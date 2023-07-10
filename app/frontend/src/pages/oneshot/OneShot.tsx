@@ -173,7 +173,7 @@ const OneShot = () => {
             </div>
 
             <Panel
-                headerText="Configure answer generation"
+                headerText="Einstellungen"
                 isOpen={isConfigPanelOpen}
                 isBlocking={false}
                 onDismiss={() => setIsConfigPanelOpen(false)}

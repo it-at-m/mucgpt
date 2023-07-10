@@ -11,13 +11,13 @@ param location string
 
 param appServicePlanName string = ''
 param backendServiceName string = ''
-param resourceGroupName string = ''
+param resourceGroupName string = 'rg-openai-demo-c-euw'
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''
 param searchServiceResourceGroupLocation string = location
 
-param searchServiceSkuName string = 'standard'
+param searchServiceSkuName string = 'F0'
 param searchIndexName string = 'gptkbindex'
 
 param storageAccountName string = ''
@@ -35,11 +35,11 @@ param formRecognizerServiceName string = ''
 param formRecognizerResourceGroupName string = ''
 param formRecognizerResourceGroupLocation string = location
 
-param formRecognizerSkuName string = 'S0'
+param formRecognizerSkuName string = 'F0'
 
 param gptDeploymentName string = ''
 param gptDeploymentCapacity int = 30
-param gptModelName string = 'text-davinci-003'
+param gptModelName string = 'gpt-35-turbo'
 param chatGptDeploymentName string = ''
 param chatGptDeploymentCapacity int = 30
 param chatGptModelName string = 'gpt-35-turbo'
@@ -133,7 +133,7 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         model: {
           format: 'OpenAI'
           name: gptModelName
-          version: '1'
+          version: '0301'
         }
         sku: {
           name: 'Standard'

@@ -11,7 +11,7 @@ param location string
 
 param appServicePlanName string = ''
 param backendServiceName string = ''
-param resourceGroupName string = 'rg-openai-demo-c-euw'
+param resourceGroupName string = ''
 
 param searchServiceName string = ''
 param searchServiceResourceGroupName string = ''

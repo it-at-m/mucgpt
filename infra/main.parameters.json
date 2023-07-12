@@ -36,7 +36,7 @@
       "value": "${AZURE_SEARCH_SERVICE_RESOURCE_GROUP}"
     },
     "searchServiceSkuName": {
-      "value": "F"
+      "value": "free"
     },
     "storageAccountName": {
       "value": "${AZURE_STORAGE_ACCOUNT}"

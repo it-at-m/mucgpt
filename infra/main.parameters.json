@@ -36,7 +36,7 @@
       "value": "${AZURE_SEARCH_SERVICE_RESOURCE_GROUP}"
     },
     "searchServiceSkuName": {
-      "value": "F0"
+      "value": "F"
     },
     "storageAccountName": {
       "value": "${AZURE_STORAGE_ACCOUNT}"
@@ -45,10 +45,10 @@
       "value": "${AZURE_STORAGE_RESOURCE_GROUP}"
     },
     "chatGptDeploymentName": {
-      "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT}"
+      "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
     },
     "gptDeploymentName": {
-      "value": "${AZURE_OPENAI_GPT_DEPLOYMENT}"
+      "value": "${AZURE_OPENAI_GPT_DEPLOYMENT=davinci}"
     }
   }
 }

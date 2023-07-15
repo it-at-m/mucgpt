@@ -3,8 +3,18 @@ import { Outlet, NavLink, Link } from "react-router-dom";
 
 import styles from "./Layout.module.css";
 import { SparkleFilled } from "@fluentui/react-icons";
+import { LanguageSelector } from "../../components/LanguageSelector";
+import { useState } from "react";
+
+import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 
 const Layout = () => {
+    const DEFAULTLANG = "Deutsch";
+    const [language, setLanguage] = useState<string>(DEFAULTLANG);
+
+    const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        setLanguage(selection.optionValue || DEFAULTLANG);
+    };
     return (
         <div className={styles.layout}>
             <header className={styles.header} role={"banner"}>
@@ -29,6 +39,7 @@ const Layout = () => {
                              */}
                         </ul>
                     </nav>
+                    <LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
                 </div>
             </header>
 

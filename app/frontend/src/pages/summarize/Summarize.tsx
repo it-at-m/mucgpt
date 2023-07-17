@@ -32,8 +32,8 @@ const Summarize = () => {
                 text: question,
                 approach: Approaches.Summarize,
                 overrides: {
-                    language: "bayrisch",
-                    person_type: "Schüler"
+                    language: "Bavarian",
+                    person_type: "Second-Grader"
                 }
             };
             const result = await sumApi(request);

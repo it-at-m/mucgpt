@@ -11,8 +11,8 @@ class Summarize(Approach):
     """
     Simple summarize implementation. One shot summarization of the given text.
     """
-    system_message_prompt = """Du bist ein hilfsbereiter Assistent für Text Zusammenfassung. Verfasse alle Antworten in der Sprache {language}."""
-    user_message_prompt = """Fasse folgenden Text für {person_type} zusammen: 
+    system_message_prompt = """You are a helpful assistant for text summarization. Answer in {language}. """
+    user_message_prompt = """Summarize this in two sentences for a {person_type}: 
     
     {text}"""
 

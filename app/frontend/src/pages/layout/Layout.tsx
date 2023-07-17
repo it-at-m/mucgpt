@@ -26,20 +26,29 @@ const Layout = () => {
                     </Link>
                     <nav>
                         <ul className={styles.headerNavList}>
-                            {/* <li>
+                            <li>
                                 <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     Chat
                                 </NavLink>
                             </li>
                             <li className={styles.headerNavLeftMargin}>
                                 <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    Ask a question
+                                    Zusammenfassen
                                 </NavLink>
                             </li>
-                             */}
+                            <li className={styles.headerNavLeftMargin}>
+                                <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    Erklären
+                                </NavLink>
+                            </li>
+                            <li className={styles.headerNavLeftMargin}>
+                                <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    Programmieren
+                                </NavLink>
+                            </li>
                         </ul>
                     </nav>
-                    <LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
+                    <div className={styles.headerNavRightMargin}><LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector></div>
                 </div>
             </header>
 

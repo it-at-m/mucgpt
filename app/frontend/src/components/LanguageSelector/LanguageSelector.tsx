@@ -1,4 +1,4 @@
-import styles from "./LanguageSelector.module.css";
+import otherStyles from "./LanguageSelector.module.css";
 import {
     Dropdown,
     makeStyles,
@@ -14,8 +14,11 @@ import {
       gridTemplateRows: "repeat(1fr)",
       justifyItems: "start",
       ...shorthands.gap("2px"),
-      maxWidth: "400px",
+      maxWidth: "100px",
     },
+    option: {
+      maxWidth: "100px",
+    }
   });
 
 interface Props {
@@ -28,14 +31,14 @@ export const LanguageSelector =  ({ onSelectionChange, defaultlang }: Props) => 
     const styles = useStyles();
     return (
       <div className={styles.root}>
-        <Dropdown  aria-label="Sprache auswählen" defaultValue={defaultlang} onOptionSelect={onSelectionChange}>
-          <Option text="Deutsch">
+        <Dropdown  aria-label="Sprache auswählen" defaultValue={defaultlang} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
+          <Option text="Deutsch" className={styles.option}>
             Deutsch
           </Option>
-          <Option text="Englisch">
+          <Option text="Englisch" className={styles.option}>
             Englisch
           </Option>
-          <Option text="Bayrisch">
+          <Option text="Bayrisch" className={styles.option}>
             Bayrisch
           </Option>
         </Dropdown>

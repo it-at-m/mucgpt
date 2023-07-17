@@ -64,7 +64,7 @@ export async function chatApi(options: ChatRequest): Promise<AskResponse> {
 }
 
 export async function sumApi(options: SumRequest): Promise<AskResponse> {
-    const response = await fetch("/chat", {
+    const response = await fetch("/sum", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

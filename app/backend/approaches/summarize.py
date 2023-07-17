@@ -11,8 +11,10 @@ class Summarize(Approach):
     """
     Simple summarize implementation. One shot summarization of the given text.
     """
-    system_message_chat_conversation = """Du bist ein hilfsbereiter Assistent für Text Zusammenfassung. Verfasse alle Antworten in der Sprache {sprache}.
-"""
+    system_message_prompt = """Du bist ein hilfsbereiter Assistent für Text Zusammenfassung. Verfasse alle Antworten in der Sprache {language}."""
+    user_message_prompt = """Fasse folgenden Text für {person_type} zusammen: 
+    
+    {text}"""
 
 
     def __init__(self, chatgpt_deployment: str, chatgpt_model: str):
@@ -30,11 +32,11 @@ class Summarize(Approach):
             messages= [
                 {
                 "role": self.SYSTEM,
-                "content": self.system_message_chat_conversation.format(language),
+                "content": self.system_message_prompt.format(language=language),
                 },
                 {
                 "role": self.USER,
-                "content": f"Fasse folgenden Text für {person_type} zusammen: {text}",
+                "content": self.user_message_prompt.format(person_type=person_type, text=text)
                 },
             ], 
             temperature=overrides.get("temperature") or 0.7, 

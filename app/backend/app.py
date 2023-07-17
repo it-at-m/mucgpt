@@ -10,6 +10,7 @@ from azure.search.documents import SearchClient
 from approaches.retrievethenread import RetrieveThenReadApproach
 from approaches.readretrieveread import ReadRetrieveReadApproach
 from approaches.readdecomposeask import ReadDecomposeAsk
+from approaches.summarize import Summarize
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from azure.storage.blob import BlobServiceClient
 
@@ -65,6 +66,10 @@ chat_approaches = {
     "rrr": ChatReadRetrieveReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
 }
 
+summarize_approaches = {
+    "sum": Summarize
+}
+
 app = Flask(__name__)
 
 @app.route("/", defaults={"path": "index.html"})
@@ -118,6 +123,22 @@ def chat():
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /chat")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/sum", methods=["POST"])
+def sum():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+    approach = request.json["approach"]
+    try:
+        impl = summarize_approaches.get(approach)
+        if not impl:
+            return jsonify({"error": "unknown approach"}), 400
+        r = impl.run(request.json["text"], request.json.get("overrides") or {})
+        return jsonify(r)
+    except Exception as e:
+        logging.exception("Exception in /sum")
         return jsonify({"error": str(e)}), 500
 
 def ensure_openai_token():

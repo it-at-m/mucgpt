@@ -1,7 +1,8 @@
 export const enum Approaches {
     RetrieveThenRead = "rtr",
     ReadRetrieveRead = "rrr",
-    ReadDecomposeAsk = "rda"
+    ReadDecomposeAsk = "rda",
+    Summarize = "sum"
 }
 
 export type AskRequestOverrides = {
@@ -14,6 +15,7 @@ export type AskRequestOverrides = {
     promptTemplatePrefix?: string;
     promptTemplateSuffix?: string;
     suggestFollowupQuestions?: boolean;
+    language?: string;
 };
 
 export type AskRequest = {
@@ -39,3 +41,16 @@ export type ChatRequest = {
     approach: Approaches;
     overrides?: AskRequestOverrides;
 };
+
+export type SumRequestOverrides = {
+    person_type?: string;
+    temperature?: number;
+    language?: string;
+};
+
+export type SumRequest = {
+    text: string;
+    approach: Approaches;
+    overrides?: SumRequestOverrides;
+};
+

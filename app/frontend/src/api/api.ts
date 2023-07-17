@@ -1,4 +1,4 @@
-import { AskRequest, AskResponse, ChatRequest } from "./models";
+import { AskRequest, AskResponse, ChatRequest, SumRequest } from "./models";
 
 export async function askApi(options: AskRequest): Promise<AskResponse> {
     const response = await fetch("/ask", {
@@ -17,7 +17,8 @@ export async function askApi(options: AskRequest): Promise<AskResponse> {
                 prompt_template: options.overrides?.promptTemplate,
                 prompt_template_prefix: options.overrides?.promptTemplatePrefix,
                 prompt_template_suffix: options.overrides?.promptTemplateSuffix,
-                exclude_category: options.overrides?.excludeCategory
+                exclude_category: options.overrides?.excludeCategory,
+                language: options.overrides?.language
             }
         })
     });
@@ -48,7 +49,33 @@ export async function chatApi(options: ChatRequest): Promise<AskResponse> {
                 prompt_template_prefix: options.overrides?.promptTemplatePrefix,
                 prompt_template_suffix: options.overrides?.promptTemplateSuffix,
                 exclude_category: options.overrides?.excludeCategory,
-                suggest_followup_questions: options.overrides?.suggestFollowupQuestions
+                suggest_followup_questions: options.overrides?.suggestFollowupQuestions,
+                language: options.overrides?.language
+            }
+        })
+    });
+
+    const parsedResponse: AskResponse = await response.json();
+    if (response.status > 299 || !response.ok) {
+        throw Error(parsedResponse.error || "Unknown error");
+    }
+
+    return parsedResponse;
+}
+
+export async function sumApi(options: SumRequest): Promise<AskResponse> {
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            text: options.text,
+            approach: options.approach,
+            overrides: {
+                temperature: options.overrides?.temperature,
+                language: options.overrides?.language,
+                person_type: options.overrides?.person_type
             }
         })
     });

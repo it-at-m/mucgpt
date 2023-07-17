@@ -7,6 +7,7 @@ import "./index.css";
 
 import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
+import Summarize from "./pages/summarize/Summarize";
 
 initializeIcons();
 
@@ -18,6 +19,10 @@ const router = createHashRouter([
             {
                 index: true,
                 element: <Chat />
+            },
+            {
+                path: "sum",
+                element: <Summarize />
             },
            /** {
                 path: "qa",

@@ -46,6 +46,12 @@ const Layout = () => {
                                     Programmieren
                                 </NavLink>
                             </li>
+                            <li className={styles.headerNavLeftMargin}>
+                                <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                Brainstorming
+                                    {/*  https://www.w3schools.com/gen_ai/chatgpt-4/chatgpt-4_brainstorming.php */}
+                                </NavLink>
+                            </li>
                         </ul>
                     </nav>
                     <div className={styles.headerNavRightMargin}><LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector></div>

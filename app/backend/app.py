@@ -67,7 +67,7 @@ chat_approaches = {
 }
 
 summarize_approaches = {
-    "sum": Summarize
+    "sum": Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 app = Flask(__name__)

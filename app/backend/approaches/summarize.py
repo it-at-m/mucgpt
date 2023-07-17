@@ -45,7 +45,7 @@ class Summarize(Approach):
         
         chat_content = chat_completion.choices[0].message.content
 
-        msg_to_display = '\n\n'.join([str(message) for message in messages])
+        #msg_to_display = '\n\n'.join([str(message) for message in messages])
 
-        return {"data_points": [], "answer": chat_content, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
+        return {"data_points": [], "answer": chat_content, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
     

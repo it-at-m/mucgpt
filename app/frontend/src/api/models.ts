@@ -46,6 +46,7 @@ export type SumRequestOverrides = {
     person_type?: string;
     temperature?: number;
     language?: string;
+    sumlength?: string;
 };
 
 export type SumRequest = {

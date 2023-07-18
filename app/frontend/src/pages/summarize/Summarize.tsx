@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useContext } from "react";
 import { Checkbox, Panel, DefaultButton, TextField, SpinButton } from "@fluentui/react";
+import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 
 import styles from "./Summarize.module.css";
 
@@ -10,8 +11,13 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ExampleListSum } from "../../components/Example/ExampleListSum";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
+import { SettingsButton } from "../../components/SettingsButton";
+import { RoleSelector } from "../../components/RoleSelector";
+import { SummarizationLengthSelector } from "../../components/SummarizationLengthSelector";
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
+
+    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
@@ -22,6 +28,18 @@ const Summarize = () => {
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+
+    const DEFAULT_ROLE = "Second-Grader";
+    const [role, setRole] = useState<string>(DEFAULT_ROLE);
+    const onRoleChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        setRole(selection.optionValue || DEFAULT_ROLE );
+    };
+
+    const DEFAULT_LENGTH = "in a maximum of 5 bullet points";
+    const [textLength, setTextLength] = useState<string>(DEFAULT_LENGTH);
+    const onTextLengthChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        setTextLength(selection.optionValue || DEFAULT_LENGTH );
+    };
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);
@@ -39,7 +57,8 @@ const Summarize = () => {
                 approach: Approaches.Summarize,
                 overrides: {
                     language: language,
-                    person_type: "Second-Grader"
+                    person_type: role,
+                    sumlength: textLength
                 }
             };
             const result = await sumApi(request);
@@ -64,6 +83,7 @@ const Summarize = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
@@ -120,6 +140,23 @@ const Summarize = () => {
                         />
                     </div>
                 </div>
+                <Panel
+                    headerText="Einstellungen"
+                    isOpen={isConfigPanelOpen}
+                    isBlocking={false}
+                    onDismiss={() => setIsConfigPanelOpen(false)}
+                    closeButtonAriaLabel="Close"
+                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
+                    isFooterAtBottom={true}
+                >
+                    <div className={styles.chatSettingsSeparator}> 
+                        <RoleSelector onSelectionChange={onRoleChanged} defaultRole={"Grundschüler"}></RoleSelector>
+                    </div>
+                    <div className={styles.chatSettingsSeparator}> 
+                        <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={"In maximal 5 Stichpunkten"}></SummarizationLengthSelector>
+                    </div>
+        
+                </Panel>
             </div>
         </div>
     );

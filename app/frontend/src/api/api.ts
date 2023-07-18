@@ -75,7 +75,8 @@ export async function sumApi(options: SumRequest): Promise<AskResponse> {
             overrides: {
                 temperature: options.overrides?.temperature,
                 language: options.overrides?.language,
-                person_type: options.overrides?.person_type
+                person_type: options.overrides?.person_type,
+                sumlength: options.overrides?.sumlength
             }
         })
     });

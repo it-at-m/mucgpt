@@ -14,7 +14,7 @@ class Summarize(Approach):
     system_sum_prompt = """You are a helpful assistant for text summarization. """
     user_sum_prompt = """
     Summarize the following text for a {person_type}.
-    The summary can be up to 3 sentences in length, expressing the key points and concepts written in the original text without adding your interpretations. 
+    The summary should be written {sumlength}, expressing the key points and concepts written in the original text without adding your interpretations. 
 
     Text: {text}"""
 
@@ -30,6 +30,7 @@ class Summarize(Approach):
     def run(self, text: str, overrides: dict[str, Any]) -> Any:
         person_type = overrides.get("person_type")
         language = overrides.get("language")
+        sumlength = overrides.get("sumlength")
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
         chat_completion_sum = openai.ChatCompletion.create(
@@ -42,7 +43,7 @@ class Summarize(Approach):
                 },
                 {
                 "role": self.USER,
-                "content": self.user_sum_prompt.format(person_type=person_type, text=text)
+                "content": self.user_sum_prompt.format(person_type=person_type, text=text, sumlength=sumlength)
                 },
             ], 
             temperature=overrides.get("temperature") or 0.7, 

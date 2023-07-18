@@ -36,7 +36,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         if (!newValue) {
             setQuestion("");
-        } else if (newValue.length <= 1000) {
+        } else if (newValue.length <= 2500) {
             setQuestion(newValue);
         }
     };

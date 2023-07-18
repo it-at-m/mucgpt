@@ -9,8 +9,8 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "Was sind die schönsten Sehenswürdigkeiten von München?",
-        value: "Was sind die schönsten Sehenswürdigkeiten von München?"
+        text: "Was gibts in München zu sehen?",
+        value: "Was gibts in München zu sehen?"
     },
     {
         text: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut?",

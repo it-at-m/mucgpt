@@ -2,6 +2,7 @@ export const enum Approaches {
     RetrieveThenRead = "rtr",
     ReadRetrieveRead = "rrr",
     ReadDecomposeAsk = "rda",
+    Chat = "chat",
     Summarize = "sum"
 }
 

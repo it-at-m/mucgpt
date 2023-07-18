@@ -32,7 +32,7 @@ class Summarize(Approach):
         language = overrides.get("language")
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        chat_completion = openai.ChatCompletion.create(
+        chat_completion_sum = openai.ChatCompletion.create(
             deployment_id=self.chatgpt_deployment,
             model=self.chatgpt_model,
             messages= [
@@ -42,16 +42,16 @@ class Summarize(Approach):
                 },
                 {
                 "role": self.USER,
-                "content": self.user_sum_prompt.format(person_type=person_type, text=text, language=language)
+                "content": self.user_sum_prompt.format(person_type=person_type, text=text)
                 },
             ], 
             temperature=overrides.get("temperature") or 0.7, 
             max_tokens=1024, 
             n=1)
         
-        chat_content = chat_completion.choices[0].message.content
+        chat_sum_result = chat_completion_sum.choices[0].message.content
 
-        chat_completion = openai.ChatCompletion.create(
+        chat_completion_translate = openai.ChatCompletion.create(
             deployment_id=self.chatgpt_deployment,
             model=self.chatgpt_model,
             messages= [
@@ -61,7 +61,7 @@ class Summarize(Approach):
                 },
                 {
                 "role": self.USER,
-                "content": self.user_translate_prompt.format(language=language, text = chat_content)
+                "content": self.user_translate_prompt.format(language=str(language).lower(), text = chat_sum_result)
                 },
             ], 
             temperature=overrides.get("temperature") or 0.7, 
@@ -69,8 +69,8 @@ class Summarize(Approach):
             n=1)
 
 
-        chat_content = chat_completion.choices[0].message.content
+        chat_translate_result = chat_completion_translate.choices[0].message.content
         #msg_to_display = '\n\n'.join([str(message) for message in messages])
 
-        return {"data_points": [], "answer": chat_content, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
+        return {"data_points": [], "answer": chat_translate_result, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
     

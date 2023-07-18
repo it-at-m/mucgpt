@@ -1,15 +1,17 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useContext } from "react";
 import { Checkbox, Panel, DefaultButton, TextField, SpinButton } from "@fluentui/react";
 
 import styles from "./Summarize.module.css";
 
-import { chatApi, Approaches, AskResponse, ChatRequest, ChatTurn, sumApi, SumRequest } from "../../api";
+import { Approaches, AskResponse, sumApi, SumRequest } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
-
+import { ExampleListSum } from "../../components/Example/ExampleListSum";
+import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 const Summarize = () => {
+    const {language} = useContext(LanguageContext)
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
@@ -21,18 +23,22 @@ const Summarize = () => {
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
 
+    const onExampleClicked = (example: string) => {
+        makeApiRequest(example);
+    };
+
+
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
 
         error && setError(undefined);
         setIsLoading(true);
         try {
-            const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: SumRequest = {
                 text: question,
                 approach: Approaches.Summarize,
                 overrides: {
-                    language: "Bavarian",
+                    language: language,
                     person_type: "Second-Grader"
                 }
             };
@@ -64,6 +70,7 @@ const Summarize = () => {
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
                             <h2 className={styles.chatEmptyStateSubtitle}>Zusammenfassen</h2>
+                            <ExampleListSum onExampleClicked={onExampleClicked} />
                         </div>
                     ) : (
                         <div className={styles.chatMessageStream}>

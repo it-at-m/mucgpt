@@ -41,6 +41,9 @@ export const LanguageSelector =  ({ onSelectionChange, defaultlang }: Props) => 
           <Option text="Bayrisch" className={styles.option}>
             Bayrisch
           </Option>
+          <Option text="Ukrainisch" className={styles.option}>
+          Ukrainisch
+          </Option>
         </Dropdown>
       </div>
     );

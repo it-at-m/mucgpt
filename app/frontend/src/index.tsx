@@ -8,7 +8,7 @@ import "./index.css";
 import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
 import Summarize from "./pages/summarize/Summarize";
-
+import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
 initializeIcons();
 
 const router = createHashRouter([
@@ -38,6 +38,8 @@ const router = createHashRouter([
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
-        <RouterProvider router={router} />
+        <LanguageContextProvider>
+            <RouterProvider router={router} />
+        </LanguageContextProvider>
     </React.StrictMode>
 );

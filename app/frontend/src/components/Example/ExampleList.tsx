@@ -16,7 +16,7 @@ const EXAMPLES: ExampleModel[] = [
         text: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut?",
         value: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut"
     },
-    { text: "Wie funktioniert ein Chatbot?", value: "Wie funktioniert ein Chatbot?" }
+    { text: "Wie funktioniert ein Sprachmodell?", value: "Wie funktioniert ein Sprachmodell?" }
 ];
 
 interface Props {

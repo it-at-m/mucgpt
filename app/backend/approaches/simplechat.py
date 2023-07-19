@@ -14,9 +14,7 @@ class SimpleChatApproach(Approach):
     """
     Simple assistant approach. Only uses trained information and message history.
     """
-    system_message_chat_conversation = """You are an assistant. Be brief in your answers.
-If asking a clarifying question to the user would help, ask the question.
-For tabular information return it as an html table. Do not return markdown format.
+    system_message_chat_conversation = """Answer in {language}. 
 {follow_up_questions_prompt}
 {injected_prompt}
 """
@@ -32,10 +30,10 @@ For tabular information return it as an html table. Do not return markdown forma
 
     def run(self, history: Sequence[dict[str, str]], overrides: dict[str, Any]) -> Any:
         prompt_override  =  history[-1]["user"]
+        language = overrides.get("language")
         follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
         
-        
-        messages = self.get_messages_from_history(prompt_override=prompt_override, follow_up_questions_prompt=follow_up_questions_prompt,history=history)
+        messages = self.get_messages_from_history(prompt_override=prompt_override, follow_up_questions_prompt=follow_up_questions_prompt,history=history, language=language)
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
         chat_completion = openai.ChatCompletion.create(
@@ -60,16 +58,16 @@ For tabular information return it as an html table. Do not return markdown forma
                 break    
         return history_text
     
-    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: Sequence[dict[str, str]], approx_max_tokens: int = 1000) -> []:
+    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: Sequence[dict[str, str]], language: str, approx_max_tokens: int = 1000) -> []:
         '''
         Generate messages needed for chat Completion api
         '''
         messages = []
         token_count = 0
         if prompt_override is None:
-            system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt)
+            system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt, language = language)
         elif prompt_override.startswith(">>>"):
-            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt)
+            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt,  language = language)
         else:
             system_message = prompt_override.format(follow_up_questions_prompt=follow_up_questions_prompt)
 

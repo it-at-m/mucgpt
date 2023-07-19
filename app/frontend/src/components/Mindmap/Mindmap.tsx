@@ -3,7 +3,7 @@
 import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
 import React, { useLayoutEffect } from "react";
-
+import styles from "./Mindmap.module.css";
 interface Props {
     markdown: string;
 }
@@ -21,8 +21,10 @@ export const Mindmap = ({ markdown }: Props) => {
       }, []);
     
     return (
-      <React.Fragment>
-        <svg id="markmap" className="flex-1" ref={svgEl}/>
+      <React.Fragment  >
+        <div className={styles.mindmapContainer}>
+            <svg id="markmap" className="flex-1" ref={svgEl} />
+        </div>
       </React.Fragment>
     );
 };

@@ -83,13 +83,7 @@ const Summarize = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                    <Mindmap markdown="# markmap
-
-                                    - beautiful
-                                    - useful
-                                    - easy
-                                    - interactivewewe
-                                    "></Mindmap>
+                                    <Mindmap markdown={answer[1].answer}></Mindmap>
                                     </div>
                                 </div>
                             ))}
@@ -127,7 +121,7 @@ const Summarize = () => {
                     isOpen={isConfigPanelOpen}
                     isBlocking={false}
                     onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel="Close"
+                    closeButtonAriaLabel="Schließen"
                     onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
                     isFooterAtBottom={true}
                 >

@@ -181,7 +181,7 @@ const Chat = () => {
                     isOpen={isConfigPanelOpen}
                     isBlocking={false}
                     onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel="Close"
+                    closeButtonAriaLabel="Schließen"
                     onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Close</DefaultButton>}
                     isFooterAtBottom={true}
                 >

@@ -11,6 +11,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { SettingsButton } from "../../components/SettingsButton";
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
+import { Mindmap } from "../../components/Mindmap";
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
 
@@ -82,16 +83,13 @@ const Summarize = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                        <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            isSelected={selectedAnswer === index }
-                                            onCitationClicked={() => {}}
-                                            onThoughtProcessClicked={() => {}}
-                                            onSupportingContentClicked={() => {}}
-                                            onFollowupQuestionClicked={q => makeApiRequest(q)}
-                                            showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
-                                        />
+                                    <Mindmap markdown="# markmap
+
+                                    - beautiful
+                                    - useful
+                                    - easy
+                                    - interactivewewe
+                                    "></Mindmap>
                                     </div>
                                 </div>
                             ))}

@@ -3,6 +3,7 @@ import io
 import mimetypes
 import time
 import logging
+from app.backend.approaches.brainstorm import Brainstorm
 
 import openai
 from flask import Flask, request, jsonify, send_file, abort
@@ -73,6 +74,10 @@ summarize_approaches = {
     "sum": Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
+brainstorm_approaches = {
+    "brainstorm": Brainstorm(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+}
+
 app = Flask(__name__)
 
 @app.route("/", defaults={"path": "index.html"})
@@ -139,6 +144,22 @@ def sum():
         if not impl:
             return jsonify({"error": "unknown approach"}), 400
         r = impl.run(request.json["text"], request.json.get("overrides") or {})
+        return jsonify(r)
+    except Exception as e:
+        logging.exception("Exception in /sum")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/brainstorm", methods=["POST"])
+def brainstorm():
+    ensure_openai_token()
+    if not request.json:
+        return jsonify({"error": "request must be json"}), 400
+    approach = request.json["approach"]
+    try:
+        impl = brainstorm_approaches.get(approach)
+        if not impl:
+            return jsonify({"error": "unknown approach"}), 400
+        r = impl.run(request.json["topic"], request.json.get("overrides") or {})
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")

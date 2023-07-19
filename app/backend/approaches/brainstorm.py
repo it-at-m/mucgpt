@@ -98,7 +98,7 @@ class Brainstorm(Approach):
         chat_translate_result = chat_completion_translate.choices[0].message.content
         #Falls Erklärungen um das Markdown außen rum existieren.
         if("```" in str(chat_translate_result)):
-            splitted = str(chat_translate_result).split("````")
+            splitted = str(chat_translate_result).split("```")
             if(len(splitted) == 3):
                 chat_translate_result = splitted[1]
         #msg_to_display = '\n\n'.join([str(message) for message in messages])

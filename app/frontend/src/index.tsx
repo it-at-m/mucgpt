@@ -9,6 +9,7 @@ import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
 import Summarize from "./pages/summarize/Summarize";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
+import Brainstorm from "./pages/brainstorm/Brainstorm";
 initializeIcons();
 
 const router = createHashRouter([
@@ -23,6 +24,10 @@ const router = createHashRouter([
             {
                 path: "sum",
                 element: <Summarize />
+            },
+            {
+                path: "brainstorm",
+                element: <Brainstorm />
             },
            /** {
                 path: "qa",

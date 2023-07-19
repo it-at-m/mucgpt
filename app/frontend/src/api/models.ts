@@ -3,7 +3,8 @@ export const enum Approaches {
     ReadRetrieveRead = "rrr",
     ReadDecomposeAsk = "rda",
     Chat = "chat",
-    Summarize = "sum"
+    Summarize = "sum",
+    Brainstorm = "brainstorm"
 }
 
 export type AskRequestOverrides = {
@@ -54,5 +55,16 @@ export type SumRequest = {
     text: string;
     approach: Approaches;
     overrides?: SumRequestOverrides;
+};
+
+export type BrainstormRequestOverrides = {
+    temperature?: number;
+    language?: string;
+};
+
+export type BrainstormRequest = {
+    topic: string;
+    approach: Approaches;
+    overrides?: BrainstormRequestOverrides;
 };
 

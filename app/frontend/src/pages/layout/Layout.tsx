@@ -37,17 +37,17 @@ const Layout = () => {
                                     </NavLink>
                                 </li>
                                 <li className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    <NavLink to="/explain" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                         Erklären
                                     </NavLink>
                                 </li>
                                 <li className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    <NavLink to="/code" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                         Programmieren
                                     </NavLink>
                                 </li>
                                 <li className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/qa" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     Brainstorming
                                         {/*  https://www.w3schools.com/gen_ai/chatgpt-4/chatgpt-4_brainstorming.php  https://faun.pub/effortless-diagrams-unlocked-streamline-diagram-creation-with-chatgpt-mermaid-82ed44f3a9a6*/}
                                     </NavLink>

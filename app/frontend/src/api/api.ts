@@ -1,4 +1,4 @@
-import { AskRequest, AskResponse, ChatRequest, SumRequest } from "./models";
+import { AskRequest, AskResponse, BrainstormRequest, ChatRequest, SumRequest } from "./models";
 
 export async function askApi(options: AskRequest): Promise<AskResponse> {
     const response = await fetch("/ask", {
@@ -77,6 +77,30 @@ export async function sumApi(options: SumRequest): Promise<AskResponse> {
                 language: options.overrides?.language,
                 person_type: options.overrides?.person_type,
                 sumlength: options.overrides?.sumlength
+            }
+        })
+    });
+
+    const parsedResponse: AskResponse = await response.json();
+    if (response.status > 299 || !response.ok) {
+        throw Error(parsedResponse.error || "Unknown error");
+    }
+
+    return parsedResponse;
+}
+
+export async function brainstormApi(options: BrainstormRequest): Promise<AskResponse> {
+    const response = await fetch("/brainstorm", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            topic: options.topic,
+            approach: options.approach,
+            overrides: {
+                temperature: options.overrides?.temperature,
+                language: options.overrides?.language,
             }
         })
     });

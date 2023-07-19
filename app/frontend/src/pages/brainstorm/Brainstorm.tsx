@@ -16,7 +16,6 @@ const Summarize = () => {
     const {language} = useContext(LanguageContext)
 
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
-    const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);

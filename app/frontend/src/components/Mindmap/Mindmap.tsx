@@ -23,7 +23,7 @@ export const Mindmap = ({ markdown }: Props) => {
     return (
       <React.Fragment  >
         <div className={styles.mindmapContainer}>
-            <svg id="markmap" className="flex-1" ref={svgEl} />
+            <svg id="markmap" className={styles.svgMark} ref={svgEl} />
         </div>
       </React.Fragment>
     );

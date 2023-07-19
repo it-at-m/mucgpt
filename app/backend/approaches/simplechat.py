@@ -14,7 +14,7 @@ class SimpleChatApproach(Approach):
     """
     Simple assistant approach. Only uses trained information and message history.
     """
-    system_message_chat_conversation = """Answer in {language}. 
+    system_message_chat_conversation = """Du beantwortest alle Fragen ab jetzt in der Sprache {language}. 
 {follow_up_questions_prompt}
 {injected_prompt}
 """

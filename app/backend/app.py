@@ -3,7 +3,6 @@ import io
 import mimetypes
 import time
 import logging
-from app.backend.approaches.brainstorm import Brainstorm
 
 import openai
 from flask import Flask, request, jsonify, send_file, abort
@@ -15,6 +14,7 @@ from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.summarize import Summarize
 from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.simplechat import SimpleChatApproach
+from approaches.brainstorm import Brainstorm
 from azure.storage.blob import BlobServiceClient
 
 # Replace these with your own values, either in environment variables or directly here

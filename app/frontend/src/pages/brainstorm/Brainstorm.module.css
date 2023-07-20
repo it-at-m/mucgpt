@@ -68,7 +68,7 @@
     max-width: 80%;
     display: flex;
     min-width: 500px;
-    min-height: 300px;
+    min-height: 500px;
 }
 
 .chatMessageGptMinWidth {

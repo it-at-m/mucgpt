@@ -13,7 +13,7 @@ class Brainstorm(Approach):
     """
     system_sum_prompt = """You are a helpful assistant. """
     user_mindmap_prompt = """
-      In a markdown file (MD) plan out a mind map on the topic {topic}. Follow the format in this example. Write it in a code snippet I can copy from directly. Include the exact format I used below.
+      In a markdown file (MD) plan out a mind map on the topic {topic}. Follow the format in this example. Write it in a code snippet I can copy from directly. Provide only code, no description. Include the exact format I used below.
     Example markdown format:
 
     # Central topic

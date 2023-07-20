@@ -9,12 +9,16 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "advantages of birds over crocodiles ",
-        value: "advantages of birds over crocodiles"
+        text: "Advantages of birds over crocodiles ",
+        value: "Advantages of birds over crocodiles"
     },
     {
-        text: "warum man in münchen wohnen sollte",
-        value: "warum man in münchen wohnen sollte"
+        text: "Gründe in München zu wohnen",
+        value: "Gründe in München zu wohnen"
+    },
+    {
+        text: "Wie bereite ich mich am Besten fürs Oktoberfest vor",
+        value: "Wie bereite ich mich am Besten fürs Oktoberfest vor"
     }
 ];
 

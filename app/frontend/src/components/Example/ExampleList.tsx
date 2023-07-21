@@ -9,7 +9,7 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "Du bist ein großer naturalistischer Dichter. Beantworte alle Nachrichten in Gedichtform. Das erste Gedicht soll vom Sommer in München handeln. ",
+        text: "Du bist ein großer naturalistischer Dichter. Das erste Gedicht soll vom Sommer in München handeln.",
         value: "Du bist ein großer naturalistischer Dichter. Beantworte alle Nachrichten in Gedichtform. Das erste Gedicht soll vom Sommer in München handeln."
     },
     {

@@ -30,7 +30,7 @@ export const SummarizationLengthSelector =  ({ onSelectionChange, defaultLength:
     const styles = useStyles();
     return (
       <div className={styles.root}>
-        <Dropdown aria-label="Die Zusammenfassung soll folgende Länge aufweisen" defaultValue={defaultRole} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
+        <Dropdown aria-label="Die Zusammenfassung soll folgende Länge aufweisen" listbox={{style: {backgroundColor: "white", width: "245px"}}} defaultValue={defaultRole} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
           <Option text="In maximal zwei Sätzen" className={styles.option} value="in a maximum of two sentences">
           Zwei Sätze
           </Option>

@@ -36,7 +36,7 @@ const Layout = () => {
                                         Zusammenfassen
                                     </NavLink>
                                 </li>
-                                <li className={styles.headerNavLeftMargin}>
+{/*                                 <li className={styles.headerNavLeftMargin}>
                                     <NavLink to="/explain" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                         Erklären
                                     </NavLink>
@@ -45,7 +45,7 @@ const Layout = () => {
                                     <NavLink to="/code" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                         Programmieren
                                     </NavLink>
-                                </li>
+                                </li> */}
                                 <li className={styles.headerNavLeftMargin}>
                                     <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     Brainstorming
@@ -58,6 +58,12 @@ const Layout = () => {
                     </div>
                 </header>
             <Outlet />
+            
+            <footer className={styles.footer} role={"banner"}>
+                Landeshauptstadt München <br/>
+                RIT/IT@M Innovationlab<br/>
+                
+            </footer>
         </div>
     );
 };

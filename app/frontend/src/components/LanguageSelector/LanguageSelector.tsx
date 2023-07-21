@@ -14,7 +14,7 @@ import {
       gridTemplateRows: "repeat(1fr)",
       justifyItems: "start",
       ...shorthands.gap("2px"),
-      maxWidth: "100px",
+      maxWidth: "100px"
     },
     option: {
       maxWidth: "100px",
@@ -31,7 +31,7 @@ export const LanguageSelector =  ({ onSelectionChange, defaultlang }: Props) => 
     const styles = useStyles();
     return (
       <div className={styles.root}>
-        <Dropdown  aria-label="Sprache auswählen" defaultValue={defaultlang} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
+        <Dropdown  aria-label="Sprache auswählen" defaultValue={defaultlang} onOptionSelect={onSelectionChange} size="small" positioning="below-end"  listbox={{style: {backgroundColor: "white", width: "245px"}}}>
           <Option text="Deutsch" className={styles.option}>
             Deutsch
           </Option>

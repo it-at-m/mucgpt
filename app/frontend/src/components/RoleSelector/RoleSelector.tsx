@@ -30,7 +30,7 @@ export const RoleSelector =  ({ onSelectionChange, defaultRole }: Props) => {
     const styles = useStyles();
     return (
       <div className={styles.root}>
-        <Dropdown  aria-label="Zusammenfassung für diese Personengruppe erstellen" defaultValue={defaultRole} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
+        <Dropdown  aria-label="Zusammenfassung für diese Personengruppe erstellen" listbox={{style: {backgroundColor: "white", width: "245px"}}} defaultValue={defaultRole} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
           <Option text="Grundschüler" className={styles.option} value="Second-Grader">
             Grundschüler
           </Option>

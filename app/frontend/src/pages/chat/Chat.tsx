@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect, useContext } from "react";
-import { Checkbox, Panel, DefaultButton, TextField, SpinButton } from "@fluentui/react";
 
 import styles from "./Chat.module.css";
 
@@ -9,13 +8,14 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
-import { SettingsButton } from "../../components/SettingsButton";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
+import { useTranslation } from 'react-i18next';
 
 const Chat = () => {
     
     const {language} = useContext(LanguageContext)
+    const { t} = useTranslation ();
     
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
@@ -103,13 +103,12 @@ const Chat = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                {/* <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />  */}
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>Stelle eine Frage oder probiere ein Beispiel</h2>
+                            <h2 className={styles.chatEmptyStateSubtitle}>{t('chat.header')}</h2>
                             <ExampleList onExampleClicked={onExampleClicked} />
                         </div>
                     ) : (
@@ -151,7 +150,7 @@ const Chat = () => {
                     <div className={styles.chatInput}>
                         <QuestionInput
                             clearOnSend
-                            placeholder="Stelle eine Frage (z.B. ..?)"
+                            placeholder={t('chat.prompt')}
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />

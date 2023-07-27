@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect, useContext } from "react";
-import { Panel, DefaultButton } from "@fluentui/react";
 
 import styles from "./Brainstorm.module.css";
 
@@ -9,13 +8,13 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
-import { SettingsButton } from "../../components/SettingsButton";
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
+import { useTranslation } from 'react-i18next';
+
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
-
-    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
+    const { t} = useTranslation ();
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -23,7 +22,6 @@ const Summarize = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
 
 
@@ -67,13 +65,12 @@ const Summarize = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                {/* <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} /> */}
-            </div>
+                </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>Brainstorming</h2>
+                            <h2 className={styles.chatEmptyStateSubtitle}>{t('brainstorm.header')}</h2>
                             <ExampleListBrainstorm onExampleClicked={onExampleClicked} />
                         </div>
                     ) : (
@@ -109,22 +106,12 @@ const Summarize = () => {
                     <div className={styles.chatInput}>
                         <QuestionInput
                             clearOnSend
-                            placeholder="Ideen zu diesem Thema"
+                            placeholder={t('brainstorm.prompt')}
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />
                     </div>
                 </div>
-                <Panel
-                    headerText="Einstellungen"
-                    isOpen={isConfigPanelOpen}
-                    isBlocking={false}
-                    onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel="Schließen"
-                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Schließen</DefaultButton>}
-                    isFooterAtBottom={true}
-                >
-                </Panel>
             </div>
         </div>
     );

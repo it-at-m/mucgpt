@@ -14,8 +14,11 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { SettingsButton } from "../../components/SettingsButton";
 import { RoleSelector } from "../../components/RoleSelector";
 import { SummarizationLengthSelector } from "../../components/SummarizationLengthSelector";
+import { useTranslation } from 'react-i18next';
+
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
+    const { t} = useTranslation ();
 
     const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
@@ -89,7 +92,7 @@ const Summarize = () => {
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>Zusammenfassen</h2>
+                            <h2 className={styles.chatEmptyStateSubtitle}> {t('sum.header')}</h2>
                             <ExampleListSum onExampleClicked={onExampleClicked} />
                         </div>
                     ) : (
@@ -134,18 +137,18 @@ const Summarize = () => {
                     <div className={styles.chatInput}>
                         <QuestionInput
                             clearOnSend
-                            placeholder="Diesen Text zusammenfassen"
+                            placeholder={t('sum.prompt')}
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />
                     </div>
                 </div>
                 <Panel
-                    headerText="Einstellungen"
+                    headerText={t('common.settings')}
                     isOpen={isConfigPanelOpen}
                     isBlocking={false}
                     onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel="Schließen"
+                    closeButtonAriaLabel={t('common.close')}
                     onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Schließen</DefaultButton>}
                     isFooterAtBottom={true}
                 >

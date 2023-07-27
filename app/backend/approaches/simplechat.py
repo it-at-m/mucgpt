@@ -14,7 +14,7 @@ class SimpleChatApproach(Approach):
     """
     Simple assistant approach. Only uses trained information and message history.
     """
-    system_message_chat_conversation = """Du beantwortest alle Fragen ab jetzt in der Sprache {language}. 
+    system_message_chat_conversation = """
 {follow_up_questions_prompt}
 {injected_prompt}
 """
@@ -65,9 +65,9 @@ class SimpleChatApproach(Approach):
         messages = []
         token_count = 0
         if prompt_override is None:
-            system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt, language = language)
+            system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt)
         elif prompt_override.startswith(">>>"):
-            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt,  language = language)
+            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt)
         else:
             system_message = prompt_override.format(follow_up_questions_prompt=follow_up_questions_prompt)
 

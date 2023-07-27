@@ -12,6 +12,9 @@
 .footer {
     background-color: #212529;
     color: #f2f2f2;
+    justify-content: space-between;
+    flex-direction: row;
+    display: flex;
 }
 
 .linklight{

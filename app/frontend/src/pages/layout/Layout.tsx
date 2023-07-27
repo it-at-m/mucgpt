@@ -9,6 +9,7 @@ import { useContext, useState } from "react";
 import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import React from "react";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
+import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 const Layout = () => {
     const { language, setLanguage } = useContext(LanguageContext);
 
@@ -58,11 +59,13 @@ const Layout = () => {
                     </div>
                 </header>
             <Outlet />
-            
+  
             <footer className={styles.footer} role={"banner"}>
-                Landeshauptstadt München <br/>
-                RIT/IT@M Innovationlab<br/>
-                
+                <div>
+                    Landeshauptstadt München <br/>
+                    RIT/IT@M Innovationlab<br/>
+                </div>
+                <TermsOfUseDialog></TermsOfUseDialog>
             </footer>
         </div>
     );

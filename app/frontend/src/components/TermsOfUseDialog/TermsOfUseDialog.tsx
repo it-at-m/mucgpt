@@ -17,13 +17,13 @@ export const TermsOfUseDialog = () => {
   const { t} = useTranslation ();
   return (
     <div>
-        <Dialog defaultOpen={true}>
+        <Dialog modalType="alert" defaultOpen={true}>
         <DialogTrigger disableButtonEnhancement>
             <Button>{t('header.nutzungsbedingungen')}</Button>
         </DialogTrigger>
         <DialogSurface className={styles.dialog}>
             <DialogBody  className={styles.dialogContent} >
-            <DialogTitle>{t('header.nutzungsbedingungen')}</DialogTitle>
+            <DialogTitle >{t('header.nutzungsbedingungen')}</DialogTitle>
             <DialogContent>
                 <ul>
                     <li>

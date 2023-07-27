@@ -46,6 +46,11 @@ i18n
                         student: "Student*innnen",
                         secondgrader: "Grundschüler*innen",
                         retired: "Rentner*innen"
+                    },
+                    sumlength: {
+                        sentences: "Zwei Sätzen",
+                        bullets: "Fünf Stichpunkten",
+                        quarter: "1/4 der Länge"
                     }
                 }
             }
@@ -83,6 +88,11 @@ i18n
                         student: "University Students",
                         secondgrader: "Second-Graders",
                         retired: "Pensioners"
+                    },
+                    sumlength: {
+                        sentences: "Two sentences",
+                        bullets: "Five bullet points",
+                        quarter: "1/4 of the length"
                     }
                 }
             }
@@ -120,6 +130,11 @@ i18n
                         student: "Studentn",
                         secondgrader: "Grundschüla",
                         retired: "Rentna"
+                    },
+                    sumlength: {
+                        sentences: "Zwoa Sätzen",
+                        bullets: "Fünf Stichpunkten",
+                        quarter: "Viertl vo da Läng"
                     }
                 }
             }

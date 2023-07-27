@@ -29,7 +29,7 @@ interface Props {
 
 export const RoleSelector =  ({ onSelectionChange, defaultRole }: Props) => {
     const styles = useStyles();
-    const { t} = useTranslation ();
+    const { t} = useTranslation();
     return (
       <div className={styles.root}>
         <Dropdown  

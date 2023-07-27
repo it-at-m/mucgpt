@@ -102,9 +102,6 @@ const Summarize = () => {
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index }
                                             onCitationClicked={() => {}}
-                                            onThoughtProcessClicked={() => {}}
-                                            onSupportingContentClicked={() => {}}
-                                            onFollowupQuestionClicked={q => makeApiRequest(q)}
                                             showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
                                         />
                                     </div>
@@ -150,7 +147,7 @@ const Summarize = () => {
                         <label>{t('sum.lengthlabel')} </label>
                     </div>
                     <div className={styles.chatSettingsSeparator}> 
-                        <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={"Fünf Stichpunkten"}></SummarizationLengthSelector>
+                        <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={t('components.sumlength.bullets')}></SummarizationLengthSelector>
                     </div>
                 </div>
             </div>

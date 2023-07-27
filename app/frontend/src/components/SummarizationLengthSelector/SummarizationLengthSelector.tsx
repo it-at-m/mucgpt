@@ -5,6 +5,7 @@ import {
     shorthands
   } from "@fluentui/react-components";
   import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
+  import { useTranslation } from 'react-i18next';
   
   const useStyles = makeStyles({
     root: {
@@ -28,6 +29,7 @@ interface Props {
 
 export const SummarizationLengthSelector =  ({ onSelectionChange, defaultLength }: Props) => {
     const styles = useStyles();
+    const { t} = useTranslation();
     return (
       <div className={styles.root}>
         <Dropdown 
@@ -39,14 +41,14 @@ export const SummarizationLengthSelector =  ({ onSelectionChange, defaultLength 
           size="small" 
           positioning="below-end">
 
-          <Option text="Zwei Sätzen" className={styles.option} value="in a maximum of two sentences">
-          Zwei Sätze
+          <Option text={t('components.sumlength.sentences')} className={styles.option} value="in a maximum of two sentences">
+          {t('components.sumlength.sentences')}
           </Option>
-          <Option text="Fünf Stichpunkten" className={styles.option} value="in a maximum of 5 bullet points">
-          5 Stichpunkten
+          <Option text={t('components.sumlength.bullets')} className={styles.option} value="in a maximum of 5 bullet points">
+          {t('components.sumlength.bullets')}
           </Option>
-          <Option text="1/4 der Länge" className={styles.option} value="in bullet points using at most 1/4 as many words as the original">
-          1/4 der Länge
+          <Option text={t('components.sumlength.quarter')} className={styles.option} value="using at most 1/4 as many words as the original">
+          {t('components.sumlength.quarter')}
           </Option>
 
         </Dropdown>

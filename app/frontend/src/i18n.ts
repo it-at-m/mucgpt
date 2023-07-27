@@ -26,11 +26,11 @@ i18n
                     prompt: "Stelle eine Frage"
                 },
                 sum: {
-                    header: "Zusammenfassen",
+                    header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
                     prompt: "Diesen Text zusammenfassen"
                 },
                 brainstorm: {
-                    header: "Brainstorming",
+                    header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
                     prompt: "Ideen zu diesem Thema finden"
                 },
                 common: {
@@ -54,11 +54,11 @@ i18n
                     prompt: "Ask a question"
                 },
                 sum: {
-                    header: "Summarize",
+                    header: "Summarize text or try an example",
                     prompt: "Summarize this text"
                 },
                 brainstorm: {
-                    header: "Brainstorming",
+                    header: "Find ideas for a topic or try an example",
                     prompt: "Find ideas for this topics"
                 },
                 common: {
@@ -82,11 +82,11 @@ i18n
                     prompt: "Stelle a Froog "
                 },
                 sum: {
-                    header: "Zammfassn",
+                    header: "Fassn Text zam oda probier a Beispui",
                     prompt: "Diesn Text zammfassn"
                 },
                 brainstorm: {
-                    header: "Gedanknschmarrn",
+                    header: "Ideen zu dem Thema aufaspuin oda probier a Beispui",
                     prompt: "Ideen zu dem Thema aufaspuin"
                 },
                 common: {

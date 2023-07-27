@@ -9,8 +9,8 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "Advantages of birds over crocodiles ",
-        value: "Advantages of birds over crocodiles"
+        text: "Maßnahmen für Städte um besser mit dem Klimawandel zurechtzukommen",
+        value: "Maßnahmen für Städte um besser mit dem Klimawandel zurechtzukommen"
     },
     {
         text: "Gründe in München zu wohnen",

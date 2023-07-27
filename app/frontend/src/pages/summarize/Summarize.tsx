@@ -13,13 +13,11 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { RoleSelector } from "../../components/RoleSelector";
 import { SummarizationLengthSelector } from "../../components/SummarizationLengthSelector";
 import { useTranslation } from 'react-i18next';
-import { Text } from "@fluentui/react";
 
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
     const { t} = useTranslation ();
 
-    const [isConfigPanelOpen, setIsConfigPanelOpen] = useState(false);
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
@@ -143,13 +141,13 @@ const Summarize = () => {
                 </div>
                 <div className={styles.settingsContainer}>
                     <div className={styles.label}> 
-                        <label>Zusammenfassen für</label>
+                        <label>{t('sum.rolelabel')}</label>
                     </div>
                     <div className={styles.chatSettingsSeparator}> 
-                        <RoleSelector onSelectionChange={onRoleChanged} defaultRole={"Grundschüler"}></RoleSelector>
+                        <RoleSelector onSelectionChange={onRoleChanged} defaultRole={t('components.roles.secondgrader')}></RoleSelector>
                     </div>
                     <div className={styles.label}> 
-                        <label>in </label>
+                        <label>{t('sum.lengthlabel')} </label>
                     </div>
                     <div className={styles.chatSettingsSeparator}> 
                         <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={"Fünf Stichpunkten"}></SummarizationLengthSelector>

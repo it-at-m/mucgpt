@@ -27,7 +27,9 @@ i18n
                 },
                 sum: {
                     header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
-                    prompt: "Diesen Text zusammenfassen"
+                    prompt: "Diesen Text zusammenfassen",
+                    rolelabel: "Zusammenfassen für",
+                    lengthlabel: "in"
                 },
                 brainstorm: {
                     header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
@@ -38,6 +40,13 @@ i18n
                     settings: "Einstellungen",
                     close: "Schließen",
                     answer_loading: "Erstelle Antwort"
+                },
+                components:{
+                    roles: {
+                        student: "Student*innnen",
+                        secondgrader: "Grundschüler*innen",
+                        retired: "Rentner*innen"
+                    }
                 }
             }
         },
@@ -55,7 +64,9 @@ i18n
                 },
                 sum: {
                     header: "Summarize text or try an example",
-                    prompt: "Summarize this text"
+                    prompt: "Summarize this text",
+                    rolelabel: "Summarize for",
+                    lengthlabel: "in"
                 },
                 brainstorm: {
                     header: "Find ideas for a topic or try an example",
@@ -66,6 +77,13 @@ i18n
                     settings: "Settings",
                     close: "Close",
                     answer_loading: "Generating answer"
+                },
+                components:{
+                    roles: {
+                        student: "University Students",
+                        secondgrader: "Second-Graders",
+                        retired: "Pensioners"
+                    }
                 }
             }
         },
@@ -83,7 +101,9 @@ i18n
                 },
                 sum: {
                     header: "Fassn Text zam oda probier a Beispui",
-                    prompt: "Diesn Text zammfassn"
+                    prompt: "Diesn Text zammfassn",
+                    rolelabel: "Zammfassn für",
+                    lengthlabel: "in"
                 },
                 brainstorm: {
                     header: "Ideen zu dem Thema aufaspuin oda probier a Beispui",
@@ -94,6 +114,13 @@ i18n
                     settings: "Konfiguration",
                     close: "Schließen",
                     answer_loading: "I bearbeit grad de Frog"
+                },
+                components:{
+                    roles: {
+                        student: "Studentn",
+                        secondgrader: "Grundschüla",
+                        retired: "Rentna"
+                    }
                 }
             }
         },    

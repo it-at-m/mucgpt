@@ -5,6 +5,7 @@ import {
     shorthands
   } from "@fluentui/react-components";
   import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
+  import { useTranslation } from 'react-i18next';
   
   const useStyles = makeStyles({
     root: {
@@ -28,10 +29,11 @@ interface Props {
 
 export const RoleSelector =  ({ onSelectionChange, defaultRole }: Props) => {
     const styles = useStyles();
+    const { t} = useTranslation ();
     return (
       <div className={styles.root}>
         <Dropdown  
-          aria-label="Zusammenfassung für diese Personengruppe erstellen" 
+          aria-label={t('sum.rolelabel')}
           root={{style: {backgroundColor: "white", width: "150px", minWidth: "100px"}}}
           listbox={{style: {backgroundColor: "white", width: "150px"}}} 
           defaultValue={defaultRole} 
@@ -39,14 +41,14 @@ export const RoleSelector =  ({ onSelectionChange, defaultRole }: Props) => {
           size="small" 
           positioning="below-end">
 
-          <Option text="Grundschüler" className={styles.option} value="Second-Grader">
-            Grundschüler
+          <Option text={t('components.roles.secondgrader')} className={styles.option} value="Second-Grader">
+            {t('components.roles.secondgrader')}
           </Option>
-          <Option text="Student" value="Unitversity Student" className={styles.option}>
-            Student
+          <Option text={t('components.roles.student')} value="University Student" className={styles.option}>
+            {t('components.roles.student')}
           </Option>
-          <Option text="Rentner"  value="Retired"className={styles.option} >
-          Rentner
+          <Option text= {t('components.roles.retired')}  value="Retired"className={styles.option} >
+            {t('components.roles.retired')}
           </Option>
         </Dropdown>
       </div>

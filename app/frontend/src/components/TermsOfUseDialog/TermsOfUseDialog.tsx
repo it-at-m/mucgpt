@@ -9,19 +9,21 @@ import {
   Button,
 } from "@fluentui/react-components";
 import { Checkmark24Filled } from '@fluentui/react-icons';
+import { useTranslation } from 'react-i18next';
 
 import styles from "./TermsOfUseDialog.module.css";
 
 export const TermsOfUseDialog = () => {
+  const { t} = useTranslation ();
   return (
     <div>
         <Dialog defaultOpen={true}>
         <DialogTrigger disableButtonEnhancement>
-            <Button>Nutzungsbedingungen</Button>
+            <Button>{t('header.nutzungsbedingungen')}</Button>
         </DialogTrigger>
         <DialogSurface className={styles.dialog}>
             <DialogBody  className={styles.dialogContent} >
-            <DialogTitle>Nutzungsbedingungen</DialogTitle>
+            <DialogTitle>{t('header.nutzungsbedingungen')}</DialogTitle>
             <DialogContent>
                 <ul>
                     <li>

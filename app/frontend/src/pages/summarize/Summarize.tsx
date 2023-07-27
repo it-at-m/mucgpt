@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect, useContext } from "react";
-import { Checkbox, Panel, DefaultButton, TextField, SpinButton } from "@fluentui/react";
 import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 
 import styles from "./Summarize.module.css";
@@ -11,10 +10,10 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ExampleListSum } from "../../components/Example/ExampleListSum";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
-import { SettingsButton } from "../../components/SettingsButton";
 import { RoleSelector } from "../../components/RoleSelector";
 import { SummarizationLengthSelector } from "../../components/SummarizationLengthSelector";
 import { useTranslation } from 'react-i18next';
+import { Text } from "@fluentui/react";
 
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
@@ -86,7 +85,6 @@ const Summarize = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                <SettingsButton className={styles.commandButton} onClick={() => setIsConfigPanelOpen(!isConfigPanelOpen)} />
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
@@ -143,23 +141,20 @@ const Summarize = () => {
                         />
                     </div>
                 </div>
-                <Panel
-                    headerText={t('common.settings')}
-                    isOpen={isConfigPanelOpen}
-                    isBlocking={false}
-                    onDismiss={() => setIsConfigPanelOpen(false)}
-                    closeButtonAriaLabel={t('common.close')}
-                    onRenderFooterContent={() => <DefaultButton onClick={() => setIsConfigPanelOpen(false)}>Schließen</DefaultButton>}
-                    isFooterAtBottom={true}
-                >
+                <div className={styles.settingsContainer}>
+                    <div className={styles.label}> 
+                        <label>Zusammenfassen für</label>
+                    </div>
                     <div className={styles.chatSettingsSeparator}> 
                         <RoleSelector onSelectionChange={onRoleChanged} defaultRole={"Grundschüler"}></RoleSelector>
                     </div>
-                    <div className={styles.chatSettingsSeparator}> 
-                        <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={"In maximal 5 Stichpunkten"}></SummarizationLengthSelector>
+                    <div className={styles.label}> 
+                        <label>in </label>
                     </div>
-        
-                </Panel>
+                    <div className={styles.chatSettingsSeparator}> 
+                        <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={"Fünf Stichpunkten"}></SummarizationLengthSelector>
+                    </div>
+                </div>
             </div>
         </div>
     );

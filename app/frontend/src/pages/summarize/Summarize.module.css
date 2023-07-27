@@ -11,11 +11,19 @@
 }
 
 .chatContainer {
-    flex: 1;
+    flex: 15;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+}
+
+.settingsContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    margin-right: 10px;
 }
 
 .chatEmptyState {
@@ -97,8 +105,16 @@
 }
 
 .chatSettingsSeparator {
-    margin-top: 15px;
+    margin-bottom: 10px;
+    max-width: 200px;
 }
+
+.label {
+    margin-bottom: 5px;
+    max-width: 200px;
+    justify-content: left;
+}
+
 
 .loadingLogo {
     font-size: 28px;

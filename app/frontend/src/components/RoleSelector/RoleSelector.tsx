@@ -13,10 +13,10 @@ import {
       gridTemplateRows: "repeat(1fr)",
       justifyItems: "start",
       ...shorthands.gap("2px"),
-      maxWidth: "100px",
+      maxWidth: "150px",
     },
     option: {
-      maxWidth: "100px",
+      maxWidth: "150px",
     }
   });
 
@@ -30,7 +30,15 @@ export const RoleSelector =  ({ onSelectionChange, defaultRole }: Props) => {
     const styles = useStyles();
     return (
       <div className={styles.root}>
-        <Dropdown  aria-label="Zusammenfassung für diese Personengruppe erstellen" listbox={{style: {backgroundColor: "white", width: "245px"}}} defaultValue={defaultRole} onOptionSelect={onSelectionChange} size="small" positioning="below-end">
+        <Dropdown  
+          aria-label="Zusammenfassung für diese Personengruppe erstellen" 
+          root={{style: {backgroundColor: "white", width: "150px", minWidth: "100px"}}}
+          listbox={{style: {backgroundColor: "white", width: "150px"}}} 
+          defaultValue={defaultRole} 
+          onOptionSelect={onSelectionChange} 
+          size="small" 
+          positioning="below-end">
+
           <Option text="Grundschüler" className={styles.option} value="Second-Grader">
             Grundschüler
           </Option>

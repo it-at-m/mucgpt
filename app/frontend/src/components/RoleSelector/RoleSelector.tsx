@@ -34,8 +34,8 @@ export const RoleSelector =  ({ onSelectionChange, defaultRole }: Props) => {
       <div className={styles.root}>
         <Dropdown  
           aria-label={t('sum.rolelabel')}
-          root={{style: {backgroundColor: "white", width: "150px", minWidth: "100px"}}}
-          listbox={{style: {backgroundColor: "white", width: "150px"}}} 
+          root={{style: {backgroundColor: "#f2f2f2", width: "150px", borderWidth: "1px", minWidth: "auto"}}}
+          listbox={{style: {backgroundColor: "#f2f2f2", width: "150px"}}} 
           defaultValue={defaultRole} 
           onOptionSelect={onSelectionChange} 
           size="small" 

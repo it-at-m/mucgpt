@@ -23,24 +23,22 @@ const Layout = () => {
     return (
         <div className={styles.layout}>
                 <header className={styles.header} role={"banner"}>
-                    <div className={styles.headerContainer}>
-                    <SparkleFilled fontSize={"60px"} primaryFill={"rgba(255, 204, 0, 1)"} aria-hidden="true" aria-label="Chat logo" />
-                        
-                        <Link to="/" className={styles.headerTitleContainer}>
-                            <h2 className={styles.headerTitle}>MUCGPT</h2>
-                        </Link>
-                        <nav>
-                            <ul className={styles.headerNavList}>
-                                <li>
+                            <div className={styles.headerNavList}>
+                                
+                                <SparkleFilled fontSize={"60px"} primaryFill={"rgba(255, 204, 0, 1)"} aria-hidden="true" aria-label="Chat logo" />
+                                <Link to="/" className={styles.headerTitleContainer}>
+                                    <h2 className={styles.headerTitle}>MUCGPT</h2>
+                                </Link>
+                                <div className={styles.headerNavLeftMargin}>
                                     <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     {t('header.chat')}
                                     </NavLink>
-                                </li>
-                                <li className={styles.headerNavLeftMargin}>
+                                </div>
+                                <div className={styles.headerNavLeftMargin}>
                                     <NavLink to="/sum"   state={{from: "This is my props"}} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     {t('header.sum')}
                                     </NavLink>
-                                </li>
+                                </div>
 {/*                                 <li className={styles.headerNavLeftMargin}>
                                     <NavLink to="/explain" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                         Erklären
@@ -51,24 +49,29 @@ const Layout = () => {
                                         Programmieren
                                     </NavLink>
                                 </li> */}
-                                <li className={styles.headerNavLeftMargin}>
+                                <div className={styles.headerNavLeftMargin}>
                                     <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     {t('header.brainstorm')}
                                     </NavLink>
-                                </li>
-                            </ul>
-                        </nav>
-                        <div className={styles.headerNavRightMargin}><LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector></div>
-                    </div>
+                                </div>
+                                
+                                <div className={styles.spacer}>
+
+                                </div>
+                                <div className={styles.headerNavRightMargin}><LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
+                                </div>
+                            </div>
                 </header>
             <Outlet />
   
             <footer className={styles.footer} role={"banner"}>
-                <div>
+                <div className={styles.headerNavLeftMargin}>
                     Landeshauptstadt München <br/>
                     RIT/IT@M Innovationlab<br/>
                 </div>
-                <TermsOfUseDialog></TermsOfUseDialog>
+                <div className={styles.headerNavRightMargin}>
+                    <TermsOfUseDialog ></TermsOfUseDialog>
+                </div>
             </footer>
         </div>
     );

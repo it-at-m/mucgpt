@@ -34,8 +34,8 @@ export const SummarizationLengthSelector =  ({ onSelectionChange, defaultLength 
       <div className={styles.root}>
         <Dropdown 
           aria-label="Die Zusammenfassung soll folgende Länge aufweisen" 
-          root={{style: {backgroundColor: "white", width: "150px", minWidth: "100px"}}} 
-          listbox={{style: {backgroundColor: "white", width: "150px"}}}
+          root={{style: {backgroundColor: "#f2f2f2", width: "150px", borderWidth: "1px", minWidth: "auto"}}}
+          listbox={{style: {backgroundColor: "#f2f2f2", width: "150px"}}}
           defaultValue={defaultLength} 
           onOptionSelect={onSelectionChange} 
           size="small" 

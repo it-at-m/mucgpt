@@ -9,12 +9,17 @@
     color: #f2f2f2;
 }
 
+.spacer {
+    flex-grow: 1;
+}
+
 .footer {
     background-color: #212529;
     color: #f2f2f2;
     justify-content: space-between;
     flex-direction: row;
     display: flex;
+    flex-wrap: wrap;
 }
 
 .linklight{
@@ -50,6 +55,9 @@
     display: flex;
     list-style: none;
     padding-left: 0;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-items: start;
 }
 
 .headerNavPageLink {
@@ -76,7 +84,8 @@
 }
 
 .headerNavRightMargin {
-    margin-right: 150px;
+    margin-right:20px;
+    margin-left: 20px;
 }
 
 .headerRightText {

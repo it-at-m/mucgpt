@@ -10,14 +10,10 @@ import {
   const useStyles = makeStyles({
     root: {
       // Stack the label above the field with a gap
-      display: "grid",
-      gridTemplateRows: "repeat(1fr)",
-      justifyItems: "start",
-      ...shorthands.gap("2px"),
-      maxWidth: "100px"
+
     },
     option: {
-      maxWidth: "100px",
+      maxWidth: "50px"
     }
   });
 
@@ -31,7 +27,13 @@ export const LanguageSelector =  ({ onSelectionChange, defaultlang }: Props) => 
     const styles = useStyles();
     return (
       <div className={styles.root}>
-        <Dropdown  aria-label="Sprache auswählen" defaultValue={defaultlang} onOptionSelect={onSelectionChange} size="small" positioning="below-end"  listbox={{style: {backgroundColor: "white", width: "245px"}}}>
+        <Dropdown 
+          aria-label="Sprache auswählen" 
+          defaultValue={defaultlang}
+          onOptionSelect={onSelectionChange}
+          size="small" positioning="below-start" 
+          listbox={{style: {backgroundColor: "#f2f2f2", maxWidth: "auto"} }}
+          root={{style: {borderWidth: "0px", minWidth: "auto"} }}>
           <Option text="Deutsch" className={styles.option}>
             Deutsch
           </Option>

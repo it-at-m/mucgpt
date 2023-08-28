@@ -1,7 +1,13 @@
 .dialog{
     background-color: white;
     padding: 0 !important; 
-    min-width: 800px;
+    min-width: 700px;
+}
+
+@media (max-width: 650px) {
+    .dialog {
+        min-width: 400px;
+    }
 }
 
 .dialogContent{

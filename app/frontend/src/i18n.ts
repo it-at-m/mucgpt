@@ -54,6 +54,9 @@ i18n
                     },
                     answererror: {
                         retry: "Wiederholen"
+                    },
+                    answer: {
+                        regenerate: "Antwort regenerieren"
                     }
                 }
             }
@@ -99,6 +102,9 @@ i18n
                     },
                     answererror: {
                         retry: "Retry"
+                    },
+                    answer: {
+                        regenerate: "Regenerate response"
                     }
                 }
             }
@@ -144,6 +150,9 @@ i18n
                     },
                     answererror: {
                         retry: "No amoi probiern"
+                    },
+                    answer: {
+                        regenerate: "No amoi probiern"
                     }
                 }
             }

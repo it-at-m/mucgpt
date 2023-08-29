@@ -137,17 +137,21 @@ const Summarize = () => {
                     </div>
                 </div>
                 <div className={styles.settingsContainer}>
-                    <div className={styles.label}> 
-                        <label>{t('sum.rolelabel')}</label>
+                    <div>
+                        <div className={styles.label}> 
+                            <label>{t('sum.rolelabel')}</label>
+                        </div>
+                        <div className={styles.chatSettingsSeparator}> 
+                            <RoleSelector onSelectionChange={onRoleChanged} defaultRole={t('components.roles.secondgrader')}></RoleSelector>
+                        </div>
                     </div>
-                    <div className={styles.chatSettingsSeparator}> 
-                        <RoleSelector onSelectionChange={onRoleChanged} defaultRole={t('components.roles.secondgrader')}></RoleSelector>
-                    </div>
-                    <div className={styles.label}> 
-                        <label>{t('sum.lengthlabel')} </label>
-                    </div>
-                    <div className={styles.chatSettingsSeparator}> 
-                        <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={t('components.sumlength.bullets')}></SummarizationLengthSelector>
+                    <div>
+                        <div className={styles.label}> 
+                            <label>{t('sum.lengthlabel')} </label>
+                        </div>
+                        <div className={styles.chatSettingsSeparator}> 
+                            <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={t('components.sumlength.bullets')}></SummarizationLengthSelector>
+                        </div>
                     </div>
                 </div>
             </div>

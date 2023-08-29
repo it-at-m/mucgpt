@@ -19,7 +19,7 @@ const Chat = () => {
     
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
-    const lastQuestionRef = useRef<string>("");
+    const lastQuestionRef = useRef<string>("Antwort");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -71,6 +71,16 @@ const Chat = () => {
         setAnswers([]);
     };
 
+    const onRegeneratResponseClicked = () => {
+        if(answers.length > 0 )
+        {
+            let last = answers.pop();
+            setAnswers(answers);
+            if(last)
+                makeApiRequest(last[0])
+        }
+    }
+
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
 
@@ -117,13 +127,23 @@ const Chat = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                        <Answer
+                                        {index === answers.length -1 && <Answer
+                                            key={index}
+                                            answer={answer[1]}
+                                            isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
+                                            onCitationClicked={c => onShowCitation(c, index)}
+                                            onFollowupQuestionClicked={q => makeApiRequest(q)}
+                                            onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                           />
+                                        }
+                                        {index !== answers.length -1 && <Answer
                                             key={index}
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
                                             onFollowupQuestionClicked={q => makeApiRequest(q)}
                                            />
+                                        }
                                     </div>
                                 </div>
                             ))}

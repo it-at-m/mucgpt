@@ -15,6 +15,7 @@ interface Props {
     onThoughtProcessClicked?: () => void;
     onSupportingContentClicked?: () => void;
     onFollowupQuestionClicked?: (question: string) => void;
+    onRegenerateResponseClicked?: () => void;
     showFollowupQuestions?: boolean;
 }
 
@@ -25,6 +26,7 @@ export const Answer = ({
     onThoughtProcessClicked,
     onSupportingContentClicked,
     onFollowupQuestionClicked,
+    onRegenerateResponseClicked, 
     showFollowupQuestions
 }: Props) => {
     const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer, onCitationClicked), [answer]);
@@ -56,6 +58,15 @@ export const Answer = ({
                                 onClick={() => onSupportingContentClicked()}
                                 disabled={!answer.data_points.length}
                             />
+                        }
+                        {onRegenerateResponseClicked &&
+                            <IconButton
+                                    style={{ color: "black"}}
+                                    iconProps={{ iconName: "Sync" }}
+                                    title="Antwort regenerieren"
+                                    ariaLabel="Antwort regenerieren"
+                                    onClick={() => onRegenerateResponseClicked()}
+                                />
                         }
                     </div>
                 </Stack>

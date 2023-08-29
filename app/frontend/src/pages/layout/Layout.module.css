@@ -98,6 +98,8 @@
     font-weight: 600;
 }
 
-.githubLogo {
-    height: 20px;
+.logo {
+    height: 60px;
+    padding: 3px;
+    margin-left: 1em;
 }

@@ -2,9 +2,9 @@ import { Outlet, NavLink, Link } from "react-router-dom";
 
 
 import styles from "./Layout.module.css";
-import { SparkleFilled } from "@fluentui/react-icons";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { useContext } from "react";
+import logo from "../../assets/mucgpt_logo.png";
 
 import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
@@ -25,10 +25,16 @@ const Layout = () => {
                 <header className={styles.header} role={"banner"}>
                             <div className={styles.headerNavList}>
                                 
-                                <SparkleFilled fontSize={"60px"} primaryFill={"rgba(255, 204, 0, 1)"} aria-hidden="true" aria-label="Chat logo" />
                                 <Link to="/" className={styles.headerTitleContainer}>
+                                    <img
+                                            src={logo}
+                                            alt="MUCGPT logo"
+                                            aria-label="Link to github repository"
+                                            className={styles.logo}
+                                        />
                                     <h2 className={styles.headerTitle}>MUCGPT</h2>
                                 </Link>
+                                
                                 <div className={styles.headerNavLeftMargin}>
                                     <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     {t('header.chat')}

@@ -7,6 +7,7 @@ import styles from "./Answer.module.css";
 import { AskResponse, getCitationFilePath } from "../../api";
 import { parseAnswerToHtml } from "./AnswerParser";
 import { AnswerIcon } from "./AnswerIcon";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     answer: AskResponse;
@@ -30,6 +31,8 @@ export const Answer = ({
     showFollowupQuestions
 }: Props) => {
     const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer, onCitationClicked), [answer]);
+    
+    const { t} = useTranslation ();
 
     const sanitizedAnswerHtml = DOMPurify.sanitize(parsedAnswer.answerHtml);
 
@@ -63,8 +66,8 @@ export const Answer = ({
                             <IconButton
                                     style={{ color: "black"}}
                                     iconProps={{ iconName: "Sync" }}
-                                    title="Antwort regenerieren"
-                                    ariaLabel="Antwort regenerieren"
+                                    title={t('components.answer.regenerate')}
+                                    ariaLabel={t('components.answer.regenerate')}
                                     onClick={() => onRegenerateResponseClicked()}
                                 />
                         }

@@ -51,6 +51,9 @@ i18n
                         sentences: "Zwei Sätzen",
                         bullets: "Fünf Stichpunkten",
                         quarter: "1/4 der Länge"
+                    },
+                    answererror: {
+                        retry: "Wiederholen"
                     }
                 }
             }
@@ -93,6 +96,9 @@ i18n
                         sentences: "Two sentences",
                         bullets: "Five bullet points",
                         quarter: "1/4 of the length"
+                    },
+                    answererror: {
+                        retry: "Retry"
                     }
                 }
             }
@@ -135,6 +141,9 @@ i18n
                         sentences: "Zwoa Sätzen",
                         bullets: "Fünf Stichpunkten",
                         quarter: "Viertl vo da Läng"
+                    },
+                    answererror: {
+                        retry: "No amoi probiern"
                     }
                 }
             }

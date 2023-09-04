@@ -57,6 +57,12 @@ i18n
                     },
                     answer: {
                         regenerate: "Antwort regenerieren"
+                    },
+                    mindmap: {
+                        download: "Herunterladen",
+                        reset: "Ansicht zurücksetzen",
+                        source: "Datenansicht",
+                        mindmap: "Mindmapansicht"
                     }
                 }
             }
@@ -105,6 +111,12 @@ i18n
                     },
                     answer: {
                         regenerate: "Regenerate response"
+                    },
+                    mindmap: {
+                        download: "Download",
+                        reset: "Reset view",
+                        source: "Source view",
+                        mindmap: "Mindmap view"
                     }
                 }
             }
@@ -153,6 +165,12 @@ i18n
                     },
                     answer: {
                         regenerate: "No amoi probiern"
+                    },
+                    mindmap: {
+                        download: "Obalada",
+                        reset: "Oisicht zrucksetzn",
+                        source: "Datenoisicht",
+                        mindmap: "Mindmapoisicht"
                     }
                 }
             }

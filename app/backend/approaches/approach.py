@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Dict, Any
 
 
 class Approach:
-    def run(self, q: str, overrides: dict[str, Any]) -> Any:
+    def run(self, q: str, overrides: Dict[str, Any]) -> Any:
         raise NotImplementedError

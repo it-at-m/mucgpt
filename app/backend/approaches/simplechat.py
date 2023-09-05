@@ -28,7 +28,7 @@ class SimpleChatApproach(Approach):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
 
-    def run(self, history: Sequence[dict[str, str]], overrides: dict[str, Any]) -> Any:
+    def run(self, history: "Sequence[dict[str, str]]", overrides: "dict[str, Any]") -> Any:
         prompt_override  =  history[-1]["user"]
         language = overrides.get("language")
         follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
@@ -50,7 +50,7 @@ class SimpleChatApproach(Approach):
 
         return {"data_points": [], "answer": chat_content, "thoughts": f"Searched for:<br>{prompt_override}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
     
-    def get_chat_history_as_text(self, history: Sequence[dict[str, str]], include_last_turn: bool=True, approx_max_tokens: int=1000) -> str:
+    def get_chat_history_as_text(self, history: "Sequence[dict[str, str]]", include_last_turn: bool=True, approx_max_tokens: int=1000) -> str:
         history_text = ""
         for h in reversed(history if include_last_turn else history[:-1]):
             history_text = """<|im_start|>user""" + "\n" + h["user"] + "\n" + """<|im_end|>""" + "\n" + """<|im_start|>assistant""" + "\n" + (h.get("bot", "") + """<|im_end|>""" if h.get("bot") else "") + "\n" + history_text
@@ -58,7 +58,7 @@ class SimpleChatApproach(Approach):
                 break    
         return history_text
     
-    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: Sequence[dict[str, str]], language: str, approx_max_tokens: int = 1000) -> []:
+    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: "Sequence[dict[str, str]]", language: str, approx_max_tokens: int = 1000) -> []:
         '''
         Generate messages needed for chat Completion api
         '''
@@ -96,7 +96,7 @@ class SimpleChatApproach(Approach):
                 break
         return messages
     
-    def num_tokens_from_messages(self, message: dict[str,str], model: str) -> int:
+    def num_tokens_from_messages(self, message: "dict[str,str]", model: str) -> int:
         """
         Calculate the number of tokens required to encode a message.
         Args:

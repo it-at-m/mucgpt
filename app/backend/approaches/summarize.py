@@ -27,7 +27,7 @@ class Summarize(Approach):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
 
-    def run(self, text: str, overrides: dict[str, Any]) -> Any:
+    def run(self, text: str, overrides: "dict[str, Any]") -> Any:
         person_type = overrides.get("person_type")
         language = overrides.get("language")
         sumlength = overrides.get("sumlength")

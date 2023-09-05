@@ -1,13 +1,18 @@
 from typing import Any
+from langchain import LLMChain
 
 import openai
+from langchain.chat_models import AzureChatOpenAI
+from langchain.prompts.chat import (
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+)
+from langchain.chains import SequentialChain
+
 from approaches.approach import Approach
 
 class Brainstorm(Approach):
-    # Chat roles
-    SYSTEM = "system"
-    USER = "user"
-
     """
     Simple brainstorm implementation. One shot generation of certain markdown files
     """
@@ -46,56 +51,52 @@ class Brainstorm(Approach):
 
     – Subtopic 3"""
 
-    system_translate_prompt = """Agiere als {language}-Übersetzer, du übersetzt kommentarlos jede Eingabe. Verstanden?"""
+    system_translate_prompt = """Agiere als Übersetzer, du übersetzt kommentarlos jeden Text in die Sprache {language}. Verstanden?"""
     user_translate_prompt = """
     Übersetze den folgenden Text in {language}.
-    Text: {text}"""
+
+    Text: 
+    {brainstorm}"""
 
     def __init__(self, chatgpt_deployment: str, chatgpt_model: str):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
+    
+    def getBrainstormPrompt(self) -> ChatPromptTemplate:
+        system_message_prompt = SystemMessagePromptTemplate.from_template(self.system_sum_prompt)
+        human_message_prompt = HumanMessagePromptTemplate.from_template(input_variables=["topic"], template=self.user_mindmap_prompt)
+        return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
 
-    def run(self, topic: str, overrides: dict[str, Any]) -> Any:
+    def getTranslationPrompt(self) -> ChatPromptTemplate:
+        system_message_prompt = SystemMessagePromptTemplate.from_template(input_variables=["language"], template= self.system_translate_prompt)
+        human_message_prompt = HumanMessagePromptTemplate.from_template(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
+        return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+
+
+    def run(self, topic: str, overrides: "dict[str, Any]") -> Any:
         language = overrides.get("language")
-
-        # STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        chat_completion_sum = openai.ChatCompletion.create(
-            deployment_id=self.chatgpt_deployment,
+        verbose = True
+        llm = AzureChatOpenAI(
             model=self.chatgpt_model,
-            messages= [
-                {
-                "role": self.SYSTEM,
-                "content": self.system_sum_prompt.format()
-                },
-                {
-                "role": self.USER,
-                "content": self.user_mindmap_prompt.format(topic=topic)
-                },
-            ], 
-            temperature=overrides.get("temperature") or 0.7, 
-            max_tokens=1024, 
-            n=1)
-        
-        chat_sum_result = chat_completion_sum.choices[0].message.content
+            temperature=overrides.get("temperature") or 0.7,
+            max_tokens=1024,
+            n=1,
+            deployment_name= self.chatgpt_deployment,
+            openai_api_key=openai.api_key,
+            openai_api_base=openai.api_base,
+            openai_api_version=openai.api_version,
+            openai_api_type=openai.api_type
+        )
+        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm", verbose=verbose)
+        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation", verbose=verbose)
+        overall_chain = SequentialChain(
+            chains=[brainstormChain, translationChain], 
+            input_variables=["language", "topic"],
+            output_variables=["brainstorm","translation"],
+            verbose=verbose)
 
-        chat_completion_translate = openai.ChatCompletion.create(
-            deployment_id=self.chatgpt_deployment,
-            model=self.chatgpt_model,
-            messages= [
-                {
-                "role": self.SYSTEM,
-                "content": self.system_translate_prompt.format(language=language)
-                },
-                {
-                "role": self.USER,
-                "content": self.user_translate_prompt.format(language=str(language).lower(), text = chat_sum_result)
-                },
-            ], 
-            temperature=overrides.get("temperature") or 0.7, 
-            max_tokens=1024, 
-            n=1)
-
-        chat_translate_result = chat_completion_translate.choices[0].message.content
+        result = overall_chain({"topic": topic, "language": language})
+        chat_translate_result = result['translation']     
         #Falls Erklärungen um das Markdown außen rum existieren.
         if("```" in str(chat_translate_result)):
             splitted = str(chat_translate_result).split("```")

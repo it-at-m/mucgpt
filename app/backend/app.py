@@ -1,6 +1,4 @@
 import os
-import io
-import mimetypes
 import time
 import logging
 
@@ -8,11 +6,7 @@ import openai
 from flask import Flask, request, jsonify, send_file, abort
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
-from approaches.retrievethenread import RetrieveThenReadApproach
-from approaches.readretrieveread import ReadRetrieveReadApproach
-from approaches.readdecomposeask import ReadDecomposeAsk
 from approaches.summarize import Summarize
-from approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from approaches.simplechat import SimpleChatApproach
 from approaches.brainstorm import Brainstorm
 from azure.storage.blob import BlobServiceClient
@@ -60,14 +54,10 @@ blob_container = blob_client.get_container_client(AZURE_STORAGE_CONTAINER)
 # Various approaches to integrate GPT and external knowledge, most applications will use a single one of these patterns
 # or some derivative, here we include several for exploration purposes
 ask_approaches = {
-    "rtr": RetrieveThenReadApproach(search_client, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "rrr": ReadRetrieveReadApproach(search_client, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "rda": ReadDecomposeAsk(search_client, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT)
 }
 
 chat_approaches = {
-    "rrr": ChatReadRetrieveReadApproach(search_client, AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_SOURCEPAGE, KB_FIELDS_CONTENT),
-    "chat": SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+     "chat": SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
 }
 
 summarize_approaches = {
@@ -85,37 +75,6 @@ app = Flask(__name__)
 def static_file(path):
     return app.send_static_file(path)
 
-# Serve content files from blob storage from within the app to keep the example self-contained. 
-# *** NOTE *** this assumes that the content files are public, or at least that all users of the app
-# can access all the files. This is also slow and memory hungry.
-@app.route("/content/<path>")
-def content_file(path):
-    blob = blob_container.get_blob_client(path).download_blob()
-    if not blob.properties or not blob.properties.has_key("content_settings"):
-        abort(404)
-    mime_type = blob.properties["content_settings"]["content_type"]
-    if mime_type == "application/octet-stream":
-        mime_type = mimetypes.guess_type(path)[0] or "application/octet-stream"
-    blob_file = io.BytesIO()
-    blob.readinto(blob_file)
-    blob_file.seek(0)
-    return send_file(blob_file, mimetype=mime_type, as_attachment=False, download_name=path)
-    
-@app.route("/ask", methods=["POST"])
-def ask():
-    ensure_openai_token()
-    if not request.json:
-        return jsonify({"error": "request must be json"}), 400
-    approach = request.json["approach"]
-    try:
-        impl = ask_approaches.get(approach)
-        if not impl:
-            return jsonify({"error": "unknown approach"}), 400
-        r = impl.run(request.json["question"], request.json.get("overrides") or {})
-        return jsonify(r)
-    except Exception as e:
-        logging.exception("Exception in /ask")
-        return jsonify({"error": str(e)}), 500
     
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -159,10 +118,13 @@ def brainstorm():
         impl = brainstorm_approaches.get(approach)
         if not impl:
             return jsonify({"error": "unknown approach"}), 400
-        r = impl.run(request.json["topic"], request.json.get("overrides") or {})
+        r = impl.run(
+            request.json["topic"],
+            request.json.get("overrides") or {}
+            )
         return jsonify(r)
     except Exception as e:
-        logging.exception("Exception in /sum")
+        logging.exception("Exception in /brainstorm")
         return jsonify({"error": str(e)}), 500
 
 def ensure_openai_token():

@@ -16,7 +16,19 @@ const EXAMPLES: ExampleModel[] = [
         text: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut?",
         value: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut"
     },
-    { text: "Wie funktioniert ein Sprachmodell? Beantworte diese Frage so, dass sie auch ein Grundschüler versteht.", value: "Wie funktioniert ein Sprachmodell? Beantworte diese Frage so, dass sie auch ein Grundschüler versteht." }
+    { text:  "Du bist ein Zauberer aus Harry Potter...",
+         value: `
+    Du bist ein Zauberer aus Harry Potter. Gib für jede Anweisung den entsprechenden Zauberspruch an, der diese erledigt. Beschreibe genau was der Zauberspruch macht:
+    Hier sind einige Beispiele:
+    
+    Anweisung: Dinge anheben 
+    Zauberspruch: Leviosa 
+
+    Anweisung:Verwandlung in einen Gegenstand 
+    Zauberspruch: Duro 
+
+    Anweisung: Pflanzen zu düngen 
+    Zauberspruch: ` }
 ];
 
 interface Props {

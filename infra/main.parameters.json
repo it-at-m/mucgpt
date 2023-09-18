@@ -5,6 +5,9 @@
     "environmentName": {
       "value": "${AZURE_ENV_NAME}"
     },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP}"
+    },
     "location": {
       "value": "${AZURE_LOCATION}"
     },
@@ -29,6 +32,9 @@
     "formRecognizerSkuName": {
       "value": "F0"
     },
+    "searchIndexName": {
+      "value": "${AZURE_SEARCH_INDEX=gptkbindex}"
+    },
     "searchServiceName": {
       "value": "${AZURE_SEARCH_SERVICE}"
     },
@@ -36,7 +42,7 @@
       "value": "${AZURE_SEARCH_SERVICE_RESOURCE_GROUP}"
     },
     "searchServiceSkuName": {
-      "value": "basis"
+      "value": "basic"
     },
     "storageAccountName": {
       "value": "${AZURE_STORAGE_ACCOUNT}"
@@ -47,8 +53,8 @@
     "chatGptDeploymentName": {
       "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
     },
-    "gptDeploymentName": {
-      "value": "${AZURE_OPENAI_GPT_DEPLOYMENT=davinci}"
+    "useApplicationInsights": {
+      "value": "${AZURE_USE_APPLICATION_INSIGHTS=false}"
     }
   }
 }

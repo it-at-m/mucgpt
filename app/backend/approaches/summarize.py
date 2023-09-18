@@ -41,7 +41,7 @@ class Summarize(Approach):
         return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
 
 
-    def run(self, text: str, overrides: "dict[str, Any]") -> Any:
+    async def run(self, text: str, overrides: "dict[str, Any]") -> Any:
         person_type = overrides.get("person_type")
         language = overrides.get("language")
         sumlength = overrides.get("sumlength")
@@ -66,7 +66,7 @@ class Summarize(Approach):
             output_variables=["translation", "sum"],
             verbose=verbose)
 
-        result = overall_chain({"text": text, "language": str(language).lower(), "sumlength": sumlength, "person_type": person_type})
+        result =  await overall_chain.acall({"text": text, "language": str(language).lower(), "sumlength": sumlength, "person_type": person_type})
         chat_translate_result = result['translation']     
 
         return {"data_points": [], "answer": chat_translate_result, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}

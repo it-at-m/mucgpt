@@ -73,7 +73,7 @@ class Brainstorm(Approach):
         return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
 
 
-    def run(self, topic: str, overrides: "dict[str, Any]") -> Any:
+    async def run(self, topic: str, overrides: "dict[str, Any]") -> Any:
         language = overrides.get("language")
         verbose = True
         llm = AzureChatOpenAI(
@@ -95,7 +95,7 @@ class Brainstorm(Approach):
             output_variables=["brainstorm","translation"],
             verbose=verbose)
 
-        result = overall_chain({"topic": topic, "language": language})
+        result = await overall_chain.acall({"topic": topic, "language": language})
         chat_translate_result = result['translation']     
         #Falls Erklärungen um das Markdown außen rum existieren.
         if("```" in str(chat_translate_result)):

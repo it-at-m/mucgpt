@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect, useContext } from "react";
+import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
+import { chatApi, RetrievalMode, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -16,7 +17,7 @@ const Chat = () => {
     
     const {language} = useContext(LanguageContext)
     const { t} = useTranslation ();
-    
+    const [shouldStream, setShouldStream] = useState<boolean>(true);
     const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
@@ -44,6 +45,7 @@ const Chat = () => {
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
                 approach: Approaches.Chat,
+                shouldStream: shouldStream,
                 overrides: {
                     promptTemplate: undefined,
                     excludeCategory: undefined,
@@ -54,8 +56,31 @@ const Chat = () => {
                     language: language
                 }
             };
-            const result = await chatApi(request);
-            setAnswers([...answers, [question, result]]);
+
+            const response = await chatApi(request);
+            if (!response.body) {
+                throw Error("No response body");
+            }
+            if (shouldStream) {
+                let answer: string = '';
+                let askResponse: AskResponse = {} as AskResponse;
+                for await (const event of readNDJSONStream(response.body)) {
+                    if (event["data_points"]) {
+                        askResponse = event;
+                    } else if (event["choices"] && event["choices"][0]["delta"]["content"]) {
+                        answer += event["choices"][0]["delta"]["content"];
+                        let latestResponse: AskResponse = {...askResponse, answer: answer};
+                        setIsLoading(false);
+                        setAnswers([...answers, [question, latestResponse]]);
+                    }
+                }
+            } else {
+                const parsedResponse: AskResponse = await response.json();
+                if (response.status > 299 || !response.ok) {
+                    throw Error(parsedResponse.error || "Unknown error");
+                }
+                setAnswers([...answers, [question, parsedResponse]]);
+            }
         } catch (e) {
             setError(e);
         } finally {

@@ -1,124 +1,80 @@
-from typing import Any, Sequence
+from typing import Any, AsyncGenerator, Sequence
 
 import openai
-import tiktoken
-from approaches.approach import Approach
-from text import nonewlines
+from core.modelhelper import get_token_limit
+from core.messagebuilder import MessageBuilder
 
-class SimpleChatApproach(Approach):
-    # Chat roles
+class SimpleChatApproach():
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
-
-    """
-    Simple assistant approach. Only uses trained information and message history.
-    """
-    system_message_chat_conversation = """
-{follow_up_questions_prompt}
-{injected_prompt}
-"""
-    follow_up_questions_prompt_content = """Generate three very brief follow-up questions that the user would likely ask next based on its previous message history. 
-    Use double angle brackets to reference the questions, e.g. <<Are there exclusions for prescriptions?>>.
-    Try not to repeat questions that have already been asked.
-    Only generate questions and do not generate any text before or after the questions, such as 'Next Questions'"""
 
 
     def __init__(self, chatgpt_deployment: str, chatgpt_model: str):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
+        
+        self.chatgpt_token_limit = get_token_limit(chatgpt_model)
 
-    def run(self, history: "Sequence[dict[str, str]]", overrides: "dict[str, Any]") -> Any:
-        prompt_override  =  history[-1]["user"]
+    async def run_until_final_call(self, history: "Sequence[dict[str, str]]", overrides: "dict[str, Any]", should_stream: bool = False) -> Any:
         language = overrides.get("language")
-        follow_up_questions_prompt = self.follow_up_questions_prompt_content if overrides.get("suggest_followup_questions") else ""
-        
-        messages = self.get_messages_from_history(prompt_override=prompt_override, follow_up_questions_prompt=follow_up_questions_prompt,history=history, language=language)
+        user_q =   history[-1]["user"]
 
-        # STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        chat_completion = openai.ChatCompletion.create(
-            deployment_id=self.chatgpt_deployment,
-            model=self.chatgpt_model,
-            messages=messages, 
-            temperature=overrides.get("temperature") or 0.7, 
-            max_tokens=1024, 
-            n=1)
         
-        chat_content = chat_completion.choices[0].message.content
-
+        messages = self.get_messages_from_history(
+            "",
+            self.chatgpt_model,
+            history,
+            user_q,
+            [],
+            self.chatgpt_token_limit - len(user_q)
+        )
         msg_to_display = '\n\n'.join([str(message) for message in messages])
 
-        return {"data_points": [], "answer": chat_content, "thoughts": f"Searched for:<br>{prompt_override}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
+        extra_info = {"data_points": [], "thoughts": f"Searched for:<br>{user_q}<br><br>Conversations:<br>" + msg_to_display.replace('\n', '<br>')}
+        chat_coroutine = openai.ChatCompletion.acreate(
+                deployment_id=self.chatgpt_deployment,
+                model=self.chatgpt_model,
+                messages=messages,
+                temperature=overrides.get("temperature") or 0.7,
+                max_tokens=1024,
+                n=1,
+                stream=should_stream)
+        return (extra_info, chat_coroutine)
     
-    def get_chat_history_as_text(self, history: "Sequence[dict[str, str]]", include_last_turn: bool=True, approx_max_tokens: int=1000) -> str:
-        history_text = ""
-        for h in reversed(history if include_last_turn else history[:-1]):
-            history_text = """<|im_start|>user""" + "\n" + h["user"] + "\n" + """<|im_end|>""" + "\n" + """<|im_start|>assistant""" + "\n" + (h.get("bot", "") + """<|im_end|>""" if h.get("bot") else "") + "\n" + history_text
-            if len(history_text) > approx_max_tokens*4:
-                break    
-        return history_text
+    async def run_without_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]') -> 'dict[str, Any]':
+        extra_info, chat_coroutine = await self.run_until_final_call(history, overrides, should_stream=False)
+        chat_content = (await chat_coroutine).choices[0].message.content
+        extra_info["answer"] = chat_content
+        return extra_info
+
+    async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]') -> AsyncGenerator[dict, None]:
+        extra_info, chat_coroutine = await self.run_until_final_call(history, overrides, should_stream=True)
+        yield extra_info
+        async for event in await chat_coroutine:
+            yield event
+
     
-    def get_messages_from_history(self, prompt_override, follow_up_questions_prompt, history: "Sequence[dict[str, str]]", language: str, approx_max_tokens: int = 1000) -> []:
-        '''
-        Generate messages needed for chat Completion api
-        '''
-        messages = []
-        token_count = 0
-        if prompt_override is None:
-            system_message = self.system_message_chat_conversation.format(injected_prompt="", follow_up_questions_prompt=follow_up_questions_prompt)
-        elif prompt_override.startswith(">>>"):
-            system_message = self.system_message_chat_conversation.format(injected_prompt=prompt_override[3:] + "\n", follow_up_questions_prompt=follow_up_questions_prompt)
-        else:
-            system_message = prompt_override.format(follow_up_questions_prompt=follow_up_questions_prompt)
 
-        messages.append({"role":self.SYSTEM, "content": system_message})
-        token_count += self.num_tokens_from_messages(messages[-1], self.chatgpt_model)
-        
-        # latest conversation
-        user_content = history[-1]["user"]
-        messages.append({"role": self.USER, "content": user_content})
-        token_count += token_count + self.num_tokens_from_messages(messages[-1], self.chatgpt_model)
+    def get_messages_from_history(self, system_prompt: str, model_id: str, history: 'list[dict[str, str]]', user_conv: 'str', few_shots = [], max_tokens: int = 4096) -> list:
+        message_builder = MessageBuilder(system_prompt, model_id)
 
-        '''
-        Enqueue in reverse order
-        if limit exceeds truncate old messages 
-        leaving system message behind
-        Keep track of token count for each conversation
-        If token count exceeds limit, break
-        '''
+        # Add examples to show the chat what responses we want. It will try to mimic any responses and make sure they match the rules laid out in the system message.
+        for shot in few_shots:
+            message_builder.append_message(shot.get('role'), shot.get('content'))
+
+        user_content = user_conv
+        append_index = len(few_shots) + 1
+
+        message_builder.append_message(self.USER, user_content, index=append_index)
+
         for h in reversed(history[:-1]):
-            if h.get("bot"):
-                messages.insert(1, {"role": self.ASSISTANT, "content" : h.get("bot")})
-                token_count += self.num_tokens_from_messages(messages[1], self.chatgpt_model)
-            messages.insert(1, {"role": self.USER, "content" : h.get("user")})
-            token_count += self.num_tokens_from_messages(messages[1], self.chatgpt_model)
-            if token_count > approx_max_tokens*4:
+            if bot_msg := h.get("bot"):
+                message_builder.append_message(self.ASSISTANT, bot_msg, index=append_index)
+            if user_msg := h.get("user"):
+                message_builder.append_message(self.USER, user_msg, index=append_index)
+            if message_builder.token_length > max_tokens:
                 break
-        return messages
-    
-    def num_tokens_from_messages(self, message: "dict[str,str]", model: str) -> int:
-        """
-        Calculate the number of tokens required to encode a message.
-        Args:
-            message (dict): The message to encode, represented as a dictionary.
-            model (str): The name of the model to use for encoding.
-        Returns:
-            int: The total number of tokens required to encode the message.
-        Example:
-            message = {'role': 'user', 'content': 'Hello, how are you?'}
-            model = 'gpt-3.5-turbo'
-            num_tokens_from_messages(message, model)
-            output: 11
-        """
-        encoding = tiktoken.encoding_for_model(self.get_oai_chatmodel_tiktok(model))
-        num_tokens = 0
-        num_tokens += 2  # For "role" and "content" keys
-        for key, value in message.items():
-            num_tokens += len(encoding.encode(value))
-        return num_tokens
 
-    def get_oai_chatmodel_tiktok(self, aoaimodel: str):
-        if aoaimodel == "" or aoaimodel is None:
-            raise Exception("Expected AOAI chatGPT model name")
-        
-        return "gpt-3.5-turbo" if aoaimodel == "gpt-35-turbo" else aoaimodel
+        messages = message_builder.messages
+        return messages

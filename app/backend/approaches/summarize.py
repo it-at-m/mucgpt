@@ -81,7 +81,16 @@ class Summarize(Approach):
             verbose=verbose)
 
         result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
+        # array with {missing_entities: str[], denser_summary: str }
         chat_translate_result = result['translation'].replace("\n", "")   
+        # sometimes, missing_entities is just str, convert to array.
+        cleaned = []
+        for (i, element) in enumerate(json.loads(chat_translate_result)):
+            print(element)
+            missing = element['missing_entities']
+            if(isinstance(missing, str)):
+                element['missing_entities'] = [missing]
+            cleaned.append(element)
 
-        return {"data_points": [], "answer": json.loads(chat_translate_result), "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
+        return {"data_points": [], "answer": cleaned, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
     

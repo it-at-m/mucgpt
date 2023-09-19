@@ -54,6 +54,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
                 value={question}
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
+                autoAdjustHeight={true}
             />
             <div className={styles.questionInputButtonsContainer}>
                 <div

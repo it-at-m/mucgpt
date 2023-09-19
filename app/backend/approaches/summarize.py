@@ -3,26 +3,21 @@ from langchain import LLMChain
 
 import openai
 from langchain.chat_models import AzureChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
 
 from approaches.approach import Approach
 
 class Summarize(Approach):
-    system_sum_prompt = """You are a helpful assistant for text summarization. """
     user_sum_prompt = """
     Summarize the following text for a {person_type}.
     The summary should be written {sumlength}, expressing the key points and concepts written in the original text without adding your interpretations. 
 
     Text: {text}"""
 
-    system_translate_prompt = """Agiere als {language}-Übersetzer, du übersetzt kommentarlos jede Eingabe. Verstanden?"""
     user_translate_prompt = """
-    Übersetze den folgenden Text in {language}.
+    Übersetze den folgenden Text in {language}. Beinhalte die Formatierung bei.
+
     Text: {sum}"""
 
 
@@ -30,15 +25,11 @@ class Summarize(Approach):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
 
-    def getSummarizationPrompt(self) -> ChatPromptTemplate:
-        system_message_prompt = SystemMessagePromptTemplate.from_template(self.system_sum_prompt)
-        human_message_prompt = HumanMessagePromptTemplate.from_template(input_variables=["person_type", "sumlength"], template=self.user_sum_prompt)
-        return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+    def getSummarizationPrompt(self) -> PromptTemplate:
+        return PromptTemplate(input_variables=["person_type", "sumlength", "text"], template=self.user_sum_prompt)
 
-    def getTranslationPrompt(self) -> ChatPromptTemplate:
-        system_message_prompt = SystemMessagePromptTemplate.from_template(input_variables=["language"], template= self.system_translate_prompt)
-        human_message_prompt = HumanMessagePromptTemplate.from_template(input_variables=["language", "sum"], template=self.user_translate_prompt)
-        return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+    def getTranslationPrompt(self) -> PromptTemplate: 
+        return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_prompt)
 
 
     async def run(self, text: str, overrides: "dict[str, Any]") -> Any:
@@ -49,7 +40,7 @@ class Summarize(Approach):
         verbose = True
         llm = AzureChatOpenAI(
             model="gpt-35-turbo",
-            temperature= 0.7,
+            temperature= overrides.get("temperature") or 0.7,
             max_tokens=1024,
             n=1,
             deployment_name= "chat",

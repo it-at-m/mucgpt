@@ -3,22 +3,19 @@ import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 
 import styles from "./Summarize.module.css";
 
-import { Approaches, AskResponse, sumApi, SumRequest } from "../../api";
+import { Approaches, sumApi, SumRequest, SumResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ExampleListSum } from "../../components/Example/ExampleListSum";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
-import { RoleSelector } from "../../components/RoleSelector";
-import { SummarizationLengthSelector } from "../../components/SummarizationLengthSelector";
 import { useTranslation } from 'react-i18next';
+import { SumAnswer } from "../../components/SumAnswer";
 
 const Summarize = () => {
     const {language} = useContext(LanguageContext)
     const { t} = useTranslation ();
-
-    const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -26,20 +23,7 @@ const Summarize = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
-
-    const DEFAULT_ROLE = "Second-Grader";
-    const [role, setRole] = useState<string>(DEFAULT_ROLE);
-    const onRoleChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        setRole(selection.optionValue || DEFAULT_ROLE );
-    };
-
-    const DEFAULT_LENGTH = "in a maximum of 5 bullet points";
-    const [textLength, setTextLength] = useState<string>(DEFAULT_LENGTH);
-    const onTextLengthChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        setTextLength(selection.optionValue || DEFAULT_LENGTH );
-    };
+    const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);
@@ -57,8 +41,6 @@ const Summarize = () => {
                 approach: Approaches.Summarize,
                 overrides: {
                     language: language,
-                    person_type: role,
-                    sumlength: textLength
                 }
             };
             const result = await sumApi(request);
@@ -97,13 +79,7 @@ const Summarize = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                        <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            isSelected={selectedAnswer === index }
-                                            onCitationClicked={() => {}}
-                                            showFollowupQuestions={useSuggestFollowupQuestions && answers.length - 1 === index}
-                                        />
+                                        <SumAnswer answer={answer[1]}></SumAnswer>
                                     </div>
                                 </div>
                             ))}
@@ -134,24 +110,6 @@ const Summarize = () => {
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                         />
-                    </div>
-                </div>
-                <div className={styles.settingsContainer}>
-                    <div>
-                        <div className={styles.label}> 
-                            <label>{t('sum.rolelabel')}</label>
-                        </div>
-                        <div className={styles.chatSettingsSeparator}> 
-                            <RoleSelector onSelectionChange={onRoleChanged} defaultRole={t('components.roles.secondgrader')}></RoleSelector>
-                        </div>
-                    </div>
-                    <div>
-                        <div className={styles.label}> 
-                            <label>{t('sum.lengthlabel')} </label>
-                        </div>
-                        <div className={styles.chatSettingsSeparator}> 
-                            <SummarizationLengthSelector onSelectionChange={onTextLengthChanged} defaultLength={t('components.sumlength.bullets')}></SummarizationLengthSelector>
-                        </div>
                     </div>
                 </div>
             </div>

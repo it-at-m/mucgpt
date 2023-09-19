@@ -26,7 +26,7 @@ i18n
                     prompt: "Stelle eine Frage"
                 },
                 sum: {
-                    header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
+                    header: "Lasse Text zusammenfassen oder probiere ein Beispiel. Generiert fünf einzigartige Zusammenfassungen, die sich jeweils auf andere Aspekte fokusieren.",
                     prompt: "Diesen Text zusammenfassen",
                     rolelabel: "Zusammenfassen für",
                     lengthlabel: "in"
@@ -63,6 +63,9 @@ i18n
                         reset: "Ansicht zurücksetzen",
                         source: "Datenansicht",
                         mindmap: "Mindmapansicht"
+                    },
+                    sumanswer: {
+                        header: "Einzigartige Aspekte/Entitäten:"
                     }
                 }
             }
@@ -80,7 +83,7 @@ i18n
                     prompt: "Ask a question"
                 },
                 sum: {
-                    header: "Summarize text or try an example",
+                    header: "Summarize text or try an example. Generates five unique summaries, each focusing on different aspects",
                     prompt: "Summarize this text",
                     rolelabel: "Summarize for",
                     lengthlabel: "in"
@@ -117,6 +120,9 @@ i18n
                         reset: "Reset view",
                         source: "Source view",
                         mindmap: "Mindmap view"
+                    },
+                    sumanswer: {
+                        header: "Unique entities/aspects:"
                     }
                 }
             }
@@ -134,7 +140,7 @@ i18n
                     prompt: "Stelle a Froog "
                 },
                 sum: {
-                    header: "Fassn Text zam oda probier a Beispui",
+                    header: "Fassn Text zam oda probier a Beispui. Erzeugt fünf einzigarte Zammfassunga, jedesmoi mid an andan Schwerpunkt",
                     prompt: "Diesn Text zammfassn",
                     rolelabel: "Zammfassn für",
                     lengthlabel: "in"
@@ -171,6 +177,9 @@ i18n
                         reset: "Oisicht zrucksetzn",
                         source: "Datenoisicht",
                         mindmap: "Mindmapoisicht"
+                    },
+                    sumanswer: {
+                        header: "Einzigartige Schwerpunkte:"
                     }
                 }
             }

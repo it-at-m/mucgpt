@@ -40,6 +40,18 @@ export type AskResponse = {
     error?: string;
 };
 
+export type DenseSummary = {
+    missing_entities: string[];
+    denser_summary: string
+}
+
+export type SumResponse = {
+    answer: DenseSummary[];
+    thoughts: string | null;
+    data_points: string[];
+    error?: string;
+};
+
 export type ChatTurn = {
     user: string;
     bot?: string;
@@ -53,10 +65,8 @@ export type ChatRequest = {
 };
 
 export type SumRequestOverrides = {
-    person_type?: string;
     temperature?: number;
     language?: string;
-    sumlength?: string;
 };
 
 export type SumRequest = {

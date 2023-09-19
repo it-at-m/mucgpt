@@ -1,4 +1,4 @@
-import { AskRequest, AskResponse, BrainstormRequest, ChatRequest, SumRequest } from "./models";
+import { AskRequest, AskResponse, BrainstormRequest, ChatRequest, SumRequest, SumResponse } from "./models";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/chat_stream" : "/chat";
@@ -27,7 +27,7 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     });
 }
 
-export async function sumApi(options: SumRequest): Promise<AskResponse> {
+export async function sumApi(options: SumRequest): Promise<SumResponse> {
     const response = await fetch("/sum", {
         method: "POST",
         headers: {
@@ -38,14 +38,12 @@ export async function sumApi(options: SumRequest): Promise<AskResponse> {
             approach: options.approach,
             overrides: {
                 temperature: options.overrides?.temperature,
-                language: options.overrides?.language,
-                person_type: options.overrides?.person_type,
-                sumlength: options.overrides?.sumlength
+                language: options.overrides?.language
             }
         })
     });
 
-    const parsedResponse: AskResponse = await response.json();
+    const parsedResponse: SumResponse = await response.json();
     if (response.status > 299 || !response.ok) {
         throw Error(parsedResponse.error || "Unknown error");
     }

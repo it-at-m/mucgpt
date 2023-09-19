@@ -3,11 +3,7 @@ from langchain import LLMChain
 
 import openai
 from langchain.chat_models import AzureChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
 
 from approaches.approach import Approach
@@ -16,7 +12,6 @@ class Brainstorm(Approach):
     """
     Simple brainstorm implementation. One shot generation of certain markdown files
     """
-    system_sum_prompt = """You are a helpful assistant. """
     user_mindmap_prompt = """
       In a markdown file (MD) plan out a mind map on the topic {topic}. Follow the format in this example. Write it in a code snippet I can copy from directly. Provide only code, no description. Include the exact format I used below.
     Example markdown format:
@@ -51,9 +46,8 @@ class Brainstorm(Approach):
 
     – Subtopic 3"""
 
-    system_translate_prompt = """Agiere als Übersetzer, du übersetzt kommentarlos jeden Text in die Sprache {language}. Verstanden?"""
     user_translate_prompt = """
-    Übersetze den folgenden Text in {language}.
+    Übersetze den folgenden Text in {language}. Beinhalte die Markdown Formatierung bei.
 
     Text: 
     {brainstorm}"""
@@ -62,15 +56,11 @@ class Brainstorm(Approach):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
     
-    def getBrainstormPrompt(self) -> ChatPromptTemplate:
-        system_message_prompt = SystemMessagePromptTemplate.from_template(self.system_sum_prompt)
-        human_message_prompt = HumanMessagePromptTemplate.from_template(input_variables=["topic"], template=self.user_mindmap_prompt)
-        return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+    def getBrainstormPrompt(self) -> PromptTemplate:
+        return PromptTemplate(input_variables=["topic"], template=self.user_mindmap_prompt)
 
-    def getTranslationPrompt(self) -> ChatPromptTemplate:
-        system_message_prompt = SystemMessagePromptTemplate.from_template(input_variables=["language"], template= self.system_translate_prompt)
-        human_message_prompt = HumanMessagePromptTemplate.from_template(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
-        return ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+    def getTranslationPrompt(self) -> PromptTemplate:
+        return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
     async def run(self, topic: str, overrides: "dict[str, Any]") -> Any:
@@ -78,8 +68,8 @@ class Brainstorm(Approach):
         verbose = True
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
-            temperature=overrides.get("temperature") or 0.7,
-            max_tokens=1024,
+            temperature=overrides.get("temperature") or 0.9,
+            max_tokens=4096,
             n=1,
             deployment_name= self.chatgpt_deployment,
             openai_api_key=openai.api_key,

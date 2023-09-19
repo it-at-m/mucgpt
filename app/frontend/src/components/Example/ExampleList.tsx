@@ -17,18 +17,17 @@ const EXAMPLES: ExampleModel[] = [
         value: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut"
     },
     { text:  "Du bist ein Zauberer aus Harry Potter...",
-         value: `
-    Du bist ein Zauberer aus Harry Potter. Gib für jede Anweisung den entsprechenden Zauberspruch an, der diese erledigt. Beschreibe genau was der Zauberspruch macht:
-    Hier sind einige Beispiele:
-    
-    Anweisung: Dinge anheben 
-    Zauberspruch: Leviosa 
-
-    Anweisung:Verwandlung in einen Gegenstand 
-    Zauberspruch: Duro 
-
-    Anweisung: Pflanzen zu düngen 
-    Zauberspruch: ` }
+         value: 
+`Du bist ein Zauberer aus Harry Potter. Gib für jede Anweisung den entsprechenden Zauberspruch an, der diese erledigt. Beschreibe ausführlich was der Zauberspruch macht:
+Hier sind einige Beispiele:
+            
+Anweisung: Dinge anheben 
+Zauberspruch: Leviosa 
+        
+Anweisung: Verwandlung in einen Gegenstand 
+Zauberspruch: Duro 
+        
+Wie kann ich eine Kartoffel schälen?` }
 ];
 
 interface Props {

@@ -67,8 +67,8 @@ const Chat = () => {
                 for await (const event of readNDJSONStream(response.body)) {
                     if (event["data_points"]) {
                         askResponse = event;
-                    } else if (event["choices"] && event["choices"][0]["delta"]["content"]) {
-                        answer += event["choices"][0]["delta"]["content"];
+                    } else if (event) {
+                        answer += event;
                         let latestResponse: AskResponse = {...askResponse, answer: answer};
                         setIsLoading(false);
                         setAnswers([...answers, [question, latestResponse]]);

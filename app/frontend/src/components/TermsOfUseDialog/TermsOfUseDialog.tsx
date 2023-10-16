@@ -27,7 +27,7 @@ export const TermsOfUseDialog = () => {
             <DialogContent>
                 <ul>
                     <li>
-                    Keine Nutzung für Daten mit LHM-Schutzbedarf "hoch" oder "sehr hoch" oder mit der Klassifizierung "vertrauchlich" oder "streng vertraulich". Generell dürfen alle für Microsoft Azure zugelassenen Daten verarbeitet werden.
+                    Keine Nutzung für Daten mit LHM-Schutzbedarf "hoch" oder "sehr hoch" oder mit der Klassifizierung "vertraulich" oder "streng vertraulich". Generell dürfen alle für Microsoft Azure zugelassenen Daten verarbeitet werden.
                     </li>
                     <li>
                     Einsatz nur für interne, betriebliche Tätigkeiten.

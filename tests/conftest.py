@@ -94,10 +94,6 @@ def mock_acs_search(monkeypatch):
 
 @pytest_asyncio.fixture
 async def client(monkeypatch, mock_openai_chatcompletion, mock_openai_embedding, mock_acs_search):
-    monkeypatch.setenv("AZURE_STORAGE_ACCOUNT", "test-storage-account")
-    monkeypatch.setenv("AZURE_STORAGE_CONTAINER", "test-storage-container")
-    monkeypatch.setenv("AZURE_SEARCH_INDEX", "test-search-index")
-    monkeypatch.setenv("AZURE_SEARCH_SERVICE", "test-search-service")
     monkeypatch.setenv("AZURE_OPENAI_SERVICE", "test-openai-service")
     monkeypatch.setenv("AZURE_OPENAI_CHATGPT_DEPLOYMENT", "test-chatgpt")
     monkeypatch.setenv("AZURE_OPENAI_CHATGPT_MODEL", "gpt-35-turbo")

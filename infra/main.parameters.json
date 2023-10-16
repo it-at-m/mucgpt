@@ -23,33 +23,6 @@
     "openAiSkuName": {
       "value": "S0"
     },
-    "formRecognizerServiceName": {
-      "value": "${AZURE_FORMRECOGNIZER_SERVICE}"
-    },
-    "formRecognizerResourceGroupName": {
-      "value": "${AZURE_FORMRECOGNIZER_RESOURCE_GROUP}"
-    },
-    "formRecognizerSkuName": {
-      "value": "F0"
-    },
-    "searchIndexName": {
-      "value": "${AZURE_SEARCH_INDEX=gptkbindex}"
-    },
-    "searchServiceName": {
-      "value": "${AZURE_SEARCH_SERVICE}"
-    },
-    "searchServiceResourceGroupName": {
-      "value": "${AZURE_SEARCH_SERVICE_RESOURCE_GROUP}"
-    },
-    "searchServiceSkuName": {
-      "value": "basic"
-    },
-    "storageAccountName": {
-      "value": "${AZURE_STORAGE_ACCOUNT}"
-    },
-    "storageResourceGroupName": {
-      "value": "${AZURE_STORAGE_RESOURCE_GROUP}"
-    },
     "chatGptDeploymentName": {
       "value": "${AZURE_OPENAI_CHATGPT_DEPLOYMENT=chat}"
     },

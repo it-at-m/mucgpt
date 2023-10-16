@@ -10,8 +10,6 @@ import aiohttp
 import openai
 from azure.identity.aio import DefaultAzureCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
-from azure.search.documents.aio import SearchClient
-from azure.storage.blob.aio import BlobServiceClient
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
@@ -36,7 +34,6 @@ CONFIG_ASK_APPROACHES = "ask_approaches"
 CONFIG_CHAT_APPROACHES = "chat_approaches"
 CONFIG_SUM_APPROACHES = "sum_approaches"
 CONFIG_BRAINSTORM_APPROACHES = "brainstorm_approaches"
-CONFIG_BLOB_CONTAINER_CLIENT = "blob_container_client"
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
@@ -51,23 +48,6 @@ async def favicon():
 @bp.route("/assets/<path:path>")
 async def assets(path):
     return await send_from_directory("static/assets", path)
-
-# Serve content files from blob storage from within the app to keep the example self-contained.
-# *** NOTE *** this assumes that the content files are public, or at least that all users of the app
-# can access all the files. This is also slow and memory hungry.
-@bp.route("/content/<path>")
-async def content_file(path):
-    blob_container_client = current_app.config[CONFIG_BLOB_CONTAINER_CLIENT]
-    blob = await blob_container_client.get_blob_client(path).download_blob()
-    if not blob.properties or not blob.properties.has_key("content_settings"):
-        abort(404)
-    mime_type = blob.properties["content_settings"]["content_type"]
-    if mime_type == "application/octet-stream":
-        mime_type = mimetypes.guess_type(path)[0] or "application/octet-stream"
-    blob_file = io.BytesIO()
-    await blob.readinto(blob_file)
-    blob_file.seek(0)
-    return await send_file(blob_file, mimetype=mime_type, as_attachment=False, attachment_filename=path)
 
 
 @bp.route("/chat", methods=["POST"])
@@ -164,8 +144,6 @@ async def ensure_openai_token():
 async def setup_clients():
 
     # Replace these with your own values, either in environment variables or directly here
-    AZURE_STORAGE_ACCOUNT = os.environ["AZURE_STORAGE_ACCOUNT"]
-    AZURE_STORAGE_CONTAINER = os.environ["AZURE_STORAGE_CONTAINER"]
     AZURE_OPENAI_SERVICE = os.environ["AZURE_OPENAI_SERVICE"]
     AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ["AZURE_OPENAI_CHATGPT_DEPLOYMENT"]
     AZURE_OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
@@ -180,12 +158,6 @@ async def setup_clients():
     # If you encounter a blocking error during a DefaultAzureCredential resolution, you can exclude the problematic credential by using a parameter (ex. exclude_shared_token_cache_credential=True)
     azure_credential = DefaultAzureCredential(exclude_shared_token_cache_credential = True)
 
-    # Set up clients for Cognitive Search and Storage
-    blob_client = BlobServiceClient(
-        account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net",
-        credential=azure_credential)
-    blob_container_client = blob_client.get_container_client(AZURE_STORAGE_CONTAINER)
-
     # Used by the OpenAI SDK
     openai.api_base = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
     openai.api_version = "2023-05-15"
@@ -198,7 +170,6 @@ async def setup_clients():
     # Store on app.config for later use inside requests
     current_app.config[CONFIG_OPENAI_TOKEN] = openai_token
     current_app.config[CONFIG_CREDENTIAL] = azure_credential
-    current_app.config[CONFIG_BLOB_CONTAINER_CLIENT] = blob_container_client
 
     current_app.config[CONFIG_CHAT_APPROACHES] = {
         "chat":  SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)

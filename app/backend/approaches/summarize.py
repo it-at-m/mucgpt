@@ -62,7 +62,7 @@ class Summarize(Approach):
 
         verbose = True
         llm = AzureChatOpenAI(
-            model="gpt-35-turbo",
+            model=self.chatgpt_model,
             temperature= overrides.get("temperature") or 0.7,
             max_tokens=4096,
             n=1,

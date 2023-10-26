@@ -13,6 +13,8 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Props) => {
     const [question, setQuestion] = useState<string>("");
+    const wordCount = 4000;
+    const getCharLeft = () => Math.max(wordCount - countWords(question), 0);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -33,10 +35,14 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
         }
     };
 
+    function countWords(str: string) {
+        return str.trim().split(/\s+/).length;
+    }
+
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         if (!newValue) {
             setQuestion("");
-        } else if (newValue.length <= 2500) {
+        } else if (countWords(newValue) <= wordCount) {
             setQuestion(newValue);
         }
     };
@@ -55,6 +61,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
                 autoAdjustHeight={true}
+                description={`${getCharLeft()} Wörter übrig`}
             />
             <div className={styles.questionInputButtonsContainer}>
                 <div

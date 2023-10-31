@@ -1,10 +1,9 @@
-import io
 import json
 import logging
-import mimetypes
 import os
 import time
 from typing import AsyncGenerator
+import base64 
 
 import aiohttp
 import openai
@@ -15,14 +14,13 @@ from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
     Blueprint,
     Quart,
-    abort,
     current_app,
     jsonify,
     make_response,
     request,
-    send_file,
     send_from_directory,
 )
+from core.authentification import AuthentificationHelper, AuthError
 
 from approaches.summarize import Summarize
 from approaches.simplechat import SimpleChatApproach
@@ -34,8 +32,13 @@ CONFIG_ASK_APPROACHES = "ask_approaches"
 CONFIG_CHAT_APPROACHES = "chat_approaches"
 CONFIG_SUM_APPROACHES = "sum_approaches"
 CONFIG_BRAINSTORM_APPROACHES = "brainstorm_approaches"
+CONFIG_AUTH = "authentification_client"
 
 bp = Blueprint("routes", __name__, static_folder='static')
+
+@bp.errorhandler(AuthError)
+async def handleAuthError(error: AuthError):
+    return error.error, error.status_code
 
 @bp.route("/")
 async def index():
@@ -129,6 +132,35 @@ async def chat_stream():
         logging.exception("Exception in /chat")
         return jsonify({"error": str(e)}), 500
 
+@bp.route("/token", methods=["GET"])
+async def readToken():
+    principalID = request.headers.get('X-MS-CLIENT-PRINCIPAL-ID')
+    principalName = request.headers.get('X-MS-CLIENT-PRINCIPAL-NAME')
+    idProviderId = request.headers.get('X-MS-CLIENT-PRINCIPAL-IDP')
+    ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
+    clientPrincipal = request.headers.get('X-MS-CLIENT-PRINCIPAL')
+    clientPrincipal= base64.b64decode(clientPrincipal)
+
+    auth_client = current_app.config[CONFIG_AUTH]
+    claims = auth_client.authentificate(ssoaccesstoken)
+
+    result = "\n"
+    myDict = sorted(dict(request.headers))
+    for key in myDict:
+        result += f"{key} = {dict(request.headers)[key]}\n"
+
+    response = await make_response(        f"Hi {auth_client.getName(claims)}"+
+        f"\n\nHier sind deine Client Principals von Azure:"+ 
+        f"\nThis is your X-MS-CLIENT-PRINCIPAL-ID: {principalID}"+
+        f"\nThis is your X-MS-CLIENT-PRINCIPAL-NAME: {principalName}"+
+        f"\nThis is your X-MS-CLIENT-PRINCIPAL-IDP: {idProviderId}"+
+        f"\nThis is your X-MS-CLIENT-PRINCIPAL: {clientPrincipal}"+
+        f"\n\nJetzt gehts um deine Rollen:"+
+        f"\n\nRollen: {auth_client.getRoles(claims)}"+
+        f"\n\n\n Und alle Daten: {result}", 200)
+
+    response.mimetype = "text/plain"
+    return response
 
 
 @bp.before_request
@@ -167,6 +199,12 @@ async def setup_clients():
     )
     openai.api_key = openai_token.token
 
+     # Set up authentication helper
+    auth_helper = AuthentificationHelper(
+        issuer="https://ssotest.muenchen.de/auth/realms/intrap",
+        role="lhm-ab-mucgpt-user"
+    )
+
     # Store on app.config for later use inside requests
     current_app.config[CONFIG_OPENAI_TOKEN] = openai_token
     current_app.config[CONFIG_CREDENTIAL] = azure_credential
@@ -180,6 +218,7 @@ async def setup_clients():
     current_app.config[CONFIG_SUM_APPROACHES] = {
         "sum":  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
     }
+    current_app.config[CONFIG_AUTH] = auth_helper
 
 
 def create_app():

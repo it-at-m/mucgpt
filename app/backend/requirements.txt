@@ -10,3 +10,5 @@ opentelemetry-instrumentation-asgi==0.40b0
 opentelemetry-instrumentation-requests==0.40b0
 opentelemetry-instrumentation-aiohttp-client==0.40b0
 werkzeug==3.0.0
+joserfc
+requests

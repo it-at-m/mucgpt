@@ -38,10 +38,10 @@ class AuthentificationHelper:
         try:
             roles = decoded.claims["resource_access"]['mucgpt']['roles']
         except KeyError:
-            raise AuthError("Rolle nicht vorhanden", status=401)
+            raise AuthError(error="Rolle nicht vorhanden", status_code=401)
 
         if self.role not in roles:
-            raise AuthError("Rolle nicht vorhanden", status=401)
+            raise AuthError(error="Rolle nicht vorhanden", status_code=401)
         return decoded.claims;
 
     def getRoles(self, claims):

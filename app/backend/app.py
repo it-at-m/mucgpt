@@ -179,10 +179,8 @@ async def setup_clients():
     AZURE_OPENAI_SERVICE = os.environ["AZURE_OPENAI_SERVICE"]
     AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ["AZURE_OPENAI_CHATGPT_DEPLOYMENT"]
     AZURE_OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
-    #AZURE_OPENAI_EMB_DEPLOYMENT = os.environ["AZURE_OPENAI_EMB_DEPLOYMENT"]
+    SSO_ISSUER = os.environ["SSO_ISSUER"]
 
-    #KB_FIELDS_CONTENT = os.getenv("KB_FIELDS_CONTENT", "content")
-    #KB_FIELDS_SOURCEPAGE = os.getenv("KB_FIELDS_SOURCEPAGE", "sourcepage")
 
     # Use the current user identity to authenticate with Azure OpenAI, Cognitive Search and Blob Storage (no secrets needed,
     # just use 'az login' locally, and managed identity when deployed on Azure). If you need to use keys, use separate AzureKeyCredential instances with the
@@ -201,7 +199,7 @@ async def setup_clients():
 
      # Set up authentication helper
     auth_helper = AuthentificationHelper(
-        issuer="https://ssotest.muenchen.de/auth/realms/intrap",
+        issuer=SSO_ISSUER,
         role="lhm-ab-mucgpt-user"
     )
 

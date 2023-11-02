@@ -1,6 +1,7 @@
 param name string
 param location string = resourceGroup().location
 param tags object = {}
+param ssoSecret string 
 
 // Reference Properties
 param applicationInsightsName string = ''
@@ -69,7 +70,7 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
       {
         SCM_DO_BUILD_DURING_DEPLOYMENT: string(scmDoBuildDuringDeployment)
         ENABLE_ORYX_BUILD: string(enableOryxBuild)
-        SSOTEST_AUTHENTICATION_SECRET: '73jeZqCYFuix7LSL9oplljUaWT1oVOxb'
+        SSOTEST_AUTHENTICATION_SECRET: ssoSecret
       },
       runtimeName == 'python' ? { PYTHON_ENABLE_GUNICORN_MULTIWORKERS: 'true'} : {},
       !empty(applicationInsightsName) ? { APPLICATIONINSIGHTS_CONNECTION_STRING: applicationInsights.properties.ConnectionString } : {},

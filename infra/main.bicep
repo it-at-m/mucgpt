@@ -15,6 +15,8 @@ param resourceGroupName string = ''
 
 param applicationInsightsName string = ''
 
+param ssoSecret string
+param ssoIssuer string
 
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
@@ -100,12 +102,14 @@ module backend 'core/host/appservice.bicep' = {
     appCommandLine: 'python3 -m gunicorn main:app'
     scmDoBuildDuringDeployment: true
     managedIdentity: true
+    ssoSecret: ssoSecret
     appSettings: {
       AZURE_OPENAI_SERVICE: openAi.outputs.name
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
       AZURE_OPENAI_CHATGPT_MODEL: chatGptModelName
       AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
       APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
+      SSO_ISSUER: ssoIssuer
     }
   }
 }
@@ -182,3 +186,4 @@ output AZURE_OPENAI_CHATGPT_MODEL string = chatGptModelName
 output AZURE_OPENAI_EMB_DEPLOYMENT string = embeddingDeploymentName
 output AZURE_OPENAI_EMB_MODEL_NAME string = embeddingModelName
 output BACKEND_URI string = backend.outputs.uri
+output SSO_ISSUER string = ssoIssuer

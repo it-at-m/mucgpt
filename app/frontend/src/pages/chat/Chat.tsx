@@ -3,7 +3,7 @@ import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, RetrievalMode, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
+import { chatApi, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -105,6 +105,7 @@ const Chat = () => {
                 makeApiRequest(last[0])
         }
     }
+    const ans:AskResponse = {answer: "# Hallo Diggi \n was geht **alter** \n \n \`\`\` python\n print(\"Hello World!\")\n a = 2 \n b=3 \n def a(): \n  return 5 \n  \`\`\` \n \`\`\` python\n print(\"Hello World!\")\n a = 2 \n b=3 \n def a(): \n  return 5 \n  \`\`\`", thoughts: "", data_points: []}
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
@@ -157,7 +158,6 @@ const Chat = () => {
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
-                                            onFollowupQuestionClicked={q => makeApiRequest(q)}
                                             onRegenerateResponseClicked={onRegeneratResponseClicked}
                                            />
                                         }
@@ -166,7 +166,6 @@ const Chat = () => {
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
-                                            onFollowupQuestionClicked={q => makeApiRequest(q)}
                                            />
                                         }
                                     </div>

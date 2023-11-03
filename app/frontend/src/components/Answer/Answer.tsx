@@ -1,34 +1,32 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Stack, IconButton } from "@fluentui/react";
 import DOMPurify from "dompurify";
 
 import styles from "./Answer.module.css";
 
-import { AskResponse, getCitationFilePath } from "../../api";
+import { AskResponse } from "../../api";
 import { parseAnswerToHtml } from "./AnswerParser";
 import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from 'react-i18next';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw'
+import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+
 
 interface Props {
     answer: AskResponse;
     isSelected?: boolean;
     onCitationClicked: (filePath: string) => void;
-    onThoughtProcessClicked?: () => void;
     onSupportingContentClicked?: () => void;
-    onFollowupQuestionClicked?: (question: string) => void;
     onRegenerateResponseClicked?: () => void;
-    showFollowupQuestions?: boolean;
 }
 
 export const Answer = ({
     answer,
     isSelected,
     onCitationClicked,
-    onThoughtProcessClicked,
-    onSupportingContentClicked,
-    onFollowupQuestionClicked,
     onRegenerateResponseClicked, 
-    showFollowupQuestions
 }: Props) => {
     const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer, onCitationClicked), [answer]);
     
@@ -42,26 +40,6 @@ export const Answer = ({
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
-                        {onThoughtProcessClicked &&
-                            <IconButton
-                                style={{ color: "black" }}
-                                iconProps={{ iconName: "Lightbulb" }}
-                                title="Show thought process"
-                                ariaLabel="Show thought process"
-                                onClick={() => onThoughtProcessClicked()}
-                                disabled={!answer.thoughts}
-                            />
-                        }
-                        {onSupportingContentClicked &&
-                            <IconButton
-                                style={{ color: "black" }}
-                                iconProps={{ iconName: "ClipboardList" }}
-                                title="Show supporting content"
-                                ariaLabel="Show supporting content"
-                                onClick={() => onSupportingContentClicked()}
-                                disabled={!answer.data_points.length}
-                            />
-                        }
                         {onRegenerateResponseClicked &&
                             <IconButton
                                     style={{ color: "black"}}
@@ -76,39 +54,15 @@ export const Answer = ({
             </Stack.Item>
 
             <Stack.Item grow>
-                <div className={styles.answerText} dangerouslySetInnerHTML={{ __html: sanitizedAnswerHtml }}></div>
+                <Markdown 
+                    className={styles.answerText}
+                    remarkPlugins={[remarkGfm]} 
+                    rehypePlugins={[rehypeRaw]}
+                    children={sanitizedAnswerHtml}
+                    components={{
+                        "code": CodeBlockRenderer
+                      }}/>
             </Stack.Item>
-
-            {!!parsedAnswer.citations.length && (
-                <Stack.Item>
-                    <Stack horizontal wrap tokens={{ childrenGap: 5 }}>
-                        <span className={styles.citationLearnMore}>Citations:</span>
-                        {parsedAnswer.citations.map((x, i) => {
-                            const path = getCitationFilePath(x);
-                            return (
-                                <a key={i} className={styles.citation} title={x} onClick={() => onCitationClicked(path)}>
-                                    {`${++i}. ${x}`}
-                                </a>
-                            );
-                        })}
-                    </Stack>
-                </Stack.Item>
-            )}
-
-            {!!parsedAnswer.followupQuestions.length && showFollowupQuestions && onFollowupQuestionClicked && (
-                <Stack.Item>
-                    <Stack horizontal wrap className={`${!!parsedAnswer.citations.length ? styles.followupQuestionsList : ""}`} tokens={{ childrenGap: 6 }}>
-                        <span className={styles.followupQuestionLearnMore}>Follow-up questions:</span>
-                        {parsedAnswer.followupQuestions.map((x, i) => {
-                            return (
-                                <a key={i} className={styles.followupQuestion} title={x} onClick={() => onFollowupQuestionClicked(x)}>
-                                    {`${x}`}
-                                </a>
-                            );
-                        })}
-                    </Stack>
-                </Stack.Item>
-            )}
         </Stack>
     );
 };

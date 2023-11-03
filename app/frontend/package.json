@@ -22,16 +22,22 @@
     "markmap-lib": "^0.15.2",
     "markmap-toolbar": "^0.15.0",
     "markmap-view": "^0.15.0",
+    "ndjson-readablestream": "^1.0.6",
     "react": "^18.2.0",
+    "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
     "react-i18next": "^13.0.2",
+    "react-markdown": "^9.0.0",
     "react-router-dom": "^6.14.1",
-    "ndjson-readablestream": "^1.0.6"
+    "react-syntax-highlighter": "^15.5.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.2",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
+    "@types/react-syntax-highlighter": "^15.5.9",
     "@vitejs/plugin-react": "^4.0.2",
     "prettier": "^3.0.0",
     "typescript": "^5.1.6",

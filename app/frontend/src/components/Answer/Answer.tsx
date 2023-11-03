@@ -12,6 +12,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import {CopyToClipboard} from 'react-copy-to-clipboard';
 
 
 interface Props {
@@ -33,13 +34,32 @@ export const Answer = ({
     const { t} = useTranslation ();
 
     const sanitizedAnswerHtml = DOMPurify.sanitize(parsedAnswer.answerHtml);
+    
+    const [icon, setIcon] = useState<string>("Copy")
+    const [copied, setCopied] = useState<boolean>(false);
 
+    const oncopy = () =>{
+        setCopied(true); 
+        setIcon("Checkmark"); 
+        setTimeout(()=> {
+            setIcon("Copy"); 
+            setCopied(false);
+        }, 1000)
+       }
     return (
         <Stack className={`${styles.answerContainer} ${isSelected && styles.selected}`} verticalAlign="space-between">
             <Stack.Item>
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
+                        <CopyToClipboard text={sanitizedAnswerHtml}
+                            onCopy={oncopy}>
+                                    <IconButton
+                                        style={{ color: "black"}}
+                                        iconProps={{ iconName: icon}}
+                                    >
+                                    </IconButton>
+                        </CopyToClipboard>
                         {onRegenerateResponseClicked &&
                             <IconButton
                                     style={{ color: "black"}}

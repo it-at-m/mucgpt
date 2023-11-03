@@ -30,7 +30,7 @@ export const SumAnswer = ({ answer}: Props) => {
                  {sanitzedKeywords.map((x, i) => (
                      <div>
                         <Button
-                             style={{border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "#f2f2f2": "white"}}
+                             style={{border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "#f2f2f2": "white", height: "100%"}}
                              appearance="outline"
                              size="small"
                              shape="rounded"

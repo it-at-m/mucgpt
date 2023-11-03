@@ -32,7 +32,7 @@ param openAiResourceGroupLocation string
 param openAiSkuName string = 'S0'
 
 param chatGptDeploymentName string // Set in main.parameters.json
-param chatGptDeploymentCapacity int = 30
+param chatGptDeploymentCapacity int = 70
 param chatGptModelName string = 'gpt-35-turbo'
 param chatGptModelVersion string = '0301'
 param embeddingDeploymentName string = 'embedding'

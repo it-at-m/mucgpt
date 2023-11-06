@@ -33,20 +33,27 @@ class AuthentificationHelper:
         return keyset
 
     def authentificate(self, accesstoken):
-        keyset = self.get_jwks_data(self.issuer)
-        decoded = jwt.decode(accesstoken, key=keyset)
+        claims = self.decode(accesstoken)
         try:
-            roles = decoded.claims["resource_access"]['mucgpt']['roles']
+            roles = claims["resource_access"]['mucgpt']['roles']
         except KeyError:
-            raise AuthError(error="Rolle nicht vorhanden", status_code=401)
+            raise AuthError("Rolle nicht vorhanden", status=401)
 
         if self.role not in roles:
-            raise AuthError(error="Rolle nicht vorhanden", status_code=401)
-        return decoded.claims;
+            raise AuthError("Rolle nicht vorhanden", status=401)
+        return claims;
+    
+    def decode(self, token):
+        keyset = self.get_jwks_data(self.issuer)
+        decoded = jwt.decode(token, key=keyset)
+        return decoded.claims
 
     def getRoles(self, claims):
         return claims["resource_access"]['mucgpt']['roles']
 
     def getName(self, claims):
         return claims['name']
+    
+    def getDepartment(self, claims):
+        return claims['department']
     

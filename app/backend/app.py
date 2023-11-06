@@ -138,18 +138,21 @@ async def readToken():
     principalName = request.headers.get('X-MS-CLIENT-PRINCIPAL-NAME')
     idProviderId = request.headers.get('X-MS-CLIENT-PRINCIPAL-IDP')
     ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
+    ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
     clientPrincipal = request.headers.get('X-MS-CLIENT-PRINCIPAL')
     clientPrincipal= base64.b64decode(clientPrincipal)
 
-    auth_client = current_app.config[CONFIG_AUTH]
+    auth_client : AuthentificationHelper = current_app.config[CONFIG_AUTH]
     claims = auth_client.authentificate(ssoaccesstoken)
+
+    id_claims = auth_client.decode(ssoidtoken)
 
     result = "\n"
     myDict = sorted(dict(request.headers))
     for key in myDict:
         result += f"{key} = {dict(request.headers)[key]}\n"
 
-    response = await make_response(        f"Hi {auth_client.getName(claims)}"+
+    response = await make_response(f"Hi {auth_client.getName(claims=claims)} aus {auth_client.getDepartment(claims=id_claims)}"+
         f"\n\nHier sind deine Client Principals von Azure:"+ 
         f"\nThis is your X-MS-CLIENT-PRINCIPAL-ID: {principalID}"+
         f"\nThis is your X-MS-CLIENT-PRINCIPAL-NAME: {principalName}"+

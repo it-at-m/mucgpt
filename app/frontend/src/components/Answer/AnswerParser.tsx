@@ -26,7 +26,8 @@ export function parseAnswerToHtml(answer: string, onCitationClicked: (citationFi
         if (index % 2 === 0) {
             return part;
         } else {
-            let citationIndex: number;
+            return "";
+            /**let citationIndex: number;
             if (citations.indexOf(part) !== -1) {
                 citationIndex = citations.indexOf(part) + 1;
             } else {
@@ -40,12 +41,12 @@ export function parseAnswerToHtml(answer: string, onCitationClicked: (citationFi
                 <a className="supContainer" title={part} onClick={() => onCitationClicked(path)}>
                     <sup>{citationIndex}</sup>
                 </a>
-            );
+            );**/
         }
     });
 
     return {
-        answerHtml: answer,//fragments.join(""),
+        answerHtml: fragments.join(""),
         citations,
         followupQuestions
     };

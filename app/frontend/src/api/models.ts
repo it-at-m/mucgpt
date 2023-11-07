@@ -36,6 +36,7 @@ export type AskRequest = {
 export type AskResponse = {
     answer: string;
     error?: string;
+    tokens?: number;
 };
 
 export type DenseSummary = {

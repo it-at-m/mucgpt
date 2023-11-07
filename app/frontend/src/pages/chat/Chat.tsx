@@ -30,7 +30,7 @@ const Chat = () => {
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -64,12 +64,24 @@ const Chat = () => {
             if (shouldStream) {
                 let answer: string = '';
                 let askResponse: AskResponse = {} as AskResponse;
+                let streamed_tokens = 0;
+                let user_tokens = 0;
                 for await (const event of readNDJSONStream(response.body)) {
                     if (event) {
-                        answer += event;
-                        let latestResponse: AskResponse = {...askResponse, answer: answer};
+                        let parsed = String(event)
+                        if(parsed.startsWith("<<<<STREAMEDTOKENS>>>>"))
+                        {
+                            streamed_tokens = Number(parsed.split("<<<<STREAMEDTOKENS>>>>")[1])
+                        }
+                        else if(parsed.startsWith("<<<<REQUESTTOKENS>>>>"))
+                        {
+                            user_tokens = Number(parsed.split("<<<<REQUESTTOKENS>>>>")[1])
+                        }
+                        else
+                            answer += parsed;
+                        let latestResponse: AskResponse = {...askResponse, answer: answer, tokens: streamed_tokens};
                         setIsLoading(false);
-                        setAnswers([...answers, [question, latestResponse]]);
+                        setAnswers([...answers, [question, latestResponse, user_tokens]]);
                     }
                 }
             } else {
@@ -77,7 +89,7 @@ const Chat = () => {
                 if (response.status > 299 || !response.ok) {
                     throw Error(parsedResponse.error || "Unknown error");
                 }
-                setAnswers([...answers, [question, parsedResponse]]);
+                setAnswers([...answers, [question, parsedResponse, 0]]);
             }
         } catch (e) {
             setError(e);
@@ -105,6 +117,7 @@ const Chat = () => {
     }
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
+    const computeTokens = () => {return answers.map((answ) => answ[2]+ (answ[1].tokens || 0)).reduceRight((prev, curr) => prev+curr, 0)}
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);
@@ -193,6 +206,7 @@ const Chat = () => {
                             placeholder={t('chat.prompt')}
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
+                            tokens_used={computeTokens()}
                         />
                     </div>
                 </div>

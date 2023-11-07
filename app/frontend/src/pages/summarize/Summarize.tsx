@@ -109,6 +109,7 @@ const Summarize = () => {
                             placeholder={t('sum.prompt')}
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
+                            tokens_used={0}
                         />
                     </div>
                 </div>

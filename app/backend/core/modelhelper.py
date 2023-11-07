@@ -23,7 +23,7 @@ def get_token_limit(model_id: str) -> int:
     return MODELS_2_TOKEN_LIMITS[model_id]
 
 
-def num_tokens_from_messages(message: dict[str, str], model: str) -> int:
+def num_tokens_from_messages(message: str, model: str) -> int:
     """
     Calculate the number of tokens required to encode a message.
     Args:
@@ -39,8 +39,7 @@ def num_tokens_from_messages(message: dict[str, str], model: str) -> int:
     """
     encoding = tiktoken.encoding_for_model(get_oai_chatmodel_tiktok(model))
     num_tokens = 2  # For "role" and "content" keys
-    for key, value in message.items():
-        num_tokens += len(encoding.encode(value))
+    num_tokens += len(encoding.encode(message))
     return num_tokens
 
 

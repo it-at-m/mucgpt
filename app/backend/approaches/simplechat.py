@@ -1,6 +1,7 @@
 from typing import Any, AsyncGenerator, Sequence
 
 import openai
+from core.modelhelper import num_tokens_from_messages
 from core.modelhelper import get_token_limit
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import (
@@ -75,8 +76,13 @@ class SimpleChatApproach():
         extra_info, chat_coroutine =  await self.run_until_final_call(history, overrides, should_stream=True, callbacks=[handler])
         yield extra_info
         asyncio.create_task(chat_coroutine)
+        result = ""
         async for event in handler.aiter():
+            result += str(event)
             yield event
+
+        yield "<<<<REQUESTTOKENS>>>>" + str(num_tokens_from_messages(history[-1]["user"],self.chatgpt_model))
+        yield "<<<<STREAMEDTOKENS>>>>" + str(num_tokens_from_messages(result,self.chatgpt_model))
 
     def initializeMemory(self, messages:"Sequence[dict[str, str]]", memory: ConversationBufferMemory) :
         for conversation in messages:

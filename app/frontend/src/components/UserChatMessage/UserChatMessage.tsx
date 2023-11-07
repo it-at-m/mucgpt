@@ -6,9 +6,10 @@ import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 
 interface Props {
     message: string;
+    token?: number;
 }
 
-export const UserChatMessage = ({ message }: Props) => {
+export const UserChatMessage = ({ message, token}: Props) => {
     return (
         <div className={styles.container}>
             <div className={styles.message}>          

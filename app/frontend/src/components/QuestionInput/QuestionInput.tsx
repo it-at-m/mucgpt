@@ -10,12 +10,13 @@ interface Props {
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
+    tokens_used: number
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used }: Props) => {
     const [question, setQuestion] = useState<string>("");
     const wordCount = 4000;
-    const getCharLeft = () => Math.max(wordCount - countWords(question), 0);
+    const getTokens = () => countWords(question)+tokens_used
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -62,7 +63,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend }: Pr
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
                 autoAdjustHeight={true}
-                description={`${getCharLeft()} Wörter übrig`}
+                description={`${getTokens()}/ ${wordCount} Token verbraucht`}
             />
             <div className={styles.questionInputButtonsContainer}>
                 <Tooltip content="Stelle eine Frage" relationship="label">

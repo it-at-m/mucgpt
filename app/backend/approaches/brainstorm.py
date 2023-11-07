@@ -94,5 +94,5 @@ class Brainstorm(Approach):
                 chat_translate_result = splitted[1]
         #msg_to_display = '\n\n'.join([str(message) for message in messages])
 
-        return {"data_points": [], "answer": chat_translate_result, "thoughts": f"Searched for:<br>{topic}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
+        return {"answer": chat_translate_result} 
     

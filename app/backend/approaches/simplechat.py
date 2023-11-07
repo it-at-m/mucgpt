@@ -59,7 +59,7 @@ class SimpleChatApproach():
             memory=memory
         )
 
-        extra_info = {"data_points": [], "thoughts": f"Searched for:<br>{user_q}<br><br>Conversations:<br>"}
+        extra_info = {}
 
         chat_coroutine = conversation.acall({"question": user_q})
         return (extra_info, chat_coroutine)

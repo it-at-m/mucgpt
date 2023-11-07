@@ -35,8 +35,6 @@ export type AskRequest = {
 
 export type AskResponse = {
     answer: string;
-    thoughts: string | null;
-    data_points: string[];
     error?: string;
 };
 
@@ -47,8 +45,6 @@ export type DenseSummary = {
 
 export type SumResponse = {
     answer: DenseSummary[];
-    thoughts: string | null;
-    data_points: string[];
     error?: string;
 };
 

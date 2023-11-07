@@ -65,9 +65,7 @@ const Chat = () => {
                 let answer: string = '';
                 let askResponse: AskResponse = {} as AskResponse;
                 for await (const event of readNDJSONStream(response.body)) {
-                    if (event["data_points"]) {
-                        askResponse = event;
-                    } else if (event) {
+                    if (event) {
                         answer += event;
                         let latestResponse: AskResponse = {...askResponse, answer: answer};
                         setIsLoading(false);
@@ -105,8 +103,6 @@ const Chat = () => {
                 makeApiRequest(last[0])
         }
     }
-    const ans:AskResponse = {answer: "# Hallo Diggi \n was geht **alter** \n \n \`\`\` python\n print(\"Hello World!\")\n a = 2 \n b=3 \n def a(): \n  return 5 \n  \`\`\` \n \`\`\` python\n print(\"Hello World!\")\n a = 2 \n b=3 \n def a(): \n  return 5 \n  \`\`\`", thoughts: "", data_points: []}
-
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
 

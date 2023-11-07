@@ -92,5 +92,5 @@ class Summarize(Approach):
                 element['missing_entities'] = [missing]
             cleaned.append(element)
 
-        return {"data_points": [], "answer": cleaned, "thoughts": f"Searched for:<br>{text}<br><br>Conversations:<br>"} #+ msg_to_display.replace('\n', '<br>')}
+        return {"answer": cleaned}
     

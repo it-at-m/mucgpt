@@ -10,6 +10,8 @@ import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
+import { Comment24Regular } from "@fluentui/react-icons";
+import { Button } from "@fluentui/react-components";
 
 const Layout = () => {
     const { language, setLanguage } = useContext(LanguageContext);
@@ -33,6 +35,7 @@ const Layout = () => {
                                             className={styles.logo}
                                         />
                                     <h2 className={styles.headerTitle}>MUCGPT</h2>
+                                    <h2 className={styles.headerTitle}>PILOT</h2>
                                 </Link>
                                 
                                 <div className={styles.headerNavLeftMargin}>
@@ -64,6 +67,11 @@ const Layout = () => {
                                 <div className={styles.spacer}>
 
                                 </div>
+                                <div className={styles.headerNavRightMargin}>
+                                    <Button icon={<Comment24Regular />} size="large">
+                                         {" Feedback/Fehler melden"}
+                                    </Button>
+                                </div>
                                 <div className={styles.headerNavRightMargin}><LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
                                 </div>
                             </div>
@@ -73,8 +81,11 @@ const Layout = () => {
             <footer className={styles.footer} role={"banner"}>
                 <div className={styles.headerNavLeftMargin}>
                     Landeshauptstadt München <br/>
-                    RIT/IT@M Innovationlab<br/>
+                    RIT/IT@M Innovationlab <br/>
                 </div>
+                <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT" className={styles.mail}>
+                    itm.kicc@muenchen.de
+                </a>
                 <div className={styles.headerNavRightMargin}>
                     <TermsOfUseDialog ></TermsOfUseDialog>
                 </div>

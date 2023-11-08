@@ -43,7 +43,9 @@ export const TermsOfUseDialog = () => {
                     Die Verantwortung für die Ergebnisse trägt bei der Weiterverwendung die/der MUCGPT Nutzer*in. KI-generierte Inhalte dürfen in keinem Fall zu einer automatisierten Entscheidungsfindung genutzt werden.
                     </li>
                     <li>
-                    Bei technischen Fehlern oder moralischem Fehlverhalten der KI wendet euch bitte an itm.innolab@muenchen.de.
+                    Bei technischen Fehlern oder moralischem Fehlverhalten der KI wendet euch bitte an      <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
+                    itm.kicc@muenchen.de
+                </a>
                     </li>
                 </ul>
             </DialogContent>

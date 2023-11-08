@@ -16,7 +16,13 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used }: Props) => {
     const [question, setQuestion] = useState<string>("");
     const wordCount = 4000;
-    const getTokens = () => countWords(question)+tokens_used
+    const getDescription = () => {
+        let actual = countWords(question)+tokens_used;
+        let text = `${actual}/ ${wordCount} Token verbraucht`;
+        if(actual > wordCount)
+            text += `. Ältere Eingaben werden bei der Generierung nicht berücksichtigt!`
+        return text;
+    }
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -44,7 +50,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
         if (!newValue) {
             setQuestion("");
-        } else if (countWords(newValue) <= wordCount) {
+        } else {
             setQuestion(newValue);
         }
     };
@@ -63,7 +69,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
                 autoAdjustHeight={true}
-                description={`${getTokens()}/ ${wordCount} Token verbraucht`}
+                description={getDescription()}
             />
             <div className={styles.questionInputButtonsContainer}>
                 <Tooltip content="Stelle eine Frage" relationship="label">

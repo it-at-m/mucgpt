@@ -35,9 +35,6 @@ param chatGptDeploymentName string // Set in main.parameters.json
 param chatGptDeploymentCapacity int = 70
 param chatGptModelName string = 'gpt-35-turbo'
 param chatGptModelVersion string = '0301'
-param embeddingDeploymentName string = 'embedding'
-param embeddingDeploymentCapacity int = 30
-param embeddingModelName string = 'text-embedding-ada-002'
 
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
@@ -107,7 +104,6 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_SERVICE: openAi.outputs.name
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName
       AZURE_OPENAI_CHATGPT_MODEL: chatGptModelName
-      AZURE_OPENAI_EMB_DEPLOYMENT: embeddingDeploymentName
       APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
       SSO_ISSUER: ssoIssuer
     }
@@ -136,15 +132,6 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
           name: 'Standard'
           capacity: chatGptDeploymentCapacity
         }
-      }
-      {
-        name: embeddingDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: embeddingModelName
-          version: '2'
-        }
-        capacity: embeddingDeploymentCapacity
       }
     ]
   }
@@ -183,7 +170,5 @@ output AZURE_OPENAI_SERVICE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
 output AZURE_OPENAI_CHATGPT_MODEL string = chatGptModelName
-output AZURE_OPENAI_EMB_DEPLOYMENT string = embeddingDeploymentName
-output AZURE_OPENAI_EMB_MODEL_NAME string = embeddingModelName
 output BACKEND_URI string = backend.outputs.uri
 output SSO_ISSUER string = ssoIssuer

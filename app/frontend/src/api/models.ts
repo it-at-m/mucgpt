@@ -83,3 +83,29 @@ export type BrainstormRequest = {
     overrides?: BrainstormRequestOverrides;
 };
 
+
+export interface ApplicationConfig {
+    backend:  Backend;
+    frontend: Frontend;
+    version:  string;
+}
+
+export interface Backend {
+    features: BackendFeatures;
+}
+
+export interface BackendFeatures {
+    enable_auth: boolean;
+}
+
+export interface Frontend {
+    features: FrontendFeatures;
+    labels:   Labels;
+}
+
+export interface FrontendFeatures {
+}
+
+export interface Labels {
+    env_name: string;
+}

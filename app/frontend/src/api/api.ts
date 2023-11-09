@@ -1,4 +1,4 @@
-import { AskRequest, AskResponse, BrainstormRequest, ChatRequest, SumRequest, SumResponse } from "./models";
+import { ApplicationConfig, AskRequest, AskResponse, BrainstormRequest, ChatRequest, SumRequest, SumResponse } from "./models";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/chat_stream" : "/chat";
@@ -48,6 +48,19 @@ export async function sumApi(options: SumRequest): Promise<SumResponse> {
         throw Error(parsedResponse.error || "Unknown error");
     }
 
+    return parsedResponse;
+}
+
+export async function configApi(): Promise<ApplicationConfig> {
+    const response = await fetch("/config", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        }});
+    const parsedResponse: ApplicationConfig = await response.json();
+    if (response.status > 299 || !response.ok) {
+        throw Error( "Unknown error");
+    }
     return parsedResponse;
 }
 

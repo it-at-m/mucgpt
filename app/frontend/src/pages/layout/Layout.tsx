@@ -3,7 +3,7 @@ import { Outlet, NavLink, Link } from "react-router-dom";
 
 import styles from "./Layout.module.css";
 import { LanguageSelector } from "../../components/LanguageSelector";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 
 import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
@@ -12,10 +12,33 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
 import { Comment24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
+import { ApplicationConfig, configApi } from "../../api";
 
 const Layout = () => {
     const { language, setLanguage } = useContext(LanguageContext);
     const { t, i18n } = useTranslation ();
+    const [config, setConfig] = useState<ApplicationConfig>({
+        backend: {
+          features: {
+            enable_auth: true
+          }
+        },
+        frontend: {
+          features: {},
+          labels: {
+            env_name: "PILOT-C"
+          }
+        },
+        version: "0.1.0"
+      }
+    )
+
+    useEffect(() => {
+        configApi().then(result => {
+            setConfig(result)
+        }, () => {console.log("Config nicht geladen")});
+    })
+
 
     const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let lang = selection.optionValue || DEFAULTLANG;
@@ -35,7 +58,7 @@ const Layout = () => {
                                             className={styles.logo}
                                         />
                                     <h2 className={styles.headerTitle}>MUCGPT</h2>
-                                    <h2 className={styles.headerTitle}>PILOT</h2>
+                                    <h2 className={styles.headerTitle}>{config.frontend.labels.env_name}</h2>
                                 </Link>
                                 
                                 <div className={styles.headerNavLeftMargin}>

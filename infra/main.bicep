@@ -18,6 +18,7 @@ param applicationInsightsName string = ''
 param ssoSecret string
 param ssoIssuer string
 param configName string
+param tagStage string
 
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
@@ -45,7 +46,7 @@ param useApplicationInsights bool = false
 
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
-var tags = {'azd-env-name': 'openai-demo-c-euw','BusinessCriticality': 'low','BusinessUnit': 'IL','CostCenter': '311-ITM-02064-001','ExpiryDate': '31.12.2999','RequestNumber': 'Nicht vorhanden','ServiceName': 'MucGPT','ServiceOwner': 'Michael Jaumann - KM83','Stage': 'Coding'}
+var tags = {'azd-env-name': 'openai-demo-c-euw','BusinessCriticality': 'low','BusinessUnit': 'IL','CostCenter': '311-ITM-02064-001','ExpiryDate': '31.12.2999','RequestNumber': 'Nicht vorhanden','ServiceName': 'MucGPT','ServiceOwner': 'Michael Jaumann - KM83','Stage': tagStage}
 
 // Organize resources in a resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {

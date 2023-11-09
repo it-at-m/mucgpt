@@ -37,6 +37,9 @@
     },
     "configName": {
       "value": "${CONFIG_NAME}"
+    },
+    "tagStage": {
+      "value": "${TAG_STAGE}"
     }
   }
 }

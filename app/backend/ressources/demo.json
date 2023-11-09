@@ -1,0 +1,16 @@
+{
+    "frontend":{
+        "labels":
+        {
+            "env_name": "PILOT"
+        },
+        "features":{
+
+        }
+    },
+    "backend": {
+        "features":{
+            "enable_auth": false
+        }
+    }
+}

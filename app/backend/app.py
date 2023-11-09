@@ -21,6 +21,7 @@ from quart import (
     send_from_directory,
 )
 from core.authentification import AuthentificationHelper, AuthError
+from core.confighelper import ConfigHelper
 
 from approaches.summarize import Summarize
 from approaches.simplechat import SimpleChatApproach
@@ -33,6 +34,7 @@ CONFIG_CHAT_APPROACHES = "chat_approaches"
 CONFIG_SUM_APPROACHES = "sum_approaches"
 CONFIG_BRAINSTORM_APPROACHES = "brainstorm_approaches"
 CONFIG_AUTH = "authentification_client"
+CONFIG_FEATURES = "configuration_features"
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
@@ -42,19 +44,28 @@ async def handleAuthError(error: AuthError):
 
 @bp.route("/")
 async def index():
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
+
     return await bp.send_static_file("index.html")
 
 @bp.route("/favicon.ico")
 async def favicon():
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
     return await bp.send_static_file("favicon.ico")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
     return await send_from_directory("static/assets", path)
 
 
 @bp.route("/chat", methods=["POST"])
 async def chat():
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -74,6 +85,9 @@ async def chat():
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
+
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -92,6 +106,9 @@ async def sum():
 
 @bp.route("/brainstorm", methods=["POST"])
 async def brainstorm():
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
+
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -116,6 +133,9 @@ async def format_as_ndjson(r: AsyncGenerator[dict, None]) -> AsyncGenerator[str,
 
 @bp.route("/chat_stream", methods=["POST"])
 async def chat_stream():
+    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+        ensure_authentification(request=request)
+
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
@@ -132,18 +152,20 @@ async def chat_stream():
         logging.exception("Exception in /chat")
         return jsonify({"error": str(e)}), 500
 
+@bp.route("/config", methods=["GET"])
+async def getConfig():
+    return jsonify(current_app.config[CONFIG_FEATURES])
+
 @bp.route("/token", methods=["GET"])
 async def readToken():
     principalID = request.headers.get('X-MS-CLIENT-PRINCIPAL-ID')
     principalName = request.headers.get('X-MS-CLIENT-PRINCIPAL-NAME')
     idProviderId = request.headers.get('X-MS-CLIENT-PRINCIPAL-IDP')
-    ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
     ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
     clientPrincipal = request.headers.get('X-MS-CLIENT-PRINCIPAL')
     clientPrincipal= base64.b64decode(clientPrincipal)
 
-    auth_client : AuthentificationHelper = current_app.config[CONFIG_AUTH]
-    claims = auth_client.authentificate(ssoaccesstoken)
+    auth_client, claims = ensure_authentification(request=request)
 
     id_claims = auth_client.decode(ssoidtoken)
 
@@ -165,6 +187,12 @@ async def readToken():
     response.mimetype = "text/plain"
     return response
 
+def ensure_authentification(request: request):
+    ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
+    auth_client : AuthentificationHelper = current_app.config[CONFIG_AUTH]
+    claims = auth_client.authentificate(ssoaccesstoken)
+    return auth_client,claims
+
 
 @bp.before_request
 async def ensure_openai_token():
@@ -183,6 +211,7 @@ async def setup_clients():
     AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ["AZURE_OPENAI_CHATGPT_DEPLOYMENT"]
     AZURE_OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
     SSO_ISSUER = os.environ["SSO_ISSUER"]
+    CONFIG_NAME = os.environ["CONFIG_NAME"]
 
 
     # Use the current user identity to authenticate with Azure OpenAI, Cognitive Search and Blob Storage (no secrets needed,
@@ -206,6 +235,8 @@ async def setup_clients():
         role="lhm-ab-mucgpt-user"
     )
 
+    config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
+
     # Store on app.config for later use inside requests
     current_app.config[CONFIG_OPENAI_TOKEN] = openai_token
     current_app.config[CONFIG_CREDENTIAL] = azure_credential
@@ -220,6 +251,7 @@ async def setup_clients():
         "sum":  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
     }
     current_app.config[CONFIG_AUTH] = auth_helper
+    current_app.config[CONFIG_FEATURES] = config_helper.loadData()
 
 
 def create_app():

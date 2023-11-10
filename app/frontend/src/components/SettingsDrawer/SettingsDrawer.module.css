@@ -1,0 +1,25 @@
+.drawer {
+    background-color: white;
+}
+
+.button{
+    margin-right: 20px;
+}
+
+.header{
+    margin-bottom: 10px;
+}
+
+
+.bodyContainer{
+    padding: 0px 15px 15px 15px;
+    margin-bottom: 20px;
+}
+
+.iconRightMargin{
+    margin-right: 5px;
+}
+
+.mail{
+    color: black;
+}

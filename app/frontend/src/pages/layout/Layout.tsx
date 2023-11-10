@@ -2,41 +2,39 @@ import { Outlet, NavLink, Link } from "react-router-dom";
 
 
 import styles from "./Layout.module.css";
-import { LanguageSelector } from "../../components/LanguageSelector";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 
-import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
+import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
-import { Comment24Regular } from "@fluentui/react-icons";
-import { Button } from "@fluentui/react-components";
 import { ApplicationConfig, configApi } from "../../api";
+import { SettingsDrawer } from "../../components/SettingsDrawer";
 
 const Layout = () => {
     const { language, setLanguage } = useContext(LanguageContext);
-    const { t, i18n } = useTranslation ();
+    const { t, i18n } = useTranslation();
     const [config, setConfig] = useState<ApplicationConfig>({
         backend: {
-          features: {
-            enable_auth: true
-          }
+            features: {
+                enable_auth: true
+            }
         },
         frontend: {
-          features: {},
-          labels: {
-            env_name: "PILOT-C"
-          }
+            features: {},
+            labels: {
+                env_name: "PILOT-C"
+            }
         },
         version: "0.1.0"
-      }
+    }
     )
 
     useEffect(() => {
         configApi().then(result => {
             setConfig(result)
-        }, () => {console.log("Config nicht geladen")});
+        }, () => { console.log("Config nicht geladen") });
     })
 
 
@@ -47,68 +45,49 @@ const Layout = () => {
     };
     return (
         <div className={styles.layout}>
-                <header className={styles.header} role={"banner"}>
-                            <div className={styles.headerNavList}>
-                                
-                                <Link to="/" className={styles.headerTitleContainer}>
-                                    <img
-                                            src={logo}
-                                            alt="MUCGPT logo"
-                                            aria-label="Link to github repository"
-                                            className={styles.logo}
-                                        />
-                                    <h2 className={styles.headerTitle}>MUCGPT</h2>
-                                    <h2 className={styles.headerTitle}>{config.frontend.labels.env_name}</h2>
-                                </Link>
-                                
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.chat')}
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/sum"   state={{from: "This is my props"}} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.sum')}
-                                    </NavLink>
-                                </div>
-{/*                                 <li className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/explain" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        Erklären
-                                    </NavLink>
-                                </li>
-                                <li className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/code" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        Programmieren
-                                    </NavLink>
-                                </li> */}
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.brainstorm')}
-                                    </NavLink>
-                                </div>
-                                
-                                <div className={styles.spacer}>
+            <header className={styles.header} role={"banner"}>
+                <div className={styles.headerNavList}>
 
-                                </div>
-                                <div className={styles.headerNavRightMargin}>
-                                    <Button icon={<Comment24Regular />} size="large">
-                                         {" Feedback/Fehler melden"}
-                                    </Button>
-                                </div>
-                                <div className={styles.headerNavRightMargin}><LanguageSelector defaultlang={DEFAULTLANG} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
-                                </div>
-                            </div>
-                </header>
+                    <Link to="/" className={styles.headerTitleContainer}>
+                        <img
+                            src={logo}
+                            alt="MUCGPT logo"
+                            aria-label="Link to github repository"
+                            className={styles.logo}
+                        ></img>
+                        <h2 className={styles.headerTitle}>MUCGPT</h2>
+                        <h2 className={styles.headerTitle}>{config.frontend.labels.env_name}</h2>
+                    </Link>
+
+                    <div className={styles.headerNavLeftMargin}>
+                        <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                            {t('header.chat')}
+                        </NavLink>
+                    </div>
+                    <div className={styles.headerNavLeftMargin}>
+                        <NavLink to="/sum" state={{ from: "This is my props" }} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                            {t('header.sum')}
+                        </NavLink>
+                    </div>
+                    <div className={styles.headerNavLeftMargin}>
+                        <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                            {t('header.brainstorm')}
+                        </NavLink>
+                    </div>
+
+                    <div className={styles.spacer}>
+
+                    </div>
+                    <SettingsDrawer defaultlang={DEFAULTLANG} onLanguageSelectionChanged={onLanguageSelectionChanged} version={config.version}></SettingsDrawer>
+                </div>
+            </header>
             <Outlet />
-  
+
             <footer className={styles.footer} role={"banner"}>
                 <div className={styles.headerNavLeftMargin}>
-                    Landeshauptstadt München <br/>
-                    RIT/IT@M Innovationlab <br/>
+                    Landeshauptstadt München <br />
+                    RIT/it@M Innovationlab <br />
                 </div>
-                <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT" className={styles.mail}>
-                    itm.kicc@muenchen.de
-                </a>
                 <div className={styles.headerNavRightMargin}>
                     <TermsOfUseDialog ></TermsOfUseDialog>
                 </div>

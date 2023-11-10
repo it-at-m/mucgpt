@@ -57,7 +57,8 @@
     padding-left: 0;
     align-items: center;
     flex-wrap: wrap;
-    justify-items: start;
+    justify-items: center;
+    justify-content: space-between;
 }
 
 .headerNavPageLink {
@@ -80,7 +81,7 @@
 }
 
 .headerNavLeftMargin {
-    margin-left: 20px;
+    font-size: x-large;
 }
 
 .headerNavRightMargin {

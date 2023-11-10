@@ -55,8 +55,8 @@ const Layout = () => {
                             aria-label="Link to github repository"
                             className={styles.logo}
                         ></img>
-                        <h2 className={styles.headerTitle}>MUCGPT</h2>
-                        <h2 className={styles.headerTitle}>{config.frontend.labels.env_name}</h2>
+                        <h3 className={styles.headerTitle}>MUCGPT</h3>
+                        <h3 className={styles.headerTitle}>{config.frontend.labels.env_name}</h3>
                     </Link>
 
                     <div className={styles.headerNavLeftMargin}>
@@ -74,17 +74,13 @@ const Layout = () => {
                             {t('header.brainstorm')}
                         </NavLink>
                     </div>
-
-                    <div className={styles.spacer}>
-
-                    </div>
                     <SettingsDrawer defaultlang={DEFAULTLANG} onLanguageSelectionChanged={onLanguageSelectionChanged} version={config.version}></SettingsDrawer>
                 </div>
             </header>
             <Outlet />
 
             <footer className={styles.footer} role={"banner"}>
-                <div className={styles.headerNavLeftMargin}>
+                <div >
                     Landeshauptstadt München <br />
                     RIT/it@M Innovationlab <br />
                 </div>

@@ -1,6 +1,5 @@
 import { ChevronDown24Regular, Dismiss24Regular, Mail24Regular } from "@fluentui/react-icons";
 import {
-    DrawerBody,
     DrawerHeader,
     DrawerHeaderTitle,
     OverlayDrawer,
@@ -13,6 +12,7 @@ import styles from "./SettingsDrawer.module.css";
 import { useCallback, useState } from "react";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
@@ -22,6 +22,7 @@ interface Props {
 
 export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const { t, i18n } = useTranslation();
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
     }, [])
@@ -45,7 +46,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                                 />
                             }
                         >
-                            Einstellungen
+                            {t('components.settingsdrawer.settings')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
                     <Divider />
@@ -57,7 +58,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <DrawerHeader>
                         <DrawerHeaderTitle
                         >
-                            Feedback
+                            {t('components.settingsdrawer.feedback')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
 
@@ -66,7 +67,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 <div className={styles.bodyContainer}>
                     <div className={styles.headerNavRightMargin}>
                         <Button size="large">
-                            <Comment24Regular className={styles.iconRightMargin} /> Feedback/Fehler melden
+                            <Comment24Regular className={styles.iconRightMargin} />  {t('components.settingsdrawer.feedback_button')}
                         </Button>
                     </div>
                     <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT" className={styles.mail}>
@@ -78,7 +79,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <DrawerHeader>
                         <DrawerHeaderTitle
                         >
-                            Über
+                            {t('components.settingsdrawer.about')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
 
@@ -91,7 +92,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
 
             <div className={styles.button}>
                 <Button icon={<ChevronDown24Regular />} appearance="primary" onClick={onClickRightButton}>
-                    Einstellungen und Feedback
+                    {t('components.settingsdrawer.settings_button')}
                 </Button>
             </div>
         </div >

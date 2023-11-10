@@ -66,6 +66,16 @@ i18n
                     },
                     sumanswer: {
                         header: "Einzigartige Aspekte/Entitäten:"
+                    },
+                    settingsdrawer: {
+                        settings_button: "Einstellungen und Feedback",
+                        feedback_button: "Feedback/Fehler melden",
+                        settings: "Einstellungen",
+                        feedback: "Feedback",
+                        about: "Über"
+                    },
+                    questioninput: {
+                        tokensused: "Token verbraucht"
                     }
                 }
             }
@@ -123,6 +133,16 @@ i18n
                     },
                     sumanswer: {
                         header: "Unique entities/aspects:"
+                    },
+                    settingsdrawer: {
+                        settings_button: "Settings and feedback",
+                        feedback_button: "Report Feedback/Fehler",
+                        settings: "Settings",
+                        feedback: "Feedback",
+                        about: "About"
+                    },
+                    questioninput: {
+                        tokensused: "Token used"
                     }
                 }
             }
@@ -180,6 +200,16 @@ i18n
                     },
                     sumanswer: {
                         header: "Einzigartige Schwerpunkte:"
+                    },
+                    settingsdrawer: {
+                        settings_button: "Eistellunga und Rückmeldung",
+                        feedback_button: "Ruckmeldung/Fehla meldn",
+                        settings: "Eistellunga",
+                        feedback: "Rückmeldung",
+                        about: "Iba"
+                    },
+                    questioninput: {
+                        tokensused: "Token vabrocht"
                     }
                 }
             }

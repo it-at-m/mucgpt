@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Stack, TextField } from "@fluentui/react";
-import { Button, Tooltip, Field, Textarea } from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 import { Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     onSend: (question: string) => void;
@@ -15,11 +16,12 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used }: Props) => {
     const [question, setQuestion] = useState<string>("");
+    const { t, i18n } = useTranslation();
     const wordCount = 4000;
     const getDescription = () => {
-        let actual = countWords(question)+tokens_used;
-        let text = `${actual}/ ${wordCount} Token verbraucht`;
-        if(actual > wordCount)
+        let actual = countWords(question) + tokens_used;
+        let text = `${actual}/ ${wordCount} ${t('components.questioninput.tokensused')}`;
+        if (actual > wordCount)
             text += `. Ältere Eingaben werden bei der Generierung nicht berücksichtigt!`
         return text;
     }

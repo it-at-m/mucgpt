@@ -1,8 +1,7 @@
-# ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search
+# MUCGPT
 
 ## Table of Contents
 
-- [Features](#features)
 - [Azure account requirements](#azure-account-requirements)
 - [Azure deployment](#azure-deployment)
   - [Project setup](#project-setup)

@@ -1,22 +1,22 @@
-# Pilot-Meldung: {TITEL}
+# Pilot-Meldung
 
-{--- kurze Beschreibung in 1 Satz ---}
+{- kurze Beschreibung in 1 Satz -}
 
 ## Typ
 
-- [] Fehler
-- [] Verbesserungsvorschlag
-- [] Generelles Feedback
-- [] Sonstiges
+- [ ] Fehler
+- [ ] Verbesserungsvorschlag
+- [ ] Generelles Feedback
+- [ ] Sonstiges
 
 ## Beschreibung
 
-{--- Hier bitte Beschreibung einfügen ---}
+{- Hier bitte Beschreibung einfügen -}
 
 ## Screenshots
 
-{--- Screenshot einfügen, wenn möglich (Shortcut: WIN + SHIFT + S) ---}
+{- Screenshot einfügen, wenn möglich (Shortcut: WIN + SHIFT + S) -}
 
 ## Weitere Informationen
 
-{--- Links, längere Texte o.ä. gerne hier einfügen --}
+{- Links, längere Texte o.ä. gerne hier einfügen -}

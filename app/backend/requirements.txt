@@ -5,7 +5,7 @@ openai[datalib]==1.2.3
 tiktoken==0.5.1
 uvicorn[standard]==0.24.0.post1
 aiohttp==3.8.6
-azure-monitor-opentelemetry==1.1.0
+azure-monitor-opentelemetry==1.0.0b15
 opentelemetry-instrumentation-asgi==0.40b0
 opentelemetry-instrumentation-requests==0.40b0
 opentelemetry-instrumentation-aiohttp-client==0.40b0

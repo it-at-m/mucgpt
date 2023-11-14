@@ -26,6 +26,11 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
     }, [])
+
+    const onFeedbackClicked = useCallback(() => {
+        // route to new page by changing window.location
+        window.open("https://git.muenchen.de/innovation-lab/ki-team/mucgpt/-/issues/new?issuable_template=pilot-meldung", "_blank") //to open new page
+    }, [])
     return (
         <div>
             <OverlayDrawer
@@ -66,7 +71,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.headerNavRightMargin}>
-                        <Button size="large">
+                        <Button size="large" onClick={onFeedbackClicked}>
                             <Comment24Regular className={styles.iconRightMargin} />  {t('components.settingsdrawer.feedback_button')}
                         </Button>
                     </div>

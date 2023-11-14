@@ -19,4 +19,4 @@
 
 ## Weitere Informationen
 
-{--- Links, längere Texte o.ä. gerne hier einfügen}
+{--- Links, längere Texte o.ä. gerne hier einfügen --}

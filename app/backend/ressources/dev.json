@@ -1,16 +1,20 @@
 {
-    "frontend":{
-        "labels":
-        {
+    "frontend": {
+        "labels": {
             "env_name": "PILOT-C"
-        },
-        "features":{
-
         }
     },
     "backend": {
-        "features":{
-            "enable_auth": true
+        "enable_auth": true,
+        "enable_database": true,
+        "chat":{
+            "log_tokens": true 
+        },
+        "brainstorm": {
+            "log_tokens": true
+        },
+        "sum": {
+            "log_tokens": true
         }
     }
 }

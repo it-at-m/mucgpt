@@ -1,7 +1,7 @@
 azure-identity==1.15.0
 quart==0.19.3
 langchain==0.0.335
-openai[datalib]==1.2.3
+openai[datalib]==0.28.1
 tiktoken==0.5.1
 uvicorn[standard]==0.24.0.post1
 aiohttp==3.8.6
@@ -12,3 +12,5 @@ opentelemetry-instrumentation-aiohttp-client==0.40b0
 werkzeug==3.0.1
 joserfc
 requests
+sqlalchemy=2.0.19
+psycopg2=2.9.9

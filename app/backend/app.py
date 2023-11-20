@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import time
-from typing import AsyncGenerator
+from typing import AsyncGenerator, cast
 import base64 
 
 import aiohttp
@@ -23,19 +23,11 @@ from quart import (
 from core.datahelper import Repository, Base
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
+from core.types.AppConfig import AppConfig
 
 from approaches.summarize import Summarize
 from approaches.simplechat import SimpleChatApproach
 from approaches.brainstorm import Brainstorm
-
-CONFIG_OPENAI_TOKEN = "openai_token"
-CONFIG_CREDENTIAL = "azure_credential"
-CONFIG_ASK_APPROACHES = "ask_approaches"
-CONFIG_CHAT_APPROACHES = "chat_approaches"
-CONFIG_SUM_APPROACHES = "sum_approaches"
-CONFIG_BRAINSTORM_APPROACHES = "brainstorm_approaches"
-CONFIG_AUTH = "authentification_client"
-CONFIG_FEATURES = "configuration_features"
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
@@ -45,33 +37,38 @@ async def handleAuthError(error: AuthError):
 
 @bp.route("/")
 async def index():
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
     return await bp.send_static_file("index.html")
 
 @bp.route("/favicon.ico")
 async def favicon():
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
     return await bp.send_static_file("favicon.ico")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
     return await send_from_directory("static/assets", path)
 
 
 @bp.route("/chat", methods=["POST"])
 async def chat():
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
+
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
     try:
-        impl = current_app.config[CONFIG_CHAT_APPROACHES]
+        impl = cfg["chat_approaches"]
         # Workaround for: https://github.com/openai/openai-python/issues/371
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
@@ -83,14 +80,15 @@ async def chat():
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
     try:
-        impl = current_app.config[CONFIG_SUM_APPROACHES]
+        impl = cfg["sum_approaches"]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
             r = await impl.run(request_json["text"], request_json["overrides"] or {})
@@ -101,7 +99,8 @@ async def sum():
 
 @bp.route("/brainstorm", methods=["POST"])
 async def brainstorm():
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
     if not request.is_json:
@@ -109,7 +108,7 @@ async def brainstorm():
     request_json = await request.get_json()
 
     try:
-        impl = current_app.config[CONFIG_BRAINSTORM_APPROACHES]
+        impl = cfg["brainstorm_approaches"]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
             r = await impl.run(request_json["topic"], request_json ["overrides"] or {})
@@ -126,15 +125,15 @@ async def format_as_ndjson(r: AsyncGenerator[dict, None]) -> AsyncGenerator[str,
 
 @bp.route("/chat_stream", methods=["POST"])
 async def chat_stream():
-    if current_app.config[CONFIG_FEATURES]["backend"]["features"]["enable_auth"]:
+    cfg = cast(AppConfig, current_app.config)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
-    approach = request_json["approach"]
     try:
-        impl = current_app.config[CONFIG_CHAT_APPROACHES]
+        impl = cfg["chat_approaches"]
         response_generator = impl.run_with_streaming(request_json["history"], request_json.get("overrides", {}))
         response = await make_response(format_as_ndjson(response_generator))
         response.timeout = None # type: ignore
@@ -145,7 +144,8 @@ async def chat_stream():
 
 @bp.route("/config", methods=["GET"])
 async def getConfig():
-    return jsonify(current_app.config[CONFIG_FEATURES])
+    cfg = cast(AppConfig, current_app.config)
+    return jsonify(cfg["configuration_features"])
 
 @bp.route("/token", methods=["GET"])
 async def readToken():
@@ -179,18 +179,20 @@ async def readToken():
     return response
 
 def ensure_authentification(request: request):
+    cfg = cast(AppConfig, current_app.config)
     ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
-    auth_client : AuthentificationHelper = current_app.config[CONFIG_AUTH]
+    auth_client : AuthentificationHelper = cfg["authentification_client"]
     claims = auth_client.authentificate(ssoaccesstoken)
     return auth_client,claims
 
 
 @bp.before_request
 async def ensure_openai_token():
-    openai_token = current_app.config[CONFIG_OPENAI_TOKEN]
+    cfg = cast(AppConfig, current_app.config)
+    openai_token = cfg["openai_token"]
     if openai_token.expires_on < time.time() + 60:
-        openai_token = await current_app.config[CONFIG_CREDENTIAL].get_token("https://cognitiveservices.azure.com/.default")
-        current_app.config[CONFIG_OPENAI_TOKEN] = openai_token
+        openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
+        cfg["openai_token"] = openai_token
         openai.api_key = openai_token.token
 
 
@@ -224,20 +226,36 @@ async def setup_clients():
     auth_helper = AuthentificationHelper(
         issuer=SSO_ISSUER,
         role="lhm-ab-mucgpt-user"
-    )
+    )  
     
+    host = "localhost" #"mucgpt-dev-db.postgres.database.azure.com"
+    database = "mucgpt" #"postgres"
+    username = "mucgpt-user" #"mucgpt_db_dev_admin"
+    password = "test" #"7nD6kLUVn7skmILuQs4t"
+
+    repoHelper = Repository(
+        username=username,
+        host=host,
+        database=database,
+        password=password
+    )
+
+
     config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
+    cfg = config_helper.loadData()
 
-    # Store on app.config for later use inside requests
-    current_app.config[CONFIG_OPENAI_TOKEN] = openai_token
-    current_app.config[CONFIG_CREDENTIAL] = azure_credential
+    current_app.config = AppConfig(
+        openai_token=openai_token,
+        azure_credential=azure_credential,
+        authentification_client=auth_helper,
+        configuration_features=cfg,
+        chat_approaches= SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["chat"], repo=repoHelper),
+        brainstorm_approaches= Brainstorm(chatgpt_deployment= AZURE_OPENAI_CHATGPT_DEPLOYMENT, chatgpt_model=AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["brainstorm"], repo=repoHelper),
+        sum_approaches=  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["sum"], repo=repoHelper)
+    )
+    if current_app.config["configuration_features"]["backend"]["enable_database"]:
+        repoHelper.setup_schema(base=Base)
 
-    current_app.config[CONFIG_CHAT_APPROACHES] = SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
-    current_app.config[CONFIG_BRAINSTORM_APPROACHES] = Brainstorm(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
-    current_app.config[CONFIG_SUM_APPROACHES] =  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
-
-    current_app.config[CONFIG_AUTH] = auth_helper
-    current_app.config[CONFIG_FEATURES] = config_helper.loadData()
 
 
 def create_app():

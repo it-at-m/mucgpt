@@ -1,10 +1,12 @@
-from typing import Any
+from typing import Any, Dict
 from langchain import LLMChain
 
 import openai
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
+from core.datahelper import Repository
+from core.types.Config import ApproachConfig
 
 from approaches.approach import Approach
 
@@ -52,9 +54,11 @@ class Brainstorm(Approach):
     Text: 
     {brainstorm}"""
 
-    def __init__(self, chatgpt_deployment: str, chatgpt_model: str):
+    def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
+        self.config = config
+        self.repo = repo
     
     def getBrainstormPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["topic"], template=self.user_mindmap_prompt)

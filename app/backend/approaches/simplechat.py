@@ -3,6 +3,8 @@ from typing import Any, AsyncGenerator, Sequence
 import openai
 from core.modelhelper import num_tokens_from_messages
 from core.modelhelper import get_token_limit
+from core.datahelper import Repository
+from core.types.Config import ApproachConfig
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -17,9 +19,11 @@ import asyncio
 
 class SimpleChatApproach():
 
-    def __init__(self, chatgpt_deployment: str, chatgpt_model: str):
+    def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
         self.chatgpt_deployment = chatgpt_deployment
         self.chatgpt_model = chatgpt_model
+        self.config = config
+        self.repo = repo
         
         self.chatgpt_token_limit = get_token_limit(chatgpt_model)
 

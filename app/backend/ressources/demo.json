@@ -1,16 +1,20 @@
 {
-    "frontend":{
-        "labels":
-        {
+    "frontend": {
+        "labels": {
             "env_name": "PILOT"
-        },
-        "features":{
-
         }
     },
     "backend": {
-        "features":{
-            "enable_auth": false
+        "enable_auth": false,
+        "enable_database": false,
+        "chat":{
+            "log_tokens": false 
+        },
+        "brainstorm": {
+            "log_tokens": false
+        },
+        "sum": {
+            "log_tokens": false
         }
     }
 }

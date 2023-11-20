@@ -1,35 +1,10 @@
-export const enum Approaches {
-    RetrieveThenRead = "rtr",
-    ReadRetrieveRead = "rrr",
-    ReadDecomposeAsk = "rda",
-    Chat = "chat",
-    Summarize = "sum",
-    Brainstorm = "brainstorm"
-}
-
-export const enum RetrievalMode {
-    Hybrid = "hybrid",
-    Vectors = "vectors",
-    Text = "text"
-}
-
 export type AskRequestOverrides = {
-    retrievalMode?: RetrievalMode;
-    semanticRanker?: boolean;
-    semanticCaptions?: boolean;
-    excludeCategory?: string;
-    top?: number;
     temperature?: number;
-    promptTemplate?: string;
-    promptTemplatePrefix?: string;
-    promptTemplateSuffix?: string;
-    suggestFollowupQuestions?: boolean;
     language?: string;
 };
 
 export type AskRequest = {
     question: string;
-    approach: Approaches;
     overrides?: AskRequestOverrides;
 };
 
@@ -56,7 +31,6 @@ export type ChatTurn = {
 
 export type ChatRequest = {
     history: ChatTurn[];
-    approach: Approaches;
     overrides?: AskRequestOverrides;
     shouldStream?: boolean;
 };
@@ -68,7 +42,6 @@ export type SumRequestOverrides = {
 
 export type SumRequest = {
     text: string;
-    approach: Approaches;
     overrides?: SumRequestOverrides;
 };
 
@@ -79,7 +52,6 @@ export type BrainstormRequestOverrides = {
 
 export type BrainstormRequest = {
     topic: string;
-    approach: Approaches;
     overrides?: BrainstormRequestOverrides;
 };
 

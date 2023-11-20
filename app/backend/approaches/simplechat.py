@@ -24,10 +24,7 @@ class SimpleChatApproach():
         self.chatgpt_token_limit = get_token_limit(chatgpt_model)
 
     async def run_until_final_call(self, history: "Sequence[dict[str, str]]", overrides: "dict[str, Any]", should_stream: bool = False, callbacks: "[]"=  []) -> Any:
-        language = overrides.get("language")
         user_q =   history[-1]["user"]
-
-        verbose = True
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature=overrides.get("temperature") or 0.7,

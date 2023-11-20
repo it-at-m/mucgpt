@@ -20,6 +20,7 @@ from quart import (
     request,
     send_from_directory,
 )
+from core.datahelper import Repository, Base
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
 
@@ -69,11 +70,8 @@ async def chat():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
-    approach = request_json["approach"]
     try:
-        impl = current_app.config[CONFIG_CHAT_APPROACHES].get(approach)
-        if not impl:
-            return jsonify({"error": "unknown approach"}), 400
+        impl = current_app.config[CONFIG_CHAT_APPROACHES]
         # Workaround for: https://github.com/openai/openai-python/issues/371
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
@@ -91,11 +89,8 @@ async def sum():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
-    approach = request_json["approach"]
     try:
-        impl = current_app.config[CONFIG_SUM_APPROACHES].get(approach)
-        if not impl:
-            return jsonify({"error": "unknown approach"}), 400
+        impl = current_app.config[CONFIG_SUM_APPROACHES]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
             r = await impl.run(request_json["text"], request_json["overrides"] or {})
@@ -112,11 +107,9 @@ async def brainstorm():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
-    approach = request_json["approach"]
+
     try:
-        impl = current_app.config[CONFIG_BRAINSTORM_APPROACHES].get(approach)
-        if not impl:
-            return jsonify({"error": "unknown approach"}), 400
+        impl = current_app.config[CONFIG_BRAINSTORM_APPROACHES]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
             r = await impl.run(request_json["topic"], request_json ["overrides"] or {})
@@ -141,9 +134,7 @@ async def chat_stream():
     request_json = await request.get_json()
     approach = request_json["approach"]
     try:
-        impl = current_app.config[CONFIG_CHAT_APPROACHES].get(approach)
-        if not impl:
-            return jsonify({"error": "unknown approach"}), 400
+        impl = current_app.config[CONFIG_CHAT_APPROACHES]
         response_generator = impl.run_with_streaming(request_json["history"], request_json.get("overrides", {}))
         response = await make_response(format_as_ndjson(response_generator))
         response.timeout = None # type: ignore
@@ -234,22 +225,17 @@ async def setup_clients():
         issuer=SSO_ISSUER,
         role="lhm-ab-mucgpt-user"
     )
-
+    
     config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
 
     # Store on app.config for later use inside requests
     current_app.config[CONFIG_OPENAI_TOKEN] = openai_token
     current_app.config[CONFIG_CREDENTIAL] = azure_credential
 
-    current_app.config[CONFIG_CHAT_APPROACHES] = {
-        "chat":  SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
-    }
-    current_app.config[CONFIG_BRAINSTORM_APPROACHES] = {
-        "brainstorm":  Brainstorm(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
-    }
-    current_app.config[CONFIG_SUM_APPROACHES] = {
-        "sum":  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
-    }
+    current_app.config[CONFIG_CHAT_APPROACHES] = SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+    current_app.config[CONFIG_BRAINSTORM_APPROACHES] = Brainstorm(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+    current_app.config[CONFIG_SUM_APPROACHES] =  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL)
+
     current_app.config[CONFIG_AUTH] = auth_helper
     current_app.config[CONFIG_FEATURES] = config_helper.loadData()
 

@@ -2,8 +2,8 @@ import { useRef, useState, useEffect, useContext } from "react";
 
 import styles from "./Brainstorm.module.css";
 
-import { Approaches, AskResponse, brainstormApi, BrainstormRequest } from "../../api";
-import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
+import { AskResponse, brainstormApi, BrainstormRequest } from "../../api";
+import { AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
@@ -13,8 +13,8 @@ import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from 'react-i18next';
 
 const Summarize = () => {
-    const {language} = useContext(LanguageContext)
-    const { t} = useTranslation ();
+    const { language } = useContext(LanguageContext)
+    const { t } = useTranslation();
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -38,7 +38,6 @@ const Summarize = () => {
         try {
             const request: BrainstormRequest = {
                 topic: question,
-                approach: Approaches.Brainstorm,
                 overrides: {
                     language: language,
                 }
@@ -65,7 +64,7 @@ const Summarize = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                </div>
+            </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
@@ -79,7 +78,7 @@ const Summarize = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                    <Mindmap markdown={answer[1].answer}></Mindmap>
+                                        <Mindmap markdown={answer[1].answer}></Mindmap>
                                     </div>
                                 </div>
                             ))}

@@ -1,10 +1,9 @@
 import { useRef, useState, useEffect, useContext } from "react";
-import {SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 
 import styles from "./Summarize.module.css";
 
-import { Approaches, sumApi, SumRequest, SumResponse } from "../../api";
-import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
+import { sumApi, SumRequest, SumResponse } from "../../api";
+import { AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
@@ -14,8 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
 
 const Summarize = () => {
-    const {language} = useContext(LanguageContext)
-    const { t} = useTranslation ();
+    const { language } = useContext(LanguageContext)
+    const { t } = useTranslation();
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -38,7 +37,6 @@ const Summarize = () => {
         try {
             const request: SumRequest = {
                 text: question,
-                approach: Approaches.Summarize,
                 overrides: {
                     language: language,
                 }

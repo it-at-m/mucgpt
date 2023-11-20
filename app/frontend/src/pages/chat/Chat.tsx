@@ -3,7 +3,7 @@ import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, Approaches, AskResponse, ChatRequest, ChatTurn } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -14,11 +14,10 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from 'react-i18next';
 
 const Chat = () => {
-    
-    const {language} = useContext(LanguageContext)
-    const { t} = useTranslation ();
+
+    const { language } = useContext(LanguageContext)
+    const { t } = useTranslation();
     const [shouldStream, setShouldStream] = useState<boolean>(true);
-    const [useSuggestFollowupQuestions, setUseSuggestFollowupQuestions] = useState<boolean>(false);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -44,15 +43,8 @@ const Chat = () => {
             const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
-                approach: Approaches.Chat,
                 shouldStream: shouldStream,
                 overrides: {
-                    promptTemplate: undefined,
-                    excludeCategory: undefined,
-                    top: undefined,
-                    semanticRanker: undefined,
-                    semanticCaptions: undefined,
-                    suggestFollowupQuestions: useSuggestFollowupQuestions,
                     language: language
                 }
             };
@@ -69,17 +61,15 @@ const Chat = () => {
                 for await (const event of readNDJSONStream(response.body)) {
                     if (event) {
                         let parsed = String(event)
-                        if(parsed.startsWith("<<<<STREAMEDTOKENS>>>>"))
-                        {
+                        if (parsed.startsWith("<<<<STREAMEDTOKENS>>>>")) {
                             streamed_tokens = Number(parsed.split("<<<<STREAMEDTOKENS>>>>")[1])
                         }
-                        else if(parsed.startsWith("<<<<REQUESTTOKENS>>>>"))
-                        {
+                        else if (parsed.startsWith("<<<<REQUESTTOKENS>>>>")) {
                             user_tokens = Number(parsed.split("<<<<REQUESTTOKENS>>>>")[1])
                         }
                         else
                             answer += parsed;
-                        let latestResponse: AskResponse = {...askResponse, answer: answer, tokens: streamed_tokens};
+                        let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
                         setIsLoading(false);
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
                     }
@@ -107,17 +97,16 @@ const Chat = () => {
     };
 
     const onRegeneratResponseClicked = () => {
-        if(answers.length > 0 )
-        {
+        if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            if(last)
+            if (last)
                 makeApiRequest(last[0])
         }
     }
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const computeTokens = () => {return answers.map((answ) => answ[2]+ (answ[1].tokens || 0)).reduceRight((prev, curr) => prev+curr, 0)}
+    const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);
@@ -162,20 +151,20 @@ const Chat = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                        {index === answers.length -1 && <Answer
+                                        {index === answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
                                             onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                           />
+                                        />
                                         }
-                                        {index !== answers.length -1 && <Answer
+                                        {index !== answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
-                                           />
+                                        />
                                         }
                                     </div>
                                 </div>

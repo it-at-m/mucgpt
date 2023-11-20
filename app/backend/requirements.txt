@@ -12,5 +12,5 @@ opentelemetry-instrumentation-aiohttp-client==0.40b0
 werkzeug==3.0.1
 joserfc
 requests
-sqlalchemy=2.0.19
-psycopg2=2.9.9
+sqlalchemy==2.0.19
+psycopg2==2.9.9

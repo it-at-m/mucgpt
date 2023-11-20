@@ -65,7 +65,6 @@ class Summarize(Approach):
     async def run(self, text: str, overrides: "dict[str, Any]") -> Any:
         language = overrides.get("language")
 
-        verbose = True
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature= overrides.get("temperature") or 0.7,
@@ -77,13 +76,12 @@ class Summarize(Approach):
             openai_api_version=openai.api_version,
             openai_api_type=openai.api_type
         )
-        summarizationChain = LLMChain(llm=llm, prompt=self.getSummarizationPrompt(), output_key="sum", verbose=verbose)
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation", verbose=verbose)
+        summarizationChain = LLMChain(llm=llm, prompt=self.getSummarizationPrompt(), output_key="sum")
+        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
         overall_chain = SequentialChain(
             chains=[summarizationChain, translationChain], 
             input_variables=["language", "text"],
-            output_variables=["translation", "sum"],
-            verbose=verbose)
+            output_variables=["translation", "sum"])
 
         result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
         # array with {missing_entities: str[], denser_summary: str }

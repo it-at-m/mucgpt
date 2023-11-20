@@ -69,7 +69,6 @@ class Brainstorm(Approach):
 
     async def run(self, topic: str, overrides: "dict[str, Any]") -> Any:
         language = overrides.get("language")
-        verbose = True
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature=overrides.get("temperature") or 0.9,
@@ -81,13 +80,12 @@ class Brainstorm(Approach):
             openai_api_version=openai.api_version,
             openai_api_type=openai.api_type
         )
-        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm", verbose=verbose)
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation", verbose=verbose)
+        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
+        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
         overall_chain = SequentialChain(
             chains=[brainstormChain, translationChain], 
             input_variables=["language", "topic"],
-            output_variables=["brainstorm","translation"],
-            verbose=verbose)
+            output_variables=["brainstorm","translation"])
 
         result = await overall_chain.acall({"topic": topic, "language": language})
         chat_translate_result = result['translation']     

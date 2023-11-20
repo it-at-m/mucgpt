@@ -1,10 +1,9 @@
-from typing import Any, Sequence
-from langchain import LLMChain
+from typing import Any
 
 import openai
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.chains import SequentialChain
+from langchain.chains import SequentialChain, LLMChain
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 

@@ -31,13 +31,15 @@ from approaches.brainstorm import Brainstorm
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
+APPCONFIG_KEY = "APPCONFIG"
+
 @bp.errorhandler(AuthError)
 async def handleAuthError(error: AuthError):
     return error.error, error.status_code
 
 @bp.route("/")
 async def index():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
@@ -45,14 +47,14 @@ async def index():
 
 @bp.route("/favicon.ico")
 async def favicon():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
     return await bp.send_static_file("favicon.ico")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
     return await send_from_directory("static/assets", path)
@@ -60,7 +62,7 @@ async def assets(path):
 
 @bp.route("/chat", methods=["POST"])
 async def chat():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
@@ -80,7 +82,7 @@ async def chat():
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
@@ -99,7 +101,7 @@ async def sum():
 
 @bp.route("/brainstorm", methods=["POST"])
 async def brainstorm():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
@@ -125,7 +127,7 @@ async def format_as_ndjson(r: AsyncGenerator[dict, None]) -> AsyncGenerator[str,
 
 @bp.route("/chat_stream", methods=["POST"])
 async def chat_stream():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
 
@@ -144,7 +146,7 @@ async def chat_stream():
 
 @bp.route("/config", methods=["GET"])
 async def getConfig():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     return jsonify(cfg["configuration_features"])
 
 @bp.route("/token", methods=["GET"])
@@ -179,7 +181,7 @@ async def readToken():
     return response
 
 def ensure_authentification(request: request):
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
     auth_client : AuthentificationHelper = cfg["authentification_client"]
     claims = auth_client.authentificate(ssoaccesstoken)
@@ -188,7 +190,7 @@ def ensure_authentification(request: request):
 
 @bp.before_request
 async def ensure_openai_token():
-    cfg = cast(AppConfig, current_app.config)
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     openai_token = cfg["openai_token"]
     if openai_token.expires_on < time.time() + 60:
         openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
@@ -244,7 +246,7 @@ async def setup_clients():
     config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
     cfg = config_helper.loadData()
 
-    current_app.config = AppConfig(
+    current_app.config[APPCONFIG_KEY] = AppConfig(
         openai_token=openai_token,
         azure_credential=azure_credential,
         authentification_client=auth_helper,
@@ -253,7 +255,7 @@ async def setup_clients():
         brainstorm_approaches= Brainstorm(chatgpt_deployment= AZURE_OPENAI_CHATGPT_DEPLOYMENT, chatgpt_model=AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["brainstorm"], repo=repoHelper),
         sum_approaches=  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["sum"], repo=repoHelper)
     )
-    if current_app.config["configuration_features"]["backend"]["enable_database"]:
+    if cfg["backend"]["enable_database"]:
         repoHelper.setup_schema(base=Base)
 
 

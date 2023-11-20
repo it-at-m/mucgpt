@@ -6,7 +6,7 @@
     },
     "backend": {
         "enable_auth": true,
-        "enable_database": true,
+        "enable_database": false,
         "chat":{
             "log_tokens": true 
         },

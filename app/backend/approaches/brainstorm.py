@@ -1,5 +1,5 @@
-from typing import Any, Dict
-from langchain import LLMChain
+from typing import Any
+from langchain.chains import LLMChain
 
 import openai
 from langchain.chat_models import AzureChatOpenAI

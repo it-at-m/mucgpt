@@ -55,17 +55,23 @@ class Repository:
     def countByDepartment(self):
         with Session(self.engine) as session:
             queryResult = session.query(Requestinfo.department, func.count(Requestinfo.tokencount)).group_by(Requestinfo.department)
-            return queryResult.all()
+            results = queryResult.all()
+            results = [tuple(row) for row in results]
+            return results
 
     def sumByDepartment(self):
         with Session(self.engine) as session:
             queryResult = session.query(Requestinfo.department, func.sum(Requestinfo.tokencount)).group_by(Requestinfo.department)
-            return queryResult.all()
+            results = queryResult.all()
+            results = [tuple(row) for row in results]
+            return results
 
     def avgByDepartment(self):
         with Session(self.engine) as session:
             queryResult = session.query(Requestinfo.department, func.avg(Requestinfo.tokencount)).group_by(Requestinfo.department)
-            return queryResult.all()
+            results = queryResult.all()
+            results = [tuple(row) for row in results]
+            return results
     
     def clear(self):
         with Session(self.engine) as session:

@@ -138,7 +138,7 @@ async def chat_stream():
     request_json = await request.get_json()
     try:
         impl = cfg["chat_approaches"]
-        response_generator = impl.run_with_streaming(request_json["history"], request_json.get("overrides", {}))
+        response_generator = impl.run_with_streaming(history= request_json["history"], overrides= request_json.get("overrides", {}), department= department)
         response = await make_response(format_as_ndjson(response_generator))
         response.timeout = None # type: ignore
         return response

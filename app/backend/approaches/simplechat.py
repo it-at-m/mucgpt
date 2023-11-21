@@ -1,7 +1,8 @@
 from typing import Any, AsyncGenerator, Sequence
 
 import openai
-from core.modelhelper import num_tokens_from_messages
+from core.datahelper import Requestinfo
+from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
 from core.modelhelper import get_token_limit
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
@@ -71,7 +72,7 @@ class SimpleChatApproach():
         extra_info["answer"] = chat_content
         return extra_info
 
-    async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]') -> AsyncGenerator[dict, None]:
+    async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]', department: str) -> AsyncGenerator[dict, None]:
         handler = AsyncIteratorCallbackHandler()
         extra_info, chat_coroutine =  await self.run_until_final_call(history, overrides, should_stream=True, callbacks=[handler])
         yield extra_info
@@ -81,8 +82,15 @@ class SimpleChatApproach():
             result += str(event)
             yield event
 
-        yield "<<<<REQUESTTOKENS>>>>" + str(num_tokens_from_messages(history[-1]["user"],self.chatgpt_model))
-        yield "<<<<STREAMEDTOKENS>>>>" + str(num_tokens_from_messages(result,self.chatgpt_model))
+        history[-1]["bot"] = result
+        self.repo.addInfo(Requestinfo( 
+            tokencount = num_tokens_from_messages(history,self.chatgpt_model),
+            department = department,
+            messagecount=  len(history),
+            method = "Chat"))
+
+        yield "<<<<REQUESTTOKENS>>>>" + str(num_tokens_from_message(history[-1]["user"],self.chatgpt_model))
+        yield "<<<<STREAMEDTOKENS>>>>" + str(num_tokens_from_message(result,self.chatgpt_model))
 
     def initializeMemory(self, messages:"Sequence[dict[str, str]]", memory: ConversationBufferMemory) :
         for conversation in messages:

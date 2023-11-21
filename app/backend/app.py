@@ -130,6 +130,8 @@ async def chat_stream():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ensure_authentification(request=request)
+    
+    department = get_department(request=request)
 
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
@@ -147,7 +149,22 @@ async def chat_stream():
 @bp.route("/config", methods=["GET"])
 async def getConfig():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     return jsonify(cfg["configuration_features"])
+
+@bp.route("/statistics", methods=["GET"])
+async def getStatistics():
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
+    repo = cfg["repository"]
+    sum_by_department = repo.sumByDepartment()
+    avg_by_department = repo.avgByDepartment()
+    return jsonify({
+        "sum": sum_by_department,
+        "avg": avg_by_department
+    })
 
 @bp.route("/token", methods=["GET"])
 async def readToken():
@@ -187,6 +204,12 @@ def ensure_authentification(request: request):
     claims = auth_client.authentificate(ssoaccesstoken)
     return auth_client,claims
 
+def get_department(request: request):
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
+    auth_client : AuthentificationHelper = cfg["authentification_client"]
+    id_claims = auth_client.decode(ssoidtoken)
+    return auth_client.getDepartment(claims=id_claims)
 
 @bp.before_request
 async def ensure_openai_token():
@@ -207,7 +230,10 @@ async def setup_clients():
     AZURE_OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
     SSO_ISSUER = os.environ["SSO_ISSUER"]
     CONFIG_NAME = os.environ["CONFIG_NAME"]
-
+    DB_HOST = os.environ["DB_HOST"]
+    DB_NAME = os.environ["DB_NAME"]
+    DB_USER = os.environ["DB_USER"]
+    DB_PASSWORD = os.environ["DB_PASSWORD"]
 
     # Use the current user identity to authenticate with Azure OpenAI, Cognitive Search and Blob Storage (no secrets needed,
     # just use 'az login' locally, and managed identity when deployed on Azure). If you need to use keys, use separate AzureKeyCredential instances with the
@@ -229,17 +255,12 @@ async def setup_clients():
         issuer=SSO_ISSUER,
         role="lhm-ab-mucgpt-user"
     )  
-    
-    host = "localhost" #"mucgpt-dev-db.postgres.database.azure.com"
-    database = "mucgpt" #"postgres"
-    username = "mucgpt-user" #"mucgpt_db_dev_admin"
-    password = "test" #"7nD6kLUVn7skmILuQs4t"
 
     repoHelper = Repository(
-        username=username,
-        host=host,
-        database=database,
-        password=password
+        username=DB_USER,
+        host=DB_HOST,
+        database=DB_NAME,
+        password=DB_PASSWORD
     )
 
 
@@ -253,7 +274,8 @@ async def setup_clients():
         configuration_features=cfg,
         chat_approaches= SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["chat"], repo=repoHelper),
         brainstorm_approaches= Brainstorm(chatgpt_deployment= AZURE_OPENAI_CHATGPT_DEPLOYMENT, chatgpt_model=AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["brainstorm"], repo=repoHelper),
-        sum_approaches=  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["sum"], repo=repoHelper)
+        sum_approaches=  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["sum"], repo=repoHelper),
+        repository=repoHelper
     )
     if cfg["backend"]["enable_database"]:
         repoHelper.setup_schema(base=Base)

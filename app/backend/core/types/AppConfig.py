@@ -6,6 +6,7 @@ from approaches.simplechat import SimpleChatApproach
 from approaches.brainstorm import Brainstorm
 from core.authentification import AuthentificationHelper
 from core.types.Config import Config
+from core.datahelper import Repository
 
 
 class AppConfig(TypedDict):
@@ -16,3 +17,4 @@ class AppConfig(TypedDict):
     brainstorm_approaches: Brainstorm
     authentification_client: AuthentificationHelper
     configuration_features: Config
+    repository: Repository

@@ -40,6 +40,18 @@
     },
     "tagStage": {
       "value": "${TAG_STAGE}"
+    },
+    "dbHost": {
+      "value": "${DB_HOST}"
+    },
+    "dbName": {
+      "value": "${DB_NAME}"
+    },
+    "dbUser": {
+      "value": "${DB_USER}"
+    },
+    "dbPassword": {
+      "value": "${DB_PASSWORD}"
     }
   }
 }

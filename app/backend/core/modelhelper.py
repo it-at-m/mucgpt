@@ -23,7 +23,18 @@ def get_token_limit(model_id: str) -> int:
     return MODELS_2_TOKEN_LIMITS[model_id]
 
 
-def num_tokens_from_messages(message: str, model: str) -> int:
+def num_tokens_from_messages(messages: 'list[dict[str, str]]', model: str) -> int:
+    num_tokens = 0
+    for conversation in messages:
+        if("user" in conversation and conversation["user"]):
+            userMsg = conversation["user"]
+            num_tokens += num_tokens_from_message(message= userMsg, model=model)
+        if("bot" in conversation and conversation["bot"]):
+            aiMsg = conversation["bot"]
+            num_tokens += num_tokens_from_message(message= aiMsg, model=model)
+    return num_tokens
+           
+def num_tokens_from_message(message: str, model: str) -> int:
     """
     Calculate the number of tokens required to encode a message.
     Args:

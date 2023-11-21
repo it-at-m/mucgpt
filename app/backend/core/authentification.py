@@ -55,5 +55,5 @@ class AuthentificationHelper:
         return claims['name']
     
     def getDepartment(self, claims):
-        return claims['department']
+        return str(claims['department'])
     

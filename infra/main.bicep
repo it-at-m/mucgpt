@@ -19,6 +19,10 @@ param ssoSecret string
 param ssoIssuer string
 param configName string
 param tagStage string
+param dbHost string = ''
+param dbName string = ''
+param dbUser string = ''
+param dbPassword string = ''
 
 param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
@@ -109,6 +113,10 @@ module backend 'core/host/appservice.bicep' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
       SSO_ISSUER: ssoIssuer
       CONFIG_NAME: configName
+      DB_HOST: dbHost
+      DB_NAME: dbName
+      DB_USER: dbUser
+      DB_PASSWORD: dbPassword
     }
   }
 }

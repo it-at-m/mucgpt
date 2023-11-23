@@ -5,8 +5,10 @@ import openai
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
+from langchain.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
+from core.datahelper import Requestinfo
 
 from approaches.approach import Approach
 
@@ -67,7 +69,7 @@ class Brainstorm(Approach):
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def run(self, topic: str, overrides: "dict[str, Any]") -> Any:
+    async def run(self, topic: str, overrides: "dict[str, Any]", department: str) -> Any:
         language = overrides.get("language")
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
@@ -86,15 +88,24 @@ class Brainstorm(Approach):
             chains=[brainstormChain, translationChain], 
             input_variables=["language", "topic"],
             output_variables=["brainstorm","translation"])
+            
 
-        result = await overall_chain.acall({"topic": topic, "language": language})
+        with get_openai_callback() as cb:
+            result = await overall_chain.acall({"topic": topic, "language": language})
+        total_tokens = cb.total_tokens
+
         chat_translate_result = result['translation']     
         #Falls Erklärungen um das Markdown außen rum existieren.
         if("```" in str(chat_translate_result)):
             splitted = str(chat_translate_result).split("```")
             if(len(splitted) == 3):
                 chat_translate_result = splitted[1]
-        #msg_to_display = '\n\n'.join([str(message) for message in messages])
+
+        self.repo.addInfo(Requestinfo( 
+            tokencount = total_tokens,
+            department = department,
+            messagecount=  1,
+            method = "Brainstorm"))
 
         return {"answer": chat_translate_result} 
     

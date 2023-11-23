@@ -88,12 +88,15 @@ async def sum():
 
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
+
     request_json = await request.get_json()
+    department = get_department(request=request)
+
     try:
         impl = cfg["sum_approaches"]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
-            r = await impl.run(request_json["text"], request_json["overrides"] or {})
+            r = await impl.run(text = request_json["text"], overrides=request_json["overrides"] or {}, department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -107,13 +110,15 @@ async def brainstorm():
 
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
+        
     request_json = await request.get_json()
+    department = get_department(request=request)
 
     try:
         impl = cfg["brainstorm_approaches"]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
-            r = await impl.run(request_json["topic"], request_json ["overrides"] or {})
+            r = await impl.run(topic=request_json["topic"],overrides= request_json ["overrides"] or {}, department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")

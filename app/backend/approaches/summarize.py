@@ -4,8 +4,10 @@ import openai
 from langchain.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain, LLMChain
+from langchain.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
+from core.datahelper import Requestinfo
 
 from approaches.approach import Approach
 import json
@@ -61,7 +63,7 @@ class Summarize(Approach):
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_prompt)
 
 
-    async def run(self, text: str, overrides: "dict[str, Any]") -> Any:
+    async def run(self, text: str, overrides: "dict[str, Any]", department: str) -> Any:
         language = overrides.get("language")
 
         llm = AzureChatOpenAI(
@@ -82,7 +84,9 @@ class Summarize(Approach):
             input_variables=["language", "text"],
             output_variables=["translation", "sum"])
 
-        result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
+        with get_openai_callback() as cb:
+            result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
+        total_tokens = cb.total_tokens
         # array with {missing_entities: str[], denser_summary: str }
         chat_translate_result = result['translation'].replace("\n", "")   
         # sometimes, missing_entities is just str, convert to array.
@@ -93,6 +97,14 @@ class Summarize(Approach):
             if(isinstance(missing, str)):
                 element['missing_entities'] = [missing]
             cleaned.append(element)
+        
+        
+        self.repo.addInfo(Requestinfo( 
+            tokencount = total_tokens,
+            department = department,
+            messagecount=  1,
+            method = "Sum"))
+
 
         return {"answer": cleaned}
     

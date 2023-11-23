@@ -34,12 +34,13 @@ def num_tokens_from_messages(messages: 'list[dict[str, str]]', model: str) -> in
             num_tokens += num_tokens_from_message(message= aiMsg, model=model)
     return num_tokens
            
-def num_tokens_from_message(message: str, model: str) -> int:
+def num_tokens_from_message(message: str, model: str, token_per_message: int = 3) -> int:
     """
     Calculate the number of tokens required to encode a message.
     Args:
-        message (dict): The message to encode, represented as a dictionary.
+        message (str): The message to encode
         model (str): The name of the model to use for encoding.
+        token_per_message (number): offset per message
     Returns:
         int: The total number of tokens required to encode the message.
     Example:
@@ -49,7 +50,7 @@ def num_tokens_from_message(message: str, model: str) -> int:
         output: 11
     """
     encoding = tiktoken.encoding_for_model(get_oai_chatmodel_tiktok(model))
-    num_tokens = 2  # For "role" and "content" keys
+    num_tokens = token_per_message  # For "role" and "content" keys
     num_tokens += len(encoding.encode(message))
     return num_tokens
 

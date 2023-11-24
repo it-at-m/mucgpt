@@ -65,7 +65,7 @@ resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' exi
 
 
 // Monitor application with Azure Monitor
-module monitoring './core/monitor/monitoring.bicep' = if (useApplicationInsights) {
+module monitoring 'core/monitor/monitoring.bicep' = if (useApplicationInsights) {
   name: 'monitoring'
   scope: resourceGroup
   params: {
@@ -91,6 +91,19 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
   }
 }
 
+// Create an App Service Plan to group applications under the same payment plan and SKU
+module db 'core/db/db.bicep' = {
+  name: 'db'
+  scope: resourceGroup
+  params: {
+    name: dbHost
+    location: location
+    tags: tags
+    administratorLogin:  dbUser
+    administratorLoginPassword: dbPassword
+  }
+}
+
 // The application frontend
 module backend 'core/host/appservice.bicep' = {
   name: 'web'
@@ -113,7 +126,7 @@ module backend 'core/host/appservice.bicep' = {
       APPLICATIONINSIGHTS_CONNECTION_STRING: useApplicationInsights ? monitoring.outputs.applicationInsightsConnectionString : ''
       SSO_ISSUER: ssoIssuer
       CONFIG_NAME: configName
-      DB_HOST: dbHost
+      DB_HOST: concat(dbHost, '.postgres.database.azure.com')
       DB_NAME: dbName
       DB_USER: dbUser
       DB_PASSWORD: dbPassword

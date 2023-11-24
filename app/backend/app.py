@@ -39,35 +39,23 @@ async def handleAuthError(error: AuthError):
 
 @bp.route("/")
 async def index():
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
-
     return await bp.send_static_file("index.html")
 
 @bp.route("/favicon.ico")
 async def favicon():
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
     return await bp.send_static_file("favicon.ico")
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
     return await send_from_directory("static/assets", path)
 
 
 @bp.route("/chat", methods=["POST"])
 async def chat():
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
-
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
+
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     request_json = await request.get_json()
     try:
         impl = cfg["chat_approaches"]
@@ -82,13 +70,10 @@ async def chat():
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
-
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
 
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     request_json = await request.get_json()
     department = get_department(request=request)
 
@@ -104,13 +89,10 @@ async def sum():
 
 @bp.route("/brainstorm", methods=["POST"])
 async def brainstorm():
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
-
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
-        
+
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     request_json = await request.get_json()
     department = get_department(request=request)
 
@@ -133,9 +115,6 @@ async def format_as_ndjson(r: AsyncGenerator[dict, None]) -> AsyncGenerator[str,
 @bp.route("/chat_stream", methods=["POST"])
 async def chat_stream():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
-    
     department = get_department(request=request)
 
     if not request.is_json:
@@ -154,15 +133,11 @@ async def chat_stream():
 @bp.route("/config", methods=["GET"])
 async def getConfig():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
     return jsonify(cfg["configuration_features"])
 
 @bp.route("/statistics", methods=["GET"])
 async def getStatistics():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
     repo = cfg["repository"]
     sum_by_department = repo.sumByDepartment()
     avg_by_department = repo.avgByDepartment()
@@ -215,6 +190,13 @@ def get_department(request: request):
     auth_client : AuthentificationHelper = cfg["authentification_client"]
     id_claims = auth_client.decode(ssoidtoken)
     return auth_client.getDepartment(claims=id_claims)
+
+@bp.before_app_request
+async def check_authentification():
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
+
 
 @bp.before_request
 async def ensure_openai_token():

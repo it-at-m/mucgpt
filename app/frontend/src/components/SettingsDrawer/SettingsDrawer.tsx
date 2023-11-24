@@ -91,7 +91,8 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
-                    <div>Version: {version}</div>
+                    <a href="\#faq" className={styles.faq}>FAQs</a>
+                    <div className={styles.faq}>Version: {version}</div>
                 </div>
             </OverlayDrawer >
 

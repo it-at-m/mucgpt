@@ -12,6 +12,7 @@ import Chat from "./pages/chat/Chat";
 import Summarize from "./pages/summarize/Summarize";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
 import Brainstorm from "./pages/brainstorm/Brainstorm";
+import Faq from "./pages/faq/Faq";
 initializeIcons();
 
 const router = createHashRouter([
@@ -31,10 +32,14 @@ const router = createHashRouter([
                 path: "brainstorm",
                 element: <Brainstorm />
             },
-           /** {
-                path: "qa",
-                lazy: () => import("./pages/oneshot/OneShot")
-            }, */
+            {
+                path: "faq",
+                element: <Faq />
+            },
+            /** {
+                 path: "qa",
+                 lazy: () => import("./pages/oneshot/OneShot")
+             }, */
             {
                 path: "*",
                 lazy: () => import("./pages/NoPage")

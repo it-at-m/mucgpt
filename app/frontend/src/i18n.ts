@@ -147,7 +147,7 @@ i18n
                 }
             }
         },
-        Bayrisch: {
+        Bairisch: {
             translation: {
                 header: {
                     sum: "Zammfassn",

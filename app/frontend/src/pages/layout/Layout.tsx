@@ -35,7 +35,7 @@ const Layout = () => {
         configApi().then(result => {
             setConfig(result)
         }, () => { console.log("Config nicht geladen") });
-    })
+    }, [])
 
 
     const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {

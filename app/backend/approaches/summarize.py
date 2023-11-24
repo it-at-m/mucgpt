@@ -99,11 +99,12 @@ class Summarize(Approach):
             cleaned.append(element)
         
         
-        self.repo.addInfo(Requestinfo( 
-            tokencount = total_tokens,
-            department = department,
-            messagecount=  1,
-            method = "Sum"))
+        if self.config["log_tokens"]:
+            self.repo.addInfo(Requestinfo( 
+                tokencount = total_tokens,
+                department = department,
+                messagecount=  1,
+                method = "Sum"))
 
 
         return {"answer": cleaned}

@@ -83,11 +83,12 @@ class SimpleChatApproach():
             yield event
 
         history[-1]["bot"] = result
-        self.repo.addInfo(Requestinfo( 
-            tokencount = num_tokens_from_messages(history,self.chatgpt_model),
-            department = department,
-            messagecount=  len(history),
-            method = "Chat"))
+        if self.config["log_tokens"]:
+            self.repo.addInfo(Requestinfo( 
+                tokencount = num_tokens_from_messages(history,self.chatgpt_model),
+                department = department,
+                messagecount=  len(history),
+                method = "Chat"))
 
         yield "<<<<REQUESTTOKENS>>>>" + str(num_tokens_from_message(history[-1]["user"],self.chatgpt_model))
         yield "<<<<STREAMEDTOKENS>>>>" + str(num_tokens_from_message(result,self.chatgpt_model))

@@ -101,11 +101,13 @@ class Brainstorm(Approach):
             if(len(splitted) == 3):
                 chat_translate_result = splitted[1]
 
-        self.repo.addInfo(Requestinfo( 
-            tokencount = total_tokens,
-            department = department,
-            messagecount=  1,
-            method = "Brainstorm"))
+        
+        if self.config["log_tokens"]:
+            self.repo.addInfo(Requestinfo( 
+                tokencount = total_tokens,
+                department = department,
+                messagecount=  1,
+                method = "Brainstorm"))
 
         return {"answer": chat_translate_result} 
     

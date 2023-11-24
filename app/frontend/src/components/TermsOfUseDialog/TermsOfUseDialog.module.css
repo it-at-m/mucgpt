@@ -1,7 +1,7 @@
 .dialog{
     background-color: white;
     padding: 0 !important; 
-    min-width: 700px;
+    min-width: 1000px;
 }
 
 @media (max-width: 650px) {
@@ -17,4 +17,8 @@
 
 .checkIcon{
     color: green
+}
+
+li:not(:last-child) {
+    margin-bottom: 5px;
 }

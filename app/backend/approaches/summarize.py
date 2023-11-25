@@ -13,7 +13,7 @@ from approaches.approach import Approach
 import json
 
 class Summarize(Approach):
-    """Chain of Density Prompting: https://arxiv.org/abs/2309.04269"""
+    """Chain of Density prompting: https://arxiv.org/abs/2309.04269"""
 
     user_sum_prompt = """
     Article: {text}
@@ -38,15 +38,25 @@ class Summarize(Approach):
     - Never drop entities from the previous summary. If space cannot be made, add fewer new entities.
 
     Remember: Use the exact same number of words for each summary.
-    Answer in JSON. The JSON should be a list (length 5) of dictionaries whose keys are "missing_entities" and "denser_summary".
+
+    Do not include any explanations. Only return a valid valid RFC8259 compilant JSON.
+    The JSON should be an array of length 5 following this format:
+    {{
+    "data": [
+    {{
+        "missing_entities": "a missing entity"
+        "denser_summary": "denser summary, covers every entity in detail"
+    }}
+    ]
+    }}
+    The response in JSON format:
     """
 
     user_translate_prompt = """
-    Text: {sum}
+    Übersetze das folgende JSON in {language}. Beinhalte die Formatierung als RFC8259 JSON bei.
 
-    Übersetze den Text in {language}. Beinhalte die Formatierung als JSON bei.
+    JSON: {sum}
     """
-
 
 
     def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
@@ -69,7 +79,7 @@ class Summarize(Approach):
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature= overrides.get("temperature") or 0.7,
-            max_tokens=4096,
+            max_tokens=1000,
             n=1,
             deployment_name= "chat",
             openai_api_key=openai.api_key,
@@ -88,6 +98,7 @@ class Summarize(Approach):
             result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
         total_tokens = cb.total_tokens
         # array with {missing_entities: str[], denser_summary: str }
+        result["translation"]= result["translation"][result["translation"].index("{"):]
         chat_translate_result = result['translation'].replace("\n", "")   
         # sometimes, missing_entities is just str, convert to array.
         cleaned = []

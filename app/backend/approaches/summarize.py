@@ -11,6 +11,7 @@ from core.datahelper import Requestinfo
 
 from approaches.approach import Approach
 import json
+import re
 
 class Summarize(Approach):
     """Chain of Density prompting: https://arxiv.org/abs/2309.04269"""
@@ -44,7 +45,7 @@ class Summarize(Approach):
     {{
     "data": [
     {{
-        "missing_entities": "a missing entity"
+        "missing_entities": "An array of missing entitys"
         "denser_summary": "denser summary, covers every entity in detail"
     }}
     ]
@@ -54,6 +55,15 @@ class Summarize(Approach):
 
     user_translate_prompt = """
     Übersetze das folgende JSON in {language}. Beinhalte die Formatierung als RFC8259 JSON bei.
+    Das JSON sollte ein Array der Länge 5 sein, welcher folgendem Format folgt:
+    {{
+    "data": [
+    {{
+        "missing_entities": "An array of missing entitys"
+        "denser_summary": "denser summary, covers every entity in detail"
+    }}
+    ]
+    }}
 
     JSON: {sum}
     """
@@ -73,9 +83,8 @@ class Summarize(Approach):
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_prompt)
 
 
-    async def run(self, text: str, overrides: "dict[str, Any]", department: str) -> Any:
+    async def run_internal(self, text: str, overrides: "dict[str, Any]", department: str) -> str:
         language = overrides.get("language")
-
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature= overrides.get("temperature") or 0.7,
@@ -97,19 +106,6 @@ class Summarize(Approach):
         with get_openai_callback() as cb:
             result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
         total_tokens = cb.total_tokens
-        # array with {missing_entities: str[], denser_summary: str }
-        result["translation"]= result["translation"][result["translation"].index("{"):]
-        chat_translate_result = result['translation'].replace("\n", "")   
-        # sometimes, missing_entities is just str, convert to array.
-        cleaned = []
-        for (i, element) in enumerate(json.loads(chat_translate_result)):
-            print(element)
-            missing = element['missing_entities']
-            if(isinstance(missing, str)):
-                element['missing_entities'] = [missing]
-            cleaned.append(element)
-        
-        
         if self.config["log_tokens"]:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
@@ -117,6 +113,61 @@ class Summarize(Approach):
                 messagecount=  1,
                 method = "Sum"))
 
+        # array with {missing_entities: str[], denser_summary: str }
+        chat_translate_result= result["translation"][result["translation"].index("{"):]
+        chat_translate_result = chat_translate_result.replace("\n", "").rstrip()
+        chat_translate_result = self.removeQuotations(chat_translate_result)
+        if not chat_translate_result.endswith("}"):
+            chat_translate_result  = chat_translate_result + "\"}]}"
 
+        return chat_translate_result
+
+    def removeQuotations(self,st):
+        # finds all denser summarys, replaces quotation inside with &quot
+        m = re.finditer(r'(?<=\"denser_summary\":)(.*?)(?=\})', st)
+
+        new_string = ""
+        idx = 0
+
+        for i in list(m):
+            ss, se = i.span(1)  # first and last index
+            groups = i.group()  # complete string ins
+            quotations = [m.start() for m in re.finditer('"', groups)]
+            # Quotation inside dense summary?
+            if(len(quotations)>2):
+                new_string += st[idx:ss+quotations[1]]
+                idx = ss+quotations[1]+1
+                for quotindex in quotations[1:-1]:
+                    new_string += st[idx:ss+quotindex] + "“ "
+                    idx = ss+quotindex+1
+                new_string += st[idx:se]
+                idx = quotations[-1]+1
+            else:
+                new_string += st[idx:ss] +  groups
+            idx = se
+        new_string += st[idx:]
+        return new_string
+
+    async def run(self, text: str, overrides: "dict[str, Any]", department: str) -> Any:
+        chat_translate_result = await self.run_internal(text, overrides, department)
+        try:
+            jsoned = json.loads(chat_translate_result)
+        except Exception:
+            # try again
+            try: 
+               chat_translate_result = await self.run_internal(text, overrides, department)   
+               jsoned = json.loads(chat_translate_result)  
+            except Exception:
+                jsoned = { }
+                jsoned['data'] = [{'missing_entities': 'Fehler','denser_summary': 'Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.'}]
+
+        # sometimes, missing_entities is just str, convert to array.
+        cleaned = []
+        for (i, element) in enumerate(jsoned['data']):
+            missing = element['missing_entities']
+            if(isinstance(missing, str)):
+                element['missing_entities'] = [missing]
+            cleaned.append(element)
+        
         return {"answer": cleaned}
     

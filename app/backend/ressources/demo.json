@@ -6,15 +6,15 @@
     },
     "backend": {
         "enable_auth": true,
-        "enable_database": true,
+        "enable_database": false,
         "chat":{
-            "log_tokens": true 
+            "log_tokens": false 
         },
         "brainstorm": {
-            "log_tokens": true
+            "log_tokens": false
         },
         "sum": {
-            "log_tokens": true
+            "log_tokens": false
         }
     }
 }

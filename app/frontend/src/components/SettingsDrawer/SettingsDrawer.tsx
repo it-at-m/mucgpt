@@ -84,7 +84,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <DrawerHeader>
                         <DrawerHeaderTitle
                         >
-                            {t('components.settingsdrawer.about')}
+                            {t('components.settingsdrawer.help')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
 
@@ -92,6 +92,20 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.bodyContainer}>
                     <a href="\#faq" className={styles.faq}>FAQs</a>
+                    <br />
+                    <a download className={styles.faq} aria-label="Cheat Sheet" href="https://git.muenchen.de/innovation-lab/ki-team/mucgpt-doku/-/raw/main/MucGPT%20Serviceeinf%C3%BChrung/Pilotphase/mucgpt_cheatsheet.pdf?inline=false">Cheat Sheet</a>
+                </div>
+                <div className={styles.header}>
+                    <DrawerHeader>
+                        <DrawerHeaderTitle
+                        >
+                            {t('components.settingsdrawer.about')}
+                        </DrawerHeaderTitle>
+                    </DrawerHeader>
+
+                    <Divider />
+                </div>
+                <div className={styles.bodyContainer}>
                     <div className={styles.faq}>Version: {version}</div>
                 </div>
             </OverlayDrawer >

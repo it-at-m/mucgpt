@@ -72,7 +72,8 @@ i18n
                         feedback_button: "Feedback/Fehler melden",
                         settings: "Einstellungen",
                         feedback: "Feedback",
-                        about: "Über"
+                        about: "Über",
+                        help: "Hilfe"
                     },
                     questioninput: {
                         tokensused: "Token verbraucht"
@@ -139,7 +140,8 @@ i18n
                         feedback_button: "Report Feedback/Fehler",
                         settings: "Settings",
                         feedback: "Feedback",
-                        about: "About"
+                        about: "About",
+                        help: "Help"
                     },
                     questioninput: {
                         tokensused: "Token used"
@@ -206,7 +208,8 @@ i18n
                         feedback_button: "Ruckmeldung/Fehla meldn",
                         settings: "Eistellunga",
                         feedback: "Rückmeldung",
-                        about: "Iba"
+                        about: "Iba",
+                        help: "Hilf(e)"
                     },
                     questioninput: {
                         tokensused: "Token vabrocht"

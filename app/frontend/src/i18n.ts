@@ -68,7 +68,7 @@ i18n
                     },
                     sumanswer: {
                         header: "Einzigartige Aspekte/Entitäten:",
-                        alternative: "Variante "
+                        alternative: "Zusammenfassung "
                     },
                     settingsdrawer: {
                         settings_button: "Einstellungen und Feedback",
@@ -139,7 +139,7 @@ i18n
                     },
                     sumanswer: {
                         header: "Unique entities/aspects:",
-                        alternative: "Alternative "
+                        alternative: "Summary "
                     },
                     settingsdrawer: {
                         settings_button: "Settings and feedback",
@@ -210,7 +210,7 @@ i18n
                     },
                     sumanswer: {
                         header: "Einzigartige Schwerpunkte:",
-                        alternative: "Variante "
+                        alternative: "Zsammanfassung "
                     },
                     settingsdrawer: {
                         settings_button: "Eistellunga und Rückmeldung",

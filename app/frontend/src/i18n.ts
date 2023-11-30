@@ -23,23 +23,25 @@ i18n
                 },
                 chat: {
                     header: "Stelle eine Frage oder probiere ein Beispiel",
-                    prompt: "Stelle eine Frage"
+                    prompt: "Stelle eine Frage",
+                    answer_loading: "Erstelle Antwort"
                 },
                 sum: {
-                    header: "Lasse Text zusammenfassen oder probiere ein Beispiel. Generiert fünf einzigartige Zusammenfassungen, die sich jeweils auf andere Aspekte fokusieren.",
+                    header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
                     prompt: "Diesen Text zusammenfassen",
                     rolelabel: "Zusammenfassen für",
-                    lengthlabel: "in"
+                    lengthlabel: "in",
+                    answer_loading: "Fasse zusammen"
                 },
                 brainstorm: {
                     header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
-                    prompt: "Ideen zu diesem Thema finden"
+                    prompt: "Ideen zu diesem Thema finden",
+                    answer_loading: "Denke nach"
                 },
                 common: {
                     clear_chat: "Chat löschen",
                     settings: "Einstellungen",
-                    close: "Schließen",
-                    answer_loading: "Erstelle Antwort"
+                    close: "Schließen"
                 },
                 components:{
                     roles: {
@@ -91,23 +93,25 @@ i18n
                 },
                 chat: {
                     header: "Ask a question or try an example",
-                    prompt: "Ask a question"
+                    prompt: "Ask a question",
+                    answer_loading: "Generating answer"
                 },
                 sum: {
-                    header: "Summarize text or try an example. Generates five unique summaries, each focusing on different aspects",
+                    header: "Summarize text or try an example",
                     prompt: "Summarize this text",
                     rolelabel: "Summarize for",
-                    lengthlabel: "in"
+                    lengthlabel: "in",
+                    answer_loading: "Summarize"
                 },
                 brainstorm: {
                     header: "Find ideas for a topic or try an example",
-                    prompt: "Find ideas for this topics"
+                    prompt: "Find ideas for this topics",
+                    answer_loading: "Thinking"
                 },
                 common: {
                     clear_chat: "Clear chat",
                     settings: "Settings",
-                    close: "Close",
-                    answer_loading: "Generating answer"
+                    close: "Close"
                 },
                 components:{
                     roles: {
@@ -159,23 +163,25 @@ i18n
                 },
                 chat: {
                     header: "Stelle a Froog oda probier a Beispui",
-                    prompt: "Stelle a Froog "
+                    prompt: "Stelle a Froog ",
+                    answer_loading: "I bearbeit grad de Frog"
                 },
                 sum: {
-                    header: "Fassn Text zam oda probier a Beispui. Erzeugt fünf einzigarte Zammfassunga, jedesmoi mid an andan Schwerpunkt",
+                    header: "Fassn Text zam oda probier a Beispui",
                     prompt: "Diesn Text zammfassn",
                     rolelabel: "Zammfassn für",
-                    lengthlabel: "in"
+                    lengthlabel: "in",
+                    answer_loading: "Am zammfassn"
                 },
                 brainstorm: {
                     header: "Ideen zu dem Thema aufaspuin oda probier a Beispui",
-                    prompt: "Ideen zu dem Thema aufaspuin"
+                    prompt: "Ideen zu dem Thema aufaspuin",
+                    answer_loading: "Denk na"
                 },
                 common: {
                     clear_chat: "Nochrichten löschn",
                     settings: "Konfiguration",
-                    close: "Schließen",
-                    answer_loading: "I bearbeit grad de Frog"
+                    close: "Schließen"
                 },
                 components:{
                     roles: {

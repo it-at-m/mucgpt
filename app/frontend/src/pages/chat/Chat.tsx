@@ -173,7 +173,7 @@ const Chat = () => {
                                 <>
                                     <UserChatMessage message={lastQuestionRef.current} />
                                     <div className={styles.chatMessageGptMinWidth}>
-                                        <AnswerLoading />
+                                        <AnswerLoading text={t('chat.answer_loading')} />
                                     </div>
                                 </>
                             )}

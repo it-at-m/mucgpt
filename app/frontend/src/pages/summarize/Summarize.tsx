@@ -22,7 +22,7 @@ const Summarize = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
+    const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([["Hans", { answer: [{ missing_entities: ["test", "blub"], denser_summary: "testblub1" }, { missing_entities: ["test", "blub"], denser_summary: "testblub2" }, { missing_entities: ["test", "blub"], denser_summary: "testblub3" }] }]]);
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);
@@ -77,7 +77,7 @@ const Summarize = () => {
                                 <div key={index}>
                                     <UserChatMessage message={answer[0]} />
                                     <div className={styles.chatMessageGpt}>
-                                        <SumAnswer answer={answer[1]}></SumAnswer>
+                                        <SumAnswer answer={answer[1]} top_n={2}></SumAnswer>
                                     </div>
                                 </div>
                             ))}
@@ -85,7 +85,7 @@ const Summarize = () => {
                                 <>
                                     <UserChatMessage message={lastQuestionRef.current} />
                                     <div className={styles.chatMessageGptMinWidth}>
-                                        <AnswerLoading />
+                                        <AnswerLoading text={t('sum.answer_loading')} />
                                     </div>
                                 </>
                             )}
@@ -112,7 +112,7 @@ const Summarize = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

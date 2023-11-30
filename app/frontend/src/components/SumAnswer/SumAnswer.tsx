@@ -7,46 +7,45 @@ import DOMPurify from "dompurify";
 import { Button } from "@fluentui/react-button";
 interface Props {
     answer: SumResponse;
+    top_n: number; // die besten zwei Varianten darstellen
 }
 
-
-export const SumAnswer = ({ answer}: Props) => {
-    const { t} = useTranslation ();
+export const SumAnswer = ({ answer, top_n }: Props) => {
+    const { t } = useTranslation();
     const [getSelected, setSelected] = useState(0);
-    const sanitizedAnswerHtml = answer.answer.map( answ => 
-        {
-            let summary =  answ.denser_summary;
-            answ.missing_entities.forEach(ent => {
-                summary = summary.replaceAll(ent, `<font style="color: green">${ent}</font>`)
-            });
-            return DOMPurify.sanitize(summary)
+    const answers = answer.answer.length > 2 ? answer.answer.slice(-2) : answer.answer
+    const sanitizedAnswerHtml = answers.map(answ => {
+        let summary = answ.denser_summary;
+        answ.missing_entities.forEach(ent => {
+            summary = summary.replaceAll(ent, `<font style="color: green">${ent}</font>`)
         });
-    const sanitzedKeywords = answer.answer.map(answ => answ.missing_entities.reduceRight((prev, curr) => prev + ", " + curr));
+        return DOMPurify.sanitize(summary)
+    });
+    const sanitzedKeywords = answers.map(answ => answ.missing_entities.reduceRight((prev, curr) => prev + ", " + curr));
     return (
-         <Stack  verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>
-             <Stack.Item>
-                 <Stack horizontal horizontalAlign="end">
-                 <div className={`${styles.sumanswerHeader}`}> {t('components.sumanswer.header')}</div>
-                 {sanitzedKeywords.map((x, i) => (
-                     <div>
-                        <Button
-                             style={{border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "#f2f2f2": "white", height: "100%"}}
-                             appearance="outline"
-                             size="small"
-                             shape="rounded"
-                             onClick={() => setSelected(i)}
-                             key={i}
-                         >{x}</Button>
-                     </div>
-                 ))}
-                 </Stack>
-             </Stack.Item>
-                <Stack.Item grow>
-                    <div className={styles.sumanswerContainer}>
-                        <div className={styles.answerText} dangerouslySetInnerHTML={{ __html: sanitizedAnswerHtml[getSelected] }}></div>
-                    </div>
-                </Stack.Item>
-        </Stack> 
+        <Stack verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>
+            <Stack.Item>
+                <Stack horizontal horizontalAlign="end">
+                    {sanitzedKeywords.map((x, i) => (
+                        <div>
+                            <Button
+                                style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "#f2f2f2" : "white", height: "100%" }}
+                                appearance="outline"
+                                size="small"
+                                shape="rounded"
+                                onClick={() => setSelected(i)}
+                                key={i}
+                            >Variante {i + 1}</Button>
+                        </div>
+                    ))}
+                </Stack>
+            </Stack.Item>
+            <Stack.Item grow>
+                <div className={styles.sumanswerContainer}>
+                    <div className={styles.answerText} dangerouslySetInnerHTML={{ __html: sanitizedAnswerHtml[getSelected] }}></div>
+                </div>
+            </Stack.Item>
+        </Stack>
     );
 };
 

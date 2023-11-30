@@ -86,7 +86,7 @@ const Summarize = () => {
                                 <>
                                     <UserChatMessage message={lastQuestionRef.current} />
                                     <div className={styles.chatMessageGptMinWidth}>
-                                        <AnswerLoading />
+                                        <AnswerLoading text={t('brainstorm.answer_loading')} />
                                     </div>
                                 </>
                             )}

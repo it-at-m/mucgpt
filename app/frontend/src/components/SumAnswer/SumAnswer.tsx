@@ -35,7 +35,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                                 shape="rounded"
                                 onClick={() => setSelected(i)}
                                 key={i}
-                            >Variante {i + 1}</Button>
+                            >{t("components.sumanswer.alternative")} {i + 1}</Button>
                         </div>
                     ))}
                 </Stack>

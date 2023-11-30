@@ -67,7 +67,8 @@ i18n
                         mindmap: "Mindmapansicht"
                     },
                     sumanswer: {
-                        header: "Einzigartige Aspekte/Entitäten:"
+                        header: "Einzigartige Aspekte/Entitäten:",
+                        alternative: "Variante "
                     },
                     settingsdrawer: {
                         settings_button: "Einstellungen und Feedback",
@@ -137,7 +138,8 @@ i18n
                         mindmap: "Mindmap view"
                     },
                     sumanswer: {
-                        header: "Unique entities/aspects:"
+                        header: "Unique entities/aspects:",
+                        alternative: "Alternative "
                     },
                     settingsdrawer: {
                         settings_button: "Settings and feedback",
@@ -207,7 +209,8 @@ i18n
                         mindmap: "Mindmapoisicht"
                     },
                     sumanswer: {
-                        header: "Einzigartige Schwerpunkte:"
+                        header: "Einzigartige Schwerpunkte:",
+                        alternative: "Variante "
                     },
                     settingsdrawer: {
                         settings_button: "Eistellunga und Rückmeldung",

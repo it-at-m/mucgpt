@@ -22,7 +22,7 @@ const Summarize = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([["Hans", { answer: [{ missing_entities: ["test", "blub"], denser_summary: "testblub1" }, { missing_entities: ["test", "blub"], denser_summary: "testblub2" }, { missing_entities: ["test", "blub"], denser_summary: "testblub3" }] }]]);
+    const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example);

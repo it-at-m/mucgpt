@@ -55,7 +55,6 @@ const Layout = () => {
                             aria-label="Link to github repository"
                             className={styles.logo}
                         ></img>
-                        <h3 className={styles.headerTitle}>MUCGPT</h3>
                         <h3 className={styles.headerTitle}>{config.frontend.labels.env_name}</h3>
                     </Link>
 

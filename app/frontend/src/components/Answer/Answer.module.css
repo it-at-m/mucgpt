@@ -132,3 +132,7 @@ sup {
     content: "";
     animation: loading 1s infinite;
 }
+
+.unformattedAnswer{
+    white-space: pre-wrap;
+}

@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Stack, IconButton } from "@fluentui/react";
-import DOMPurify from "dompurify";
 
 import styles from "./Answer.module.css";
 
@@ -13,6 +12,8 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { TextEditStyle24Regular } from "@fluentui/react-icons";
+import { Button } from "@fluentui/react-components";
 
 
 interface Props {
@@ -35,6 +36,7 @@ export const Answer = ({
 
     const [icon, setIcon] = useState<string>("Copy")
     const [copied, setCopied] = useState<boolean>(false);
+    const [formatted, setFormatted] = useState<boolean>(true);
 
     const oncopy = () => {
         setCopied(true);
@@ -58,6 +60,9 @@ export const Answer = ({
                             >
                             </IconButton>
                         </CopyToClipboard>
+                        <Button size="small" icon={<TextEditStyle24Regular primaryFill="rgba(1, 1, 1, 1)" />} onClick={() => setFormatted(!formatted)}>
+                        </Button>
+
                         {onRegenerateResponseClicked &&
                             <IconButton
                                 style={{ color: "black" }}
@@ -72,14 +77,19 @@ export const Answer = ({
             </Stack.Item>
 
             <Stack.Item grow>
-                <Markdown
-                    className={styles.answerText}
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                    children={parsedAnswer.answerHtml}
-                    components={{
-                        "code": CodeBlockRenderer
-                    }} />
+                {formatted &&
+                    <Markdown
+                        className={styles.answerText}
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                        children={parsedAnswer.answerHtml}
+                        components={{
+                            "code": CodeBlockRenderer
+                        }} />
+                }
+                {!formatted &&
+                    <div className={styles.unformattedAnswer}>{parsedAnswer.answerHtml}
+                    </div>}
             </Stack.Item>
         </Stack>
     );

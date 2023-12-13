@@ -11,6 +11,8 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
+import Snowfall from 'react-snowfall'
+import { CheckboxProps } from "@fluentui/react-components";
 
 const Layout = () => {
     const { language, setLanguage } = useContext(LanguageContext);
@@ -30,6 +32,8 @@ const Layout = () => {
         version: "0.1.0"
     }
     )
+    const [enableSnow, setSnow] = useState<CheckboxProps["checked"]>(true);
+    const [snowFlakeCount, setSnowFlakeCount] = useState<number>(50);
 
     useEffect(() => {
         configApi().then(result => {
@@ -45,6 +49,9 @@ const Layout = () => {
     };
     return (
         <div className={styles.layout}>
+            {enableSnow &&
+                <Snowfall color="white" snowflakeCount={snowFlakeCount} changeFrequency={300} radius={[0.5, 5.5]} />
+            }
             <header className={styles.header} role={"banner"}>
                 <div className={styles.headerNavList}>
 
@@ -73,7 +80,7 @@ const Layout = () => {
                             {t('header.brainstorm')}
                         </NavLink>
                     </div>
-                    <SettingsDrawer defaultlang={DEFAULTLANG} onLanguageSelectionChanged={onLanguageSelectionChanged} version={config.version}></SettingsDrawer>
+                    <SettingsDrawer defaultlang={DEFAULTLANG} onLanguageSelectionChanged={onLanguageSelectionChanged} version={config.version} enableSnow={enableSnow} onEnableSnowChanged={(ev, data) => setSnow(data.checked)}></SettingsDrawer>
                 </div>
             </header>
             <Outlet />

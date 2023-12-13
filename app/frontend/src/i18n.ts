@@ -76,7 +76,9 @@ i18n
                         settings: "Einstellungen",
                         feedback: "Feedback",
                         about: "Über",
-                        help: "Hilfe"
+                        help: "Hilfe",
+                        snow: "Schnee",
+                        snow_checkbox: "Aktiviert"
                     },
                     questioninput: {
                         tokensused: "Token verbraucht"
@@ -147,7 +149,9 @@ i18n
                         settings: "Settings",
                         feedback: "Feedback",
                         about: "About",
-                        help: "Help"
+                        help: "Help",
+                        snow: "Snow",
+                        snow_checkbox: "Enabled"
                     },
                     questioninput: {
                         tokensused: "Token used"
@@ -218,7 +222,9 @@ i18n
                         settings: "Eistellunga",
                         feedback: "Rückmeldung",
                         about: "Iba",
-                        help: "Hilf(e)"
+                        help: "Hilf(e)",
+                        snow: "Schnee",
+                        snow_checkbox: "Freigeschaltet"
                     },
                     questioninput: {
                         tokensused: "Token vabrocht"

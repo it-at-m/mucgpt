@@ -11,6 +11,7 @@ from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
     HumanMessagePromptTemplate,
+    SystemMessagePromptTemplate
 )
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
@@ -33,7 +34,7 @@ class SimpleChatApproach():
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature=overrides.get("temperature") or 0.7,
-            max_tokens=4096,
+            max_tokens=overrides.get("max_tokens") or 4096,
             n=1,
             deployment_name= self.chatgpt_deployment,
             openai_api_key=openai.api_key,
@@ -43,12 +44,18 @@ class SimpleChatApproach():
             streaming=should_stream, 
             callbacks=callbacks,
         )
-        prompt = ChatPromptTemplate(
-            messages=[
+        messages = [
                 # The `variable_name` here is what must align with memory
                 MessagesPlaceholder(variable_name="chat_history"),
                 HumanMessagePromptTemplate.from_template("{question}")
             ]
+        if(overrides.get("system_message") and  overrides.get("system_message").strip() !=""):
+            messages.insert(0, 
+                    SystemMessagePromptTemplate.from_template(
+                        overrides.get("system_message")
+                    ))
+        prompt = ChatPromptTemplate(
+            messages=messages
         )
         # Notice that we `return_messages=True` to fit into the MessagesPlaceholder
         # Notice that `"chat_history"` aligns with the MessagesPlaceholder name.

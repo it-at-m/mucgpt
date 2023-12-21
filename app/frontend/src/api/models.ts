@@ -1,6 +1,8 @@
 export type AskRequestOverrides = {
     temperature?: number;
     language?: string;
+    max_tokens?: number;
+    system_message?: string;
 };
 
 export type AskRequest = {
@@ -16,8 +18,8 @@ export type AskResponse = {
 
 export type DenseSummary = {
     missing_entities: string[];
-    denser_summary: string
-}
+    denser_summary: string;
+};
 
 export type SumResponse = {
     answer: DenseSummary[];
@@ -55,11 +57,10 @@ export type BrainstormRequest = {
     overrides?: BrainstormRequestOverrides;
 };
 
-
 export interface ApplicationConfig {
-    backend:  Backend;
+    backend: Backend;
     frontend: Frontend;
-    version:  string;
+    version: string;
 }
 
 export interface Backend {
@@ -72,11 +73,10 @@ export interface BackendFeatures {
 
 export interface Frontend {
     features: FrontendFeatures;
-    labels:   Labels;
+    labels: Labels;
 }
 
-export interface FrontendFeatures {
-}
+export interface FrontendFeatures {}
 
 export interface Labels {
     env_name: string;

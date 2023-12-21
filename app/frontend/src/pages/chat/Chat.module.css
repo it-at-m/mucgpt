@@ -38,7 +38,7 @@
 .chatEmptyStateSubtitle {
     font-weight: 600;
     margin: 1em;
-    text-align:center;
+    text-align: center;
 }
 
 @media (max-height: 780px) {
@@ -54,7 +54,8 @@
 
 @media (max-width: 650px) {
     .commandsContainer {
-        align-self: center;
+        flex-direction: column;
+        display: flex;
     }
 }
 

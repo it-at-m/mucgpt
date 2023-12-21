@@ -12,6 +12,7 @@ import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
+import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 
 const Chat = () => {
 
@@ -31,6 +32,10 @@ const Chat = () => {
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
 
+    const [temperature, setTemperature] = useState(0.7);
+    const [max_tokens, setMaxTokens] = useState(4000);
+    const [systemPrompt, setSystemPrompt] = useState<string>("");
+
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
 
@@ -45,7 +50,10 @@ const Chat = () => {
                 history: [...history, { user: question, bot: undefined }],
                 shouldStream: shouldStream,
                 overrides: {
-                    language: language
+                    language: language,
+                    temperature: temperature,
+                    system_message: systemPrompt,
+                    max_tokens: max_tokens
                 }
             };
 
@@ -137,6 +145,14 @@ const Chat = () => {
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                <ChatsettingsDrawer
+                    temperature={temperature}
+                    setTemperature={setTemperature}
+                    max_tokens={max_tokens}
+                    setMaxTokens={setMaxTokens}
+                    systemPrompt={systemPrompt}
+                    setSystemPrompt={setSystemPrompt}
+                ></ChatsettingsDrawer>
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>

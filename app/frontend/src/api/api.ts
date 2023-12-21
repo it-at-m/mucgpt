@@ -11,7 +11,9 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             history: options.history,
             overrides: {
                 temperature: options.overrides?.temperature,
-                language: options.overrides?.language
+                language: options.overrides?.language,
+                system_message: options.overrides?.system_message,
+                max_tokens: options.overrides?.max_tokens
             }
         })
     });
@@ -45,10 +47,11 @@ export async function configApi(): Promise<ApplicationConfig> {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
-        }});
+        }
+    });
     const parsedResponse: ApplicationConfig = await response.json();
     if (response.status > 299 || !response.ok) {
-        throw Error( "Unknown error");
+        throw Error("Unknown error");
     }
     return parsedResponse;
 }
@@ -63,7 +66,7 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
             topic: options.topic,
             overrides: {
                 temperature: options.overrides?.temperature,
-                language: options.overrides?.language,
+                language: options.overrides?.language
             }
         })
     });

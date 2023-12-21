@@ -74,7 +74,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 description={getDescription()}
             />
             <div className={styles.questionInputButtonsContainer}>
-                <Tooltip content="Stelle eine Frage" relationship="label">
+                <Tooltip content={placeholder || ""} relationship="label">
                     <Button size="large" icon={<Send28Filled primaryFill="rgba(115, 118, 225, 1)" />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
                 </Tooltip>
             </div>

@@ -58,7 +58,9 @@ i18n
                             retry: "Wiederholen"
                         },
                         answer: {
-                            regenerate: "Antwort regenerieren"
+                            regenerate: "Antwort regenerieren",
+                            copy: "Antwort kopieren",
+                            unformat: "Unformatierte Antwort"
                         },
                         mindmap: {
                             download: "Herunterladen",
@@ -142,7 +144,9 @@ i18n
                             retry: "Retry"
                         },
                         answer: {
-                            regenerate: "Regenerate response"
+                            regenerate: "Regenerate response",
+                            copy: "Copy response",
+                            unformat: "Unformatted response"
                         },
                         mindmap: {
                             download: "Download",
@@ -223,7 +227,9 @@ i18n
                             quarter: "Viertl vo da Läng"
                         },
                         answererror: {
-                            retry: "No amoi probiern"
+                            retry: "No amoi probiern",
+                            copy: "Antwort kopieren",
+                            unformat: "Unformatierte Antwort"
                         },
                         answer: {
                             regenerate: "No amoi probiern"

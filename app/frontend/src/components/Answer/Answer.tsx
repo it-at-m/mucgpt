@@ -13,7 +13,7 @@ import rehypeRaw from 'rehype-raw'
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { TextEditStyle24Regular } from "@fluentui/react-icons";
-import { Button } from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 
 
 interface Props {
@@ -52,25 +52,30 @@ export const Answer = ({
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
-                        <CopyToClipboard text={parsedAnswer.answerHtml}
-                            onCopy={oncopy}>
-                            <IconButton
-                                style={{ color: "black" }}
-                                iconProps={{ iconName: icon }}
-                            >
-                            </IconButton>
-                        </CopyToClipboard>
-                        <Button size="small" icon={<TextEditStyle24Regular primaryFill="rgba(1, 1, 1, 1)" />} onClick={() => setFormatted(!formatted)}>
-                        </Button>
+                        <Tooltip content={t('components.answer.copy')} relationship="description" positioning="below">
+                            <CopyToClipboard text={parsedAnswer.answerHtml}
+                                onCopy={oncopy}>
+                                <IconButton
+                                    style={{ color: "black" }}
+                                    iconProps={{ iconName: icon }}
+                                >
+                                </IconButton>
+                            </CopyToClipboard>
+                        </Tooltip>
+                        <Tooltip content={t('components.answer.unformat')} relationship="description" positioning="below">
+                            <Button size="small" icon={<TextEditStyle24Regular primaryFill="rgba(1, 1, 1, 1)" />} onClick={() => setFormatted(!formatted)}>
+                            </Button>
+                        </Tooltip>
 
                         {onRegenerateResponseClicked &&
-                            <IconButton
-                                style={{ color: "black" }}
-                                iconProps={{ iconName: "Sync" }}
-                                title={t('components.answer.regenerate')}
-                                ariaLabel={t('components.answer.regenerate')}
-                                onClick={() => onRegenerateResponseClicked()}
-                            />
+                            <Tooltip content={t('components.answer.regenerate')} relationship="description" positioning="below">
+                                <IconButton
+                                    style={{ color: "black" }}
+                                    iconProps={{ iconName: "Sync" }}
+                                    ariaLabel={t('components.answer.regenerate')}
+                                    onClick={() => onRegenerateResponseClicked()}
+                                />
+                            </Tooltip>
                         }
                     </div>
                 </Stack>

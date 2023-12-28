@@ -70,7 +70,8 @@ i18n
                         },
                         sumanswer: {
                             header: "Einzigartige Aspekte/Entitäten:",
-                            alternative: "Zusammenfassung "
+                            alternative: "Zusammenfassung ",
+                            copy: "Zusammenfassung kopieren"
                         },
                         settingsdrawer: {
                             settings_button: "Einstellungen und Feedback",
@@ -156,7 +157,8 @@ i18n
                         },
                         sumanswer: {
                             header: "Unique entities/aspects:",
-                            alternative: "Summary "
+                            alternative: "Summary ",
+                            copy: "Copy summary"
                         },
                         settingsdrawer: {
                             settings_button: "Settings and feedback",
@@ -242,7 +244,8 @@ i18n
                         },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",
-                            alternative: "Zsammanfassung "
+                            alternative: "Zsammanfassung ",
+                            copy: "Zsammanfassung kopiern"
                         },
                         settingsdrawer: {
                             settings_button: "Eistellunga und Rückmeldung",

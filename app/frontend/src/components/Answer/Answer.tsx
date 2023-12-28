@@ -52,30 +52,28 @@ export const Answer = ({
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
-                        <Tooltip content={t('components.answer.copy')} relationship="description" positioning="below">
-                            <CopyToClipboard text={parsedAnswer.answerHtml}
-                                onCopy={oncopy}>
-                                <IconButton
-                                    style={{ color: "black" }}
-                                    iconProps={{ iconName: icon }}
-                                >
-                                </IconButton>
-                            </CopyToClipboard>
-                        </Tooltip>
+                        <CopyToClipboard text={parsedAnswer.answerHtml}
+                            onCopy={oncopy}>
+                            <IconButton
+                                style={{ color: "black" }}
+                                iconProps={{ iconName: icon }}
+                                title={t('components.answer.copy')}
+                            >
+                            </IconButton>
+                        </CopyToClipboard>
                         <Tooltip content={t('components.answer.unformat')} relationship="description" positioning="below">
                             <Button size="small" icon={<TextEditStyle24Regular primaryFill="rgba(1, 1, 1, 1)" />} onClick={() => setFormatted(!formatted)}>
                             </Button>
                         </Tooltip>
 
                         {onRegenerateResponseClicked &&
-                            <Tooltip content={t('components.answer.regenerate')} relationship="description" positioning="below">
-                                <IconButton
-                                    style={{ color: "black" }}
-                                    iconProps={{ iconName: "Sync" }}
-                                    ariaLabel={t('components.answer.regenerate')}
-                                    onClick={() => onRegenerateResponseClicked()}
-                                />
-                            </Tooltip>
+                            <IconButton
+                                style={{ color: "black" }}
+                                iconProps={{ iconName: "Sync" }}
+                                ariaLabel={t('components.answer.regenerate')}
+                                title={t('components.answer.regenerate')}
+                                onClick={() => onRegenerateResponseClicked()}
+                            />
                         }
                     </div>
                 </Stack>

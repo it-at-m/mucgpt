@@ -12,17 +12,23 @@ interface Props {
     placeholder?: string;
     clearOnSend?: boolean;
     tokens_used: number
+    token_limit_tracking?: boolean;
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used }: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true }: Props) => {
     const [question, setQuestion] = useState<string>("");
     const { t, i18n } = useTranslation();
     const wordCount = 4000;
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
-        let text = `${actual}/ ${wordCount} ${t('components.questioninput.tokensused')}`;
-        if (actual > wordCount)
-            text += `. Ältere Eingaben werden bei der Generierung nicht berücksichtigt!`
+        let text;
+        if (token_limit_tracking) {
+            text = `${actual}/ ${wordCount} ${t('components.questioninput.tokensused')}`;
+            if (actual > wordCount)
+                text += `. Ältere Eingaben werden bei der Generierung nicht berücksichtigt!`
+        }
+        else
+            text = `${actual} ${t('components.questioninput.tokensused')}`;
         return text;
     }
 

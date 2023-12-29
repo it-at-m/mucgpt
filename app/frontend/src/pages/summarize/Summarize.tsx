@@ -108,6 +108,7 @@ const Summarize = () => {
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                             tokens_used={0}
+                            token_limit_tracking={false}
                         />
                     </div>
                 </div>

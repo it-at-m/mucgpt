@@ -4,13 +4,13 @@ import styles from "./Summarize.module.css";
 
 import { sumApi, SumRequest, SumResponse } from "../../api";
 import { AnswerError, AnswerLoading } from "../../components/Answer";
-import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ExampleListSum } from "../../components/Example/ExampleListSum";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
+import { SumInput } from "../../components/SumInput";
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
@@ -102,7 +102,7 @@ const Summarize = () => {
                     )}
 
                     <div className={styles.chatInput}>
-                        <QuestionInput
+                        <SumInput
                             clearOnSend
                             placeholder={t('sum.prompt')}
                             disabled={isLoading}

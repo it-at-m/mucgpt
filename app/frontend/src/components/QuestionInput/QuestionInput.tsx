@@ -25,7 +25,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         if (token_limit_tracking) {
             text = `${actual}/ ${wordCount} ${t('components.questioninput.tokensused')}`;
             if (actual > wordCount)
-                text += `. Ältere Eingaben werden bei der Generierung nicht berücksichtigt!`
+                text += `${t('components.questioninput.limit')}`
         }
         else
             text = `${actual} ${t('components.questioninput.tokensused')}`;

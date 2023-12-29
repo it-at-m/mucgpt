@@ -28,7 +28,7 @@ i18n
                     },
                     sum: {
                         header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
-                        prompt: "Diesen Text zusammenfassen",
+                        prompt: "Diesen Text zusammenfassen oder ein PDF per Drag und Drop hochladen",
                         rolelabel: "Zusammenfassen für",
                         lengthlabel: "in",
                         answer_loading: "Fasse zusammen"
@@ -84,7 +84,13 @@ i18n
                             snow_checkbox: "Aktiviert"
                         },
                         questioninput: {
-                            tokensused: "Token verbraucht"
+                            tokensused: "Token verbraucht",
+                            limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!"
+                        },
+                        suminput: {
+                            tokensused: "Token verbraucht",
+                            limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
+                            removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
                             settings_button: "Chat-Einstellungen",
@@ -115,7 +121,7 @@ i18n
                     },
                     sum: {
                         header: "Summarize text or try an example",
-                        prompt: "Summarize this text",
+                        prompt: "Summarize this text or upload a PDF by using drag and drop",
                         rolelabel: "Summarize for",
                         lengthlabel: "in",
                         answer_loading: "Summarize"
@@ -171,7 +177,13 @@ i18n
                             snow_checkbox: "Enabled"
                         },
                         questioninput: {
-                            tokensused: "Token used"
+                            tokensused: "Token used",
+                            limit: ". Previous inputs are not considered during generation!"
+                        },
+                        suminput: {
+                            tokensused: "Token used",
+                            limit: ". Previous inputs are not considered during generation!",
+                            removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
                             settings_button: "Chat settings",
@@ -202,7 +214,7 @@ i18n
                     },
                     sum: {
                         header: "Fassn Text zam oda probier a Beispui",
-                        prompt: "Diesn Text zammfassn",
+                        prompt: "Diesn Text zammfassn oda a PDF per Drag und Drop hoachladn",
                         rolelabel: "Zammfassn für",
                         lengthlabel: "in",
                         answer_loading: "Am zammfassn"
@@ -258,7 +270,13 @@ i18n
                             snow_checkbox: "Freigeschaltet"
                         },
                         questioninput: {
-                            tokensused: "Token vabrocht"
+                            tokensused: "Token vabrocht",
+                            limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!"
+                        },
+                        suminput: {
+                            tokensused: "Token vabrocht",
+                            limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
+                            removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
                             settings_button: "Chat-Einstellungen",

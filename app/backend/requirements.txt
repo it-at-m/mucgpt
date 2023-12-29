@@ -14,3 +14,4 @@ joserfc
 requests
 sqlalchemy==2.0.19
 psycopg2==2.9.9
+pypdf2==3.0.1

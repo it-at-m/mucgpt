@@ -8,6 +8,8 @@ from langchain.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
+from core.textsplit import splitText
+from concurrent.futures import ThreadPoolExecutor
 
 from approaches.approach import Approach
 import json
@@ -82,9 +84,8 @@ class Summarize(Approach):
     def getTranslationPrompt(self) -> PromptTemplate: 
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_prompt)
 
-
-    async def run_internal(self, text: str, overrides: "dict[str, Any]", department: str) -> str:
-        language = overrides.get("language")
+    def setup(self, overrides: "dict[str, Any]") -> SequentialChain:
+        # setup model
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,
             temperature= overrides.get("temperature") or 0.7,
@@ -102,26 +103,8 @@ class Summarize(Approach):
             chains=[summarizationChain, translationChain], 
             input_variables=["language", "text"],
             output_variables=["translation", "sum"])
-
-        with get_openai_callback() as cb:
-            result =  await overall_chain.acall({"text": text, "language": str(language).lower()})
-        total_tokens = cb.total_tokens
-        if self.config["log_tokens"]:
-            self.repo.addInfo(Requestinfo( 
-                tokencount = total_tokens,
-                department = department,
-                messagecount=  1,
-                method = "Sum"))
-
-        # array with {missing_entities: str[], denser_summary: str }
-        chat_translate_result= result["translation"][result["translation"].index("{"):]
-        chat_translate_result = chat_translate_result.replace("\n", "").rstrip()
-        chat_translate_result = self.removeQuotations(chat_translate_result)
-        if not chat_translate_result.endswith("}"):
-            chat_translate_result  = chat_translate_result + "\"}]}"
-
-        return chat_translate_result
-
+        return overall_chain
+    
     def removeQuotations(self,st):
         # finds all denser summarys, replaces quotation inside with &quot
         m = re.finditer(r'(?<=\"denser_summary\":)(.*?)(?=\})', st)
@@ -147,27 +130,74 @@ class Summarize(Approach):
             idx = se
         new_string += st[idx:]
         return new_string
-
-    async def run(self, text: str, overrides: "dict[str, Any]", department: str) -> Any:
-        chat_translate_result = await self.run_internal(text, overrides, department)
+    
+    def call_and_cleanup(self, text, llmchain, language):
+        # calls summarization chain and cleans the data
+        with get_openai_callback() as cb:
+            result = llmchain({"text": text, "language": language})
+        total_tokens = cb.total_tokens
+        chat_translate_result= result["translation"][result["translation"].index("{"):]
+        chat_translate_result = chat_translate_result.replace("\n", "").rstrip()
+        chat_translate_result = self.removeQuotations(chat_translate_result)
+        if not chat_translate_result.endswith("}"):
+            chat_translate_result  = chat_translate_result + "\"}]}"
         try:
             jsoned = json.loads(chat_translate_result)
         except Exception:
             # try again
             try: 
-               chat_translate_result = await self.run_internal(text, overrides, department)   
-               jsoned = json.loads(chat_translate_result)  
+                (chat_translate_result, total_tokens) =  self.call_and_cleanup(text=text, llmchain=llmchain, language=language)   
+                return (chat_translate_result, total_tokens)
             except Exception:
+                total_tokens = 0
                 jsoned = { }
                 jsoned['data'] = [{'missing_entities': 'Fehler','denser_summary': 'Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.'}]
 
-        # sometimes, missing_entities is just str, convert to array.
         cleaned = []
         for (i, element) in enumerate(jsoned['data']):
             missing = element['missing_entities']
             if(isinstance(missing, str)):
                 element['missing_entities'] = [missing]
             cleaned.append(element)
-        
-        return {"answer": cleaned}
+        return (cleaned,total_tokens)
+
+    def run_io_tasks_in_parallel(self, tasks):
+        # execute tasks in parallel
+        results = []
+        with ThreadPoolExecutor() as executor:
+            running_tasks = [executor.submit(task) for task in tasks]
+            for running_task in running_tasks:
+                results.append(running_task.result())
+        return results
+
+
+    async def run(self, text: str, overrides: "dict[str, Any]", department: str) -> Any:
+        #setup
+        overall_chain = self.setup(overrides=overrides)
+        language = overrides.get("language")
+        #split text
+        chunks = splitText(text=text,chunk_size=3000, chunk_overlap=0)
+        # run in parallel for each chunk
+        results = self.run_io_tasks_in_parallel(
+             list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, llmchain= overall_chain, language=language), chunks)))
+        total_tokens = 0
+        summarys = []
+        # add summarys for all chunks up
+        for i in range(0,5):
+            next_summary =   {"denser_summary": "", "missing_entities": []}
+            for (result, tokens) in results: 
+                total_tokens += tokens
+                next_summary["denser_summary"] += result[i]["denser_summary"]
+                next_summary["missing_entities"] += result[i]["missing_entities"]
+            summarys.append(next_summary)
+
+        # save total tokens
+        if self.config["log_tokens"]:
+            self.repo.addInfo(Requestinfo( 
+                tokencount = total_tokens,
+                department = department,
+                messagecount=  1,
+                method = "Sum"))
+
+        return {"answer": summarys}
     

@@ -24,6 +24,7 @@ from core.datahelper import Repository, Base
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
 from core.types.AppConfig import AppConfig
+from core.textsplit import readPDF
 
 from approaches.summarize import Summarize
 from approaches.simplechat import SimpleChatApproach
@@ -70,18 +71,25 @@ async def chat():
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
-    if not request.is_json:
-        return jsonify({"error": "request must be json"}), 415
-
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    request_json = await request.get_json()
+    files = await request.files
+    forms = await request.form
+    
+    request_json = json.loads(forms.get("body"))
+    file = files.get("file", None)
+
+    if(file is not None):
+        text = readPDF(file)
+    else:
+        text = request_json["text"]
+
     department = get_department(request=request)
 
     try:
         impl = cfg["sum_approaches"]
         async with aiohttp.ClientSession() as s:
             openai.aiosession.set(s)
-            r = await impl.run(text = request_json["text"], overrides=request_json["overrides"] or {}, department=department)
+            r = await impl.run(text = text, overrides=request_json["overrides"] or {}, department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")

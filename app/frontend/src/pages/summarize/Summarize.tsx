@@ -25,24 +25,25 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
 
     const onExampleClicked = (example: string) => {
-        makeApiRequest(example);
+        makeApiRequest(example, undefined);
     };
 
 
-    const makeApiRequest = async (question: string) => {
-        lastQuestionRef.current = question;
+    const makeApiRequest = async (question: string, file?: File) => {
+        let questionText = file ? file.name : question;
+        lastQuestionRef.current = questionText;
 
         error && setError(undefined);
         setIsLoading(true);
         try {
             const request: SumRequest = {
-                text: question,
+                text: questionText,
                 overrides: {
                     language: language,
                 }
             };
-            const result = await sumApi(request);
-            setAnswers([...answers, [question, result]]);
+            const result = await sumApi(request, file);
+            setAnswers([...answers, [questionText, result]]);
         } catch (e) {
             setError(e);
         } finally {
@@ -106,7 +107,7 @@ const Summarize = () => {
                             clearOnSend
                             placeholder={t('sum.prompt')}
                             disabled={isLoading}
-                            onSend={question => makeApiRequest(question)}
+                            onSend={(question, file) => makeApiRequest(question, file)}
                             tokens_used={0}
                             token_limit_tracking={false}
                         />

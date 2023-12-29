@@ -7,7 +7,7 @@ import styles from "./SumInput.module.css";
 import { useTranslation } from 'react-i18next';
 
 interface Props {
-    onSend: (question: string) => void;
+    onSend: (question: string, file?: File) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
@@ -35,14 +35,14 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
     }
 
     const sendQuestion = () => {
-        if (disabled || !question.trim()) {
+        if (disabled || (!question.trim() && !file)) {
             return;
         }
-
-        onSend(question);
+        onSend(question, file);
 
         if (clearOnSend) {
             setQuestion("");
+            removeDocuments();
         }
     };
 
@@ -66,15 +66,11 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
     };
 
     const handleDrop = (e: React.DragEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-
         e.preventDefault();
-
         const files = e.dataTransfer.files;
 
         if (files.length > 0)
-
             setFile(files[0]);
-
 
         setDragging(false);
 
@@ -82,19 +78,16 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
 
 
     const handleDragOver = (e: React.DragEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-
         e.preventDefault();
-
         setDragging(true);
-
     }
 
-    const onClick = () => {
+    const removeDocuments = () => {
         setFile(undefined);
         setDragging(true);
     }
 
-    const sendQuestionDisabled = disabled || !question.trim();
+    const sendQuestionDisabled = disabled || (!question.trim() && !file);
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>
@@ -104,7 +97,7 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
                     <p>{file.name}</p>
 
                     <Tooltip content={t('components.suminput.removedocument')} relationship="description" positioning="above">
-                        <Button icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={disabled} onClick={onClick} size="large">
+                        <Button icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={disabled} onClick={removeDocuments} size="large">
                         </Button>
                     </Tooltip>
 

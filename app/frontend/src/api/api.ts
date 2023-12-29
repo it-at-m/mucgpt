@@ -19,19 +19,23 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     });
 }
 
-export async function sumApi(options: SumRequest): Promise<SumResponse> {
-    const response = await fetch("/sum", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
+export async function sumApi(options: SumRequest, file?: File): Promise<SumResponse> {
+    const formData = new FormData();
+    formData.append(
+        "body",
+        JSON.stringify({
             text: options.text,
             overrides: {
                 temperature: options.overrides?.temperature,
                 language: options.overrides?.language
             }
         })
+    );
+    if (file) formData.append("file", file);
+
+    const response = await fetch("/sum", {
+        method: "POST",
+        body: formData
     });
 
     const parsedResponse: SumResponse = await response.json();

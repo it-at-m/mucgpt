@@ -9,7 +9,7 @@ def readPDF(pdf, chunk_size=2500, chunk_overlap=100):
     for page in reader.pages:
         complete += page.extract_text()
     #split
-    return splitText(text=complete, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    return complete
 
 def splitText(text, chunk_size=2500, chunk_overlap=100):
     #split

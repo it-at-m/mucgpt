@@ -61,10 +61,13 @@ export const Answer = ({
                             >
                             </IconButton>
                         </CopyToClipboard>
-                        <Tooltip content={t('components.answer.unformat')} relationship="description" positioning="below">
-                            <Button size="small" icon={<TextEditStyle24Regular primaryFill="rgba(1, 1, 1, 1)" />} onClick={() => setFormatted(!formatted)}>
-                            </Button>
-                        </Tooltip>
+                        <IconButton
+                            style={{ color: "black" }}
+                            iconProps={{ iconName: "FabricTextHighlight" }}
+                            ariaLabel={t('components.answer.unformat')}
+                            title={t('components.answer.unformat')}
+                            onClick={() => setFormatted(!formatted)}
+                        />
 
                         {onRegenerateResponseClicked &&
                             <IconButton

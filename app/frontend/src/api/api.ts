@@ -1,10 +1,4 @@
-import { ApplicationConfig, AskRequest, AskResponse, BrainstormRequest, ChatRequest, SumRequest, SumResponse } from "./models";
-import { setmessage } from "../store/messageSlice";
-
-import { useDispatch } from "react-redux";
-import { Dispatch } from "@reduxjs/toolkit";
-
-const dispatch: Dispatch = useDispatch();
+import { ApplicationConfig, AskResponse, BrainstormRequest, ChatRequest, SumRequest, SumResponse } from "./models";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/chat_stream" : "/chat";

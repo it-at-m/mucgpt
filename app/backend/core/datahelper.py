@@ -49,8 +49,8 @@ class Repository:
     def getAll(self):
         with Session(self.engine) as session:
             infos_objs = session.query(Requestinfo)
-            for info in infos_objs:
-                print(info) # or any other attribute
+            results = infos_objs.all()
+            return results
     
     def countByDepartment(self):
         with Session(self.engine) as session:

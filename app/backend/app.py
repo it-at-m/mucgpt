@@ -7,6 +7,8 @@ import base64
 
 import aiohttp
 import openai
+import csv
+import io
 from azure.identity.aio import DefaultAzureCredential
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
@@ -19,8 +21,9 @@ from quart import (
     make_response,
     request,
     send_from_directory,
+    send_file
 )
-from core.datahelper import Repository, Base
+from core.datahelper import Repository, Base, Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
 from core.types.AppConfig import AppConfig
@@ -33,6 +36,11 @@ from approaches.brainstorm import Brainstorm
 bp = Blueprint("routes", __name__, static_folder='static')
 
 APPCONFIG_KEY = "APPCONFIG"
+
+def exclude_from_authentification(func):
+    func._exclude_from_authentification = True
+    return func
+
 
 @bp.errorhandler(AuthError)
 async def handleAuthError(error: AuthError):
@@ -154,6 +162,30 @@ async def getStatistics():
         "avg": avg_by_department
     })
 
+@bp.route("/statistics/export", methods=["GET"])
+async def getStatisticsCSV():
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    repo = cfg["repository"]
+
+    memfile = io.StringIO()
+    outcsv = csv.writer(memfile, delimiter=',',quotechar='"', quoting = csv.QUOTE_MINIMAL)
+    outcsv.writerow([column.name for column in Requestinfo.__mapper__.columns])
+    [outcsv.writerow([getattr(curr, column.name) for column in Requestinfo.__mapper__.columns]) for curr in repo.getAll()]
+
+    memfile.seek(0)
+    # Das StringIO-Objekt in ein BytesIO-Objekt umwandeln
+    memfile_bytesio = io.BytesIO(memfile.getvalue().encode())
+    memfile_bytesio.getvalue()
+    return await send_file(memfile_bytesio,
+                 attachment_filename='statistics.csv',
+                 as_attachment=True)
+
+@exclude_from_authentification
+@bp.route('/health',  methods=["GET"])
+def health_check():
+    return "OK"
+
+
 @bp.route("/token", methods=["GET"])
 async def readToken():
     principalID = request.headers.get('X-MS-CLIENT-PRINCIPAL-ID')
@@ -200,10 +232,15 @@ def get_department(request: request):
     return auth_client.getDepartment(claims=id_claims)
 
 @bp.before_app_request
-async def check_authentification():
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
+async def check_authentification(*args, **kwargs):
+    _exclude_from_authentification = False
+    if request.endpoint in current_app.view_functions:
+        view_func = current_app.view_functions[request.endpoint]
+        _exclude_from_authentification = not hasattr(view_func, '_exclude_from_authentification')
+    if(not exclude_from_authentification):
+        cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+        if cfg["configuration_features"]["backend"]["enable_auth"]:
+            ensure_authentification(request=request)
 
 
 @bp.before_request

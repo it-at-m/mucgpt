@@ -3,7 +3,7 @@ import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -58,6 +58,8 @@ const Chat = () => {
             };
 
             const response = await chatApi(request);
+            handleRedirect(response);
+
             if (!response.body) {
                 throw Error("No response body");
             }

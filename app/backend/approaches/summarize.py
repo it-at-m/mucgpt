@@ -8,8 +8,8 @@ from langchain.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
-from core.textsplit import splitText
-from concurrent.futures import ThreadPoolExecutor
+from langchain.chains import MapReduceDocumentsChain, ReduceDocumentsChain
+from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 
 from approaches.approach import Approach
 import json
@@ -70,6 +70,13 @@ class Summarize(Approach):
     JSON: {sum}
     """
 
+    # Map
+    map_template = """The following is a set of documents
+    {docs}
+    Can you provide a comprehensive summary of the given set of documents? The summary should cover all the key points and main ideas presented in the original text, while also condensing the information into a concise and easy-to-understand format. Please ensure that the summary includes relevant details and examples that support the main ideas, while avoiding any unnecessary information or repetition. The length of the summary should be appropriate for the length and complexity of the original text, providing a clear and accurate overview without omitting any important information.
+    Helpful Answer:"""
+
+
 
     def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
         self.chatgpt_deployment = chatgpt_deployment
@@ -99,10 +106,37 @@ class Summarize(Approach):
         )
         summarizationChain = LLMChain(llm=llm, prompt=self.getSummarizationPrompt(), output_key="sum")
         translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
+
+        map_prompt = PromptTemplate.from_template(self.map_template)
+        map_chain = LLMChain(llm=llm, prompt=map_prompt)
+        combine_documents_chain = StuffDocumentsChain(
+            llm_chain=summarizationChain, document_variable_name="text"
+        )
+
+        reduce_documents_chain = ReduceDocumentsChain(
+            # This is final chain that is called.
+            combine_documents_chain=combine_documents_chain,
+            # If documents exceed context for `StuffDocumentsChain`
+            collapse_documents_chain=combine_documents_chain,
+            # The maximum number of tokens to group documents into.
+            token_max=4000,
+        )
+        map_reduce_chain = MapReduceDocumentsChain(
+            # Map chain
+            llm_chain=map_chain,
+            # Reduce chain
+            reduce_documents_chain=reduce_documents_chain,
+            # The variable name in the llm_chain to put the documents in
+            document_variable_name="docs",
+            # Return the results of the map steps in the output
+            return_intermediate_steps=False,
+            output_key="sum"
+        )
         overall_chain = SequentialChain(
-            chains=[summarizationChain, translationChain], 
-            input_variables=["language", "text"],
+            chains=[map_reduce_chain, translationChain], 
+            input_variables=["language", "input_documents"],
             output_variables=["translation", "sum"])
+
         return overall_chain
     
     def removeQuotations(self,st):
@@ -131,10 +165,10 @@ class Summarize(Approach):
         new_string += st[idx:]
         return new_string
     
-    def call_and_cleanup(self, text, llmchain, language):
+    def call_and_cleanup(self, docs, llmchain, language):
         # calls summarization chain and cleans the data
         with get_openai_callback() as cb:
-            result = llmchain({"text": text, "language": language})
+            result = llmchain({"input_documents": docs, "language": language})
         total_tokens = cb.total_tokens
         chat_translate_result= result["translation"][result["translation"].index("{"):]
         chat_translate_result = chat_translate_result.replace("\n", "").rstrip()
@@ -146,7 +180,7 @@ class Summarize(Approach):
         except Exception:
             # try again
             try: 
-                (chat_translate_result, total_tokens) =  self.call_and_cleanup(text=text, llmchain=llmchain, language=language)   
+                (chat_translate_result, total_tokens) =  self.call_and_cleanup(docs=docs, llmchain=llmchain, language=language)   
                 return (chat_translate_result, total_tokens)
             except Exception:
                 total_tokens = 0
@@ -161,35 +195,14 @@ class Summarize(Approach):
             cleaned.append(element)
         return (cleaned,total_tokens)
 
-    def run_io_tasks_in_parallel(self, tasks):
-        # execute tasks in parallel
-        results = []
-        with ThreadPoolExecutor() as executor:
-            running_tasks = [executor.submit(task) for task in tasks]
-            for running_task in running_tasks:
-                results.append(running_task.result())
-        return results
 
 
-    async def run(self, text: str, overrides: "dict[str, Any]", department: str) -> Any:
+    async def run(self, docs: str, overrides: "dict[str, Any]", department: str) -> Any:
         #setup
         overall_chain = self.setup(overrides=overrides)
         language = overrides.get("language")
-        #split text
-        chunks = splitText(text=text,chunk_size=3000, chunk_overlap=0)
-        # run in parallel for each chunk
-        results = self.run_io_tasks_in_parallel(
-             list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, llmchain= overall_chain, language=language), chunks)))
-        total_tokens = 0
-        summarys = []
-        # add summarys for all chunks up
-        for i in range(0,5):
-            next_summary =   {"denser_summary": "", "missing_entities": []}
-            for (result, tokens) in results: 
-                total_tokens += tokens
-                next_summary["denser_summary"] += result[i]["denser_summary"]
-                next_summary["missing_entities"] += result[i]["missing_entities"]
-            summarys.append(next_summary)
+        # call chain
+        (summarys, total_tokens) =  self.call_and_cleanup(docs=docs, llmchain= overall_chain, language=language)
 
         # save total tokens
         if self.config["log_tokens"]:

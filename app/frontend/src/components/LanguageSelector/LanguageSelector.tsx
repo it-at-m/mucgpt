@@ -29,9 +29,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: Props) => {
         aria-label="Sprache auswählen"
         defaultValue={defaultlang}
         onOptionSelect={onSelectionChange}
-        size="small" positioning="below-start"
-        listbox={{ style: { backgroundColor: "#f2f2f2", maxWidth: "auto" } }}
-        root={{ style: { borderWidth: "0px", minWidth: "auto" } }}>
+        size="small" positioning="below-start">
         <Option text="Deutsch" className={styles.option}>
           Deutsch
         </Option>
@@ -45,6 +43,6 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: Props) => {
           Ukrainisch
         </Option>
       </Dropdown>
-    </div>
+    </div >
   );
 };

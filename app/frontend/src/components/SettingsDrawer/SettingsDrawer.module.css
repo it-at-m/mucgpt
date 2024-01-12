@@ -1,32 +1,25 @@
-.drawer {
-    background-color: white;
-}
-
-.button{
+.button {
     margin-right: 20px;
     font-size: medium;
 }
 
-.header{
+.header {
     margin-bottom: 10px;
 }
 
-
-.bodyContainer{
-    padding: 0px 15px 15px 15px;
-    margin-bottom: 20px;
+.bodyContainer {
+    padding: 10px 10px 10px 10px;
 }
 
-.iconRightMargin{
+.iconRightMargin {
     margin-right: 5px;
 }
 
-.mail{
+.mail {
     color: black;
 }
 
-.faq{
-    color: black;
+.faq {
     padding-top: 8px;
     padding-bottom: 8px;
     padding-left: 3px;

@@ -41,7 +41,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 size="small"
                 position="end"
                 open={isOpen}
-                style={{ 'backgroundColor': '#ffffff', 'padding': "30px", 'alignItems': 'stretch' }}
+                style={{ 'padding': "30px", 'alignItems': 'stretch' }}
             >
                 <div className={styles.header}>
                     <DrawerHeader>
@@ -74,11 +74,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
-                    <div className={styles.headerNavRightMargin}>
-                        <Button size="large" onClick={onFeedbackClicked}>
-                            <Comment24Regular className={styles.iconRightMargin} />  {t('components.settingsdrawer.feedback_button')}
-                        </Button>
-                    </div>
                     <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT" className={styles.mail}>
                         <Mail24Regular className={styles.iconRightMargin} ></Mail24Regular>
                         itm.kicc@muenchen.de
@@ -115,7 +110,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         onChange={onEnableSnowChanged}
                         label={t('components.settingsdrawer.snow_checkbox')}
                         shape="square"
-                        indicator={{ style: { borderWidth: "2px", borderStyle: "solid", borderColor: "black", marginRight: "5px", alignSelf: "center" } }}
                     />
                 </div>
                 <div className={styles.header}>
@@ -134,7 +128,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
             </OverlayDrawer >
 
             <div className={styles.button}>
-                <Button icon={<ChevronDown24Regular />} appearance="primary" onClick={onClickRightButton}>
+                <Button icon={<ChevronDown24Regular />} appearance="secondary" onClick={onClickRightButton}>
                     {t('components.settingsdrawer.settings_button')}
                 </Button>
             </div>

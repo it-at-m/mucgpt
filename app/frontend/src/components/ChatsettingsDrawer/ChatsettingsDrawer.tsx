@@ -63,7 +63,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 size="small"
                 position="end"
                 open={isOpen}
-                style={{ 'backgroundColor': '#ffffff', 'padding': "30px", 'alignItems': 'stretch' }}
+                style={{ 'padding': "30px", 'alignItems': 'stretch' }}
             >
                 <div className={styles.header}>
                     <DrawerHeader>
@@ -138,8 +138,6 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             onChange={onMaxtokensChange}
                             aria-valuetext={`Value is ${max_tokensID}`}
                             value={max_tokens}
-                            rail={{ style: { backgroundColor: "black" } }}
-                            thumb={{ style: { backgroundColor: "black" } }}
                             id={max_tokensID} />
                         <br></br>
                         <Label htmlFor={max_tokensID}>
@@ -186,7 +184,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
 
             <div className={styles.button}>
                 <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
-                    <Button icon={<ChatSettings24Regular />} appearance="primary" onClick={onClickRightButton} size="large">
+                    <Button icon={<ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
                     </Button>
                 </Tooltip>
             </div>

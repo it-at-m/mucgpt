@@ -48,6 +48,7 @@ const router = createHashRouter([
     }
 ]);
 
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <LanguageContextProvider>

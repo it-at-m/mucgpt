@@ -14,7 +14,7 @@ export const ClearChatButton = ({ className, disabled, onClick }: Props) => {
     return (
         <div className={`${styles.container} ${className ?? ""}`}>
             <Tooltip content={t('common.clear_chat')} relationship="description" positioning="below">
-                <Button icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={disabled} onClick={onClick} size="large">
+                <Button appearance="secondary" icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={disabled} onClick={onClick} size="large">
                 </Button>
             </Tooltip>
         </div >

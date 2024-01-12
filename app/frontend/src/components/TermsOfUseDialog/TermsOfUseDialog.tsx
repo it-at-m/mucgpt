@@ -34,12 +34,14 @@ export const TermsOfUseDialog = () => {
                                 <li><strong>Weiterverwendung der Ergebnisse:</strong> Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der MUCGPT Nutzer*in. Bei unveränderter bzw. nur geringfügig veränderter Nutzung müssen diese als solche gekennzeichnet werden.
                                     Insbesondere, wenn die Inhalte für die externe Kommunikation verwendet werden. Siehe Details hierzu in den <a href="/#faq">FAQs</a>.</li>
                                 <li><strong>Entscheidungsfindung: </strong> MUCGPT darf nicht für abschließende Entscheidungen verwendet werden, die gegenüber Personen rechtliche Wirkung entfalten oder sie in ähnlicher Weise erheblich beeinträchtigen (Art. 22 Abs. 1 DSGVO). Derartige Entscheidungen müssen stets von Menschen getroffen werden</li>
-                                <li><strong>Nachhaltigkeit/GreenIT:</strong> Bitte denken Sie daran, dass bei der Nutzung von MUCGPT jede Anfrage Rechenleistung benötigt. Für Suchanfragen im Internet empfehlen wir eine Suchmaschine wie Google oder andere Suchmaschinen zu verwenden.</li>
+                                <li><strong>Nachhaltigkeit/GreenIT:</strong> Bitte denken Sie daran, dass bei der Nutzung von MUCGPT jede Anfrage Rechenleistung benötigt. Für Suchanfragen im Internet empfehlen wir eine Suchmaschine wie Ecosia/Google oder andere Suchmaschinen zu verwenden.</li>
                                 <li><strong>Ansprechpartner*innen:</strong> Bei Fragen und Feedback, sowie zum Melden von technischen Fehlern oder unangemessenen Ergebnissen von MUCGPT bitte an <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT"> itm.kicc@muenchen.de
                                 </a> wenden.</li>
                                 <li><strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung der Eingaben und Ergebnisse) geben die <a href="/#faq">FAQs</a>.</li>
                                 <li><strong>Best-Practice Dokumentation/Wissensmanagement:</strong> Erfolgreiche Anwendungsfälle von MUCGPT sollen dokumentiert werden, um wertvolles Wissen für zukünftige Projekte zu generieren. Tragen Sie diese Beispiele gerne <a href="https://wilma.muenchen.de/workspaces/mucgpt-kuenstliche-intelligenz">hier (noch im Aufbau)</a> ein.</li>
                             </ul>
+                            <div className={styles.responsibleContainer} >Verantwortlich für die Nutzungsbedingungen: RIT-I (STRAC), Fragen oder Anmerkungen dazu bitte an:
+                                it-vorschriften.strac.rit@muenchen.de</div>
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>

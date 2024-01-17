@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Stack, TextField } from "@fluentui/react";
-import { Button, Tooltip } from "@fluentui/react-components";
+import { Stack } from "@fluentui/react";
+import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
@@ -55,11 +55,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         return str.trim().split(/\s+/).length;
     }
 
-    const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        if (!newValue) {
+    const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+        if (!newValue?.value) {
             setQuestion("");
         } else {
-            setQuestion(newValue);
+            setQuestion(newValue.value);
         }
     };
 
@@ -67,22 +67,24 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>
-            <TextField
-                className={styles.questionInputTextArea}
+            <Textarea
+                textarea={styles.questionInputTextArea}
                 placeholder={placeholder}
-                multiline
-                resizable={false}
-                borderless
+                resize="vertical"
                 value={question}
+                size="large"
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
-                autoAdjustHeight={true}
-                description={getDescription()}
             />
-            <div className={styles.questionInputButtonsContainer}>
-                <Tooltip content={placeholder || ""} relationship="label">
-                    <Button size="large" appearance="subtle" icon={<Send28Filled primaryFill="rgba(115, 118, 225, 1)" />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
-                </Tooltip>
+            <div className={styles.questionInputContainerFooter}>
+                <div>
+                    {getDescription()}
+                </div>
+                <div className={styles.questionInputButtonsContainer}>
+                    <Tooltip content={placeholder || ""} relationship="label">
+                        <Button size="large" appearance="subtle" icon={<Send28Filled primaryFill="rgba(115, 118, 225, 1)" />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
+                    </Tooltip>
+                </div>
             </div>
         </Stack>
     );

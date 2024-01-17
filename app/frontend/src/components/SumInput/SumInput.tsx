@@ -1,6 +1,6 @@
 import { DragEventHandler, useState } from "react";
-import { Stack, TextField } from "@fluentui/react";
-import { Button, Tooltip } from "@fluentui/react-components";
+import { Stack, classNamesFunction, } from "@fluentui/react";
+import { Button, Tooltip, Textarea, TextareaOnChangeData, } from "@fluentui/react-components";
 import { Delete24Regular, Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./SumInput.module.css";
@@ -57,11 +57,11 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
         return str.trim().split(/\s+/).length;
     }
 
-    const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
-        if (!newValue) {
+    const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+        if (!newValue?.value) {
             setQuestion("");
         } else {
-            setQuestion(newValue);
+            setQuestion(newValue.value);
         }
     };
 
@@ -94,34 +94,41 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
             {file ? (
                 <div className={styles.documentContainer}>
 
-                    <p>{file.name}</p>
+                    <p className={styles.paddingDocumentName}>{file.name}</p>
 
                     <Tooltip content={t('components.suminput.removedocument')} relationship="description" positioning="above">
-                        <Button icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={disabled} onClick={removeDocuments} size="large">
+                        <Button icon={<Delete24Regular />} disabled={disabled} onClick={removeDocuments} size="large">
                         </Button>
                     </Tooltip>
 
                 </div>) : (
-                <TextField
-                    className={styles.questionInputTextArea}
+                <Textarea
+                    textarea={{ style: { borderStyle: "dashed", borderWidth: "4px" } }}
+                    root={{ style: { borderStyle: "hidden" } }}
                     placeholder={placeholder}
-                    borderless
-                    multiline
-                    resizable={false}
+                    resize="vertical"
                     value={question}
+                    size="large"
                     onChange={onQuestionChange}
                     onKeyDown={onEnterPress}
-                    autoAdjustHeight={true}
-                    description={getDescription()}
                     onDrop={handleDrop}
                     draggable={dragging}
                     onDragOver={handleDragOver}
-                />)
+                />
+            )
             }
-            < div className={styles.questionInputButtonsContainer}>
-                <Tooltip content={placeholder || ""} relationship="label">
-                    <Button size="large" appearance="subtle" icon={<Send28Filled primaryFill="rgba(115, 118, 225, 1)" />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
-                </Tooltip>
+            <div className={styles.questionInputContainerFooter}>
+                {file ? (<div></div>) : (
+                    <div
+                    >
+                        {getDescription()}
+                    </div>)
+                }
+                < div className={styles.questionInputButtonsContainer}>
+                    <Tooltip content={placeholder || ""} relationship="label">
+                        <Button size="large" appearance="subtle" icon={<Send28Filled primaryFill="rgba(115, 118, 225, 1)" />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
+                    </Tooltip>
+                </div>
             </div>
         </Stack >
     );

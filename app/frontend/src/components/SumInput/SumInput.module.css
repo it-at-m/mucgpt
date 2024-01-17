@@ -9,7 +9,7 @@
     background: white;
     display: flex;
     justify-content: space-between;
-    flex-direction: row;
+    flex-direction: column;
 }
 
 .documentContainer {
@@ -17,19 +17,30 @@
     justify-content: start;
     flex-direction: row;
     flex: 1;
+    justify-content: center;
 }
 
 .questionInputTextArea {
-    width: 100%;
-    line-height: 5px;
-
     border-style: dashed;
-    border-color: black;
     border-width: 0.3px;
+    background-color: blue;
+}
+
+.paddingDocumentName {
+    padding-right: 20px;
 }
 
 .questionInputButtonsContainer {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+}
+
+.questionInputContainerFooter {
+    padding: 0px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    font-size: var(--fontSizeBase100);
+    line-height: var(--lineHeightBase100);
 }

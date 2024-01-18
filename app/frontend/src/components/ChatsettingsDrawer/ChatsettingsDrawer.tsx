@@ -76,20 +76,27 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                                     onClick={() => setIsOpen(false)}
                                 />
                             }
+
                         >
-                            <InfoLabel
-                                info={
-                                    <div className={styles.info}>
-                                        <i>{t('components.chattsettingsdrawer.system_prompt')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
-                                    </div>
-                                }
-                            >
-                                {t('components.chattsettingsdrawer.system_prompt')}
-                            </InfoLabel>
+                            {t('components.chattsettingsdrawer.settings_button')}
 
                         </DrawerHeaderTitle>
 
                     </DrawerHeader>
+                </div>
+
+
+                <div className={styles.header}>
+                    <InfoLabel
+                        info={
+                            <div className={styles.info}>
+                                <i>{t('components.chattsettingsdrawer.system_prompt')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
+                            </div>
+                        }
+                    >
+                        {t('components.chattsettingsdrawer.system_prompt')}
+                    </InfoLabel>
+
                 </div>
 
                 <div className={styles.bodyContainer}>
@@ -112,20 +119,15 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 </div>
 
                 <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                        >
-                            <InfoLabel
-                                info={
-                                    <div className={styles.info}>
-                                        {t('components.chattsettingsdrawer.max_lenght_info')}
-                                    </div>
-                                }
-                            >
-                                {t('components.chattsettingsdrawer.max_lenght')}
-                            </InfoLabel>
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
+                    <InfoLabel
+                        info={
+                            <div className={styles.info}>
+                                {t('components.chattsettingsdrawer.max_lenght_info')}
+                            </div>
+                        }
+                    >
+                        {t('components.chattsettingsdrawer.max_lenght')}
+                    </InfoLabel>
 
                 </div>
 
@@ -146,20 +148,15 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                     </div>
                 </div>
                 <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                        >
-                            <InfoLabel
-                                info={
-                                    <div className={styles.info}>
-                                        {t('components.chattsettingsdrawer.temperature_article')} <i>{t('components.chattsettingsdrawer.temperature')}</i> {t('components.chattsettingsdrawer.temperature_info')}
-                                    </div>
-                                }
-                            >
-                                {t('components.chattsettingsdrawer.temperature')}
-                            </InfoLabel>
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
+                    <InfoLabel
+                        info={
+                            <div className={styles.info}>
+                                {t('components.chattsettingsdrawer.temperature_article')} <i>{t('components.chattsettingsdrawer.temperature')}</i> {t('components.chattsettingsdrawer.temperature_info')}
+                            </div>
+                        }
+                    >
+                        {t('components.chattsettingsdrawer.temperature')}
+                    </InfoLabel>
                 </div>
                 <div className={styles.bodyContainer}>
 

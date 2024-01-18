@@ -5,10 +5,12 @@
 
 .header {
     margin-bottom: 10px;
+    font-size: var(--fontSizeBase400);
+    margin-top: var(--spacingVerticalS);
 }
 
 .bodyContainer {
-    padding: 10px 10px 10px 10px;
+    padding: var(--spacingVerticalS);
 }
 
 .iconRightMargin {
@@ -17,6 +19,8 @@
 
 .mail {
     color: black;
+    display: flex;
+    flex-direction: row;
 }
 
 .faq {

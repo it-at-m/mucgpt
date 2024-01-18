@@ -64,12 +64,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
                 </div>
                 <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                        >
-                            {t('components.settingsdrawer.feedback')}
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
+                    {t('components.settingsdrawer.feedback')}
 
                     <Divider />
                 </div>
@@ -80,12 +75,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     </a>
                 </div>
                 <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                        >
-                            {t('components.settingsdrawer.help')}
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
+                    {t('components.settingsdrawer.help')}
 
                     <Divider />
                 </div>
@@ -95,13 +85,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <a download className={styles.faq} aria-label="Cheat Sheet" href="https://git.muenchen.de/innovation-lab/ki-team/mucgpt-doku/-/raw/main/MucGPT%20Serviceeinf%C3%BChrung/Pilotphase/mucgpt_cheatsheet.pdf?inline=false">Cheat Sheet</a>
                 </div>
                 <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                        >
-                            {t('components.settingsdrawer.snow')}
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
-
+                    {t('components.settingsdrawer.snow')}
                     <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
@@ -113,13 +97,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     />
                 </div>
                 <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                        >
-                            {t('components.settingsdrawer.about')}
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
-
+                    {t('components.settingsdrawer.about')}
                     <Divider />
                 </div>
                 <div className={styles.bodyContainer}>

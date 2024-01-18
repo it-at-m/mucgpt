@@ -7,6 +7,7 @@ import DOMPurify from "dompurify";
 import { Button } from "@fluentui/react-button";
 import { Tooltip } from "@fluentui/react-components";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { CheckmarkSquare24Regular, Copy24Regular } from "@fluentui/react-icons";
 interface Props {
     answer: SumResponse;
     top_n: number; // die besten zwei Varianten darstellen
@@ -15,7 +16,6 @@ interface Props {
 export const SumAnswer = ({ answer, top_n }: Props) => {
     const { t } = useTranslation();
     const [getSelected, setSelected] = useState(0);
-    const [icon, setIcon] = useState<string>("Copy")
     const [copied, setCopied] = useState<boolean>(false);
     const [ref, setRef] = React.useState<HTMLElement | null>();
 
@@ -38,9 +38,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
 
     const oncopy = () => {
         setCopied(true);
-        setIcon("Checkmark");
         setTimeout(() => {
-            setIcon("Copy");
             setCopied(false);
         }, 1000)
     }
@@ -51,7 +49,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                     {sanitzedKeywords.map((x, i) => (
                         <div>
                             <Button
-                                style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "#f2f2f2" : "white", height: "100%" }}
+                                style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground4)", height: "100%" }}
                                 appearance="outline"
                                 size="small"
                                 shape="rounded"
@@ -60,17 +58,12 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                             >{t("components.sumanswer.alternative")} {i + 1}</Button>
                         </div>
                     ))}
-                    <Tooltip content={t('components.sumanswer.copy')} relationship="description" positioning="below" mountNode={ref}>
-                        <div ref={setRef} >
-                            <CopyToClipboard text={sanitizedAnswerHtmlWithoutColors[getSelected]}
-                                onCopy={oncopy}>
-                                <IconButton
-                                    style={{ color: "black" }}
-                                    iconProps={{ iconName: icon }}
-                                >
-                                </IconButton>
-                            </CopyToClipboard>
-                        </div>
+                    <Tooltip content={t('components.sumanswer.copy')} relationship="description" positioning={{ target: ref }}>
+                        <CopyToClipboard text={sanitizedAnswerHtmlWithoutColors[getSelected]}
+                            onCopy={oncopy}>
+                            <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
+                            </Button>
+                        </CopyToClipboard>
                     </Tooltip>
                 </Stack>
             </Stack.Item>

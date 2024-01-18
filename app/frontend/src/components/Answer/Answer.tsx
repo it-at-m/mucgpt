@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Stack, IconButton } from "@fluentui/react";
+import { Stack } from "@fluentui/react";
 
 import styles from "./Answer.module.css";
 
@@ -12,7 +12,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import { TextEditStyle24Regular } from "@fluentui/react-icons";
+import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 
 
@@ -32,17 +32,16 @@ export const Answer = ({
 }: Props) => {
     const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer, onCitationClicked), [answer]);
 
+
     const { t } = useTranslation();
 
-    const [icon, setIcon] = useState<string>("Copy")
     const [copied, setCopied] = useState<boolean>(false);
     const [formatted, setFormatted] = useState<boolean>(true);
+    const [ref, setRef] = useState<HTMLElement | null>();
 
     const oncopy = () => {
         setCopied(true);
-        setIcon("Checkmark");
         setTimeout(() => {
-            setIcon("Copy");
             setCopied(false);
         }, 1000)
     }
@@ -52,31 +51,28 @@ export const Answer = ({
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
-                        <CopyToClipboard text={parsedAnswer.answerHtml}
-                            onCopy={oncopy}>
-                            <IconButton
-                                style={{ color: "black" }}
-                                iconProps={{ iconName: icon }}
-                                title={t('components.answer.copy')}
-                            >
-                            </IconButton>
-                        </CopyToClipboard>
-                        <IconButton
-                            style={{ color: "black" }}
-                            iconProps={{ iconName: "FabricTextHighlight" }}
-                            ariaLabel={t('components.answer.unformat')}
-                            title={t('components.answer.unformat')}
-                            onClick={() => setFormatted(!formatted)}
-                        />
+                        <Tooltip content={t('components.answer.copy')} relationship="description" positioning={{ target: ref }}
+                        >
+                            <CopyToClipboard text={parsedAnswer.answerHtml}
+                                onCopy={oncopy}>
+                                <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
+                                </Button>
+
+                            </CopyToClipboard>
+
+                        </Tooltip>
+
+                        <Tooltip content={t('components.answer.unformat')} relationship="description" positioning="above">
+                            <Button appearance="subtle" aria-label={t('components.answer.unformat')} icon={<ContentView24Regular className={styles.iconRightMargin} />} onClick={() => setFormatted(!formatted)} size="large">
+                            </Button>
+                        </Tooltip>
 
                         {onRegenerateResponseClicked &&
-                            <IconButton
-                                style={{ color: "black" }}
-                                iconProps={{ iconName: "Sync" }}
-                                ariaLabel={t('components.answer.regenerate')}
-                                title={t('components.answer.regenerate')}
-                                onClick={() => onRegenerateResponseClicked()}
-                            />
+                            <Tooltip content={t('components.answer.regenerate')} relationship="description" positioning="above">
+                                <Button appearance="subtle" aria-label={t('components.answer.regenerate')} icon={<ArrowSync24Regular className={styles.iconRightMargin} />}
+                                    onClick={() => onRegenerateResponseClicked()} size="large">
+                                </Button>
+                            </Tooltip>
                         }
                     </div>
                 </Stack>

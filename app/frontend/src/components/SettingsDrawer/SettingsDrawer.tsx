@@ -69,7 +69,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                             {t('components.settingsdrawer.settings')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
-                    <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
@@ -77,7 +76,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 <div className={styles.header}>
                     Barrierefreiheit
 
-                    <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.verticalContainer}>
@@ -105,7 +103,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
 
                         <Tooltip content="Design wechseln" relationship="description" positioning="below">
 
-                            <Button appearance="secondary" icon={<DarkTheme20Regular className={styles.iconRightMargin} ></DarkTheme20Regular>} onClick={() => setTheme(!isLight)} size="large">
+                            <Button appearance="subtle" icon={<DarkTheme20Regular className={styles.iconRightMargin} ></DarkTheme20Regular>} onClick={() => setTheme(!isLight)} size="large">
                             </Button>
                         </Tooltip>
 
@@ -115,7 +113,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 <div className={styles.header}>
                     {t('components.settingsdrawer.feedback')}
 
-                    <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
                     <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT" className={styles.mail}>
@@ -126,7 +123,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 <div className={styles.header}>
                     {t('components.settingsdrawer.help')}
 
-                    <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
                     <a href="\#faq" className={styles.faq}>FAQs</a>
@@ -135,7 +131,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.header}>
                     {t('components.settingsdrawer.snow')}
-                    <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
                     <Checkbox
@@ -147,7 +142,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.header}>
                     {t('components.settingsdrawer.about')}
-                    <Divider />
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.faq}>Version: {version}</div>

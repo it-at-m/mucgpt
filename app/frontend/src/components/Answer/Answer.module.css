@@ -9,6 +9,10 @@
     border-style: groove;
 }
 
+.iconRightMargin {
+    margin-right: 5 px;
+}
+
 .answerLogo {
     font-size: 28px;
 }

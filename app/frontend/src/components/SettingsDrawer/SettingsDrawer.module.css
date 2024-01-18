@@ -10,7 +10,8 @@
 }
 
 .bodyContainer {
-    padding: var(--spacingVerticalS);
+    padding-bottom: var(--spacingVerticalS);
+    padding-left: var(--spacingVerticalM);
 }
 
 .iconRightMargin {

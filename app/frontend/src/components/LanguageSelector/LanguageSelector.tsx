@@ -11,7 +11,6 @@ const useStyles = makeStyles({
 
   },
   option: {
-    maxWidth: "50px"
   }
 });
 
@@ -29,6 +28,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: Props) => {
         aria-label="Sprache auswählen"
         defaultValue={defaultlang}
         onOptionSelect={onSelectionChange}
+        appearance="underline"
         size="small" positioning="below-start">
         <Option text="Deutsch" className={styles.option}>
           Deutsch

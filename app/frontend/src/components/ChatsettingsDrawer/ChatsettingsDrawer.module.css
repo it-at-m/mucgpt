@@ -3,13 +3,14 @@
 }
 
 .header {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     font-size: var(--fontSizeBase400);
     margin-top: var(--spacingVerticalS);
 }
 
 .bodyContainer {
-    padding: var(--spacingVerticalS);
+    padding-bottom: var(--spacingVerticalS);
+    padding-left: var(--spacingVerticalM);
 }
 
 .iconRightMargin {

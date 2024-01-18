@@ -11,7 +11,8 @@ import {
     SliderProps,
     Label,
     useId,
-    Tooltip
+    Tooltip,
+    Link
 } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
@@ -70,11 +71,15 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         </DrawerHeaderTitle>
                     </DrawerHeader>
                 </div>
+                <div className={styles.header}>
+                    Sprache
+
+                </div>
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
                 </div>
                 <div className={styles.header}>
-                    Barrierefreiheit
+                    Schriftgröße
 
                 </div>
                 <div className={styles.bodyContainer}>
@@ -99,6 +104,12 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                             {Math.floor(fontscale * 100)} %
                         </Label>
                     </div>
+
+                </div>
+                <div className={styles.header}>
+                    Design
+                </div>
+                <div className={styles.bodyContainer}>
                     <div className={styles.verticalContainer}>
 
                         <Tooltip content="Design wechseln" relationship="description" positioning="below">
@@ -107,7 +118,8 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                             </Button>
                         </Tooltip>
 
-                        {isLight}
+
+                        {isLight ? (<div>Hell</div>) : (<div>Dunkel</div>)}
                     </div>
                 </div>
                 <div className={styles.header}>
@@ -115,19 +127,25 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
 
                 </div>
                 <div className={styles.bodyContainer}>
-                    <a href="mailto:itm.kicc@muenchen.de?subject=MUCGPT" className={styles.mail}>
+                    <div className={styles.verticalContainer}>
                         <Mail24Regular className={styles.iconRightMargin} ></Mail24Regular>
-                        itm.kicc@muenchen.de
-                    </a>
+                        <Link href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
+                            itm.kicc@muenchen.de
+                        </Link>
+                    </div>
                 </div>
                 <div className={styles.header}>
                     {t('components.settingsdrawer.help')}
 
                 </div>
                 <div className={styles.bodyContainer}>
-                    <a href="\#faq" className={styles.faq}>FAQs</a>
+                    <Link href="\#faq">
+                        FAQs
+                    </Link>
                     <br />
-                    <a download className={styles.faq} aria-label="Cheat Sheet" href="https://git.muenchen.de/innovation-lab/ki-team/mucgpt-doku/-/raw/main/MucGPT%20Serviceeinf%C3%BChrung/Pilotphase/mucgpt_cheatsheet.pdf?inline=false">Cheat Sheet</a>
+                    <Link download href="https://git.muenchen.de/innovation-lab/ki-team/mucgpt-doku/-/raw/main/MucGPT%20Serviceeinf%C3%BChrung/Pilotphase/mucgpt_cheatsheet.pdf?inline=false" aria-label="Cheat Sheet">
+                        Cheat Sheet
+                    </Link>
                 </div>
                 <div className={styles.header}>
                     {t('components.settingsdrawer.snow')}

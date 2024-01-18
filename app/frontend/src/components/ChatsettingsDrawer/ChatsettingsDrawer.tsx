@@ -4,23 +4,19 @@ import {
     DrawerHeaderTitle,
     OverlayDrawer,
     Button,
-    Divider,
     Slider,
     Label,
     useId,
-    Body1,
     SliderProps,
     Field,
-    Textarea,
-    TextareaOnChangeData,
     InfoLabel,
     Tooltip
 } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { ChangeEvent, Dispatch, SetStateAction, useCallback, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { Link, TextField } from "@fluentui/react";
+import { TextField } from "@fluentui/react";
 interface Props {
     temperature: number;
     setTemperature: Dispatch<SetStateAction<number>>;
@@ -37,8 +33,8 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
         setIsOpen(true);
     }, [])
 
-    const temperatureID = useId("input-underline");
-    const max_tokensID = useId("input-underline");
+    const temperatureID = useId("input-temperature");
+    const max_tokensID = useId("input-max_tokens");
 
     const min_max_tokens = 10;
     const max_max_tokens = 4000;
@@ -133,7 +129,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
 
                 <div className={styles.bodyContainer}>
 
-                    <div className={styles.headerNavRightMargin}>
+                    <div className={styles.verticalContainer}>
                         <Slider min={min_max_tokens}
                             max={max_max_tokens}
                             defaultValue={20}
@@ -160,7 +156,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 </div>
                 <div className={styles.bodyContainer}>
 
-                    <div className={styles.headerNavRightMargin}>
+                    <div className={styles.verticalContainer}>
                         <Slider min={min_temp}
                             max={max_temp}
                             defaultValue={2}

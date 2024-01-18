@@ -1,4 +1,4 @@
-import { ChevronDown24Regular, Dismiss24Regular, Mail24Regular } from "@fluentui/react-icons";
+import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, Mail24Regular } from "@fluentui/react-icons";
 import {
     DrawerHeader,
     DrawerHeaderTitle,
@@ -6,12 +6,16 @@ import {
     Button,
     Divider,
     CheckboxOnChangeData,
-    CheckboxProps
+    CheckboxProps,
+    Slider,
+    SliderProps,
+    Label,
+    useId,
+    Tooltip
 } from "@fluentui/react-components";
 
-import { Comment24Regular } from "@fluentui/react-icons";
 import styles from "./SettingsDrawer.module.css";
-import { ChangeEvent, useCallback, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useCallback, useState } from "react";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { useTranslation } from 'react-i18next';
@@ -22,19 +26,26 @@ interface Props {
     version: string;
     enableSnow: CheckboxProps["checked"];
     onEnableSnowChanged: (ev: ChangeEvent<HTMLInputElement>, data: CheckboxOnChangeData) => void;
+    fontscale: number;
+    setFontscale: (fontscale: number) => void;
+    isLight: boolean;
+    setTheme: (isLight: boolean) => void;
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, enableSnow: enableSnow, onEnableSnowChanged }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, enableSnow, onEnableSnowChanged, fontscale, setFontscale, isLight, setTheme }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
+
+    const fontscaleID = useId("input-fontscale");
+
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
     }, [])
+    const min_temp = 0.8;
+    const max_temp = 1.8;
+    const onFontscaleChange: SliderProps["onChange"] = (_, data) =>
+        setFontscale(data.value);
 
-    const onFeedbackClicked = useCallback(() => {
-        // route to new page by changing window.location
-        window.open("https://git.muenchen.de/innovation-lab/ki-team/mucgpt/-/issues/new?issuable_template=pilot-meldung", "_blank") //to open new page
-    }, [])
     return (
         <div>
             <OverlayDrawer
@@ -62,6 +73,44 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
+                </div>
+                <div className={styles.header}>
+                    Barrierefreiheit
+
+                    <Divider />
+                </div>
+                <div className={styles.bodyContainer}>
+                    <div className={styles.verticalContainer}>
+
+                        <Tooltip content="Schriftgröße anpassen" relationship="description" positioning="below">
+                            <FontIncrease20Regular className={styles.iconRightMargin} ></FontIncrease20Regular>
+                        </Tooltip>
+                        <Slider min={min_temp}
+                            max={max_temp}
+                            defaultValue={2}
+                            onChange={onFontscaleChange}
+                            aria-valuetext={`Value is ${fontscale}`}
+                            value={fontscale}
+                            rail={{ style: { backgroundColor: "black" } }}
+                            thumb={{ style: { backgroundColor: "black" } }}
+                            step={0.1}
+                            size="small"
+                            id={fontscaleID} />
+                        <br></br>
+                        <Label htmlFor={fontscaleID}>
+                            {Math.floor(fontscale * 100)} %
+                        </Label>
+                    </div>
+                    <div className={styles.verticalContainer}>
+
+                        <Tooltip content="Design wechseln" relationship="description" positioning="below">
+
+                            <Button appearance="secondary" icon={<DarkTheme20Regular className={styles.iconRightMargin} ></DarkTheme20Regular>} onClick={() => setTheme(!isLight)} size="large">
+                            </Button>
+                        </Tooltip>
+
+                        {isLight}
+                    </div>
                 </div>
                 <div className={styles.header}>
                     {t('components.settingsdrawer.feedback')}

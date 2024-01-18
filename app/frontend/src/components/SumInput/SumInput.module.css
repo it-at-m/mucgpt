@@ -6,7 +6,7 @@
     height: auto;
     width: 100%;
     padding: 10px;
-    background: white;
+    background: var(--colorNeutralBackground2);
     display: flex;
     justify-content: space-between;
     flex-direction: column;
@@ -23,7 +23,6 @@
 .questionInputTextArea {
     border-style: dashed;
     border-width: 0.3px;
-    background-color: blue;
 }
 
 .paddingDocumentName {

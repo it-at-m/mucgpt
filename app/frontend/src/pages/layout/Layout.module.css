@@ -43,7 +43,7 @@
     color: var(--colorNeutralBackground1);
     text-decoration: none;
     opacity: 0.75;
-    font-size: medium;
+    font-size: var(--fontSizeBase600);
 
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     transition-duration: 500ms;
@@ -56,12 +56,12 @@
 
 .headerNavPageLinkActive {
     color: var(--colorNeutralForegroundInvertedSelected);
-    font-size: x-large;
+    font-size: var(--fontSizeHero800);
     text-decoration: none;
 }
 
 .headerNavLeftMargin {
-    font-size: x-large;
+    font-size: var(--fontSizeBase600);
 }
 
 .headerNavRightMargin {

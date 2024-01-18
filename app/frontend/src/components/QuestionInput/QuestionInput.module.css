@@ -8,6 +8,7 @@
     padding: 10px;
     display: flex;
     flex-direction: column;
+    background: var(--colorNeutralBackground2);
 }
 
 .questionInputContainerFooter {

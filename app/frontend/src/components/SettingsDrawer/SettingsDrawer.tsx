@@ -149,7 +149,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
             </OverlayDrawer >
 
             <div className={styles.button}>
-                <Button icon={<ChevronDown24Regular />} appearance="secondary" onClick={onClickRightButton}>
+                <Button icon={<ChevronDown24Regular />} appearance="primary" onClick={onClickRightButton}>
                     {t('components.settingsdrawer.settings_button')}
                 </Button>
             </div>

@@ -4,7 +4,6 @@ import {
     DrawerHeaderTitle,
     OverlayDrawer,
     Button,
-    Divider,
     CheckboxOnChangeData,
     CheckboxProps,
     Slider,
@@ -16,7 +15,7 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
-import { ChangeEvent, Dispatch, SetStateAction, useCallback, useState } from "react";
+import { ChangeEvent, useCallback, useState } from "react";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { useTranslation } from 'react-i18next';
@@ -73,20 +72,20 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     </DrawerHeader>
                 </div>
                 <div className={styles.header}>
-                    Sprache
+                    {t('components.settingsdrawer.language')}
 
                 </div>
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
                 </div>
                 <div className={styles.header}>
-                    Schriftgröße
+                    {t('components.settingsdrawer.fontsize')}
 
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.verticalContainer}>
 
-                        <Tooltip content="Schriftgröße anpassen" relationship="description" positioning="below">
+                        <Tooltip content={t('components.settingsdrawer.change_font')} relationship="description" positioning="below">
                             <FontIncrease20Regular className={styles.iconRightMargin} ></FontIncrease20Regular>
                         </Tooltip>
                         <Slider min={min_temp}
@@ -108,19 +107,19 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
 
                 </div>
                 <div className={styles.header}>
-                    Design
+                    {t('components.settingsdrawer.theme')}
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.verticalContainer}>
 
-                        <Tooltip content="Design wechseln" relationship="description" positioning="below">
+                        <Tooltip content={t('components.settingsdrawer.change_theme')} relationship="description" positioning="below">
 
                             <Button appearance="subtle" icon={<DarkTheme20Regular className={styles.iconRightMargin} ></DarkTheme20Regular>} onClick={() => setTheme(!isLight)} size="large">
                             </Button>
                         </Tooltip>
 
 
-                        {isLight ? (<div>Hell</div>) : (<div>Dunkel</div>)}
+                        {isLight ? (<div>{t('components.settingsdrawer.theme_light')}</div>) : (<div>{t('components.settingsdrawer.theme_dark')}</div>)}
                     </div>
                 </div>
                 <div className={styles.header}>

@@ -81,7 +81,14 @@ i18n
                             about: "Über",
                             help: "Hilfe",
                             snow: "Schnee",
-                            snow_checkbox: "Aktiviert"
+                            snow_checkbox: "Aktiviert",
+                            language: "Sprache",
+                            fontsize: "Schriftgröße",
+                            change_font: "Schriftgröße anpassen",
+                            theme: "Design",
+                            change_theme: "Design wechseln",
+                            theme_light: "Hell",
+                            theme_dark: "Dunkel"
                         },
                         questioninput: {
                             tokensused: "Token verbraucht",
@@ -102,6 +109,12 @@ i18n
                             system_prompt: "System Prompt",
                             system_prompt_info:
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
+                        },
+                        answericon: {
+                            label: "MUCGPT Nachricht"
+                        },
+                        usericon: {
+                            label: "Deine Nachricht"
                         }
                     }
                 }
@@ -174,7 +187,14 @@ i18n
                             about: "About",
                             help: "Help",
                             snow: "Snow",
-                            snow_checkbox: "Enabled"
+                            snow_checkbox: "Enabled",
+                            language: "Language",
+                            fontsize: "Font size",
+                            change_font: "Adjust font size",
+                            theme: "Theme",
+                            change_theme: "Switch theme",
+                            theme_light: "Light",
+                            theme_dark: "Dark"
                         },
                         questioninput: {
                             tokensused: "Token used",
@@ -195,6 +215,12 @@ i18n
                             system_prompt: "System prompt",
                             system_prompt_info:
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
+                        },
+                        answericon: {
+                            label: "MUCGPT message"
+                        },
+                        usericon: {
+                            label: "Your message"
                         }
                     }
                 }
@@ -267,7 +293,14 @@ i18n
                             about: "Iba",
                             help: "Hilf(e)",
                             snow: "Schnee",
-                            snow_checkbox: "Freigeschaltet"
+                            snow_checkbox: "Freigeschaltet",
+                            language: "Sproch",
+                            fontsize: "Schriftgrößn",
+                            change_font: "Schriftgrößn o'passn",
+                            theme: "Design",
+                            change_theme: "Design wechseln",
+                            theme_light: "Hell",
+                            theme_dark: "Dunkel"
                         },
                         questioninput: {
                             tokensused: "Token vabrocht",
@@ -288,6 +321,12 @@ i18n
                             system_prompt: "System Prompt",
                             system_prompt_info:
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
+                        },
+                        answericon: {
+                            label: "MUCGPT Nochricht"
+                        },
+                        usericon: {
+                            label: "Dei Nochricht"
                         }
                     }
                 }

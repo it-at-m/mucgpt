@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import styles from "./SumAnswer.module.css";
-import { IconButton, Stack } from "@fluentui/react";
+import { Stack } from "@fluentui/react";
 import { useTranslation } from 'react-i18next';
 import { SumResponse } from "../../api";
 import DOMPurify from "dompurify";
@@ -8,6 +8,7 @@ import { Button } from "@fluentui/react-button";
 import { Tooltip } from "@fluentui/react-components";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { CheckmarkSquare24Regular, Copy24Regular } from "@fluentui/react-icons";
+import { AnswerIcon } from "../Answer/AnswerIcon";
 interface Props {
     answer: SumResponse;
     top_n: number; // die besten zwei Varianten darstellen
@@ -45,26 +46,29 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
     return (
         <Stack verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>
             <Stack.Item>
-                <Stack horizontal horizontalAlign="end">
-                    {sanitzedKeywords.map((x, i) => (
-                        <div>
-                            <Button
-                                style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground4)", height: "100%" }}
-                                appearance="outline"
-                                size="small"
-                                shape="rounded"
-                                onClick={() => setSelected(i)}
-                                key={i}
-                            >{t("components.sumanswer.alternative")} {i + 1}</Button>
-                        </div>
-                    ))}
-                    <Tooltip content={t('components.sumanswer.copy')} relationship="description" positioning={{ target: ref }}>
-                        <CopyToClipboard text={sanitizedAnswerHtmlWithoutColors[getSelected]}
-                            onCopy={oncopy}>
-                            <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
-                            </Button>
-                        </CopyToClipboard>
-                    </Tooltip>
+                <Stack horizontal horizontalAlign="space-between">
+                    <AnswerIcon />
+                    <div className="styles.buttonContainer">
+                        {sanitzedKeywords.map((x, i) => (
+                            <div>
+                                <Button
+                                    style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground4)", height: "100%" }}
+                                    appearance="outline"
+                                    size="small"
+                                    shape="rounded"
+                                    onClick={() => setSelected(i)}
+                                    key={i}
+                                >{t("components.sumanswer.alternative")} {i + 1}</Button>
+                            </div>
+                        ))}
+                        <Tooltip content={t('components.sumanswer.copy')} relationship="description" positioning={{ target: ref }}>
+                            <CopyToClipboard text={sanitizedAnswerHtmlWithoutColors[getSelected]}
+                                onCopy={oncopy}>
+                                <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
+                                </Button>
+                            </CopyToClipboard>
+                        </Tooltip>
+                    </div>
                 </Stack>
             </Stack.Item>
             <Stack.Item grow>

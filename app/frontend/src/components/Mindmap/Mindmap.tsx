@@ -8,6 +8,7 @@ import { Stack } from "@fluentui/react";
 import { useTranslation } from 'react-i18next';
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular } from "@fluentui/react-icons";
+import { AnswerIcon } from "../Answer/AnswerIcon";
 interface Props {
     markdown: string;
 }
@@ -78,7 +79,8 @@ export const Mindmap = ({ markdown }: Props) => {
     return (
         <Stack verticalAlign="space-between" className={`${styles.mindmapContainer}`}>
             <Stack.Item>
-                <Stack horizontal horizontalAlign="end">
+                <Stack horizontal horizontalAlign="space-between">
+                    <AnswerIcon />
                     <div>
                         <Tooltip content={isSourceView ? t('components.mindmap.source') : t('components.mindmap.mindmap')} relationship="description" positioning="above">
                             <Button appearance="subtle" aria-label={isSourceView ? t('components.mindmap.source') : t('components.mindmap.mindmap')} icon={<ContentView24Regular className={styles.iconRightMargin} />}

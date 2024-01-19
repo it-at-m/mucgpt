@@ -17,3 +17,8 @@
 .sumanswerHeader {
     margin: 20px;
 }
+
+.buttonContainer {
+    display: flex;
+    flex-direction: row;
+}

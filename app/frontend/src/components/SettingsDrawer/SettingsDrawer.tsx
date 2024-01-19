@@ -21,6 +21,7 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { useTranslation } from 'react-i18next';
 import { Checkbox } from "@fluentui/react-components";
+import cheetsheet from "../../assets/mucgpt_cheatsheet.pdf";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
@@ -143,7 +144,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         FAQs
                     </Link>
                     <br />
-                    <Link download href="https://git.muenchen.de/innovation-lab/ki-team/mucgpt-doku/-/raw/main/MucGPT%20Serviceeinf%C3%BChrung/Pilotphase/mucgpt_cheatsheet.pdf?inline=false" aria-label="Cheat Sheet">
+                    <Link download href={cheetsheet} aria-label="Cheat Sheet">
                         Cheat Sheet
                     </Link>
                 </div>

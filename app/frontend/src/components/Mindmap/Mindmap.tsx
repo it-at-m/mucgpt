@@ -74,6 +74,7 @@ export const Mindmap = ({ markdown }: Props) => {
             mm.setData(root);
             mm.fit();
         }
+        svgEl.current?.setAttribute("title", "Generierte Mindmap");
     }
 
     return (
@@ -82,7 +83,7 @@ export const Mindmap = ({ markdown }: Props) => {
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon />
                     <div>
-                        <Tooltip content={isSourceView ? t('components.mindmap.source') : t('components.mindmap.mindmap')} relationship="description" positioning="above">
+                        <Tooltip content={isSourceView ? t('components.mindmap.mindmap') : t('components.mindmap.source')} relationship="description" positioning="above">
                             <Button appearance="subtle" aria-label={isSourceView ? t('components.mindmap.source') : t('components.mindmap.mindmap')} icon={<ContentView24Regular className={styles.iconRightMargin} />}
                                 onClick={() => toggleSourceView()} size="large">
                             </Button>
@@ -107,7 +108,7 @@ export const Mindmap = ({ markdown }: Props) => {
             {!isSourceView ?
                 <Stack.Item grow>
                     <div className={styles.mindmapContainer}>
-                        <svg id="markmap" className={styles.svgMark} ref={svgEl} />
+                        <svg id="markmap" className={styles.svgMark} ref={svgEl} aria-hidden="true" role="img" ></svg>
                     </div>
                 </Stack.Item>
                 :

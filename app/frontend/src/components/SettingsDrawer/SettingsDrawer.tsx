@@ -66,19 +66,20 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                                     onClick={() => setIsOpen(false)}
                                 />
                             }
+                            role="heading" aria-aria-level={2}
                         >
                             {t('components.settingsdrawer.settings')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.language')}
 
                 </div>
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.fontsize')}
 
                 </div>
@@ -94,19 +95,18 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                             onChange={onFontscaleChange}
                             aria-valuetext={`Value is ${fontscale}`}
                             value={fontscale}
-                            rail={{ style: { backgroundColor: "black" } }}
-                            thumb={{ style: { backgroundColor: "black" } }}
                             step={0.1}
                             size="small"
+                            aria-label={t('components.settingsdrawer.change_font')}
                             id={fontscaleID} />
                         <br></br>
-                        <Label htmlFor={fontscaleID}>
+                        <Label htmlFor={fontscaleID} >
                             {Math.floor(fontscale * 100)} %
                         </Label>
                     </div>
 
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.theme')}
                 </div>
                 <div className={styles.bodyContainer}>
@@ -122,11 +122,11 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         {isLight ? (<div>{t('components.settingsdrawer.theme_light')}</div>) : (<div>{t('components.settingsdrawer.theme_dark')}</div>)}
                     </div>
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.feedback')}
 
                 </div>
-                <div className={styles.bodyContainer}>
+                <div className={styles.bodyContainer} role="heading" aria-aria-level={3}>
                     <div className={styles.verticalContainer}>
                         <Mail24Regular className={styles.iconRightMargin} ></Mail24Regular>
                         <Link href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
@@ -134,7 +134,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         </Link>
                     </div>
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.help')}
 
                 </div>
@@ -147,7 +147,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         Cheat Sheet
                     </Link>
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.snow')}
                 </div>
                 <div className={styles.bodyContainer}>
@@ -158,7 +158,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         shape="square"
                     />
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.about')}
                 </div>
                 <div className={styles.bodyContainer}>

@@ -72,7 +72,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                                     onClick={() => setIsOpen(false)}
                                 />
                             }
-
+                            role="heading" aria-aria-level={2}
                         >
                             {t('components.chattsettingsdrawer.settings_button')}
 
@@ -82,7 +82,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 </div>
 
 
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     <InfoLabel
                         info={
                             <div className={styles.info}>
@@ -114,7 +114,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                     </div>
                 </div>
 
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     <InfoLabel
                         info={
                             <div className={styles.info}>
@@ -143,7 +143,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                         </Label>
                     </div>
                 </div>
-                <div className={styles.header}>
+                <div className={styles.header} role="heading" aria-aria-level={3}>
                     <InfoLabel
                         info={
                             <div className={styles.info}>
@@ -163,8 +163,6 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             onChange={onTemperatureChange}
                             aria-valuetext={`Value is ${temperature}`}
                             value={temperature}
-                            rail={{ style: { backgroundColor: "black" } }}
-                            thumb={{ style: { backgroundColor: "black" } }}
                             step={0.05}
                             id={temperatureID} />
                         <br></br>

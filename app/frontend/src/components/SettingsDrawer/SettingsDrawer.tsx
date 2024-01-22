@@ -139,13 +139,16 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
 
                 </div>
                 <div className={styles.bodyContainer}>
-                    <Link href="\#faq">
-                        FAQs
-                    </Link>
-                    <br />
-                    <Link download href={cheetsheet} aria-label="Cheat Sheet">
-                        Cheat Sheet
-                    </Link>
+                    <ul className={styles.list}>
+                        <li>  <Link href="\#faq">
+                            FAQs
+                        </Link></li>
+                        <li>
+                            <Link download href={cheetsheet} aria-label="Cheat Sheet">
+                                Cheat Sheet
+                            </Link>
+                        </li>
+                    </ul>
                 </div>
                 <div className={styles.header} role="heading" aria-aria-level={3}>
                     {t('components.settingsdrawer.snow')}

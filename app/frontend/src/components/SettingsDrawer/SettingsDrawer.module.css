@@ -3,6 +3,11 @@
     font-size: medium;
 }
 
+.list {
+    list-style: none;
+    padding: 0;
+}
+
 .header {
     margin-bottom: 10px;
     font-size: var(--fontSizeBase400);

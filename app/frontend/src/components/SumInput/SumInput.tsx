@@ -126,7 +126,7 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
                 }
                 < div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">
-                        <Button size="large" appearance="subtle" icon={<Send28Filled primaryFill="rgba(115, 118, 225, 1)" />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
+                        <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
                     </Tooltip>
                 </div>
             </div>

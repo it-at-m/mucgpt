@@ -128,9 +128,6 @@ const Layout = () => {
         <FluentProvider theme={theme}>
 
             <div className={styles.layout}>
-                {enableSnow &&
-                    <Snowfall color="white" snowflakeCount={snowFlakeCount} changeFrequency={300} radius={[0.5, 5.5]} />
-                }
                 <header className={styles2.header} role={"banner"}>
                     <div className={styles.headerNavList}>
 
@@ -162,7 +159,7 @@ const Layout = () => {
                         <SettingsDrawer
                             defaultlang={DEFAULTLANG}
                             onLanguageSelectionChanged={onLanguageSelectionChanged}
-                            version={config.version} enableSnow={enableSnow}
+                            version={config.version}
                             onEnableSnowChanged={(ev, data) => setSnow(data.checked)}
                             fontscale={fontscaling}
                             setFontscale={onFontscaleChange}

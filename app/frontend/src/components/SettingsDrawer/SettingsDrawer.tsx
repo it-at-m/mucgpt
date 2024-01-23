@@ -25,7 +25,6 @@ interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
     version: string;
-    enableSnow: CheckboxProps["checked"];
     onEnableSnowChanged: (ev: ChangeEvent<HTMLInputElement>, data: CheckboxOnChangeData) => void;
     fontscale: number;
     setFontscale: (fontscale: number) => void;
@@ -33,7 +32,7 @@ interface Props {
     setTheme: (isLight: boolean) => void;
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, enableSnow, onEnableSnowChanged, fontscale, setFontscale, isLight, setTheme }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, onEnableSnowChanged, fontscale, setFontscale, isLight, setTheme }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
 
@@ -150,17 +149,6 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                             </Link>
                         </li>
                     </ul>
-                </div>
-                <div className={styles.header} role="heading" aria-level={3}>
-                    {t('components.settingsdrawer.snow')}
-                </div>
-                <div className={styles.bodyContainer}>
-                    <Checkbox
-                        checked={enableSnow}
-                        onChange={onEnableSnowChanged}
-                        label={t('components.settingsdrawer.snow_checkbox')}
-                        shape="square"
-                    />
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.about')}

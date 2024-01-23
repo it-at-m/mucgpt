@@ -33,7 +33,9 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
         setIsOpen(true);
     }, [])
 
+    const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
+    const max_tokens_headerID = useId("header-max_tokens");
     const max_tokensID = useId("input-max_tokens");
 
     const min_max_tokens = 10;
@@ -72,7 +74,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                                     onClick={() => setIsOpen(false)}
                                 />
                             }
-                            role="heading" aria-aria-level={2}
+                            role="heading" aria-level={2}
                         >
                             {t('components.chattsettingsdrawer.settings_button')}
 
@@ -82,7 +84,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 </div>
 
 
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     <InfoLabel
                         info={
                             <div className={styles.info}>
@@ -114,7 +116,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                     </div>
                 </div>
 
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
                     <InfoLabel
                         info={
                             <div className={styles.info}>
@@ -136,6 +138,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             onChange={onMaxtokensChange}
                             aria-valuetext={`Value is ${max_tokensID}`}
                             value={max_tokens}
+                            aria-labelledby={max_tokens_headerID}
                             id={max_tokensID} />
                         <br></br>
                         <Label htmlFor={max_tokensID}>
@@ -143,13 +146,14 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                         </Label>
                     </div>
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
                     <InfoLabel
                         info={
                             <div className={styles.info}>
                                 {t('components.chattsettingsdrawer.temperature_article')} <i>{t('components.chattsettingsdrawer.temperature')}</i> {t('components.chattsettingsdrawer.temperature_info')}
                             </div>
                         }
+
                     >
                         {t('components.chattsettingsdrawer.temperature')}
                     </InfoLabel>
@@ -164,6 +168,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             aria-valuetext={`Value is ${temperature}`}
                             value={temperature}
                             step={0.05}
+                            aria-labelledby={temperature_headerID}
                             id={temperatureID} />
                         <br></br>
                         <Label htmlFor={temperatureID}>

@@ -38,6 +38,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
     const { t, i18n } = useTranslation();
 
     const fontscaleID = useId("input-fontscale");
+    const feedback_headerID = useId("feedback-language");
 
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
@@ -66,27 +67,27 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                                     onClick={() => setIsOpen(false)}
                                 />
                             }
-                            role="heading" aria-aria-level={2}
+                            role="heading" aria-level={2}
                         >
                             {t('components.settingsdrawer.settings')}
                         </DrawerHeaderTitle>
                     </DrawerHeader>
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.language')}
 
                 </div>
                 <div className={styles.bodyContainer}>
-                    <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged} ></LanguageSelector>
+                    <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.fontsize')}
 
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.verticalContainer}>
 
-                        <Tooltip content={t('components.settingsdrawer.change_font')} relationship="description" positioning="below">
+                        <Tooltip aria-hidden="true" content={t('components.settingsdrawer.change_font')} relationship="description" positioning="below">
                             <FontIncrease20Regular className={styles.iconRightMargin} ></FontIncrease20Regular>
                         </Tooltip>
                         <Slider min={min_temp}
@@ -106,7 +107,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     </div>
 
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.theme')}
                 </div>
                 <div className={styles.bodyContainer}>
@@ -114,7 +115,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
 
                         <Tooltip content={t('components.settingsdrawer.change_theme')} relationship="description" positioning="below">
 
-                            <Button appearance="subtle" icon={<DarkTheme20Regular className={styles.iconRightMargin} ></DarkTheme20Regular>} onClick={() => setTheme(!isLight)} size="large">
+                            <Button appearance="subtle" aria-label={t('components.settingsdrawer.change_theme')} icon={<DarkTheme20Regular className={styles.iconRightMargin} ></DarkTheme20Regular>} onClick={() => setTheme(!isLight)} size="large">
                             </Button>
                         </Tooltip>
 
@@ -122,19 +123,19 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         {isLight ? (<div>{t('components.settingsdrawer.theme_light')}</div>) : (<div>{t('components.settingsdrawer.theme_dark')}</div>)}
                     </div>
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3} id={feedback_headerID}>
                     {t('components.settingsdrawer.feedback')}
 
                 </div>
-                <div className={styles.bodyContainer} role="heading" aria-aria-level={3}>
+                <div className={styles.bodyContainer} role="heading" aria-level={3}>
                     <div className={styles.verticalContainer}>
-                        <Mail24Regular className={styles.iconRightMargin} ></Mail24Regular>
-                        <Link href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
+                        <Mail24Regular className={styles.iconRightMargin} aria-ignore ></Mail24Regular>
+                        <Link aria-labelledby={feedback_headerID} href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
                             itm.kicc@muenchen.de
                         </Link>
                     </div>
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.help')}
 
                 </div>
@@ -150,7 +151,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         </li>
                     </ul>
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.snow')}
                 </div>
                 <div className={styles.bodyContainer}>
@@ -161,7 +162,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                         shape="square"
                     />
                 </div>
-                <div className={styles.header} role="heading" aria-aria-level={3}>
+                <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.about')}
                 </div>
                 <div className={styles.bodyContainer}>

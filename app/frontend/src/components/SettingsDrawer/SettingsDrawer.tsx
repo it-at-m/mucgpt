@@ -5,7 +5,6 @@ import {
     OverlayDrawer,
     Button,
     CheckboxOnChangeData,
-    CheckboxProps,
     Slider,
     SliderProps,
     Label,
@@ -19,7 +18,6 @@ import { ChangeEvent, useCallback, useState } from "react";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { useTranslation } from 'react-i18next';
-import { Checkbox } from "@fluentui/react-components";
 import cheetsheet from "../../assets/mucgpt_cheatsheet.pdf";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
@@ -93,14 +91,14 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                             max={max_temp}
                             defaultValue={2}
                             onChange={onFontscaleChange}
-                            aria-valuetext={`Value is ${fontscale}`}
+                            aria-valuetext={t('components.settingsdrawer.fontsize') + ` ist ${Math.floor(fontscale * 100)} %`}
                             value={fontscale}
                             step={0.1}
                             size="small"
                             aria-label={t('components.settingsdrawer.change_font')}
                             id={fontscaleID} />
                         <br></br>
-                        <Label htmlFor={fontscaleID} >
+                        <Label htmlFor={fontscaleID} aria-hidden>
                             {Math.floor(fontscale * 100)} %
                         </Label>
                     </div>
@@ -128,7 +126,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.bodyContainer} role="heading" aria-level={3}>
                     <div className={styles.verticalContainer}>
-                        <Mail24Regular className={styles.iconRightMargin} aria-ignore ></Mail24Regular>
+                        <Mail24Regular className={styles.iconRightMargin} aria-hidden ></Mail24Regular>
                         <Link aria-labelledby={feedback_headerID} href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
                             itm.kicc@muenchen.de
                         </Link>

@@ -115,6 +115,9 @@ i18n
                         },
                         usericon: {
                             label: "Deine Nachricht"
+                        },
+                        example: {
+                            label: "Beispiel"
                         }
                     }
                 }
@@ -221,6 +224,9 @@ i18n
                         },
                         usericon: {
                             label: "Your message"
+                        },
+                        example: {
+                            label: "Example"
                         }
                     }
                 }
@@ -327,6 +333,9 @@ i18n
                         },
                         usericon: {
                             label: "Dei Nochricht"
+                        },
+                        example: {
+                            label: "Beispui"
                         }
                     }
                 }

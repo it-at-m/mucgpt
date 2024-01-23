@@ -136,12 +136,12 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             max={max_max_tokens}
                             defaultValue={20}
                             onChange={onMaxtokensChange}
-                            aria-valuetext={`Value is ${max_tokensID}`}
+                            aria-valuetext={t('components.chattsettingsdrawer.max_lenght') + ` ist ${max_tokensID}`}
                             value={max_tokens}
                             aria-labelledby={max_tokens_headerID}
                             id={max_tokensID} />
                         <br></br>
-                        <Label htmlFor={max_tokensID}>
+                        <Label htmlFor={max_tokensID} aria-hidden>
                             {max_tokens} Tokens
                         </Label>
                     </div>
@@ -165,13 +165,13 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             max={max_temp}
                             defaultValue={2}
                             onChange={onTemperatureChange}
-                            aria-valuetext={`Value is ${temperature}`}
+                            aria-valuetext={t('components.chattsettingsdrawer.temperature') + ` ist ${temperature}`}
                             value={temperature}
                             step={0.05}
                             aria-labelledby={temperature_headerID}
                             id={temperatureID} />
                         <br></br>
-                        <Label htmlFor={temperatureID}>
+                        <Label htmlFor={temperatureID} aria-hidden>
                             {temperature}
                         </Label>
                     </div>
@@ -180,7 +180,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
 
             <div className={styles.button}>
                 <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
-                    <Button icon={<ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
+                    <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={<ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
                     </Button>
                 </Tooltip>
             </div>

@@ -12,7 +12,6 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
-import Snowfall from 'react-snowfall'
 import { CheckboxProps } from "@fluentui/react-components";
 
 import { FluentProvider, BrandVariants, createLightTheme, createDarkTheme, Theme, makeStyles } from '@fluentui/react-components';
@@ -138,7 +137,7 @@ const Layout = () => {
                                 aria-label="MUCGPT Logo"
                                 className={styles.logo}
                             ></img>
-                            <h3 className={styles.headerTitle}>{config.frontend.labels.env_name}</h3>
+                            <h3 className={styles.headerTitle} aria-description="Umgebung:">{config.frontend.labels.env_name}</h3>
                         </Link>
 
                         <div className={styles.headerNavLeftMargin}>

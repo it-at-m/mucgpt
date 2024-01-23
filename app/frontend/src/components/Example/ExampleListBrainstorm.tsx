@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Example } from "./Example";
 
 import styles from "./Example.module.css";
@@ -27,11 +28,12 @@ interface Props {
 }
 
 export const ExampleListBrainstorm = ({ onExampleClicked }: Props) => {
+    const { t } = useTranslation();
     return (
         <ul className={styles.examplesNavList}>
             {EXAMPLES.map((x, i) => (
                 <li key={i}>
-                    <Example text={x.text} value={x.value} onClick={onExampleClicked} />
+                    <Example text={x.text} value={x.value} onClick={onExampleClicked} ariaLabel={t('components.example.label') + " " + (i + 1).toString()} />
                 </li>
             ))}
         </ul>

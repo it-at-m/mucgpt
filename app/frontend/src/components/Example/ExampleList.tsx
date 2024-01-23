@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Example } from "./Example";
 
 import styles from "./Example.module.css";
@@ -16,9 +17,10 @@ const EXAMPLES: ExampleModel[] = [
         text: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut?",
         value: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut"
     },
-    { text:  "Du bist ein Zauberer aus Harry Potter...",
-         value: 
-`Du bist ein Zauberer aus Harry Potter. Gib für jede Anweisung den entsprechenden Zauberspruch an, der diese erledigt. Beschreibe ausführlich was der Zauberspruch macht:
+    {
+        text: "Du bist ein Zauberer aus Harry Potter...",
+        value:
+            `Du bist ein Zauberer aus Harry Potter. Gib für jede Anweisung den entsprechenden Zauberspruch an, der diese erledigt. Beschreibe ausführlich was der Zauberspruch macht:
 Hier sind einige Beispiele:
             
 Anweisung: Dinge anheben 
@@ -35,11 +37,13 @@ interface Props {
 }
 
 export const ExampleList = ({ onExampleClicked }: Props) => {
+
+    const { t } = useTranslation();
     return (
         <ul className={styles.examplesNavList}>
             {EXAMPLES.map((x, i) => (
                 <li key={i}>
-                    <Example text={x.text} value={x.value} onClick={onExampleClicked} />
+                    <Example text={x.text} value={x.value} onClick={onExampleClicked} ariaLabel={t('components.example.label') + " " + (i + 1).toString()} />
                 </li>
             ))}
         </ul>

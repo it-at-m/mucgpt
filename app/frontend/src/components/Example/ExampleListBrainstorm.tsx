@@ -32,7 +32,7 @@ export const ExampleListBrainstorm = ({ onExampleClicked }: Props) => {
     return (
         <ul className={styles.examplesNavList} aria-description={t('common.examples')}>
             {EXAMPLES.map((x, i) => (
-                <li key={i}>
+                <li key={i} tabIndex={0}>
                     <Example text={x.text} value={x.value} onClick={onExampleClicked} ariaLabel={t('components.example.label') + " " + (i + 1).toString()} />
                 </li>
             ))}

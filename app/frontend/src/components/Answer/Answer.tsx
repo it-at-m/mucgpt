@@ -90,7 +90,7 @@ export const Answer = ({
                         }} />
                 }
                 {!formatted &&
-                    <div className={styles.unformattedAnswer}>{parsedAnswer.answerHtml}
+                    <div className={styles.unformattedAnswer} tabIndex={0}>{parsedAnswer.answerHtml}
                     </div>}
             </Stack.Item>
         </Stack>

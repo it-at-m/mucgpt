@@ -40,7 +40,7 @@ export const ExampleList = ({ onExampleClicked }: Props) => {
 
     const { t } = useTranslation();
     return (
-        <ul className={styles.examplesNavList}>
+        <ul className={styles.examplesNavList} aria-description={t('common.examples')}>
             {EXAMPLES.map((x, i) => (
                 <li key={i}>
                     <Example text={x.text} value={x.value} onClick={onExampleClicked} ariaLabel={t('components.example.label') + " " + (i + 1).toString()} />

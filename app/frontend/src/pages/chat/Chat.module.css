@@ -69,6 +69,7 @@
     padding-right: 24px;
     display: flex;
     flex-direction: column;
+    list-style: none;
 }
 
 .chatMessageGpt {

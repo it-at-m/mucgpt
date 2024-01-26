@@ -164,11 +164,13 @@ const Chat = () => {
                             <ExampleList onExampleClicked={onExampleClicked} />
                         </div>
                     ) : (
-                        <div className={styles.chatMessageStream}>
+                        <ul className={styles.chatMessageStream} aria-description={t("common.messages")}>
                             {answers.map((answer, index) => (
                                 <div key={index}>
-                                    <UserChatMessage message={answer[0]} />
-                                    <div className={styles.chatMessageGpt}>
+                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()}>
+                                        <UserChatMessage message={answer[0]} />
+                                    </li>
+                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
                                         {index === answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
@@ -184,27 +186,31 @@ const Chat = () => {
                                             onCitationClicked={c => onShowCitation(c, index)}
                                         />
                                         }
-                                    </div>
+                                    </li>
                                 </div>
                             ))}
                             {isLoading && (
                                 <>
-                                    <UserChatMessage message={lastQuestionRef.current} />
-                                    <div className={styles.chatMessageGptMinWidth}>
+                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
+                                        <UserChatMessage message={lastQuestionRef.current} />
+                                    </li>
+                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>  answericon
                                         <AnswerLoading text={t('chat.answer_loading')} />
-                                    </div>
+                                    </li>
                                 </>
                             )}
                             {error ? (
                                 <>
-                                    <UserChatMessage message={lastQuestionRef.current} />
-                                    <div className={styles.chatMessageGptMinWidth}>
+                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
+                                        <UserChatMessage message={lastQuestionRef.current} />
+                                    </li>
+                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
                                         <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
-                                    </div>
+                                    </li>
                                 </>
                             ) : null}
                             <div ref={chatMessageStreamEnd} />
-                        </div>
+                        </ul>
                     )}
 
                     <div className={styles.chatInput}>

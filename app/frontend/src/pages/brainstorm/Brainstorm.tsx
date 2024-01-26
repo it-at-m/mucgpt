@@ -73,33 +73,39 @@ const Summarize = () => {
                             <ExampleListBrainstorm onExampleClicked={onExampleClicked} />
                         </div>
                     ) : (
-                        <div className={styles.chatMessageStream}>
+                        <ul className={styles.chatMessageStream}>
                             {answers.map((answer, index) => (
                                 <div key={index}>
-                                    <UserChatMessage message={answer[0]} />
-                                    <div className={styles.chatMessageGpt}>
+                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()}>
+                                        <UserChatMessage message={answer[0]} />
+                                    </li>
+                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
                                         <Mindmap markdown={answer[1].answer}></Mindmap>
-                                    </div>
+                                    </li>
                                 </div>
                             ))}
                             {isLoading && (
                                 <>
-                                    <UserChatMessage message={lastQuestionRef.current} />
-                                    <div className={styles.chatMessageGptMinWidth}>
+                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
+                                        <UserChatMessage message={lastQuestionRef.current} />
+                                    </li>
+                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
                                         <AnswerLoading text={t('brainstorm.answer_loading')} />
-                                    </div>
+                                    </li>
                                 </>
                             )}
                             {error ? (
                                 <>
-                                    <UserChatMessage message={lastQuestionRef.current} />
-                                    <div className={styles.chatMessageGptMinWidth}>
+                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
+                                        <UserChatMessage message={lastQuestionRef.current} />
+                                    </li>
+                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
                                         <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
-                                    </div>
+                                    </li>
                                 </>
                             ) : null}
                             <div ref={chatMessageStreamEnd} />
-                        </div>
+                        </ul>
                     )}
 
                     <div className={styles.chatInput}>

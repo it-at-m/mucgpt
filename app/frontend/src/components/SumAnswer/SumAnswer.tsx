@@ -47,7 +47,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
         <Stack verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>
             <Stack.Item>
                 <Stack horizontal horizontalAlign="space-between">
-                    <AnswerIcon />
+                    <AnswerIcon aria-hidden />
                     <div className={styles.buttonContainer}>
                         {sanitzedKeywords.map((x, i) => (
                             <div>

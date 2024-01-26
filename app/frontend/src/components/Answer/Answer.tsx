@@ -49,7 +49,7 @@ export const Answer = ({
         <Stack className={`${styles.answerContainer} ${isSelected && styles.selected}`} verticalAlign="space-between">
             <Stack.Item>
                 <Stack horizontal horizontalAlign="space-between">
-                    <AnswerIcon />
+                    <AnswerIcon aria-hidden />
                     <div>
                         <Tooltip content={t('components.answer.copy')} relationship="description" positioning={{ target: ref }}
                         >

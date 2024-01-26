@@ -41,7 +41,9 @@ i18n
                     common: {
                         clear_chat: "Chat löschen",
                         settings: "Einstellungen",
-                        close: "Schließen"
+                        close: "Schließen",
+                        messages: "Nachrichten",
+                        examples: "Beispiele"
                     },
                     components: {
                         roles: {
@@ -150,7 +152,9 @@ i18n
                     common: {
                         clear_chat: "Clear chat",
                         settings: "Settings",
-                        close: "Close"
+                        close: "Close",
+                        messages: "Messages",
+                        examples: "Examples"
                     },
                     components: {
                         roles: {
@@ -259,7 +263,9 @@ i18n
                     common: {
                         clear_chat: "Nochrichten löschn",
                         settings: "Konfiguration",
-                        close: "Schließen"
+                        close: "Schließen",
+                        messages: "Nochrichten",
+                        examples: "Beispui"
                     },
                     components: {
                         roles: {

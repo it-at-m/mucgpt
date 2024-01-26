@@ -81,7 +81,7 @@ export const Mindmap = ({ markdown }: Props) => {
         <Stack verticalAlign="space-between" className={`${styles.mindmapContainer}`}>
             <Stack.Item>
                 <Stack horizontal horizontalAlign="space-between">
-                    <AnswerIcon />
+                    <AnswerIcon aria-hidden />
                     <div>
                         <Tooltip content={isSourceView ? t('components.mindmap.mindmap') : t('components.mindmap.source')} relationship="description" positioning="above">
                             <Button appearance="subtle" aria-label={isSourceView ? t('components.mindmap.source') : t('components.mindmap.mindmap')} icon={<ContentView24Regular className={styles.iconRightMargin} />}

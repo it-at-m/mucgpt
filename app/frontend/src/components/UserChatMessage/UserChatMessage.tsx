@@ -15,7 +15,7 @@ export const UserChatMessage = ({ message, token }: Props) => {
         <div className={styles.container}>
             <div className={styles.message}>
 
-                <ChatMessageIcon></ChatMessageIcon>
+                <ChatMessageIcon aria-hidden></ChatMessageIcon>
                 <Markdown
                     className={styles.answerText}
                     remarkPlugins={[remarkGfm]}

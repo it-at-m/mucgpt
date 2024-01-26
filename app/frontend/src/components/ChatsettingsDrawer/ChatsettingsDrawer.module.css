@@ -29,3 +29,8 @@
     align-items: center;
     justify-content: start;
 }
+
+.systempromptTextArea {
+    line-height: var(--lineHeightBase400);
+    font-size: var(--fontSizeBase400);
+}

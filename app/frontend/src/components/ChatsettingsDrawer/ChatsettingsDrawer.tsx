@@ -10,7 +10,9 @@ import {
     SliderProps,
     Field,
     InfoLabel,
-    Tooltip
+    Tooltip,
+    Textarea,
+    TextareaOnChangeData
 } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
@@ -48,9 +50,9 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) =>
         setMaxTokens(data.value);
 
-    const onSytemPromptChange = (ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, data: string | undefined) => {
-        if (data)
-            setSystemPrompt(data);
+    const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+        if (newValue?.value)
+            setSystemPrompt(newValue.value);
         else
             setSystemPrompt("");
     }
@@ -103,14 +105,13 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             placeholder={t('components.chattsettingsdrawer.system_prompt')}
                             size="large"
                         >
-                            <TextField
-                                className={styles.questionInputTextArea}
+                            <Textarea
+                                textarea={styles.systempromptTextArea}
                                 placeholder={t('components.chattsettingsdrawer.system_prompt')}
-                                multiline
-                                resizable={false}
+                                resize="vertical"
                                 value={systemPrompt}
+                                size="small"
                                 onChange={onSytemPromptChange}
-                                autoAdjustHeight={true}
                             />
                         </Field>
                     </div>

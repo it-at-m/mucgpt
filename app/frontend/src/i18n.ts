@@ -107,7 +107,7 @@ i18n
                             temperature_article: "Die",
                             temperature_info: `beinflusst die "Kreativität" des Sprachmodells. Ein höherer Wert führt zu unvorhersehbareren Antworten (Wörter, die unwahrschienliche gegeben dem aktuellem Kontext sind,  werden generiert), während ein niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
                             max_lenght: "Maximale Antwortlänge",
-                            max_lenght_info: " Wieviele Token (Wörter) dürfen maximal bei einer Antwort generiert werden.",
+                            max_lenght_info: " Wieviele Token dürfen maximal bei einer Antwort generiert werden.",
                             system_prompt: "System Prompt",
                             system_prompt_info:
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
@@ -329,7 +329,7 @@ i18n
                             temperature_article: "Da",
                             temperature_info: `	beinflusst de "Kreativität" vom Sprachmodel. A höherer Wert führt zu unvorhersehbareren Antworten (Wörter, de unwahrscheinliche geem de aktuelle Kontext san, werdn generiert), während a niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
                             max_lenght: "Maximale Antwortläng",
-                            max_lenght_info: "Wia vui Token (Wörter) dürfen maximal bei am Antwort generiert werdn.",
+                            max_lenght_info: "Wia vui Token dürfen maximal bei am Antwort generiert werdn.",
                             system_prompt: "System Prompt",
                             system_prompt_info:
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."

@@ -18,7 +18,6 @@ import {
 import styles from "./ChatsettingsDrawer.module.css";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useTranslation } from 'react-i18next';
-import { TextField } from "@fluentui/react";
 interface Props {
     temperature: number;
     setTemperature: Dispatch<SetStateAction<number>>;

@@ -14,11 +14,16 @@ import { useTranslation } from 'react-i18next';
 
 import styles from "./TermsOfUseDialog.module.css";
 
-export const TermsOfUseDialog = () => {
+interface Props {
+    defaultOpen: boolean;
+    onAccept: () => void;
+}
+
+export const TermsOfUseDialog = ({ defaultOpen, onAccept }: Props) => {
     const { t } = useTranslation();
     return (
         <div>
-            <Dialog modalType="alert" defaultOpen={true}>
+            <Dialog modalType="alert" defaultOpen={defaultOpen}>
                 <DialogTrigger disableButtonEnhancement>
                     <Button appearance="primary">{t('header.nutzungsbedingungen')}</Button>
                 </DialogTrigger>
@@ -46,7 +51,7 @@ export const TermsOfUseDialog = () => {
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="small">
+                                <Button appearance="secondary" size="small" onClick={(_) => onAccept()}>
                                     <Checkmark24Filled className={styles.checkIcon} />Zustimmen</Button>
                             </DialogTrigger>
                         </DialogActions>

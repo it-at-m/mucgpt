@@ -20,11 +20,11 @@ import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { useTranslation } from 'react-i18next';
 interface Props {
     temperature: number;
-    setTemperature: Dispatch<SetStateAction<number>>;
+    setTemperature: (temp: number) => void;
     max_tokens: number;
-    setMaxTokens: Dispatch<SetStateAction<number>>;
+    setMaxTokens: (maxTokens: number) => void;
     systemPrompt: string;
-    setSystemPrompt: Dispatch<SetStateAction<string>>;
+    setSystemPrompt: (systemPrompt: string) => void;
 }
 
 export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {

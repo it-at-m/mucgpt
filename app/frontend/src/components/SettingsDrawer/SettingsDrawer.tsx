@@ -23,14 +23,13 @@ interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
     version: string;
-    onEnableSnowChanged: (ev: ChangeEvent<HTMLInputElement>, data: CheckboxOnChangeData) => void;
     fontscale: number;
     setFontscale: (fontscale: number) => void;
     isLight: boolean;
     setTheme: (isLight: boolean) => void;
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, onEnableSnowChanged, fontscale, setFontscale, isLight, setTheme }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
 

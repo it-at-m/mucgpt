@@ -12,7 +12,6 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
-import { CheckboxProps } from "@fluentui/react-components";
 
 import { FluentProvider, BrandVariants, createLightTheme, createDarkTheme, Theme, makeStyles } from '@fluentui/react-components';
 import { tokens } from '@fluentui/react-theme';
@@ -32,7 +31,19 @@ const useStyles = makeStyles({
         color: tokens.colorBrandForeground2
     }
 });
+
+const enum STORAGE_KEYS {
+    TERMS_OF_USE_READ = 'TERMS_OF_USE_READ',
+    SETTINGS_LANGUAGE = 'SETTINGS_LANGUAGE',
+    SETTINGS_FONT_SCALING = 'SETTINGS_FONT_SCALING',
+    SETTINGS_IS_LIGHT_THEME = 'SETTINGS_IS_LIGHT_THEME',
+}
 const Layout = () => {
+    const styles2 = useStyles();
+    const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === null ? false : localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) == 'true';
+    const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
+    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1.0;
+    const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
     const { language, setLanguage } = useContext(LanguageContext);
     const { t, i18n } = useTranslation();
     const [config, setConfig] = useState<ApplicationConfig>({
@@ -47,13 +58,10 @@ const Layout = () => {
                 env_name: "PILOT-C"
             }
         },
-        version: "0.1.0"
-    }
-    )
-    const [enableSnow, setSnow] = useState<CheckboxProps["checked"]>(true);
-    const [isLight, setLight] = useState<boolean>(true);
-    const [snowFlakeCount, setSnowFlakeCount] = useState<number>(50);
-    const [fontscaling, setFontscaling] = useState<number>(1.0);
+        version: "DEV 0.3.0"
+    })
+    const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
+    const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
     const customBrandRamp: BrandVariants = {
         10: '#f2f2f2',
         20: '#e4e4e5',
@@ -98,29 +106,38 @@ const Layout = () => {
         return theme;
     };
 
-    const [theme, setTheme] = useState<Theme>(adjustTheme(true, fontscaling));
-
+    const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
         setTheme(adjustTheme(isLight, fontscale));
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString())
     }
 
+    const onThemeChange = (light: boolean) => {
+        setLight(light);
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
+        setTheme(adjustTheme(light, fontscaling))
+    }
 
-    const styles2 = useStyles();
 
     useEffect(() => {
         configApi().then(result => {
             setConfig(result)
         }, () => { console.log("Config nicht geladen") });
+        i18n.changeLanguage(language_pref);
     }, [])
 
+    const onAcceptTermsOfUse = () => {
+        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, String(true))
+    }
 
     const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let lang = selection.optionValue || DEFAULTLANG;
         i18n.changeLanguage(lang);
         setLanguage(lang);
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
     };
     return (
 
@@ -156,14 +173,13 @@ const Layout = () => {
                             </NavLink>
                         </div>
                         <SettingsDrawer
-                            defaultlang={DEFAULTLANG}
+                            defaultlang={language_pref}
                             onLanguageSelectionChanged={onLanguageSelectionChanged}
                             version={config.version}
-                            onEnableSnowChanged={(ev, data) => setSnow(data.checked)}
                             fontscale={fontscaling}
                             setFontscale={onFontscaleChange}
                             isLight={isLight}
-                            setTheme={(light) => { setLight(light); setTheme(adjustTheme(light, fontscaling)) }}></SettingsDrawer>
+                            setTheme={onThemeChange}></SettingsDrawer>
                     </div>
                 </header>
                 <Outlet />
@@ -174,7 +190,7 @@ const Layout = () => {
                         RIT/it@M Innovationlab <br />
                     </div>
                     <div className={styles.headerNavRightMargin}>
-                        <TermsOfUseDialog ></TermsOfUseDialog>
+                        <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>
                     </div>
                 </footer>
             </div>

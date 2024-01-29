@@ -14,6 +14,13 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 
+
+const enum STORAGE_KEYS {
+    CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
+    CHAT_SYSTEM_PROMPT = 'CHAT_SYSTEM_PROMPT',
+    CHAT_MAX_TOKENS = 'CHAT_MAX_TOKENS',
+}
+
 const Chat = () => {
 
     const { language } = useContext(LanguageContext)
@@ -32,9 +39,13 @@ const Chat = () => {
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
 
-    const [temperature, setTemperature] = useState(0.7);
-    const [max_tokens, setMaxTokens] = useState(4000);
-    const [systemPrompt, setSystemPrompt] = useState<string>("");
+    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
+    const max_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
+    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT) || "";
+
+    const [temperature, setTemperature] = useState(temperature_pref);
+    const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
+    const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -143,17 +154,33 @@ const Chat = () => {
         setSelectedAnswer(index);
     };
 
+    const onTemperatureChanged = (temp: number) => {
+        setTemperature(temp);
+        localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString())
+    };
+
+    const onMaxTokensChanged = (maxTokens: number) => {
+        setMaxTokens(maxTokens);
+        localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString())
+    };
+
+    const onSystemPromptChanged = (systemPrompt: string) => {
+        setSystemPrompt(systemPrompt);
+        localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt)
+    };
+
+
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
                 <ChatsettingsDrawer
                     temperature={temperature}
-                    setTemperature={setTemperature}
+                    setTemperature={onTemperatureChanged}
                     max_tokens={max_tokens}
-                    setMaxTokens={setMaxTokens}
+                    setMaxTokens={onMaxTokensChanged}
                     systemPrompt={systemPrompt}
-                    setSystemPrompt={setSystemPrompt}
+                    setSystemPrompt={onSystemPromptChanged}
                 ></ChatsettingsDrawer>
             </div>
             <div className={styles.chatRoot}>

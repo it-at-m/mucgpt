@@ -194,7 +194,7 @@ const Chat = () => {
                                     <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
                                         <UserChatMessage message={lastQuestionRef.current} />
                                     </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >  answericon
+                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
                                         <AnswerLoading text={t('chat.answer_loading')} />
                                     </li>
                                 </>

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular } from "@fluentui/react-icons";
 import { AnswerIcon } from "../Answer/AnswerIcon";
+import { IPureNode } from "markmap-common";
 interface Props {
     markdown: string;
 }
@@ -19,6 +20,7 @@ export const Mindmap = ({ markdown }: Props) => {
     const transformer = new Transformer();
     const svgEl = useRef<SVGSVGElement>(null);
     const [isSourceView, setIsSourceView] = useState(false);
+    const [freeplaneXML, setFreeplaneXML] = useState("");
 
     useLayoutEffect(() => {
         createMM();
@@ -47,9 +49,8 @@ export const Mindmap = ({ markdown }: Props) => {
     const download = () => {
         if (svgEl && svgEl.current) {
             // fetch SVG-rendered image as a blob object
-            const data = (new XMLSerializer()).serializeToString(svgEl.current);
-            const svgBlob = new Blob([data], {
-                type: 'image/svg+xml;charset=utf-8'
+            const svgBlob = new Blob([freeplaneXML], {
+                type: 'text-plain/mm;charset=utf-8'
             });
 
             // convert the blob object to a dedicated URL
@@ -59,7 +60,7 @@ export const Mindmap = ({ markdown }: Props) => {
             const img = new Image();
             const link = document.createElement('a')
             link.href = url
-            link.download = 'Idee'
+            link.download = 'Idee.mm'
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
@@ -67,15 +68,49 @@ export const Mindmap = ({ markdown }: Props) => {
         }
     };
 
+    const parseXML = (parsed: IPureNode) => {
+        const doc = document.implementation.createDocument(null, null, null);
+        const mapElem = doc.createElement("map");
+        mapElem.setAttribute("version", "freeplane 1.11.1");
+
+        const question = doc.createElement("node");
+        question.setAttribute("TEXT", parsed.content);
+        question.setAttribute("FOLDED", "false");
+
+        for (let child of parsed.children) {
+            parseNodes(child, question, doc);
+        }
+        mapElem.appendChild(question);
+        doc.appendChild(mapElem);
+        setFreeplaneXML(new XMLSerializer().serializeToString(mapElem))
+    }
+
+    const parseNodes = (to_be_parsed: IPureNode, parent: HTMLElement, doc: XMLDocument) => {
+        const result = doc.createElement("node");
+        result.setAttribute("TEXT", to_be_parsed.content);
+
+        //const edge = doc.createElement("edge");
+        //edge.setAttribute("COLOR", "")
+
+        for (let child of to_be_parsed.children) {
+            parseNodes(child, result, doc);
+        }
+        parent.appendChild(result);
+    }
+
     const createMM = () => {
         let mm = Markmap.create(svgEl.current as SVGSVGElement);
         if (mm) {
             const { root } = transformer.transform(markdown || "");
+            parseXML(root);
+
             mm.setData(root);
             mm.fit();
         }
         svgEl.current?.setAttribute("title", "Generierte Mindmap");
     }
+
+
 
     return (
         <Stack verticalAlign="space-between" className={`${styles.mindmapContainer}`}>

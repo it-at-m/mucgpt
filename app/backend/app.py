@@ -5,7 +5,6 @@ import time
 from typing import AsyncGenerator, cast
 import base64 
 
-import aiohttp
 import openai
 import csv
 import io
@@ -69,9 +68,7 @@ async def chat():
     try:
         impl = cfg["chat_approaches"]
         # Workaround for: https://github.com/openai/openai-python/issues/371
-        async with aiohttp.ClientSession() as s:
-            openai.aiosession.set(s)
-            r = await impl.run_without_streaming(request_json.get("history", []), request_json.get("overrides", {}))
+        r = await impl.run_without_streaming(request_json.get("history", []), request_json.get("overrides", {}))
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /chat")
@@ -96,9 +93,7 @@ async def sum():
 
     try:
         impl = cfg["sum_approaches"]
-        async with aiohttp.ClientSession() as s:
-            openai.aiosession.set(s)
-            r = await impl.run(docs = docs, overrides=request_json["overrides"] or {}, department=department)
+        r = await impl.run(docs = docs, overrides=request_json["overrides"] or {}, department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -115,9 +110,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        async with aiohttp.ClientSession() as s:
-            openai.aiosession.set(s)
-            r = await impl.run(topic=request_json["topic"],overrides= request_json ["overrides"] or {}, department=department)
+        r = await impl.run(topic=request_json["topic"],overrides= request_json ["overrides"] or {}, department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")

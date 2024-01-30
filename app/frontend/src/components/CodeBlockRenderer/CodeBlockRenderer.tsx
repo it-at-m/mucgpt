@@ -23,28 +23,32 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
   }
 
   const language = match ? match[1] : "";
+  const isMultiline = String(children).includes("\n")
   return (
-    <div className={styles.codeContainer}>
-      <SyntaxHighlighter
-        {...rest}
-        children={String(children).replace(/\n$/, '')}
-        style={dark}
-        language={language}
-        PreTag="div"
-        showLineNumbers={true}
-        wrapLongLines={true}
-      />
-      <div className={styles.copyContainer}>
-        {language}
-        <CopyToClipboard text={children}
-          onCopy={oncopy}>
-          <IconButton
-            style={{ color: "black" }}
-            iconProps={{ iconName: icon }}
-          >
-          </IconButton>
-        </CopyToClipboard>
+    isMultiline ? (
+      <div className={styles.codeContainer}>
+        <SyntaxHighlighter
+          {...rest}
+          children={String(children).replace(/\n$/, '')}
+          style={dark}
+          language={language}
+          PreTag="div"
+          showLineNumbers={true}
+          wrapLongLines={true}
+        />
+        <div className={styles.copyContainer}>
+          {language}
+          <CopyToClipboard text={children}
+            onCopy={oncopy}>
+            <IconButton
+              style={{ color: "black" }}
+              iconProps={{ iconName: icon }}
+            >
+            </IconButton>
+          </CopyToClipboard>
+        </div>
       </div>
-    </div>
+    ) :
+      <code {...rest} className={className}>{children}</code>
   )
 }

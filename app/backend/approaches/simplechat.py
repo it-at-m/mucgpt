@@ -6,7 +6,7 @@ from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
 from core.modelhelper import get_token_limit
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
-from langchain.chat_models import AzureChatOpenAI
+from langchain_community.chat_models import AzureChatOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,

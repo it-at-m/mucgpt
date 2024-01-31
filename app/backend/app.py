@@ -26,7 +26,7 @@ from core.datahelper import Repository, Base, Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
 from core.types.AppConfig import AppConfig
-from core.textsplit import readPDF, textToDocs
+from core.textsplit import  splitPDF, splitText
 
 from approaches.summarize import Summarize
 from approaches.simplechat import SimpleChatApproach
@@ -84,16 +84,16 @@ async def sum():
     file = files.get("file", None)
 
     if(file is not None):
-        docs = readPDF(file, 3000, 0)
+        splits = splitPDF(file, 700, 0)
     else:
         text = request_json["text"]
-        docs = textToDocs(text, 3000, 0)
+        splits = splitText(text, 700, 0)
 
     department = get_department(request=request)
 
     try:
         impl = cfg["sum_approaches"]
-        r = await impl.run(docs = docs, overrides=request_json["overrides"] or {}, department=department)
+        r = await impl.run(splits = splits, overrides=request_json["overrides"] or {}, department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")

@@ -24,18 +24,8 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
 
 
     const sanitizedAnswerHtmlWithoutColors = answers.map(answ => {
-        let summary = answ.denser_summary;
-        return DOMPurify.sanitize(summary)
+        return DOMPurify.sanitize(answ)
     });
-
-    const sanitizedAnswerHtml = answers.map(answ => {
-        let summary = answ.denser_summary;
-        answ.missing_entities.forEach(ent => {
-            summary = summary.replaceAll(ent, `<font style="color: green">${ent}</font>`)
-        });
-        return DOMPurify.sanitize(summary)
-    });
-    const sanitzedKeywords = answers.map(answ => answ.missing_entities.reduceRight((prev, curr) => prev + ", " + curr));
 
     const oncopy = () => {
         setCopied(true);
@@ -49,7 +39,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon aria-hidden />
                     <div className={styles.buttonContainer}>
-                        {sanitzedKeywords.map((x, i) => (
+                        {answers.map((x, i) => (
                             <div>
                                 <Button
                                     style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground4)", height: "100%" }}
@@ -73,7 +63,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
             </Stack.Item>
             <Stack.Item grow>
                 <div className={styles.sumanswerContainer}>
-                    <div className={styles.answerText} dangerouslySetInnerHTML={{ __html: sanitizedAnswerHtml[getSelected] }}></div>
+                    <div className={styles.answerText} dangerouslySetInnerHTML={{ __html: sanitizedAnswerHtmlWithoutColors[getSelected] }}></div>
                 </div>
             </Stack.Item>
         </Stack>

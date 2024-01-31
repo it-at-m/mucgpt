@@ -16,13 +16,8 @@ export type AskResponse = {
     tokens?: number;
 };
 
-export type DenseSummary = {
-    missing_entities: string[];
-    denser_summary: string;
-};
-
 export type SumResponse = {
-    answer: DenseSummary[];
+    answer: string[];
     error?: string;
 };
 

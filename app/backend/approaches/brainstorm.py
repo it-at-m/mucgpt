@@ -2,10 +2,10 @@ from typing import Any
 from langchain.chains import LLMChain
 
 import openai
-from langchain.chat_models import AzureChatOpenAI
+from langchain_community.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
-from langchain.callbacks import get_openai_callback
+from langchain_community.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo

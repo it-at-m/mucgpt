@@ -31,7 +31,11 @@ i18n
                         prompt: "Diesen Text zusammenfassen oder ein PDF per Drag und Drop hochladen",
                         rolelabel: "Zusammenfassen für",
                         lengthlabel: "in",
-                        answer_loading: "Fasse zusammen"
+                        answer_loading: "Fasse zusammen",
+                        levelofdetail: "Detailierungsgrad",
+                        short: "Kurz",
+                        medium: "Mittel",
+                        long: "Kurz"
                     },
                     brainstorm: {
                         header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
@@ -142,7 +146,11 @@ i18n
                         prompt: "Summarize this text or upload a PDF by using drag and drop",
                         rolelabel: "Summarize for",
                         lengthlabel: "in",
-                        answer_loading: "Summarize"
+                        answer_loading: "Summarize",
+                        levelofdetail: "Level of Detail",
+                        short: "Short",
+                        medium: "Medium",
+                        long: "Long"
                     },
                     brainstorm: {
                         header: "Find ideas for a topic or try an example",
@@ -253,7 +261,11 @@ i18n
                         prompt: "Diesn Text zammfassn oda a PDF per Drag und Drop hoachladn",
                         rolelabel: "Zammfassn für",
                         lengthlabel: "in",
-                        answer_loading: "Am zammfassn"
+                        answer_loading: "Am zammfassn",
+                        levelofdetail: "Detai-Grad",
+                        short: "Kurz",
+                        medium: "Mittel",
+                        long: "Lang"
                     },
                     brainstorm: {
                         header: "Ideen zu dem Thema aufaspuin oda probier a Beispui",

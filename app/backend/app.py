@@ -83,11 +83,21 @@ async def sum():
     request_json = json.loads(forms.get("body"))
     file = files.get("file", None)
 
+    # detailed summarization summarizes lower chunks
+    detaillevel = request_json["detaillevel"]
+    switcher = {
+        "short": 2100,
+        "medium": 1500,
+        "long": 700,
+    }
+    splitsize = switcher.get(detaillevel, 700)
+
+   #TODO Wenn Cleanup tokenlimit sprengt, was machen? In mehreren Schritten übersetzen.
     if(file is not None):
-        splits = splitPDF(file, 700, 0)
+        splits = splitPDF(file, splitsize, 0)
     else:
         text = request_json["text"]
-        splits = splitText(text, 700, 0)
+        splits = splitText(text, splitsize, 0)
 
     department = get_department(request=request)
 

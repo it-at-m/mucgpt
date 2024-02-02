@@ -39,6 +39,7 @@ export type SumRequestOverrides = {
 
 export type SumRequest = {
     text: string;
+    detaillevel?: "short" | "medium" | "long";
     overrides?: SumRequestOverrides;
 };
 

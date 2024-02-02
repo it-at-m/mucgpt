@@ -11,6 +11,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
+import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
@@ -21,6 +22,8 @@ const Summarize = () => {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
+
+    const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">("long");
 
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
 
@@ -38,8 +41,9 @@ const Summarize = () => {
         try {
             const request: SumRequest = {
                 text: questionText,
+                detaillevel: detaillevel,
                 overrides: {
-                    language: language,
+                    language: language
                 }
             };
             const result = await sumApi(request, file);
@@ -59,10 +63,19 @@ const Summarize = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-
+    const onDetaillevelChanged = (e: any, selection: RadioGroupOnChangeData) => {
+        setDetaillevel(selection.value as ("long" | "medium" | "short"));
+    };
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
+                <Field label={t('sum.levelofdetail')}>
+                    <RadioGroup layout="horizontal" onChange={onDetaillevelChanged}>
+                        <Radio value="short" label={t('sum.short')} defaultChecked />
+                        <Radio value="medium" label={t('sum.medium')} />
+                        <Radio value="long" label={t('sum.long')} />
+                    </RadioGroup>
+                </Field>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
             </div>
             <div className={styles.chatRoot}>

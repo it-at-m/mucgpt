@@ -28,6 +28,7 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
         "body",
         JSON.stringify({
             text: options.text,
+            detaillevel: options.detaillevel,
             overrides: {
                 temperature: options.overrides?.temperature,
                 language: options.overrides?.language

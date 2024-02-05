@@ -13,6 +13,8 @@ import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
 
+const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
+
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
     const { t } = useTranslation();
@@ -23,9 +25,14 @@ const Summarize = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">("long");
+    const detaillevel_pref = localStorage.getItem(STORAGE_KEY_LEVEL_OF_DETAIL) as "long" | "medium" | "short" || "short";
+
+
+    const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">(detaillevel_pref);
 
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
+
+
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example, undefined);
@@ -65,13 +72,14 @@ const Summarize = () => {
 
     const onDetaillevelChanged = (e: any, selection: RadioGroupOnChangeData) => {
         setDetaillevel(selection.value as ("long" | "medium" | "short"));
+        localStorage.setItem(STORAGE_KEY_LEVEL_OF_DETAIL, selection.value);
     };
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 <Field label={t('sum.levelofdetail')}>
-                    <RadioGroup layout="horizontal" onChange={onDetaillevelChanged}>
-                        <Radio value="short" label={t('sum.short')} defaultChecked />
+                    <RadioGroup layout="horizontal" onChange={onDetaillevelChanged} value={detaillevel_pref}>
+                        <Radio value="short" label={t('sum.short')} />
                         <Radio value="medium" label={t('sum.medium')} />
                         <Radio value="long" label={t('sum.long')} />
                     </RadioGroup>

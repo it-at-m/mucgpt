@@ -1,48 +1,22 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
-
-
 import styles from "./Layout.module.css";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 import logo_black from "../../assets/mucgpt_black.png";
-
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from 'react-i18next';
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
+import { FluentProvider, Theme } from '@fluentui/react-components';
+import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 
-import { FluentProvider, BrandVariants, createLightTheme, createDarkTheme, Theme, makeStyles } from '@fluentui/react-components';
-import { tokens } from '@fluentui/react-theme';
-
-const useStyles = makeStyles({
-    footer: {
-        display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
-        marginTop: "auto",
-        backgroundColor: tokens.colorBrandBackground2,
-        color: tokens.colorNeutralBackground1
-    },
-    header: {
-        backgroundColor: tokens.colorBrandBackground2,
-        color: tokens.colorBrandForeground2
-    }
-});
-
-const enum STORAGE_KEYS {
-    TERMS_OF_USE_READ = 'TERMS_OF_USE_READ',
-    SETTINGS_LANGUAGE = 'SETTINGS_LANGUAGE',
-    SETTINGS_FONT_SCALING = 'SETTINGS_FONT_SCALING',
-    SETTINGS_IS_LIGHT_THEME = 'SETTINGS_IS_LIGHT_THEME',
-}
-const Layout = () => {
+export const Layout = () => {
     const styles2 = useStyles();
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === null ? false : localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) == 'true';
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
-    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1.0;
+    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
     const { language, setLanguage } = useContext(LanguageContext);
     const { t, i18n } = useTranslation();
@@ -59,52 +33,10 @@ const Layout = () => {
             }
         },
         version: "DEV 0.3.0"
-    })
+    });
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
     const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
-    const customBrandRamp: BrandVariants = {
-        10: '#f2f2f2',
-        20: '#e4e4e5',
-        30: '#d6d6d8',
-        40: '#c8c8cb',
-        50: '#bababe',
-        60: '#acacb1',
-        70: '#9e9ea4',
-        80: '#909097',
-        90: '#82828a',
-        100: '#74747d',
-        110: '#666670',
-        120: '#585863',
-        130: '#4a4a56',
-        140: '#3c3c49',
-        150: '#2e2e3c',
-        160: '#212529',
-    };
-    const adjustTheme = (isLight: boolean, scaling: number) => {
-        let theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
-        theme.fontSizeBase100 = (parseFloat(theme.fontSizeBase100.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeBase200 = (parseFloat(theme.fontSizeBase200.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeBase300 = (parseFloat(theme.fontSizeBase300.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeBase400 = (parseFloat(theme.fontSizeBase400.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeBase500 = (parseFloat(theme.fontSizeBase500.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeBase600 = (parseFloat(theme.fontSizeBase600.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeHero700 = (parseFloat(theme.fontSizeHero700.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeHero800 = (parseFloat(theme.fontSizeHero800.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeHero900 = (parseFloat(theme.fontSizeHero900.replace("px", "")) * scaling).toString() + "px";
-        theme.fontSizeHero1000 = (parseFloat(theme.fontSizeHero1000.replace("px", "")) * scaling).toString() + "px";
 
-        theme.lineHeightBase100 = (parseFloat(theme.lineHeightBase100.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightBase200 = (parseFloat(theme.lineHeightBase200.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightBase300 = (parseFloat(theme.lineHeightBase300.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightBase400 = (parseFloat(theme.lineHeightBase400.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightBase500 = (parseFloat(theme.lineHeightBase500.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightBase600 = (parseFloat(theme.lineHeightBase600.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightHero700 = (parseFloat(theme.lineHeightHero700.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightHero800 = (parseFloat(theme.lineHeightHero800.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightHero900 = (parseFloat(theme.lineHeightHero900.replace("px", "")) * scaling).toString() + "px";
-        theme.lineHeightHero1000 = (parseFloat(theme.lineHeightHero1000.replace("px", "")) * scaling).toString() + "px";
-        return theme;
-    };
 
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
@@ -112,26 +44,26 @@ const Layout = () => {
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
         setTheme(adjustTheme(isLight, fontscale));
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString())
-    }
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
+    };
 
     const onThemeChange = (light: boolean) => {
         setLight(light);
         localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-        setTheme(adjustTheme(light, fontscaling))
-    }
+        setTheme(adjustTheme(light, fontscaling));
+    };
 
 
     useEffect(() => {
         configApi().then(result => {
-            setConfig(result)
-        }, () => { console.log("Config nicht geladen") });
+            setConfig(result);
+        }, () => { console.log("Config nicht geladen"); });
         i18n.changeLanguage(language_pref);
-    }, [])
+    }, []);
 
     const onAcceptTermsOfUse = () => {
-        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, String(true))
-    }
+        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, String(true));
+    };
 
     const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let lang = selection.optionValue || DEFAULTLANG;
@@ -185,9 +117,9 @@ const Layout = () => {
                 <Outlet />
 
                 <footer className={styles2.footer} role={"banner"}>
-                    <div >
+                    <div>
                         Landeshauptstadt München <br />
-                        RIT/it@M Innovationlab <br />
+                        RIT/it@M KICC <br />
                     </div>
                     <div className={styles.headerNavRightMargin}>
                         <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>

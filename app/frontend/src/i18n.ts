@@ -35,7 +35,7 @@ i18n
                         levelofdetail: "Detailierungsgrad",
                         short: "Kurz",
                         medium: "Mittel",
-                        long: "Kurz"
+                        long: "Lang"
                     },
                     brainstorm: {
                         header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",

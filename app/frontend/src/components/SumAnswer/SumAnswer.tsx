@@ -42,7 +42,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                         {answers.map((x, i) => (
                             <div>
                                 <Button
-                                    style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground4)", height: "100%" }}
+                                    style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground1Hover)", height: "100%" }}
                                     appearance="outline"
                                     size="small"
                                     shape="rounded"

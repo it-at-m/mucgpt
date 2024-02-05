@@ -14,7 +14,7 @@ export const useStyles = makeStyles({
         justifyContent: "space-between",
         marginTop: "auto",
         backgroundColor: tokens.colorBrandBackground2,
-        color: tokens.colorNeutralBackground1
+        color: tokens.colorNeutralBackground1,
     },
     header: {
         backgroundColor: tokens.colorBrandBackground2,

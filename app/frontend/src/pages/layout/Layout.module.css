@@ -16,7 +16,7 @@
     display: flex;
     align-items: center;
     margin-right: 40px;
-    color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralBackground1Hover);
     text-decoration: none;
 }
 
@@ -40,7 +40,7 @@
 }
 
 .headerNavPageLink {
-    color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralBackround1Hover);
     text-decoration: none;
     opacity: 0.75;
     font-size: var(--fontSizeBase600);

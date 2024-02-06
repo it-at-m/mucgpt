@@ -20,7 +20,7 @@ resource symbolicname 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
       activeDirectoryAuth: 'Disabled'
       passwordAuth: 'Enabled'
     }
-    availabilityZone: '2'
+    availabilityZone: '1'
     backup: {
       backupRetentionDays: 7
       geoRedundantBackup: 'Disabled'

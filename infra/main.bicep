@@ -15,6 +15,7 @@ param resourceGroupName string = ''
 
 param applicationInsightsName string = ''
 
+@secure()
 param ssoSecret string
 param ssoIssuer string
 param configName string
@@ -22,6 +23,7 @@ param tagStage string
 param dbHost string = ''
 param dbName string = ''
 param dbUser string = ''
+@secure()
 param dbPassword string = ''
 
 param openAiServiceName string = ''
@@ -158,6 +160,13 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
         }
       }
     ]
+  }
+}
+
+module authsettingsV2 'core/host/authsettingsV2.bicep' = {
+  name: 'authsettingsV2'
+  scope: resourceGroup
+  params: {
   }
 }
 

@@ -167,6 +167,8 @@ module authsettingsV2 'core/host/authsettingsV2.bicep' = {
   name: 'authsettingsV2'
   scope: resourceGroup
   params: {
+    location: location
+    siteName: backend.outputs.name
   }
 }
 

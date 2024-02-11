@@ -1,7 +1,9 @@
-param siteName string = 'app-backend-y53xwrhpfrete'
+param siteName string
+param location string = resourceGroup().location
 
 resource authsettingsV 'Microsoft.Web/sites/config@2022-09-01' = {
   name: '${siteName}/authsettingsV2'
+  location: location
   properties: {
     platform: {
       enabled: true

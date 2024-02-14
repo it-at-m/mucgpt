@@ -230,10 +230,13 @@ def ensure_authentification(request: request):
 
 def get_department(request: request):
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
-    auth_client : AuthentificationHelper = cfg["authentification_client"]
-    id_claims = auth_client.decode(ssoidtoken)
-    return auth_client.getDepartment(claims=id_claims)
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
+        auth_client : AuthentificationHelper = cfg["authentification_client"]
+        id_claims = auth_client.decode(ssoidtoken)
+        return auth_client.getDepartment(claims=id_claims)
+    else:
+        return None
 
 @bp.before_app_request
 async def check_authentification(*args, **kwargs):

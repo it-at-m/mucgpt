@@ -1,4 +1,4 @@
-from typing import Any, AsyncGenerator, Sequence
+from typing import Any, AsyncGenerator, Optional, Sequence
 
 import openai
 from core.datahelper import Requestinfo
@@ -79,7 +79,7 @@ class SimpleChatApproach():
         extra_info["answer"] = chat_content
         return extra_info
 
-    async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]', department: str) -> AsyncGenerator[dict, None]:
+    async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]', department: Optional[str]) -> AsyncGenerator[dict, None]:
         handler = AsyncIteratorCallbackHandler()
         extra_info, chat_coroutine =  await self.run_until_final_call(history, overrides, should_stream=True, callbacks=[handler])
         yield extra_info

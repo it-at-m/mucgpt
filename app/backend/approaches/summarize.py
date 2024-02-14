@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, List
+from typing import Any, List, Optional
 
 import openai
 from langchain_community.chat_models import AzureChatOpenAI
@@ -185,7 +185,7 @@ class Summarize(Approach):
 
 
 
-    async def run(self, splits: List[str], overrides: "dict[str, Any]", department: str) -> Any:
+    async def run(self, splits: List[str], overrides: "dict[str, Any]", department: Optional[str]) -> Any:
         #setup
         (summarizeChain, cleanupChain) = self.setup(overrides=overrides)
         language = overrides.get("language")

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from langchain.chains import LLMChain
 
 import openai
@@ -69,7 +69,7 @@ class Brainstorm(Approach):
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def run(self, topic: str, overrides: "dict[str, Any]", department: str) -> Any:
+    async def run(self, topic: str, overrides: "dict[str, Any]", department: Optional[str]) -> Any:
         language = overrides.get("language")
         llm = AzureChatOpenAI(
             model=self.chatgpt_model,

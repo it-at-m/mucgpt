@@ -12,9 +12,17 @@ import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from '@fluentui/react-components';
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 
+const formatDate = (date: Date) => {
+    let formatted_date =
+        date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear()
+    return formatted_date;
+}
+
+
+
 export const Layout = () => {
     const styles2 = useStyles();
-    const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === null ? false : localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) == 'true';
+    const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
@@ -62,7 +70,7 @@ export const Layout = () => {
     }, []);
 
     const onAcceptTermsOfUse = () => {
-        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, String(true));
+        localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
     };
 
     const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {

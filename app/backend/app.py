@@ -22,6 +22,7 @@ from quart import (
     send_from_directory,
     send_file
 )
+from core.types.Chunk import Chunk
 from core.datahelper import Repository, Base, Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
@@ -57,22 +58,6 @@ async def favicon():
 async def assets(path):
     return await send_from_directory("static/assets", path)
 
-
-@bp.route("/chat", methods=["POST"])
-async def chat():
-    if not request.is_json:
-        return jsonify({"error": "request must be json"}), 415
-
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    request_json = await request.get_json()
-    try:
-        impl = cfg["chat_approaches"]
-        # Workaround for: https://github.com/openai/openai-python/issues/371
-        r = await impl.run_without_streaming(request_json.get("history", []), request_json.get("overrides", {}))
-        return jsonify(r)
-    except Exception as e:
-        logging.exception("Exception in /chat")
-        return jsonify({"error": str(e)}), 500
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
@@ -127,9 +112,13 @@ async def brainstorm():
         return jsonify({"error": str(e)}), 500
 
 
-async def format_as_ndjson(r: AsyncGenerator[dict, None]) -> AsyncGenerator[str, None]:
-    async for event in r:
-        yield json.dumps(event, ensure_ascii=False) + "\n"
+async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str, None]:
+    try:
+        async for event in r:
+            yield json.dumps(event, ensure_ascii=False) + "\n"
+    except Exception as error:
+        logging.exception("Exception while generating response stream: %s", error)
+        yield json.dumps(Chunk(type="E", message=str(error)))
         
 
 @bp.route("/chat_stream", methods=["POST"])

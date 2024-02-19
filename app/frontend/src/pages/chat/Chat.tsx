@@ -3,7 +3,7 @@ import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -79,17 +79,21 @@ const Chat = () => {
                 let askResponse: AskResponse = {} as AskResponse;
                 let streamed_tokens = 0;
                 let user_tokens = 0;
-                for await (const event of readNDJSONStream(response.body)) {
-                    if (event) {
-                        let parsed = String(event)
-                        if (parsed.startsWith("<<<<STREAMEDTOKENS>>>>")) {
-                            streamed_tokens = Number(parsed.split("<<<<STREAMEDTOKENS>>>>")[1])
+                for await (const chunk of readNDJSONStream(response.body)) {
+                    if (chunk as Chunk) {
+                        switch (chunk.type) {
+                            case "C":
+                                answer += chunk.message as string;
+                                break;
+                            case "I":
+                                const info = chunk.message as ChunkInfo;
+                                streamed_tokens = info.streamedtokens;
+                                user_tokens = info.requesttokens;
+                                break;
+                            case "E":
+                                throw Error(chunk.message as (string) || "Unknown error");
                         }
-                        else if (parsed.startsWith("<<<<REQUESTTOKENS>>>>")) {
-                            user_tokens = Number(parsed.split("<<<<REQUESTTOKENS>>>>")[1])
-                        }
-                        else
-                            answer += parsed;
+
                         let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
                         setIsLoading(false);
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);

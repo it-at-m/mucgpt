@@ -6,6 +6,7 @@ from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
 from core.modelhelper import get_token_limit
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
+from core.types.Chunk import Chunk, ChunkInfo
 from langchain_community.chat_models import AzureChatOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -17,6 +18,7 @@ from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 import asyncio
+import json
 
 
 class SimpleChatApproach():
@@ -68,37 +70,39 @@ class SimpleChatApproach():
             memory=memory
         )
 
-        extra_info = {}
-
         chat_coroutine = conversation.acall({"question": user_q})
-        return (extra_info, chat_coroutine)
+        return (chat_coroutine)
     
-    async def run_without_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]') -> 'dict[str, Any]':
-        extra_info, chat_coroutine = await self.run_until_final_call(history, overrides, should_stream=False)
-        chat_content = (await chat_coroutine)['text']
-        extra_info["answer"] = chat_content
-        return extra_info
 
     async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]', department: Optional[str]) -> AsyncGenerator[dict, None]:
         handler = AsyncIteratorCallbackHandler()
-        extra_info, chat_coroutine =  await self.run_until_final_call(history, overrides, should_stream=True, callbacks=[handler])
-        yield extra_info
-        asyncio.create_task(chat_coroutine)
+        chat_coroutine =  await self.run_until_final_call(history, overrides, should_stream=True, callbacks=[handler])
+        task = asyncio.create_task(chat_coroutine)
         result = ""
+        position = 0
+
+
         async for event in handler.aiter():
             result += str(event)
-            yield event
+            yield Chunk(type="C", message= event, order=position)
+            position += 1
 
-        history[-1]["bot"] = result
-        if self.config["log_tokens"]:
-            self.repo.addInfo(Requestinfo( 
-                tokencount = num_tokens_from_messages(history,self.chatgpt_model),
-                department = department,
-                messagecount=  len(history),
-                method = "Chat"))
+        await task
+        if task.exception():
+            yield Chunk(type="E",message= task.exception(), order=position)
+        
+        else:
+            history[-1]["bot"] = result
+            if self.config["log_tokens"]:
+                self.repo.addInfo(Requestinfo( 
+                    tokencount = num_tokens_from_messages(history,self.chatgpt_model),
+                    department = department,
+                    messagecount=  len(history),
+                    method = "Chat"))
+            
+            info = ChunkInfo(requesttokens=num_tokens_from_message(history[-1]["user"],self.chatgpt_model), streamedtokens=num_tokens_from_message(result,self.chatgpt_model))
+            yield Chunk(type="I", message=info, order=position)
 
-        yield "<<<<REQUESTTOKENS>>>>" + str(num_tokens_from_message(history[-1]["user"],self.chatgpt_model))
-        yield "<<<<STREAMEDTOKENS>>>>" + str(num_tokens_from_message(result,self.chatgpt_model))
 
     def initializeMemory(self, messages:"Sequence[dict[str, str]]", memory: ConversationBufferMemory) :
         for conversation in messages:

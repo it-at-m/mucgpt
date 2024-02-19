@@ -77,3 +77,14 @@ export interface FrontendFeatures {}
 export interface Labels {
     env_name: string;
 }
+
+export interface Chunk {
+    type: "E" | "C" | "I"; //ERROR, CONTENT, INFO
+    message: string | ChunkInfo;
+    order: number;
+}
+
+export interface ChunkInfo {
+    requesttokens: number;
+    streamedtokens: number;
+}

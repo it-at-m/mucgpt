@@ -18,7 +18,7 @@ from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 import asyncio
-import json
+from openai import RateLimitError
 
 
 class SimpleChatApproach():
@@ -89,7 +89,10 @@ class SimpleChatApproach():
 
         await task
         if task.exception():
-            yield Chunk(type="E",message= task.exception(), order=position)
+            if isinstance(task.exception(), RateLimitError):
+                yield Chunk(type="E",message= "Fehler: Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen.", order=position) 
+            else:
+                yield Chunk(type="E",message= task.exception(), order=position)
         
         else:
             history[-1]["bot"] = result

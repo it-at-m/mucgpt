@@ -6,7 +6,6 @@ from typing import AsyncGenerator, cast
 import base64 
 
 import openai
-from openai import RateLimitError
 import csv
 import io
 from azure.identity.aio import DefaultAzureCredential
@@ -108,12 +107,10 @@ async def brainstorm():
         impl = cfg["brainstorm_approaches"]
         r = await impl.run(topic=request_json["topic"],overrides= request_json ["overrides"] or {}, department=department)
         return jsonify(r)
-    except RateLimitError as e:
-        logging.exception("RateLimitException in /brainstorm")
-        return jsonify({"error": "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."}), 500
     except Exception as e:
         logging.exception("Exception in /brainstorm")
-        return jsonify({"error": str(e)}), 500
+        msg = "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen." if "RateLimitError" in str(e) else str(e)
+        return jsonify({"error": msg}), 500
 
 
 async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str, None]:

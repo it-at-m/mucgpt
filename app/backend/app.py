@@ -109,7 +109,7 @@ async def brainstorm():
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")
-        msg = "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen." if "RateLimitError" in str(e) else str(e)
+        msg = "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen." if "Rate limit" in str(e) else str(e)
         return jsonify({"error": msg}), 500
 
 
@@ -117,9 +117,10 @@ async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str
     try:
         async for event in r:
             yield json.dumps(event, ensure_ascii=False) + "\n"
-    except Exception as error:
-        logging.exception("Exception while generating response stream: %s", error)
-        yield json.dumps(Chunk(type="E", message=str(error)))
+    except Exception as e:
+        logging.exception("Exception while generating response stream: %s", e)
+        msg = "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen." if "Rate limit" in str(e) else str(e)
+        yield json.dumps(Chunk(type="E", message=msg))
         
 
 @bp.route("/chat_stream", methods=["POST"])

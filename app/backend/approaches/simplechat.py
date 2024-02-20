@@ -87,7 +87,7 @@ class SimpleChatApproach():
 
         await task
         if task.exception():
-            if "RateLimitError" in str(task.exception()):
+            if "Rate limit" in str(task.exception()):
                 yield Chunk(type="E",message= "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen.", order=position) 
             else:
                 yield Chunk(type="E",message= task.exception(), order=position)

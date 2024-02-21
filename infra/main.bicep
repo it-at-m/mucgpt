@@ -23,6 +23,8 @@ param tagStage string
 param dbHost string = ''
 param dbName string = ''
 param dbUser string = ''
+param backendSkuName string
+param backendCapacaty int 
 @secure()
 param dbPassword string = ''
 
@@ -86,8 +88,8 @@ module appServicePlan 'core/host/appserviceplan.bicep' = {
     location: location
     tags: tags
     sku: {
-      name: 'B1'
-      capacity: 1
+      name:  backendSkuName
+      capacity: backendCapacaty
     }
     kind: 'linux'
   }

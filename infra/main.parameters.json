@@ -38,6 +38,12 @@
     "ssoIssuer": {
       "value": "${SSO_ISSUER}"
     },
+    "backendSkuName": {
+      "value": "${BACKEND_SKU}"
+    },
+    "backendCapacaty": {
+      "value": "${BACKEND_CAPACITY}"
+    },
     "configName": {
       "value": "${CONFIG_NAME}"
     },

@@ -33,7 +33,7 @@
       "value": "${AZURE_USE_APPLICATION_INSIGHTS=false}"
     },
     "ssoSecret": {
-      "value": "${SSOTEST_AUTHENTICATION_SECRET}"
+      "value": "${SSO_AUTHENTICATION_SECRET}"
     },
     "ssoIssuer": {
       "value": "${SSO_ISSUER}"

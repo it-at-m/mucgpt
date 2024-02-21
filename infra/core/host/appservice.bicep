@@ -70,7 +70,7 @@ resource appService 'Microsoft.Web/sites@2022-03-01' = {
       {
         SCM_DO_BUILD_DURING_DEPLOYMENT: string(scmDoBuildDuringDeployment)
         ENABLE_ORYX_BUILD: string(enableOryxBuild)
-        SSOTEST_AUTHENTICATION_SECRET: ssoSecret
+        SSO_AUTHENTICATION_SECRET: ssoSecret
         ORYX_DISABLE_TELEMETRY: 'true'
       },
       runtimeName == 'python' ? { PYTHON_ENABLE_GUNICORN_MULTIWORKERS: 'true'} : {},

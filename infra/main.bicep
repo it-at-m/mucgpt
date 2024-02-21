@@ -52,6 +52,7 @@ param principalId string = ''
 @description('Use Application Insights for monitoring and performance tracing')
 param useApplicationInsights bool = false
 
+var ssoConfiguration = concat(ssoIssuer, '/.well-known/openid-configuration')
 var abbrs = loadJsonContent('abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = {'azd-env-name': environmentName,'BusinessCriticality': 'low','BusinessUnit': 'ITM-KM-DI-KI','CostCenter': '311-ITM-02064-001','ExpiryDate': '31.12.2999','RequestNumber': 'Nicht vorhanden','ServiceName': 'MUCGPT','ServiceOwner': 'Michael Jaumann - ITM-KM-DI-KI','Stage': tagStage}
@@ -171,6 +172,7 @@ module authsettingsV2 'core/host/authsettingsV2.bicep' = {
   params: {
     location: location
     siteName: backend.outputs.name
+    ssoConfiguration: ssoConfiguration
   }
 }
 

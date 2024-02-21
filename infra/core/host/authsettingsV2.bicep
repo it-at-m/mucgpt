@@ -1,5 +1,6 @@
 param siteName string
 param location string = resourceGroup().location
+param ssoConfiguration string
 
 resource authsettingsV 'Microsoft.Web/sites/config@2022-09-01' = {
   name: '${siteName}/authsettingsV2'
@@ -12,7 +13,7 @@ resource authsettingsV 'Microsoft.Web/sites/config@2022-09-01' = {
     globalValidation: {
       requireAuthentication:  true
       unauthenticatedClientAction: 'RedirectToLoginPage'
-      redirectToProvider: 'SSOTEST'
+      redirectToProvider: 'LHMSSO'
     }
     identityProviders: {
       azureActiveDirectory: {
@@ -22,14 +23,14 @@ resource authsettingsV 'Microsoft.Web/sites/config@2022-09-01' = {
         }
       }
       customOpenIdConnectProviders: {
-        SSOTEST: {
+        LHMSSO: {
           registration: {
             clientId: 'mucgpt'
             clientCredential: {
-              clientSecretSettingName: 'SSOTEST_AUTHENTICATION_SECRET'
+              clientSecretSettingName: 'SSO_AUTHENTICATION_SECRET'
             }
             openIdConnectConfiguration: {
-              wellKnownOpenIdConfiguration: 'https://ssotest.muenchen.de/auth/realms/intrap/.well-known/openid-configuration'
+              wellKnownOpenIdConfiguration: ssoConfiguration
             }
           }
           login: {

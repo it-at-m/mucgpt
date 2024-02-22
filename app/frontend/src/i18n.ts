@@ -109,7 +109,7 @@ i18n
                             settings_button: "Chat-Einstellungen",
                             temperature: "Temperatur",
                             temperature_article: "Die",
-                            temperature_info: `beinflusst die "Kreativität" des Sprachmodells. Ein höherer Wert führt zu unvorhersehbareren Antworten (Wörter, die unwahrschienliche gegeben dem aktuellem Kontext sind,  werden generiert), während ein niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
+                            temperature_info: `beinflusst die "Kreativität" des Sprachmodells. Ein höherer Wert führt zu unvorhersehbareren Antworten (Wörter, die unwahrscheinlich gegenüber dem aktuellem Kontext sind, werden generiert), während ein niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
                             max_lenght: "Maximale Antwortlänge",
                             max_lenght_info: " Wieviele Token dürfen maximal bei einer Antwort generiert werden.",
                             system_prompt: "System Prompt",

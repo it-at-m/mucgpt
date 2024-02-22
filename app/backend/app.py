@@ -186,7 +186,7 @@ async def readToken():
     principalID = request.headers.get('X-MS-CLIENT-PRINCIPAL-ID')
     principalName = request.headers.get('X-MS-CLIENT-PRINCIPAL-NAME')
     idProviderId = request.headers.get('X-MS-CLIENT-PRINCIPAL-IDP')
-    ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
+    ssoidtoken = request.headers.get('X-Ms-Token-Lhmsso-Id-Token')
     clientPrincipal = request.headers.get('X-MS-CLIENT-PRINCIPAL')
     clientPrincipal= base64.b64decode(clientPrincipal)
 
@@ -214,7 +214,7 @@ async def readToken():
 
 def ensure_authentification(request: request):
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    ssoaccesstoken = request.headers.get("X-Ms-Token-Ssotest-Access-Token")
+    ssoaccesstoken = request.headers.get("X-Ms-Token-Lhmsso-Access-Token")
     auth_client : AuthentificationHelper = cfg["authentification_client"]
     claims = auth_client.authentificate(ssoaccesstoken)
     return auth_client,claims
@@ -222,7 +222,7 @@ def ensure_authentification(request: request):
 def get_department(request: request):
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ssoidtoken = request.headers.get('X-Ms-Token-Ssotest-Id-Token')
+        ssoidtoken = request.headers.get('X-Ms-Token-Lhmsso-Id-Token')
         auth_client : AuthentificationHelper = cfg["authentification_client"]
         id_claims = auth_client.decode(ssoidtoken)
         return auth_client.getDepartment(claims=id_claims)

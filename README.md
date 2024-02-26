@@ -1,11 +1,10 @@
 # MUCGPT
 
-## Table of Contents
+## Inhaltsverzeichnis
 
-- [Azure account requirements](#azure-account-requirements)
-- [Azure deployment](#azure-deployment)
-  - [Project setup](#project-setup)
-    - [Local environment](#local-environment)
+- [Berechtigungen](#berechtigungen)
+- [Lokale Entwicklung](#lokale-entwicklung)
+  - [Voraussetzungen](#voraussetzungen)
   - [Deployment](#deployment)
 - [Enabling optional features](#enabling-optional-features)
   - [Enabling Application Insights](#enabling-application-insights)
@@ -25,39 +24,38 @@
 
 ![Chat](docs/chatscreen.png)
 
-## Azure account requirements
+## Berechtigungen
 
-**IMPORTANT:** In order to deploy and run this example, you'll need:
-
-* **Azure account**. If you're new to Azure, [get an Azure account for free](https://azure.microsoft.com/free/cognitive-search/) and you'll get some free Azure credits to get started.
-* **Azure subscription with access enabled for the Azure OpenAI service**. You can request access with [this form](https://aka.ms/oaiapply).
-* **Azure account permissions**: Your Azure account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [Role Based Access Control Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#role-based-access-control-administrator-preview), [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator), or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
-
-## Azure deployment
-
-### Project setup
-
-You have a few options for setting up this project.
-The easiest way to get started is GitHub Codespaces, since it will setup all the tools for you,
-but you can also [set it up locally](#local-environment) if desired.
-
-#### Local environment
-
-First install the required tools:
-
-* [Azure Developer CLI](https://aka.ms/azure-dev/install)
-* [Python 3.9+](https://www.python.org/downloads/)
-  * **Important**: Python and the pip package manager must be in the path in Windows for the setup scripts to work.
-  * **Important**: Ensure you can run `python --version` from console. On Ubuntu, you might need to run `sudo apt install python-is-python3` to link `python` to `python3`.
-* [Node.js 14+](https://nodejs.org/en/download/)
-* [Git](https://git-scm.com/downloads)
-* [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
-  * **Important**: Ensure you can run `pwsh.exe` from a PowerShell terminal. If this fails, you likely need to upgrade PowerShell.
+### LHM Tennant
+- Admin Account
+- Zugriff auf die Subscription `sub-stadtmuenchen-workloads-ki-001` im LHM-Tennant
+- Rolle `Mitwirkender` auf die drei Unterliegenden Ressourcengruppen
+  - `rg-mucgpt-c-euw` Devumgebung
+  - `rg-mucgpt-k-euw` Testumgebung, momentan nicht genutzt
+  - `rg-mucgpt-p-euw` Produktivumgebung
+### Testlhm Tennant (Legacy)
+- `testlhm` Admin Account
+- Zugriff auf die Subscription `sub-testlhm-earlyaccess-ea-001` im Testlhm-Tennant
+- Rolle `Mitwirkender` auf die drei Unterliegenden Ressourcengruppen
+  - `rg-openai-demo-c-euw` Pilotumgebung, von den Pilotnutzern genutzt
 
 
-1. Run `azd auth login`
+## Lokale Entwicklung
+
+### Voraussetzungen
+
+Folgende Werkzeuge werden benötigt:
+
+* [Azure Developer CLI](https://aka.ms/azure-dev/install), wird benötigt um das Deployment in azure durchzuführen
+* `Python` 3.8+
+* `Node.js 14+`, zum Frontend bauen
+* `Git`
+* `Powershell 7+` (pwsh)
+
 
 ### Deployment
+Es gibt drei verschiedene Fälle. Entweder es hat sich nur Code geändert. Oder es hat sich nur Infrastruktur geändert. Oder es hat sich beides 
+
 
 If you've only changed the backend/frontend code in the `app` folder, then you don't need to re-provision the Azure resources. You can just run:
 

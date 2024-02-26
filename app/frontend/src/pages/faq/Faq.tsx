@@ -61,7 +61,7 @@ const Faq = () => {
                             <li><strong>Zusammenfassen:</strong> Diese Funktion ermöglicht es MUCGPT prägnante Zusammenfassungen von Themen zu erstellen, entweder auf der Basis von Eingaben, oder hochgeladenen PDFs.</li>
                             <li><strong>Brainstorming:</strong> Diese Funktion generiert kreative Vorschläge, Ideen und Lösungen auf der Basis von Eingaben im Kontext einer Mindmap.</li>
                         </ul>
-                        <p>Ein Erklärvideo zu den einzelnen Funktionen mit jeweiligen Beispielen, finden Sie hier (folgt in Kürze).</p>
+                        <p>Ein Erklärvideo zu den einzelnen Funktionen mit jeweiligen Beispielen, finden Sie <Link href="https://www.youtube.com/watch?v=jLFvdJhRV_U">hier</Link>.</p>
                         <p>Unter folgendem Link finden sich Hilfestellungen zu Eingaben („Prompts“) bei MUCGPT, um zu erfahren, wie Sie Ihre Fragen am besten formulieren, um eine gewünschte Antwort zu erhalten: <Link href="https://the-decoder.de/chatgpt-guide-prompt-strategien/">https://the-decoder.de/chatgpt-guide-prompt-strategien/</Link></p>
                         <p>Um die in der Brainstorming Funktion generierten Mindmaps nach dem Abspeichern öffnen zu können, nutzen Sie am besten „Freeplane“, welches Sie in Service Now unter diesem <Link href="https://it-services.muenchen.de/sp?id=sc_cat_item&table=sc_cat_item&sys_id=c1b4dc4f1ba12154a70c433c8b4bcba0">Link</Link> beantragen können (falls noch nicht auf Ihrem Rechner vorhanden). </p>
                     </AccordionPanel>

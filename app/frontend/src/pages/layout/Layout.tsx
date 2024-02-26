@@ -40,7 +40,7 @@ export const Layout = () => {
                 env_name: "PILOT-C"
             }
         },
-        version: "DEV 0.3.0"
+        version: "DEV 1.0.0"
     });
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
     const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);

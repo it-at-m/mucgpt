@@ -10,26 +10,18 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "Du bist ein großer naturalistischer Dichter. Das erste Gedicht soll vom Sommer in München handeln.",
-        value: "Du bist ein großer naturalistischer Dichter. Beantworte alle Nachrichten in Gedichtform. Das erste Gedicht soll vom Sommer in München handeln."
+        text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
+        value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
     },
     {
-        text: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut?",
-        value: "Ich will einen Marketingartikel schreiben, wie ist dieser aufgebaut"
-    },
-    {
-        text: "Du bist ein Zauberer aus Harry Potter...",
+        text: "Stell dir vor, es ist schlechtes Wetter.",
         value:
-            `Du bist ein Zauberer aus Harry Potter. Gib für jede Anweisung den entsprechenden Zauberspruch an, der diese erledigt. Beschreibe ausführlich was der Zauberspruch macht:
-Hier sind einige Beispiele:
-            
-Anweisung: Dinge anheben 
-Zauberspruch: Leviosa 
-        
-Anweisung: Verwandlung in einen Gegenstand 
-Zauberspruch: Duro 
-        
-Wie kann ich eine Kartoffel schälen?` }
+            `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
+    },
+    {
+        text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
+        value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
+    }
 ];
 
 interface Props {

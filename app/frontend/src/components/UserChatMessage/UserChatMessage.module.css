@@ -17,3 +17,8 @@
         0px 0px 2px var(--colorBrandForeground2);
     outline: transparent solid 1px;
 }
+
+.answerText {
+    white-space: pre-wrap;
+    font-size: var(--fontSizeBase300);
+}

@@ -12,6 +12,7 @@
 
 .answerText {
     white-space: pre-wrap;
+    font-size: var(--fontSizeBase400);
 }
 
 .sumanswerHeader {

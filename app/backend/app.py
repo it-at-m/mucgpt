@@ -37,10 +37,6 @@ bp = Blueprint("routes", __name__, static_folder='static')
 
 APPCONFIG_KEY = "APPCONFIG"
 
-def exclude_from_authentification(func):
-    func._exclude_from_authentification = True
-    return func
-
 
 @bp.errorhandler(AuthError)
 async def handleAuthError(error: AuthError):
@@ -48,6 +44,9 @@ async def handleAuthError(error: AuthError):
 
 @bp.route("/")
 async def index():
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     return await bp.send_static_file("index.html")
 
 @bp.route("/favicon.ico")
@@ -56,12 +55,17 @@ async def favicon():
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     return await send_from_directory("static/assets", path)
 
 
 @bp.route("/sum", methods=["POST"])
 async def sum():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     files = await request.files
     forms = await request.form
     
@@ -96,10 +100,12 @@ async def sum():
 
 @bp.route("/brainstorm", methods=["POST"])
 async def brainstorm():
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
 
-    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
     request_json = await request.get_json()
     department = get_department(request=request)
 
@@ -126,6 +132,8 @@ async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str
 @bp.route("/chat_stream", methods=["POST"])
 async def chat_stream():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     department = get_department(request=request)
 
     if not request.is_json:
@@ -144,11 +152,15 @@ async def chat_stream():
 @bp.route("/config", methods=["GET"])
 async def getConfig():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     return jsonify(cfg["configuration_features"])
 
 @bp.route("/statistics", methods=["GET"])
 async def getStatistics():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     repo = cfg["repository"]
     sum_by_department = repo.sumByDepartment()
     avg_by_department = repo.avgByDepartment()
@@ -160,6 +172,8 @@ async def getStatistics():
 @bp.route("/statistics/export", methods=["GET"])
 async def getStatisticsCSV():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
     repo = cfg["repository"]
 
     memfile = io.StringIO()
@@ -175,18 +189,22 @@ async def getStatisticsCSV():
                  attachment_filename='statistics.csv',
                  as_attachment=True)
 
-@exclude_from_authentification
 @bp.route('/health',  methods=["GET"])
 def health_check():
     return "OK"
 
+
+@bp.route("/checkauth", methods=["GET"])
+async def checkauth():
+    auth_client, claims = ensure_authentification(request=request)
+    return "OK"
 
 @bp.route("/token", methods=["GET"])
 async def readToken():
     principalID = request.headers.get('X-MS-CLIENT-PRINCIPAL-ID')
     principalName = request.headers.get('X-MS-CLIENT-PRINCIPAL-NAME')
     idProviderId = request.headers.get('X-MS-CLIENT-PRINCIPAL-IDP')
-    ssoidtoken = request.headers.get('X-Ms-Token-Lhmsso-Id-Token')
+    ssoidtoken = request.headers.get("X-Ms-Token-Lhmsso-Access-Token")
     clientPrincipal = request.headers.get('X-MS-CLIENT-PRINCIPAL')
     clientPrincipal= base64.b64decode(clientPrincipal)
 
@@ -229,16 +247,6 @@ def get_department(request: request):
     else:
         return None
 
-@bp.before_app_request
-async def check_authentification(*args, **kwargs):
-    _exclude_from_authentification = False
-    if request.endpoint in current_app.view_functions:
-        view_func = current_app.view_functions[request.endpoint]
-        _exclude_from_authentification = not hasattr(view_func, '_exclude_from_authentification')
-    if(not exclude_from_authentification):
-        cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-        if cfg["configuration_features"]["backend"]["enable_auth"]:
-            ensure_authentification(request=request)
 
 
 @bp.before_request

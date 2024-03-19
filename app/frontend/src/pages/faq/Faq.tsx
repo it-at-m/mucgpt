@@ -72,6 +72,42 @@ const Faq = () => {
                         Als Datengrundlage von MUCGPT wird GPT-3.5 von ChatGPT verwendet. Die Datengrundlage reicht bis zum Jahr 2021. Dies ist bei den generierten Antworten unbedingt zu beachten. Um an aktuelle Informationen zu gelangen, können Suchmaschinen wie Ecosia oder Google verwendet werden.</AccordionPanel>
                 </AccordionItem>
                 <AccordionItem value="8">
+                    <AccordionHeader>Was muss bei der Überprüfung der Ergebnisse beachtet werden?</AccordionHeader>
+                    <AccordionPanel>
+                        Für seine Antworten durchsucht MUCGPT keine Informationsquellen aus dem Internet oder anderen Datenbanken.
+                        <p>
+                            MUCGPT sagt für seine Antworten auf Basis der Nutzereingaben Wörter voraus, die häufig in diesem Kontext vorkommen, weiß aber nicht, ob die darin enthaltene Information richtig ist. Bei allgemeinen Informationen, die häufig im Internet zu finden sind, ist es sehr wahrscheinlich, dass die Antwort richtig ist. Bei Randthemen ist das nicht der Fall. Trotzdem wird das Sprachmodell immer eine grammatikalisch/sprachlich korrekte Antwort geben. Inhaltlich muss sie aber nicht korrekt sein.
+                        </p>
+                        <p>
+                            Einen großen Einfluss auf die Qualität der Antworten des Sprachmodells haben die Texte, die für das Training des Sprachmodells genutzt wurden. Für ChatGPT3.5, auf dem MUCGPT basiert, sind dies über 300 Milliarden Wörter. Darin enthalten sind vor allem Texte aus dem Internet.
+                        </p>
+                        <p>
+                            Viele Informationen sind in den Trainingsdaten nicht vorhanden, z.B.:
+                            <ul>
+                                <li>
+                                    Wissen, das zum Zeitpunkt des Trainings noch nicht verfügbar war (alles, was nach dem Jahr 2021 liegt)
+                                </li>
+                                <li>
+                                    Internes Wissen, das z.B. nur im Intranet der Stadt verfügbar ist
+                                </li>
+                                <li>
+                                    Inhalte, die nicht Teil des Trainings waren (nicht jede Website im Internet war Teil des Trainings)
+                                </li>
+                            </ul>
+                        </p>
+                        <p>
+                            Insbesondere ist Vorsicht geboten, wenn MUCGPT nach Zahlen gefragt wird oder Zahlen in dessen Antwort vorhanden sind, da MUCGPT, bzw. Sprachmodelle im Allgemeinen, Probleme mit Mathematik oder Zahlen haben. Sie wurden darauf trainiert, Wörter vorherzusagen. Für ein Sprachmodell ist jede Zahl auch eine Art „Wort“. Wörter haben oft einen ganz bestimmten Kontext, in dem sie eine Bedeutung haben. Zum Beispiel ist es sehr wahrscheinlich, dass das Wort „Krönung“ im Kontext des Wortes „König“ oder „Königin“ vorkommt. Bei der Zahl „2“ ist das nicht so klar. Sie kann in sehr vielen Kontexten vorkommen. Ähnlich verhält es sich mit konkreten Anfragen an die Statistik.
+
+                        </p>
+                        <p>
+                            Sprachmodelle sind daher sehr gut geeignet, um allgemeine (nicht aktuelle) Informationen zu erhalten. Je spezifischer das abgefragte Wissen ist, desto geringer ist die Wahrscheinlichkeit einer korrekten Antwort.
+                        </p>
+                        <p>
+                            Wenn man spezifische und aktuelle Informationen sucht, sollte man daher Internet-Suchmaschinen verwenden. Siehe dazu auch den Punkt oben <i>„Was ist der Unterschied zu Suchmaschinen wie z.B. Ecosia oder Google?“</i>
+                        </p>
+                    </AccordionPanel>
+                </AccordionItem>
+                <AccordionItem value="9">
                     <AccordionHeader>Was muss ich bezüglich der Weiterverwendung der Ergebnisse beachten?</AccordionHeader>
                     <AccordionPanel>
                         Es ist möglich, dass Texte (Antworten) von MUCGPT sich nur minimal von der ursprünglichen Version unterscheiden oder sogar wesentliche Elemente des Ursprungstextes identisch übernommen werden. Wer dann einen solchen Text vervielfältigt oder veröffentlicht, begeht damit – ohne es beabsichtigt zu haben – eine Urheberrechtsverletzung. Der Urheber des Originals kann in einem solchen Fall Unterlassungs-, Schadensersatz- und Beseitigungsansprüche geltend machen. Bei unveränderter bzw. nur geringfügig veränderter externer Nutzung, müssen diese als solche gekennzeichnet werden („Quelle: MUCGPT“). Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der MUCGPT Nutzer*in.
@@ -79,7 +115,7 @@ const Faq = () => {
                             Weiterhin muss beachtet werden, dass die Ergebnisse entsprechend dem jeweiligen Rechtsgebiet angemessen weiterverwendet werden. Das bedeutet, dass es (je nach betroffenem Rechtsgebiet) wichtig ist, nahe am üblichen Standard der Formulierungen zu bleiben, damit hier keine Ungleichheit oder Unverständlichkeit z.B. aufgrund von (durch die KI) anders gewählten Fachbegriffen o.ä. entsteht. Bei der Nutzung von solch künstlich erzeugten Ergebnissen, sollte immer auch der gesunde Menschenverstand angewendet werden, damit die Adressaten dieser Texte diese sowohl verstehen, als auch sich darauf verlassen können.
                         </p> </AccordionPanel>
                 </AccordionItem>
-                <AccordionItem value="9">
+                <AccordionItem value="10">
                     <AccordionHeader>Was muss ich bezüglich der Informationssicherheit und des Datenschutzes beachten?</AccordionHeader>
                     <AccordionPanel>
                         Es ist nicht erlaubt, Daten mit LHM-Schutzbedarf "hoch" oder "sehr hoch" oder mit der Klassifizierung "vertraulich" oder "streng vertraulich" als Eingabe zu verwenden.
@@ -87,18 +123,18 @@ const Faq = () => {
                         <p>Bitte beachten Sie, dass auch bei Nutzung von MUCGPT die Vorschriften der LHM (z.B. <Link href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/wiki/dienstanweisung/list/view/293986cc-4ded-4aad-ac2a-dd831540eb5c?currentLanguage=NONE">DA-IT</Link>) zu beachten sind.</p>
                     </AccordionPanel>
                 </AccordionItem>
-                <AccordionItem value="10">
+                <AccordionItem value="11">
                     <AccordionHeader>Werden meine Eingaben irgendwo gespeichert? Wer hat Zugriff auf die Daten?</AccordionHeader>
                     <AccordionPanel>
                         Ihre Eingaben werden nicht gespeichert. Keiner hat Zugriff auf Ihre eingegebenen Daten, sowie die generierten Antworten.</AccordionPanel>
                 </AccordionItem>
-                <AccordionItem value="11">
+                <AccordionItem value="12">
                     <AccordionHeader>Werden meine Eingaben für Trainingszwecke der Software verwendet?</AccordionHeader>
                     <AccordionPanel>
                         Nein.
                     </AccordionPanel>
                 </AccordionItem>
-                <AccordionItem value="12">
+                <AccordionItem value="13">
                     <AccordionHeader>Werden meine Eingaben anderweitig verwendet?</AccordionHeader>
                     <AccordionPanel>
                         Nein.

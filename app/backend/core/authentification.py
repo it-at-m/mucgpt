@@ -37,10 +37,10 @@ class AuthentificationHelper:
         try:
             roles = claims["resource_access"]['mucgpt']['roles']
         except KeyError:
-            raise AuthError("Rolle nicht vorhanden. Bitte Zugang in SNOW beantragen.", status_code=401)
+            raise AuthError("Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2.", status_code=401)
 
         if self.role not in roles:
-            raise AuthError("Rolle nicht vorhanden.  Bitte Zugang in SNOW beantragen.", status_code=401)
+            raise AuthError("Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2.", status_code=401)
         return claims;
     
     def decode(self, token):

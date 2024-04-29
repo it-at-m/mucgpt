@@ -217,7 +217,7 @@ const Chat = () => {
     }
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const computeTokens = () => { return 1 }//{ return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
+    const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
 
     const onExampleClicked = async (example: string) => {
         makeApiRequest(example);

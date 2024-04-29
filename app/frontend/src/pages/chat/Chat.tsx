@@ -37,6 +37,7 @@ const Chat = () => {
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
+
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
@@ -46,6 +47,70 @@ const Chat = () => {
     const [temperature, setTemperature] = useState(temperature_pref);
     const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
+
+    const save_chat = async (a: any[]) => {
+        let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
+
+        openRequest.onupgradeneeded = function () {
+            // triggers if the client had no database
+            let db = openRequest.result;
+            if (!db.objectStoreNames.contains('chat')) {
+                db.createObjectStore('chat', { keyPath: 'id' });
+            }
+        };
+
+        openRequest.onerror = function () {
+            console.error("Error", openRequest.error);
+        };
+
+        openRequest.onsuccess = function () {
+            let db = openRequest.result;
+            let transaction = db.transaction("chat", "readwrite");
+            // get an object store to operate on it
+            let books = transaction.objectStore("chat");
+            let request = books.put({ 'Answers': a, 'id': 1 });
+
+            request.onerror = function () {
+                console.log("Error", request.error);
+            };
+        };
+    }
+
+    useEffect(() => {
+        error && setError(undefined);
+        setIsLoading(true);
+        setActiveCitation(undefined);
+        setActiveAnalysisPanelTab(undefined);
+        let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
+        let db;
+        openRequest.onupgradeneeded = function () {
+            // triggers if the client had no database
+            db = openRequest.result;
+            if (!db.objectStoreNames.contains('chat')) {
+                db.createObjectStore('chat', { keyPath: 'id' });
+            }
+        };
+
+        openRequest.onerror = function () {
+            console.error("Error", openRequest.error);
+        };
+
+        openRequest.onsuccess = async function () {
+            db = openRequest.result;
+            let old = db.transaction("chat", "readwrite").objectStore("chat").get(1);
+
+            old.onsuccess = () => {
+                if (old.result) {
+                    setAnswers(old.result.Answers)
+                    setAnswers([...answers, old.result.Answers]);
+                    lastQuestionRef.current = old.result.Answers[0];
+                }
+
+            }
+
+        }
+        setIsLoading(false);
+    }, [])
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -97,6 +162,7 @@ const Chat = () => {
                         let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
                         setIsLoading(false);
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
+                        save_chat([question, latestResponse, user_tokens])
                     }
                 }
             } else {
@@ -105,11 +171,13 @@ const Chat = () => {
                     throw Error(parsedResponse.error || "Unknown error");
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
+                save_chat([question, parsedResponse, 0])
             }
         } catch (e) {
             setError(e);
         } finally {
             setIsLoading(false);
+
         }
     };
 
@@ -119,6 +187,24 @@ const Chat = () => {
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
         setAnswers([]);
+
+        let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
+        let db;
+        openRequest.onupgradeneeded = function () {
+            db = openRequest.result;
+            if (!db.objectStoreNames.contains('chat')) {
+                db.createObjectStore('chat', { keyPath: 'id' });
+            }
+        };
+
+        openRequest.onerror = function () {
+            console.error("Error", openRequest.error);
+        };
+
+        openRequest.onsuccess = async function () {
+            db = openRequest.result;
+            db.transaction("chat", "readwrite").objectStore("chat").delete(1);
+        }
     };
 
     const onRegeneratResponseClicked = () => {
@@ -131,10 +217,21 @@ const Chat = () => {
     }
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
+    const computeTokens = () => { return 1 }//{ return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
 
-    const onExampleClicked = (example: string) => {
+    const onExampleClicked = async (example: string) => {
         makeApiRequest(example);
+        //lastQuestionRef.current = example;
+        //error && setError(undefined);
+        //setIsLoading(true);
+        //setActiveCitation(undefined);
+        //setActiveAnalysisPanelTab(undefined);
+        //const Response: AskResponse = {
+        //    answer: "ANSWER"
+        //}
+        //setIsLoading(false);
+        //setAnswers([...answers, [example, Response, 0]])
+        //save_chat([example, Response, 0])
     };
 
     const onShowCitation = (citation: string, index: number) => {

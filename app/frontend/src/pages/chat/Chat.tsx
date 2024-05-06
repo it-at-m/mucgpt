@@ -52,7 +52,6 @@ const Chat = () => {
         let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
 
         openRequest.onupgradeneeded = function () {
-            // triggers if the client had no database
             let db = openRequest.result;
             if (!db.objectStoreNames.contains('chat')) {
                 db.createObjectStore('chat', { keyPath: 'id' });
@@ -66,13 +65,20 @@ const Chat = () => {
         openRequest.onsuccess = function () {
             let db = openRequest.result;
             let transaction = db.transaction("chat", "readwrite");
-            // get an object store to operate on it
-            let books = transaction.objectStore("chat");
-            let request = books.put({ 'Answers': a, 'id': 1 });
-
-            request.onerror = function () {
-                console.log("Error", request.error);
-            };
+            let chat = transaction.objectStore("chat");
+            let stored = chat.get(1)
+            stored.onsuccess = () => {
+                let request: IDBRequest;
+                if (stored.result) {
+                    stored.result.Answers.push(a)
+                    request = chat.put({ 'Answers': stored.result.Answers, 'id': 1 });
+                } else {
+                    request = chat.put({ 'Answers': [a], 'id': 1 });
+                }
+                request.onerror = function () {
+                    console.log("Error", request.error);
+                };
+            }
         };
     }
 
@@ -84,7 +90,6 @@ const Chat = () => {
         let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
         let db;
         openRequest.onupgradeneeded = function () {
-            // triggers if the client had no database
             db = openRequest.result;
             if (!db.objectStoreNames.contains('chat')) {
                 db.createObjectStore('chat', { keyPath: 'id' });
@@ -101,9 +106,8 @@ const Chat = () => {
 
             old.onsuccess = () => {
                 if (old.result) {
-                    setAnswers(old.result.Answers)
-                    setAnswers([...answers, old.result.Answers]);
-                    lastQuestionRef.current = old.result.Answers[0];
+                    setAnswers([...answers.concat(old.result.Answers)]);
+                    lastQuestionRef.current = old.result.Answers[old.result.Answers.length - 1][0];
                 }
 
             }
@@ -139,11 +143,12 @@ const Chat = () => {
             if (!response.body) {
                 throw Error("No response body");
             }
+            let user_tokens = 0;
             if (shouldStream) {
-                let answer: string = '';
                 let askResponse: AskResponse = {} as AskResponse;
+                let answer: string = '';
                 let streamed_tokens = 0;
-                let user_tokens = 0;
+                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens }
                 for await (const chunk of readNDJSONStream(response.body)) {
                     if (chunk as Chunk) {
                         switch (chunk.type) {
@@ -159,12 +164,12 @@ const Chat = () => {
                                 throw Error(chunk.message as (string) || "Unknown error");
                         }
 
-                        let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
+                        latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
                         setIsLoading(false);
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
-                        save_chat([question, latestResponse, user_tokens])
                     }
                 }
+                save_chat([question, latestResponse, user_tokens])
             } else {
                 const parsedResponse: AskResponse = await response.json();
                 if (response.status > 299 || !response.ok) {
@@ -177,7 +182,6 @@ const Chat = () => {
             setError(e);
         } finally {
             setIsLoading(false);
-
         }
     };
 
@@ -211,27 +215,53 @@ const Chat = () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            if (last)
-                makeApiRequest(last[0])
-        }
+            let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
+            openRequest.onupgradeneeded = function () {
+                let db = openRequest.result;
+                if (!db.objectStoreNames.contains('chat')) {
+                    db.createObjectStore('chat', { keyPath: 'id' });
+                }
+            };
+            openRequest.onerror = function () {
+                console.error("Error", openRequest.error);
+            };
+            openRequest.onsuccess = function () {
+                let db = openRequest.result;
+                let transaction = db.transaction("chat", "readwrite");
+                let chat = transaction.objectStore("chat");
+                let stored = chat.get(1);
+                stored.onsuccess = function () {
+                    let deleted = chat.delete(1);
+                    deleted.onsuccess = function () {
+                        if (stored.result) {
+                            stored.result.Answers.pop();
+                            let put = chat.put({ 'Answers': stored.result.Answers, 'id': 1 });
+                            put.onsuccess = function () {
+                                if (last)
+                                    makeApiRequest(last[0])
+                            };
+                            put.onerror = function () {
+                                console.error("Error", put.error);
+                            };
+                        };
+                    };
+                    deleted.onerror = function () {
+                        console.error("Error", deleted.error);
+                    }
+                };
+                stored.onerror = function () {
+                    console.error("Error", stored.error);
+                };
+            };
+        };
     }
+
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
 
     const onExampleClicked = async (example: string) => {
         makeApiRequest(example);
-        //lastQuestionRef.current = example;
-        //error && setError(undefined);
-        //setIsLoading(true);
-        //setActiveCitation(undefined);
-        //setActiveAnalysisPanelTab(undefined);
-        //const Response: AskResponse = {
-        //    answer: "ANSWER"
-        //}
-        //setIsLoading(false);
-        //setAnswers([...answers, [example, Response, 0]])
-        //save_chat([example, Response, 0])
     };
 
     const onShowCitation = (citation: string, index: number) => {
@@ -241,7 +271,6 @@ const Chat = () => {
             setActiveCitation(citation);
             setActiveAnalysisPanelTab(AnalysisPanelTabs.CitationTab);
         }
-
         setSelectedAnswer(index);
     };
 
@@ -251,7 +280,6 @@ const Chat = () => {
         } else {
             setActiveAnalysisPanelTab(tab);
         }
-
         setSelectedAnswer(index);
     };
 

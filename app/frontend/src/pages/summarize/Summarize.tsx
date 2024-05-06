@@ -36,7 +36,6 @@ const Summarize = () => {
         let openRequest = indexedDB.open("MUCGPT-SUMMARIZE", 1);
 
         openRequest.onupgradeneeded = function () {
-            // triggers if the client had no database
             let db = openRequest.result;
             if (!db.objectStoreNames.contains('summarize')) {
                 db.createObjectStore('summarize', { keyPath: 'id' });
@@ -50,13 +49,20 @@ const Summarize = () => {
         openRequest.onsuccess = function () {
             let db = openRequest.result;
             let transaction = db.transaction("summarize", "readwrite");
-            // get an object store to operate on it
-            let books = transaction.objectStore("summarize");
-            let request = books.put({ 'Answers': a, 'id': 1 });
-
-            request.onerror = function () {
-                console.log("Error", request.error);
-            };
+            let chat = transaction.objectStore("summarize");
+            let stored = chat.get(1)
+            stored.onsuccess = () => {
+                let request: IDBRequest;
+                if (stored.result) {
+                    stored.result.Answers.push(a)
+                    request = chat.put({ 'Answers': stored.result.Answers, 'id': 1 });
+                } else {
+                    request = chat.put({ 'Answers': [a], 'id': 1 });
+                }
+                request.onerror = function () {
+                    console.log("Error", request.error);
+                };
+            }
         };
     }
 
@@ -66,7 +72,6 @@ const Summarize = () => {
         let openRequest = indexedDB.open("MUCGPT-SUMMARIZE", 1);
         let db;
         openRequest.onupgradeneeded = function () {
-            // triggers if the client had no database
             db = openRequest.result;
             if (!db.objectStoreNames.contains('summarize')) {
                 db.createObjectStore('summarize', { keyPath: 'id' });
@@ -83,9 +88,8 @@ const Summarize = () => {
 
             old.onsuccess = () => {
                 if (old.result) {
-                    setAnswers(old.result.Answers)
-                    setAnswers([...answers, old.result.Answers]);
-                    lastQuestionRef.current = old.result.Answers[0];
+                    setAnswers([...answers.concat(old.result.Answers)]);
+                    lastQuestionRef.current = old.result.Answers[old.result.Answers.length - 1][0];
                 }
 
             }
@@ -96,15 +100,6 @@ const Summarize = () => {
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example, undefined);
-        //lastQuestionRef.current = example;
-        //error && setError(undefined);
-        //setIsLoading(true);
-        //const Response: SumResponse = {
-        //    answer: ["ANSWER"]
-        //}
-        //setIsLoading(false);
-        //setAnswers([...answers, [example, Response]])
-        //save_summarize([example, Response])
     };
 
 
@@ -136,8 +131,6 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
-
-
         let openRequest = indexedDB.open("MUCGPT-SUMMARIZE", 1);
         let db;
         openRequest.onupgradeneeded = function () {
@@ -146,11 +139,9 @@ const Summarize = () => {
                 db.createObjectStore('summarize', { keyPath: 'id' });
             }
         };
-
         openRequest.onerror = function () {
             console.error("Error", openRequest.error);
         };
-
         openRequest.onsuccess = async function () {
             db = openRequest.result;
             db.transaction("summarize", "readwrite").objectStore("summarize").delete(1);

@@ -11,6 +11,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from 'react-i18next';
+import { clearDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
@@ -23,6 +24,20 @@ const Summarize = () => {
     const [error, setError] = useState<unknown>();
 
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+
+    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming" }
+
+    useEffect(() => {
+        error && setError(undefined);
+        setIsLoading(true);
+        getStartDataFromDB(storage).then((stored) => {
+            if (stored) {
+                setAnswers([...answers.concat(stored)]);
+                lastQuestionRef.current = stored[stored.length - 1][0];
+            }
+        });
+        setIsLoading(false);
+    }, [])
 
 
     const onExampleClicked = (example: string) => {
@@ -44,6 +59,7 @@ const Summarize = () => {
             };
             const result = await brainstormApi(request);
             setAnswers([...answers, [question, result]]);
+            saveToDB([question, result], storage);
         } catch (e) {
             setError(e);
         } finally {
@@ -55,6 +71,7 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
+        clearDB(storage);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);

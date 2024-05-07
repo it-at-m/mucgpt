@@ -34,7 +34,7 @@
     "rehype-raw": "^7.0.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.0",
-    "remark-graphviz": "^0.2.2"
+    "scheduler": "^0.23.2"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",

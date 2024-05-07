@@ -68,6 +68,9 @@ i18n
                             copy: "Antwort kopieren",
                             unformat: "Unformatierte Antwort"
                         },
+                        mermaid: {
+                            download: "Diagramm herunterladen"
+                        },
                         mindmap: {
                             download: "Herunterladen",
                             reset: "Ansicht zurücksetzen",
@@ -189,6 +192,9 @@ i18n
                             source: "Source view",
                             mindmap: "Mindmap view"
                         },
+                        mermaid: {
+                            download: "Download diagram"
+                        },
                         sumanswer: {
                             header: "Unique entities/aspects:",
                             alternative: "Summary ",
@@ -303,6 +309,9 @@ i18n
                             reset: "Oisicht zrucksetzn",
                             source: "Datenoisicht",
                             mindmap: "Mindmapoisicht"
+                        },
+                        mermaid: {
+                            download: "Schau-Buidl obalada"
                         },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",

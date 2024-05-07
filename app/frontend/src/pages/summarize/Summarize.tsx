@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
+import { clearDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
 
@@ -32,7 +33,19 @@ const Summarize = () => {
 
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
 
+    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize" }
 
+    useEffect(() => {
+        error && setError(undefined);
+        setIsLoading(true);
+        getStartDataFromDB(storage).then((stored) => {
+            if (stored) {
+                setAnswers([...answers.concat(stored)]);
+                lastQuestionRef.current = stored[stored.length - 1][0];
+            }
+        });
+        setIsLoading(false);
+    }, [])
 
     const onExampleClicked = (example: string) => {
         makeApiRequest(example, undefined);
@@ -55,6 +68,7 @@ const Summarize = () => {
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);
+            saveToDB([questionText, result], storage)
         } catch (e) {
             setError(e);
         } finally {
@@ -66,6 +80,7 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
+        clearDB(storage);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);

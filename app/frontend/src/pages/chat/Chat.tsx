@@ -13,6 +13,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
+import { indexedDBStorage, saveToDB, getStartDataFromDB, clearDB, popLastInDB } from "../../service/storage"
 
 
 const enum STORAGE_KEYS {
@@ -37,6 +38,7 @@ const Chat = () => {
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
+
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
@@ -47,9 +49,24 @@ const Chat = () => {
     const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
+    const storage: indexedDBStorage = { db_name: "MUCGPT-CHAT", objectStore_name: "chat" }
+
+    useEffect(() => {
+        error && setError(undefined);
+        setIsLoading(true);
+        setActiveCitation(undefined);
+        setActiveAnalysisPanelTab(undefined);
+        getStartDataFromDB(storage).then((stored) => {
+            if (stored) {
+                setAnswers([...answers.concat(stored)]);
+                lastQuestionRef.current = stored[stored.length - 1][0];
+            }
+        });
+        setIsLoading(false);
+    }, [])
+
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
-
         error && setError(undefined);
         setIsLoading(true);
         setActiveCitation(undefined);
@@ -74,11 +91,12 @@ const Chat = () => {
             if (!response.body) {
                 throw Error("No response body");
             }
+            let user_tokens = 0;
             if (shouldStream) {
-                let answer: string = '';
                 let askResponse: AskResponse = {} as AskResponse;
+                let answer: string = '';
                 let streamed_tokens = 0;
-                let user_tokens = 0;
+                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens }
                 for await (const chunk of readNDJSONStream(response.body)) {
                     if (chunk as Chunk) {
                         switch (chunk.type) {
@@ -94,17 +112,19 @@ const Chat = () => {
                                 throw Error(chunk.message as (string) || "Unknown error");
                         }
 
-                        let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
+                        latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
                         setIsLoading(false);
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
                     }
                 }
+                saveToDB([question, latestResponse, user_tokens], storage)
             } else {
                 const parsedResponse: AskResponse = await response.json();
                 if (response.status > 299 || !response.ok) {
                     throw Error(parsedResponse.error || "Unknown error");
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
+                saveToDB([question, parsedResponse, 0], storage)
             }
         } catch (e) {
             setError(e);
@@ -119,21 +139,25 @@ const Chat = () => {
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
         setAnswers([]);
+        clearDB(storage);
     };
 
-    const onRegeneratResponseClicked = () => {
+    const onRegeneratResponseClicked = async () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
+            popLastInDB(storage);
             if (last)
                 makeApiRequest(last[0])
-        }
+
+        };
     }
+
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
 
-    const onExampleClicked = (example: string) => {
+    const onExampleClicked = async (example: string) => {
         makeApiRequest(example);
     };
 
@@ -144,7 +168,6 @@ const Chat = () => {
             setActiveCitation(citation);
             setActiveAnalysisPanelTab(AnalysisPanelTabs.CitationTab);
         }
-
         setSelectedAnswer(index);
     };
 
@@ -154,7 +177,6 @@ const Chat = () => {
         } else {
             setActiveAnalysisPanelTab(tab);
         }
-
         setSelectedAnswer(index);
     };
 

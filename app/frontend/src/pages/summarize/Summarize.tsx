@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
+import { clearDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
 
@@ -32,69 +33,17 @@ const Summarize = () => {
 
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
 
-    const save_summarize = async (a: any[]) => {
-        let openRequest = indexedDB.open("MUCGPT-SUMMARIZE", 1);
-
-        openRequest.onupgradeneeded = function () {
-            let db = openRequest.result;
-            if (!db.objectStoreNames.contains('summarize')) {
-                db.createObjectStore('summarize', { keyPath: 'id' });
-            }
-        };
-
-        openRequest.onerror = function () {
-            console.error("Error", openRequest.error);
-        };
-
-        openRequest.onsuccess = function () {
-            let db = openRequest.result;
-            let transaction = db.transaction("summarize", "readwrite");
-            let chat = transaction.objectStore("summarize");
-            let stored = chat.get(1)
-            stored.onsuccess = () => {
-                let request: IDBRequest;
-                if (stored.result) {
-                    stored.result.Answers.push(a)
-                    request = chat.put({ 'Answers': stored.result.Answers, 'id': 1 });
-                } else {
-                    request = chat.put({ 'Answers': [a], 'id': 1 });
-                }
-                request.onerror = function () {
-                    console.log("Error", request.error);
-                };
-            }
-        };
-    }
+    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize" }
 
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
-        let openRequest = indexedDB.open("MUCGPT-SUMMARIZE", 1);
-        let db;
-        openRequest.onupgradeneeded = function () {
-            db = openRequest.result;
-            if (!db.objectStoreNames.contains('summarize')) {
-                db.createObjectStore('summarize', { keyPath: 'id' });
+        getStartDataFromDB(storage).then((stored) => {
+            if (stored) {
+                setAnswers([...answers.concat(stored)]);
+                lastQuestionRef.current = stored[stored.length - 1][0];
             }
-        };
-
-        openRequest.onerror = function () {
-            console.error("Error", openRequest.error);
-        };
-
-        openRequest.onsuccess = async function () {
-            db = openRequest.result;
-            let old = db.transaction("summarize", "readwrite").objectStore("summarize").get(1);
-
-            old.onsuccess = () => {
-                if (old.result) {
-                    setAnswers([...answers.concat(old.result.Answers)]);
-                    lastQuestionRef.current = old.result.Answers[old.result.Answers.length - 1][0];
-                }
-
-            }
-
-        }
+        });
         setIsLoading(false);
     }, [])
 
@@ -119,7 +68,7 @@ const Summarize = () => {
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);
-            save_summarize([questionText, result])
+            saveToDB([questionText, result], storage)
         } catch (e) {
             setError(e);
         } finally {
@@ -131,21 +80,7 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
-        let openRequest = indexedDB.open("MUCGPT-SUMMARIZE", 1);
-        let db;
-        openRequest.onupgradeneeded = function () {
-            db = openRequest.result;
-            if (!db.objectStoreNames.contains('summarize')) {
-                db.createObjectStore('summarize', { keyPath: 'id' });
-            }
-        };
-        openRequest.onerror = function () {
-            console.error("Error", openRequest.error);
-        };
-        openRequest.onsuccess = async function () {
-            db = openRequest.result;
-            db.transaction("summarize", "readwrite").objectStore("summarize").delete(1);
-        }
+        clearDB(storage);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);

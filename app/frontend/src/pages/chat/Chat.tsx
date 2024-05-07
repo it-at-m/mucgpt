@@ -13,6 +13,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
+import { indexedDBStorage, saveToDB, getStartDataFromDB, clearDB, popLastInDB } from "../../service/storage"
 
 
 const enum STORAGE_KEYS {
@@ -48,77 +49,24 @@ const Chat = () => {
     const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    const save_chat = async (a: any[]) => {
-        let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
-
-        openRequest.onupgradeneeded = function () {
-            let db = openRequest.result;
-            if (!db.objectStoreNames.contains('chat')) {
-                db.createObjectStore('chat', { keyPath: 'id' });
-            }
-        };
-
-        openRequest.onerror = function () {
-            console.error("Error", openRequest.error);
-        };
-
-        openRequest.onsuccess = function () {
-            let db = openRequest.result;
-            let transaction = db.transaction("chat", "readwrite");
-            let chat = transaction.objectStore("chat");
-            let stored = chat.get(1)
-            stored.onsuccess = () => {
-                let request: IDBRequest;
-                if (stored.result) {
-                    stored.result.Answers.push(a)
-                    request = chat.put({ 'Answers': stored.result.Answers, 'id': 1 });
-                } else {
-                    request = chat.put({ 'Answers': [a], 'id': 1 });
-                }
-                request.onerror = function () {
-                    console.log("Error", request.error);
-                };
-            }
-        };
-    }
+    const storage: indexedDBStorage = { db_name: "MUCGPT-CHAT", objectStore_name: "chat" }
 
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
-        let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
-        let db;
-        openRequest.onupgradeneeded = function () {
-            db = openRequest.result;
-            if (!db.objectStoreNames.contains('chat')) {
-                db.createObjectStore('chat', { keyPath: 'id' });
+        getStartDataFromDB(storage).then((stored) => {
+            if (stored) {
+                setAnswers([...answers.concat(stored)]);
+                lastQuestionRef.current = stored[stored.length - 1][0];
             }
-        };
-
-        openRequest.onerror = function () {
-            console.error("Error", openRequest.error);
-        };
-
-        openRequest.onsuccess = async function () {
-            db = openRequest.result;
-            let old = db.transaction("chat", "readwrite").objectStore("chat").get(1);
-
-            old.onsuccess = () => {
-                if (old.result) {
-                    setAnswers([...answers.concat(old.result.Answers)]);
-                    lastQuestionRef.current = old.result.Answers[old.result.Answers.length - 1][0];
-                }
-
-            }
-
-        }
+        });
         setIsLoading(false);
     }, [])
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
-
         error && setError(undefined);
         setIsLoading(true);
         setActiveCitation(undefined);
@@ -169,14 +117,14 @@ const Chat = () => {
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
                     }
                 }
-                save_chat([question, latestResponse, user_tokens])
+                saveToDB([question, latestResponse, user_tokens], storage)
             } else {
                 const parsedResponse: AskResponse = await response.json();
                 if (response.status > 299 || !response.ok) {
                     throw Error(parsedResponse.error || "Unknown error");
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
-                save_chat([question, parsedResponse, 0])
+                saveToDB([question, parsedResponse, 0], storage)
             }
         } catch (e) {
             setError(e);
@@ -191,68 +139,17 @@ const Chat = () => {
         setActiveCitation(undefined);
         setActiveAnalysisPanelTab(undefined);
         setAnswers([]);
-
-        let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
-        let db;
-        openRequest.onupgradeneeded = function () {
-            db = openRequest.result;
-            if (!db.objectStoreNames.contains('chat')) {
-                db.createObjectStore('chat', { keyPath: 'id' });
-            }
-        };
-
-        openRequest.onerror = function () {
-            console.error("Error", openRequest.error);
-        };
-
-        openRequest.onsuccess = async function () {
-            db = openRequest.result;
-            db.transaction("chat", "readwrite").objectStore("chat").delete(1);
-        }
+        clearDB(storage);
     };
 
-    const onRegeneratResponseClicked = () => {
+    const onRegeneratResponseClicked = async () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            let openRequest = indexedDB.open("MUCGPT-CHAT", 1);
-            openRequest.onupgradeneeded = function () {
-                let db = openRequest.result;
-                if (!db.objectStoreNames.contains('chat')) {
-                    db.createObjectStore('chat', { keyPath: 'id' });
-                }
-            };
-            openRequest.onerror = function () {
-                console.error("Error", openRequest.error);
-            };
-            openRequest.onsuccess = function () {
-                let db = openRequest.result;
-                let transaction = db.transaction("chat", "readwrite");
-                let chat = transaction.objectStore("chat");
-                let stored = chat.get(1);
-                stored.onsuccess = function () {
-                    let deleted = chat.delete(1);
-                    deleted.onsuccess = function () {
-                        if (stored.result) {
-                            stored.result.Answers.pop();
-                            let put = chat.put({ 'Answers': stored.result.Answers, 'id': 1 });
-                            put.onsuccess = function () {
-                                if (last)
-                                    makeApiRequest(last[0])
-                            };
-                            put.onerror = function () {
-                                console.error("Error", put.error);
-                            };
-                        };
-                    };
-                    deleted.onerror = function () {
-                        console.error("Error", deleted.error);
-                    }
-                };
-                stored.onerror = function () {
-                    console.error("Error", stored.error);
-                };
-            };
+            popLastInDB(storage);
+            if (last)
+                makeApiRequest(last[0])
+
         };
     }
 

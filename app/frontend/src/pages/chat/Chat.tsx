@@ -37,46 +37,7 @@ const Chat = () => {
     const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([
-        [
-            `Du bist Profi darin Mermaid diagramme zu erstellen. Du antwortest ausschließlich in Mermaid Code.
-            Erstelle ein Mermaid Klassendiagramm über Hundearten.`, {
-                answer: `\`\`\`mermaid
-    classDiagram
-        class Canine{
-            +size: string
-            +color: string
-            +fur: string
-            +breed: string
-            +bark(): void
-        }
-    
-        class Wolf extends Canine{
-            -packSize: number
-            +hunt(): void
-        }
-    
-        class Dog extends Canine{
-            -trained: boolean
-            +fetch(): void
-        }
-    
-        class GoldenRetriever extends Dog{
-            +loyal: boolean
-        }
-    
-        class GermanShepherd extends Dog{
-            +intelligent: boolean
-        }
-    
-        Canine <|-- Wolf
-        Canine <|-- Dog
-        Dog <|--- GoldenRetriever
-        Dog <|--- GermanShepherd
-    \`\`\`
-    In diesem Mermaid Klassendiagramm werden die Klassen Canine als Basisklasse, Wolf als Unterklasse von Canine, Dog als Unterklasse von Canine und GoldenRetriever sowie GermanShepherd als Unterklasse von Dog dargestellt. Jede Klasse hat ihre eigenen Attribute und Methoden, die durch die Mermaid-Syntax beschrieben werden.
-    ` }, 2]
-    ]); //TODO enfternen
+    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
     const max_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;

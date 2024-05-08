@@ -1,70 +1,21 @@
 import React, { useEffect, useState } from "react";
-import mermaid from "mermaid";
 import styles from "./Mermaid.module.css";
 import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
+import mermaid, { MermaidConfig } from "mermaid";
 export interface MermaidProps {
     text: string;
+    darkTheme: boolean;
 }
 
 
-mermaid.initialize({
-    startOnLoad: true,
-    theme: "default",
-    securityLevel: "loose",
-    themeCSS: `
-      g.classGroup rect {
-        fill: #282a36;
-        stroke: #6272a4;
-      } 
-      g.classGroup text {
-        fill: #f8f8f2;
-      }
-      g.classGroup line {
-        stroke: #f8f8f2;
-        stroke-width: 0.5;
-      }
-      .classLabel .box {
-        stroke: #21222c;
-        stroke-width: 3;
-        fill: #21222c;
-        opacity: 1;
-      }
-      .classLabel .label {
-        fill: #f1fa8c;
-      }
-      .relation {
-        stroke: #ff79c6;
-        stroke-width: 1;
-      }
-      #compositionStart, #compositionEnd {
-        fill: #bd93f9;
-        stroke: #bd93f9;
-        stroke-width: 1;
-      }
-      #aggregationEnd, #aggregationStart {
-        fill: #21222c;
-        stroke: #50fa7b;
-        stroke-width: 1;
-      }
-      #dependencyStart, #dependencyEnd {
-        fill: #00bcd4;
-        stroke: #00bcd4;
-        stroke-width: 1;
-      } 
-      #extensionStart, #extensionEnd {
-        fill: #f8f8f2;
-        stroke: #f8f8f2;
-        stroke-width: 1;
-      }`,
-    fontFamily: "Fira Code"
-});
 
-export const Mermaid: React.FC<MermaidProps> = ({ text }) => {
+export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
     const [diagram, setDiagram] = useState<string | boolean>(true);
     const [id, setID] = useState<string>("");
     const { t } = useTranslation();
+
 
     useEffect(() => {
         const render = async () => {
@@ -72,24 +23,40 @@ export const Mermaid: React.FC<MermaidProps> = ({ text }) => {
             const id = `mermaid-svg-${Math.round(Math.random() * 10000000)}`;
             setID(id);
 
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: darkTheme ? "dark" : "default",
+                securityLevel: "loose",
+                suppressErrorRendering: true,
+            } as MermaidConfig);
             // Confirm the diagram is valid before rendering since it could be invalid
             // while streaming, or if the LLM "hallucinates" an invalid diagram.
-            if (await mermaid.parse(text, { suppressErrors: true })) {
-                const { svg } = await mermaid.render(id, text);
-                const svgImage = new DOMParser().parseFromString(svg, "text/html").body
-                    .firstElementChild;
-                if (svgImage) {
-                    svgImage.setAttribute("width", "700px");
-                    svgImage.setAttribute("max-width", "100%"); //TODO Besser auf die größe des Übergeordneten Containers skalieren
-                    svgImage.setAttribute("height", "100%");
+            text = text.replaceAll('`', "");
+            let validMermaid = await mermaid.parse(text, { suppressErrors: true });
+            if (validMermaid) {
+                const { svg } = await mermaid.render(id, text).then((value) => value, (_) => { return { svg: undefined } });
+                if (svg) {
+                    const svgImage = new DOMParser().parseFromString(svg, "text/html").body
+                        .firstElementChild;
+                    if (svgImage) {
+                        svgImage.setAttribute("width", "700px");
+                        svgImage.setAttribute("max-width", "100%"); //TODO Besser auf die größe des Übergeordneten Containers skalieren
+                        svgImage.setAttribute("height", "100%");
+                    }
+                    if (svgImage)
+                        setDiagram(svgImage.outerHTML);
+                    else
+                        setDiagram(false);
                 }
-                if (svgImage)
-                    setDiagram(svgImage.outerHTML);
-                else
-                    setDiagram(false);
+                else {
+                    document.querySelectorAll(`[id=${id}`).forEach(el => el.remove())
+                    setDiagram(false)
+                }
             } else {
                 setDiagram(false);
             }
+            //remove error elements
+
         };
         render();
 
@@ -111,9 +78,9 @@ export const Mermaid: React.FC<MermaidProps> = ({ text }) => {
     }
 
     if (diagram === true) {
-        return <p className="...">Rendering diagram...</p>;
+        return <p className="...">Zeichne Diagramm...</p>;
     } else if (diagram === false) {
-        return <p className="...">Unable to render this diagram.</p>;
+        return <p className="...">Das Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.</p>;
     } else {
         return <div className={styles.diagramContainer}>
             <div dangerouslySetInnerHTML={{ __html: diagram ?? "" }}></div>

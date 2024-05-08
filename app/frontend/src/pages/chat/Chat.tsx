@@ -39,7 +39,7 @@ const Chat = () => {
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
+    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>();
     const [question, setQuestion] = useState<string>("");
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Stack } from "@fluentui/react";
 import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { Send28Filled } from "@fluentui/react-icons";
@@ -13,10 +12,11 @@ interface Props {
     clearOnSend?: boolean;
     tokens_used: number
     token_limit_tracking?: boolean;
+    question: string;
+    setQuestion: (question: string) => void;
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true }: Props) => {
-    const [question, setQuestion] = useState<string>("");
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
     const wordCount = 4000;
     const getDescription = () => {

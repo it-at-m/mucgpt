@@ -34,7 +34,7 @@ const EXAMPLES: ExampleModel[] = [
         3. Gib den Mermaid-Code für das entsprechende Mermaid Diagramm zurück:
         
         Halte unbedingt folgende Regeln bei Schritt 3 ein:
-        - Antworte dabei ausschließlich in Markdown- Codeblöcken in Mermaid Syntax
+        - Antworte dabei ausschließlich in Markdown-Codeblöcken in der Programmiersprache mermaid
         - Beschrifte die Knoten der Diagramme passend
         - Verwende ausschließlich die Daten aus Schritt 1 und 2
         

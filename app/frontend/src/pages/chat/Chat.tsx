@@ -161,7 +161,7 @@ const Chat = () => {
 
     const onExampleClicked = async (example: string, system?: string) => {
         if (system)
-            setSystemPrompt(system)
+            onSystemPromptChanged(system);
         makeApiRequest(example, system);
     };
 

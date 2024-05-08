@@ -69,7 +69,9 @@ i18n
                             unformat: "Unformatierte Antwort"
                         },
                         mermaid: {
-                            download: "Diagramm herunterladen"
+                            download: "Diagramm herunterladen",
+                            render: "Zeichne Diagramm...",
+                            error: "Das Diagramm kann leider nicht dargestellt werden, da es Fehler enthält."
                         },
                         mindmap: {
                             download: "Herunterladen",
@@ -212,7 +214,9 @@ i18n
                             mindmap: "Mindmap view"
                         },
                         mermaid: {
-                            download: "Download diagram"
+                            download: "Download diagram",
+                            render: "Draw diagram...",
+                            error: "Unfortunately, the diagram cannot be displayed as it contains errors."
                         },
                         sumanswer: {
                             header: "Unique entities/aspects:",
@@ -349,7 +353,9 @@ i18n
                             mindmap: "Mindmapoisicht"
                         },
                         mermaid: {
-                            download: "Schau-Buidl obalada"
+                            download: "Schau-Buidl obalada",
+                            render: "Zeichne Schau-Buidl...",
+                            error: "Des Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd."
                         },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",

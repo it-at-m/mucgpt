@@ -14,6 +14,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { indexedDBStorage, saveToDB, getStartDataFromDB, clearDB, popLastInDB } from "../../service/storage"
+import React from "react";
 
 
 const enum STORAGE_KEYS {
@@ -39,7 +40,7 @@ const Chat = () => {
 
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>();
+    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
     const [question, setQuestion] = useState<string>("");
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
@@ -66,7 +67,7 @@ const Chat = () => {
         setIsLoading(false);
     }, [])
 
-    const makeApiRequest = async (question: string) => {
+    const makeApiRequest = async (question: string, system?: string) => {
         lastQuestionRef.current = question;
         error && setError(undefined);
         setIsLoading(true);
@@ -81,7 +82,7 @@ const Chat = () => {
                 overrides: {
                     language: language,
                     temperature: temperature,
-                    system_message: systemPrompt,
+                    system_message: system ? system : systemPrompt,
                     max_tokens: max_tokens
                 }
             };
@@ -158,8 +159,10 @@ const Chat = () => {
 
     const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
 
-    const onExampleClicked = async (example: string) => {
-        makeApiRequest(example);
+    const onExampleClicked = async (example: string, system?: string) => {
+        if (system)
+            setSystemPrompt(system)
+        makeApiRequest(example, system);
     };
 
     const onShowCitation = (citation: string, index: number) => {

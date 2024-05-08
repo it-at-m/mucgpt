@@ -78,9 +78,9 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
     }
 
     if (diagram === true) {
-        return <p className="...">Zeichne Diagramm...</p>;
+        return <p className="...">{t('components.mermaid.render')}</p>;
     } else if (diagram === false) {
-        return <p className="...">Das Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.</p>;
+        return <p className="...">{t('components.mermaid.error')}</p>;
     } else {
         return <div className={styles.diagramContainer}>
             <div dangerouslySetInnerHTML={{ __html: diagram ?? "" }}></div>

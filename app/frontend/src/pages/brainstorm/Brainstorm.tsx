@@ -24,6 +24,7 @@ const Summarize = () => {
     const [error, setError] = useState<unknown>();
 
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+    const [question, setQuestion] = useState<string>("");
 
     const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming" }
 
@@ -132,6 +133,8 @@ const Summarize = () => {
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                             tokens_used={0}
+                            question={question}
+                            setQuestion={question => setQuestion(question)}
                         />
                     </div>
                 </div>

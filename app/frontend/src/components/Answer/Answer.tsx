@@ -12,8 +12,9 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
-import { Button, Tooltip } from "@fluentui/react-components";
+import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular, } from "@fluentui/react-icons";
+import { Button, Divider, Tooltip } from "@fluentui/react-components";
+import { RecommendAnswers } from "../RecommendedAnswers/RecommendedAnswers";
 
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
     onCitationClicked: (filePath: string) => void;
     onSupportingContentClicked?: () => void;
     onRegenerateResponseClicked?: () => void;
+    setQuestion: (question: string) => void;
 }
 
 export const Answer = ({
@@ -29,6 +31,7 @@ export const Answer = ({
     isSelected,
     onCitationClicked,
     onRegenerateResponseClicked,
+    setQuestion,
 }: Props) => {
     const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer, onCitationClicked), [answer]);
 
@@ -92,6 +95,10 @@ export const Answer = ({
                 {!formatted &&
                     <div className={styles.unformattedAnswer} tabIndex={0}>{parsedAnswer.answerHtml}
                     </div>}
+            </Stack.Item>
+            <Stack.Item >
+                <RecommendAnswers
+                    setQuestion={question => setQuestion(question)} />
             </Stack.Item>
         </Stack>
     );

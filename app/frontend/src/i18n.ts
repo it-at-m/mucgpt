@@ -127,6 +127,25 @@ i18n
                         },
                         example: {
                             label: "Beispiel"
+                        },
+                        recommendanswers: {
+                            name: "Vogeschlagene Antworten",
+                            shorter_tooltip: "Schreibe eine kürzere Antwort",
+                            longer_tooltip: "Schreibe eine längere Antwort",
+                            formal_tooltip: "Schreibe eine förmlichere Antwort",
+                            informal_tooltip: "Schreibe eine informellere Antwort",
+                            shorter: "Kürzer",
+                            longer: "Länger",
+                            formal: "Förmlicher",
+                            informal: "Informeller",
+                            shorter_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen kürzeren Text, der den ursprünglichen Inhalt in einer kürzeren und prägnanteren Form wiedergibt. Dieser Text sollte die wichtigsten Informationen enthalten und das Verständnis des Lesers verbessern.",
+                            longer_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen längeren Text, der den ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen ist. Dieser Text sollte das Verständnis des Lesers vertiefen und eine umfassendere Perspektive auf das Thema bieten.",
+                            formal_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen formellen Text, der den ursprünglichen Inhalt in einer akademischen Schreibweise präsentiert. Dieser Text sollte eine klare Struktur aufweisen, präzise und sachliche Ausdrucksweise verwenden und dem Leser ein professionelles Leseerlebnis bieten",
+                            informal_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
                         }
                     }
                 }
@@ -245,6 +264,25 @@ i18n
                         },
                         example: {
                             label: "Example"
+                        },
+                        recommendanswers: {
+                            name: "Recommended answers",
+                            shorter_tooltip: "Shorten your answer",
+                            longer_tooltip: "Write a longer response",
+                            formal_tooltip: "Write your answer more formal",
+                            informal_tooltip: "Write your answer more informal",
+                            shorter: "more precise",
+                            longer: "more detail",
+                            formal: "more formal",
+                            informal: "more informal",
+                            shorter_prompt:
+                                "Rewrite your last message into a new, shorter text that conveys the original content in a more concise and impactful way. This text should include the most important information and improve the reader's understanding.",
+                            longer_prompt:
+                                "Rewrite your last message into a new, longer text that expands upon the original content with more details and background information. This text should deepen the reader's understanding and provide a more comprehensive perspective on the topic.",
+                            formal_prompt:
+                                "Rewrite your last message into a new formal text that presents the original content in an academic writing style. This text should have a clear structure, use precise and factual language, and provide the reader with a professional reading experience.",
+                            informal_prompt:
+                                "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
                         }
                     }
                 }
@@ -363,6 +401,25 @@ i18n
                         },
                         example: {
                             label: "Beispui"
+                        },
+                        recommendanswers: {
+                            name: "Vogschlagene Antworten",
+                            shorter_tooltip: "Schreib a kürzere Antwort",
+                            longer_tooltip: "Schreib a längere Antwort",
+                            formal_tooltip: "Schreib a förmlichere Antwort",
+                            informal_tooltip: "Schreib a informellere Antwort",
+                            shorter: "Kürzer",
+                            longer: "Länger",
+                            formal: "Förmlicher",
+                            informal: "Informeller",
+                            shorter_prompt:
+                                "Formulier dei letzte Nachricht zu am neuen kürzeren Text, der an ursprünglichen Inhalt in a kürzere und prägnantere Form wiedagibt. Der Text soidad die wichtigsten Informationen enthalten und as Verständnis des Lesers verbessern.",
+                            longer_prompt:
+                                "Formuliere dei letzte Nachricht zu am neuen längeren Text, der an ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen is. Der Text soidad as Verständnis des Lesers vertiefen und a umfassendere Perspektive auf das Thema bieten.",
+                            formal_prompt:
+                                "Formuliere dei letzte Nachricht zu am neuen formellen Text, der an ursprünglichen Inhalt in na akademischen Schreibweise präsentiert. Der Text soidad a klare Struktur aufweisen, präzise und sachliche Ausdrucksweise benutzn und am Leser a professionelles Leseerlebnis bieten",
+                            informal_prompt:
+                                "Formuliere dei letzte Nachricht zu am neuen informelleren Text, der an ursprünglichen Inhalt in a lockeren Schreibweise wiedagibt. Dieser Text soi am Leser a ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente benutzt."
                         }
                     }
                 }

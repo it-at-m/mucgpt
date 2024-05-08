@@ -40,6 +40,7 @@ const Chat = () => {
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
+    const [question, setQuestion] = useState<string>("");
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
     const max_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
@@ -230,6 +231,7 @@ const Chat = () => {
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
                                             onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                            setQuestion={question => setQuestion(question)}
                                         />
                                         }
                                         {index !== answers.length - 1 && <Answer
@@ -237,6 +239,7 @@ const Chat = () => {
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
                                             onCitationClicked={c => onShowCitation(c, index)}
+                                            setQuestion={question => setQuestion(question)}
                                         />
                                         }
                                     </li>
@@ -273,6 +276,8 @@ const Chat = () => {
                             disabled={isLoading}
                             onSend={question => makeApiRequest(question)}
                             tokens_used={computeTokens()}
+                            question={question}
+                            setQuestion={question => setQuestion(question)}
                         />
                     </div>
                 </div>

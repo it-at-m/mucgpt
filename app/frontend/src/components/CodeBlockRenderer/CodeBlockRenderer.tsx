@@ -1,17 +1,24 @@
 // @ts-nocheck
 import { IconButton } from "@fluentui/react";
-import { ClassAttributes, HTMLAttributes, useState } from "react";
+import { ClassAttributes, HTMLAttributes, useState, useEffect } from "react";
 import { ExtraProps } from "react-markdown";
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { dark, duotoneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import styles from "./CodeBlockRenderer.module.css";
+import { Mermaid, MermaidProps } from "./Mermaid";
+import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
+
+
 
 export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps) {
   const { children, className, node, ...rest } = props
   const match = /language-(\w+)/.exec(className || '')
   const [copied, setCopied] = useState<boolean>(false);
   const [icon, setIcon] = useState<string>("Copy")
+  const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
+
+
 
   const oncopy = () => {
     setCopied(true);
@@ -23,32 +30,46 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
   }
 
   const language = match ? match[1] : "";
-  const isMultiline = String(children).includes("\n")
-  return (
-    isMultiline ? (
-      <div className={styles.codeContainer}>
-        <SyntaxHighlighter
-          {...rest}
-          children={String(children).replace(/\n$/, '')}
-          style={dark}
-          language={language}
-          PreTag="div"
-          showLineNumbers={true}
-          wrapLongLines={true}
-        />
-        <div className={styles.copyContainer}>
-          {language}
-          <CopyToClipboard text={children}
-            onCopy={oncopy}>
-            <IconButton
-              style={{ color: "black" }}
-              iconProps={{ iconName: icon }}
-            >
-            </IconButton>
-          </CopyToClipboard>
+  const text = String(children);
+  let diagrams = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"];
+  //check if mermaid diagramm is at the start
+  if (language === "mermaid" || (language === "" && text.length > 30 && diagrams.some((type) => text.indexOf(type) !== -1))) {
+    const mermaidProps: MermaidProps = {
+      text: text,
+      darkTheme: !ligth_theme_pref
+    };
+
+    return <Mermaid {...mermaidProps} />
+  }
+  else {
+
+    const isMultiline = String(children).includes("\n")
+    return (
+      isMultiline ? (
+        <div className={styles.codeContainer}>
+          <SyntaxHighlighter
+            {...rest}
+            children={String(children).replace(/\n$/, '')}
+            style={ligth_theme_pref ? duotoneLight : dark}
+            language={language}
+            PreTag="div"
+            showLineNumbers={true}
+            wrapLongLines={true}
+          />
+          <div className={styles.copyContainer}>
+            {language}
+            <CopyToClipboard text={children}
+              onCopy={oncopy}>
+              <IconButton
+                style={{ color: "black" }}
+                iconProps={{ iconName: icon }}
+              >
+              </IconButton>
+            </CopyToClipboard>
+          </div>
         </div>
-      </div>
-    ) :
-      <code {...rest} className={className}>{children}</code>
-  )
+      ) :
+        <code {...rest} className={className}>{children}</code>
+    )
+  }
 }

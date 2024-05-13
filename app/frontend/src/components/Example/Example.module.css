@@ -30,7 +30,7 @@
     margin: 0;
     font-size: var(--fontSizeBase500);
     width: 280px;
-    min-height: 150px;
+    min-height: 100px;
 }
 
 @media only screen and (max-height: 780px) {

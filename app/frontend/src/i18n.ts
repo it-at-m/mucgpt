@@ -125,6 +125,9 @@ i18n
                         example: {
                             label: "Beispiel"
                         },
+                        deleteMessage: {
+                            label: "Nachricht zurückziehen"
+                        },
                         recommendanswers: {
                             name: "Vogeschlagene Antworten",
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
@@ -259,6 +262,9 @@ i18n
                         example: {
                             label: "Example"
                         },
+                        deleteMessage: {
+                            label: "Retract message"
+                        },
                         recommendanswers: {
                             name: "Recommended answers",
                             shorter_tooltip: "Shorten your answer",
@@ -392,6 +398,9 @@ i18n
                         },
                         example: {
                             label: "Beispui"
+                        },
+                        deleteMessage: {
+                            label: "Nachricht zruckziang"
                         },
                         recommendanswers: {
                             name: "Vogschlagene Antworten",

@@ -22,3 +22,7 @@
     white-space: pre-wrap;
     font-size: var(--fontSizeBase300);
 }
+
+.iconRightMargin {
+    margin-right: 5 px;
+}

@@ -13,10 +13,12 @@ interface Props {
     clearOnSend?: boolean;
     tokens_used: number
     token_limit_tracking?: boolean;
+    question: string;
+    setQuestion: (question: string) => void;
 }
 
-export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true }: Props) => {
-    const [question, setQuestion] = useState<string>("");
+export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
+
     const { t, i18n } = useTranslation();
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | undefined>(undefined);

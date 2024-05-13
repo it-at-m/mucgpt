@@ -32,6 +32,7 @@ const Summarize = () => {
     const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">(detaillevel_pref);
 
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
+    const [question, setQuestion] = useState<string>("");
 
     const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize" }
 
@@ -113,7 +114,13 @@ const Summarize = () => {
                             {answers.map((answer, index) => (
                                 <div key={index}>
                                     <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()}>
-                                        <UserChatMessage message={answer[0]} />
+                                        <UserChatMessage message={answer[0]}
+                                            setAnswers={setAnswers}
+                                            setQuestion={setQuestion}
+                                            answers={answers}
+                                            storage={storage}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
                                         <SumAnswer answer={answer[1]} top_n={2}></SumAnswer>
@@ -123,7 +130,13 @@ const Summarize = () => {
                             {isLoading && (
                                 <>
                                     <li aria-description={t('components.usericon.label') + " " + answers.length.toString() + 1}>
-                                        <UserChatMessage message={lastQuestionRef.current} />
+                                        <UserChatMessage message={lastQuestionRef.current}
+                                            setAnswers={setAnswers}
+                                            setQuestion={setQuestion}
+                                            answers={answers}
+                                            storage={storage}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
                                         <AnswerLoading text={t('sum.answer_loading')} />
@@ -132,7 +145,13 @@ const Summarize = () => {
                             )}
                             {error ? (
                                 <><li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                    <UserChatMessage message={lastQuestionRef.current} />
+                                    <UserChatMessage message={lastQuestionRef.current}
+                                        setAnswers={setAnswers}
+                                        setQuestion={setQuestion}
+                                        answers={answers}
+                                        storage={storage}
+                                        lastQuestionRef={lastQuestionRef}
+                                    />
                                 </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
                                         <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
@@ -151,6 +170,8 @@ const Summarize = () => {
                             onSend={(question, file) => makeApiRequest(question, file)}
                             tokens_used={0}
                             token_limit_tracking={false}
+                            question={question}
+                            setQuestion={setQuestion}
                         />
                     </div>
                 </div>

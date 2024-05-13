@@ -20,8 +20,6 @@ import { RecommendAnswers } from "../RecommendedAnswers/RecommendedAnswers";
 interface Props {
     answer: AskResponse;
     isSelected?: boolean;
-    onCitationClicked: (filePath: string) => void;
-    onSupportingContentClicked?: () => void;
     onRegenerateResponseClicked?: () => void;
     setQuestion: (question: string) => void;
 }
@@ -29,11 +27,10 @@ interface Props {
 export const Answer = ({
     answer,
     isSelected,
-    onCitationClicked,
     onRegenerateResponseClicked,
     setQuestion,
 }: Props) => {
-    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer, onCitationClicked), [answer]);
+    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]);
 
 
     const { t } = useTranslation();

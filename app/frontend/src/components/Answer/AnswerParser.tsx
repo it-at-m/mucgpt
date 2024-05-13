@@ -1,5 +1,3 @@
-import { renderToStaticMarkup } from "react-dom/server";
-import { getCitationFilePath } from "../../api";
 
 type HtmlParsedAnswer = {
     answerHtml: string;
@@ -7,7 +5,7 @@ type HtmlParsedAnswer = {
     followupQuestions: string[];
 };
 
-export function parseAnswerToHtml(answer: string, onCitationClicked: (citationFilePath: string) => void): HtmlParsedAnswer {
+export function parseAnswerToHtml(answer: string): HtmlParsedAnswer {
     const citations: string[] = [];
     const followupQuestions: string[] = [];
 
@@ -27,21 +25,6 @@ export function parseAnswerToHtml(answer: string, onCitationClicked: (citationFi
             return part;
         } else {
             return "";
-            /**let citationIndex: number;
-            if (citations.indexOf(part) !== -1) {
-                citationIndex = citations.indexOf(part) + 1;
-            } else {
-                citations.push(part);
-                citationIndex = citations.length;
-            }
-
-            const path = getCitationFilePath(part);
-
-            return renderToStaticMarkup(
-                <a className="supContainer" title={part} onClick={() => onCitationClicked(path)}>
-                    <sup>{citationIndex}</sup>
-                </a>
-            );**/
         }
     });
 

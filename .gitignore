@@ -1,5 +1,6 @@
 # Azure az webapp deployment details
 *_env
+.azure/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

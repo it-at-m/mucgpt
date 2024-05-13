@@ -8,13 +8,11 @@ import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
 import { UserChatMessage } from "../../components/UserChatMessage";
-import { AnalysisPanel, AnalysisPanelTabs } from "../../components/AnalysisPanel";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { indexedDBStorage, saveToDB, getStartDataFromDB, clearDB, popLastInDB } from "../../service/storage"
-import React from "react";
 
 
 const enum STORAGE_KEYS {
@@ -35,9 +33,6 @@ const Chat = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [activeCitation, setActiveCitation] = useState<string>();
-    const [activeAnalysisPanelTab, setActiveAnalysisPanelTab] = useState<AnalysisPanelTabs | undefined>(undefined);
-
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
@@ -56,8 +51,6 @@ const Chat = () => {
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
-        setActiveCitation(undefined);
-        setActiveAnalysisPanelTab(undefined);
         getStartDataFromDB(storage).then((stored) => {
             if (stored) {
                 setAnswers([...answers.concat(stored)]);
@@ -71,8 +64,6 @@ const Chat = () => {
         lastQuestionRef.current = question;
         error && setError(undefined);
         setIsLoading(true);
-        setActiveCitation(undefined);
-        setActiveAnalysisPanelTab(undefined);
 
         try {
             const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
@@ -138,8 +129,6 @@ const Chat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        setActiveCitation(undefined);
-        setActiveAnalysisPanelTab(undefined);
         setAnswers([]);
         clearDB(storage);
     };
@@ -165,24 +154,6 @@ const Chat = () => {
         makeApiRequest(example, system);
     };
 
-    const onShowCitation = (citation: string, index: number) => {
-        if (activeCitation === citation && activeAnalysisPanelTab === AnalysisPanelTabs.CitationTab && selectedAnswer === index) {
-            setActiveAnalysisPanelTab(undefined);
-        } else {
-            setActiveCitation(citation);
-            setActiveAnalysisPanelTab(AnalysisPanelTabs.CitationTab);
-        }
-        setSelectedAnswer(index);
-    };
-
-    const onToggleTab = (tab: AnalysisPanelTabs, index: number) => {
-        if (activeAnalysisPanelTab === tab && selectedAnswer === index) {
-            setActiveAnalysisPanelTab(undefined);
-        } else {
-            setActiveAnalysisPanelTab(tab);
-        }
-        setSelectedAnswer(index);
-    };
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
@@ -237,8 +208,7 @@ const Chat = () => {
                                         {index === answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
-                                            onCitationClicked={c => onShowCitation(c, index)}
+                                            isSelected={selectedAnswer === index}
                                             onRegenerateResponseClicked={onRegeneratResponseClicked}
                                             setQuestion={question => setQuestion(question)}
                                         />
@@ -246,8 +216,7 @@ const Chat = () => {
                                         {index !== answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index && activeAnalysisPanelTab !== undefined}
-                                            onCitationClicked={c => onShowCitation(c, index)}
+                                            isSelected={selectedAnswer === index}
                                             setQuestion={question => setQuestion(question)}
                                         />
                                         }
@@ -302,17 +271,6 @@ const Chat = () => {
                         />
                     </div>
                 </div>
-
-                {answers.length > 0 && activeAnalysisPanelTab && (
-                    <AnalysisPanel
-                        className={styles.chatAnalysisPanel}
-                        activeCitation={activeCitation}
-                        onActiveTabChanged={x => onToggleTab(x, selectedAnswer)}
-                        citationHeight="810px"
-                        answer={answers[selectedAnswer][1]}
-                        activeTab={activeAnalysisPanelTab}
-                    />
-                )}
             </div>
         </div>
     );

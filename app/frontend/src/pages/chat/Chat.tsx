@@ -222,7 +222,13 @@ const Chat = () => {
                             {answers.map((answer, index) => (
                                 <div key={index}>
                                     <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()} >
-                                        <UserChatMessage message={answer[0]} />
+                                        <UserChatMessage message={answer[0]}
+                                            setAnswers={setAnswers}
+                                            setQuestion={setQuestion}
+                                            answers={answers}
+                                            storage={storage}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
                                         {index === answers.length - 1 && <Answer
@@ -248,7 +254,13 @@ const Chat = () => {
                             {isLoading && (
                                 <>
                                     <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current} />
+                                        <UserChatMessage message={lastQuestionRef.current}
+                                            setAnswers={setAnswers}
+                                            setQuestion={setQuestion}
+                                            answers={answers}
+                                            storage={storage}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
                                         <AnswerLoading text={t('chat.answer_loading')} />
@@ -258,7 +270,13 @@ const Chat = () => {
                             {error ? (
                                 <>
                                     <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()} >
-                                        <UserChatMessage message={lastQuestionRef.current} />
+                                        <UserChatMessage message={lastQuestionRef.current}
+                                            setAnswers={setAnswers}
+                                            setQuestion={setQuestion}
+                                            answers={answers}
+                                            storage={storage}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
                                         <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />

@@ -30,11 +30,12 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
   }
 
   const language = match ? match[1] : "";
-
-  if (language === "mermaid") {
-
+  const text = String(children);
+  let diagrams = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"];
+  //check if mermaid diagramm is at the start
+  if (language === "mermaid" || (language === "" && text.length > 30 && diagrams.some((type) => text.indexOf(type) !== -1))) {
     const mermaidProps: MermaidProps = {
-      text: String(children),
+      text: text,
       darkTheme: !ligth_theme_pref
     };
 

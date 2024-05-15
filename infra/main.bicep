@@ -124,6 +124,7 @@ module backend 'core/host/appservice.bicep' = {
     scmDoBuildDuringDeployment: true
     managedIdentity: true
     ssoSecret: ssoSecret
+    healthCheckPath: '/health'
     appSettings: {
       AZURE_OPENAI_SERVICE: openAi.outputs.name
       AZURE_OPENAI_CHATGPT_DEPLOYMENT: chatGptDeploymentName

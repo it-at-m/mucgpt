@@ -34,7 +34,7 @@ param numberOfWorkers int = -1
 param scmDoBuildDuringDeployment bool = false
 param use32BitWorkerProcess bool = false
 param ftpsState string = 'FtpsOnly'
-param healthCheckPath string = ''
+param healthCheckPath string
 
 resource appService 'Microsoft.Web/sites@2022-03-01' = {
   name: name

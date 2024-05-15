@@ -46,9 +46,6 @@ param chatGptDeploymentCapacity int = 70
 param chatGptModelName string = 'gpt-35-turbo'
 param chatGptModelVersion string = '0301'
 
-@description('Id of the user or app to assign application roles')
-param principalId string = ''
-
 @description('Use Application Insights for monitoring and performance tracing')
 param useApplicationInsights bool = false
 
@@ -176,31 +173,6 @@ module authsettingsV2 'core/host/authsettingsV2.bicep' = {
     ssoConfiguration: ssoConfiguration
   }
 }
-
-
-// USER ROLES
-module openAiRoleUser 'core/security/role.bicep' = {
-  scope: openAiResourceGroup
-  name: 'openai-role-user'
-  params: {
-    principalId: principalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-    principalType: 'User'
-  }
-}
-
-
-// SYSTEM IDENTITIES
-module openAiRoleBackend 'core/security/role.bicep' = {
-  scope: openAiResourceGroup
-  name: 'openai-role-backend'
-  params: {
-    principalId: backend.outputs.identityPrincipalId
-    roleDefinitionId: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-    principalType: 'ServicePrincipal'
-  }
-}
-
 
 output AZURE_LOCATION string = location
 output AZURE_TENANT_ID string = tenant().tenantId

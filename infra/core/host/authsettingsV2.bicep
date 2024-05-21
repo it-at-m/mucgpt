@@ -14,6 +14,7 @@ resource authsettingsV 'Microsoft.Web/sites/config@2022-09-01' = {
       requireAuthentication:  true
       unauthenticatedClientAction: 'RedirectToLoginPage'
       redirectToProvider: 'LHMSSO'
+      excludedPaths: ['/health' ]
     }
     identityProviders: {
       azureActiveDirectory: {

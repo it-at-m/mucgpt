@@ -56,12 +56,14 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <DrawerHeader>
                         <DrawerHeaderTitle
                             action={
-                                <Button
-                                    appearance="subtle"
-                                    aria-label="Close"
-                                    icon={<Dismiss24Regular />}
-                                    onClick={() => setIsOpen(false)}
-                                />
+                                <Tooltip content={t('components.settingsdrawer.settings_button_close')} relationship="description" positioning="below">
+                                    <Button
+                                        appearance="subtle"
+                                        aria-label={t('components.settingsdrawer.settings_button_close')}
+                                        icon={<Dismiss24Regular />}
+                                        onClick={() => setIsOpen(false)}
+                                    />
+                                </Tooltip>
                             }
                             role="heading" aria-level={2}
                         >

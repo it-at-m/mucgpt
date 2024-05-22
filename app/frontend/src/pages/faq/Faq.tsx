@@ -1,10 +1,10 @@
-import { Link } from "@fluentui/react-components";
 import styles from "./Faq.module.css";
 import {
     Accordion,
     AccordionHeader,
     AccordionItem,
     AccordionPanel,
+    Link
 } from "@fluentui/react-components";
 
 

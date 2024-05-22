@@ -1,4 +1,4 @@
-import { ChatSettings24Regular, Dismiss24Regular } from "@fluentui/react-icons";
+import { ChatSettings24Regular, ChatWarning24Regular, CheckboxWarning24Regular, Delete24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import {
     DrawerHeader,
     DrawerHeaderTitle,
@@ -12,11 +12,12 @@ import {
     InfoLabel,
     Tooltip,
     Textarea,
-    TextareaOnChangeData
+    TextareaOnChangeData,
+    Badge
 } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { Dispatch, SetStateAction, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from 'react-i18next';
 interface Props {
     temperature: number;
@@ -44,6 +45,9 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
     const min_temp = 0;
     const max_temp = 1;
 
+
+    const isEmptySystemPrompt = systemPrompt.trim() === "";
+
     const onTemperatureChange: SliderProps["onChange"] = (_, data) =>
         setTemperature(data.value);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) =>
@@ -56,10 +60,13 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
             setSystemPrompt("");
     }
 
+    const onClearSystemPrompt = () => {
+        setSystemPrompt("");
+    }
     return (
         <div>
             <OverlayDrawer
-                size="small"
+                size="medium"
                 position="end"
                 open={isOpen}
                 style={{ 'padding': "30px", 'alignItems': 'stretch' }}
@@ -68,12 +75,15 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                     <DrawerHeader>
                         <DrawerHeaderTitle
                             action={
-                                <Button
-                                    appearance="subtle"
-                                    aria-label="Close"
-                                    icon={<Dismiss24Regular />}
-                                    onClick={() => setIsOpen(false)}
-                                />
+                                <Tooltip content={t('components.chattsettingsdrawer.settings_button_close')} relationship="description" positioning="below">
+
+                                    <Button
+                                        appearance="subtle"
+                                        aria-label={t('components.chattsettingsdrawer.settings_button_close')}
+                                        icon={<Dismiss24Regular />}
+                                        onClick={() => setIsOpen(false)}
+                                    />
+                                </Tooltip>
                             }
                             role="heading" aria-level={2}
                         >
@@ -86,15 +96,21 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
 
 
                 <div className={styles.header} role="heading" aria-level={3}>
-                    <InfoLabel
-                        info={
-                            <div className={styles.info}>
-                                <i>{t('components.chattsettingsdrawer.system_prompt')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
-                            </div>
-                        }
-                    >
-                        {t('components.chattsettingsdrawer.system_prompt')}
-                    </InfoLabel>
+                    <div className={styles.systemPromptHeadingContainer}>
+                        <InfoLabel
+                            info={
+                                <div className={styles.info}>
+                                    <i>{t('components.chattsettingsdrawer.system_prompt')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
+                                </div>
+                            }
+                        >
+                            {t('components.chattsettingsdrawer.system_prompt')}
+                        </InfoLabel>
+                        <Tooltip content={t('components.chattsettingsdrawer.system_prompt_clear')} relationship="description" positioning="below">
+                            <Button aria-label={t('components.chattsettingsdrawer.system_prompt_clear')} icon={<Dismiss24Regular />} appearance="subtle" onClick={onClearSystemPrompt} size="small">
+                            </Button>
+                        </Tooltip>
+                    </div>
 
                 </div>
 
@@ -108,7 +124,8 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                                 placeholder={t('components.chattsettingsdrawer.system_prompt')}
                                 resize="vertical"
                                 value={systemPrompt}
-                                size="small"
+                                size="large"
+                                rows={7}
                                 onChange={onSytemPromptChange}
                             />
                         </Field>
@@ -160,6 +177,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 <div className={styles.bodyContainer}>
 
                     <div className={styles.verticalContainer}>
+                        <Label htmlFor={temperatureID} aria-hidden size="medium" className={styles.temperatureLabel}> {t('components.chattsettingsdrawer.min_temperature')}</Label>
                         <Slider min={min_temp}
                             max={max_temp}
                             defaultValue={2}
@@ -169,7 +187,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             step={0.05}
                             aria-labelledby={temperature_headerID}
                             id={temperatureID} />
-                        <br></br>
+                        <Label htmlFor={temperatureID} className={styles.temperatureLabel} aria-hidden size="medium"> {t('components.chattsettingsdrawer.max_temperatur')}</Label>
                         <Label htmlFor={temperatureID} aria-hidden>
                             {temperature}
                         </Label>
@@ -178,10 +196,22 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
             </OverlayDrawer >
 
             <div className={styles.button}>
-                <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
-                    <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={<ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
-                    </Button>
-                </Tooltip>
+
+                {isEmptySystemPrompt ?
+                    <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
+
+                        <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={< ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
+
+                        </Button>
+                    </Tooltip>
+                    :
+                    <Tooltip content={t('components.chattsettingsdrawer.settings_button_system_prompt')} relationship="description" positioning="below">
+
+                        <Button aria-label={t('components.chattsettingsdrawer.settings_button_system_prompt')} icon={<ChatWarning24Regular className={styles.system_prompt_warining_icon} />} appearance="secondary" onClick={onClickRightButton} size="large">
+
+                        </Button>
+                    </Tooltip>
+                }
             </div>
         </div >
     );

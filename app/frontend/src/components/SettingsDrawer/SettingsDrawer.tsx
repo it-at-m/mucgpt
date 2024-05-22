@@ -153,7 +153,12 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     {t('components.settingsdrawer.about')}
                 </div>
                 <div className={styles.bodyContainer}>
-                    <div className={styles.faq}>Version: {version}</div>
+                    <div className={styles.faq}>Version: {version} </div>
+                    <div className={styles.faq}>
+                        <Link href="\#version">
+                            {t('version.header')}
+                        </Link>
+                    </div>
                 </div>
             </OverlayDrawer >
 

@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link } from "react-router-dom";
+import { Outlet, NavLink, Link, Navigate, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
@@ -22,6 +22,7 @@ const formatDate = (date: Date) => {
 
 export const Layout = () => {
     const styles2 = useStyles();
+    const navigate = useNavigate()
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
@@ -61,7 +62,6 @@ export const Layout = () => {
         setTheme(adjustTheme(light, fontscaling));
     };
 
-
     useEffect(() => {
         configApi().then(result => {
             setConfig(result);
@@ -71,6 +71,10 @@ export const Layout = () => {
 
     const onAcceptTermsOfUse = () => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
+        if (localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.version) {
+            localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.version);
+            navigate('version');
+        }
     };
 
     const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {

@@ -37,6 +37,12 @@ i18n
                         medium: "Mittel",
                         long: "Lang"
                     },
+                    version: {
+                        header: "Was gibts neues?",
+                        added: "Neu",
+                        fixed: "Fehler behoben",
+                        changed: "Änderungen"
+                    },
                     brainstorm: {
                         header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
                         prompt: "Ideen zu diesem Thema finden",
@@ -184,6 +190,12 @@ i18n
                         short: "Short",
                         medium: "Medium",
                         long: "Long"
+                    },
+                    version: {
+                        header: "Whats new?",
+                        added: "Added",
+                        fixed: "Fixed",
+                        changed: "Changed"
                     },
                     brainstorm: {
                         header: "Find ideas for a topic or try an example",
@@ -344,6 +356,12 @@ i18n
                         close: "Schließen",
                         messages: "Nochrichten",
                         examples: "Beispui"
+                    },
+                    version: {
+                        header: "Wos gibts neis?",
+                        added: "Nei",
+                        fixed: "Fehla beseitigt",
+                        changed: "Änderunga"
                     },
                     components: {
                         roles: {

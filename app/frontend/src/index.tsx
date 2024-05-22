@@ -13,6 +13,7 @@ import Summarize from "./pages/summarize/Summarize";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
 import Brainstorm from "./pages/brainstorm/Brainstorm";
 import Faq from "./pages/faq/Faq";
+import Version from "./pages/version/Version";
 initializeIcons();
 
 const router = createHashRouter([
@@ -24,22 +25,27 @@ const router = createHashRouter([
             {
                 index: true,
                 element: <Chat />,
-                errorElement: <div>Error</div>,
+                errorElement: <div>Fehler</div>,
             },
             {
                 path: "sum",
                 element: <Summarize />,
-                errorElement: <div>Error</div>,
+                errorElement: <div>Fehler</div>,
             },
             {
                 path: "brainstorm",
                 element: <Brainstorm />,
-                errorElement: <div>Error</div>,
+                errorElement: <div>Fehler</div>,
             },
             {
                 path: "faq",
                 element: <Faq />,
-                errorElement: <div>Error</div>,
+                errorElement: <div>Fehler</div>,
+            },
+            {
+                path: "version",
+                element: <Version />,
+                errorElement: <div>Fehler</div>,
             },
             /** {
                  path: "qa",

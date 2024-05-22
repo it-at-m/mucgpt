@@ -4,8 +4,6 @@ import os
 import time
 from typing import AsyncGenerator, cast
 import base64 
-
-import openai
 import csv
 import io
 from azure.identity.aio import DefaultAzureCredential
@@ -22,6 +20,7 @@ from quart import (
     send_from_directory,
     send_file
 )
+from core.llmhelper import createAzureChatGPT, getAzureChatGPT
 from core.types.Chunk import Chunk
 from core.datahelper import Repository, Base, Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
@@ -92,7 +91,7 @@ async def sum():
 
     try:
         impl = cfg["sum_approaches"]
-        r = await impl.run(splits = splits, overrides=request_json["overrides"] or {}, department=department)
+        r = await impl.run(splits = splits, department=department, language=request_json["language"] or "Deutsch")
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -111,7 +110,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        r = await impl.run(topic=request_json["topic"],overrides= request_json ["overrides"] or {}, department=department)
+        r = await impl.run(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")
@@ -141,7 +140,14 @@ async def chat_stream():
     request_json = await request.get_json()
     try:
         impl = cfg["chat_approaches"]
-        response_generator = impl.run_with_streaming(history= request_json["history"], overrides= request_json.get("overrides", {}), department= department)
+        temperature=request_json['temperature'] or 0.7
+        max_tokens=request_json['max_tokens'] or 4096
+        system_message = request_json['system_message'] or None
+        response_generator = impl.run_with_streaming(history= request_json["history"],
+                                                    temperature=temperature,
+                                                    max_tokens=max_tokens,
+                                                    system_message=system_message,
+                                                    department= department)
         response = await make_response(format_as_ndjson(response_generator))
         response.timeout = None # type: ignore
         return response
@@ -256,8 +262,6 @@ async def ensure_openai_token():
     if openai_token.expires_on < time.time() + 60:
         openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
         cfg["openai_token"] = openai_token
-        openai.api_key = openai_token.token
-
 
 @bp.before_app_serving
 async def setup_clients():
@@ -280,14 +284,13 @@ async def setup_clients():
     azure_credential = DefaultAzureCredential(exclude_shared_token_cache_credential = True)
 
     # Used by the OpenAI SDK
-    openai.api_base = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
-    openai.api_version = "2023-05-15"
-    openai.api_type = "azure_ad"
+    openai_api_base = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
+    openai_api_version = "2023-05-15"
+    openai_api_type = "azure_ad"
     openai_token = await azure_credential.get_token(
         "https://cognitiveservices.azure.com/.default"
     )
-    openai.api_key = openai_token.token
-
+    openai_api_key = openai_token.token
      # Set up authentication helper
     auth_helper = AuthentificationHelper(
         issuer=SSO_ISSUER,
@@ -305,14 +308,41 @@ async def setup_clients():
     config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
     cfg = config_helper.loadData()
 
+    brainstormllm = getAzureChatGPT(
+                    chatgpt_model=  AZURE_OPENAI_CHATGPT_MODEL,
+                    max_tokens =  4000,
+                    n = 1,
+                    openai_api_key =  openai_api_key,
+                    openai_api_base =  openai_api_base,
+                    openai_api_version =  openai_api_version,
+                    openai_api_type = openai_api_type,
+                    temperature=0.9)
+    sumllm = getAzureChatGPT(
+                    chatgpt_model=  AZURE_OPENAI_CHATGPT_MODEL,
+                    max_tokens =  1000,
+                    n = 1,
+                    openai_api_key =  openai_api_key,
+                    openai_api_base =  openai_api_base,
+                    openai_api_version =  openai_api_version,
+                    openai_api_type = openai_api_type,
+                    temperature=0.7)
+    chatlllm = createAzureChatGPT(
+                    chatgpt_model=  AZURE_OPENAI_CHATGPT_MODEL,
+                    n = 1,
+                    openai_api_key =  openai_api_key,
+                    openai_api_base =  openai_api_base,
+                    openai_api_version =  openai_api_version,
+                    openai_api_type = openai_api_type)
+
+
     current_app.config[APPCONFIG_KEY] = AppConfig(
         openai_token=openai_token,
         azure_credential=azure_credential,
         authentification_client=auth_helper,
         configuration_features=cfg,
-        chat_approaches= SimpleChatApproach(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["chat"], repo=repoHelper),
-        brainstorm_approaches= Brainstorm(chatgpt_deployment= AZURE_OPENAI_CHATGPT_DEPLOYMENT, chatgpt_model=AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["brainstorm"], repo=repoHelper),
-        sum_approaches=  Summarize(AZURE_OPENAI_CHATGPT_DEPLOYMENT, AZURE_OPENAI_CHATGPT_MODEL, config=cfg["backend"]["sum"], repo=repoHelper),
+        chat_approaches= SimpleChatApproach(createLLM=chatlllm, config=cfg["backend"]["chat"], repo=repoHelper, chatgpt_model=AZURE_OPENAI_CHATGPT_MODEL),
+        brainstorm_approaches= Brainstorm(llm=brainstormllm, config=cfg["backend"]["brainstorm"], repo=repoHelper),
+        sum_approaches=  Summarize(llm=sumllm, config=cfg["backend"]["sum"], repo=repoHelper),
         repository=repoHelper
     )
     if cfg["backend"]["enable_database"]:

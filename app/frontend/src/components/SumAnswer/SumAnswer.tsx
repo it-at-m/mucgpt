@@ -6,7 +6,6 @@ import { SumResponse } from "../../api";
 import DOMPurify from "dompurify";
 import { Button } from "@fluentui/react-button";
 import { Tooltip } from "@fluentui/react-components";
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { CheckmarkSquare24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { AnswerIcon } from "../Answer/AnswerIcon";
 interface Props {
@@ -27,8 +26,9 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
         return DOMPurify.sanitize(answ)
     });
 
-    const oncopy = () => {
+    const oncopy = (text: string) => {
         setCopied(true);
+        navigator.clipboard.writeText(text);
         setTimeout(() => {
             setCopied(false);
         }, 1000)
@@ -52,11 +52,10 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                             </div>
                         ))}
                         <Tooltip content={t('components.sumanswer.copy')} relationship="description" positioning={{ target: ref }}>
-                            <CopyToClipboard text={sanitizedAnswerHtmlWithoutColors[getSelected]}
-                                onCopy={oncopy}>
-                                <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
-                                </Button>
-                            </CopyToClipboard>
+                            <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')}
+                                onClick={() => oncopy(sanitizedAnswerHtmlWithoutColors[getSelected])}
+                                icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
+                            </Button>
                         </Tooltip>
                     </div>
                 </Stack>

@@ -12,12 +12,10 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
         redirect: "manual",
         body: JSON.stringify({
             history: options.history,
-            overrides: {
-                temperature: options.overrides?.temperature,
-                language: options.overrides?.language,
-                system_message: options.overrides?.system_message,
-                max_tokens: options.overrides?.max_tokens
-            }
+            temperature: options.temperature,
+            language: options.language,
+            system_message: options.system_message,
+            max_tokens: options.max_tokens
         })
     });
 }
@@ -29,10 +27,8 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
         JSON.stringify({
             text: options.text,
             detaillevel: options.detaillevel,
-            overrides: {
-                temperature: options.overrides?.temperature,
-                language: options.overrides?.language
-            }
+            temperature: options.temperature,
+            language: options.language
         })
     );
     if (file) formData.append("file", file);
@@ -96,10 +92,8 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
         redirect: "manual",
         body: JSON.stringify({
             topic: options.topic,
-            overrides: {
-                temperature: options.overrides?.temperature,
-                language: options.overrides?.language
-            }
+            temperature: options.temperature,
+            language: options.language
         })
     });
 

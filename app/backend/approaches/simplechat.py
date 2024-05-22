@@ -1,58 +1,43 @@
-from typing import Any, AsyncGenerator, Optional, Sequence
+from typing import Any, AsyncGenerator, Callable, Optional, Sequence
 
-import openai
 from core.datahelper import Requestinfo
 from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
-from core.modelhelper import get_token_limit
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.types.Chunk import Chunk, ChunkInfo
-from langchain_community.chat_models import AzureChatOpenAI
 from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate
 )
+
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
+
 import asyncio
 
 class SimpleChatApproach():
 
-    def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
-        self.chatgpt_deployment = chatgpt_deployment
-        self.chatgpt_model = chatgpt_model
+    def __init__(self, createLLM: Callable[[int, float, AsyncIteratorCallbackHandler], BaseChatModel], config: ApproachConfig, repo: Repository, chatgpt_model: str):
+        self.createLLM = createLLM
         self.config = config
         self.repo = repo
-        
-        self.chatgpt_token_limit = get_token_limit(chatgpt_model)
+        self.chatgpt_model = chatgpt_model
 
-    async def run_until_final_call(self, history: "Sequence[dict[str, str]]", overrides: "dict[str, Any]", should_stream: bool = False, callbacks: "[]"=  []) -> Any:
+    async def run_until_final_call(self, history: "Sequence[dict[str, str]]", llm: BaseChatModel, system_message: Optional[str]) -> Any:
         user_q =   history[-1]["user"]
-        llm = AzureChatOpenAI(
-            model=self.chatgpt_model,
-            temperature=overrides.get("temperature") or 0.7,
-            max_tokens=overrides.get("max_tokens") or 4096,
-            n=1,
-            deployment_name= self.chatgpt_deployment,
-            openai_api_key=openai.api_key,
-            openai_api_base=openai.api_base,
-            openai_api_version=openai.api_version,
-            openai_api_type=openai.api_type,
-            streaming=should_stream, 
-            callbacks=callbacks,
-        )
         messages = [
                 # The `variable_name` here is what must align with memory
                 MessagesPlaceholder(variable_name="chat_history"),
                 HumanMessagePromptTemplate.from_template("{question}")
             ]
-        if(overrides.get("system_message") and  overrides.get("system_message").strip() !=""):
+        if(system_message and  system_message.strip() !=""):
             messages.insert(0, 
                     SystemMessagePromptTemplate.from_template(
-                        overrides.get("system_message")
+                        system_message
                     ))
         prompt = ChatPromptTemplate(
             messages=messages
@@ -72,9 +57,10 @@ class SimpleChatApproach():
         return (chat_coroutine)
     
 
-    async def run_with_streaming(self, history: 'list[dict[str, str]]', overrides: 'dict[str, Any]', department: Optional[str]) -> AsyncGenerator[dict, None]:
+    async def run_with_streaming(self, history: 'list[dict[str, str]]',max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> AsyncGenerator[dict, None]:
         handler = AsyncIteratorCallbackHandler()
-        chat_coroutine =  await self.run_until_final_call(history, overrides, should_stream=True, callbacks=[handler])
+        llm = self.createLLM(max_tokens, temperature, handler)
+        chat_coroutine =  await self.run_until_final_call(history, llm=llm, system_message=system_message)
         task = asyncio.create_task(chat_coroutine)
         result = ""
         position = 0

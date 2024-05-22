@@ -1,7 +1,7 @@
 {
-  "name": "frontend",
+  "name": "mucgpt",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.2",
   "type": "module",
   "engines": {
     "node": ">=14.0.0"
@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "watch": "tsc && vite build --watch"
+    "watch": "tsc && vite build --watch",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@fluentui/react": "^8.112.8",
@@ -24,17 +25,15 @@
     "markmap-view": "^0.15.0",
     "mermaid": "^10.9.0",
     "ndjson-readablestream": "^1.0.6",
-    "react": "^18.2.0",
-    "react-copy-to-clipboard": "^5.1.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-i18next": "^13.0.2",
     "react-markdown": "^9.0.0",
     "react-router-dom": "^6.16.0",
     "react-syntax-highlighter": "^15.5.0",
     "rehype-raw": "^7.0.0",
     "remark": "^15.0.1",
-    "remark-gfm": "^4.0.0",
-    "scheduler": "^0.23.2"
+    "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",

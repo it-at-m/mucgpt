@@ -11,7 +11,6 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular, } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { RecommendAnswers } from "../RecommendedAnswers/RecommendedAnswers";
@@ -41,6 +40,7 @@ export const Answer = ({
 
     const oncopy = () => {
         setCopied(true);
+        navigator.clipboard.writeText(parsedAnswer.answerHtml);
         setTimeout(() => {
             setCopied(false);
         }, 1000)
@@ -53,12 +53,9 @@ export const Answer = ({
                     <div>
                         <Tooltip content={t('components.answer.copy')} relationship="description" positioning={{ target: ref }}
                         >
-                            <CopyToClipboard text={parsedAnswer.answerHtml}
-                                onCopy={oncopy}>
-                                <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
-                                </Button>
-
-                            </CopyToClipboard>
+                            <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')} icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large"
+                                onClick={() => { oncopy() }}>
+                            </Button>
 
                         </Tooltip>
 

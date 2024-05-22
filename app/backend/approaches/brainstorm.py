@@ -1,18 +1,15 @@
 from typing import Any, Optional
 from langchain.chains import LLMChain
 
-import openai
-from langchain_community.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
+from langchain_core.language_models.chat_models import BaseChatModel
 
-from approaches.approach import Approach
-
-class Brainstorm(Approach):
+class Brainstorm():
     """
     Simple brainstorm implementation. One shot generation of certain markdown files
     """
@@ -56,9 +53,8 @@ class Brainstorm(Approach):
     Text: 
     {brainstorm}"""
 
-    def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
-        self.chatgpt_deployment = chatgpt_deployment
-        self.chatgpt_model = chatgpt_model
+    def __init__(self, llm: BaseChatModel, config: ApproachConfig, repo: Repository):
+        self.llm = llm
         self.config = config
         self.repo = repo
     
@@ -69,21 +65,9 @@ class Brainstorm(Approach):
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def run(self, topic: str, overrides: "dict[str, Any]", department: Optional[str]) -> Any:
-        language = overrides.get("language")
-        llm = AzureChatOpenAI(
-            model=self.chatgpt_model,
-            temperature=overrides.get("temperature") or 0.9,
-            max_tokens=4096,
-            n=1,
-            deployment_name= self.chatgpt_deployment,
-            openai_api_key=openai.api_key,
-            openai_api_base=openai.api_base,
-            openai_api_version=openai.api_version,
-            openai_api_type=openai.api_type
-        )
-        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
+    async def run(self, topic: str, language: str, department: Optional[str]) -> Any:
+        brainstormChain = LLMChain(llm=self.llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
+        translationChain = LLMChain(llm=self.llm, prompt=self.getTranslationPrompt(), output_key="translation")
         overall_chain = SequentialChain(
             chains=[brainstormChain, translationChain], 
             input_variables=["language", "topic"],

@@ -2,7 +2,6 @@
 import { IconButton } from "@fluentui/react";
 import { ClassAttributes, HTMLAttributes, useState, useEffect } from "react";
 import { ExtraProps } from "react-markdown";
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { dark, duotoneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import styles from "./CodeBlockRenderer.module.css";
@@ -22,6 +21,7 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
 
   const oncopy = () => {
     setCopied(true);
+    navigator.clipboard.writeText(children);
     setIcon("Checkmark");
     setTimeout(() => {
       setIcon("Copy");
@@ -58,14 +58,12 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
           />
           <div className={styles.copyContainer}>
             {language}
-            <CopyToClipboard text={children}
-              onCopy={oncopy}>
-              <IconButton
-                style={{ color: "black" }}
-                iconProps={{ iconName: icon }}
-              >
-              </IconButton>
-            </CopyToClipboard>
+            <IconButton
+              style={{ color: "black" }}
+              iconProps={{ iconName: icon }}
+              onClick={() => { oncopy() }}
+            >
+            </IconButton>
           </div>
         </div>
       ) :

@@ -1,8 +1,8 @@
 azure-identity==1.15.0
 quart==0.19.3
-langchain==0.1.4
-openai[datalib]==0.28.1
-tiktoken==0.5.1
+langchain==0.1.20
+langchain_openai 
+tiktoken
 uvicorn[standard]==0.24.0.post1
 aiohttp==3.8.6
 azure-monitor-opentelemetry==1.0.0b15

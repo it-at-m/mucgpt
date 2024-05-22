@@ -19,22 +19,27 @@ const router = createHashRouter([
     {
         path: "/",
         element: <Layout />,
+        errorElement: <div>Error</div>,
         children: [
             {
                 index: true,
-                element: <Chat />
+                element: <Chat />,
+                errorElement: <div>Error</div>,
             },
             {
                 path: "sum",
-                element: <Summarize />
+                element: <Summarize />,
+                errorElement: <div>Error</div>,
             },
             {
                 path: "brainstorm",
-                element: <Brainstorm />
+                element: <Brainstorm />,
+                errorElement: <div>Error</div>,
             },
             {
                 path: "faq",
-                element: <Faq />
+                element: <Faq />,
+                errorElement: <div>Error</div>,
             },
             /** {
                  path: "qa",

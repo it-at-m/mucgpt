@@ -101,7 +101,6 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 <div className={styles.bodyContainer}>
                     <div >
                         <Field
-                            placeholder={t('components.chattsettingsdrawer.system_prompt')}
                             size="large"
                         >
                             <Textarea

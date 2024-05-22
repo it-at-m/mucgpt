@@ -70,12 +70,10 @@ const Chat = () => {
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
                 shouldStream: shouldStream,
-                overrides: {
-                    language: language,
-                    temperature: temperature,
-                    system_message: system ? system : systemPrompt,
-                    max_tokens: max_tokens
-                }
+                language: language,
+                temperature: temperature,
+                system_message: system ? system : systemPrompt,
+                max_tokens: max_tokens
             };
 
             const response = await chatApi(request);

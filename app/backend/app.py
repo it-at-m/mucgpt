@@ -20,6 +20,7 @@ from quart import (
     send_from_directory,
     send_file
 )
+from core.modelhelper import num_tokens_from_message
 from core.llmhelper import createAzureChatGPT, getAzureChatGPT
 from core.types.Chunk import Chunk
 from core.datahelper import Repository, Base, Requestinfo
@@ -173,6 +174,22 @@ async def getStatistics():
     return jsonify({
         "sum": sum_by_department,
         "avg": avg_by_department
+    })
+
+@bp.route("/counttokens", methods=["POST"])
+async def counttokens():
+    cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
+    if cfg["configuration_features"]["backend"]["enable_auth"]:
+        ensure_authentification(request=request)
+    if not request.is_json:
+        return jsonify({"error": "request must be json"}), 415
+    
+    model = cfg["model"]
+    request_json = await request.get_json()
+    message=request_json['text'] or ""
+    counted_tokens = num_tokens_from_message(message,model)
+    return jsonify({
+        "count": counted_tokens
     })
 
 @bp.route("/statistics/export", methods=["GET"])
@@ -336,6 +353,7 @@ async def setup_clients():
 
 
     current_app.config[APPCONFIG_KEY] = AppConfig(
+        model=AZURE_OPENAI_CHATGPT_MODEL,
         openai_token=openai_token,
         azure_credential=azure_credential,
         authentification_client=auth_helper,

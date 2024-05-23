@@ -82,7 +82,7 @@ class SimpleChatApproach():
             history[-1]["bot"] = result
             if self.config["log_tokens"]:
                 self.repo.addInfo(Requestinfo( 
-                    tokencount = num_tokens_from_messages(history,self.chatgpt_model),
+                    tokencount = num_tokens_from_messages(history,self.chatgpt_model) + num_tokens_from_message(system_message,self.chatgpt_model),
                     department = department,
                     messagecount=  len(history),
                     method = "Chat"))

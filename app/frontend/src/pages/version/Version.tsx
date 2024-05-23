@@ -75,6 +75,9 @@ const Version = () => {
                                     </li>
                                 </ul>
                                 <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>Der System Prompt wird nun ins Tokenlimit miteinbezogen</li>
+                                </ul>
                                 <h3>{t('version.changed')}</h3>
                             </div>
                         </AccordionPanel>

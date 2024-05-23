@@ -56,12 +56,14 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     <DrawerHeader>
                         <DrawerHeaderTitle
                             action={
-                                <Button
-                                    appearance="subtle"
-                                    aria-label="Close"
-                                    icon={<Dismiss24Regular />}
-                                    onClick={() => setIsOpen(false)}
-                                />
+                                <Tooltip content={t('components.settingsdrawer.settings_button_close')} relationship="description" positioning="below">
+                                    <Button
+                                        appearance="subtle"
+                                        aria-label={t('components.settingsdrawer.settings_button_close')}
+                                        icon={<Dismiss24Regular />}
+                                        onClick={() => setIsOpen(false)}
+                                    />
+                                </Tooltip>
                             }
                             role="heading" aria-level={2}
                         >
@@ -151,7 +153,12 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     {t('components.settingsdrawer.about')}
                 </div>
                 <div className={styles.bodyContainer}>
-                    <div className={styles.faq}>Version: {version}</div>
+                    <div className={styles.faq}>Version: {version} </div>
+                    <div className={styles.faq}>
+                        <Link href="\#version">
+                            {t('version.header')}
+                        </Link>
+                    </div>
                 </div>
             </OverlayDrawer >
 

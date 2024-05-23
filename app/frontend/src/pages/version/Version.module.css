@@ -7,9 +7,11 @@
     max-width: 90em;
     padding-left: 10em;
 }
+
 .panel {
     margin-left: 2em;
 }
+
 .header {
     font-weight: 600;
     margin: 1em;
@@ -26,7 +28,7 @@
     justify-content: end;
 }
 
-.faqRoot {
+.versionRoot {
     flex: 1;
     display: flex;
     flex-direction: column;

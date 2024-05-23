@@ -17,6 +17,10 @@
     margin-right: 5px;
 }
 
+.temperatureLabel {
+    margin-right: 10px;
+}
+
 .faq {
     padding-top: 8px;
     padding-bottom: 8px;
@@ -30,7 +34,18 @@
     justify-content: start;
 }
 
+.systemPromptHeadingContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .systempromptTextArea {
     line-height: var(--lineHeightBase400);
     font-size: var(--fontSizeBase400);
+}
+
+.system_prompt_warining_icon {
+    color: red;
 }

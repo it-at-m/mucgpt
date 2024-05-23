@@ -54,9 +54,7 @@ const Summarize = () => {
         try {
             const request: BrainstormRequest = {
                 topic: question,
-                overrides: {
-                    language: language,
-                }
+                language: language,
             };
             const result = await brainstormApi(request);
             setAnswers([...answers, [question, result]]);

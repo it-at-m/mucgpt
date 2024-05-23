@@ -1,15 +1,3 @@
-export type AskRequestOverrides = {
-    temperature?: number;
-    language?: string;
-    max_tokens?: number;
-    system_message?: string;
-};
-
-export type AskRequest = {
-    question: string;
-    overrides?: AskRequestOverrides;
-};
-
 export type AskResponse = {
     answer: string;
     error?: string;
@@ -28,29 +16,23 @@ export type ChatTurn = {
 
 export type ChatRequest = {
     history: ChatTurn[];
-    overrides?: AskRequestOverrides;
-    shouldStream?: boolean;
-};
-
-export type SumRequestOverrides = {
     temperature?: number;
     language?: string;
+    max_tokens?: number;
+    system_message?: string;
+    shouldStream?: boolean;
 };
 
 export type SumRequest = {
     text: string;
     detaillevel?: "short" | "medium" | "long";
-    overrides?: SumRequestOverrides;
-};
-
-export type BrainstormRequestOverrides = {
     temperature?: number;
     language?: string;
 };
-
 export type BrainstormRequest = {
     topic: string;
-    overrides?: BrainstormRequestOverrides;
+    temperature?: number;
+    language?: string;
 };
 
 export interface ApplicationConfig {

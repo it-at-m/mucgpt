@@ -11,11 +11,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: id => {
-                    if (id.includes("@fluentui/react-icons")) {
-                        return "fluentui-icons";
-                    } else if (id.includes("@fluentui/react")) {
-                        return "fluentui-react";
-                    } else if (id.includes("node_modules")) {
+                    if (id.includes("node_modules")) {
                         return "vendor";
                     }
                 }

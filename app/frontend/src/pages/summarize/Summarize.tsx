@@ -63,9 +63,7 @@ const Summarize = () => {
             const request: SumRequest = {
                 text: questionText,
                 detaillevel: detaillevel,
-                overrides: {
-                    language: language
-                }
+                language: language
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);

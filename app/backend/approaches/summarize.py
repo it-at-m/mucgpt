@@ -1,20 +1,17 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, List, Optional
 
-import openai
-from langchain_community.chat_models import AzureChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain, LLMChain
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_community.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
-
-from approaches.approach import Approach
 import json
 import re
 
-class Summarize(Approach):
+class Summarize():
     """Chain of Density prompting: https://arxiv.org/abs/2309.04269"""
 
     user_sum_prompt = """
@@ -82,10 +79,8 @@ class Summarize(Approach):
 
 
 
-    def __init__(self, chatgpt_deployment: str, chatgpt_model: str, config: ApproachConfig, repo: Repository):
-        self.chatgpt_deployment = chatgpt_deployment
-        self.chatgpt_model = chatgpt_model
-        
+    def __init__(self, llm: BaseChatModel, config: ApproachConfig, repo: Repository):
+        self.llm = llm
         self.config = config
         self.repo = repo
 
@@ -99,21 +94,10 @@ class Summarize(Approach):
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_and_cleanup_prompt)
 
 
-    def setup(self, overrides: "dict[str, Any]") -> SequentialChain:
+    def setup(self) -> SequentialChain:
         # setup model
-        llm = AzureChatOpenAI(
-            model=self.chatgpt_model,
-            temperature= overrides.get("temperature") or 0.7,
-            max_tokens=1000,
-            n=1,
-            deployment_name= "chat",
-            openai_api_key=openai.api_key,
-            openai_api_base=openai.api_base,
-            openai_api_version=openai.api_version,
-            openai_api_type=openai.api_type
-        )
-        summarizationChain = LLMChain(llm=llm, prompt=self.getSummarizationPrompt(), output_key="sum")
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationCleanupPrompt(), output_key="translation")
+        summarizationChain = LLMChain(llm=self.llm, prompt=self.getSummarizationPrompt(), output_key="sum")
+        translationChain = LLMChain(llm=self.llm, prompt=self.getTranslationCleanupPrompt(), output_key="translation")
 
         return (summarizationChain, translationChain)
     
@@ -185,10 +169,9 @@ class Summarize(Approach):
 
 
 
-    async def run(self, splits: List[str], overrides: "dict[str, Any]", department: Optional[str]) -> Any:
+    async def run(self, splits: List[str],  language: str, department: Optional[str]) -> Any:
         #setup
-        (summarizeChain, cleanupChain) = self.setup(overrides=overrides)
-        language = overrides.get("language")
+        (summarizeChain, cleanupChain) = self.setup()
         # call chain
         total_tokens = 0
         summarys = []

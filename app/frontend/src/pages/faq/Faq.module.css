@@ -20,3 +20,14 @@
     align-items: center;
     max-height: 1024px;
 }
+
+.commandsContainer {
+    display: flex;
+    justify-content: end;
+}
+
+.faqRoot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}

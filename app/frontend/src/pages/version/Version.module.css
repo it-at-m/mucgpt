@@ -22,3 +22,14 @@
     align-items: center;
     max-height: 1024px;
 }
+
+.commandsContainer {
+    display: flex;
+    justify-content: end;
+}
+
+.versionRoot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}

@@ -6,6 +6,8 @@ import {
     AccordionPanel,
 } from "@fluentui/react-components";
 import mindmaps_video from "../../assets/Mindmaps.mp4";
+import vorgeschlageneAntworten from "../../assets/vorgeschlagene_antworten.png";
+import zurückziehen from "../../assets/zurückziehen.png";
 import { useTranslation } from "react-i18next";
 
 
@@ -24,21 +26,34 @@ const Version = () => {
                             <ul>
                                 <li> Chat/Zusammenfassen/Brainstorming
                                     <ul>
-                                        <li>Die letzte verfasste Nachricht kann zurückgenommen werden</li>
-                                        <li>Aktueller Chatverlauf wird im Browser zwischengespeichert und bleibt somit bestehen beim Verlassen der Seite</li>
+                                        <li>Eigene Nachrichten können zurückgenommen werden. Beim Klicken des entsprechenden Buttons werden alle darunter liegenden Nachrichten und die ausgewählte Nachricht gelöscht. In das Eingabefeld wird die ausgewählte Nachricht eingefügt und kann abgeändert werden:
+                                            <p>
+
+                                                <img width="70%" src={zurückziehen}>
+                                                </img>
+                                            </p>
+                                        </li>
+                                        <li>Aktueller Chatverlauf wird im Browser zwischengespeichert und bleibt somit beim Verlassen der Seite bestehen</li>
                                     </ul>
                                 </li>
                                 <li>Was gibts neues?: Updatehistorie kann angezeigt werden</li>
                                 <li>Chat:
                                     <ul>
-                                        <li>Diagramme können mithilfe eines Assistenten erstellt werden:   <p>
+                                        <li><div>Auf eine Antwort von MUCGPT werden nun <b>Antwortmöglichkeiten</b> vorgeschlagen. Beim Auswählen einer Antwortmöglichkeit wird ein entsprechender Prompt in das Eingabefeld geladen: </div>
+                                            <p>
+                                                <img width="80%" src={vorgeschlageneAntworten}>
+                                                </img>
+                                            </p>
+                                        </li>
+                                        <li><b>Mermaid Diagramme</b>  können im Chat angezeigt und heruntergeladen werden</li>
+                                        <li>Es gibt Arielle, die Diagramm-Assistentin. Diese begleitet den Nutzer beim Erstellen von Mermaid-Diagrammen.  <p>
                                             <video width="80%" controls>
                                                 <source src={mindmaps_video} type="video/mp4" />
                                             </video>
                                         </p></li>
                                         <li>Mehr Platz für die Eingabe des Systemprompts</li>
-                                        <li>Warnmeldung, falls Systemprompt gesetzt ist</li>
-                                        <li>Bessere Beschreibungen für Temperatur</li>
+                                        <li>Warnmeldung wird angezeigt, falls Systemprompt gesetzt ist</li>
+                                        <li>Bessere Beschreibungen für die Temperatur Einstellung</li>
 
 
                                     </ul>

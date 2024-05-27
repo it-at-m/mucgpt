@@ -1,7 +1,5 @@
 ## Customize this file after creating the new REPO and remove this lines.
 What to adjust:  
-* Add a short and long desciption.
-* Add links for your final repo to report a bug or request a feature.
 * Add list of used technologies.
 * If you have, add a roadmap or remove this section.
 * Fill up the section for set up and documentation.
@@ -30,8 +28,7 @@ What to adjust:
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
 [releases]: https://github.com/it-at-m/mucgpt/releases
-*Add a description from your project here.*
-
+MUCGPT provides a web interface based on a large language model (LLM). Currently, the interface uses ChatGPT3.5, which allows users to chat, summarise text and brainstorm. The chat function allows text to be generated and refined in several steps. Summarising allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. The included IAC files for Azure make it easy to deploy the project in just a few steps.
 
 ### Built With
 

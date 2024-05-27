@@ -10,6 +10,7 @@ from core.datahelper import Repository
 
 
 class AppConfig(TypedDict):
+    model: str
     openai_token: AccessToken
     azure_credential: DefaultAzureCredential
     chat_approaches: SimpleChatApproach

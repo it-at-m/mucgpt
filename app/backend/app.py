@@ -26,8 +26,9 @@ from core.types.Chunk import Chunk
 from core.datahelper import Repository, Base, Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
 from core.confighelper import ConfigHelper
-from core.types.AppConfig import AppConfig
+from core.types.AppConfig import AppConfig, OpenaiInfo
 from core.textsplit import  splitPDF, splitText
+from core.types.Config import BackendConfig
 
 from approaches.summarize import Summarize
 from approaches.simplechat import SimpleChatApproach
@@ -184,7 +185,7 @@ async def counttokens():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     
-    model = cfg["model"]
+    model = cfg["model_info"]["model"]
     request_json = await request.get_json()
     message=request_json['text'] or ""
     counted_tokens = num_tokens_from_message(message,model)
@@ -275,10 +276,18 @@ def get_department(request: request):
 @bp.before_request
 async def ensure_openai_token():
     cfg = cast(AppConfig, current_app.config[APPCONFIG_KEY])
-    openai_token = cfg["openai_token"]
+    openai_token = cfg["model_info"]["openai_token"]
     if openai_token.expires_on < time.time() + 60:
         openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
-        cfg["openai_token"] = openai_token
+        # new token, 
+        cfg["model_info"]["openai_token"] = openai_token
+        cfg["model_info"]["openai_api_key"] = openai_token.token
+        (chat_approaches, brainstorm_approaches, sum_approaches) = initApproaches(model_info=cfg["model_info"], cfg=cfg["backend_config"], repoHelper=cfg["repository"])
+        cfg["chat_approaches"] = chat_approaches
+        cfg["brainstorm_approaches"]  = brainstorm_approaches
+        cfg["sum_approaches"] = sum_approaches
+
+
 
 @bp.before_app_serving
 async def setup_clients():
@@ -324,47 +333,61 @@ async def setup_clients():
 
     config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
     cfg = config_helper.loadData()
+    model_info = OpenaiInfo(
+            model=AZURE_OPENAI_CHATGPT_MODEL,
+            openai_token = openai_token,
+            openai_api_key =  openai_api_key,
+            openai_api_base =  openai_api_base,
+            openai_api_version =  openai_api_version,
+            openai_api_type = openai_api_type
+        )
 
-    brainstormllm = getAzureChatGPT(
-                    chatgpt_model=  AZURE_OPENAI_CHATGPT_MODEL,
-                    max_tokens =  4000,
-                    n = 1,
-                    openai_api_key =  openai_api_key,
-                    openai_api_base =  openai_api_base,
-                    openai_api_version =  openai_api_version,
-                    openai_api_type = openai_api_type,
-                    temperature=0.9)
-    sumllm = getAzureChatGPT(
-                    chatgpt_model=  AZURE_OPENAI_CHATGPT_MODEL,
-                    max_tokens =  1000,
-                    n = 1,
-                    openai_api_key =  openai_api_key,
-                    openai_api_base =  openai_api_base,
-                    openai_api_version =  openai_api_version,
-                    openai_api_type = openai_api_type,
-                    temperature=0.7)
-    chatlllm = createAzureChatGPT(
-                    chatgpt_model=  AZURE_OPENAI_CHATGPT_MODEL,
-                    n = 1,
-                    openai_api_key =  openai_api_key,
-                    openai_api_base =  openai_api_base,
-                    openai_api_version =  openai_api_version,
-                    openai_api_type = openai_api_type)
-
+    (chat_approaches, brainstorm_approaches, sum_approaches) = initApproaches(model_info=model_info, cfg=cfg["backend"], repoHelper=repoHelper)
 
     current_app.config[APPCONFIG_KEY] = AppConfig(
-        model=AZURE_OPENAI_CHATGPT_MODEL,
-        openai_token=openai_token,
+        model_info= model_info,
         azure_credential=azure_credential,
         authentification_client=auth_helper,
         configuration_features=cfg,
-        chat_approaches= SimpleChatApproach(createLLM=chatlllm, config=cfg["backend"]["chat"], repo=repoHelper, chatgpt_model=AZURE_OPENAI_CHATGPT_MODEL),
-        brainstorm_approaches= Brainstorm(llm=brainstormllm, config=cfg["backend"]["brainstorm"], repo=repoHelper),
-        sum_approaches=  Summarize(llm=sumllm, config=cfg["backend"]["sum"], repo=repoHelper),
-        repository=repoHelper
+        chat_approaches= chat_approaches,
+        brainstorm_approaches= brainstorm_approaches,
+        sum_approaches= sum_approaches,
+        repository=repoHelper,
+        backend_config=cfg["backend"]
     )
     if cfg["backend"]["enable_database"]:
         repoHelper.setup_schema(base=Base)
+
+def initApproaches(model_info: OpenaiInfo, cfg: BackendConfig, repoHelper: Repository):
+    brainstormllm = getAzureChatGPT(
+                    chatgpt_model=  model_info["model"],
+                    max_tokens =  4000,
+                    n = 1,
+                    openai_api_key =  model_info["openai_api_key"],
+                    openai_api_base =  model_info["openai_api_base"],
+                    openai_api_version =   model_info["openai_api_version"],
+                    openai_api_type =  model_info["openai_api_type"],
+                    temperature=0.9)
+    sumllm = getAzureChatGPT(
+                    chatgpt_model=  model_info["model"],
+                    max_tokens =  1000,
+                    n = 1,
+                    openai_api_key =  model_info["openai_api_key"],
+                    openai_api_base =   model_info["openai_api_base"],
+                    openai_api_version =   model_info["openai_api_version"],
+                    openai_api_type =  model_info["openai_api_type"],
+                    temperature=0.7)
+    chatlllm = createAzureChatGPT(
+                    chatgpt_model=  model_info["model"],
+                    n = 1,
+                    openai_api_key =  model_info["openai_api_key"],
+                    openai_api_base =  model_info["openai_api_base"],
+                    openai_api_version =   model_info["openai_api_version"],
+                    openai_api_type = model_info["openai_api_type"])
+    chat_approaches = SimpleChatApproach(createLLM=chatlllm, config=cfg["chat"], repo=repoHelper, chatgpt_model=model_info["model"])
+    brainstorm_approaches = Brainstorm(llm=brainstormllm, config=cfg["brainstorm"], repo=repoHelper)
+    sum_approaches =  Summarize(llm=sumllm, config=cfg["sum"], repo=repoHelper)
+    return (chat_approaches, brainstorm_approaches, sum_approaches)
 
 
 

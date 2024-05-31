@@ -51,8 +51,12 @@ const Chat = () => {
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
 
     const makeTokenCountRequest = useCallback(async () => {
-        const response = await countTokensAPI({ "text": debouncedSystemPrompt });
-        setSystemPromptTokens(response.count)
+        if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
+            const response = await countTokensAPI({ "text": debouncedSystemPrompt });
+            setSystemPromptTokens(response.count);
+        }
+        else
+            setSystemPromptTokens(0);
     }, [debouncedSystemPrompt]);
 
     useEffect(() => {
@@ -83,7 +87,7 @@ const Chat = () => {
                 shouldStream: shouldStream,
                 language: language,
                 temperature: temperature,
-                system_message: system ? system : systemPrompt,
+                system_message: system ? system : "",
                 max_tokens: max_tokens
             };
 
@@ -148,7 +152,7 @@ const Chat = () => {
             setAnswers(answers);
             popLastInDB(storage);
             if (last)
-                makeApiRequest(last[0])
+                makeApiRequest(last[0], systemPrompt)
 
         };
     }
@@ -260,7 +264,7 @@ const Chat = () => {
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
+                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />
                                     </li>
                                 </>
                             ) : null}
@@ -273,7 +277,7 @@ const Chat = () => {
                             clearOnSend
                             placeholder={t('chat.prompt')}
                             disabled={isLoading}
-                            onSend={question => makeApiRequest(question)}
+                            onSend={question => makeApiRequest(question, systemPrompt)}
                             tokens_used={totalTokens}
                             question={question}
                             setQuestion={question => setQuestion(question)}

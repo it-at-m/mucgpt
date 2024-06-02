@@ -159,7 +159,7 @@ const Chat = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = answers.map((answ) => answ[2] + systemPromptTokens + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
+    const totalTokens = systemPromptTokens + answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
     const onExampleClicked = async (example: string, system?: string) => {
         if (system)

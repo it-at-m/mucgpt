@@ -71,27 +71,18 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 open={isOpen}
                 style={{ 'padding': "30px", 'alignItems': 'stretch' }}
             >
-                <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                            action={
-                                <Tooltip content={t('components.chattsettingsdrawer.settings_button_close')} relationship="description" positioning="below">
+                <div className={styles.title} role="heading" aria-level={2}>
+                    {t('components.chattsettingsdrawer.settings_button')}
+                    <Tooltip content={t('components.chattsettingsdrawer.settings_button_close')} relationship="description" positioning="below">
 
-                                    <Button
-                                        appearance="subtle"
-                                        aria-label={t('components.chattsettingsdrawer.settings_button_close')}
-                                        icon={<Dismiss24Regular />}
-                                        onClick={() => setIsOpen(false)}
-                                    />
-                                </Tooltip>
-                            }
-                            role="heading" aria-level={2}
-                        >
-                            {t('components.chattsettingsdrawer.settings_button')}
+                        <Button
+                            appearance="subtle"
+                            aria-label={t('components.chattsettingsdrawer.settings_button_close')}
+                            icon={<Dismiss24Regular />}
+                            onClick={() => setIsOpen(false)}
+                        />
+                    </Tooltip>
 
-                        </DrawerHeaderTitle>
-
-                    </DrawerHeader>
                 </div>
 
 
@@ -99,7 +90,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                     <div className={styles.systemPromptHeadingContainer}>
                         <InfoLabel
                             info={
-                                <div className={styles.info}>
+                                <div>
                                     <i>{t('components.chattsettingsdrawer.system_prompt')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
                                 </div>
                             }
@@ -135,7 +126,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
                     <InfoLabel
                         info={
-                            <div className={styles.info}>
+                            <div>
                                 {t('components.chattsettingsdrawer.max_lenght_info')}
                             </div>
                         }
@@ -165,7 +156,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                 <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
                     <InfoLabel
                         info={
-                            <div className={styles.info}>
+                            <div>
                                 {t('components.chattsettingsdrawer.temperature_article')} <i>{t('components.chattsettingsdrawer.temperature')}</i> {t('components.chattsettingsdrawer.temperature_info')}
                             </div>
                         }

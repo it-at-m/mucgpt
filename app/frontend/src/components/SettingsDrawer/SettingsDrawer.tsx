@@ -52,24 +52,17 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 open={isOpen}
                 style={{ 'padding': "30px", 'alignItems': 'stretch' }}
             >
-                <div className={styles.header}>
-                    <DrawerHeader>
-                        <DrawerHeaderTitle
-                            action={
-                                <Tooltip content={t('components.settingsdrawer.settings_button_close')} relationship="description" positioning="below">
-                                    <Button
-                                        appearance="subtle"
-                                        aria-label={t('components.settingsdrawer.settings_button_close')}
-                                        icon={<Dismiss24Regular />}
-                                        onClick={() => setIsOpen(false)}
-                                    />
-                                </Tooltip>
-                            }
-                            role="heading" aria-level={2}
-                        >
-                            {t('components.settingsdrawer.settings')}
-                        </DrawerHeaderTitle>
-                    </DrawerHeader>
+                <div className={styles.title} role="heading" aria-level={2}>
+
+                    {t('components.settingsdrawer.settings')}
+                    <Tooltip content={t('components.settingsdrawer.settings_button_close')} relationship="description" positioning="below">
+                        <Button
+                            appearance="subtle"
+                            aria-label={t('components.settingsdrawer.settings_button_close')}
+                            icon={<Dismiss24Regular />}
+                            onClick={() => setIsOpen(false)}
+                        />
+                    </Tooltip>
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.language')}

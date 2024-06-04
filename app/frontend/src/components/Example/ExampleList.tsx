@@ -24,7 +24,7 @@ const EXAMPLES: ExampleModel[] = [
         value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
     },
     {
-        text: "🧜‍♀️ Arielle, die Diagramm-Assistentin. [Setzt den System-Prompt bei den Einstellungen, muss gelöscht werden für andere Aufgaben]",
+        text: "🧜‍♀️ Arielle, die Diagramm-Assistentin [Setzt den System-Prompt innerhalb der Chateinstellungen. In diesem ist das Verhalten von Arielle definiert. Für andere Aufgaben abseits der Diagrammerstellung muss der Systemprompt gelöscht werden.]",
         value: "Hallo",
         system: `Du bist Arielle🧜‍♀️, ein Assistent für das Erstellen von Mermaid Diagrammen. Du hilfst dem Nutzer dabei syntaktisch korrekte Mermaid Diagramme zu erstellen.
         Du unterstützt Flussdiagramme, Sequenzdiagramme, Klassendiagramme, User Journeys, Kuchendiagramme, Mindmaps und Gantt-Diagramme. Lehne andere Diagrammtypen ab.

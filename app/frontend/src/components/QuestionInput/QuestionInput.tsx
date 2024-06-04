@@ -80,6 +80,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 <div>
                     {getDescription()}
                 </div>
+                <div className={styles.errorhint}>
+                    {t('components.questioninput.errorhint')}
+                </div>
                 <div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">
                         <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={sendQuestionDisabled} onClick={sendQuestion} />

@@ -1,9 +1,9 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import styles from "./Chat.module.css";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -13,6 +13,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { indexedDBStorage, saveToDB, getStartDataFromDB, clearDB, popLastInDB } from "../../service/storage"
+import useDebounce from "../../hooks/debouncehook";
 
 
 const enum STORAGE_KEYS {
@@ -22,7 +23,6 @@ const enum STORAGE_KEYS {
 }
 
 const Chat = () => {
-
     const { language } = useContext(LanguageContext)
     const { t } = useTranslation();
     const [shouldStream, setShouldStream] = useState<boolean>(true);
@@ -47,6 +47,21 @@ const Chat = () => {
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
     const storage: indexedDBStorage = { db_name: "MUCGPT-CHAT", objectStore_name: "chat" }
+    const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
+    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+
+    const makeTokenCountRequest = useCallback(async () => {
+        if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
+            const response = await countTokensAPI({ "text": debouncedSystemPrompt });
+            setSystemPromptTokens(response.count);
+        }
+        else
+            setSystemPromptTokens(0);
+    }, [debouncedSystemPrompt]);
+
+    useEffect(() => {
+        makeTokenCountRequest();
+    }, [debouncedSystemPrompt, makeTokenCountRequest]);
 
     useEffect(() => {
         error && setError(undefined);
@@ -72,7 +87,7 @@ const Chat = () => {
                 shouldStream: shouldStream,
                 language: language,
                 temperature: temperature,
-                system_message: system ? system : systemPrompt,
+                system_message: system ? system : "",
                 max_tokens: max_tokens
             };
 
@@ -137,14 +152,14 @@ const Chat = () => {
             setAnswers(answers);
             popLastInDB(storage);
             if (last)
-                makeApiRequest(last[0])
+                makeApiRequest(last[0], systemPrompt)
 
         };
     }
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const computeTokens = () => { return answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0) }
+    const totalTokens = systemPromptTokens + answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
     const onExampleClicked = async (example: string, system?: string) => {
         if (system)
@@ -249,7 +264,7 @@ const Chat = () => {
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
+                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />
                                     </li>
                                 </>
                             ) : null}
@@ -262,8 +277,8 @@ const Chat = () => {
                             clearOnSend
                             placeholder={t('chat.prompt')}
                             disabled={isLoading}
-                            onSend={question => makeApiRequest(question)}
-                            tokens_used={computeTokens()}
+                            onSend={question => makeApiRequest(question, systemPrompt)}
+                            tokens_used={totalTokens}
                             question={question}
                             setQuestion={question => setQuestion(question)}
                         />
@@ -275,3 +290,4 @@ const Chat = () => {
 };
 
 export default Chat;
+

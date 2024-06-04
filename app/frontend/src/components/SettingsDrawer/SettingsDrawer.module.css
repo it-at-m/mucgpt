@@ -3,6 +3,14 @@
     font-size: medium;
 }
 
+.title {
+    margin-bottom: 5px;
+    font-size: var(--fontSizeHero700);
+    margin-top: var(--spacingVerticalS);
+    display: flex;
+    justify-content: space-between;
+}
+
 .list {
     list-style: none;
     padding: 0;

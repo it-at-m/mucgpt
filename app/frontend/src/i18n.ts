@@ -110,7 +110,8 @@ i18n
                         },
                         questioninput: {
                             tokensused: "Token verbraucht",
-                            limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!"
+                            limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
+                            errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen."
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -264,7 +265,8 @@ i18n
                         },
                         questioninput: {
                             tokensused: "Token used",
-                            limit: ". Previous inputs are not considered during generation!"
+                            limit: ". Previous inputs are not considered during generation!",
+                            errorhint: "MUCGPT can make errors. Verify important information."
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -418,7 +420,8 @@ i18n
                         },
                         questioninput: {
                             tokensused: "Token vabrocht",
-                            limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!"
+                            limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
+                            errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma."
                         },
                         suminput: {
                             tokensused: "Token vabrocht",

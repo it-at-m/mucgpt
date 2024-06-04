@@ -70,3 +70,11 @@ export interface ChunkInfo {
     requesttokens: number;
     streamedtokens: number;
 }
+
+export type CountTokenRequest = {
+    text: string;
+};
+
+export type CountTokenResponse = {
+    count: number;
+};

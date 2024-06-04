@@ -1,12 +1,11 @@
-import { ApplicationConfig, AskResponse, BrainstormRequest, ChatRequest, SumRequest, SumResponse } from "./models";
+import { ApplicationConfig, AskResponse, BrainstormRequest, ChatRequest, CountTokenRequest, CountTokenResponse, SumRequest, SumResponse } from "./models";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/chat_stream" : "/chat";
     return await fetch(url, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "ssotest.muenchen.de"
+            "Content-Type": "application/json"
         },
         mode: "cors",
         redirect: "manual",
@@ -35,9 +34,7 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
 
     const response = await fetch("/sum", {
         method: "POST",
-        headers: {
-            "Access-Control-Allow-Origin": "ssotest.muenchen.de"
-        },
+        headers: {},
         mode: "cors",
         redirect: "manual",
         body: formData
@@ -70,8 +67,7 @@ export async function configApi(): Promise<ApplicationConfig> {
     const response = await fetch("/config", {
         method: "GET",
         headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "ssotest.muenchen.de"
+            "Content-Type": "application/json"
         },
         mode: "cors",
         redirect: "manual"
@@ -85,8 +81,7 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
     const response = await fetch("/brainstorm", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "ssotest.muenchen.de"
+            "Content-Type": "application/json"
         },
         mode: "cors",
         redirect: "manual",
@@ -102,6 +97,20 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
     return parsedResponse;
 }
 
-export function getCitationFilePath(citation: string): string {
-    return `/content/${citation}`;
+export async function countTokensAPI(options: CountTokenRequest): Promise<CountTokenResponse> {
+    const response = await fetch("/counttokens", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual",
+        body: JSON.stringify({
+            text: options.text
+        })
+    });
+
+    handleRedirect(response);
+    const parsedResponse: CountTokenResponse = await handleResponse(response);
+    return parsedResponse;
 }

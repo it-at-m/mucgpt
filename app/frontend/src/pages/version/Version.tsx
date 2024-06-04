@@ -32,7 +32,26 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="1">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="5">
+                    <AccordionItem value="5">
+                        <AccordionHeader>[1.1.1] 04.06.2024</AccordionHeader>
+                        <AccordionPanel >
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <ul>
+                                    <li>Neuer Hinweis im Antwortfeld vom Chat: MUCGPT macht Fehler</li>
+                                </ul>
+                                <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>Der Hilfstext für den Systemprompt ist nicht mehr transparent</li>
+                                </ul>
+                                <h3>{t('version.changed')}</h3>
+                                <ul>
+                                    <li>Die Beschreibung des Arielle-Chat-Beispiels wurde verbessert</li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem >
                     <AccordionItem value="1">
                         <AccordionHeader>[1.1.0] 22.05.2024</AccordionHeader>
                         <AccordionPanel >
@@ -75,6 +94,9 @@ const Version = () => {
                                     </li>
                                 </ul>
                                 <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>Der System Prompt wird nun ins Tokenlimit miteinbezogen</li>
+                                </ul>
                                 <h3>{t('version.changed')}</h3>
                             </div>
                         </AccordionPanel>

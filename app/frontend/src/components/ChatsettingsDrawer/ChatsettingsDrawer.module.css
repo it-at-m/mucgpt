@@ -2,6 +2,14 @@
     margin-right: 20px;
 }
 
+.title {
+    margin-bottom: 5px;
+    font-size: var(--fontSizeHero700);
+    margin-top: var(--spacingVerticalS);
+    display: flex;
+    justify-content: space-between;
+}
+
 .header {
     margin-bottom: 5px;
     font-size: var(--fontSizeBase400);

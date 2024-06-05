@@ -1,12 +1,9 @@
 # MUCGPT
 
 <!-- PROJECT LOGO -->
-<div align="center">
-  <a href="#">
-    <img src="app/frontend/src/assets/mucgpt_logo.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
-  </a>
-</div>
-<br />
+![Logo](app/frontend/src/assets/mucgpt_logo.png#gh-dark-mode-only)
+![Logo](app/frontend/src/assets/mucgpt_black.png#gh-light-mode-only)
+
 <!-- ABOUT THE PROJECT -->
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![GitHub license][license-shield]][license]
@@ -86,7 +83,7 @@ Pricing varies per region and usage, so it isn't possible to predict exact costs
 4. Create a new azd environemnt with `azd env new`. Enter a name that will be used for the resource group. This will create a new folder in the `.azure` folder, and set it as the active environment for any calls to `azd` going forward.
 5. (Optional) This is the point where you can customize the deployment by setting environment variables, in order to use existing resources, enable optional features (such as auth or vision), or deploy to free tiers.
 6. Run `azd up` - This will provision Azure resources and deploy this sample to those resources.
-7. After the application has been successfully deployed you will see a URL printed to the console. Click that URL to interact with the application in your browser. It will look like the following:
+7. After the application has been successfully deployed you will see a URL printed to the console. Click that URL to interact with the application in your browser. It will look like the following:  
 ![](/docs/endpoint.png)
     > **_NOTE:_**  It may take 5-10 minutes after you see 'SUCCESS' for the application to be fully deployed. If you see a "Python Developer" welcome screen or an error page, then wait a bit and refresh the page.
 

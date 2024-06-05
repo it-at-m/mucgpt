@@ -1,14 +1,12 @@
 # MUCGPT
 
 <!-- PROJECT LOGO -->
-
 <div align="center">
   <a href="#">
-    <img src="app/frontend/src/assets/mucgpt_logo.png" alt="Logo" height="200">
+    <img src="app/frontend/src/assets/mucgpt_logo.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
   </a>
 </div>
 <br />
-
 <!-- ABOUT THE PROJECT -->
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![GitHub license][license-shield]][license]
@@ -46,13 +44,13 @@ The documentation project is built with technologies we use in our projects (see
   * [Powershell 7+ (pwsh)](https://github.com/powershell/powershell)
 
 ## Table of contents
-* [MUCGPT](#-MUCGPT)
-* [Roadmap](#-Roadmap)
-* [Set up](#-Set-up)
-* [Documentation](#-Documentation)
-* [Contributing](#-Contributing)
-* [License](#-License)
-* [Contact](#-Contact)
+* [Built With](#built-with)
+* [Roadmap](#roadmap)
+* [Set up](#set-up-on-azure)
+* [Documentation](#documentation)
+* [Contributing](#contributing)
+* [License](#license)
+* [Contact](#contact)
 
 ## Roadmap
 

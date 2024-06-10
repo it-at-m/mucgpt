@@ -1,8 +1,12 @@
 # MUCGPT
 
 <!-- PROJECT LOGO -->
-![Logo](app/frontend/src/assets/mucgpt_logo.png#gh-dark-mode-only)
-![Logo](app/frontend/src/assets/mucgpt_black.png#gh-light-mode-only)
+<div align="center">
+  <a href="#">
+    <img src="app/frontend/src/assets/mucgpt_logo.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
+  </a>
+</div>
+<br />
 
 <!-- ABOUT THE PROJECT -->
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
@@ -18,10 +22,14 @@
 [releases]: https://github.com/it-at-m/mucgpt/releases
 MUCGPT provides a web interface based on a large language model (LLM). Currently, the interface uses ChatGPT3.5, which allows users to chat, summarise text and brainstorm. The chat function allows text to be generated and refined in several steps. Summarising allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. The included IAC files for Azure make it easy to deploy the project in just a few steps.
 
+Why should you use MUCGPT? Let itself convince you:  
+  
+![Essay of MUCGPT to convince the user to use it!](/docs/convince-the-user.png) 
+
 
 ## Built With
 
-The documentation project is built with technologies we use in our projects (see [requirements.txt](/requirements.txt) and [requirements-dev.txt](/requirements-dev.txt)):
+The documentation project is built with technologies we use in our projects (see [requirements-dev.txt](/requirements-dev.txt)):
 ### Backend:
 * [Python 3.9, 3.10 or 3.11](https://www.python.org/downloads/)
 * [Quart](https://pgjones.gitlab.io/quart/)
@@ -97,21 +105,23 @@ If you've changed the infrastructure files (`infra` folder or `azure.yaml`), the
 `azd up`
 
 ### Runnig locally
-You can only run locally after having successfully run the azd up command. If you haven't yet, follow the steps in [Deploying](#deploying) above.
+You can only run locally after having successfully run the `azd up` command. If you haven't yet, follow the steps in [Deploying](#deploying) above.
 
-1. Run azd auth login
+1. Run `azd auth login`
 2. Change dir to app
 3. Run `./start.ps1` or `./start.sh` to start the app
 
 ## Documentation
-![Architecture](docs/appcomponents.png)
-The Architecture of MUCGPT splits into two parts, the Frontend and the backend. MUCGPT is deployed on Microsoft Azure as a AppService with an PostgreSQL Database and a Azure OpenAI unit.
+![Architecture](docs/appcomponents_en.png)
+The Architecture of MUCGPT splits into two parts, the frontend and the backend. MUCGPT is deployed on Microsoft Azure as a AppService with an PostgreSQL Database and a Azure OpenAI unit.
   
 The Frontend bases on a Template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented and enriched with features using React, Typescript and Javascript.    
   
 The Framework used to implement the Backend of MUCGPT is called [Quart](https://pgjones.gitlab.io/quart/). It is a Fast Python web microframework to build JSON APIs, render and serve HTML, serve Web Sockets an much more. The Backend is using LangChain to connect LLMs like Chat-GPT-3.5, wich is currently in use.  
   
-To get more informations about all the feautures of MUCGPT click [here](/docs/FEATURES.md).
+To get more informations about all the feautures of MUCGPT click [here](/docs/FEATURES.md).  
+  
+A cheatsheat to use MUCGPT is located [here](app/frontend/src/assets/mucgpt_cheatsheet.pdf).
 
 ## Contributing
 

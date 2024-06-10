@@ -59,15 +59,15 @@ The documentation project is built with technologies we use in our projects (see
 
 ## Roadmap
 
-*tbd*
+![Roadmap](/docs/roadmap_2024.png)
 
 
 See the [open issues](#) for a full list of proposed features (and known issues).
 
 
 ## Set up on Azure
-see also [here](https://github.com/Azure-Samples/azure-search-openai-demo?tab=readme-ov-file#azure-deployment)
-### You need the folloqing requirements to set up MUCGPT on Azure:
+As this project bases on a template of Microsoft Azure see also [here](https://github.com/Azure-Samples/azure-search-openai-demo?tab=readme-ov-file#azure-deployment) for the deployment documentation.
+### You need the following requirements to set up MUCGPT on Azure:
 * Azure account
 * Azure subscription with access enabled for the Azure OpenAI service
 * Account Permissions:

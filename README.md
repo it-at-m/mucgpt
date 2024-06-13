@@ -3,7 +3,7 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="#">
-    <img src="app/frontend/src/assets/mucgpt_logo.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
+    <img src="app/frontend/src/assets/mucgpt_black_filled.png" alt="Logo" height="400" style="display: block; margin: 0 auto; filter: invert(0)">
   </a>
 </div>
 <br />
@@ -112,7 +112,7 @@ You can only run locally after having successfully run the `azd up` command. If 
 3. Run `./start.ps1` or `./start.sh` to start the app
 
 ## Documentation
-![Architecture](docs/appcomponents_en.png)
+![Architecture](docs/appcomponents_en.png)  
 The Architecture of MUCGPT splits into two parts, the frontend and the backend. MUCGPT is deployed on Microsoft Azure as a AppService with an PostgreSQL Database and a Azure OpenAI unit.
   
 The Frontend bases on a Template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented and enriched with features using React, Typescript and Javascript.    

@@ -16,10 +16,11 @@ from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
-
+from langchain_core.messages import AIMessage
+from langchain_community.callbacks import get_openai_callback
 import asyncio
 
-class SimpleChatApproach():
+class ChatApproach():
 
     def __init__(self, createLLM: Callable[[int, float, AsyncIteratorCallbackHandler], BaseChatModel], config: ApproachConfig, repo: Repository, chatgpt_model: str):
         self.createLLM = createLLM
@@ -28,35 +29,10 @@ class SimpleChatApproach():
         self.chatgpt_model = chatgpt_model
 
     async def run_until_final_call(self, history: "Sequence[dict[str, str]]", llm: BaseChatModel, system_message: Optional[str]) -> Any:
-        user_q =   history[-1]["user"]
-        messages = [
-                # The `variable_name` here is what must align with memory
-                MessagesPlaceholder(variable_name="chat_history"),
-                HumanMessagePromptTemplate.from_template("{question}")
-            ]
-        if(system_message and  system_message.strip() !=""):
-            messages.insert(0, 
-                    SystemMessagePromptTemplate.from_template(
-                        system_message
-                    ))
-        prompt = ChatPromptTemplate(
-            messages=messages
-        )
-        # Notice that we `return_messages=True` to fit into the MessagesPlaceholder
-        # Notice that `"chat_history"` aligns with the MessagesPlaceholder name.
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        ## initialize memory with our own chat model.
-        self.initializeMemory(history[:-1],memory=memory)
-        conversation = LLMChain(
-            llm=llm,
-            prompt=prompt,
-            memory=memory
-        )
-
+        user_q, conversation = self.init_conversation(history, llm, system_message)
         chat_coroutine = conversation.acall({"question": user_q})
         return (chat_coroutine)
     
-
     async def run_with_streaming(self, history: 'list[dict[str, str]]',max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> AsyncGenerator[dict, None]:
         handler = AsyncIteratorCallbackHandler()
         llm = self.createLLM(max_tokens, temperature, handler)
@@ -92,9 +68,53 @@ class SimpleChatApproach():
             
             info = ChunkInfo(requesttokens=num_tokens_from_message(history[-1]["user"],self.chatgpt_model), streamedtokens=num_tokens_from_message(result,self.chatgpt_model))
             yield Chunk(type="I", message=info, order=position)
+    
+    def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> str:
+        llm = self.createLLM(max_tokens, temperature, None)
+        user_q, conversation = self.init_conversation(history, llm, system_message)
+        with get_openai_callback() as cb:
+            ai_message: AIMessage = conversation.invoke({"question": user_q})
+        total_tokens = cb.total_tokens
+      
+        info = ChunkInfo(requesttokens=cb.prompt_tokens, streamedtokens=cb.completion_tokens)
+        if self.config["log_tokens"]:
+            self.repo.addInfo(Requestinfo( 
+                tokencount = total_tokens,
+                department = department,
+                messagecount=  1,
+                method = "Brainstorm"))
+        return ai_message["chat_history"][-1].content
+
+    def init_conversation(self, history, llm, system_message):
+        user_q =   history[-1]["user"]
+        messages = [
+                # The `variable_name` here is what must align with memory
+                MessagesPlaceholder(variable_name="chat_history"),
+                HumanMessagePromptTemplate.from_template("{question}")
+            ]
+        if(system_message and  system_message.strip() !=""):
+            messages.insert(0, 
+                    SystemMessagePromptTemplate.from_template(
+                        system_message
+                    ))
+        prompt = ChatPromptTemplate(
+            messages=messages
+        )
+        # Notice that we `return_messages=True` to fit into the MessagesPlaceholder
+        # Notice that `"chat_history"` aligns with the MessagesPlaceholder name.
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        ## initialize memory with our own chat model.
+        self.init_mem(history[:-1],memory=memory)
+        conversation = LLMChain(
+            llm=llm,
+            prompt=prompt,
+            memory=memory
+        )
+        
+        return user_q,conversation
 
 
-    def initializeMemory(self, messages:"Sequence[dict[str, str]]", memory: ConversationBufferMemory) :
+    def init_mem(self, messages:"Sequence[dict[str, str]]", memory: ConversationBufferMemory) :
         for conversation in messages:
             if("user" in conversation and conversation["user"]):
                 userMsg = conversation["user"]

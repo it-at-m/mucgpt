@@ -8,6 +8,7 @@ from langchain_community.callbacks import get_openai_callback
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
+from core.textsplit import  splitPDF, splitText
 import json
 import re
 
@@ -79,10 +80,15 @@ class Summarize():
 
 
 
-    def __init__(self, llm: BaseChatModel, config: ApproachConfig, repo: Repository):
+    def __init__(self, llm: BaseChatModel, config: ApproachConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700):
         self.llm = llm
         self.config = config
         self.repo = repo
+        self.switcher =  {
+            "short": short_split,
+            "medium": medium_split,
+            "long": long_split,
+        }
 
     def getSummarizationPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["text"], template=self.user_sum_prompt)
@@ -201,4 +207,14 @@ class Summarize():
                 method = "Sum"))
 
         return {"answer": final_summarys}
+    
+    def split(self, detaillevel: str, file = None, text = None):
+        splitsize = self.switcher.get(detaillevel, 700)
+
+        #TODO Wenn Cleanup tokenlimit sprengt, was machen? In mehreren Schritten übersetzen.
+        if(file is not None):
+            splits = splitPDF(file, splitsize, 0)
+        else:
+            splits = splitText(text, splitsize, 0)
+        return splits
     

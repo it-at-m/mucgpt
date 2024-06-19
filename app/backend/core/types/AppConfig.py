@@ -2,7 +2,7 @@ from typing import Any, Mapping, TypedDict
 from azure.identity.aio import DefaultAzureCredential
 from azure.core.credentials import AccessToken
 from approaches.summarize import Summarize
-from approaches.simplechat import SimpleChatApproach
+from approaches.chat import ChatApproach
 from approaches.brainstorm import Brainstorm
 from core.authentification import AuthentificationHelper
 from core.types.Config import Config
@@ -20,7 +20,7 @@ class OpenaiInfo(TypedDict):
 class AppConfig(TypedDict):
     model_info: OpenaiInfo
     azure_credential: DefaultAzureCredential
-    chat_approaches: SimpleChatApproach
+    chat_approaches: ChatApproach
     sum_approaches: Summarize
     brainstorm_approaches: Brainstorm
     authentification_client: AuthentificationHelper

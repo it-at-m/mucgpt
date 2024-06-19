@@ -42,5 +42,5 @@ def createAzureChatGPT(chatgpt_model: str,
             openai_api_type=openai_api_type,
             temperature=temperature,
             streaming=True,
-            callbacks=[callback]
+            callbacks= [callback] if callback else []
         )

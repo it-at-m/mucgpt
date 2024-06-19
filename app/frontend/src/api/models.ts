@@ -42,19 +42,13 @@ export interface ApplicationConfig {
 }
 
 export interface Backend {
-    features: BackendFeatures;
-}
-
-export interface BackendFeatures {
     enable_auth: boolean;
 }
 
 export interface Frontend {
-    features: FrontendFeatures;
+    alternative_logo: boolean;
     labels: Labels;
 }
-
-export interface FrontendFeatures {}
 
 export interface Labels {
     env_name: string;

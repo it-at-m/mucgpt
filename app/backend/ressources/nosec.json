@@ -2,7 +2,8 @@
     "frontend": {
         "labels": {
             "env_name": "NOSEC"
-        }
+        },
+        "alternative_logo": false 
     },
     "backend": {
         "enable_auth": false,

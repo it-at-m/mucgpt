@@ -2,6 +2,7 @@ import { Outlet, NavLink, Link, Navigate, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
+import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_black.png";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
@@ -31,15 +32,13 @@ export const Layout = () => {
     const { t, i18n } = useTranslation();
     const [config, setConfig] = useState<ApplicationConfig>({
         backend: {
-            features: {
-                enable_auth: true
-            }
+            enable_auth: true
         },
         frontend: {
-            features: {},
             labels: {
-                env_name: "PILOT-C"
-            }
+                "env_name": "MUC tschibidi-C"
+            },
+            alternative_logo: true,
         },
         version: "DEV 1.0.0"
     });
@@ -93,7 +92,7 @@ export const Layout = () => {
 
                         <Link to="/" className={styles.headerTitleContainer}>
                             <img
-                                src={isLight ? logo : logo_black}
+                                src={config.frontend.alternative_logo ? alternative_logo : (isLight ? logo : logo_black)}
                                 alt="MUCGPT logo"
                                 aria-label="MUCGPT Logo"
                                 className={styles.logo}

@@ -1,41 +1,50 @@
-from typing import Any, AsyncGenerator, Callable, Optional, Sequence
-
-from core.datahelper import Requestinfo
-from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
-from core.datahelper import Repository
-from core.types.Config import ApproachConfig
-from core.types.Chunk import Chunk, ChunkInfo
+from typing import Any, AsyncGenerator, Optional, Sequence
+import asyncio
 from langchain.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
     HumanMessagePromptTemplate,
     SystemMessagePromptTemplate
 )
-
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 from langchain_core.messages import AIMessage
 from langchain_community.callbacks import get_openai_callback
-import asyncio
+from langchain_core.runnables.base import RunnableSerializable
+
+from core.datahelper import Requestinfo
+from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
+from core.datahelper import Repository
+from core.types.Config import ApproachConfig
+from core.types.Chunk import Chunk, ChunkInfo
+from core.types.LlmConfigs import LlmConfigs
+from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 
 class ChatApproach():
 
-    def __init__(self, createLLM: Callable[[int, float, AsyncIteratorCallbackHandler], BaseChatModel], config: ApproachConfig, repo: Repository, chatgpt_model: str):
-        self.createLLM = createLLM
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig,  model_info: AzureChatGPTConfig, repo: Repository, chatgpt_model: str):
+        self.llm = llm
         self.config = config
+        self.model_info = model_info
         self.repo = repo
         self.chatgpt_model = chatgpt_model
 
-    async def run_until_final_call(self, history: "Sequence[dict[str, str]]", llm: BaseChatModel, system_message: Optional[str]) -> Any:
+    async def run_until_final_call(self, history: "Sequence[dict[str, str]]", llm: RunnableSerializable, system_message: Optional[str]) -> Any:
         user_q, conversation = self.init_conversation(history, llm, system_message)
         chat_coroutine = conversation.acall({"question": user_q})
         return (chat_coroutine)
     
     async def run_with_streaming(self, history: 'list[dict[str, str]]',max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> AsyncGenerator[dict, None]:
         handler = AsyncIteratorCallbackHandler()
-        llm = self.createLLM(max_tokens, temperature, handler)
+        config: LlmConfigs = {
+            "llm_max_tokens": max_tokens,
+            "llm_api_key": self.model_info["openai_api_key"],
+            "llm_temperature": temperature,
+            "llm_streaming": True,
+            "llm_callbacks": [handler],
+        }
+        llm = self.llm.with_config(configurable=config)
         chat_coroutine =  await self.run_until_final_call(history, llm=llm, system_message=system_message)
         task = asyncio.create_task(chat_coroutine)
         result = ""
@@ -70,7 +79,13 @@ class ChatApproach():
             yield Chunk(type="I", message=info, order=position)
     
     def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> str:
-        llm = self.createLLM(max_tokens, temperature, None)
+        config: LlmConfigs = {
+            "llm_max_tokens": max_tokens,
+            "llm_api_key": self.model_info["openai_api_key"],
+            "llm_temperature": temperature,
+            "llm_streaming": False,
+        }
+        llm = self.llm.with_config(configurable=config)
         user_q, conversation = self.init_conversation(history, llm, system_message)
         with get_openai_callback() as cb:
             ai_message: AIMessage = conversation.invoke({"question": user_q})

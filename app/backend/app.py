@@ -18,12 +18,13 @@ from quart import (
     send_from_directory,
     send_file
 )
-from init_app import initApp, initApproaches
+from init_app import initApp
 from core.modelhelper import num_tokens_from_message
 from core.types.Chunk import Chunk
 from core.datahelper import Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
 from core.types.AppConfig import AppConfig
+from core.types.SupportedModels import SupportedModels
 bp = Blueprint("routes", __name__, static_folder='static')
 
 APPCONFIG_KEY = "APPCONFIG"
@@ -234,14 +235,9 @@ async def ensure_openai_token():
     openai_token = cfg["model_info"]["openai_token"]
     if openai_token.expires_on < time.time() + 60:
         openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
-        # new token, 
+        # updates tokens, the approaches should get the newest version of the token via reference 
         cfg["model_info"]["openai_token"] = openai_token
         cfg["model_info"]["openai_api_key"] = openai_token.token
-        (chat_approaches, brainstorm_approaches, sum_approaches) = initApproaches(model_info=cfg["model_info"], cfg=cfg["backend_config"], repoHelper=cfg["repository"])
-        cfg["chat_approaches"] = chat_approaches
-        cfg["brainstorm_approaches"]  = brainstorm_approaches
-        cfg["sum_approaches"] = sum_approaches
-
 
 @bp.before_app_serving
 async def setup_clients():

@@ -1,6 +1,6 @@
 from typing import Any, Mapping, TypedDict
 from azure.identity.aio import DefaultAzureCredential
-from azure.core.credentials import AccessToken
+from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from approaches.summarize import Summarize
 from approaches.chat import ChatApproach
 from approaches.brainstorm import Brainstorm
@@ -9,16 +9,8 @@ from core.types.Config import Config
 from core.datahelper import Repository
 from core.types.Config import BackendConfig
 
-class OpenaiInfo(TypedDict):
-    model: str
-    openai_token: AccessToken
-    openai_api_key: str
-    openai_api_base: str
-    openai_api_version: str
-    openai_api_type: str
-
 class AppConfig(TypedDict):
-    model_info: OpenaiInfo
+    model_info: AzureChatGPTConfig
     azure_credential: DefaultAzureCredential
     chat_approaches: ChatApproach
     sum_approaches: Summarize

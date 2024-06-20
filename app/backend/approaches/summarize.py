@@ -1,16 +1,19 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, List, Optional
-
+import json
+import re
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain, LLMChain
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_community.callbacks import get_openai_callback
+from langchain_core.runnables.base import RunnableSerializable
+
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
 from core.textsplit import  splitPDF, splitText
-import json
-import re
+from core.types.AzureChatGPTConfig import AzureChatGPTConfig
+from core.types.LlmConfigs import LlmConfigs
+
 
 class Summarize():
     """Chain of Density prompting: https://arxiv.org/abs/2309.04269"""
@@ -80,9 +83,10 @@ class Summarize():
 
 
 
-    def __init__(self, llm: BaseChatModel, config: ApproachConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700):
         self.llm = llm
         self.config = config
+        self.model_info = model_info
         self.repo = repo
         self.switcher =  {
             "short": short_split,
@@ -101,9 +105,13 @@ class Summarize():
 
 
     def setup(self) -> SequentialChain:
+        config: LlmConfigs = {
+            "llm_api_key": self.model_info["openai_api_key"]
+        }
+        llm = self.llm.with_config(configurable=config)
         # setup model
-        summarizationChain = LLMChain(llm=self.llm, prompt=self.getSummarizationPrompt(), output_key="sum")
-        translationChain = LLMChain(llm=self.llm, prompt=self.getTranslationCleanupPrompt(), output_key="translation")
+        summarizationChain = LLMChain(llm=llm, prompt=self.getSummarizationPrompt(), output_key="sum")
+        translationChain = LLMChain(llm=llm, prompt=self.getTranslationCleanupPrompt(), output_key="translation")
 
         return (summarizationChain, translationChain)
     

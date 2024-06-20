@@ -15,6 +15,7 @@ class LabelsConfig(TypedDict):
 
 class FrontendConfig(TypedDict):
     labels: LabelsConfig
+    alternative_logo: bool
 
 class Config(TypedDict):
     version: str

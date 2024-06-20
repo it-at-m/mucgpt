@@ -1,8 +1,9 @@
 {
     "frontend": {
         "labels": {
-            "env_name": "PILOT-L"
-        }
+            "env_name": "MUC tschibidi-C"
+        },
+        "alternative_logo": true 
     },
     "backend": {
         "enable_auth": false,

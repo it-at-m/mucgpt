@@ -1,13 +1,15 @@
 from typing import Any, Optional
 from langchain.chains import LLMChain
-
 from langchain.prompts import PromptTemplate
 from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
+from langchain_core.runnables.base import RunnableSerializable
+
+from core.types.LlmConfigs import LlmConfigs
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
+from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.datahelper import Requestinfo
-from langchain_core.language_models.chat_models import BaseChatModel
 
 class Brainstorm():
     """
@@ -53,9 +55,10 @@ class Brainstorm():
     Text: 
     {brainstorm}"""
 
-    def __init__(self, llm: BaseChatModel, config: ApproachConfig, repo: Repository):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository):
         self.llm = llm
         self.config = config
+        self.model_info = model_info
         self.repo = repo
     
     def getBrainstormPrompt(self) -> PromptTemplate:
@@ -66,8 +69,12 @@ class Brainstorm():
 
 
     async def run(self, topic: str, language: str, department: Optional[str]) -> Any:
-        brainstormChain = LLMChain(llm=self.llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
-        translationChain = LLMChain(llm=self.llm, prompt=self.getTranslationPrompt(), output_key="translation")
+        config: LlmConfigs = {
+            "llm_api_key": self.model_info["openai_api_key"]
+        }
+        llm = self.llm.with_config(configurable=config)
+        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
+        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
         overall_chain = SequentialChain(
             chains=[brainstormChain, translationChain], 
             input_variables=["language", "topic"],

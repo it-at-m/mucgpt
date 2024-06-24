@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.types.Config import BackendConfig
 from core.llmhelper import getModel
@@ -12,6 +13,8 @@ from brainstorm.brainstorm import Brainstorm
 from azure.identity.aio import DefaultAzureCredential
 
 def read_env():
+    """reads configured values from env
+    """
     AZURE_OPENAI_SERVICE = os.environ["AZURE_OPENAI_SERVICE"]
     #AZURE_OPENAI_CHATGPT_DEPLOYMENT = os.environ["AZURE_OPENAI_CHATGPT_DEPLOYMENT"]
     AZURE_OPENAI_CHATGPT_MODEL = os.environ["AZURE_OPENAI_CHATGPT_MODEL"]
@@ -24,7 +27,12 @@ def read_env():
     return AZURE_OPENAI_SERVICE,AZURE_OPENAI_CHATGPT_MODEL,SSO_ISSUER,CONFIG_NAME,DB_HOST,DB_NAME,DB_USER,DB_PASSWORD
 
 
-async def get_openai_params(AZURE_OPENAI_SERVICE):
+async def get_openai_params(AZURE_OPENAI_SERVICE: str):
+    """get current openai access token
+
+    Args:
+        AZURE_OPENAI_SERVICE (str): the current openaiservice
+    """
     # Use the current user identity to authenticate with Azure OpenAI (no secrets needed,
     # just use 'az login' locally, and managed identity when deployed on Azure). If you need to use keys, use separate AzureKeyCredential instances with the
     # keys for each service
@@ -42,7 +50,17 @@ async def get_openai_params(AZURE_OPENAI_SERVICE):
     return azure_credential,openai_api_base,openai_api_version,openai_api_type,openai_token,openai_api_key
 
 
-def initApproaches(model_info: AzureChatGPTConfig, cfg: BackendConfig, repoHelper: Repository):
+def initApproaches(model_info: AzureChatGPTConfig, cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Brainstorm, Summarize]:
+    """init different approaches
+
+    Args:
+        model_info (AzureChatGPTConfig): defines access key for the current model, gets renewed over time
+        cfg (BackendConfig): the config for the backend
+        repoHelper (Repository): the repository to save request statistics
+
+    Returns:
+        Tuple[Chat, Brainstorm, Summarize]: the implementation behind chat, brainstorm and summarize
+    """
     brainstormllm = getModel(
                     chatgpt_model=  model_info["model"],
                     max_tokens =  4000,
@@ -79,6 +97,11 @@ def initApproaches(model_info: AzureChatGPTConfig, cfg: BackendConfig, repoHelpe
     return (chat_approaches, brainstorm_approaches, sum_approaches)
 
 async def initApp() -> AppConfig:
+    """inits the app
+
+    Returns:
+        AppConfig: contains the configuration for the webservice
+    """
     # Replace these with your own values, either in environment variables or directly here
     AZURE_OPENAI_SERVICE, AZURE_OPENAI_CHATGPT_MODEL, SSO_ISSUER, CONFIG_NAME, DB_HOST, DB_NAME, DB_USER, DB_PASSWORD = read_env()
 

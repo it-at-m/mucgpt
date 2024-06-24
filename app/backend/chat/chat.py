@@ -13,6 +13,7 @@ from langchain_core.messages import AIMessage
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
+from chat.chatresult import ChatResult
 from core.datahelper import Requestinfo
 from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
 from core.datahelper import Repository
@@ -111,7 +112,7 @@ class Chat():
             info = ChunkInfo(requesttokens=num_tokens_from_message(history[-1]["user"],self.chatgpt_model), streamedtokens=num_tokens_from_message(result,self.chatgpt_model))
             yield Chunk(type="I", message=info, order=position)
     
-    def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> str:
+    def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> ChatResult:
         """calls the llm in blocking mode, returns the full result
 
         Args:
@@ -122,7 +123,7 @@ class Chat():
             department (Optional[str]): from which department comes the call
 
         Returns:
-            str: the generated text from the llm
+            ChatResult: the generated text from the llm
         """
         config: LlmConfigs = {
             "llm_max_tokens": max_tokens,
@@ -143,7 +144,7 @@ class Chat():
                 department = department,
                 messagecount=  1,
                 method = "Brainstorm"))
-        return ai_message["chat_history"][-1].content
+        return ChatResult(content=ai_message["chat_history"][-1].content)
 
     def init_conversation(self, history: "Sequence[dict[str, str]]", llm: RunnableSerializable, system_message:str) -> Tuple[str, Any]:
         """transform the history into langchain format, initates the llm with the messages

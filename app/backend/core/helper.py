@@ -5,6 +5,17 @@ import logging
 from core.types.Chunk import Chunk
 
 async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str, None]:
+    """Converts stream of Chunks into Stream of serialized JSON Objects
+
+    Args:
+        r (AsyncGenerator[Chunk, None]): a generator, that returns chunks
+
+    Returns:
+        AsyncGenerator[str, None]: a genererator, that returns str
+
+    Yields:
+        Iterator[AsyncGenerator[str, None]]: a stringified chunk
+    """
     try:
         async for event in r:
             yield json.dumps(event, ensure_ascii=False) + "\n"

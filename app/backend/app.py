@@ -21,6 +21,7 @@ from init_app import initApp
 from core.modelhelper import num_tokens_from_message
 from core.authentification import AuthentificationHelper, AuthError
 from core.types.AppConfig import AppConfig
+from core.types.countresult import CountResult
 from core.helper import format_as_ndjson
 
 bp = Blueprint("routes", __name__, static_folder='static')
@@ -127,12 +128,12 @@ async def chat():
         max_tokens=request_json['max_tokens'] or 4096
         system_message = request_json['system_message'] or None
         history =  request_json["history"]
-        response = impl.run_without_streaming(history= history,
+        chatResult = impl.run_without_streaming(history= history,
                                                     temperature=temperature,
                                                     max_tokens=max_tokens,
                                                     system_message=system_message,
                                                     department= department)
-        return jsonify({"content": response})
+        return jsonify(chatResult)
     except Exception as e:
         logging.exception("Exception in /chat")
         return jsonify({"error": str(e)}), 500
@@ -163,9 +164,7 @@ async def counttokens():
     request_json = await request.get_json()
     message=request_json['text'] or ""
     counted_tokens = num_tokens_from_message(message,model)
-    return jsonify({
-        "count": counted_tokens
-    })
+    return jsonify(CountResult(count=counted_tokens))
 
 @bp.route("/statistics/export", methods=["GET"])
 async def getStatisticsCSV():

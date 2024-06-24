@@ -2,15 +2,14 @@ import json
 import logging
 import os
 import time
-from typing import AsyncGenerator, cast
-import csv
-import io
+from typing import cast
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
     Blueprint,
     Quart,
+    Request,
     current_app,
     jsonify,
     make_response,
@@ -20,11 +19,10 @@ from quart import (
 )
 from init_app import initApp
 from core.modelhelper import num_tokens_from_message
-from core.types.Chunk import Chunk
-from core.datahelper import Requestinfo
 from core.authentification import AuthentificationHelper, AuthError
 from core.types.AppConfig import AppConfig
-from core.types.SupportedModels import SupportedModels
+from core.helper import format_as_ndjson
+
 bp = Blueprint("routes", __name__, static_folder='static')
 
 APPCONFIG_KEY = "APPCONFIG"
@@ -66,7 +64,7 @@ async def sum():
         text = request_json["text"] if file is None else None
         splits = impl.split(detaillevel=detaillevel, file=file, text=text)
 
-        r = await impl.run(splits = splits, department=department, language=request_json["language"] or "Deutsch")
+        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch")
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -83,7 +81,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        r = await impl.run(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department)
+        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department)
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")
@@ -173,17 +171,8 @@ async def counttokens():
 async def getStatisticsCSV():
     cfg = get_config_and_authentificate()
     repo = cfg["repository"]
-
-    memfile = io.StringIO()
-    outcsv = csv.writer(memfile, delimiter=',',quotechar='"', quoting = csv.QUOTE_MINIMAL)
-    outcsv.writerow([column.name for column in Requestinfo.__mapper__.columns])
-    [outcsv.writerow([getattr(curr, column.name) for column in Requestinfo.__mapper__.columns]) for curr in repo.getAll()]
-
-    memfile.seek(0)
-    # Das StringIO-Objekt in ein BytesIO-Objekt umwandeln
-    memfile_bytesio = io.BytesIO(memfile.getvalue().encode())
-    memfile_bytesio.getvalue()
-    return await send_file(memfile_bytesio,
+    export = repo.export()
+    return await send_file(export,
                  attachment_filename='statistics.csv',
                  as_attachment=True)
 
@@ -200,14 +189,14 @@ def get_config_and_authentificate():
         ensure_authentification(request=request)
     return cfg
 
-def ensure_authentification(request: request):
+def ensure_authentification(request: Request):
     cfg = get_config()
     ssoaccesstoken = request.headers.get("X-Ms-Token-Lhmsso-Access-Token")
     auth_client : AuthentificationHelper = cfg["authentification_client"]
     claims = auth_client.authentificate(ssoaccesstoken)
     return auth_client,claims
 
-def get_department(request: request):
+def get_department(request: Request):
     cfg = get_config()
     if cfg["configuration_features"]["backend"]["enable_auth"]:
         ssoidtoken = request.headers.get('X-Ms-Token-Lhmsso-Id-Token')
@@ -217,16 +206,6 @@ def get_department(request: request):
     else:
         return None
     
-
-
-async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str, None]:
-    try:
-        async for event in r:
-            yield json.dumps(event, ensure_ascii=False) + "\n"
-    except Exception as e:
-        logging.exception("Exception while generating response stream: %s", e)
-        msg = "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen." if "Rate limit" in str(e) else str(e)
-        yield json.dumps(Chunk(type="E", message=msg))
 
 
 @bp.before_request

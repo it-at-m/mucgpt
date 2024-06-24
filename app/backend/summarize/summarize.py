@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 import json
 import re
 from langchain.prompts import PromptTemplate
@@ -7,6 +7,7 @@ from langchain.chains import SequentialChain, LLMChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
+from summarize.summarizeresult import SummarizeResult
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
 from core.datahelper import Requestinfo
@@ -16,7 +17,7 @@ from core.types.LlmConfigs import LlmConfigs
 
 
 class Summarize():
-    """Chain of Density prompting: https://arxiv.org/abs/2309.04269"""
+    """Summarizes text. Chunks long texts. Individual chunks where summarized with Chain of Density prompting: https://arxiv.org/abs/2309.04269. Afterwards the text is translated into the target language."""
 
     user_sum_prompt = """
     Article: {text}
@@ -83,7 +84,7 @@ class Summarize():
 
 
 
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700, use_last_n_summaries = -2):
         self.llm = llm
         self.config = config
         self.model_info = model_info
@@ -93,6 +94,8 @@ class Summarize():
             "medium": medium_split,
             "long": long_split,
         }
+        # use only last 2 summaries, they have the best results
+        self.use_last_n_summaries = use_last_n_summaries
 
     def getSummarizationPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["text"], template=self.user_sum_prompt)
@@ -115,8 +118,15 @@ class Summarize():
 
         return (summarizationChain, translationChain)
     
-    def removeQuotations(self,st):
-        # finds all denser summarys, replaces quotation inside with &quot
+    def removeQuotations(self,st: str) -> str:
+        """finds all denser summarys, replaces quotation inside with &quot
+
+        Args:
+            st (str): input str
+
+        Returns:
+            str: str without quotations
+        """
         m = re.finditer(r'(?<=\"denser_summary\":)(.*?)(?=\})', st)
 
         new_string = ""
@@ -141,8 +151,15 @@ class Summarize():
         new_string += st[idx:]
         return new_string
     
-    def run_io_tasks_in_parallel(self, tasks):
-        # execute tasks in parallel
+    def run_io_tasks_in_parallel(self, tasks) -> List[Any]:
+        """execute tasks in parallel
+
+        Args:
+            tasks : the task to be executed
+
+        Returns:
+            List[Any]: the results of the task
+        """
         results = []
         with ThreadPoolExecutor() as executor:
             running_tasks = [executor.submit(task) for task in tasks]
@@ -151,11 +168,20 @@ class Summarize():
         return results
 
     
-    def call_and_cleanup(self, text: str, summarizeChain: LLMChain):
-        # calls summarization chain and cleans the data
+    def call_and_cleanup(self, text: str, summarizeChain: LLMChain) -> Tuple[List[str], int]:
+        """calls summarization chain and cleans the data
+
+        Args:
+            text (str): text, to be summarized
+            summarizeChain (LLMChain): the chain, that summarizes and cleans the data
+
+        Returns:
+            Tuple[List[str], int]: the last n summaries, the number of consumed tokens
+        """
         with get_openai_callback() as cb:
             result = summarizeChain.invoke({"text": text})
         total_tokens = cb.total_tokens
+        # post procession
         chat_translate_result= result["sum"][result["sum"].index("{"):]
         chat_translate_result = chat_translate_result.replace("\n", "").rstrip()
         chat_translate_result = self.removeQuotations(chat_translate_result)
@@ -183,15 +209,28 @@ class Summarize():
 
 
 
-    async def run(self, splits: List[str],  language: str, department: Optional[str]) -> Any:
-        #setup
+    async def summarize(self, splits: List[str],  language: str, department: Optional[str]) -> SummarizeResult:
+        """summarizes text with chain of density prompting. Generates 5 increasingly better summaries per split.
+        Concatenates the results and translates it into the target language.
+
+        Args:
+            splits (List[str]): splits, to be summarized
+            language (str): the target language
+            department (Optional[str]): _description_
+
+        Returns:
+            SummarizeResult: the best n summarizations
+        """
+        # setup
         (summarizeChain, cleanupChain) = self.setup()
         # call chain
         total_tokens = 0
         summarys = []
+        # call summarization in parallel
         results  =  self.run_io_tasks_in_parallel(
              list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, summarizeChain=summarizeChain), splits)))
 
+        # concatenate all summarys
         for i in range(0,5):
             next_summary =   {"denser_summary": "", "missing_entities": []}
             for (result, tokens) in results:
@@ -201,7 +240,8 @@ class Summarize():
             summarys.append(next_summary)
 
         final_summarys = []
-        for summary in summarys[-2:]:
+        for summary in summarys[self.use_last_n_summaries:]:
+            # translate and beautify the concatenated summaries
             with get_openai_callback() as cb:
                 result = cleanupChain.invoke({"language": language, "sum": summary['denser_summary']})        
             total_tokens = cb.total_tokens
@@ -214,12 +254,21 @@ class Summarize():
                 messagecount=  1,
                 method = "Sum"))
 
-        return {"answer": final_summarys}
+        return SummarizeResult(answer= final_summarys)
     
-    def split(self, detaillevel: str, file = None, text = None):
+    def split(self, detaillevel: str, file = None, text = None) -> List[str]:
+        """splits the text (either a pdf or text) into equal chunks
+
+        Args:
+            detaillevel (str): size of the chunks
+            file (pdf, optional): a pdf. Defaults to None
+            text (str, optional): a text. Defaults to None.
+
+        Returns:
+            List[str]: the chunked text
+        """
         splitsize = self.switcher.get(detaillevel, 700)
 
-        #TODO Wenn Cleanup tokenlimit sprengt, was machen? In mehreren Schritten übersetzen.
         if(file is not None):
             splits = splitPDF(file, splitsize, 0)
         else:

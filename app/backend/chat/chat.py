@@ -1,4 +1,4 @@
-from typing import Any, AsyncGenerator, Optional, Sequence
+from typing import Any, AsyncGenerator, Optional, Sequence, Tuple
 import asyncio
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -21,7 +21,9 @@ from core.types.Chunk import Chunk, ChunkInfo
 from core.types.LlmConfigs import LlmConfigs
 from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 
-class ChatApproach():
+class Chat():
+    """Chat with a llm via multiple steps.
+    """
 
     def __init__(self, llm: RunnableSerializable, config: ApproachConfig,  model_info: AzureChatGPTConfig, repo: Repository, chatgpt_model: str):
         self.llm = llm
@@ -30,12 +32,38 @@ class ChatApproach():
         self.repo = repo
         self.chatgpt_model = chatgpt_model
 
-    async def run_until_final_call(self, history: "Sequence[dict[str, str]]", llm: RunnableSerializable, system_message: Optional[str]) -> Any:
+    async def create_coroutine(self, history: "Sequence[dict[str, str]]", llm: RunnableSerializable, system_message: Optional[str]) -> Any:
+        """Calls the llm in streaming mode
+
+        Args:
+            history (Sequence[dict[str, str]]): given set of messages
+            llm (RunnableSerializable): the llm
+            system_message (Optional[str]): the system message
+
+        Returns:
+            Any: A Coroutine streaming the chat results 
+        """
         user_q, conversation = self.init_conversation(history, llm, system_message)
         chat_coroutine = conversation.acall({"question": user_q})
         return (chat_coroutine)
     
-    async def run_with_streaming(self, history: 'list[dict[str, str]]',max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> AsyncGenerator[dict, None]:
+    async def run_with_streaming(self, history: 'list[dict[str, str]]',max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> AsyncGenerator[Chunk, None]:
+        """call the llm in streaming mode
+
+        Args:
+            history (list[dict[str, str]]): the history,user and ai messages 
+            max_tokens (int): max_tokens to generate
+            temperature (float): temperature of the llm
+            system_message (Optional[str]): the system message
+            department (Optional[str]): from which department comes the call
+
+        Returns:
+            AsyncGenerator[Chunks, None]: a generator returning chunks of messages
+
+        Yields:
+            Iterator[AsyncGenerator[Chunks, None]]: Chunks of chat messages. n messages with content. One final message with infos about the consumed tokens.
+        """
+        # configure
         handler = AsyncIteratorCallbackHandler()
         config: LlmConfigs = {
             "llm_max_tokens": max_tokens,
@@ -45,18 +73,23 @@ class ChatApproach():
             "llm_callbacks": [handler],
         }
         llm = self.llm.with_config(configurable=config)
-        chat_coroutine =  await self.run_until_final_call(history, llm=llm, system_message=system_message)
+        
+        # create coroutine
+        chat_coroutine =  await self.create_coroutine(history, llm=llm, system_message=system_message)
         task = asyncio.create_task(chat_coroutine)
         result = ""
         position = 0
 
-
+        # go over events
         async for event in handler.aiter():
             result += str(event)
             yield Chunk(type="C", message= event, order=position)
             position += 1
 
+        # await till we have collected all events
         await task
+        
+        # handle exceptions
         if task.exception():
             if "Rate limit" in str(task.exception()):
                 yield Chunk(type="E",message= "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen.", order=position) 
@@ -79,6 +112,18 @@ class ChatApproach():
             yield Chunk(type="I", message=info, order=position)
     
     def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> str:
+        """calls the llm in blocking mode, returns the full result
+
+        Args:
+            history (list[dict[str, str]]): the history,user and ai messages 
+            max_tokens (int): max_tokens to generate
+            temperature (float): temperature of the llm
+            system_message (Optional[str]): the system message
+            department (Optional[str]): from which department comes the call
+
+        Returns:
+            str: the generated text from the llm
+        """
         config: LlmConfigs = {
             "llm_max_tokens": max_tokens,
             "llm_api_key": self.model_info["openai_api_key"],
@@ -87,11 +132,11 @@ class ChatApproach():
         }
         llm = self.llm.with_config(configurable=config)
         user_q, conversation = self.init_conversation(history, llm, system_message)
+        
         with get_openai_callback() as cb:
             ai_message: AIMessage = conversation.invoke({"question": user_q})
         total_tokens = cb.total_tokens
       
-        info = ChunkInfo(requesttokens=cb.prompt_tokens, streamedtokens=cb.completion_tokens)
         if self.config["log_tokens"]:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
@@ -100,7 +145,17 @@ class ChatApproach():
                 method = "Brainstorm"))
         return ai_message["chat_history"][-1].content
 
-    def init_conversation(self, history, llm, system_message):
+    def init_conversation(self, history: "Sequence[dict[str, str]]", llm: RunnableSerializable, system_message:str) -> Tuple[str, Any]:
+        """transform the history into langchain format, initates the llm with the messages
+
+        Args:
+            history (Sequence[dict[str, str]]): the previous chat messages
+            llm (RunnableSerializable): the llm
+            system_message (str): the system message
+
+        Returns:
+            Tuple[str, Any]: (user query, the configured llm with memory)
+        """
         user_q =   history[-1]["user"]
         messages = [
                 # The `variable_name` here is what must align with memory
@@ -130,6 +185,12 @@ class ChatApproach():
 
 
     def init_mem(self, messages:"Sequence[dict[str, str]]", memory: ConversationBufferMemory) :
+        """initialises memory with chat messages
+
+        Args:
+            messages (Sequence[dict[str, str]]): history of messages, are converted into langchain format
+            memory (ConversationBufferMemory): a memory for the messages
+        """
         for conversation in messages:
             if("user" in conversation and conversation["user"]):
                 userMsg = conversation["user"]

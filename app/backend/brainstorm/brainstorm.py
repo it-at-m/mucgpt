@@ -5,6 +5,7 @@ from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
+from brainstorm.brainstormresult import BrainstormResult
 from core.types.LlmConfigs import LlmConfigs
 from core.datahelper import Repository
 from core.types.Config import ApproachConfig
@@ -13,7 +14,7 @@ from core.datahelper import Requestinfo
 
 class Brainstorm():
     """
-    Simple brainstorm implementation. One shot generation of certain markdown files
+    Simple brainstorm implementation. One shot generation of certain markdown files. Translates the result into a target language.
     """
     user_mindmap_prompt = """
       In a markdown file (MD) plan out a mind map on the topic {topic}. Follow the format in this example. Write it in a code snippet I can copy from directly. Provide only code, no description. Include the exact format I used below.
@@ -62,17 +63,39 @@ class Brainstorm():
         self.repo = repo
     
     def getBrainstormPrompt(self) -> PromptTemplate:
+        """Returns the brainstrom prompt template
+        Returns:
+            PromptTemplate: prompt template, has an input variable topic
+        """
         return PromptTemplate(input_variables=["topic"], template=self.user_mindmap_prompt)
 
     def getTranslationPrompt(self) -> PromptTemplate:
+        """Returns the translation prompt, translates the output of the brainstorming to a given langugage
+
+        Returns:
+            PromptTemplate: prompt template for translation, uses the target language and the brainstorm output as an input
+        """
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def run(self, topic: str, language: str, department: Optional[str]) -> Any:
+    async def brainstorm(self, topic: str, language: str, department: Optional[str]) -> BrainstormResult:
+        """Generates ideas for a given topic structured in markdown, translates the result into the target language 
+
+        Args:
+            topic (str): topic of the brainstorming
+            language (str): target language
+            department (Optional[str]): department, who is responsible for the call
+
+        Returns:
+            BrainstormResult: the structured markdown with ideas about the topic
+        """
+        # configure
         config: LlmConfigs = {
             "llm_api_key": self.model_info["openai_api_key"]
         }
         llm = self.llm.with_config(configurable=config)
+        
+        # construct chains
         brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
         translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
         overall_chain = SequentialChain(
@@ -85,20 +108,29 @@ class Brainstorm():
             result = await overall_chain.acall({"topic": topic, "language": language})
         total_tokens = cb.total_tokens
 
-        chat_translate_result = result['translation']     
-        #Falls Erklärungen um das Markdown außen rum existieren.
-        if("```" in str(chat_translate_result)):
-            splitted = str(chat_translate_result).split("```")
-            if(len(splitted) == 3):
-                chat_translate_result = splitted[1]
+        translation = result['translation']     
+        translation = self.cleanup(str(translation))
 
-        
         if self.config["log_tokens"]:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
                 method = "Brainstorm"))
+        return BrainstormResult(answer=translation)
 
-        return {"answer": chat_translate_result} 
+    def cleanup(self, chat_translate_result: str) -> str:
+        """removes leading explanation
+
+        Args:
+            chat_translate_result (str): the result of the brainstorming, sometimes has leading explanation before the markdown part
+
+        Returns:
+            str: _description_ the result of the brainstorming without leading explanations
+        """
+        if("```" in chat_translate_result):
+            splitted = str(chat_translate_result).split("```")
+            if(len(splitted) == 3):
+                chat_translate_result = splitted[1]
+        return chat_translate_result
     

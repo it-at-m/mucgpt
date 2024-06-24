@@ -3,6 +3,8 @@ from typing import TypedDict
 
 
 class AzureChatGPTConfig(TypedDict):
+    """Contains all information, that describes an AzureOpenAI endpoint
+    """
     model: str
     openai_token: AccessToken
     openai_api_key: str

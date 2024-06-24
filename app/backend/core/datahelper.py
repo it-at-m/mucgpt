@@ -12,6 +12,8 @@ import io
 Base = declarative_base()
 
 class Requestinfo(Base):
+    """Information about an Request to MUCGPT that is stored in the database.
+    """
     __tablename__ = 'requestinfo'
 
     id = Column(Integer(), primary_key=True)
@@ -28,6 +30,10 @@ class Requestinfo(Base):
 
 
 class Repository:
+    """Connects to a postgresql database.
+    Saves information about processed requests (Requestinfo).
+    Calculates statistics.
+    """
     def __init__(self, username: str, host: str, database: str, password: str):
         url = URL.create(
             drivername="postgresql",

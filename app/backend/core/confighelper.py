@@ -3,6 +3,8 @@ import json
 from core.types.Config import to_typed_config, Config
 
 class ConfigHelper:
+    """Loads an available configuration.
+    """
     def __init__(self, base_path: str, env: str, base_config_name: str = "base"):
         self.base_path = base_path
         self.base_config_name = base_config_name

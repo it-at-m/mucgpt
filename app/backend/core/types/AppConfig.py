@@ -10,6 +10,8 @@ from core.datahelper import Repository
 from core.types.Config import BackendConfig
 
 class AppConfig(TypedDict):
+    """Config for the app, contains all clients and informations, that are needed
+    """
     model_info: AzureChatGPTConfig
     azure_credential: DefaultAzureCredential
     chat_approaches: Chat

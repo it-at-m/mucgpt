@@ -70,3 +70,4 @@ async def client(monkeypatch, mock_openai_chatcompletion):
             quart_app.config.update({"TESTING": True})
 
             yield test_app.test_client()
+

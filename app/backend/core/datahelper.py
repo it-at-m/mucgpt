@@ -1,15 +1,19 @@
 
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import csv
+import io
 
 Base = declarative_base()
 
 class Requestinfo(Base):
+    """Information about an Request to MUCGPT that is stored in the database.
+    """
     __tablename__ = 'requestinfo'
 
     id = Column(Integer(), primary_key=True)
@@ -26,6 +30,10 @@ class Requestinfo(Base):
 
 
 class Repository:
+    """Connects to a postgresql database.
+    Saves information about processed requests (Requestinfo).
+    Calculates statistics.
+    """
     def __init__(self, username: str, host: str, database: str, password: str):
         url = URL.create(
             drivername="postgresql",
@@ -77,3 +85,16 @@ class Repository:
         with Session(self.engine) as session:
             session.query(Requestinfo).delete()
             session.commit()
+            
+    def export(self):
+        memfile = io.StringIO()
+        outcsv = csv.writer(memfile, delimiter=',',quotechar='"', quoting = csv.QUOTE_MINIMAL)
+        outcsv.writerow([column.name for column in Requestinfo.__mapper__.columns])
+        [outcsv.writerow([getattr(curr, column.name) for column in Requestinfo.__mapper__.columns]) for curr in self.getAll()]
+
+        memfile.seek(0)
+        # Das StringIO-Objekt in ein BytesIO-Objekt umwandeln
+        memfile_bytesio = io.BytesIO(memfile.getvalue().encode())
+        return memfile_bytesio
+            
+    

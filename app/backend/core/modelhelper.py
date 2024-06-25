@@ -18,12 +18,32 @@ AOAI_2_OAI = {
 
 
 def get_token_limit(model_id: str) -> int:
+    """returns the token limit for a given model
+
+    Args:
+        model_id (str): id of the model
+
+    Raises:
+        ValueError: if the model is not available
+
+    Returns:
+        int: the token limit of the model
+    """
     if model_id not in MODELS_2_TOKEN_LIMITS:
         raise ValueError("Expected model gpt-35-turbo and above")
     return MODELS_2_TOKEN_LIMITS[model_id]
 
 
 def num_tokens_from_messages(messages: 'list[dict[str, str]]', model: str) -> int:
+    """  Calculate the number of tokens required to encode a list of messages
+
+    Args:
+        messages (list[dict[str, str]]): list of messages
+        model (str): for which model
+
+    Returns:
+        int: The total number of tokens required to encode the message.
+    """
     num_tokens = 0
     for conversation in messages:
         if("user" in conversation and conversation["user"]):
@@ -35,8 +55,8 @@ def num_tokens_from_messages(messages: 'list[dict[str, str]]', model: str) -> in
     return num_tokens
            
 def num_tokens_from_message(message: str, model: str, token_per_message: int = 3) -> int:
-    """
-    Calculate the number of tokens required to encode a message.
+    """Calculate the number of tokens required to encode a message.
+    
     Args:
         message (str): The message to encode
         model (str): The name of the model to use for encoding.

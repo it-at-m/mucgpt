@@ -9,6 +9,9 @@ class AuthError(Exception):
         self.status_code = status_code
 
 class AuthentificationHelper:
+    """ Authentificates against an OpenID Connect provider.
+        Looks if the right role is available.
+    """
     def __init__(self, issuer: str, role: str):
         self.issuer = issuer
         self.role = role

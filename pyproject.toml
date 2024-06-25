@@ -12,6 +12,9 @@ addopts = "-ra --cov"
 pythonpath = ["app/backend"]
 testpaths = [
     "tests"]
+markers =
+    integration: mark a test as a integration test
+    unit: mark test as a unit test
 
 [tool.coverage.paths]
 source = ["scripts", "app"]

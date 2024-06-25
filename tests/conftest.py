@@ -4,7 +4,6 @@ from unittest import mock
 import openai
 import pytest
 import pytest_asyncio
-from azure.search.documents.aio import SearchClient
 
 import app
 
@@ -55,45 +54,9 @@ def mock_openai_chatcompletion(monkeypatch):
     monkeypatch.setattr(openai.ChatCompletion, "acreate", mock_acreate)
 
 
-@pytest.fixture
-def mock_acs_search(monkeypatch):
-    class Caption:
-        def __init__(self, text):
-            self.text = text
-
-    class AsyncSearchResultsIterator:
-        def __init__(self):
-            self.num = 1
-
-        def __aiter__(self):
-            return self
-
-        async def __anext__(self):
-            if self.num == 1:
-                self.num = 0
-                return {
-                    "sourcepage": "Benefit_Options-2.pdf",
-                    "sourcefile": "Benefit_Options.pdf",
-                    "content": "There is a whistleblower policy.",
-                    "embeddings": [],
-                    "category": None,
-                    "id": "file-Benefit_Options_pdf-42656E656669745F4F7074696F6E732E706466-page-2",
-                    "@search.score": 0.03279569745063782,
-                    "@search.reranker_score": 3.4577205181121826,
-                    "@search.highlights": None,
-                    "@search.captions": [Caption("Caption: A whistleblower policy.")],
-                }
-            else:
-                raise StopAsyncIteration
-
-    async def mock_search(*args, **kwargs):
-        return AsyncSearchResultsIterator()
-
-    monkeypatch.setattr(SearchClient, "search", mock_search)
-
 
 @pytest_asyncio.fixture
-async def client(monkeypatch, mock_openai_chatcompletion, mock_openai_embedding, mock_acs_search):
+async def client(monkeypatch, mock_openai_chatcompletion):
     monkeypatch.setenv("AZURE_OPENAI_SERVICE", "test-openai-service")
     monkeypatch.setenv("AZURE_OPENAI_CHATGPT_DEPLOYMENT", "test-chatgpt")
     monkeypatch.setenv("AZURE_OPENAI_CHATGPT_MODEL", "gpt-35-turbo")

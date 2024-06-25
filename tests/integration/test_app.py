@@ -1,5 +1,3 @@
-import json
-
 import pytest
 import quart.testing.app
 
@@ -7,6 +5,7 @@ import app
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_missing_env_vars():
     quart_app = app.create_app()
 
@@ -16,14 +15,15 @@ async def test_missing_env_vars():
         assert str(exc_info.value) == "Lifespan failure in startup. ''AZURE_OPENAI_EMB_DEPLOYMENT''"
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 async def test_index(client):
-    response = await client.get("/")
+    response = await client.get('/')
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
-async def test_ask_request_must_be_json(client):
-    response = await client.post("/ask")
-    assert response.status_code == 415
-    result = await response.get_json()
-    assert result["error"] == "request must be json"
+@pytest.mark.integration
+async def test_unknown_endpoint(client):
+    response = await client.post("/unknownendpoint")
+    assert response.status_code == 404
+

@@ -1,5 +1,4 @@
 from collections import namedtuple
-from unittest import mock
 
 import openai
 import pytest
@@ -14,13 +13,6 @@ class MockAzureCredential:
     async def get_token(self, uri):
         return MockToken("mock_token", 9999999999)
 
-
-@pytest.fixture
-def mock_openai_embedding(monkeypatch):
-    async def mock_acreate(*args, **kwargs):
-        return {"data": [{"embedding": [0.1, 0.2, 0.3]}]}
-
-    monkeypatch.setattr(openai.Embedding, "acreate", mock_acreate)
 
 
 @pytest.fixture
@@ -61,13 +53,20 @@ async def client(monkeypatch, mock_openai_chatcompletion):
     monkeypatch.setenv("AZURE_OPENAI_CHATGPT_DEPLOYMENT", "test-chatgpt")
     monkeypatch.setenv("AZURE_OPENAI_CHATGPT_MODEL", "gpt-35-turbo")
     monkeypatch.setenv("AZURE_OPENAI_EMB_DEPLOYMENT", "test-ada")
+    monkeypatch.setenv("SSO_ISSUER", "testissuer.de")
+    monkeypatch.setenv("CONFIG_NAME", "test")
+    monkeypatch.setenv("DB_HOST", "not used")
+    monkeypatch.setenv("DB_NAME", "not used")
+    monkeypatch.setenv("DB_PASSWORD", "not used")
+    monkeypatch.setenv("DB_USER", "not used")
 
-    with mock.patch("app.DefaultAzureCredential") as mock_default_azure_credential:
-        mock_default_azure_credential.return_value = MockAzureCredential()
-        quart_app = app.create_app()
 
-        async with quart_app.test_app() as test_app:
-            quart_app.config.update({"TESTING": True})
+    #with mock.patch("app.DefaultAzureCredential") as mock_default_azure_credential:
+    #mock_default_azure_credential.return_value = MockAzureCredential()
+    quart_app = app.create_app()
 
-            yield test_app.test_client()
+    async with quart_app.test_app() as test_app:
+        quart_app.config.update({"TESTING": True})
+
+        yield test_app.test_client()
 

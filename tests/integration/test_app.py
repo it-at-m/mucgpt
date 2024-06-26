@@ -1,9 +1,13 @@
+from io import BytesIO
 from unittest import mock
 import pytest
 import quart.testing.app
 from httpx import Request, Response
 from openai import BadRequestError
+from quart.datastructures import FileStorage
+import json
 import app
+import PyPDF2
 from brainstorm.brainstormresult import BrainstormResult
 from summarize.summarizeresult import SummarizeResult
 
@@ -121,9 +125,47 @@ async def test_sum_text(client, mocker):
     mocker.patch("summarize.summarize.Summarize.summarize", mock.AsyncMock(return_value=mock_result))
     data = {
         "detaillevel": "short",
-        "text": "Hi",
+        "text": "To be summarized",
+        "language": "Deutsch"
     }
-    response = await client.post('/sum', data={"body": data})
+    response = await client.post('/sum',  form={"body": json.dumps(data)})
+    assert response.status_code == 200
+    result = await response.get_json()
+    assert result == mock_result
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_sum_pdf(client, mocker):
+    mock_result = SummarizeResult(answer= ["sum1", "sum2", "sum3"])
+    mocker.patch("summarize.summarize.Summarize.summarize", mock.AsyncMock(return_value=mock_result))
+
+    data = {
+        "detaillevel": "short",
+        "language": "Deutsch"
+    }
+
+    tmp = BytesIO()
+    writer = PyPDF2.PdfWriter()
+    writer.add_blank_page(219, 297)
+    page = writer.pages[0] 
+    writer.add_page(page) 
+    # create text
+    annotation = PyPDF2.generic.AnnotationBuilder.free_text(
+        "Hello World\nThis is the second line!",
+        rect=(50, 550, 200, 650),
+        font="Arial",
+        bold=True,
+        italic=True,
+        font_size="20pt",
+        font_color="00ff00",
+        border_color="0000ff",
+        background_color="cdcdcd",
+    )
+    writer.add_annotation(page_number=0, annotation=annotation)
+    writer.write(tmp)
+    tmp.seek(0)
+
+    response = await client.post('/sum',  form={"body": json.dumps(data)}, files={"file": FileStorage(tmp, filename="file")})
     assert response.status_code == 200
     result = await response.get_json()
     assert result == mock_result

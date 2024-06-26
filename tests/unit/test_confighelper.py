@@ -3,7 +3,7 @@ import unittest
 import pytest
 
 from core.confighelper import ConfigHelper
-from typing import TypedDict
+import os
 
 
 class Test_Confighelper(unittest.TestCase):
@@ -32,3 +32,18 @@ class Test_Confighelper(unittest.TestCase):
         self.assertIn("version", data)
         self.assertIn("frontend", data)
         self.assertIn("backend", data)
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit
+    def test_confighelper_loadData_fail(self):
+        filename = "app\\backend\\ressources\\super.json"
+        with open(filename, "w") as file:
+            file.write('{"frontend": {"labels": {"env_name": "MUC tschibidi-C"},"alternative_logo": true}}')
+        path=r"app\\backend\\ressources\\"
+        env="super"
+        helper = ConfigHelper(path, env)
+        self.assertEqual(helper.base_config_name, "base")
+        self.assertEqual(helper.env, env)
+        self.assertEqual(helper.base_path, path)
+        self.assertRaises(ValueError, helper.loadData)
+        os.remove(filename)

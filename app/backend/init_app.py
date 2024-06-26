@@ -119,7 +119,7 @@ async def initApp() -> AppConfig:
         password=DB_PASSWORD
     )
     # read enviornment config
-    config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
+    config_helper = ConfigHelper(base_path=os.path.dirname(os.path.realpath(__file__))+"/ressources/", env=CONFIG_NAME, base_config_name="base")
     cfg = config_helper.loadData()
     
     model_info = AzureChatGPTConfig(

@@ -5,6 +5,7 @@ black
 pytest
 pytest-asyncio
 pytest-snapshot
+pytest-mock
 coverage
 pytest-cov
 pre-commit

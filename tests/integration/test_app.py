@@ -8,6 +8,7 @@ from quart.datastructures import FileStorage
 import json
 import app
 import PyPDF2
+from core.types.Chunk import Chunk
 from brainstorm.brainstormresult import BrainstormResult
 from summarize.summarizeresult import SummarizeResult
 
@@ -169,3 +170,32 @@ async def test_sum_pdf(client, mocker):
     assert response.status_code == 200
     result = await response.get_json()
     assert result == mock_result
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_chat_stream_must_be_json(client):
+    response = await client.post('/chat_stream')
+    assert response.status_code == 415
+    result = await response.get_json()
+    assert result["error"] == "request must be json"
+
+async def streaming_generator():
+    yield Chunk(type="C", message= "Hello", order=0)
+
+    yield Chunk(type="C", message= "World", order=1)
+
+    yield Chunk(type="C", message= "!", order=2)
+
+@pytest.mark.asyncio
+@pytest.mark.integration
+async def test_chatstream(client, mocker):
+    mocker.patch("chat.chat.Chat.run_without_streaming", mock.AsyncMock(return_value=streaming_generator))
+    data = {
+        "temperature": 0.1,
+        "max_tokens": 2400,
+        "system_message": "",
+        "history": [{"user": "hi"}]
+        
+    }
+    response = await client.post('/chat_stream', json=data)
+    assert response.status_code == 200

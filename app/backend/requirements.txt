@@ -1,5 +1,5 @@
 azure-identity==1.15.0
-quart==0.19.3
+quart==0.19.6
 langchain==0.1.20
 langchain_openai 
 tiktoken

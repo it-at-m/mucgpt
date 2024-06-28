@@ -127,3 +127,23 @@ export function popLastInDB(storage: indexedDBStorage) {
         };
     };
 }
+
+export function deleteFromDB(storage: indexedDBStorage) {
+    let openRequest = indexedDB.open(storage.db_name, VERSION);
+    openRequest.onupgradeneeded = function () {
+        let db = openRequest.result;
+        if (!db.objectStoreNames.contains(storage.objectStore_name)) {
+            db.createObjectStore(storage.objectStore_name, { keyPath: "id" });
+        }
+    };
+    openRequest.onerror = function () {
+        console.error("Error", openRequest.error);
+    };
+    openRequest.onsuccess = function () {
+        let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+        let deleted = chat.delete(ID);
+        deleted.onerror = function () {
+            console.error("Error", deleted.error);
+        };
+    };
+}

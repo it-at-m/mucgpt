@@ -1,4 +1,5 @@
 from collections import namedtuple
+from unittest import mock
 
 import openai
 import pytest
@@ -61,12 +62,12 @@ async def client(monkeypatch, mock_openai_chatcompletion):
     monkeypatch.setenv("DB_USER", "not used")
 
 
-    #with mock.patch("app.DefaultAzureCredential") as mock_default_azure_credential:
-    #mock_default_azure_credential.return_value = MockAzureCredential()
-    quart_app = app.create_app()
+    with mock.patch("init_app.DefaultAzureCredential") as mock_default_azure_credential:
+        mock_default_azure_credential.return_value = MockAzureCredential()
+        quart_app = app.create_app()
 
-    async with quart_app.test_app() as test_app:
-        quart_app.config.update({"TESTING": True})
+        async with quart_app.test_app() as test_app:
+            quart_app.config.update({"TESTING": True})
 
-        yield test_app.test_client()
+            yield test_app.test_client()
 

@@ -1,6 +1,7 @@
 import json
 
-from core.types.Config import to_typed_config, Config
+from core.types.Config import Config, to_typed_config
+
 
 class ConfigHelper:
     """Loads an available configuration.
@@ -10,9 +11,9 @@ class ConfigHelper:
         self.base_config_name = base_config_name
         self.env = env
     def loadData(self) -> Config:
-        with open(self.base_path + self.env + ".json", 'r') as f:
+        with open(self.base_path + self.env + ".json") as f:
             env_config = json.load(f)
-        with open(self.base_path + self.base_config_name + ".json", 'r') as f:
+        with open(self.base_path + self.base_config_name + ".json") as f:
             base_config = json.load(f)
         result_dict =  dict(env_config,**base_config)
         return to_typed_config(result_dict)

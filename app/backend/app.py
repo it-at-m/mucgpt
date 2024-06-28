@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from typing import cast
+
 from azure.monitor.opentelemetry import configure_azure_monitor
 from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
@@ -14,15 +15,16 @@ from quart import (
     jsonify,
     make_response,
     request,
+    send_file,
     send_from_directory,
-    send_file
 )
-from init_app import initApp
-from core.modelhelper import num_tokens_from_message
+
 from core.authentification import AuthentificationHelper, AuthError
+from core.helper import format_as_ndjson
+from core.modelhelper import num_tokens_from_message
 from core.types.AppConfig import AppConfig
 from core.types.countresult import CountResult
-from core.helper import format_as_ndjson
+from init_app import initApp
 
 bp = Blueprint("routes", __name__, static_folder='static')
 
@@ -35,7 +37,7 @@ async def handleAuthError(error: AuthError):
 
 @bp.route("/")
 async def index():
-    cfg = get_config_and_authentificate()
+    get_config_and_authentificate()
     return await bp.send_static_file("index.html")
 
 @bp.route("/favicon.ico")
@@ -44,7 +46,7 @@ async def favicon():
 
 @bp.route("/assets/<path:path>")
 async def assets(path):
-    cfg = get_config_and_authentificate()
+    get_config_and_authentificate()
     return await send_from_directory("static/assets", path)
 
 

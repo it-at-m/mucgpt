@@ -1,22 +1,22 @@
-from concurrent.futures import ThreadPoolExecutor
-from typing import Any, List, Optional, Tuple
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, List, Optional, Tuple
+
+from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts import PromptTemplate
-from langchain.chains import SequentialChain, LLMChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
-from summarize.summarizeresult import SummarizeResult
-from core.datahelper import Repository
-from core.types.Config import ApproachConfig
-from core.datahelper import Requestinfo
-from core.textsplit import  splitPDF, splitText
+from core.datahelper import Repository, Requestinfo
+from core.textsplit import splitPDF, splitText
 from core.types.AzureChatGPTConfig import AzureChatGPTConfig
+from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
+from summarize.summarizeresult import SummarizeResult
 
 
-class Summarize():
+class Summarize:
     """Summarizes text. Chunks long texts. Individual chunks where summarized with Chain of Density prompting: https://arxiv.org/abs/2309.04269. Afterwards the text is translated into the target language."""
 
     user_sum_prompt = """

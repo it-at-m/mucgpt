@@ -1,13 +1,11 @@
 
-from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime
-from datetime import datetime
-from sqlalchemy import create_engine
-from sqlalchemy.engine import URL
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 import csv
 import io
+from datetime import datetime
+
+from sqlalchemy import Column, DateTime, Integer, String, create_engine, func
+from sqlalchemy.engine import URL
+from sqlalchemy.orm import Session, declarative_base
 
 Base = declarative_base()
 
@@ -25,7 +23,8 @@ class Requestinfo(Base):
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
-        return '<ID %r, Department %r, Tokencount %r, Method %r, Messagecount %r> ' % (self.id, self.department, self.tokencount, self.method, self.messagecount)
+        return f'<ID {self.id!r}, Department {self.department!r}, Tokencount {self.tokencount!r}, Method {self.method!r}, Messagecount {self.messagecount!r}>'
+
 
 
 

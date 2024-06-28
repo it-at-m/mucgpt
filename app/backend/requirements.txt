@@ -1,5 +1,5 @@
 azure-identity==1.16.1
-quart==0.19.3
+quart==0.19.6
 langchain==0.1.20
 langchain_openai 
 tiktoken
@@ -9,7 +9,7 @@ azure-monitor-opentelemetry==1.0.0b15
 opentelemetry-instrumentation-asgi==0.40b0
 opentelemetry-instrumentation-requests==0.40b0
 opentelemetry-instrumentation-aiohttp-client==0.40b0
-werkzeug==3.0.1
+werkzeug==3.0.3
 joserfc
 requests
 sqlalchemy==2.0.31

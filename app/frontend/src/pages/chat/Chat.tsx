@@ -68,8 +68,11 @@ const Chat = () => {
         setIsLoading(true);
         getStartDataFromDB(storage).then((stored) => {
             if (stored) {
-                setAnswers([...answers.concat(stored)]);
-                lastQuestionRef.current = stored[stored.length - 1][0];
+                try {
+                    setAnswers([...answers.concat(stored)]);
+                    lastQuestionRef.current = stored[stored.length - 1][0];
+                }
+                catch { }
             }
         });
         setIsLoading(false);

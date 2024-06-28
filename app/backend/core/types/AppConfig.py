@@ -1,13 +1,15 @@
 from typing import TypedDict
+
 from azure.identity.aio import DefaultAzureCredential
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
-from summarize.summarize import Summarize
-from chat.chat import Chat
+
 from brainstorm.brainstorm import Brainstorm
+from chat.chat import Chat
 from core.authentification import AuthentificationHelper
-from core.types.Config import Config
 from core.datahelper import Repository
-from core.types.Config import BackendConfig
+from core.types.AzureChatGPTConfig import AzureChatGPTConfig
+from core.types.Config import BackendConfig, Config
+from summarize.summarize import Summarize
+
 
 class AppConfig(TypedDict):
     """Config for the app, contains all clients and informations, that are needed

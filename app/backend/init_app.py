@@ -1,16 +1,19 @@
 import os
 from typing import Tuple
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
-from core.types.Config import BackendConfig
-from core.llmhelper import getModel
-from core.datahelper import Repository, Base
+
+from azure.identity.aio import DefaultAzureCredential
+
+from brainstorm.brainstorm import Brainstorm
+from chat.chat import Chat
 from core.authentification import AuthentificationHelper
 from core.confighelper import ConfigHelper
+from core.datahelper import Base, Repository
+from core.llmhelper import getModel
 from core.types.AppConfig import AppConfig
+from core.types.AzureChatGPTConfig import AzureChatGPTConfig
+from core.types.Config import BackendConfig
 from summarize.summarize import Summarize
-from chat.chat import Chat
-from brainstorm.brainstorm import Brainstorm
-from azure.identity.aio import DefaultAzureCredential
+
 
 def read_env():
     """reads configured values from env
@@ -119,7 +122,7 @@ async def initApp() -> AppConfig:
         password=DB_PASSWORD
     )
     # read enviornment config
-    config_helper = ConfigHelper(base_path=os.getcwd()+"/ressources/", env=CONFIG_NAME, base_config_name="base")
+    config_helper = ConfigHelper(base_path=os.path.dirname(os.path.realpath(__file__))+"/ressources/", env=CONFIG_NAME, base_config_name="base")
     cfg = config_helper.loadData()
     
     model_info = AzureChatGPTConfig(

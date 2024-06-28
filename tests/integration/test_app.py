@@ -1,17 +1,18 @@
+import json
 from io import BytesIO
 from unittest import mock
+
+import PyPDF2
 import pytest
 import quart.testing.app
 from httpx import Request, Response
 from openai import BadRequestError
 from quart.datastructures import FileStorage
-import json
-import app
-import PyPDF2
-from core.types.Chunk import Chunk
-from brainstorm.brainstormresult import BrainstormResult
-from summarize.summarizeresult import SummarizeResult
 
+import app
+from brainstorm.brainstormresult import BrainstormResult
+from core.types.Chunk import Chunk
+from summarize.summarizeresult import SummarizeResult
 
 
 def fake_response(http_code):
@@ -92,7 +93,7 @@ async def test_brainstorm_exception(client, monkeypatch,caplog):
     }
     response = await client.post('/brainstorm', json=data)
     assert response.status_code == 500
-    result = await response.get_json()
+    await response.get_json()
     assert "Exception in /error: something bad happened" in caplog.text
     
 @pytest.mark.asyncio

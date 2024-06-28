@@ -1,5 +1,6 @@
-from azure.core.credentials import AccessToken
 from typing import TypedDict
+
+from azure.core.credentials import AccessToken
 
 
 class AzureChatGPTConfig(TypedDict):

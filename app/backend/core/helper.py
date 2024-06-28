@@ -1,8 +1,10 @@
 
-from typing import AsyncGenerator
 import json
 import logging
+from typing import AsyncGenerator
+
 from core.types.Chunk import Chunk
+
 
 async def format_as_ndjson(r: AsyncGenerator[Chunk, None]) -> AsyncGenerator[str, None]:
     """Converts stream of Chunks into Stream of serialized JSON Objects

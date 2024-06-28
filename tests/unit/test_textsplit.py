@@ -2,9 +2,7 @@ import unittest
 
 import pytest
 
-import PyPDF2
-
-from core.textsplit import textToDocs, PDFtoDocs, splitText, splitPDF
+from core.textsplit import PDFtoDocs, splitPDF, splitText, textToDocs
 
 
 class Test_Testsplit(unittest.TestCase):

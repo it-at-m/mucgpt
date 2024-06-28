@@ -1,4 +1,6 @@
-from typing_extensions import List, NotRequired, TypedDict
+from typing import List
+
+from typing_extensions import NotRequired, TypedDict
 
 
 class LlmConfigs(TypedDict, total=False):

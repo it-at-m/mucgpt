@@ -15,4 +15,4 @@ class Test_Datahelper(unittest.TestCase):
         self.assertEqual(request.department, 'IT')
         self.assertEqual(request.messagecount, 50)
         self.assertEqual(request.method, 'GET')
-        self.assertEqual(str(request), '<ID None, Department \'IT\', Tokencount 100, Method \'GET\', Messagecount 50> ')
+        self.assertEqual(str(request), '<ID None, Department \'IT\', Tokencount 100, Method \'GET\', Messagecount 50>')

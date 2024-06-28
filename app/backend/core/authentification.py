@@ -1,7 +1,9 @@
 import functools
+
 import requests
 from joserfc import jwt
 from joserfc.jwk import KeySet
+
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
@@ -44,7 +46,7 @@ class AuthentificationHelper:
 
         if self.role not in roles:
             raise AuthError("Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2.", status_code=401)
-        return claims;
+        return claims
     
     def decode(self, token):
         keyset = self.get_jwks_data(self.issuer)

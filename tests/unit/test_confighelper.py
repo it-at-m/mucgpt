@@ -1,9 +1,9 @@
+import os
 import unittest
 
 import pytest
 
 from core.confighelper import ConfigHelper
-import os
 
 
 class Test_Confighelper(unittest.TestCase):

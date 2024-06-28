@@ -1,8 +1,10 @@
-from langchain_openai import AzureChatOpenAI
+from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
-from langchain_community.llms.fake import  FakeListLLM  
 from langchain_core.runnables.base import RunnableSerializable
+from langchain_openai import AzureChatOpenAI
+
 from core.types.SupportedModels import SupportedModels
+
 
 def getModel(chatgpt_model: str,
              max_tokens: int,

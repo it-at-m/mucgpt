@@ -1,9 +1,9 @@
 import unittest
 
 import pytest
+from langchain_core.runnables.base import RunnableSerializable
 
 from core.llmhelper import getModel
-from langchain_core.runnables.base import RunnableSerializable
 
 
 class Test_LLMhelper(unittest.TestCase):

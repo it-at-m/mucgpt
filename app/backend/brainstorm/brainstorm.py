@@ -1,18 +1,18 @@
-from typing import Any, Optional
-from langchain.chains import LLMChain
+from typing import Optional
+
+from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts import PromptTemplate
-from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
 from brainstorm.brainstormresult import BrainstormResult
-from core.types.LlmConfigs import LlmConfigs
-from core.datahelper import Repository
-from core.types.Config import ApproachConfig
+from core.datahelper import Repository, Requestinfo
 from core.types.AzureChatGPTConfig import AzureChatGPTConfig
-from core.datahelper import Requestinfo
+from core.types.Config import ApproachConfig
+from core.types.LlmConfigs import LlmConfigs
 
-class Brainstorm():
+
+class Brainstorm:
     """
     Simple brainstorm implementation. One shot generation of certain markdown files. Translates the result into a target language.
     """

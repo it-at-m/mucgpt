@@ -1,4 +1,6 @@
-from typing import TypedDict, Literal
+from typing import Literal, TypedDict
+
+
 class Chunk(TypedDict):
     """Represents a chunk during streaming. Has 3 modes:
     E: Error, message contains the error message.

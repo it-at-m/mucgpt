@@ -1,28 +1,29 @@
-from typing import Any, AsyncGenerator, Optional, Sequence, Tuple
 import asyncio
-from langchain.prompts import (
-    ChatPromptTemplate,
-    MessagesPlaceholder,
-    HumanMessagePromptTemplate,
-    SystemMessagePromptTemplate
-)
+from typing import Any, AsyncGenerator, Optional, Sequence, Tuple
+
+from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
-from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
-from langchain_core.messages import AIMessage
+from langchain.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
 from langchain_community.callbacks import get_openai_callback
+from langchain_core.messages import AIMessage
 from langchain_core.runnables.base import RunnableSerializable
 
 from chat.chatresult import ChatResult
-from core.datahelper import Requestinfo
+from core.datahelper import Repository, Requestinfo
 from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
-from core.datahelper import Repository
-from core.types.Config import ApproachConfig
-from core.types.Chunk import Chunk, ChunkInfo
-from core.types.LlmConfigs import LlmConfigs
 from core.types.AzureChatGPTConfig import AzureChatGPTConfig
+from core.types.Chunk import Chunk, ChunkInfo
+from core.types.Config import ApproachConfig
+from core.types.LlmConfigs import LlmConfigs
 
-class Chat():
+
+class Chat:
     """Chat with a llm via multiple steps.
     """
 

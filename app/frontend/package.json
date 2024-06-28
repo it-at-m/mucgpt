@@ -22,7 +22,7 @@
     "markmap-common": "^0.15.6",
     "markmap-lib": "^0.15.8",
     "markmap-toolbar": "^0.15.8",
-    "markmap-view": "^0.15.8",
+    "markmap-view": "^0.17.0",
     "mermaid": "^10.9.1",
     "ndjson-readablestream": "^1.2.0",
     "react": "^18.3.1",

@@ -1,4 +1,4 @@
-azure-identity==1.15.0
+azure-identity==1.16.1
 quart==0.19.3
 langchain==0.1.20
 langchain_openai 
@@ -12,7 +12,7 @@ opentelemetry-instrumentation-aiohttp-client==0.40b0
 werkzeug==3.0.1
 joserfc
 requests
-sqlalchemy==2.0.19
+sqlalchemy==2.0.31
 psycopg2==2.9.9
 pypdf2==3.0.1
 tenacity==8.2.3

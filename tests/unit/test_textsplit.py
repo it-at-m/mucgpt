@@ -1,3 +1,4 @@
+import os
 import unittest
 
 import pytest
@@ -16,8 +17,10 @@ class Test_Testsplit(unittest.TestCase):
     @pytest.mark.asyncio    
     @pytest.mark.unit
     def test_PDFtoDocs(self):
-        path= r"app\frontend\src\assets\mucgpt_cheatsheet.pdf"
-        self.assertEqual(len(PDFtoDocs(path)), 2)
+        file_path = os.path.join('app', 'frontend', 'src', 'assets', 'mucgpt_cheatsheet.pdf')
+        file_path = os.path.abspath(file_path)
+        assert os.path.exists(file_path), "File does not exist"
+        self.assertEqual(len(PDFtoDocs(file_path)), 2)
 
     @pytest.mark.asyncio    
     @pytest.mark.unit
@@ -28,5 +31,7 @@ class Test_Testsplit(unittest.TestCase):
     @pytest.mark.asyncio    
     @pytest.mark.unit
     def test_splitPDF(self):
-        path= r"app\frontend\src\assets\mucgpt_cheatsheet.pdf"
-        self.assertEqual(len(splitPDF(path)), 2)
+        file_path = os.path.join('app', 'frontend', 'src', 'assets', 'mucgpt_cheatsheet.pdf')
+        file_path = os.path.abspath(file_path)
+        assert os.path.exists(file_path), "File does not exist"
+        self.assertEqual(len(splitPDF(file_path)), 2)

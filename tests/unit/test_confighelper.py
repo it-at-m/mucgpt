@@ -13,7 +13,7 @@ class Test_Confighelper(unittest.TestCase):
         path = os.path.join('app', 'backend', 'ressources', '')
         path = os.path.abspath(path)
         assert os.path.exists(path), "File does not exist"
-        path = path + "\\"
+        path = path + "/"
         env="dev"
         helper = ConfigHelper(path, env)
         self.assertEqual(helper.base_config_name, "base")
@@ -31,7 +31,7 @@ class Test_Confighelper(unittest.TestCase):
         path = os.path.join('app', 'backend', 'ressources', '')
         path = os.path.abspath(path)
         assert os.path.exists(path), "File does not exist"
-        path = path + "\\"
+        path = path + "/"
         env="dev"
         helper = ConfigHelper(path, env)
         data = helper.loadData()
@@ -45,7 +45,7 @@ class Test_Confighelper(unittest.TestCase):
         path = os.path.join('app', 'backend', 'ressources', '')
         path = os.path.abspath(path)
         assert os.path.exists(path), "File does not exist"
-        path = path + "\\"
+        path = path + "/"
         env="super"
         filename = path + env + ".json"
         with open(filename, "w") as file:

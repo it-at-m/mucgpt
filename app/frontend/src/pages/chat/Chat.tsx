@@ -12,7 +12,8 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
-import { indexedDBStorage, saveToDB, getStartDataFromDB, clearDB, popLastInDB } from "../../service/storage"
+import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getZeroChat } from "../../service/storage"
+import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 
 
@@ -20,6 +21,7 @@ const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
     CHAT_SYSTEM_PROMPT = 'CHAT_SYSTEM_PROMPT',
     CHAT_MAX_TOKENS = 'CHAT_MAX_TOKENS',
+    CHAT_IS_NEW_CHAT = 'CHAT_IS_NEW_CHAT',
 }
 
 const Chat = () => {
@@ -46,7 +48,12 @@ const Chat = () => {
     const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-CHAT", objectStore_name: "chat" }
+    let storage: indexedDBStorage = {
+        db_name: "MUCGPT-CHAT", objectStore_name: "chat", db_version: 1
+    }
+    const [currentId, setCurrentId] = useState<number>(0);
+    const [idCounter, setIdCounter] = useState<number>(0);
+
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
 
@@ -64,18 +71,29 @@ const Chat = () => {
     }, [debouncedSystemPrompt, makeTokenCountRequest]);
 
     useEffect(() => {
-        error && setError(undefined);
-        setIsLoading(true);
-        getStartDataFromDB(storage).then((stored) => {
-            if (stored) {
-                try {
-                    setAnswers([...answers.concat(stored)]);
-                    lastQuestionRef.current = stored[stored.length - 1][0];
+        getHighestKeyInDB(storage).then((highestKey) => {
+            getZeroChat(storage).then((refID) => {
+                let key;
+                if (refID) {
+                    setIdCounter(refID)
+                    setCurrentId(refID)
+                    key = refID
+                } else {
+                    key = highestKey + 1
+                    setIdCounter(key)
+                    setCurrentId(key)
                 }
-                catch { }
-            }
-        });
-        setIsLoading(false);
+                error && setError(undefined);
+                setIsLoading(true);
+                getStartDataFromDB(storage, key).then((stored) => {
+                    if (stored) {
+                        setAnswers([...answers.concat(stored)]);
+                        lastQuestionRef.current = stored[stored.length - 1][0];
+                    }
+                });
+                setIsLoading(false);
+            })
+        })
     }, [])
 
     const makeApiRequest = async (question: string, system?: string) => {
@@ -126,14 +144,14 @@ const Chat = () => {
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
                     }
                 }
-                saveToDB([question, latestResponse, user_tokens], storage)
+                saveToDB([question, latestResponse, user_tokens], storage, currentId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens)
             } else {
                 const parsedResponse: AskResponse = await response.json();
                 if (response.status > 299 || !response.ok) {
                     throw Error(parsedResponse.error || "Unknown error");
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
-                saveToDB([question, parsedResponse, 0], storage)
+                saveToDB([question, parsedResponse, 0], storage, currentId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens)
             }
         } catch (e) {
             setError(e);
@@ -145,15 +163,15 @@ const Chat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        setAnswers([]);
-        clearDB(storage);
+        setCurrentId(idCounter + 1)
+        deleteChatFromDB(storage, 0, setAnswers, true, lastQuestionRef)
     };
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            popLastInDB(storage);
+            popLastMessageInDB(storage, currentId);
             if (last)
                 makeApiRequest(last[0], systemPrompt)
 
@@ -189,6 +207,13 @@ const Chat = () => {
 
     return (
         <div className={styles.container}>
+            <History
+                storage={storage}
+                setAnswers={setAnswers}
+                lastQuestionRef={lastQuestionRef}
+                currentId={currentId}
+                setCurrentId={setCurrentId}
+            ></History>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
                 <ChatsettingsDrawer
@@ -218,6 +243,7 @@ const Chat = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
@@ -248,6 +274,7 @@ const Chat = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
@@ -264,6 +291,7 @@ const Chat = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >

@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
-import { clearDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
 
@@ -34,12 +34,17 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize" }
-
+    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 1 }
+    const [currentId, setCurrentId] = useState<number>(0);
+    const [idCounter, setIdCounter] = useState<number>(0);
     useEffect(() => {
+        getHighestKeyInDB(storage).then((highestKey) => {
+            setIdCounter(highestKey + 1)
+            setCurrentId(highestKey)
+        })
         error && setError(undefined);
         setIsLoading(true);
-        getStartDataFromDB(storage).then((stored) => {
+        getStartDataFromDB(storage, currentId).then((stored) => {
             if (stored) {
                 setAnswers([...answers.concat(stored)]);
                 lastQuestionRef.current = stored[stored.length - 1][0];
@@ -67,7 +72,7 @@ const Summarize = () => {
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);
-            saveToDB([questionText, result], storage)
+            saveToDB([questionText, result], storage, currentId, idCounter, setCurrentId, setIdCounter)
         } catch (e) {
             setError(e);
         } finally {
@@ -79,7 +84,7 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
-        clearDB(storage);
+        deleteChatFromDB(storage, currentId, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -118,6 +123,7 @@ const Summarize = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
@@ -134,6 +140,7 @@ const Summarize = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
@@ -149,6 +156,7 @@ const Summarize = () => {
                                         answers={answers}
                                         storage={storage}
                                         lastQuestionRef={lastQuestionRef}
+                                        current_id={currentId}
                                     />
                                 </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>

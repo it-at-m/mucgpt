@@ -35,8 +35,7 @@ export async function saveToDB(
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
     openRequest.onerror = () => onError(openRequest);
     openRequest.onsuccess = function () {
-        let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
-        let stored = chat.get(current_id);
+        let stored = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).get(current_id);
 
         stored.onsuccess = async () => {
             let data;
@@ -50,7 +49,7 @@ export async function saveToDB(
                 let name: string = "";
                 if (language != undefined && temperature != undefined && system_message != undefined && max_tokens != undefined) {
                     name = await (await getChatName(a, language, temperature, system_message, max_tokens)).content;
-                    name = name.replace('"', "");
+                    name = name.replaceAll('"', "").replaceAll(".", "");
                 }
                 let new_idcounter = id_counter;
                 if (storage.objectStore_name === "chat") {
@@ -61,7 +60,7 @@ export async function saveToDB(
                 data = { Data: { Answers: [a], Name: name, LastEdited: Date.now() }, id: new_idcounter };
                 dataID = new_idcounter;
             }
-            chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+            let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
             let request = chat.put(data);
             request.onerror = () => onError(request);
             data["id"] = 0;
@@ -78,7 +77,7 @@ export async function getChatName(answers: any, language: string, temperature: n
         history: [
             ...history,
             {
-                user: "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Überprüfe dich selbst, ob der Name tatsächlich passend ist. Antworte nur mit dem vollständigen Namen und keinem weiteren Text. ",
+                user: "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Überprüfe dich selbst, ob der Name tatsächlich passend ist. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. ",
                 bot: undefined
             }
         ],
@@ -101,6 +100,17 @@ export async function getChatName(answers: any, language: string, temperature: n
     return parsedResponse;
 }
 
+export async function renameChat(storage: indexedDBStorage, newName: string, chat: any) {
+    let openRequest = indexedDB.open(storage.db_name, storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        chat.Data.Name = newName;
+        let getRequest = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(chat);
+        getRequest.onerror = () => onError(getRequest);
+    };
+}
+
 export async function getStartDataFromDB(storage: indexedDBStorage, id: number): Promise<any> {
     let openRequest = indexedDB.open(storage.db_name, storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
@@ -109,11 +119,11 @@ export async function getStartDataFromDB(storage: indexedDBStorage, id: number):
         openRequest.onsuccess = function () {
             let getRequest = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).get(id);
             getRequest.onsuccess = function () {
+                let res = undefined;
                 if (getRequest.result) {
-                    resolve(getRequest.result.Data.Answers);
-                } else {
-                    resolve(undefined);
+                    res = getRequest.result.Data.Answers;
                 }
+                resolve(res);
             };
             getRequest.onerror = () => onError(getRequest);
         };
@@ -171,13 +181,9 @@ export function getHighestKeyInDB(storage: indexedDBStorage): Promise<number> {
         openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
         openRequest.onerror = () => onError(openRequest);
         openRequest.onsuccess = function () {
-            let db = openRequest.result;
-            let transaction = db.transaction(storage.objectStore_name, "readwrite");
-            let chat = transaction.objectStore(storage.objectStore_name);
-            let keys = chat.getAllKeys();
+            let keys = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).getAllKeys();
             keys.onsuccess = function () {
-                let result = keys.result;
-                let highestKey = Math.max(...result.map(Number), 0);
+                let highestKey = Math.max(...keys.result.map(Number), 0);
                 resolve(highestKey);
             };
             keys.onerror = () => reject(keys.error);
@@ -191,16 +197,13 @@ export function getZeroChat(storage: indexedDBStorage): Promise<number | undefin
         openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
         openRequest.onerror = () => onError(openRequest);
         openRequest.onsuccess = function () {
-            let db = openRequest.result;
-            let transaction = db.transaction(storage.objectStore_name, "readwrite");
-            let chat = transaction.objectStore(storage.objectStore_name);
-            let getRequest = chat.get(0);
+            let getRequest = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).get(0);
             getRequest.onsuccess = function () {
+                let res = undefined;
                 if (getRequest.result) {
-                    resolve(getRequest.result.refID);
-                } else {
-                    resolve(undefined);
+                    res = getRequest.result.refID;
                 }
+                resolve(res);
             };
             getRequest.onerror = () => reject(getRequest.error);
         };

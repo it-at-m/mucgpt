@@ -166,7 +166,16 @@ i18n
                                 "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
                         },
                         history: {
-                            button: "Gespeicherte Chats"
+                            button: "Gespeicherte Chats",
+                            today: "Heute",
+                            yesterday: "Gestern",
+                            sevendays: "Letzte 7 Tage",
+                            older: "Älter",
+                            history: "Historie",
+                            newchat: "Gib dem Chat einen neuen Namen:",
+                            options: "Chat-Optionen",
+                            close: "Schließen",
+                            lastEdited: "Zuletzt geändert: "
                         }
                     }
                 }
@@ -324,7 +333,16 @@ i18n
                                 "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
                         },
                         history: {
-                            button: "Saved Chats"
+                            button: "Saved Chats",
+                            today: "Today",
+                            yesterday: "Yesterday",
+                            sevendays: "Last 7 Days",
+                            older: "Older",
+                            history: "History",
+                            newchat: "Enter new name for the chat:",
+                            options: "Chat-Options",
+                            close: "Close",
+                            lastEdited: "Last edited: "
                         }
                     }
                 }
@@ -482,7 +500,16 @@ i18n
                                 "Formuliere dei letzte Nachricht zu am neuen informelleren Text, der an ursprünglichen Inhalt in a lockeren Schreibweise wiedagibt. Dieser Text soi am Leser a ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente benutzt."
                         },
                         history: {
-                            button: "Gespeichade Chats"
+                            button: "Gespeichade Chats",
+                            today: "Heid",
+                            yesterday: "Gesdan",
+                            sevendays: "Letzte 7 Dog",
+                            older: "Oida",
+                            history: "Historie",
+                            newchat: "Gib dem Chat an nein Nama:",
+                            options: "Chat-Optionen",
+                            close: "Schließen",
+                            lastEdited: "Zuletzt geändert: "
                         }
                     }
                 }

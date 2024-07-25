@@ -21,7 +21,6 @@ const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
     CHAT_SYSTEM_PROMPT = 'CHAT_SYSTEM_PROMPT',
     CHAT_MAX_TOKENS = 'CHAT_MAX_TOKENS',
-    CHAT_IS_NEW_CHAT = 'CHAT_IS_NEW_CHAT',
 }
 
 const Chat = () => {
@@ -48,7 +47,7 @@ const Chat = () => {
     const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    let storage: indexedDBStorage = {
+    const storage: indexedDBStorage = {
         db_name: "MUCGPT-CHAT", objectStore_name: "chat", db_version: 1
     }
     const [currentId, setCurrentId] = useState<number>(0);
@@ -73,18 +72,17 @@ const Chat = () => {
     useEffect(() => {
         getHighestKeyInDB(storage).then((highestKey) => {
             getZeroChat(storage).then((refID) => {
+                error && setError(undefined);
+                setIsLoading(true);
+
                 let key;
                 if (refID) {
-                    setIdCounter(refID)
-                    setCurrentId(refID)
                     key = refID
                 } else {
                     key = highestKey + 1
-                    setIdCounter(key)
-                    setCurrentId(key)
                 }
-                error && setError(undefined);
-                setIsLoading(true);
+                setIdCounter(key)
+                setCurrentId(key)
                 getStartDataFromDB(storage, key).then((stored) => {
                     if (stored) {
                         setAnswers([...answers.concat(stored)]);
@@ -172,9 +170,9 @@ const Chat = () => {
             let last = answers.pop();
             setAnswers(answers);
             popLastMessageInDB(storage, currentId);
-            if (last)
+            if (last) {
                 makeApiRequest(last[0], systemPrompt)
-
+            }
         };
     }
 

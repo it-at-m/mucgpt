@@ -175,7 +175,9 @@ i18n
                             newchat: "Gib dem Chat einen neuen Namen:",
                             options: "Chat-Optionen",
                             close: "Schließen",
-                            lastEdited: "Zuletzt geändert: "
+                            lastEdited: "Zuletzt geändert: ",
+                            rename: "Chat Umbenennen",
+                            delete: "Chat Löschen"
                         }
                     }
                 }
@@ -342,7 +344,9 @@ i18n
                             newchat: "Enter new name for the chat:",
                             options: "Chat-Options",
                             close: "Close",
-                            lastEdited: "Last edited: "
+                            lastEdited: "Last edited: ",
+                            rename: "Delete chat",
+                            delete: "Rename chat"
                         }
                     }
                 }
@@ -509,7 +513,9 @@ i18n
                             newchat: "Gib dem Chat an nein Nama:",
                             options: "Chat-Optionen",
                             close: "Schließen",
-                            lastEdited: "Zuletzt geändert: "
+                            lastEdited: "Zuletzt geändert: ",
+                            rename: "Chat Umbenenna",
+                            delete: "Chat Löschn"
                         }
                     }
                 }

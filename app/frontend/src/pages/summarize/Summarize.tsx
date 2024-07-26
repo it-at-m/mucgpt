@@ -46,8 +46,8 @@ const Summarize = () => {
         setIsLoading(true);
         getStartDataFromDB(storage, currentId).then((stored) => {
             if (stored) {
-                setAnswers([...answers.concat(stored)]);
-                lastQuestionRef.current = stored[stored.length - 1][0];
+                setAnswers([...answers.concat(stored.Data.Answers)]);
+                lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
             }
         });
         setIsLoading(false);

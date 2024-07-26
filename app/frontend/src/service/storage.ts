@@ -12,6 +12,7 @@ export async function onUpgrade(openRequest: IDBOpenDBRequest, storage: indexedD
     let db = openRequest.result;
     if (!db.objectStoreNames.contains(storage.objectStore_name)) {
         db.createObjectStore(storage.objectStore_name, { keyPath: "id" });
+    } else {
     }
 }
 
@@ -44,20 +45,34 @@ export async function saveToDB(
                 dataID = stored.result.id;
                 stored.result.Data.Answers.push(a);
                 stored.result.Data.LastEdited = Date.now();
+                if (storage.objectStore_name === "chat") {
+                    stored.result.Options.system = system_message;
+                    stored.result.Options.maxTokens = max_tokens;
+                    stored.result.Options.temperature = temperature;
+                }
                 data = stored.result;
             } else {
                 let name: string = "";
+                let new_idcounter = id_counter;
                 if (language != undefined && temperature != undefined && system_message != undefined && max_tokens != undefined) {
                     name = await (await getChatName(a, language, temperature, system_message, max_tokens)).content;
                     name = name.replaceAll('"', "").replaceAll(".", "");
                 }
-                let new_idcounter = id_counter;
                 if (storage.objectStore_name === "chat") {
                     new_idcounter = new_idcounter + 1;
                     setIdCounter(new_idcounter);
+                    data = {
+                        Data: { Answers: [a], Name: name, LastEdited: Date.now() },
+                        id: new_idcounter,
+                        Options: { favorite: false, system: system_message, maxTokens: max_tokens, temperature: temperature }
+                    };
+                } else {
+                    data = {
+                        Data: { Answers: [a], Name: name, LastEdited: Date.now() },
+                        id: new_idcounter
+                    };
                 }
                 setCurrentId(new_idcounter);
-                data = { Data: { Answers: [a], Name: name, LastEdited: Date.now() }, id: new_idcounter };
                 dataID = new_idcounter;
             }
             let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
@@ -121,7 +136,7 @@ export async function getStartDataFromDB(storage: indexedDBStorage, id: number):
             getRequest.onsuccess = function () {
                 let res = undefined;
                 if (getRequest.result) {
-                    res = getRequest.result.Data.Answers;
+                    res = getRequest.result;
                 }
                 resolve(res);
             };
@@ -209,3 +224,68 @@ export function getZeroChat(storage: indexedDBStorage): Promise<number | undefin
         };
     });
 }
+
+export const changeTemperatureInDb = (temp: number, id: number, storage: indexedDBStorage) => {
+    let openRequest = indexedDB.open(storage.db_name, storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = async function () {
+        let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+        let stored = chat.get(id);
+        stored.onsuccess = function () {
+            if (stored.result) {
+                stored.result.Options.temperature = temp;
+                chat.put(stored.result);
+            }
+        };
+    };
+};
+
+export const changeSystempromptInDb = (system: string, id: number, storage: indexedDBStorage) => {
+    let openRequest = indexedDB.open(storage.db_name, storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = async function () {
+        let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+        let stored = chat.get(id);
+        stored.onsuccess = function () {
+            if (stored.result) {
+                stored.result.Options.system = system;
+                chat.put(stored.result);
+            }
+        };
+    };
+};
+
+export const changeMaxTokensInDb = (tokens: number, id: number, storage: indexedDBStorage) => {
+    let openRequest = indexedDB.open(storage.db_name, storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = async function () {
+        let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+        let stored = chat.get(id);
+        stored.onsuccess = function () {
+            if (stored.result) {
+                stored.result.Options.maxTokens = tokens;
+                chat.put(stored.result);
+            }
+        };
+    };
+};
+
+export const changeFavouritesInDb = (fav: boolean, id: number, storage: indexedDBStorage) => {
+    let openRequest = indexedDB.open(storage.db_name, storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = async function () {
+        let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+        let stored = chat.get(id);
+        stored.onsuccess = function () {
+            if (stored.result) {
+                stored.result.Options.favourites = fav;
+                chat.put(stored.result);
+            }
+        };
+        stored.onerror = () => onError(stored);
+    };
+};

@@ -12,7 +12,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
-import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getZeroChat } from "../../service/storage"
+import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getZeroChat, changeTemperatureInDb, changeMaxTokensInDb, changeSystempromptInDb } from "../../service/storage"
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 
@@ -85,8 +85,11 @@ const Chat = () => {
                 setCurrentId(key)
                 getStartDataFromDB(storage, key).then((stored) => {
                     if (stored) {
-                        setAnswers([...answers.concat(stored)]);
-                        lastQuestionRef.current = stored[stored.length - 1][0];
+                        setAnswers([...answers.concat(stored.Data.Answers)]);
+                        lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
+                        onMaxTokensChanged(stored.Options.maxTokens);
+                        onTemperatureChanged(stored.Options.temperature);
+                        onSystemPromptChanged(stored.Options.system)
                     }
                 });
                 setIsLoading(false);
@@ -189,17 +192,20 @@ const Chat = () => {
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
-        localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString())
+        localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString());
+        changeTemperatureInDb(temp, currentId, storage);
     };
 
     const onMaxTokensChanged = (maxTokens: number) => {
         setMaxTokens(maxTokens);
-        localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString())
+        localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString());
+        changeMaxTokensInDb(maxTokens, currentId, storage);
     };
 
     const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
-        localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt)
+        localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt);
+        changeSystempromptInDb(systemPrompt, currentId, storage);
     };
 
 
@@ -211,6 +217,9 @@ const Chat = () => {
                 lastQuestionRef={lastQuestionRef}
                 currentId={currentId}
                 setCurrentId={setCurrentId}
+                onTemperatureChanged={onTemperatureChanged}
+                onMaxTokensChanged={onMaxTokensChanged}
+                onSystemPromptChanged={onSystemPromptChanged}
             ></History>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />

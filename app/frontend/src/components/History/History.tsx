@@ -3,7 +3,7 @@ import { Button, Drawer, DrawerBody, DrawerHeader, DrawerHeaderTitle, Menu, Menu
 import { Options24Regular, Dismiss24Regular, History24Regular } from '@fluentui/react-icons';
 import { MutableRefObject, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat } from '../../service/storage';
+import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb } from '../../service/storage';
 import { AskResponse } from '../../api/models';
 import styles from "./History.module.css";
 
@@ -13,14 +13,20 @@ interface Props {
     lastQuestionRef: MutableRefObject<string>
     currentId: number
     setCurrentId: (id: number) => void
+    onTemperatureChanged: (temp: number) => void
+    onMaxTokensChanged: (tokens: number) => void
+    onSystemPromptChanged: (prompt: string) => void
 }
-export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCurrentId }: Props) => {
+export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCurrentId, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged }: Props) => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
 
     const loadChat = (stored: any) => {
         setAnswers(stored.Data.Answers);
+        onTemperatureChanged(stored.Options.temperature);
+        onMaxTokensChanged(stored.Options.maxTokens);
+        onSystemPromptChanged(stored.Options.system);
         lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
         setIsOpen(false);
         setCurrentId(stored.id);
@@ -34,7 +40,8 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
             putRequest.onerror = () => onError(putRequest)
         }
     }
-    const getCategory = (lastEdited: string) => {
+    const getCategory = (lastEdited: string, fav: boolean) => {
+        if (fav) return t('components.history.favourites');
         const today = new Date();
         const lastEditedDate = new Date(lastEdited);
         today.setHours(0, 0, 0, 0);
@@ -59,6 +66,11 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
         getAllChats();
     }
 
+    const changeFavourites = (fav: boolean, id: number) => {
+        changeFavouritesInDb(fav, id, storage)
+        getAllChats()
+    }
+
     const getAllChats = async () => {
         let openRequest = indexedDB.open(storage.db_name, storage.db_version);
         openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
@@ -70,12 +82,17 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
                     .filter((chat: any) => chat.id !== 0)
                     .sort((a: any, b: any) => { return new Date(b.Data.LastEdited).getTime() - new Date(a.Data.LastEdited).getTime(); })
                     .reduce((acc: any, chat: any) => {
-                        const category = getCategory(chat.Data.LastEdited);
+                        const category = getCategory(chat.Data.LastEdited, chat.Options.favourites);
                         if (!acc[category]) acc[category] = [];
                         acc[category].push(chat);
                         return acc;
                     }, {});
-                const newChatButtons = Object.entries(categorizedChats).map(([category, chats]: [string, any]) => (
+                const sortedChats = Object.entries(categorizedChats).sort(([categoryA], [categoryB]) => {
+                    if (categoryA === t('components.history.favourites')) return -1;
+                    if (categoryB === t('components.history.favourites')) return 1;
+                    return 0;
+                });
+                const newChatButtons = sortedChats.map(([category, chats]: [string, any]) => (
                     <div key={category} >
                         <h2>{category}</h2>
                         {chats.map((chat: any, index: number) => (
@@ -95,6 +112,12 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
                                         <MenuList>
                                             <MenuItem onClick={() => deleteChat(storage, chat.id, setAnswers, chat.id === currentId, lastQuestionRef)}>{t('components.history.delete')}</MenuItem>
                                             <MenuItem onClick={() => changeChatName(chat)}>{t('components.history.rename')}</MenuItem>
+                                            {chat.Options.favourites ? (
+                                                <MenuItem onClick={() => changeFavourites(false, chat.id)}>{t('components.history.unsave')}</MenuItem>
+                                            ) : (
+                                                <MenuItem onClick={() => changeFavourites(true, chat.id)}>{t('components.history.save')}</MenuItem>
+                                            )}
+
                                         </MenuList>
                                     </MenuPopover>
                                 </Menu>

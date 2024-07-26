@@ -177,7 +177,10 @@ i18n
                             close: "Schließen",
                             lastEdited: "Zuletzt geändert: ",
                             rename: "Chat Umbenennen",
-                            delete: "Chat Löschen"
+                            delete: "Chat Löschen",
+                            favourites: "Favouriten",
+                            save: "Zu Favouriten hinzufügen",
+                            unsave: "Aus Favouriten entfernen"
                         }
                     }
                 }
@@ -346,7 +349,10 @@ i18n
                             close: "Close",
                             lastEdited: "Last edited: ",
                             rename: "Delete chat",
-                            delete: "Rename chat"
+                            delete: "Rename chat",
+                            favourites: "Favourites",
+                            save: "Add to Favourites",
+                            unsave: "Remove from Favourites"
                         }
                     }
                 }
@@ -515,7 +521,10 @@ i18n
                             close: "Schließen",
                             lastEdited: "Zuletzt geändert: ",
                             rename: "Chat Umbenenna",
-                            delete: "Chat Löschn"
+                            delete: "Chat Löschn",
+                            favourites: "Favouriten",
+                            save: "Zu Favouritn hinzufügn",
+                            unsave: "Vo Favouritn entfernen"
                         }
                     }
                 }

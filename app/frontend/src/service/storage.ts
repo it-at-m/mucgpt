@@ -7,12 +7,16 @@ export interface indexedDBStorage {
     db_version: number;
     objectStore_name: string;
 }
+export const CURRENT_CHAT_IN_DB = 0;
 
 export async function onUpgrade(openRequest: IDBOpenDBRequest, storage: indexedDBStorage) {
     let db = openRequest.result;
-    if (!db.objectStoreNames.contains(storage.objectStore_name)) {
-        db.createObjectStore(storage.objectStore_name, { keyPath: "id" });
-    } else {
+    let transaction = openRequest.transaction;
+    let storeName = storage.objectStore_name;
+    if (!db.objectStoreNames.contains(storeName)) {
+        db.createObjectStore(storeName, { keyPath: "id" });
+    } else if (transaction) {
+        transaction.objectStore(storeName).clear();
     }
 }
 
@@ -41,16 +45,17 @@ export async function saveToDB(
         stored.onsuccess = async () => {
             let data;
             let dataID;
-            if (stored.result) {
-                dataID = stored.result.id;
-                stored.result.Data.Answers.push(a);
-                stored.result.Data.LastEdited = Date.now();
+            let result = stored.result;
+            if (result) {
+                dataID = result.id;
+                result.Data.Answers.push(a);
+                result.Data.LastEdited = Date.now();
                 if (storage.objectStore_name === "chat") {
-                    stored.result.Options.system = system_message;
-                    stored.result.Options.maxTokens = max_tokens;
-                    stored.result.Options.temperature = temperature;
+                    result.Options.system = system_message;
+                    result.Options.maxTokens = max_tokens;
+                    result.Options.temperature = temperature;
                 }
-                data = stored.result;
+                data = result;
             } else {
                 let name: string = "";
                 let new_idcounter = id_counter;
@@ -78,7 +83,7 @@ export async function saveToDB(
             let chat = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
             let request = chat.put(data);
             request.onerror = () => onError(request);
-            data["id"] = 0;
+            data["id"] = CURRENT_CHAT_IN_DB;
             data["refID"] = dataID;
             request = chat.put(data);
             request.onerror = () => onError(request);
@@ -162,8 +167,8 @@ export async function deleteChatFromDB(
     }
     openRequest.onsuccess = async function () {
         openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).delete(id);
-        if (isCurrent && id != 0) {
-            openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).delete(0);
+        if (isCurrent && id != CURRENT_CHAT_IN_DB) {
+            openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).delete(CURRENT_CHAT_IN_DB);
         }
     };
 }
@@ -212,7 +217,7 @@ export function getZeroChat(storage: indexedDBStorage): Promise<number | undefin
         openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
         openRequest.onerror = () => onError(openRequest);
         openRequest.onsuccess = function () {
-            let getRequest = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).get(0);
+            let getRequest = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).get(CURRENT_CHAT_IN_DB);
             getRequest.onsuccess = function () {
                 let res = undefined;
                 if (getRequest.result) {

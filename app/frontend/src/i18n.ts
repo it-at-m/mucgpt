@@ -49,7 +49,7 @@ i18n
                         answer_loading: "Denke nach"
                     },
                     common: {
-                        clear_chat: "Chat löschen",
+                        clear_chat: "Neuer Chat",
                         settings: "Einstellungen",
                         close: "Schließen",
                         messages: "Nachrichten",
@@ -178,9 +178,9 @@ i18n
                             lastEdited: "Zuletzt geändert: ",
                             rename: "Chat Umbenennen",
                             delete: "Chat Löschen",
-                            favourites: "Favouriten",
-                            save: "Zu Favouriten hinzufügen",
-                            unsave: "Aus Favouriten entfernen"
+                            favourites: "Favoriten",
+                            save: "Zu Favoriten hinzufügen",
+                            unsave: "Aus Favoriten entfernen"
                         }
                     }
                 }
@@ -221,7 +221,7 @@ i18n
                         answer_loading: "Thinking"
                     },
                     common: {
-                        clear_chat: "Clear chat",
+                        clear_chat: "New chat",
                         settings: "Settings",
                         close: "Close",
                         messages: "Messages",
@@ -348,8 +348,8 @@ i18n
                             options: "Chat-Options",
                             close: "Close",
                             lastEdited: "Last edited: ",
-                            rename: "Delete chat",
-                            delete: "Rename chat",
+                            rename: "Rename chat",
+                            delete: "Delete chat",
                             favourites: "Favourites",
                             save: "Add to Favourites",
                             unsave: "Remove from Favourites"
@@ -387,7 +387,7 @@ i18n
                         answer_loading: "Denk na"
                     },
                     common: {
-                        clear_chat: "Nochrichten löschn",
+                        clear_chat: "Neia Chat",
                         settings: "Konfiguration",
                         close: "Schließen",
                         messages: "Nochrichten",
@@ -522,9 +522,9 @@ i18n
                             lastEdited: "Zuletzt geändert: ",
                             rename: "Chat Umbenenna",
                             delete: "Chat Löschn",
-                            favourites: "Favouriten",
-                            save: "Zu Favouritn hinzufügn",
-                            unsave: "Vo Favouritn entfernen"
+                            favourites: "Favoriten",
+                            save: "Zu Favoritn hinzufügn",
+                            unsave: "Vo Favoritn entfernen"
                         }
                     }
                 }

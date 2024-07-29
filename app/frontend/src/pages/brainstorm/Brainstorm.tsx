@@ -26,7 +26,7 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 1 }
+    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 }
 
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);

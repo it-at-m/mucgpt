@@ -3,7 +3,7 @@ import { Button, Drawer, DrawerBody, DrawerHeader, DrawerHeaderTitle, Menu, Menu
 import { Options24Regular, Dismiss24Regular, History24Regular } from '@fluentui/react-icons';
 import { MutableRefObject, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb } from '../../service/storage';
+import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB } from '../../service/storage';
 import { AskResponse } from '../../api/models';
 import styles from "./History.module.css";
 
@@ -13,9 +13,9 @@ interface Props {
     lastQuestionRef: MutableRefObject<string>
     currentId: number
     setCurrentId: (id: number) => void
-    onTemperatureChanged: (temp: number) => void
-    onMaxTokensChanged: (tokens: number) => void
-    onSystemPromptChanged: (prompt: string) => void
+    onTemperatureChanged: (temp: number, id: number) => void
+    onMaxTokensChanged: (tokens: number, id: number) => void
+    onSystemPromptChanged: (prompt: string, id: number) => void
 }
 export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCurrentId, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged }: Props) => {
     const { t } = useTranslation();
@@ -24,18 +24,19 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
 
     const loadChat = (stored: any) => {
         setAnswers(stored.Data.Answers);
-        onTemperatureChanged(stored.Options.temperature);
-        onMaxTokensChanged(stored.Options.maxTokens);
-        onSystemPromptChanged(stored.Options.system);
         lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
+        let id = stored.id;
         setIsOpen(false);
-        setCurrentId(stored.id);
+        setCurrentId(id);
+        onTemperatureChanged(stored.Options.temperature, id);
+        onMaxTokensChanged(stored.Options.maxTokens, id);
+        onSystemPromptChanged(stored.Options.system, id);
         let openRequest = indexedDB.open(storage.db_name, storage.db_version);
         openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
         openRequest.onerror = () => onError(openRequest)
         openRequest.onsuccess = async function () {
-            stored["refID"] = stored["id"]
-            stored["id"] = 0
+            stored["refID"] = id
+            stored["id"] = CURRENT_CHAT_IN_DB
             let putRequest = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(stored);
             putRequest.onerror = () => onError(putRequest)
         }

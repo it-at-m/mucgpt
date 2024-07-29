@@ -34,7 +34,7 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 1 }
+    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 }
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);
     useEffect(() => {

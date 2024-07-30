@@ -76,7 +76,6 @@ const Chat = () => {
             getZeroChat(storage).then((refID) => {
                 error && setError(undefined);
                 setIsLoading(true);
-
                 let key;
                 if (refID) {
                     key = refID
@@ -106,7 +105,8 @@ const Chat = () => {
         lastQuestionRef.current = question;
         error && setError(undefined);
         setIsLoading(true);
-
+        let askResponse: AskResponse = {} as AskResponse;
+        saveToDB([question, { ...askResponse, answer: "", tokens: 0 }, 0], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens)
         try {
             const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: ChatRequest = {
@@ -126,10 +126,11 @@ const Chat = () => {
             }
             let user_tokens = 0;
             if (shouldStream) {
-                let askResponse: AskResponse = {} as AskResponse;
+
                 let answer: string = '';
                 let streamed_tokens = 0;
                 let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens }
+
                 for await (const chunk of readNDJSONStream(response.body)) {
                     if (chunk as Chunk) {
                         switch (chunk.type) {

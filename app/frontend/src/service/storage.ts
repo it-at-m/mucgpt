@@ -48,7 +48,13 @@ export async function saveToDB(
             let result = stored.result;
             if (result) {
                 dataID = result.id;
-                result.Data.Answers.push(a);
+                let storedAnswers = result.Data.Answers;
+                console.log("stored: ", storedAnswers[storedAnswers.length - 1][1], " new: ", a[1]);
+                if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                    storedAnswers[storedAnswers.length - 1][1] = a[1];
+                } else {
+                    storedAnswers.push(a);
+                }
                 result.Data.LastEdited = Date.now();
                 if (storage.objectStore_name === "chat") {
                     result.Options.system = system_message;

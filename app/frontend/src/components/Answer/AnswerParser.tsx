@@ -1,5 +1,5 @@
 
-type HtmlParsedAnswer = {
+export type HtmlParsedAnswer = {
     answerHtml: string;
     citations: string[];
     followupQuestions: string[];

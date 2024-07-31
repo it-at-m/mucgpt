@@ -32,14 +32,14 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="5">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="6">
                     <AccordionItem value="6">
                         <AccordionHeader>[1.1.2] 31.07.2024</AccordionHeader>
                         <AccordionPanel >
                             <div className={styles.panel}>
                                 <h3>{t('version.added')}</h3>
                                 <ul>
-                                    <li>Für die Chat-Funktion gibt es jetzt eine Historie
+                                    <li>Für die Chat-Funktion gibt es nun eine Historie aller durchgeführten konversationen
                                         <p>
                                             <img width="70%" src={history}>
                                             </img>

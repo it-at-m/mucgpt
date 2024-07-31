@@ -11,7 +11,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from 'react-i18next';
-import { deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
@@ -34,6 +34,7 @@ const Summarize = () => {
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
+        checkStructurOfDB(storage);
         getHighestKeyInDB(storage).then((highestKey) => {
             setIdCounter(highestKey + 1)
             setCurrentId(highestKey)

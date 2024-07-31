@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
-import { deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
 
@@ -38,6 +38,7 @@ const Summarize = () => {
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);
     useEffect(() => {
+        checkStructurOfDB(storage);
         getHighestKeyInDB(storage).then((highestKey) => {
             setIdCounter(highestKey + 1)
             setCurrentId(highestKey)

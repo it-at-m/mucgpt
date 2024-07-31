@@ -30,8 +30,7 @@ export const Answer = ({
     setQuestion,
 }: Props) => {
     let dummyAnswer = { answerHtml: "<p className={styles.answerText}> Reload the site or try to resend the Question!<p>", citations: [], followupQuestions: [] } as HtmlParsedAnswer
-    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]) || dummyAnswer;
-
+    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]) || useMemo(() => parseAnswerToHtml("Reload the site or try to resend the Question!"), [answer]);
 
     const { t } = useTranslation();
 

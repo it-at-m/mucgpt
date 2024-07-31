@@ -180,7 +180,8 @@ i18n
                             delete: "Chat Löschen",
                             favourites: "Favoriten",
                             save: "Zu Favoriten hinzufügen",
-                            unsave: "Aus Favoriten entfernen"
+                            unsave: "Aus Favoriten entfernen",
+                            error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!"
                         }
                     }
                 }
@@ -352,7 +353,8 @@ i18n
                             delete: "Delete chat",
                             favourites: "Favourites",
                             save: "Add to Favourites",
-                            unsave: "Remove from Favourites"
+                            unsave: "Remove from Favourites",
+                            error: "Do not change the Tab before the Answer is fully generated!"
                         }
                     }
                 }
@@ -524,7 +526,8 @@ i18n
                             delete: "Chat Löschn",
                             favourites: "Favoriten",
                             save: "Zu Favoritn hinzufügn",
-                            unsave: "Vo Favoritn entfernen"
+                            unsave: "Vo Favoritn entfernen",
+                            error: "Wechsle de Seiten ned bevor ned de nachricht komplett generiert wordn is!"
                         }
                     }
                 }

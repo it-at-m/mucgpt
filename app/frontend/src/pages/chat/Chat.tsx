@@ -12,10 +12,10 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
-import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getZeroChat, changeTemperatureInDb, changeMaxTokensInDb, changeSystempromptInDb, CURRENT_CHAT_IN_DB } from "../../service/storage"
+import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getZeroChat, changeTemperatureInDb, changeMaxTokensInDb, changeSystempromptInDb, CURRENT_CHAT_IN_DB, checkStructurOfDB } from "../../service/storage"
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
-
+import { MessageError } from "./MessageError";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
@@ -70,6 +70,7 @@ const Chat = () => {
     }, [debouncedSystemPrompt, makeTokenCountRequest]);
 
     useEffect(() => {
+        checkStructurOfDB(storage);
         setAnswers([]);
         lastQuestionRef.current = "";
         getHighestKeyInDB(storage).then((highestKey) => {
@@ -86,12 +87,20 @@ const Chat = () => {
                 setCurrentId(key)
                 getStartDataFromDB(storage, key).then((stored) => {
                     if (stored) {
-                        setAnswers([...answers.concat(stored.Data.Answers)]);
                         lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
-                        if (stored.Options) {
-                            onMaxTokensChanged(stored.Options.maxTokens, key);
-                            onTemperatureChanged(stored.Options.temperature, key);
-                            onSystemPromptChanged(stored.Options.system, key)
+                        if (stored.Data.Answers[stored.Data.Answers.length - 1][1].answer == "") {
+                            if (stored.Data.Answers.length > 1) {
+                                stored.Data.Answers.pop();
+                                setAnswers([...answers.concat(stored.Data.Answers)]);
+                            }
+                            setError(new MessageError(t('components.history.error')))
+                        } else {
+                            setAnswers([...answers.concat(stored.Data.Answers)]);
+                            if (stored.Options) {
+                                onMaxTokensChanged(stored.Options.maxTokens, key);
+                                onTemperatureChanged(stored.Options.temperature, key);
+                                onSystemPromptChanged(stored.Options.system, key)
+                            }
                         }
                     }
                 });
@@ -230,6 +239,7 @@ const Chat = () => {
                 onTemperatureChanged={onTemperatureChanged}
                 onMaxTokensChanged={onMaxTokensChanged}
                 onSystemPromptChanged={onSystemPromptChanged}
+                setError={setError}
             ></History>
             <div className={styles.commandsContainer}>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />

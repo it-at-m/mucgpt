@@ -49,7 +49,6 @@ export async function saveToDB(
             if (result) {
                 dataID = result.id;
                 let storedAnswers = result.Data.Answers;
-                console.log("stored: ", storedAnswers[storedAnswers.length - 1][1], " new: ", a[1]);
                 if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
                     storedAnswers[storedAnswers.length - 1][1] = a[1];
                 } else {
@@ -300,3 +299,16 @@ export const changeFavouritesInDb = (fav: boolean, id: number, storage: indexedD
         stored.onerror = () => onError(stored);
     };
 };
+
+export function checkStructurOfDB(storage: indexedDBStorage) {
+    let openRequest = indexedDB.open(storage.db_name, storage.db_version);
+    let storeName = storage.objectStore_name;
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = async function () {
+        let db = openRequest.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: "id" });
+        }
+    };
+}

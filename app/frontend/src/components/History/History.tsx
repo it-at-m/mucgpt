@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB } from '../../service/storage';
 import { AskResponse } from '../../api/models';
 import styles from "./History.module.css";
+import { MessageError } from '../../pages/chat/MessageError';
 
 interface Props {
     storage: indexedDBStorage
@@ -16,15 +17,23 @@ interface Props {
     onTemperatureChanged: (temp: number, id: number) => void
     onMaxTokensChanged: (tokens: number, id: number) => void
     onSystemPromptChanged: (prompt: string, id: number) => void
+    setError: (error: Error | undefined) => void
 }
-export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCurrentId, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged }: Props) => {
+export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCurrentId, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged, setError }: Props) => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
 
     const loadChat = (stored: any) => {
-        setAnswers(stored.Data.Answers);
+        setError(undefined);
         lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
+        if (stored.Data.Answers[stored.Data.Answers.length - 1][1].answer == "") {
+            stored.Data.Answers.pop()
+            setAnswers(stored.Data.Answers);
+            setError(new MessageError(t('components.history.error')))
+        } else {
+            setAnswers(stored.Data.Answers);
+        }
         let id = stored.id;
         setIsOpen(false);
         setCurrentId(id);

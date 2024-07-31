@@ -9,6 +9,7 @@ import {
 } from "@fluentui/react-components";
 import vorgeschlageneAntworten from "../../assets/vorgeschlagene_antworten.png";
 import zurückziehen from "../../assets/zurückziehen.png";
+import history from "../../assets/History.png"
 import { useTranslation } from "react-i18next";
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +40,10 @@ const Version = () => {
                                 <h3>{t('version.added')}</h3>
                                 <ul>
                                     <li>Für die Chat-Funktion gibt es jetzt eine Historie
+                                        <p>
+                                            <img width="70%" src={history}>
+                                            </img>
+                                        </p>
                                         <ul>
                                             <li>Alle Chat-Verläufe in dem Tab "Chat" werden automatisch gespeichert</li>
                                             <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favourisiert werden</li>

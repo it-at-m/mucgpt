@@ -39,7 +39,7 @@ const Version = () => {
                             <div className={styles.panel}>
                                 <h3>{t('version.added')}</h3>
                                 <ul>
-                                    <li>Für die Chat-Funktion gibt es nun eine Historie aller durchgeführten konversationen
+                                    <li>Für die Chat-Funktion gibt es nun eine Historie aller durchgeführten Konversationen
                                         <p>
                                             <img width="70%" src={history}>
                                             </img>

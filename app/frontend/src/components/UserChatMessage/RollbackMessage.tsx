@@ -1,6 +1,6 @@
 import { Button, Tooltip } from "@fluentui/react-components"
 import { useTranslation } from "react-i18next";
-import { deleteFromDB, indexedDBStorage, popLastInDB } from "../../service/storage";
+import { deleteChatFromDB, indexedDBStorage, popLastMessageInDB } from "../../service/storage";
 import { DeleteArrowBackRegular } from "@fluentui/react-icons";
 
 import styles from "./UserChatMessage.module.css"
@@ -14,14 +14,15 @@ interface Props {
     setAnswers: (answers: any[]) => void;
     storage: indexedDBStorage;
     lastQuestionRef: MutableRefObject<string>;
+    current_id: number;
 }
 
-export const RollBackMessage = ({ message, setQuestion, answers, setAnswers, storage, lastQuestionRef }: Props) => {
+export const RollBackMessage = ({ message, setQuestion, answers, setAnswers, storage, lastQuestionRef, current_id }: Props) => {
     const { t } = useTranslation();
     const deleteMessageAndRollbackChat = () => {
         let last;
         while (answers.length) {
-            popLastInDB(storage);
+            popLastMessageInDB(storage, current_id);
             last = answers.pop();
             setAnswers(answers);
             if (last && last[0] == message) {
@@ -29,8 +30,8 @@ export const RollBackMessage = ({ message, setQuestion, answers, setAnswers, sto
             }
         }
         if (answers.length == 0) {
-            lastQuestionRef.current = ""
-            deleteFromDB(storage)
+            deleteChatFromDB(storage, current_id, setAnswers, true, lastQuestionRef)
+            deleteChatFromDB(storage, 0, setAnswers, false, lastQuestionRef)
         } else {
             lastQuestionRef.current = last[1]
         }

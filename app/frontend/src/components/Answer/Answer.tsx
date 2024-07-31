@@ -31,7 +31,6 @@ export const Answer = ({
 }: Props) => {
     const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]);
 
-
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);

@@ -21,14 +21,15 @@ import { useCallback, useState } from "react";
 import { useTranslation } from 'react-i18next';
 interface Props {
     temperature: number;
-    setTemperature: (temp: number) => void;
+    setTemperature: (temp: number, id: number) => void;
     max_tokens: number;
-    setMaxTokens: (maxTokens: number) => void;
+    setMaxTokens: (maxTokens: number, id: number) => void;
     systemPrompt: string;
-    setSystemPrompt: (systemPrompt: string) => void;
+    setSystemPrompt: (systemPrompt: string, id: number) => void;
+    current_id: number;
 }
 
-export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, setMaxTokens, systemPrompt, setSystemPrompt, current_id }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
     const onClickRightButton = useCallback(() => {
@@ -49,19 +50,19 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
     const isEmptySystemPrompt = systemPrompt.trim() === "";
 
     const onTemperatureChange: SliderProps["onChange"] = (_, data) =>
-        setTemperature(data.value);
+        setTemperature(data.value, current_id);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) =>
-        setMaxTokens(data.value);
+        setMaxTokens(data.value, current_id);
 
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value)
-            setSystemPrompt(newValue.value);
+            setSystemPrompt(newValue.value, current_id);
         else
-            setSystemPrompt("");
+            setSystemPrompt("", current_id);
     }
 
     const onClearSystemPrompt = () => {
-        setSystemPrompt("");
+        setSystemPrompt("", current_id);
     }
     return (
         <div>

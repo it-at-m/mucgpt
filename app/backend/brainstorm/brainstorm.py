@@ -7,7 +7,6 @@ from langchain_core.runnables.base import RunnableSerializable
 
 from brainstorm.brainstormresult import BrainstormResult
 from core.datahelper import Repository, Requestinfo
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 
@@ -56,10 +55,9 @@ class Brainstorm:
     Text: 
     {brainstorm}"""
 
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository):
         self.llm = llm
         self.config = config
-        self.model_info = model_info
         self.repo = repo
     
     def getBrainstormPrompt(self) -> PromptTemplate:
@@ -91,7 +89,6 @@ class Brainstorm:
         """
         # configure
         config: LlmConfigs = {
-            "llm_api_key": self.model_info["openai_api_key"]
         }
         llm = self.llm.with_config(configurable=config)
         

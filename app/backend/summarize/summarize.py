@@ -10,7 +10,6 @@ from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
 from core.textsplit import splitPDF, splitText
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 from summarize.summarizeresult import SummarizeResult
@@ -84,10 +83,9 @@ class Summarize:
 
 
 
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700, use_last_n_summaries = -2):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700, use_last_n_summaries = -2):
         self.llm = llm
         self.config = config
-        self.model_info = model_info
         self.repo = repo
         self.switcher =  {
             "short": short_split,
@@ -109,7 +107,6 @@ class Summarize:
 
     def setup(self) -> SequentialChain:
         config: LlmConfigs = {
-            "llm_api_key": self.model_info["openai_api_key"]
         }
         llm = self.llm.with_config(configurable=config)
         # setup model

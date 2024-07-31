@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import time
 from typing import cast
 
 from azure.monitor.opentelemetry import configure_azure_monitor
@@ -162,10 +161,9 @@ async def counttokens():
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     
-    model = cfg["model_info"]["model"]
     request_json = await request.get_json()
     message=request_json['text'] or ""
-    counted_tokens = num_tokens_from_message(message,model)
+    counted_tokens = num_tokens_from_message(message,"gpt-35-turbo") #TODO use correct model
     return jsonify(CountResult(count=counted_tokens))
 
 @bp.route("/statistics/export", methods=["GET"])
@@ -207,18 +205,6 @@ def get_department(request: Request):
     else:
         return None
     
-
-
-@bp.before_request
-async def ensure_openai_token():
-    cfg = get_config()
-    openai_token = cfg["model_info"]["openai_token"]
-    if openai_token.expires_on < time.time() + 60:
-        openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
-        # updates tokens, the approaches should get the newest version of the token via reference 
-        cfg["model_info"]["openai_token"] = openai_token
-        cfg["model_info"]["openai_api_key"] = openai_token.token
-
 @bp.before_app_serving
 async def setup_clients():
     current_app.config[APPCONFIG_KEY] = await initApp()

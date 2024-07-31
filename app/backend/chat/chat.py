@@ -17,7 +17,6 @@ from langchain_core.runnables.base import RunnableSerializable
 from chat.chatresult import ChatResult
 from core.datahelper import Repository, Requestinfo
 from core.modelhelper import num_tokens_from_message, num_tokens_from_messages
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.types.Chunk import Chunk, ChunkInfo
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
@@ -27,12 +26,10 @@ class Chat:
     """Chat with a llm via multiple steps.
     """
 
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig,  model_info: AzureChatGPTConfig, repo: Repository, chatgpt_model: str):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository):
         self.llm = llm
         self.config = config
-        self.model_info = model_info
         self.repo = repo
-        self.chatgpt_model = chatgpt_model
 
     async def create_coroutine(self, history: "Sequence[dict[str, str]]", llm: RunnableSerializable, system_message: Optional[str]) -> Any:
         """Calls the llm in streaming mode
@@ -69,7 +66,6 @@ class Chat:
         handler = AsyncIteratorCallbackHandler()
         config: LlmConfigs = {
             "llm_max_tokens": max_tokens,
-            "llm_api_key": self.model_info["openai_api_key"],
             "llm_temperature": temperature,
             "llm_streaming": True,
             "llm_callbacks": [handler],
@@ -102,15 +98,15 @@ class Chat:
             history[-1]["bot"] = result
             system_message_tokens = 0
             if(system_message and  system_message.strip() !=""):
-                system_message_tokens = num_tokens_from_message(system_message,self.chatgpt_model) 
+                system_message_tokens = num_tokens_from_message(system_message,"gpt-35-turbo")  #TODO
             if self.config["log_tokens"]:
                 self.repo.addInfo(Requestinfo( 
-                    tokencount = num_tokens_from_messages(history,self.chatgpt_model) + system_message_tokens,
+                    tokencount = num_tokens_from_messages(history,"gpt-35-turbo") + system_message_tokens, #TODO richtiges Modell und tokenizer auswählen
                     department = department,
                     messagecount=  len(history),
                     method = "Chat"))
             
-            info = ChunkInfo(requesttokens=num_tokens_from_message(history[-1]["user"],self.chatgpt_model), streamedtokens=num_tokens_from_message(result,self.chatgpt_model))
+            info = ChunkInfo(requesttokens=num_tokens_from_message(history[-1]["user"],"gpt-35-turbo"), streamedtokens=num_tokens_from_message(result,"gpt-35-turbo")) #TODO
             yield Chunk(type="I", message=info, order=position)
     
     def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str]) -> ChatResult:
@@ -128,7 +124,6 @@ class Chat:
         """
         config: LlmConfigs = {
             "llm_max_tokens": max_tokens,
-            "llm_api_key": self.model_info["openai_api_key"],
             "llm_temperature": temperature,
             "llm_streaming": False,
         }

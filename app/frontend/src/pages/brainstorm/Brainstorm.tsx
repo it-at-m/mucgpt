@@ -11,7 +11,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from 'react-i18next';
-import { clearDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
@@ -26,15 +26,23 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming" }
+    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 }
+
+    const [currentId, setCurrentId] = useState<number>(0);
+    const [idCounter, setIdCounter] = useState<number>(0);
 
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
-        getStartDataFromDB(storage).then((stored) => {
+        checkStructurOfDB(storage);
+        getHighestKeyInDB(storage).then((highestKey) => {
+            setIdCounter(highestKey + 1)
+            setCurrentId(highestKey)
+        })
+        getStartDataFromDB(storage, currentId).then((stored) => {
             if (stored) {
-                setAnswers([...answers.concat(stored)]);
-                lastQuestionRef.current = stored[stored.length - 1][0];
+                setAnswers([...answers.concat(stored.Data.Answers)]);
+                lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
             }
         });
         setIsLoading(false);
@@ -58,7 +66,7 @@ const Summarize = () => {
             };
             const result = await brainstormApi(request);
             setAnswers([...answers, [question, result]]);
-            saveToDB([question, result], storage);
+            saveToDB([question, result], storage, currentId, idCounter, setCurrentId, setIdCounter,);
         } catch (e) {
             setError(e);
         } finally {
@@ -70,7 +78,7 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
-        clearDB(storage);
+        deleteChatFromDB(storage, currentId, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -99,6 +107,7 @@ const Summarize = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
@@ -115,6 +124,7 @@ const Summarize = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
@@ -131,6 +141,7 @@ const Summarize = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
+                                            current_id={currentId}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>

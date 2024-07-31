@@ -17,9 +17,10 @@ interface Props {
     setAnswers: (answers: any[]) => void;
     storage: indexedDBStorage;
     lastQuestionRef: MutableRefObject<string>;
+    current_id: number;
 }
 
-export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswers, storage, lastQuestionRef }: Props) => {
+export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswers, storage, lastQuestionRef, current_id }: Props) => {
 
 
     return (
@@ -34,6 +35,7 @@ export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswe
                         setAnswers={setAnswers}
                         storage={storage}
                         lastQuestionRef={lastQuestionRef}
+                        current_id={current_id}
                     />
                 </Stack>
                 <Markdown

@@ -7,7 +7,6 @@ import {
     Button,
     Tooltip,
 } from "@fluentui/react-components";
-import mindmaps_video from "../../assets/Mindmaps.mp4";
 import vorgeschlageneAntworten from "../../assets/vorgeschlagene_antworten.png";
 import zurückziehen from "../../assets/zurückziehen.png";
 import { useTranslation } from "react-i18next";
@@ -33,6 +32,27 @@ const Version = () => {
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
                 <Accordion multiple collapsible navigation="linear" defaultOpenItems="5">
+                    <AccordionItem value="6">
+                        <AccordionHeader>[1.1.2] 31.07.2024</AccordionHeader>
+                        <AccordionPanel >
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <ul>
+                                    <li>Für die Chat-Funktion gibt es jetzt eine Historie
+                                        <ul>
+                                            <li>Alle Chat-Verläufe in dem Tab "Chat" werden automatisch gespeichert</li>
+                                            <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favourisiert werden</li>
+                                            <li>Favourisierte Chats werden immer ganz oben angezeigt</li>
+                                            <li>Die Chats werden nach dem letzte Bearbeitungszeitpunkt sortiert und werden gruppiert in "Heute", "Gestern", "Letzte 7 Tage" und "Älter"</li>
+                                        </ul>
+
+                                    </li>
+                                </ul>
+                                <h3>{t('version.fixed')}</h3>
+                                <h3>{t('version.changed')}</h3>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem >
                     <AccordionItem value="5">
                         <AccordionHeader>[1.1.1] 04.06.2024</AccordionHeader>
                         <AccordionPanel >
@@ -80,11 +100,7 @@ const Version = () => {
                                                 </p>
                                             </li>
                                             <li><b>Mermaid Diagramme</b>  können im Chat angezeigt und heruntergeladen werden</li>
-                                            <li>Es gibt Arielle, die Diagramm-Assistentin. Diese begleitet den Nutzer beim Erstellen von Mermaid-Diagrammen.  <p>
-                                                <video width="80%" controls>
-                                                    <source src={mindmaps_video} type="video/mp4" />
-                                                </video>
-                                            </p></li>
+                                            <li>Es gibt Arielle, die Diagramm-Assistentin. Diese begleitet den Nutzer beim Erstellen von Mermaid-Diagrammen.</li>
                                             <li>Mehr Platz für die Eingabe des Systemprompts</li>
                                             <li>Warnmeldung wird angezeigt, falls Systemprompt gesetzt ist</li>
                                             <li>Bessere Beschreibungen für die Temperatur Einstellung</li>

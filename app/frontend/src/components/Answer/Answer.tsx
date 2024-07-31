@@ -4,7 +4,7 @@ import { Stack } from "@fluentui/react";
 import styles from "./Answer.module.css";
 
 import { AskResponse } from "../../api";
-import { parseAnswerToHtml, HtmlParsedAnswer } from "./AnswerParser";
+import { parseAnswerToHtml } from "./AnswerParser";
 import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from 'react-i18next';
 import Markdown from 'react-markdown';
@@ -29,8 +29,7 @@ export const Answer = ({
     onRegenerateResponseClicked,
     setQuestion,
 }: Props) => {
-    let dummyAnswer = { answerHtml: "<p className={styles.answerText}> Reload the site or try to resend the Question!<p>", citations: [], followupQuestions: [] } as HtmlParsedAnswer
-    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]) || useMemo(() => parseAnswerToHtml("Reload the site or try to resend the Question!"), [answer]);
+    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]);
 
     const { t } = useTranslation();
 

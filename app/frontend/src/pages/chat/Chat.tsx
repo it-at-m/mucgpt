@@ -87,19 +87,21 @@ const Chat = () => {
                 setCurrentId(key)
                 getStartDataFromDB(storage, key).then((stored) => {
                     if (stored) {
-                        lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
-                        if (stored.Data.Answers[stored.Data.Answers.length - 1][1].answer == "") {
-                            if (stored.Data.Answers.length > 1) {
-                                stored.Data.Answers.pop();
-                                setAnswers([...answers.concat(stored.Data.Answers)]);
+                        let storedAnswers = stored.Data.Answers;
+                        lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
+                        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                            if (storedAnswers.length > 1) {
+                                storedAnswers.pop();
+                                setAnswers([...answers.concat(storedAnswers)]);
                             }
                             setError(new MessageError(t('components.history.error')))
                         } else {
-                            setAnswers([...answers.concat(stored.Data.Answers)]);
-                            if (stored.Options) {
-                                onMaxTokensChanged(stored.Options.maxTokens, key);
-                                onTemperatureChanged(stored.Options.temperature, key);
-                                onSystemPromptChanged(stored.Options.system, key)
+                            let options = stored.Options
+                            setAnswers([...answers.concat(storedAnswers)]);
+                            if (options) {
+                                onMaxTokensChanged(options.maxTokens, key);
+                                onTemperatureChanged(options.temperature, key);
+                                onSystemPromptChanged(options.system, key)
                             }
                         }
                     }

@@ -26,14 +26,13 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
 
     const loadChat = (stored: any) => {
         setError(undefined);
-        lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
-        if (stored.Data.Answers[stored.Data.Answers.length - 1][1].answer == "") {
-            stored.Data.Answers.pop()
-            setAnswers(stored.Data.Answers);
+        let storedAnswers = stored.Data.Answers;
+        lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
+        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+            storedAnswers.pop()
             setError(new MessageError(t('components.history.error')))
-        } else {
-            setAnswers(stored.Data.Answers);
         }
+        setAnswers(storedAnswers);
         let id = stored.id;
         setIsOpen(false);
         setCurrentId(id);

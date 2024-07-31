@@ -12,7 +12,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
-import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getZeroChat, changeTemperatureInDb, changeMaxTokensInDb, changeSystempromptInDb, CURRENT_CHAT_IN_DB, checkStructurOfDB } from "../../service/storage"
+import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, getHighestKeyInDB, deleteChatFromDB, getCurrentChatID, changeTemperatureInDb, changeMaxTokensInDb, changeSystempromptInDb, CURRENT_CHAT_IN_DB, checkStructurOfDB } from "../../service/storage"
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 import { MessageError } from "./MessageError";
@@ -74,7 +74,7 @@ const Chat = () => {
         setAnswers([]);
         lastQuestionRef.current = "";
         getHighestKeyInDB(storage).then((highestKey) => {
-            getZeroChat(storage).then((refID) => {
+            getCurrentChatID(storage).then((refID) => {
                 error && setError(undefined);
                 setIsLoading(true);
                 let key;
@@ -86,10 +86,10 @@ const Chat = () => {
                 setIdCounter(key)
                 setCurrentId(key)
                 getStartDataFromDB(storage, key).then((stored) => {
-                    if (stored) {
+                    if (stored) {// if the chat exists
                         let storedAnswers = stored.Data.Answers;
                         lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
-                        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {// if the answer of the LLM has not (yet) returned
                             if (storedAnswers.length > 1) {
                                 storedAnswers.pop();
                                 setAnswers([...answers.concat(storedAnswers)]);

@@ -527,7 +527,7 @@ i18n
                             favourites: "Favoriten",
                             save: "Zu Favoritn hinzufügn",
                             unsave: "Vo Favoritn entfernen",
-                            error: "Wechsle de Seiten ned bevor ned de nachricht komplett generiert wordn is!"
+                            error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!"
                         }
                     }
                 }

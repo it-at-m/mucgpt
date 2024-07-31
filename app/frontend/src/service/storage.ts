@@ -47,6 +47,7 @@ export async function saveToDB(
             let dataID;
             let result = stored.result;
             if (result) {
+                // if the chat allready exist in the DB
                 dataID = result.id;
                 let storedAnswers = result.Data.Answers;
                 if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
@@ -62,6 +63,7 @@ export async function saveToDB(
                 }
                 data = result;
             } else {
+                // if the chat does not exist in the DB
                 let name: string = "";
                 let new_idcounter = id_counter;
                 if (language != undefined && temperature != undefined && system_message != undefined && max_tokens != undefined) {
@@ -69,6 +71,7 @@ export async function saveToDB(
                     name = name.replaceAll('"', "").replaceAll(".", "");
                 }
                 if (storage.objectStore_name === "chat") {
+                    // if this function is called by the chat the chat options are also saved
                     new_idcounter = new_idcounter + 1;
                     setIdCounter(new_idcounter);
                     data = {
@@ -216,7 +219,8 @@ export function getHighestKeyInDB(storage: indexedDBStorage): Promise<number> {
     });
 }
 
-export function getZeroChat(storage: indexedDBStorage): Promise<number | undefined> {
+export function getCurrentChatID(storage: indexedDBStorage): Promise<number | undefined> {
+    // This method returns the current chat ID or undefined if there is currently no chat in the chat window
     return new Promise((resolve, reject) => {
         let openRequest = indexedDB.open(storage.db_name, storage.db_version);
         openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);

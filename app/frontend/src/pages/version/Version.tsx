@@ -46,8 +46,8 @@ const Version = () => {
                                         </p>
                                         <ul>
                                             <li>Alle Chat-Verläufe in dem Tab "Chat" werden automatisch gespeichert</li>
-                                            <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favourisiert werden</li>
-                                            <li>Favourisierte Chats werden immer ganz oben angezeigt</li>
+                                            <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favorisiert werden</li>
+                                            <li>Favorisiert Chats werden immer ganz oben angezeigt</li>
                                             <li>Die Chats werden nach dem letzte Bearbeitungszeitpunkt sortiert und werden gruppiert in "Heute", "Gestern", "Letzte 7 Tage" und "Älter"</li>
                                         </ul>
 

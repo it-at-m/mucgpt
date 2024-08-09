@@ -16,4 +16,4 @@ requests
 sqlalchemy==2.0.31
 psycopg2==2.9.9
 pypdf2==3.0.1
-tenacity==8.4.2
+tenacity==8.5.0

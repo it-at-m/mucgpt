@@ -165,7 +165,9 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
                             />
                         }
                     >
-                        {t('components.history.history')}:
+                        <Tooltip content={t('components.history.saved_in_browser')} relationship="description" positioning="below">
+                            <p>{t('components.history.history')}:</p>
+                        </Tooltip>
                     </DrawerHeaderTitle>
                 </DrawerHeader>
 

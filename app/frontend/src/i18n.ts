@@ -49,7 +49,7 @@ i18n
                         answer_loading: "Denke nach"
                     },
                     common: {
-                        clear_chat: "Chat löschen",
+                        clear_chat: "Neuer Chat",
                         settings: "Einstellungen",
                         close: "Schließen",
                         messages: "Nachrichten",
@@ -164,6 +164,24 @@ i18n
                                 "Formuliere deine letzte Nachricht zu einem neuen formellen Text, der den ursprünglichen Inhalt in einer akademischen Schreibweise präsentiert. Dieser Text sollte eine klare Struktur aufweisen, präzise und sachliche Ausdrucksweise verwenden und dem Leser ein professionelles Leseerlebnis bieten",
                             informal_prompt:
                                 "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
+                        },
+                        history: {
+                            button: "Gespeicherte Chats",
+                            today: "Heute",
+                            yesterday: "Gestern",
+                            sevendays: "Letzte 7 Tage",
+                            older: "Älter",
+                            history: "Historie",
+                            newchat: "Gib dem Chat einen neuen Namen:",
+                            options: "Chat-Optionen",
+                            close: "Schließen",
+                            lastEdited: "Zuletzt geändert: ",
+                            rename: "Chat Umbenennen",
+                            delete: "Chat Löschen",
+                            favourites: "Favoriten",
+                            save: "Zu Favoriten hinzufügen",
+                            unsave: "Aus Favoriten entfernen",
+                            error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!"
                         }
                     }
                 }
@@ -204,7 +222,7 @@ i18n
                         answer_loading: "Thinking"
                     },
                     common: {
-                        clear_chat: "Clear chat",
+                        clear_chat: "New chat",
                         settings: "Settings",
                         close: "Close",
                         messages: "Messages",
@@ -319,6 +337,24 @@ i18n
                                 "Rewrite your last message into a new formal text that presents the original content in an academic writing style. This text should have a clear structure, use precise and factual language, and provide the reader with a professional reading experience.",
                             informal_prompt:
                                 "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
+                        },
+                        history: {
+                            button: "Saved Chats",
+                            today: "Today",
+                            yesterday: "Yesterday",
+                            sevendays: "Last 7 Days",
+                            older: "Older",
+                            history: "History",
+                            newchat: "Enter new name for the chat:",
+                            options: "Chat-Options",
+                            close: "Close",
+                            lastEdited: "Last edited: ",
+                            rename: "Rename chat",
+                            delete: "Delete chat",
+                            favourites: "Favourites",
+                            save: "Add to Favourites",
+                            unsave: "Remove from Favourites",
+                            error: "Do not change the Tab before the Answer is fully generated!"
                         }
                     }
                 }
@@ -353,7 +389,7 @@ i18n
                         answer_loading: "Denk na"
                     },
                     common: {
-                        clear_chat: "Nochrichten löschn",
+                        clear_chat: "Neia Chat",
                         settings: "Konfiguration",
                         close: "Schließen",
                         messages: "Nochrichten",
@@ -474,6 +510,24 @@ i18n
                                 "Formuliere dei letzte Nachricht zu am neuen formellen Text, der an ursprünglichen Inhalt in na akademischen Schreibweise präsentiert. Der Text soidad a klare Struktur aufweisen, präzise und sachliche Ausdrucksweise benutzn und am Leser a professionelles Leseerlebnis bieten",
                             informal_prompt:
                                 "Formuliere dei letzte Nachricht zu am neuen informelleren Text, der an ursprünglichen Inhalt in a lockeren Schreibweise wiedagibt. Dieser Text soi am Leser a ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente benutzt."
+                        },
+                        history: {
+                            button: "Gespeichade Chats",
+                            today: "Heid",
+                            yesterday: "Gesdan",
+                            sevendays: "Letzte 7 Dog",
+                            older: "Oida",
+                            history: "Historie",
+                            newchat: "Gib dem Chat an nein Nama:",
+                            options: "Chat-Optionen",
+                            close: "Schließen",
+                            lastEdited: "Zuletzt geändert: ",
+                            rename: "Chat Umbenenna",
+                            delete: "Chat Löschn",
+                            favourites: "Favoriten",
+                            save: "Zu Favoritn hinzufügn",
+                            unsave: "Vo Favoritn entfernen",
+                            error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!"
                         }
                     }
                 }

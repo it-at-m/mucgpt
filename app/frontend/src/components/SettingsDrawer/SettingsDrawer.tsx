@@ -19,6 +19,7 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { useTranslation } from 'react-i18next';
 import cheetsheet from "../../assets/mucgpt_cheatsheet.pdf";
+import { LLMSelector } from "../LLMSelector/LLMSelector";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
@@ -27,9 +28,11 @@ interface Props {
     setFontscale: (fontscale: number) => void;
     isLight: boolean;
     setTheme: (isLight: boolean) => void;
+    onLLMSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
+    defaultLLM: string;
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
 
@@ -71,6 +74,14 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
                 </div>
+
+                <div className={styles.header} role="heading" aria-level={3}>
+                    {t('components.settingsdrawer.llm')}
+                </div>
+                <div className={styles.bodyContainer}>
+                    <LLMSelector defaultLLM={defaultLLM} onSelectionChange={onLLMSelectionChanged}></LLMSelector>
+                </div>
+
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.fontsize')}
 

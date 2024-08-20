@@ -14,7 +14,7 @@ FROM python:3.12
 WORKDIR /code
 COPY --from=builder /build/backend .
 
-ARG fromconfig="./config/.local.json"
+ARG fromconfig="./config/default.json"
 COPY $fromconfig /code/config.json
 COPY "./config/base.json"  /code/base.json
 

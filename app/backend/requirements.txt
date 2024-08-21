@@ -5,9 +5,9 @@ langchain_community
 tiktoken
 uvicorn[standard]==0.30.3
 aiohttp==3.10.2
-opentelemetry-instrumentation-asgi==0.46b0
-opentelemetry-instrumentation-requests==0.46b0
-opentelemetry-instrumentation-aiohttp-client==0.46b0
+opentelemetry-instrumentation-asgi==0.47b0
+opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-aiohttp-client
 werkzeug==3.0.3
 joserfc
 requests

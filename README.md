@@ -33,7 +33,6 @@ The documentation project is built with technologies we use in our projects (see
 ### Backend:
 * [Python 3.9, 3.10 or 3.11](https://www.python.org/downloads/)
 * [Quart](https://pgjones.gitlab.io/quart/)
-* [Azure OpenAI](https://azure.microsoft.com/de-de/products/ai-services/openai-service)
 * [LangChain](https://www.langchain.com/)
 
 ### Frontend:
@@ -43,10 +42,10 @@ The documentation project is built with technologies we use in our projects (see
 * [Javascript](https://wiki.selfhtml.org/wiki/JavaScript)
 
 ### Deployment:
-  * [Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows)
   * [Node.js 14+](https://nodejs.org/en/download/package-manager)
   * [Git](https://git-scm.com/downloads)
-  * [Powershell 7+ (pwsh)](https://github.com/powershell/powershell)
+  * Python 12
+  * Docker
 
 ## Table of contents
 * [Built With](#built-with)
@@ -64,52 +63,26 @@ The documentation project is built with technologies we use in our projects (see
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
+## Run
+ Configure your environment in [config/default.json](config/default.json).  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
+### Run locally
+```
+cd app\backend
+pip install --no-cache-dir --upgrade -r requirements.txt   
+cd ..\frontend
+npm run build
+cd ..\backend
+$env:MUCGPT_CONFIG="path to default.json"
+$env:MUCGPT_BASE_CONFIG="path to base.json"
+python -m  quart --app main:app run
+```
 
-## Set up on Azure
-As this project bases on a template of Microsoft Azure see also [here](https://github.com/Azure-Samples/azure-search-openai-demo?tab=readme-ov-file#azure-deployment) for the deployment documentation.
-### You need the following requirements to set up MUCGPT on Azure:
-* Azure account
-* Azure subscription with access enabled for the Azure OpenAI service
-* Account Permissions:
-  * `Microsoft.Authorization/roleAssignments/write`
-  * Role Based Access Control Administrator, User Access Administrator, or Owner
-  * subscription-level permissions
-  * `Microsoft.Resources/deployments/write` on the subscription level 
 
+### Run with docker
+1. Build an Image
+   ``` docker build --tag mucgpt-local . --build-arg   fromconfig="./config/default.json"```
+2. Run the image ```docker run --detach --publish 8080:8000  mucgpt-local```
 
-### Cost estimation: 
-Pricing varies per region and usage, so it isn't possible to predict exact costs for your usage. However, you can try the [Azure pricing calculator](https://azure.microsoft.com/en-us/pricing/calculator/) for the resources below.
-* Azure App Service
-* Azure OpenAI
-* Flexibler Azure Database for PostgreSQL-Server
-* App Service-Plan
-
-### Deploying
-1. Install the [required tools](#built-with)
-2. Clone the repository with the command `git clone https://github.com/it-at-m/mucgpt` and switch in your terminal to the folder
-3. Login to your Azure account: `azd auth login`
-4. Create a new azd environemnt with `azd env new`. Enter a name that will be used for the resource group. This will create a new folder in the `.azure` folder, and set it as the active environment for any calls to `azd` going forward.
-5. (Optional) This is the point where you can customize the deployment by setting environment variables, in order to use existing resources, enable optional features (such as auth or vision), or deploy to free tiers.
-6. Run `azd up` - This will provision Azure resources and deploy this sample to those resources.
-7. After the application has been successfully deployed you will see a URL printed to the console. Click that URL to interact with the application in your browser. It will look like the following:  
-![](/docs/endpoint.png)
-    > **_NOTE:_**  It may take 5-10 minutes after you see 'SUCCESS' for the application to be fully deployed. If you see a "Python Developer" welcome screen or an error page, then wait a bit and refresh the page.
-
-### Deploying again
-If you've only changed the backend/frontend code in the `app` folder, then you don't need to re-provision the Azure resources. You can just run:
-
-`azd deploy`
-
-If you've changed the infrastructure files (`infra` folder or `azure.yaml`), then you'll need to re-provision the Azure resources. You can do that by running:
-
-`azd up`
-
-### Running locally
-You can only run locally after having successfully run the `azd up` command. If you haven't yet, follow the steps in [Deploying](#deploying) above.
-
-1. Run `azd auth login`
-2. Change dir to app
-3. Run `./start.ps1` or `./start.sh` to start the app
 
 ## Documentation
 ![Architecture](docs/appcomponents_en.png)  

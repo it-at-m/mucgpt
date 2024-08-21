@@ -54,7 +54,9 @@ async def initApp() -> AppConfig:
     """
     
     # read enviornment config
-    config_helper = ConfigHelper(base_path=os.path.dirname(os.path.realpath(__file__))+"/", env="config", base_config_name="base")
+    env_config = os.environ['MUCGPT_CONFIG'] if "MUCGPT_CONFIG" in os.environ else os.path.dirname(os.path.realpath(__file__))+"/config.json"
+    base_config = os.environ['MUCGPT_BASE_CONFIG'] if "MUCGPT_BASE_CONFIG" in os.environ is not None else os.path.dirname(os.path.realpath(__file__))+"/base.json"
+    config_helper = ConfigHelper(env_config=env_config, base_config=base_config)
     cfg = config_helper.loadData()
      # Set up authentication helper
     auth_helper = AuthentificationHelper(

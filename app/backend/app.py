@@ -2,9 +2,6 @@ import json
 import logging
 import os
 from typing import cast
-
-from azure.monitor.opentelemetry import configure_azure_monitor
-from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
     Blueprint,
@@ -210,12 +207,9 @@ async def setup_clients():
     current_app.config[APPCONFIG_KEY] = await initApp()
 
 def create_app():
-    if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
-        configure_azure_monitor()
-        AioHttpClientInstrumentor().instrument()
     app = Quart(__name__)
     app.register_blueprint(bp)
-    app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
+    app.asgi_app = OpenTelemetryMiddleware(app = app.asgi_app)
     # Level should be one of https://docs.python.org/3/library/logging.html#logging-levels
     logging.basicConfig(level=os.getenv("APP_LOG_LEVEL", "ERROR"))
     return app

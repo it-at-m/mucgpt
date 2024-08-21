@@ -12,6 +12,7 @@ import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from '@fluentui/react-components';
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
+import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 
 const formatDate = (date: Date) => {
     let formatted_date =
@@ -26,9 +27,11 @@ export const Layout = () => {
     const navigate = useNavigate()
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
+    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || DEFAULTLLM;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
     const { language, setLanguage } = useContext(LanguageContext);
+    const { LLM, setLLM } = useContext(LLMContext);
     const { t, i18n } = useTranslation();
     const [config, setConfig] = useState<ApplicationConfig>({
         backend: {
@@ -82,6 +85,12 @@ export const Layout = () => {
         setLanguage(lang);
         localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
     };
+    const onLLMSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        let llm = selection.optionValue || DEFAULTLLM;
+        setLLM(llm);
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
+    };
+
     return (
 
         <FluentProvider theme={theme}>
@@ -122,7 +131,10 @@ export const Layout = () => {
                             fontscale={fontscaling}
                             setFontscale={onFontscaleChange}
                             isLight={isLight}
-                            setTheme={onThemeChange}></SettingsDrawer>
+                            setTheme={onThemeChange}
+                            defaultLLM={llm_pref}
+                            onLLMSelectionChanged={onLLMSelectionChanged}
+                        ></SettingsDrawer>
                     </div>
                 </header>
                 <Outlet />

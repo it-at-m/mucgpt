@@ -13,6 +13,10 @@ class ModelsConfig(TypedDict):
     api_version: str
     max_tokens: int
 
+class ModelsDTO(TypedDict):
+    model_name: str
+    max_tokens: int
+
 class SSOConfig(TypedDict):
     sso_issuer: str
     role: str

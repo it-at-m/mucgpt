@@ -36,18 +36,19 @@ export type BrainstormRequest = {
 };
 
 export interface ApplicationConfig {
-    backend: Backend;
+    models: Model[];
     frontend: Frontend;
     version: string;
-}
-
-export interface Backend {
-    enable_auth: boolean;
 }
 
 export interface Frontend {
     alternative_logo: boolean;
     labels: Labels;
+}
+
+export interface Model {
+    max_tokens: number;
+    model_name: string;
 }
 
 export interface Labels {

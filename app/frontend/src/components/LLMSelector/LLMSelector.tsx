@@ -4,6 +4,7 @@ import {
     Option,
 } from "@fluentui/react-components";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
+import { Model } from "../../api";
 
 const useStyles = makeStyles({
     root: {
@@ -17,10 +18,11 @@ const useStyles = makeStyles({
 interface Props {
     onSelectionChange: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultLLM: string;
+    options: Model[];
 }
 
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM }: Props) => {
+export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const styles = useStyles();
     return (
         <div className={styles.root}>
@@ -30,18 +32,12 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM }: Props) => {
                 onOptionSelect={onSelectionChange}
                 appearance="underline"
                 size="small" positioning="below-start">
-                <Option text="GPT-4o-mini" className={styles.option}>
-                    GPT-4o-mini
-                </Option>
-                <Option text="LLama" className={styles.option}>
-                    LLama
-                </Option>
-                <Option text="Mistral" className={styles.option}>
-                    Mistral
-                </Option>
-                <Option text="GPT-4o" className={styles.option}>
-                    GPT-4o
-                </Option>
+                {options.map((item, index) => (
+                    <Option text={item.model_name} className={styles.option} key={index}>
+                        {item.model_name}
+                    </Option>
+
+                ))}
             </Dropdown>
         </div >
     );

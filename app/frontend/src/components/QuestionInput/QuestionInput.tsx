@@ -4,6 +4,8 @@ import { Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from 'react-i18next';
+import { useContext } from "react";
+import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
 interface Props {
     onSend: (question: string) => void;
@@ -18,7 +20,8 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
-    const wordCount = 4000;
+    const { LLM } = useContext(LLMContext)
+    const wordCount = LLM.max_tokens;
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;

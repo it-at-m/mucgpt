@@ -27,16 +27,15 @@ export const Layout = () => {
     const navigate = useNavigate()
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
-    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || DEFAULTLLM;
-    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
-    const { language, setLanguage } = useContext(LanguageContext);
-    const { LLM, setLLM } = useContext(LLMContext);
-    const { t, i18n } = useTranslation();
     const [config, setConfig] = useState<ApplicationConfig>({
-        backend: {
-            enable_auth: true
+        models: [{
+            "model_name": "KICC GPT",
+            "max_tokens": 128000
         },
+        {
+            "model_name": "Unknown GPT",
+            "max_tokens": 100
+        }],
         frontend: {
             labels: {
                 "env_name": "MUC tschibidi-C"
@@ -45,6 +44,12 @@ export const Layout = () => {
         },
         version: "DEV 1.0.0"
     });
+    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || config.models[0].model_name;
+    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
+    const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
+    const { language, setLanguage } = useContext(LanguageContext);
+    const { LLM, setLLM } = useContext(LLMContext);
+    const { t, i18n } = useTranslation();
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
     const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
 
@@ -67,7 +72,11 @@ export const Layout = () => {
     useEffect(() => {
         configApi().then(result => {
             setConfig(result);
-        }, () => { console.log("Config nicht geladen"); });
+            if (result.models.length === 0)
+                console.error("Keine Modelle vorhanden");
+            if (result.models.filter((model) => LLM.model_name === model.model_name).length === 0)
+                setLLM(result.models[0])
+        }, () => { console.error("Config nicht geladen"); });
         i18n.changeLanguage(language_pref);
     }, []);
 
@@ -87,9 +96,15 @@ export const Layout = () => {
     };
     const onLLMSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let llm = selection.optionValue || DEFAULTLLM;
-        setLLM(llm);
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
+        let found_llm = models.find((model) => model.model_name == llm);
+        if (found_llm) {
+            setLLM(found_llm);
+            localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
+        }
+
     };
+
+    const models = config.models;
 
     return (
 
@@ -134,6 +149,7 @@ export const Layout = () => {
                             setTheme={onThemeChange}
                             defaultLLM={llm_pref}
                             onLLMSelectionChanged={onLLMSelectionChanged}
+                            llmOptions={models}
                         ></SettingsDrawer>
                     </div>
                 </header>

@@ -1,10 +1,7 @@
 import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, Mail24Regular } from "@fluentui/react-icons";
 import {
-    DrawerHeader,
-    DrawerHeaderTitle,
     OverlayDrawer,
     Button,
-    CheckboxOnChangeData,
     Slider,
     SliderProps,
     Label,
@@ -14,12 +11,13 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
-import { ChangeEvent, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { useTranslation } from 'react-i18next';
 import cheetsheet from "../../assets/mucgpt_cheatsheet.pdf";
+import { Model } from "../../api";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
@@ -30,9 +28,10 @@ interface Props {
     setTheme: (isLight: boolean) => void;
     onLLMSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultLLM: string;
+    llmOptions: Model[];
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM, llmOptions }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
 
@@ -74,14 +73,15 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 <div className={styles.bodyContainer}>
                     <LanguageSelector defaultlang={defaultlang} onSelectionChange={onLanguageSelectionChanged}></LanguageSelector>
                 </div>
-                <div className={styles.header} role="heading" aria-level={3}>
-                    {t('components.settingsdrawer.fontsize')}
-                </div>
+
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.llm')}
                 </div>
                 <div className={styles.bodyContainer}>
-                    <LLMSelector defaultLLM={defaultLLM} onSelectionChange={onLLMSelectionChanged}></LLMSelector>
+                    <LLMSelector defaultLLM={defaultLLM} onSelectionChange={onLLMSelectionChanged} options={llmOptions}></LLMSelector>
+                </div>
+                <div className={styles.header} role="heading" aria-level={3}>
+                    {t('components.settingsdrawer.fontsize')}
                 </div>
                 <div className={styles.bodyContainer}>
                     <div className={styles.verticalContainer}>

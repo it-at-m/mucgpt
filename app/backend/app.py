@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import cast
+from typing import List, cast
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
     Blueprint,
@@ -15,6 +15,7 @@ from quart import (
     send_from_directory,
 )
 
+from core.types.Config import ModelsConfig, ModelsDTO
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
 from core.modelhelper import num_tokens_from_message
@@ -139,7 +140,16 @@ async def chat():
 @bp.route("/config", methods=["GET"])
 async def getConfig():
     cfg = get_config_and_authentificate()
-    return jsonify(cfg["configuration_features"])
+    frontend_features = cfg["configuration_features"]["frontend"]
+    models= cast(List[ModelsConfig], cfg["configuration_features"]["backend"]["models"])
+    models_dto_list = []
+    for model in models:
+        dto = ModelsDTO(model_name=model["model_name"], max_tokens=model["max_tokens"])
+        models_dto_list.append(dto)
+    return jsonify({
+        "frontend": frontend_features,
+        "models": models_dto_list
+    })
 
 @bp.route("/statistics", methods=["GET"])
 async def getStatistics():

@@ -52,7 +52,6 @@ async def initApp() -> AppConfig:
     Returns:
         AppConfig: contains the configuration for the webservice
     """
-    
     # read enviornment config
     env_config = os.environ['MUCGPT_CONFIG'] if "MUCGPT_CONFIG" in os.environ else os.path.dirname(os.path.realpath(__file__))+"/config.json"
     base_config = os.environ['MUCGPT_BASE_CONFIG'] if "MUCGPT_BASE_CONFIG" in os.environ is not None else os.path.dirname(os.path.realpath(__file__))+"/base.json"

@@ -3,10 +3,49 @@ from typing import List
 
 import tiktoken
 from langchain_core.messages.base import BaseMessage
+from mistral_common.protocol.instruct.messages import (
+    UserMessage, SystemMessage, AssistantMessage
+)
+from mistral_common.protocol.instruct.request import ChatCompletionRequest
+from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 
 def num_tokens_from_messages(messages: List[BaseMessage], model: str):
-    print(messages)
     """Return the number of tokens used by a list of messages."""
+    if("gpt-" in model):
+        return num_tokens_from_openai_model(messages=messages, model=model)
+    elif("mistral" in model):
+        return num_tokens_from_mistral_model(messages=messages, model=model)
+    else:
+        raise NotImplementedError(
+            f"""No tokenizer for model found. currently only openai and mistral are supported."""
+        )
+def num_tokens_from_mistral_model(messages: List[BaseMessage], model: str):
+    """Return the number of tokens used by a list of messages for a given mistral model."""
+    num_tokens = 0
+    # see which tokenizer for which model is needed, https://github.com/mistralai/mistral-common/blob/main/README.md
+    if(model == "mistral-large-2407" ):
+        tokenizer = MistralTokenizer.v3()
+    else:
+        tokenizer = MistralTokenizer.from_model(model) 
+    # convert langchain msgs to mistral format
+    mistral_messages = []
+    for message in messages:
+        if(message.type =="ai"):
+            mistral_messages.append(AssistantMessage(content=message.content))
+        elif(message.type == "system"):
+            mistral_messages.append(SystemMessage(content=message.content))
+        elif(message.type == "human"):
+            mistral_messages.append(UserMessage(content=message.content))
+        else:
+            raise NotImplementedError(
+                    f"""Not implemented for the message type {message.type}"""
+                )
+    tokenized = tokenizer.encode_chat_completion(
+                ChatCompletionRequest(messages=mistral_messages))
+    return len(tokenized.tokens)
+
+def num_tokens_from_openai_model(messages: List[BaseMessage], model: str):
+    """Return the number of tokens used by a list of messages for a given openai model."""
     try:
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
@@ -24,7 +63,6 @@ def num_tokens_from_messages(messages: List[BaseMessage], model: str):
         "gpt-4o",
         "gpt-4o-mini",
         "gpt-4o-2024-05-13",
-        "Mistral-large-2407" #TODO use https://docs.mistral.ai/guides/tokenization/ for estimation
         }:
         tokens_per_message = 3
         tokens_per_name = 1

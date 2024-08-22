@@ -1,84 +1,67 @@
 from __future__ import annotations
+from typing import List
 
 import tiktoken
+from langchain_core.messages.base import BaseMessage
 
-MODELS_2_TOKEN_LIMITS = {
-    "gpt-35-turbo": 4000,
-    "gpt-3.5-turbo": 4000,
-    "gpt-35-turbo-16k": 16000,
-    "gpt-3.5-turbo-16k": 16000,
-    "gpt-4": 8100,
-    "gpt-4-32k": 32000
-}
-
-AOAI_2_OAI = {
-    "gpt-35-turbo": "gpt-3.5-turbo",
-    "gpt-35-turbo-16k": "gpt-3.5-turbo-16k"
-}
-
-
-def get_token_limit(model_id: str) -> int:
-    """returns the token limit for a given model
-
-    Args:
-        model_id (str): id of the model
-
-    Raises:
-        ValueError: if the model is not available
-
-    Returns:
-        int: the token limit of the model
-    """
-    if model_id not in MODELS_2_TOKEN_LIMITS:
-        raise ValueError("Expected model gpt-35-turbo and above")
-    return MODELS_2_TOKEN_LIMITS[model_id]
-
-
-def num_tokens_from_messages(messages: list[dict[str, str]], model: str) -> int:
-    """  Calculate the number of tokens required to encode a list of messages
-
-    Args:
-        messages (list[dict[str, str]]): list of messages
-        model (str): for which model
-
-    Returns:
-        int: The total number of tokens required to encode the message.
-    """
+def num_tokens_from_messages(messages: List[BaseMessage], model: str):
+    print(messages)
+    """Return the number of tokens used by a list of messages."""
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model in {
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k-0613",
+        "gpt-4-0314",
+        "gpt-4-32k-0314",
+        "gpt-4-0613",
+        "gpt-4-32k-0613",
+        "gpt-4-turbo",
+        "gpt-4-turbo-2024-04-09",
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-4o-2024-05-13",
+        "Mistral-large-2407" #TODO use https://docs.mistral.ai/guides/tokenization/ for estimation
+        }:
+        tokens_per_message = 3
+        tokens_per_name = 1
+    elif model == "gpt-3.5-turbo-0301":
+        tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
+        tokens_per_name = -1  # if there's a name, the role is omitted
+    elif "gpt-3.5-turbo" in model:
+        print("Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0613.")
+        return num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613")
+    elif "gpt-4o" in model:
+        print(
+            "Warning: gpt-4o may update over time. Returning num tokens assuming gpt-4o-2024-05-13.")
+        return num_tokens_from_messages(messages, model="gpt-4o-2024-05-13")
+    elif "gpt-4" in model:
+        print("Warning: gpt-4 may update over time. Returning num tokens assuming gpt-4-0613.")
+        return num_tokens_from_messages(messages, model="gpt-4-0613")
+    else:
+        raise NotImplementedError(
+            f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."""
+        )
     num_tokens = 0
-    for conversation in messages:
-        if("user" in conversation and conversation["user"]):
-            userMsg = conversation["user"]
-            num_tokens += num_tokens_from_message(message= userMsg, model=model)
-        if("bot" in conversation and conversation["bot"]):
-            aiMsg = conversation["bot"]
-            num_tokens += num_tokens_from_message(message= aiMsg, model=model)
+    for message in messages:
+        num_tokens += tokens_per_message
+        if(message.type):
+           role = ""
+           if(message.type =="ai"):
+               role = "assistant"
+           elif(message.type == "system"):
+               role = "system"
+           elif(message.type == "human"):
+               role = "user"
+           else:
+            raise NotImplementedError(
+                f"""Not implemented for the message type {message.type}"""
+            )
+           num_tokens += len(encoding.encode(role))
+        if(message.content):
+           num_tokens += len(encoding.encode(message.content))
+    num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
-           
-def num_tokens_from_message(message: str, model: str, token_per_message: int = 3) -> int:
-    """Calculate the number of tokens required to encode a message.
-    
-    Args:
-        message (str): The message to encode
-        model (str): The name of the model to use for encoding.
-        token_per_message (number): offset per message
-    Returns:
-        int: The total number of tokens required to encode the message.
-    Example:
-        message = {'role': 'user', 'content': 'Hello, how are you?'}
-        model = 'gpt-3.5-turbo'
-        num_tokens_from_messages(message, model)
-        output: 11
-    """
-    encoding = tiktoken.encoding_for_model(get_oai_chatmodel_tiktok(model))
-    num_tokens = token_per_message  # For "role" and "content" keys
-    num_tokens += len(encoding.encode(message))
-    return num_tokens
-
-
-def get_oai_chatmodel_tiktok(aoaimodel: str) -> str:
-    message = "Expected Azure OpenAI ChatGPT model name"
-    if aoaimodel == "" or aoaimodel is None:
-        raise ValueError(message)
-    if aoaimodel not in AOAI_2_OAI and aoaimodel not in MODELS_2_TOKEN_LIMITS:
-        raise ValueError(message)
-    return AOAI_2_OAI.get(aoaimodel) or aoaimodel

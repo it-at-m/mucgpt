@@ -21,6 +21,7 @@ export type ChatRequest = {
     max_tokens?: number;
     system_message?: string;
     shouldStream?: boolean;
+    model?: string;
 };
 
 export type SumRequest = {

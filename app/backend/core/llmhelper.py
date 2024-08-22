@@ -24,7 +24,6 @@ def getModel(models: List[ModelsConfig],
         default_model = models[0]
         if default_model["type"] == "AZURE":
                 llm = AzureChatOpenAI(
-                        model=default_model["model_name"],
                         deployment_name= default_model["deployment"],
                         openai_api_key=default_model["api_key"],
                         azure_endpoint=default_model["endpoint"],
@@ -48,6 +47,31 @@ def getModel(models: List[ModelsConfig],
         else:
                 raise ModelsConfigurationException(f"Unknown model type: {default_model['type']}. Currently only `AZURE` and `OPENAI` are supported.")
 
+        alternatives = {"fake" : FakeListLLM(responses=["Hi diggi"])}
+        for model in models[1:]:
+                if model["type"] == "AZURE":
+                        alternative = AzureChatOpenAI(
+                                deployment_name= model["deployment"],
+                                openai_api_key=model["api_key"],
+                                azure_endpoint=model["endpoint"],
+                                openai_api_version=model["api_version"],
+                                openai_api_type="azure",
+                                max_tokens=max_tokens,
+                                n=n,
+                                streaming=streaming,
+                                temperature=temperature,
+                                )
+                elif model["type"] == "OPENAI":
+                        alternative = ChatOpenAI(
+                                        model=model["model_name"],
+                                        api_key=model["api_key"],
+                                        base_url=model["endpoint"],
+                                        max_tokens=max_tokens,
+                                        n=n,
+                                        streaming=streaming,
+                                        temperature=temperature,
+                        )
+                alternatives[model["model_name"]] = alternative
         llm = llm.configurable_fields(
                         temperature=ConfigurableField(
                                 id="llm_temperature",
@@ -75,5 +99,6 @@ def getModel(models: List[ModelsConfig],
                         ).configurable_alternatives(
                                 ConfigurableField(id="llm"),
                                 default_key=models[0]["model_name"],
-                                fake= FakeListLLM(responses=["Hi diggi"]))
+                                **alternatives
+                               )
         return llm

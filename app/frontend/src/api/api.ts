@@ -14,7 +14,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             temperature: options.temperature,
             language: options.language,
             system_message: options.system_message,
-            max_tokens: options.max_tokens
+            max_tokens: options.max_tokens,
+            model: options.model
         })
     });
 }

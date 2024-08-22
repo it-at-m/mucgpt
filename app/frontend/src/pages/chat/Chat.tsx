@@ -26,6 +26,7 @@ const enum STORAGE_KEYS {
 
 const Chat = () => {
     const { language } = useContext(LanguageContext)
+    const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const [shouldStream, setShouldStream] = useState<boolean>(true);
 
@@ -127,7 +128,8 @@ const Chat = () => {
                 language: language,
                 temperature: temperature,
                 system_message: system ? system : "",
-                max_tokens: max_tokens
+                max_tokens: max_tokens,
+                model: LLM.model_name
             };
 
             const response = await chatApi(request);

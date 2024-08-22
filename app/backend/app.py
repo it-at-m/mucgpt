@@ -14,11 +14,11 @@ from quart import (
     send_file,
     send_from_directory,
 )
-
+from langchain_core.messages.human import HumanMessage
+from core.modelhelper import num_tokens_from_messages
 from core.types.Config import ModelsConfig, ModelsDTO
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
-from core.modelhelper import num_tokens_from_message
 from core.types.AppConfig import AppConfig
 from core.types.countresult import CountResult
 from init_app import initApp
@@ -101,10 +101,12 @@ async def chat_stream():
         temperature=request_json['temperature'] or 0.7
         max_tokens=request_json['max_tokens'] or 4096
         system_message = request_json['system_message'] or None
+        model = request_json['model']
         response_generator = impl.run_with_streaming(history= request_json["history"],
                                                     temperature=temperature,
                                                     max_tokens=max_tokens,
                                                     system_message=system_message,
+                                                    model=model,
                                                     department= department)
         response = await make_response(format_as_ndjson(response_generator))
         response.timeout = None # type: ignore
@@ -170,7 +172,7 @@ async def counttokens():
     
     request_json = await request.get_json()
     message=request_json['text'] or ""
-    counted_tokens = num_tokens_from_message(message,"gpt-35-turbo") #TODO use correct model
+    counted_tokens = num_tokens_from_messages([HumanMessage(message)],"gpt-35-turbo") #TODO use correct model
     return jsonify(CountResult(count=counted_tokens))
 
 @bp.route("/statistics/export", methods=["GET"])

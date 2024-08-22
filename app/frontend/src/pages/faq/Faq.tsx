@@ -176,6 +176,15 @@ const Faq = () => {
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
+                    <AccordionItem value="14">
+                        <AccordionHeader>Wo werden die Chats der Chat-Historie gespeichert?</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                Die gespeicherten Chats in Ihrer Historie werden lokal in Ihrem Browser gespeichert (IndexedDB).
+                                Dadurch sind die Chats nur für Sie zugänglich und werden nicht in der Cloud oder auf einem Server gespeichert, allerdings sind somit die Chats auch nur auf diesem Gerät und diesem Browser zugänglich. Bei einem Wechsel auf ein anderes Gerät, einen anderen Browser oder in einen Inkognito-Tab sind die gespeicherten Chats nicht mehr verfügbar.
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="12">
                         <AccordionHeader>Werden meine Eingaben für Trainingszwecke der Software verwendet?</AccordionHeader>
                         <AccordionPanel>

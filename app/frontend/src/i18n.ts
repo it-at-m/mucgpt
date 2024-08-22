@@ -181,7 +181,8 @@ i18n
                             favourites: "Favoriten",
                             save: "Zu Favoriten hinzufügen",
                             unsave: "Aus Favoriten entfernen",
-                            error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!"
+                            error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!",
+                            saved_in_browser: "Im Browser gespeicherte Chats"
                         }
                     }
                 }
@@ -354,7 +355,8 @@ i18n
                             favourites: "Favourites",
                             save: "Add to Favourites",
                             unsave: "Remove from Favourites",
-                            error: "Do not change the Tab before the Answer is fully generated!"
+                            error: "Do not change the Tab before the Answer is fully generated!",
+                            saved_in_browser: "Chats saved in Browser"
                         }
                     }
                 }
@@ -527,7 +529,8 @@ i18n
                             favourites: "Favoriten",
                             save: "Zu Favoritn hinzufügn",
                             unsave: "Vo Favoritn entfernen",
-                            error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!"
+                            error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!",
+                            saved_in_browser: "Im Browser gespeichade Chats"
                         }
                     }
                 }

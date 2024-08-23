@@ -81,7 +81,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department)
+        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department, model_name=request_json["model"]["model_name"])
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")

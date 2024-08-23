@@ -76,7 +76,7 @@ class Brainstorm:
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def brainstorm(self, topic: str, language: str, department: Optional[str]) -> BrainstormResult:
+    async def brainstorm(self, topic: str, language: str, department: Optional[str], model_name:str) -> BrainstormResult:
         """Generates ideas for a given topic structured in markdown, translates the result into the target language 
 
         Args:
@@ -89,9 +89,9 @@ class Brainstorm:
         """
         # configure
         config: LlmConfigs = {
+            "llm": model_name
         }
         llm = self.llm.with_config(configurable=config)
-        
         # construct chains
         brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
         translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")

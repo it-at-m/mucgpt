@@ -102,7 +102,7 @@ class Summarize:
         llm = self.llm.with_config(configurable=config)
 
         #extraction with structured output: https://python.langchain.com/v0.1/docs/use_cases/extraction/quickstart/
-        summarizationChain = self.getSummarizationPrompt() | llm.with_structured_output(schema=Summarys)
+        summarizationChain = self.getSummarizationPrompt() | llm.with_structured_output(schema=Summarys,  method="json_mode")
         translationChain = self.getTranslationCleanupPrompt() | llm
 
         return (summarizationChain, translationChain)

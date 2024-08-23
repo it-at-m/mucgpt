@@ -89,7 +89,8 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
         body: JSON.stringify({
             topic: options.topic,
             temperature: options.temperature,
-            language: options.language
+            language: options.language,
+            model: options.model
         })
     });
 

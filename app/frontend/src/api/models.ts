@@ -32,6 +32,7 @@ export type SumRequest = {
 };
 export type BrainstormRequest = {
     topic: string;
+    model: Model;
     temperature?: number;
     language?: string;
 };

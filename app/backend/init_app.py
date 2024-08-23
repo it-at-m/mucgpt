@@ -31,10 +31,10 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
                     temperature=0.9)
     sumllm = getModel(
                     models=cfg["models"],
-                    max_tokens =  1000,
+                    max_tokens =  2000,
                     n = 1,
                     streaming=False,
-                    temperature=0.2)
+                    temperature=0)
     chatlllm = getModel(
                     models=cfg["models"],
                     max_tokens=4000,

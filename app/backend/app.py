@@ -172,7 +172,8 @@ async def counttokens():
     
     request_json = await request.get_json()
     message=request_json['text'] or ""
-    counted_tokens = num_tokens_from_messages([HumanMessage(message)],"gpt-35-turbo") #TODO use correct model
+    model = request_json['model']['model_name'] or "gpt-35-turbo"
+    counted_tokens = num_tokens_from_messages([HumanMessage(message)], model)
     return jsonify(CountResult(count=counted_tokens))
 
 @bp.route("/statistics/export", methods=["GET"])

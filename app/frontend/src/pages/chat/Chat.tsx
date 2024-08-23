@@ -60,16 +60,16 @@ const Chat = () => {
 
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
-            const response = await countTokensAPI({ "text": debouncedSystemPrompt });
+            const response = await countTokensAPI({ "text": debouncedSystemPrompt, "model": LLM });
             setSystemPromptTokens(response.count);
         }
         else
             setSystemPromptTokens(0);
-    }, [debouncedSystemPrompt]);
+    }, [debouncedSystemPrompt, LLM]);
 
     useEffect(() => {
         makeTokenCountRequest();
-    }, [debouncedSystemPrompt, makeTokenCountRequest]);
+    }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
     useEffect(() => {
         checkStructurOfDB(storage);

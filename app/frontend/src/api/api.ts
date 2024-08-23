@@ -107,7 +107,8 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
         mode: "cors",
         redirect: "manual",
         body: JSON.stringify({
-            text: options.text
+            text: options.text,
+            model: options.model
         })
     });
 

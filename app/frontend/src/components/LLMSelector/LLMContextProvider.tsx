@@ -7,7 +7,7 @@ interface ILLMProvider {
     setLLM: Dispatch<SetStateAction<Model>>;
 }
 
-export const DEFAULTLLM = "GPT-4o-mini";
+export const DEFAULTLLM = "gpt-4o-mini";
 export const LLMContext = React.createContext<ILLMProvider>({ LLM: { model_name: DEFAULTLLM, max_tokens: 0 }, setLLM: () => { } });
 
 export const LLMContextProvider = (props: React.PropsWithChildren<{}>) => {

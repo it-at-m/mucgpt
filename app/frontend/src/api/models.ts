@@ -69,6 +69,7 @@ export interface ChunkInfo {
 
 export type CountTokenRequest = {
     text: string;
+    model: Model;
 };
 
 export type CountTokenResponse = {

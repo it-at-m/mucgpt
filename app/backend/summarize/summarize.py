@@ -95,13 +95,15 @@ class Summarize:
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_and_cleanup_prompt)
 
 
-    def setup(self) -> SequentialChain:
+    def setup(self, model_name: str) -> SequentialChain:
         config: LlmConfigs = {
+            "llm": model_name
         }
         llm = self.llm.with_config(configurable=config)
 
+        #extraction with structured output: https://python.langchain.com/v0.1/docs/use_cases/extraction/quickstart/
         summarizationChain = self.getSummarizationPrompt() | llm.with_structured_output(schema=Summarys)
-        translationChain = self.getTranslationCleanupPrompt() | llm.with_structured_output(schema=Summarys)
+        translationChain = self.getTranslationCleanupPrompt() | llm
 
         return (summarizationChain, translationChain)
     
@@ -144,31 +146,32 @@ class Summarize:
             print(ex)
             # error message
             total_tokens = 0
-            result = Summarys(data= [DenserSummary(missing_entities="Fehler", denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities="Fehler", denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities="Fehler", denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities="Fehler", denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities="Fehler", denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' )])
+            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' )])
 
 
         return (result,total_tokens)
 
 
 
-    async def summarize(self, splits: List[str],  language: str, department: Optional[str]) -> SummarizeResult:
+    async def summarize(self, splits: List[str],  language: str, department: Optional[str], model_name:str) -> SummarizeResult:
         """summarizes text with chain of density prompting. Generates 5 increasingly better summaries per split.
         Concatenates the results and translates it into the target language.
 
         Args:
             splits (List[str]): splits, to be summarized
             language (str): the target language
-            department (Optional[str]): _description_
+            department (Optional[str]): department, who is responsible for the call
+            model_name (str): the choosen llm
 
         Returns:
             SummarizeResult: the best n summarizations
         """
         # setup
-        (summarizeChain, cleanupChain) = self.setup()
+        (summarizeChain, cleanupChain) = self.setup(model_name)
         # call chain
         total_tokens = 0
         summarys: List[DenserSummary] = []

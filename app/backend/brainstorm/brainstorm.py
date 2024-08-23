@@ -83,6 +83,7 @@ class Brainstorm:
             topic (str): topic of the brainstorming
             language (str): target language
             department (Optional[str]): department, who is responsible for the call
+            model_name (str): the choosen llm
 
         Returns:
             BrainstormResult: the structured markdown with ideas about the topic

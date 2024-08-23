@@ -29,10 +29,11 @@ export type SumRequest = {
     detaillevel?: "short" | "medium" | "long";
     temperature?: number;
     language?: string;
+    model: string;
 };
 export type BrainstormRequest = {
     topic: string;
-    model: Model;
+    model: string;
     temperature?: number;
     language?: string;
 };

@@ -64,7 +64,7 @@ async def sum():
         text = request_json["text"] if file is None else None
         splits = impl.split(detaillevel=detaillevel, file=file, text=text)
 
-        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch")
+        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch", model_name=request_json["model"])
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -81,7 +81,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department, model_name=request_json["model"]["model_name"])
+        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department, model_name=request_json["model"])
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")

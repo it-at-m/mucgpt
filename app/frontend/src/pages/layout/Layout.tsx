@@ -53,7 +53,7 @@ export const Layout = () => {
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
     const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
 
-
+    const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
 
@@ -72,10 +72,11 @@ export const Layout = () => {
     useEffect(() => {
         configApi().then(result => {
             setConfig(result);
-            if (result.models.length === 0)
+            setModels(result.models);
+            if (result.models.length === 0) {
                 console.error("Keine Modelle vorhanden");
-            if (result.models.filter((model) => LLM.model_name === model.model_name).length === 0)
-                setLLM(result.models[0])
+            }
+            setLLM(result.models.find((model) => model.model_name == llm_pref) || result.models[0])
         }, () => { console.error("Config nicht geladen"); });
         i18n.changeLanguage(language_pref);
     }, []);
@@ -104,7 +105,7 @@ export const Layout = () => {
 
     };
 
-    const models = config.models;
+
 
     return (
 

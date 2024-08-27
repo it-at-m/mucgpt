@@ -146,7 +146,7 @@ async def getConfig():
     models= cast(List[ModelsConfig], cfg["configuration_features"]["backend"]["models"])
     models_dto_list = []
     for model in models:
-        dto = ModelsDTO(model_name=model["model_name"], max_tokens=model["max_tokens"])
+        dto = ModelsDTO(model_name=model["model_name"], max_tokens=model["max_tokens"], description=model["description"])
         models_dto_list.append(dto)
     return jsonify({
         "frontend": frontend_features,

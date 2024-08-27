@@ -29,9 +29,10 @@ interface Props {
     onLLMSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultLLM: string;
     llmOptions: Model[];
+    currentLLM: Model;
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM, llmOptions }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM, llmOptions, currentLLM }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
 
@@ -79,6 +80,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                 </div>
                 <div className={styles.bodyContainer}>
                     <LLMSelector defaultLLM={defaultLLM} onSelectionChange={onLLMSelectionChanged} options={llmOptions}></LLMSelector>
+                    <div className={styles.info}>{currentLLM["description"]}</div>
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.fontsize')}

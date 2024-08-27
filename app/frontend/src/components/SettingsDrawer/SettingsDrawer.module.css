@@ -47,3 +47,10 @@
     align-items: center;
     justify-content: start;
 }
+
+.info {
+    margin-top: 8px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}

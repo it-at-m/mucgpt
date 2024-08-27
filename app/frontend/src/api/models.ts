@@ -52,6 +52,7 @@ export interface Frontend {
 export interface Model {
     max_tokens: number;
     model_name: string;
+    description: string;
 }
 
 export interface Labels {

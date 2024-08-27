@@ -16,6 +16,7 @@ class ModelsConfig(TypedDict):
 class ModelsDTO(TypedDict):
     model_name: str
     max_tokens: int
+    description: str
 
 class SSOConfig(TypedDict):
     sso_issuer: str

@@ -27,7 +27,7 @@ class Requestinfo(Base):
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
 
     def __repr__(self):
-        return f'<ID {self.id!r}, Department {self.department!r}, Tokencount {self.tokencount!r}, Model {self.model}, Method {self.method!r}, Messagecount {self.messagecount!r}>'
+        return f'<ID {self.id!r}, Department {self.department!r}, Tokencount {self.tokencount!r}, Model {self.model!r}, Method {self.method!r}, Messagecount {self.messagecount!r}>'
 
 
 

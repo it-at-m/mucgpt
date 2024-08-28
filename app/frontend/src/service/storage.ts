@@ -34,7 +34,8 @@ export async function saveToDB(
     language?: string,
     temperature?: number,
     system_message?: string,
-    max_tokens?: number
+    max_tokens?: number,
+    model?: string
 ) {
     let openRequest = indexedDB.open(storage.db_name, storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
@@ -66,8 +67,8 @@ export async function saveToDB(
                 // if the chat does not exist in the DB
                 let name: string = "";
                 let new_idcounter = id_counter;
-                if (language != undefined && temperature != undefined && system_message != undefined && max_tokens != undefined) {
-                    name = await (await getChatName(a, language, temperature, system_message, max_tokens)).content;
+                if (language != undefined && temperature != undefined && system_message != undefined && max_tokens != undefined && model != undefined) {
+                    name = await (await getChatName(a, language, temperature, system_message, max_tokens, model)).content;
                     name = name.replaceAll('"', "").replaceAll(".", "");
                 }
                 if (storage.objectStore_name === "chat") {
@@ -99,7 +100,7 @@ export async function saveToDB(
     };
 }
 
-export async function getChatName(answers: any, language: string, temperature: number, system_message: string, max_tokens: number) {
+export async function getChatName(answers: any, language: string, temperature: number, system_message: string, max_tokens: number, model: string) {
     const history: ChatTurn[] = [{ user: answers[0], bot: answers[1].answer }];
     const request: ChatRequest = {
         history: [
@@ -113,7 +114,8 @@ export async function getChatName(answers: any, language: string, temperature: n
         language: language,
         temperature: temperature,
         system_message: system_message,
-        max_tokens: max_tokens
+        max_tokens: max_tokens,
+        model: model
     };
     const response = await chatApi(request);
     handleRedirect(response);

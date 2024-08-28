@@ -2,6 +2,8 @@ import json
 import logging
 import os
 from typing import List, cast
+
+from langchain_core.messages.human import HumanMessage
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
     Blueprint,
@@ -14,12 +16,12 @@ from quart import (
     send_file,
     send_from_directory,
 )
-from langchain_core.messages.human import HumanMessage
-from core.modelhelper import num_tokens_from_messages
-from core.types.Config import ModelsConfig, ModelsDTO
+
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
+from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
+from core.types.Config import ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from init_app import initApp
 
@@ -168,7 +170,7 @@ async def getStatistics():
 
 @bp.route("/counttokens", methods=["POST"])
 async def counttokens():
-    cfg = get_config_and_authentificate()
+    get_config_and_authentificate()
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     

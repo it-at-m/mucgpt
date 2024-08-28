@@ -3,7 +3,7 @@ import unittest
 import pytest
 from langchain_core.runnables.base import RunnableSerializable
 
-from core.llmhelper import getModel, ModelsConfigurationException
+from core.llmhelper import ModelsConfigurationException, getModel
 
 
 class Test_LLMhelper(unittest.TestCase):

@@ -1,5 +1,6 @@
 import os
 from typing import Tuple
+
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
 from core.authentification import AuthentificationHelper
@@ -9,8 +10,6 @@ from core.llmhelper import getModel
 from core.types.AppConfig import AppConfig
 from core.types.Config import BackendConfig, DatabaseConfig
 from summarize.summarize import Summarize
-
-
 
 
 def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Brainstorm, Summarize]:

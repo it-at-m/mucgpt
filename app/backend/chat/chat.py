@@ -1,9 +1,8 @@
 from typing import AsyncGenerator, Optional, Sequence
 
 from langchain_community.callbacks import get_openai_callback
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from chat.chatresult import ChatResult
 from core.datahelper import Repository, Requestinfo

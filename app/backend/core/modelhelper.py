@@ -1,15 +1,17 @@
 from __future__ import annotations
-from typing import List
 
 import tiktoken
 from langchain_core.messages.base import BaseMessage
 from mistral_common.protocol.instruct.messages import (
-    UserMessage, SystemMessage, AssistantMessage
+    AssistantMessage,
+    SystemMessage,
+    UserMessage,
 )
 from mistral_common.protocol.instruct.request import ChatCompletionRequest
 from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
 
-def num_tokens_from_messages(messages: List[BaseMessage], model: str):
+
+def num_tokens_from_messages(messages: list[BaseMessage], model: str):
     """Return the number of tokens used by a list of messages."""
     if("gpt-" in model):
         return num_tokens_from_openai_model(messages=messages, model=model)
@@ -17,11 +19,10 @@ def num_tokens_from_messages(messages: List[BaseMessage], model: str):
         return num_tokens_from_mistral_model(messages=messages, model=model)
     else:
         raise NotImplementedError(
-            f"""No tokenizer for model found. currently only openai and mistral are supported."""
+            """No tokenizer for model found. currently only openai and mistral are supported."""
         )
-def num_tokens_from_mistral_model(messages: List[BaseMessage], model: str):
+def num_tokens_from_mistral_model(messages: list[BaseMessage], model: str):
     """Return the number of tokens used by a list of messages for a given mistral model."""
-    num_tokens = 0
     # see which tokenizer for which model is needed, https://github.com/mistralai/mistral-common/blob/main/README.md
     if(model == "mistral-large-2407" ):
         tokenizer = MistralTokenizer.v3()
@@ -44,7 +45,7 @@ def num_tokens_from_mistral_model(messages: List[BaseMessage], model: str):
                 ChatCompletionRequest(messages=mistral_messages))
     return len(tokenized.tokens)
 
-def num_tokens_from_openai_model(messages: List[BaseMessage], model: str):
+def num_tokens_from_openai_model(messages: list[BaseMessage], model: str):
     """Return the number of tokens used by a list of messages for a given openai model."""
     try:
         encoding = tiktoken.encoding_for_model(model)
@@ -67,10 +68,8 @@ def num_tokens_from_openai_model(messages: List[BaseMessage], model: str):
         "gpt-4o-2024-05-13",
         }:
         tokens_per_message = 3
-        tokens_per_name = 1
     elif model == "gpt-3.5-turbo-0301":
         tokens_per_message = 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
-        tokens_per_name = -1  # if there's a name, the role is omitted
     else:
         raise NotImplementedError(
             f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."""

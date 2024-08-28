@@ -3,7 +3,7 @@ import unittest
 import pytest
 from sqlalchemy import Engine
 
-from core.datahelper import Requestinfo, Repository
+from core.datahelper import Repository, Requestinfo
 
 
 class Test_Datahelper(unittest.TestCase):

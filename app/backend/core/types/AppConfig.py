@@ -1,4 +1,5 @@
 from typing import List, TypedDict
+
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
 from core.authentification import AuthentificationHelper

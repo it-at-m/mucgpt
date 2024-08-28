@@ -1,7 +1,8 @@
+from operator import itemgetter
 from typing import Optional
 
-from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts import PromptTemplate
+from langchain.schema.output_parser import StrOutputParser
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
@@ -93,21 +94,19 @@ class Brainstorm:
             "llm": model_name
         }
         llm = self.llm.with_config(configurable=config)
+        # get prompts
+        brainstorm_prompt = self.getBrainstormPrompt()
+        translation_prompt = self.getTranslationPrompt()
         # construct chains
-        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
-        overall_chain = SequentialChain(
-            chains=[brainstormChain, translationChain], 
-            input_variables=["language", "topic"],
-            output_variables=["brainstorm","translation"])
-            
-
+        brainstormChain =  brainstorm_prompt |llm | StrOutputParser()
+        translationChain = translation_prompt |llm | StrOutputParser()
+        # build complete chain
+        overall_chain = ({"brainstorm": brainstormChain,"language": itemgetter("language") }| translationChain )
+        
         with get_openai_callback() as cb:
-            result = await overall_chain.acall({"topic": topic, "language": language})
+            result = await overall_chain.ainvoke({"topic": topic, "language": language})
         total_tokens = cb.total_tokens
-
-        translation = result['translation']     
-        translation = self.cleanup(str(translation))
+        translation = self.cleanup(str(result))
 
         if self.config["log_tokens"]:
             self.repo.addInfo(Requestinfo( 

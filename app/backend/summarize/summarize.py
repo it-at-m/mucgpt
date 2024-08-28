@@ -3,18 +3,19 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, List, Optional, Tuple
 
-from langchain.chains import LLMChain, SequentialChain
+from langchain.chains import SequentialChain
 from langchain.prompts import PromptTemplate
 from langchain_community.callbacks import get_openai_callback
-from langchain_core.runnables.base import RunnableSerializable
-from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.runnables.base import RunnableSequence, RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
 from core.textsplit import splitPDF, splitText
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 from summarize.summarizeresult import SummarizeResult
+
 
 class DenserSummary(BaseModel):
     missing_entities: List[str] = Field(description="An list of missing entitys")
@@ -126,12 +127,12 @@ class Summarize:
         return results
 
     
-    def call_and_cleanup(self, text: str, summarizeChain: LLMChain) -> Tuple[Summarys, int]:
+    def call_and_cleanup(self, text: str, summarizeChain: RunnableSequence) -> Tuple[Summarys, int]:
         """calls summarization chain and cleans the data
 
         Args:
             text (str): text, to be summarized
-            summarizeChain (LLMChain): the chain, that summarizes and cleans the data
+            summarizeChain (RunnableSequence): the chain, that summarizes and cleans the data
 
         Returns:
             Tuple[List[str], int]: the last n summaries, the number of consumed tokens

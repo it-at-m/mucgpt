@@ -64,7 +64,7 @@ async def sum():
         text = request_json["text"] if file is None else None
         splits = impl.split(detaillevel=detaillevel, file=file, text=text)
 
-        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch", model_name=request_json["model"])
+        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch", model_name=request_json["model"] or "gpt-4o-mini")
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -81,7 +81,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department, model_name=request_json["model"])
+        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department, model_name=request_json["model"] or "gpt-4o-mini")
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")
@@ -101,7 +101,7 @@ async def chat_stream():
         temperature=request_json['temperature'] or 0.7
         max_tokens=request_json['max_tokens'] or 4096
         system_message = request_json['system_message'] or None
-        model = request_json['model']
+        model = request_json['model'] or "gpt-4o-mini"
         response_generator = impl.run_with_streaming(history= request_json["history"],
                                                     temperature=temperature,
                                                     max_tokens=max_tokens,
@@ -127,13 +127,15 @@ async def chat():
         impl = cfg["chat_approaches"]
         temperature=request_json['temperature'] or 0.7
         max_tokens=request_json['max_tokens'] or 4096
+        model_name=request_json['model'] or "gpt-4o-mini"
         system_message = request_json['system_message'] or None
         history =  request_json["history"]
         chatResult = impl.run_without_streaming(history= history,
                                                     temperature=temperature,
                                                     max_tokens=max_tokens,
                                                     system_message=system_message,
-                                                    department= department)
+                                                    department= department,
+                                                    model_name= model_name)
         return jsonify(chatResult)
     except Exception as e:
         logging.exception("Exception in /chat")
@@ -172,7 +174,7 @@ async def counttokens():
     
     request_json = await request.get_json()
     message=request_json['text'] or ""
-    model = request_json['model']['model_name'] or "gpt-35-turbo"
+    model = request_json['model']['model_name'] or "gpt-4o-mini"
     counted_tokens = num_tokens_from_messages([HumanMessage(message)], model)
     return jsonify(CountResult(count=counted_tokens))
 

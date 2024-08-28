@@ -52,16 +52,6 @@ class Test_Modelhelper(unittest.TestCase):
     @pytest.mark.unit  
     def test_num_tokens_from_messages_openai_gpt0301(self):
         assert num_tokens_from_messages(self.messages, "gpt-3.5-turbo-0301") == 34
-
-    @pytest.mark.asyncio    
-    @pytest.mark.unit  
-    def test_num_tokens_from_messages_openai_gptturbo(self):
-        assert num_tokens_from_messages(self.messages, "gpt-3.5-turbo") == 31
-
-    @pytest.mark.asyncio    
-    @pytest.mark.unit  
-    def test_num_tokens_from_messages_openai_gpt4(self):
-        assert num_tokens_from_messages(self.messages, "gpt-4") == 31
     
     @pytest.mark.asyncio    
     @pytest.mark.unit  

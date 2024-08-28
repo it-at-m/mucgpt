@@ -50,7 +50,7 @@ The documentation project is built with technologies we use in our projects (see
 ## Table of contents
 * [Built With](#built-with)
 * [Roadmap](#roadmap)
-* [Set up](#set-up-on-azure)
+* [Run](#Run)
 * [Documentation](#documentation)
 * [Contributing](#contributing)
 * [License](#license)

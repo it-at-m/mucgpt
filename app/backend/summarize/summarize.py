@@ -201,7 +201,8 @@ class Summarize:
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
-                method = "Sum"))
+                method = "Sum"),
+                model = model_name)
 
         return SummarizeResult(answer= final_summarys)
     

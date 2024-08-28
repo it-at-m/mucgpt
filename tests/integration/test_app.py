@@ -89,7 +89,7 @@ async def test_brainstorm_exception(client, monkeypatch,caplog):
     data = {
         "topic": "München",
         "language": "Deutsch",
-        
+        "model": "TEST_MODEL",
     }
     response = await client.post('/brainstorm', json=data)
     assert response.status_code == 500
@@ -112,7 +112,7 @@ async def test_brainstorm(client, mocker):
     data = {
         "topic": "München",
         "language": "Deutsch",
-        
+        "model": "TEST_MODEL",
     }
     response = await client.post('/brainstorm', json=data)
     assert response.status_code == 200
@@ -128,7 +128,8 @@ async def test_sum_text(client, mocker):
     data = {
         "detaillevel": "short",
         "text": "To be summarized",
-        "language": "Deutsch"
+        "language": "Deutsch",
+        "model": "TEST_MODEL",
     }
     response = await client.post('/sum',  form={"body": json.dumps(data)})
     assert response.status_code == 200
@@ -143,7 +144,8 @@ async def test_sum_pdf(client, mocker):
 
     data = {
         "detaillevel": "short",
-        "language": "Deutsch"
+        "language": "Deutsch",
+        "model": "TEST_MODEL"
     }
 
     tmp = BytesIO()
@@ -195,6 +197,7 @@ async def test_chatstream(client, mocker):
         "temperature": 0.1,
         "max_tokens": 2400,
         "system_message": "",
+        "model": "TEST_MODEL",
         "history": [{"user": "hi"}]
         
     }

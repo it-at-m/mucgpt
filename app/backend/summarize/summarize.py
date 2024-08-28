@@ -3,7 +3,7 @@ import re
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, List, Optional, Tuple
 
-from langchain.chains import LLMChain, SequentialChain
+from langchain.chains import SequentialChain
 from langchain.prompts import PromptTemplate
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
@@ -126,12 +126,12 @@ class Summarize:
         return results
 
     
-    def call_and_cleanup(self, text: str, summarizeChain: LLMChain) -> Tuple[Summarys, int]:
+    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int]:
         """calls summarization chain and cleans the data
 
         Args:
             text (str): text, to be summarized
-            summarizeChain (LLMChain): the chain, that summarizes and cleans the data
+            summarizeChain (RunnableSerializable): the chain, that summarizes and cleans the data
 
         Returns:
             Tuple[List[str], int]: the last n summaries, the number of consumed tokens

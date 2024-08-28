@@ -8,7 +8,7 @@ from langchain.prompts import PromptTemplate
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.runnables.base import RunnableSequence, RunnableSerializable
+from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
 from core.textsplit import splitPDF, splitText
@@ -127,12 +127,12 @@ class Summarize:
         return results
 
     
-    def call_and_cleanup(self, text: str, summarizeChain: RunnableSequence) -> Tuple[Summarys, int]:
+    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int]:
         """calls summarization chain and cleans the data
 
         Args:
             text (str): text, to be summarized
-            summarizeChain (RunnableSequence): the chain, that summarizes and cleans the data
+            summarizeChain (RunnableSerializable): the chain, that summarizes and cleans the data
 
         Returns:
             Tuple[List[str], int]: the last n summaries, the number of consumed tokens

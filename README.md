@@ -31,7 +31,7 @@ Why should you use MUCGPT? See for yourself:
 
 The documentation project is built with technologies we use in our projects (see [requirements-dev.txt](/requirements-dev.txt)):
 ### Backend:
-* [Python 3.9, 3.10 or 3.11](https://www.python.org/downloads/)
+* [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
 * [Quart](https://pgjones.gitlab.io/quart/)
 * [LangChain](https://www.langchain.com/)
 

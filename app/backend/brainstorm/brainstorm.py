@@ -114,8 +114,8 @@ class Brainstorm:
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
-                method = "Brainstorm"),
-                model = model_name)
+                method = "Brainstorm",
+                model = model_name))
         return BrainstormResult(answer=translation)
 
     def cleanup(self, chat_translate_result: str) -> str:

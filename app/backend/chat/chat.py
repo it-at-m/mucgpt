@@ -69,8 +69,8 @@ class Chat:
                     tokencount = num_tokens_from_messages(messages=msgs,model=model), #TODO richtiges Modell und tokenizer auswählen
                     department = department,
                     messagecount=  len(history),
-                    method = "Chat"),
-                    model = model)
+                    method = "Chat",
+                    model = model))
             
             info = ChunkInfo(requesttokens=num_tokens_from_messages([msgs[-1]],model), streamedtokens=num_tokens_from_messages([HumanMessage(result)], model)) 
             yield Chunk(type="I", message=info, order=position)
@@ -105,8 +105,8 @@ class Chat:
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
-                method = "Brainstorm"),
-                model = model_name)
+                method = "Brainstorm",
+                model = model_name))
         return ChatResult(content=ai_message.content)
 
 

@@ -17,7 +17,8 @@ class Test_Modelhelper(unittest.TestCase):
            
         ]
         self.model_openai = "gpt-3.5-turbo-0613"
-        self.model_mistral = "mistral-large-2407"
+        self.model_mistral2407 = "mistral-large-2407"
+        self.model_mistral = "mistral-large"
 
 
     @pytest.mark.asyncio    
@@ -25,6 +26,11 @@ class Test_Modelhelper(unittest.TestCase):
     def test_num_tokens_from_messages_openai(self):
         assert num_tokens_from_messages(self.messages, self.model_openai) == 31
     
+    @pytest.mark.asyncio    
+    @pytest.mark.unit  
+    def test_num_tokens_from_messages_mistral2407(self):
+        assert num_tokens_from_messages(self.messages, self.model_mistral2407) == 24
+
     @pytest.mark.asyncio    
     @pytest.mark.unit  
     def test_num_tokens_from_messages_mistral(self):
@@ -35,6 +41,32 @@ class Test_Modelhelper(unittest.TestCase):
     def test_num_tokens_from_messages_invalid_model(self):
         with self.assertRaises(NotImplementedError):
             num_tokens_from_messages(self.messages, "invalid-model")
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit  
+    def test_num_tokens_from_messages_invalid_openai_model(self):
+        with self.assertRaises(NotImplementedError):
+            num_tokens_from_openai_model(self.messages, "")
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit  
+    def test_num_tokens_from_messages_openai_gpt0301(self):
+        assert num_tokens_from_messages(self.messages, "gpt-3.5-turbo-0301") == 34
+
+    @pytest.mark.asyncio    
+    @pytest.mark.unit  
+    def test_num_tokens_from_messages_openai_gptturbo(self):
+        assert num_tokens_from_messages(self.messages, "gpt-3.5-turbo") == 31
+
+    @pytest.mark.asyncio    
+    @pytest.mark.unit  
+    def test_num_tokens_from_messages_openai_gpt4(self):
+        assert num_tokens_from_messages(self.messages, "gpt-4") == 31
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit  
+    def test_num_tokens_from_messages_openai_gpt4o(self):
+        assert num_tokens_from_messages(self.messages, "gpt-4o") == 31
 
     @pytest.mark.asyncio    
     @pytest.mark.unit  

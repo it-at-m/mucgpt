@@ -3,7 +3,7 @@ import unittest
 import pytest
 from langchain_core.runnables.base import RunnableSerializable
 
-from core.llmhelper import getModel
+from core.llmhelper import getModel, ModelsConfigurationException
 
 
 class Test_LLMhelper(unittest.TestCase):
@@ -17,7 +17,16 @@ class Test_LLMhelper(unittest.TestCase):
                 "max_tokens": 128000
             }
         self.model2 ={
-                "type": "OPENAI",
+                "type": "AZURE",
+                "deployment": "model2",
+                "model_name": "model2",
+                "api_version": "preview",
+                "endpoint": "TODO",
+                "api_key": "TODO",
+                "max_tokens": 128000
+            }
+        self.model3 ={
+                "type": "TODO",
                 "model_name": "model2",
                 "endpoint": "TODO",
                 "api_key": "TODO",
@@ -35,6 +44,36 @@ class Test_LLMhelper(unittest.TestCase):
                          temperature=0.5,
                          streaming=True)
         self.assertIsInstance(model, RunnableSerializable)
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit
+    def test_getModel_wrong_type(self):
+        with self.assertRaises(ModelsConfigurationException):
+            getModel(models=[self.model3],
+                         max_tokens=10,
+                         n=1,
+                         temperature=0.5,
+                         streaming=True)
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit
+    def test_getModel_azure_first(self):
+        model = getModel(models=[self.model2, self.model1],
+                         max_tokens=10,
+                         n=1,
+                         temperature=0.5,
+                         streaming=True)
+        self.assertIsInstance(model, RunnableSerializable)
+    
+    @pytest.mark.asyncio    
+    @pytest.mark.unit
+    def test_getModel_no_model(self):
+        with self.assertRaises(ModelsConfigurationException):
+            getModel(models=[],
+                            max_tokens=10,
+                            n=1,
+                            temperature=0.5,
+                            streaming=True)
 
     @pytest.mark.asyncio    
     @pytest.mark.unit    

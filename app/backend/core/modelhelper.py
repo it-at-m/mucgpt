@@ -60,7 +60,6 @@ def num_tokens_from_openai_model(messages: List[BaseMessage], model: str):
         "gpt-4-32k-0613",
         "gpt-4-turbo",
         "gpt-4-turbo-2024-04-09",
-        "gpt-4o",
         "gpt-4o-mini",
         "gpt-4o-2024-05-13",
         }:

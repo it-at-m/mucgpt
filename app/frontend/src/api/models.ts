@@ -21,6 +21,7 @@ export type ChatRequest = {
     max_tokens?: number;
     system_message?: string;
     shouldStream?: boolean;
+    model?: string;
 };
 
 export type SumRequest = {
@@ -28,26 +29,30 @@ export type SumRequest = {
     detaillevel?: "short" | "medium" | "long";
     temperature?: number;
     language?: string;
+    model: string;
 };
 export type BrainstormRequest = {
     topic: string;
+    model: string;
     temperature?: number;
     language?: string;
 };
 
 export interface ApplicationConfig {
-    backend: Backend;
+    models: Model[];
     frontend: Frontend;
     version: string;
-}
-
-export interface Backend {
-    enable_auth: boolean;
 }
 
 export interface Frontend {
     alternative_logo: boolean;
     labels: Labels;
+}
+
+export interface Model {
+    max_tokens: number;
+    model_name: string;
+    description: string;
 }
 
 export interface Labels {
@@ -67,6 +72,7 @@ export interface ChunkInfo {
 
 export type CountTokenRequest = {
     text: string;
+    model: Model;
 };
 
 export type CountTokenResponse = {

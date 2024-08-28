@@ -1,18 +1,17 @@
 from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
 from langchain_core.runnables.base import RunnableSerializable
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+from typing import List
+from core.types.Config import ModelsConfig
 
-from core.types.SupportedModels import SupportedModels
+class ModelsConfigurationException(Exception):
+    pass
 
 
-def getModel(chatgpt_model: str,
+def getModel(models: List[ModelsConfig], 
              max_tokens: int,
              n: int,
-             api_key: str,
-             api_base: str,
-             api_version: str,
-             api_type: str,
              temperature: float,
              streaming: bool) -> RunnableSerializable:
         """returns a configured llm, which can be later be parametrized during runtime
@@ -20,43 +19,86 @@ def getModel(chatgpt_model: str,
         Returns:
                 RunnableSerializable: the configured llm
         """
-        llm = AzureChatOpenAI(
-                model=chatgpt_model,
-                max_tokens=max_tokens,
-                n=n,
-                deployment_name= "chat",
-                openai_api_key=api_key,
-                azure_endpoint=api_base,
-                openai_api_version=api_version,
-                openai_api_type=api_type,
-                temperature=temperature,
-                streaming=streaming,
-                ).configurable_fields(
-                temperature=ConfigurableField(
-                        id="llm_temperature",
-                        name="LLM Temperature",
-                        description="The temperature of the LLM",
-                ),
-                max_tokens= ConfigurableField(
-                        id="llm_max_tokens",
-                        name="LLM max Tokens",
-                        description="The token Limit of the LLM",
-                ),
-                openai_api_key = ConfigurableField(
-                        id="llm_api_key",
-                        name="The api key",
-                        description="The api key"),
-                streaming = ConfigurableField(
-                        id="llm_streaming",
-                        name="Streaming",
-                        description="Should the LLM Stream"),
-                callbacks = ConfigurableField(
-                        id="llm_callbacks",
-                        name="Callbacks",
-                        description="Callbacks for the llm")
-                        
-                ).configurable_alternatives(
-                ConfigurableField(id="llm"),
-                default_key=SupportedModels.AZURE_CHATGPT.value,
-                fake= FakeListLLM(responses=["Hi diggi"]))
+        if len(models) == 0:
+                raise ModelsConfigurationException("No models found in the configuration.json")
+        default_model = models[0]
+        if default_model["type"] == "AZURE":
+                llm = AzureChatOpenAI(
+                        deployment_name= default_model["deployment"],
+                        openai_api_key=default_model["api_key"],
+                        azure_endpoint=default_model["endpoint"],
+                        openai_api_version=default_model["api_version"],
+                        max_tokens=max_tokens,
+                        n=n,
+                        streaming=streaming,
+                        temperature=temperature,
+                        openai_api_type="azure",
+                        )
+        elif default_model["type"] == "OPENAI":
+               llm = ChatOpenAI(
+                        model=default_model["model_name"],
+                        api_key=default_model["api_key"],
+                        base_url=default_model["endpoint"],
+                        max_tokens=max_tokens,
+                        n=n,
+                        streaming=streaming,
+                        temperature=temperature,
+            )
+        else:
+                raise ModelsConfigurationException(f"Unknown model type: {default_model['type']}. Currently only `AZURE` and `OPENAI` are supported.")
+
+        alternatives = {"fake" : FakeListLLM(responses=["Hi diggi"])}
+        for model in models[1:]:
+                if model["type"] == "AZURE":
+                        alternative = AzureChatOpenAI(
+                                deployment_name= model["deployment"],
+                                openai_api_key=model["api_key"],
+                                azure_endpoint=model["endpoint"],
+                                openai_api_version=model["api_version"],
+                                openai_api_type="azure",
+                                max_tokens=max_tokens,
+                                n=n,
+                                streaming=streaming,
+                                temperature=temperature,
+                                )
+                elif model["type"] == "OPENAI":
+                        alternative = ChatOpenAI(
+                                        model=model["model_name"],
+                                        api_key=model["api_key"],
+                                        base_url=model["endpoint"],
+                                        max_tokens=max_tokens,
+                                        n=n,
+                                        streaming=streaming,
+                                        temperature=temperature,
+                        )
+                alternatives[model["model_name"]] = alternative
+        llm = llm.configurable_fields(
+                        temperature=ConfigurableField(
+                                id="llm_temperature",
+                                name="LLM Temperature",
+                                description="The temperature of the LLM",
+                        ),
+                        max_tokens= ConfigurableField(
+                                id="llm_max_tokens",
+                                name="LLM max Tokens",
+                                description="The token Limit of the LLM",
+                        ),
+                        openai_api_key = ConfigurableField(
+                                id="llm_api_key",
+                                name="The api key",
+                                description="The api key"),
+                        streaming = ConfigurableField(
+                                id="llm_streaming",
+                                name="Streaming",
+                                description="Should the LLM Stream"),
+                        callbacks = ConfigurableField(
+                                id="llm_callbacks",
+                                name="Callbacks",
+                                description="Callbacks for the llm")
+                                
+                        ).configurable_alternatives(
+                                ConfigurableField(id="llm"),
+                                default_key=models[0]["model_name"],
+                                **alternatives
+                               )
         return llm

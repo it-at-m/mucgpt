@@ -8,6 +8,9 @@ from sqlalchemy.engine import URL
 from sqlalchemy.orm import Session, declarative_base
 
 Base = declarative_base()
+DEPARTMENT_STRING_LENGTH=30
+MODEL_STRING_LENGTH=20
+METHOD_STRING_LENGTH=10
 
 class Requestinfo(Base):
     """Information about an Request to MUCGPT that is stored in the database.
@@ -16,9 +19,10 @@ class Requestinfo(Base):
 
     id = Column(Integer(), primary_key=True)
     tokencount = Column(Integer())
-    department = Column(String(20), nullable=False)
+    department = Column(String(DEPARTMENT_STRING_LENGTH), nullable=False)
+    model = Column(String(MODEL_STRING_LENGTH), nullable=False)
     messagecount = Column(Integer())
-    method = Column(String(10))
+    method = Column(String(METHOD_STRING_LENGTH))
     created_on = Column(DateTime(), default=datetime.now)
     updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
 
@@ -47,6 +51,9 @@ class Repository:
         base.metadata.create_all(self.engine)
 
     def addInfo(self, info: Requestinfo):
+        info.department = self.truncate_string(info.department, DEPARTMENT_STRING_LENGTH)
+        info.model = self.truncate_string(info.model, MODEL_STRING_LENGTH)
+        info.method = self.truncate_string(info.method, METHOD_STRING_LENGTH)
         with Session(self.engine) as session:
             session.add(info)
             session.commit()
@@ -95,5 +102,10 @@ class Repository:
         # Das StringIO-Objekt in ein BytesIO-Objekt umwandeln
         memfile_bytesio = io.BytesIO(memfile.getvalue().encode())
         return memfile_bytesio
+    
+    def truncate_string(self, s, length):
+        if len(s) > length:
+            return s[:length]
+        return s
             
     

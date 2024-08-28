@@ -64,7 +64,7 @@ The documentation project is built with technologies we use in our projects (see
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
 ## Run
- Configure your environment in [config/default.json](config/default.json).  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
+ Configure your environment in [config/default.json](config/default.json). The schema of the configuration is [cofnig/mucgpt_config.schema.json](config/mucgpt_config.schema.json) described.  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
 ### Run locally
 ```
 cd app\backend

@@ -1,0 +1,50 @@
+{
+    "frontend": {
+        "labels": {
+            "env_name": "MUCGPT"
+        },
+        "alternative_logo": false
+    },
+    "backend": {
+        "enable_auth": false,
+        "enable_database": false,
+        "sso_config": {
+            "sso_issuer": "TODO",
+            "role": "lhm-ab-mucgpt-user"
+        },
+        "db_config": {
+            "db_host": "TODO",
+            "db_name": "postgres",
+            "db_user": "TODO",
+            "db_passwort": "TODO"
+        },
+        "chat": {
+            "log_tokens": false
+        },
+        "brainstorm": {
+            "log_tokens": false
+        },
+        "sum": {
+            "log_tokens": false
+        },
+
+        "models": [
+            {
+                "type": "OPENAI",
+                "model_name": "TODO",
+                "endpoint": "TODO",
+                "api_key": "TODO",
+                "max_tokens": 128000
+            },
+            {
+                "type": "AZURE",
+                "model_name": "TODO",
+                "deployment": "TODO",
+                "endpoint": "TODO",
+                "api_key": "TODO",
+                "api_version": "TODO",
+                "max_tokens": 0
+            }
+        ]
+    }
+}

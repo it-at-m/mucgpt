@@ -13,11 +13,13 @@ import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext)
+    const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
 
     const lastQuestionRef = useRef<string>("");
@@ -69,7 +71,8 @@ const Summarize = () => {
             const request: SumRequest = {
                 text: questionText,
                 detaillevel: detaillevel,
-                language: language
+                language: language,
+                model: LLM.model_name
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);

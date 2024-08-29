@@ -1,20 +1,25 @@
-import json
-import re
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-from langchain.chains import LLMChain, SequentialChain
-from langchain.prompts import PromptTemplate
+from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
 from core.textsplit import splitPDF, splitText
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 from summarize.summarizeresult import SummarizeResult
 
+
+class DenserSummary(BaseModel):
+    missing_entities: List[str] = Field(description="An list of missing entitys")
+    denser_summary: str = Field(description="denser summary, covers every entity in detail")
+
+class Summarys(BaseModel):
+    data: List[DenserSummary] = Field(description="An list of increasingly concise dense summaries")
 
 class Summarize:
     """Summarizes text. Chunks long texts. Individual chunks where summarized with Chain of Density prompting: https://arxiv.org/abs/2309.04269. Afterwards the text is translated into the target language."""
@@ -56,21 +61,6 @@ class Summarize:
     The response in JSON format:
     """
 
-    user_translate_prompt = """
-    Übersetze das folgende JSON in {language}. Beinhalte die Formatierung als RFC8259 JSON bei.
-    Das JSON sollte ein Array der Länge 5 sein, welcher folgendem Format folgt:
-    {{
-    "data": [
-    {{
-        "missing_entities": "An array of missing entitys"
-        "denser_summary": "denser summary, covers every entity in detail"
-    }}
-    ]
-    }}
-
-    JSON: {sum}
-    """
-
     user_translate_and_cleanup_prompt = """
     Übersetze den folgenden Text in {language}.
 
@@ -84,10 +74,9 @@ class Summarize:
 
 
 
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700, use_last_n_summaries = -2):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700, use_last_n_summaries = -2):
         self.llm = llm
         self.config = config
-        self.model_info = model_info
         self.repo = repo
         self.switcher =  {
             "short": short_split,
@@ -99,59 +88,26 @@ class Summarize:
 
     def getSummarizationPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["text"], template=self.user_sum_prompt)
-
-    def getTranslationPrompt(self) -> PromptTemplate: 
-        return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_prompt)
     
     def getTranslationCleanupPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_and_cleanup_prompt)
 
 
-    def setup(self) -> SequentialChain:
+    def setup(self, model_name: str) -> SequentialChain:
         config: LlmConfigs = {
-            "llm_api_key": self.model_info["openai_api_key"]
+            "llm": model_name
         }
         llm = self.llm.with_config(configurable=config)
-        # setup model
-        summarizationChain = LLMChain(llm=llm, prompt=self.getSummarizationPrompt(), output_key="sum")
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationCleanupPrompt(), output_key="translation")
+
+        #extraction with structured output: https://python.langchain.com/v0.1/docs/use_cases/extraction/quickstart/
+        summarizationChain = self.getSummarizationPrompt() | llm.with_structured_output(schema=Summarys,  method="json_mode")
+        translationChain = self.getTranslationCleanupPrompt() | llm
 
         return (summarizationChain, translationChain)
     
-    def removeQuotations(self,st: str) -> str:
-        """finds all denser summarys, replaces quotation inside with &quot
-
-        Args:
-            st (str): input str
-
-        Returns:
-            str: str without quotations
-        """
-        m = re.finditer(r'(?<=\"denser_summary\":)(.*?)(?=\})', st)
-
-        new_string = ""
-        idx = 0
-
-        for i in list(m):
-            ss, se = i.span(1)  # first and last index
-            groups = i.group()  # complete string ins
-            quotations = [m.start() for m in re.finditer('"', groups)]
-            # Quotation inside dense summary?
-            if(len(quotations)>2):
-                new_string += st[idx:ss+quotations[1]]
-                idx = ss+quotations[1]+1
-                for quotindex in quotations[1:-1]:
-                    new_string += st[idx:ss+quotindex] + "“ "
-                    idx = ss+quotindex+1
-                new_string += st[idx:se]
-                idx = quotations[-1]+1
-            else:
-                new_string += st[idx:ss] +  groups
-            idx = se
-        new_string += st[idx:]
-        return new_string
     
-    def run_io_tasks_in_parallel(self, tasks) -> List[Any]:
+    
+    def run_io_tasks_in_parallel(self, tasks) -> List[Tuple[Summarys, int]]:
         """execute tasks in parallel
 
         Args:
@@ -168,91 +124,83 @@ class Summarize:
         return results
 
     
-    def call_and_cleanup(self, text: str, summarizeChain: LLMChain) -> Tuple[List[str], int]:
+    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int]:
         """calls summarization chain and cleans the data
 
         Args:
             text (str): text, to be summarized
-            summarizeChain (LLMChain): the chain, that summarizes and cleans the data
+            summarizeChain (RunnableSerializable): the chain, that summarizes and cleans the data
 
         Returns:
             Tuple[List[str], int]: the last n summaries, the number of consumed tokens
         """
-        with get_openai_callback() as cb:
-            result = summarizeChain.invoke({"text": text})
-        total_tokens = cb.total_tokens
-        # post procession
-        chat_translate_result= result["sum"][result["sum"].index("{"):]
-        chat_translate_result = chat_translate_result.replace("\n", "").rstrip()
-        chat_translate_result = self.removeQuotations(chat_translate_result)
-        if not chat_translate_result.endswith("}"):
-            chat_translate_result  = chat_translate_result + "\"}]}"
         try:
-            jsoned = json.loads(chat_translate_result)
-        except Exception:
-            # try again
-            try: 
-                (chat_translate_result, total_tokens) =  self.call_and_cleanup(text=text, summarizeChain=summarizeChain)   
-                return (chat_translate_result, total_tokens)
-            except Exception:
-                total_tokens = 0
-                jsoned = { }
-                jsoned['data'] = [{'missing_entities': 'Fehler','denser_summary': 'Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.'}]
-
-        cleaned = []
-        for (i, element) in enumerate(jsoned['data']):
-            missing = element['missing_entities']
-            if(isinstance(missing, str)):
-                element['missing_entities'] = [missing]
-            cleaned.append(element)
-        return (cleaned,total_tokens)
+            with get_openai_callback() as cb:
+                result: Summarys = summarizeChain.invoke({"text": text})
+  
+            total_tokens = cb.total_tokens
+        
+        except Exception as ex:
+            print(ex)
+            # error message
+            total_tokens = 0
+            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
+                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' )])
 
 
+        return (result,total_tokens)
 
-    async def summarize(self, splits: List[str],  language: str, department: Optional[str]) -> SummarizeResult:
+
+
+    async def summarize(self, splits: List[str],  language: str, department: Optional[str], model_name:str) -> SummarizeResult:
         """summarizes text with chain of density prompting. Generates 5 increasingly better summaries per split.
         Concatenates the results and translates it into the target language.
 
         Args:
             splits (List[str]): splits, to be summarized
             language (str): the target language
-            department (Optional[str]): _description_
+            department (Optional[str]): department, who is responsible for the call
+            model_name (str): the choosen llm
 
         Returns:
             SummarizeResult: the best n summarizations
         """
         # setup
-        (summarizeChain, cleanupChain) = self.setup()
+        (summarizeChain, cleanupChain) = self.setup(model_name)
         # call chain
         total_tokens = 0
-        summarys = []
+        summarys: List[DenserSummary] = []
         # call summarization in parallel
-        results  =  self.run_io_tasks_in_parallel(
+        chunk_summaries  =  self.run_io_tasks_in_parallel(
              list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, summarizeChain=summarizeChain), splits)))
 
         # concatenate all summarys
         for i in range(0,5):
-            next_summary =   {"denser_summary": "", "missing_entities": []}
-            for (result, tokens) in results:
+            next_summary = DenserSummary(missing_entities=[], denser_summary="")
+            for (chunk_summary, tokens) in chunk_summaries:
                 total_tokens += tokens
-                next_summary["denser_summary"] += " "+ result[i]["denser_summary"]
-                next_summary["missing_entities"] += result[i]["missing_entities"]
+                next_summary.denser_summary += " "+ chunk_summary.data[i].denser_summary
+                next_summary.missing_entities += chunk_summary.data[i].missing_entities
             summarys.append(next_summary)
 
         final_summarys = []
         for summary in summarys[self.use_last_n_summaries:]:
             # translate and beautify the concatenated summaries
             with get_openai_callback() as cb:
-                result = cleanupChain.invoke({"language": language, "sum": summary['denser_summary']})        
+                chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})        
             total_tokens = cb.total_tokens
-            final_summarys.append(result['translation'])
+            final_summarys.append(chunk_summary.content)
         # save total tokens
         if self.config["log_tokens"]:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
-                method = "Sum"))
+                method = "Sum",
+                model = model_name))
 
         return SummarizeResult(answer= final_summarys)
     

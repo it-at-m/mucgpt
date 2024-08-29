@@ -16,6 +16,7 @@ import { indexedDBStorage, saveToDB, getStartDataFromDB, popLastMessageInDB, get
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 import { MessageError } from "./MessageError";
+import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
@@ -25,6 +26,7 @@ const enum STORAGE_KEYS {
 
 const Chat = () => {
     const { language } = useContext(LanguageContext)
+    const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const [shouldStream, setShouldStream] = useState<boolean>(true);
 
@@ -58,16 +60,16 @@ const Chat = () => {
 
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
-            const response = await countTokensAPI({ "text": debouncedSystemPrompt });
+            const response = await countTokensAPI({ "text": debouncedSystemPrompt, "model": LLM });
             setSystemPromptTokens(response.count);
         }
         else
             setSystemPromptTokens(0);
-    }, [debouncedSystemPrompt]);
+    }, [debouncedSystemPrompt, LLM]);
 
     useEffect(() => {
         makeTokenCountRequest();
-    }, [debouncedSystemPrompt, makeTokenCountRequest]);
+    }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
     useEffect(() => {
         checkStructurOfDB(storage);
@@ -117,7 +119,7 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
         let askResponse: AskResponse = {} as AskResponse;
-        saveToDB([question, { ...askResponse, answer: "", tokens: 0 }, 0], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens)
+        saveToDB([question, { ...askResponse, answer: "", tokens: 0 }, 0], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens, LLM.model_name)
         try {
             const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: ChatRequest = {
@@ -126,7 +128,8 @@ const Chat = () => {
                 language: language,
                 temperature: temperature,
                 system_message: system ? system : "",
-                max_tokens: max_tokens
+                max_tokens: max_tokens,
+                model: LLM.model_name
             };
 
             const response = await chatApi(request);
@@ -163,7 +166,7 @@ const Chat = () => {
                     }
                 }
                 if (startId == currentId) {
-                    saveToDB([question, latestResponse, user_tokens], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens)
+                    saveToDB([question, latestResponse, user_tokens], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens, LLM.model_name)
                 }
             } else {
                 const parsedResponse: AskResponse = await response.json();
@@ -172,7 +175,7 @@ const Chat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (startId == currentId) {
-                    saveToDB([question, parsedResponse, 0], storage, currentId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens)
+                    saveToDB([question, parsedResponse, 0], storage, currentId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens, LLM.model_name)
                 }
             }
         } catch (e) {

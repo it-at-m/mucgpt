@@ -14,6 +14,7 @@ import { LanguageContextProvider } from "./components/LanguageSelector/LanguageC
 import Brainstorm from "./pages/brainstorm/Brainstorm";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
+import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 initializeIcons();
 
 const router = createHashRouter([
@@ -63,7 +64,9 @@ const router = createHashRouter([
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <LanguageContextProvider>
-            <RouterProvider router={router} />
+            <LLMContextProvider>
+                <RouterProvider router={router} />
+            </LLMContextProvider>
         </LanguageContextProvider>
     </React.StrictMode>
 );

@@ -60,19 +60,15 @@ async def assets(request: Request, path: str):
 @backend.post("/sum")
 async def sum(
     request: Request,
-    file: UploadFile = File(None),  # Use File to get the uploaded file
-    body: str = Form(...),  # Use Form to get the 'body' form data
-    #detaillevel: str = Form(...),  # Extract detaillevel from form data
-    #language: str = Form("Deutsch"),  # Default to "Deutsch" if not provided
-    #model: str = Form("gpt-4o-mini")  # Default model
+    file: UploadFile = File(None), 
+    body: str = Form(...), 
 ):
     cfg = get_config_and_authentificate(request)
     department = get_department(request=request)
-    # Parse the JSON body from the form data
     try:
         request_json = json.loads(body)
     except json.JSONDecodeError:
-        return JSONResponse({"error": "Invalid JSON in body"}, status_code=400)
+        return JSONResponse({"error": "Invalid JSON in body"}, status_code=415)
     text = request_json.get("text") if file is None else None
     detaillevel = request_json.get("detaillevel")
     language = request_json.get("language")

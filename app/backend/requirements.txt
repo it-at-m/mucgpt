@@ -1,4 +1,3 @@
-quart==0.19.6
 langchain==0.2.6
 langchain_openai
 langchain_community 
@@ -19,4 +18,4 @@ gunicorn
 mistral-common==1.3.4
 django
 python-multipart
-fastapi
+fastapi=0.112.2

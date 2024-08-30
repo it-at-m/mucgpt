@@ -207,7 +207,7 @@ async def getStatistics(request: Request):
     repo = cfg["repository"]
     sum_by_department = repo.sumByDepartment()
     avg_by_department = repo.avgByDepartment()
-    return JSONResponse({"sum": sum_by_department, "avg": avg_by_department})
+    return JSONResponse({"sum": float(sum_by_department), "avg": float(avg_by_department)})
 
 
 @backend.post("/counttokens")

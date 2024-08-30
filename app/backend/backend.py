@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import List, cast
 
-from django.http import FileResponse
+from fastapi.responses import FileResponse
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import (
     HTMLResponse,
@@ -29,7 +29,7 @@ async def lifespan(backend: FastAPI):
     yield
 
 
-backend = FastAPI(title="DAVe Schnittstelle", lifespan=lifespan)
+backend = FastAPI(title="MUCGPT", lifespan=lifespan)
 backend.mount("/static", StaticFiles(directory="static"), name="static")
 backend.state.app_config = None
 
@@ -213,9 +213,6 @@ async def getStatistics(request: Request):
 @backend.post("/counttokens")
 async def counttokens(request: Request):
     get_config_and_authentificate(request)
-    if not request.is_json:
-        return JSONResponse({"error": "request must be json"}), 415
-
     request_json = await request.get_json()
     message = request_json["text"] or ""
     model = request_json["model"]["model_name"] or "gpt-4o-mini"

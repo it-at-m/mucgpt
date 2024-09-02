@@ -203,18 +203,21 @@ async def getConfig(request: Request):
 
 @backend.get("/statistics")
 async def getStatistics(request: Request):
-    cfg = get_config_and_authentificate(request)
-    repo = cfg["repository"]
-    sum_by_department = repo.sumByDepartment()
-    avg_by_department = repo.avgByDepartment()
-    return JSONResponse({"sum": sum_by_department, "avg": avg_by_department})
+    try:
+        cfg = get_config_and_authentificate(request)
+        repo = cfg["repository"]
+        sum_by_department = repo.sumByDepartment()
+        avg_by_department = repo.avgByDepartment()
+        return JSONResponse({"sum": str(sum_by_department), "avg": str(avg_by_department)})
+    except Exception as e:
+        return JSONResponse(content={"error": e}, status_code=404)
 
 
 @backend.post("/counttokens")
 async def counttokens(request: Request):
     get_config_and_authentificate(request)
-    if not request.is_json:
-        return JSONResponse({"error": "request must be json"}), 415
+    if not request.json():
+        return JSONResponse({"error": "request must be json"}, status_code=415)
 
     request_json = await request.get_json()
     message = request_json["text"] or ""
@@ -225,10 +228,13 @@ async def counttokens(request: Request):
 
 @backend.get("/statistics/export")
 async def getStatisticsCSV(request: Request):
-    cfg = get_config_and_authentificate(request)
-    repo = cfg["repository"]
-    export = repo.export()
-    return FileResponse(export, filename="statistics.csv", as_attachment=True)
+    try:
+        cfg = get_config_and_authentificate(request)
+        repo = cfg["repository"]
+        export = repo.export()
+        return FileResponse(export, filename="statistics.csv", as_attachment=True)
+    except Exception as e:
+        return JSONResponse(content={"error": e}, status_code=404)
 
 
 @backend.get("/health")

@@ -3,9 +3,9 @@ import logging
 from contextlib import asynccontextmanager
 from typing import List, cast
 
-from django.http import FileResponse
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import (
+    FileResponse,
     HTMLResponse,
     JSONResponse,
     RedirectResponse,
@@ -29,7 +29,7 @@ async def lifespan(backend: FastAPI):
     yield
 
 
-backend = FastAPI(title="DAVe Schnittstelle", lifespan=lifespan)
+backend = FastAPI(title="MUCGPT", lifespan=lifespan)
 backend.mount("/static", StaticFiles(directory="static"), name="static")
 backend.state.app_config = None
 
@@ -208,7 +208,7 @@ async def getStatistics(request: Request):
         repo = cfg["repository"]
         sum_by_department = repo.sumByDepartment()
         avg_by_department = repo.avgByDepartment()
-        return JSONResponse({"sum": str(sum_by_department), "avg": str(avg_by_department)})
+        return JSONResponse({"sum": float(sum_by_department), "avg": float(avg_by_department)})
     except Exception as e:
         return JSONResponse(content={"error": e}, status_code=404)
 
@@ -218,8 +218,7 @@ async def counttokens(request: Request):
     get_config_and_authentificate(request)
     if not request.json():
         return JSONResponse({"error": "request must be json"}, status_code=415)
-
-    request_json = await request.get_json()
+    request_json = await request.json()
     message = request_json["text"] or ""
     model = request_json["model"]["model_name"] or "gpt-4o-mini"
     counted_tokens = num_tokens_from_messages([HumanMessage(message)], model)

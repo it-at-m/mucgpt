@@ -14,6 +14,7 @@ from fastapi.responses import (
 from fastapi.staticfiles import StaticFiles
 from langchain_core.messages.human import HumanMessage
 
+from core.types.ChatRequest import ChatRequest
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
 from core.modelhelper import num_tokens_from_messages
@@ -123,26 +124,18 @@ async def brainstorm(request: Request):
 
 
 @backend.post("/chat_stream")
-async def chat_stream(request: Request):
+async def chat_stream(request: ChatRequest):
     cfg = get_config_and_authentificate(request)
     department = get_department(request=request)
 
     try:
-        request_json = await request.json()
-    except ValueError:
-        return JSONResponse(content={"error": "request must be json"}, status_code=415)
-    try:
         impl = cfg["chat_approaches"]
-        temperature = request_json["temperature"] or 0.7
-        max_tokens = request_json["max_tokens"] or 4096
-        system_message = request_json["system_message"] or None
-        model = request_json["model"] or "gpt-4o-mini"
         response_generator = impl.run_with_streaming(
-            history=request_json["history"],
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_message=system_message,
-            model=model,
+            history=request.history,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+            system_message=request.system_message,
+            model=request.model,
             department=department,
         )
         response = StreamingResponse(format_as_ndjson(response_generator))
@@ -154,28 +147,18 @@ async def chat_stream(request: Request):
 
 
 @backend.post("/chat")
-async def chat(request: Request):
+async def chat(request: ChatRequest):
     cfg = get_config_and_authentificate(request)
     department = get_department(request=request)
-        
-    try:
-        request_json = await request.json()
-    except ValueError:
-        return JSONResponse(content={"error": "request must be json"}, status_code=415)
     try:
         impl = cfg["chat_approaches"]
-        temperature = request_json["temperature"] or 0.7
-        max_tokens = request_json["max_tokens"] or 4096
-        model_name = request_json["model"] or "gpt-4o-mini"
-        system_message = request_json["system_message"] or None
-        history = request_json["history"]
         chatResult = impl.run_without_streaming(
-            history=history,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_message=system_message,
+            history=request.history,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens,
+            system_message=request.system_message,
             department=department,
-            model_name=model_name,
+            model_name=request.model,
         )
         return JSONResponse(chatResult)
     except Exception as e:

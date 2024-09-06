@@ -1,9 +1,10 @@
-import json
+from dataclasses import dataclass
+import io
 import logging
 from contextlib import asynccontextmanager
 from typing import List, cast
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Header, Request, UploadFile
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -13,14 +14,16 @@ from fastapi.responses import (
 )
 from fastapi.staticfiles import StaticFiles
 from langchain_core.messages.human import HumanMessage
+from pydantic_core import from_json
 
-from core.types.ChatRequest import ChatRequest
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
 from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
 from core.types.Config import ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
+from core.types.SumRequest import SumRequest
+from core.types.ChatRequest import ChatRequest
 from init_app import initApp
 
 
@@ -57,31 +60,28 @@ async def assets(request: Request, path: str):
     get_config_and_authentificate(request)
     return RedirectResponse(url="/static/assets/" + path)
 
-
 @backend.post("/sum")
 async def sum(
-    request: Request,
+    body: str = Form(...),
     file: UploadFile = File(None), 
-    body: str = Form(...), 
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  
 ):
-    cfg = get_config_and_authentificate(request)
-    department = get_department(request=request)
-    try:
-        request_json = json.loads(body)
-    except json.JSONDecodeError:
-        return JSONResponse({"error": "Invalid JSON in body"}, status_code=415)
-    text = request_json.get("text") if file is None else None
-    detaillevel = request_json.get("detaillevel")
-    language = request_json.get("language")
-    model = request_json.get("model")
+    cfg = get_config_and_authentificate(access_token)
+    department = get_department(request=access_token)
+    sumRequest = SumRequest.model_validate(from_json(body))
+    text =sumRequest.text if file is None else None
+    if(file is not None):
+        file_content = io.BytesIO(await file.read())
+    else:
+        file_content = None
     try:
         impl = cfg["sum_approaches"]
-        splits = impl.split(detaillevel=detaillevel, file=file, text=text)
+        splits = impl.split(detaillevel=sumRequest.detaillevel, file=file_content, text=text)
         r = await impl.summarize(
             splits=splits,
             department=department,
-            language=language,
-            model_name=model,
+            language=sumRequest.language,
+            model_name=sumRequest.model,
         )
         return JSONResponse(content=r)
     except Exception as e:

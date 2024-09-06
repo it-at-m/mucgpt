@@ -27,7 +27,6 @@ export type ChatRequest = {
 export type SumRequest = {
     text: string;
     detaillevel?: "short" | "medium" | "long";
-    temperature?: number;
     language?: string;
     model: string;
 };

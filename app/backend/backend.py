@@ -1,10 +1,9 @@
-from dataclasses import dataclass
 import io
 import logging
 from contextlib import asynccontextmanager
 from typing import List, cast
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Header, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Header, Request, UploadFile
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -64,10 +63,11 @@ async def assets(request: Request, path: str):
 async def sum(
     body: str = Form(...),
     file: UploadFile = File(None), 
+    id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  
 ):
-    cfg = get_config_and_authentificate(access_token)
-    department = get_department(request=access_token)
+    cfg = get_config_and_authentificate(access_token=access_token)
+    department = get_department(id_token=id_token)
     sumRequest = SumRequest.model_validate(from_json(body))
     text =sumRequest.text if file is None else None
     if(file is not None):
@@ -96,13 +96,15 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 @backend.post("/brainstorm")
-async def brainstorm(request: Request):
-    cfg = get_config_and_authentificate(request)
+async def brainstorm(request: Request,
+                    id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
+                    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+    cfg = get_config_and_authentificate(access_token=access_token)
     try:
         request_json = await request.json()
     except ValueError:
         return JSONResponse(content={"error": "request must be json"}, status_code=415)
-    department = get_department(request=request)
+    department = get_department(id_token=id_token)
 
     try:
         impl = cfg["brainstorm_approaches"]
@@ -124,9 +126,11 @@ async def brainstorm(request: Request):
 
 
 @backend.post("/chat_stream")
-async def chat_stream(request: ChatRequest):
-    cfg = get_config_and_authentificate(request)
-    department = get_department(request=request)
+async def chat_stream(request: ChatRequest,
+                      access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+                      id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")):
+    cfg = get_config_and_authentificate(access_token=access_token)
+    department = get_department(id_token=id_token)
 
     try:
         impl = cfg["chat_approaches"]
@@ -147,9 +151,11 @@ async def chat_stream(request: ChatRequest):
 
 
 @backend.post("/chat")
-async def chat(request: ChatRequest):
-    cfg = get_config_and_authentificate(request)
-    department = get_department(request=request)
+async def chat(request: ChatRequest,
+               access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+               id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")):
+    cfg = get_config_and_authentificate(access_token=access_token)
+    department = get_department(id_token=id_token)
     try:
         impl = cfg["chat_approaches"]
         chatResult = impl.run_without_streaming(
@@ -167,8 +173,8 @@ async def chat(request: ChatRequest):
 
 
 @backend.get("/config")
-async def getConfig(request: Request):
-    cfg = get_config_and_authentificate(request)
+async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+    cfg = get_config_and_authentificate(access_token)
     frontend_features = cfg["configuration_features"]["frontend"]
     models = cast(
         List[ModelsConfig], cfg["configuration_features"]["backend"]["models"]
@@ -185,9 +191,9 @@ async def getConfig(request: Request):
 
 
 @backend.get("/statistics")
-async def getStatistics(request: Request):
+async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
     try:
-        cfg = get_config_and_authentificate(request)
+        cfg = get_config_and_authentificate(access_token)
         repo = cfg["repository"]
         sum_by_department = repo.sumByDepartment()
         avg_by_department = repo.avgByDepartment()
@@ -197,8 +203,8 @@ async def getStatistics(request: Request):
 
 
 @backend.post("/counttokens")
-async def counttokens(request: Request):
-    get_config_and_authentificate(request)
+async def counttokens(request: Request, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  ):
+    get_config_and_authentificate(access_token)
     if not request.json():
         return JSONResponse({"error": "request must be json"}, status_code=415)
     request_json = await request.json()
@@ -209,9 +215,10 @@ async def counttokens(request: Request):
 
 
 @backend.get("/statistics/export")
-async def getStatisticsCSV(request: Request):
+async def getStatisticsCSV(request: Request, 
+                           access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
     try:
-        cfg = get_config_and_authentificate(request)
+        cfg = get_config_and_authentificate(access_token)
         repo = cfg["repository"]
         export = repo.export()
         return FileResponse(export, filename="statistics.csv", as_attachment=True)
@@ -228,28 +235,26 @@ def get_config():
     return cast(AppConfig, backend.state.app_config)
 
 
-def get_config_and_authentificate(request: Request):
+def get_config_and_authentificate(access_token):
     cfg = get_config()
     if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ensure_authentification(request=request)
+        ensure_authentification(access_token=access_token)
     return cfg
 
 
-def ensure_authentification(request: Request):
+def ensure_authentification(access_token):
     cfg = get_config()
-    ssoaccesstoken = request.headers.get("X-Ms-Token-Lhmsso-Access-Token")
     auth_client: AuthentificationHelper = cfg["authentification_client"]
-    claims = auth_client.authentificate(ssoaccesstoken)
+    claims = auth_client.authentificate(accesstoken=access_token)
     return auth_client, claims
 
 
-def get_department(request: Request):
+def get_department(id_token):
     cfg = get_config()
 
     if cfg["configuration_features"]["backend"]["enable_auth"]:
-        ssoidtoken = request.headers.get("X-Ms-Token-Lhmsso-Id-Token")
         auth_client: AuthentificationHelper = cfg["authentification_client"]
-        id_claims = auth_client.decode(ssoidtoken)
+        id_claims = auth_client.decode(id_token)
         return auth_client.getDepartment(claims=id_claims)
     else:
         return None

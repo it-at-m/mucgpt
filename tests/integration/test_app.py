@@ -4,12 +4,10 @@ from unittest import mock
 
 import PyPDF2
 import pytest
-import quart.testing.app
 from httpx import Request, Response
 from openai import BadRequestError
 from quart.datastructures import FileStorage
 
-import app
 from brainstorm.brainstormresult import BrainstormResult
 from core.types.Chunk import Chunk
 from summarize.summarizeresult import SummarizeResult

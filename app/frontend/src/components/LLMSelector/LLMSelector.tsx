@@ -33,8 +33,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                 appearance="underline"
                 size="small" positioning="below-start">
                 {options.map((item, index) => (
-                    <Option text={item.model_name} className={styles.option} key={index}>
-                        {item.model_name}
+                    <Option text={item.llm_name} className={styles.option} key={index}>
+                        {item.llm_name}
                     </Option>
 
                 ))}

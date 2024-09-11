@@ -1,20 +1,22 @@
-from typing import Any, Mapping, TypedDict
+from typing import Any, List, Mapping, TypedDict
+
+from pydantic import BaseModel
 
 
 class ApproachConfig(TypedDict):
     log_tokens: bool
 
-class ModelsConfig(TypedDict):
+class ModelsConfig(BaseModel):
     type: str
-    model_name: str
+    llm_name: str
     deployment: str
     endpoint: str
     api_key: str
     api_version: str
     max_tokens: int
 
-class ModelsDTO(TypedDict):
-    model_name: str
+class ModelsDTO(BaseModel):
+    llm_name: str
     max_tokens: int
     description: str
 
@@ -36,12 +38,12 @@ class BackendConfig(TypedDict):
     sum: ApproachConfig
     models: ModelsConfig
 
-class LabelsConfig(TypedDict):
-    env_name: str
+class LabelsConfig(BaseModel):
+    env_name: str = "MUCGPT"
 
 class FrontendConfig(TypedDict):
-    labels: LabelsConfig
-    alternative_logo: bool
+    labels: LabelsConfig 
+    alternative_logo: bool = False
 
 class Config(TypedDict):
     """Config for an environment, is loaded from ressources/env.json
@@ -49,6 +51,10 @@ class Config(TypedDict):
     version: str
     frontend: FrontendConfig
     backend: BackendConfig
+
+class ConfigResponse(BaseModel):
+    frontend: FrontendConfig
+    models: List[ModelsDTO] =[]
 
 
 

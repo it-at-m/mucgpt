@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import List, cast
 
-from fastapi import FastAPI, File, Form, HTTPException, Header, Request, UploadFile
+from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -19,10 +19,12 @@ from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
 from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
-from core.types.Config import ModelsConfig, ModelsDTO
-from core.types.countresult import CountResult
-from core.types.SumRequest import SumRequest
 from core.types.ChatRequest import ChatRequest
+from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
+from core.types.countresult import CountResult
+from core.types.CountTokenRequest import CountTokenRequest
+from core.types.StatisticsResponse import StatisticsResponse
+from core.types.SumRequest import SumRequest
 from init_app import initApp
 
 
@@ -62,7 +64,7 @@ async def assets(request: Request, path: str):
 @backend.post("/sum")
 async def sum(
     body: str = Form(...),
-    file: UploadFile = File(None), 
+    file: UploadFile = None, 
     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  
 ):
@@ -81,7 +83,7 @@ async def sum(
             splits=splits,
             department=department,
             language=sumRequest.language,
-            model_name=sumRequest.model,
+            llm_name=sumRequest.model,
         )
         return JSONResponse(content=r)
     except Exception as e:
@@ -112,7 +114,7 @@ async def brainstorm(request: Request,
             topic=request_json["topic"],
             language=request_json["language"] or "Deutsch",
             department=department,
-            model_name=request_json["model"] or "gpt-4o-mini",
+            llm_name=request_json["model"] or "gpt-4o-mini",
         )
         return JSONResponse(r)
     except Exception as e:
@@ -164,7 +166,7 @@ async def chat(request: ChatRequest,
             max_tokens=request.max_tokens,
             system_message=request.system_message,
             department=department,
-            model_name=request.model,
+            llm_name=request.model,
         )
         return JSONResponse(chatResult)
     except Exception as e:
@@ -173,50 +175,42 @@ async def chat(request: ChatRequest,
 
 
 @backend.get("/config")
-async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
-    frontend_features = cfg["configuration_features"]["frontend"]
+    response = ConfigResponse(frontend=cfg["configuration_features"]["frontend"])
     models = cast(
         List[ModelsConfig], cfg["configuration_features"]["backend"]["models"]
     )
-    models_dto_list = []
     for model in models:
         dto = ModelsDTO(
-            model_name=model["model_name"],
+            llm_name=model["llm_name"],
             max_tokens=model["max_tokens"],
             description=model["description"],
         )
-        models_dto_list.append(dto)
-    return JSONResponse({"frontend": frontend_features, "models": models_dto_list})
+        response.models.append(dto)
+    return response
 
 
-@backend.get("/statistics")
-async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+@backend.get("/statistics", response_model=StatisticsResponse)
+async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> StatisticsResponse:
     try:
         cfg = get_config_and_authentificate(access_token)
         repo = cfg["repository"]
-        sum_by_department = repo.sumByDepartment()
-        avg_by_department = repo.avgByDepartment()
-        return JSONResponse({"sum": float(sum_by_department), "avg": float(avg_by_department)})
-    except Exception as e:
-        return JSONResponse(content={"error": e}, status_code=404)
+        reponse = StatisticsResponse(sum=float(repo.sumByDepartment()), avg=float(repo.avgByDepartment()))
+        return reponse
+    except Exception:
+        raise HTTPException(status_code=404, detail="Get Statistics failed!")
 
 
-@backend.post("/counttokens")
-async def counttokens(request: Request, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  ):
+@backend.post("/counttokens", response_model=CountResult)
+async def counttokens(request: CountTokenRequest, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> CountResult:
     get_config_and_authentificate(access_token)
-    if not request.json():
-        return JSONResponse({"error": "request must be json"}, status_code=415)
-    request_json = await request.json()
-    message = request_json["text"] or ""
-    model = request_json["model"]["model_name"] or "gpt-4o-mini"
-    counted_tokens = num_tokens_from_messages([HumanMessage(message)], model)
-    return JSONResponse(CountResult(count=counted_tokens))
+    counted_tokens = num_tokens_from_messages([HumanMessage(request.text)], request.model.llm_name)
+    return CountResult(count=counted_tokens)
 
 
 @backend.get("/statistics/export")
-async def getStatisticsCSV(request: Request, 
-                           access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
     try:
         cfg = get_config_and_authentificate(access_token)
         repo = cfg["repository"]

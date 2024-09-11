@@ -76,7 +76,7 @@ class Chat:
             info = ChunkInfo(requesttokens=num_tokens_from_messages([msgs[-1]],model), streamedtokens=num_tokens_from_messages([HumanMessage(result)], model)) 
             yield Chunk(type="I", message=info, order=position)
     
-    def run_without_streaming(self, history: List[ChatTurn], max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], model_name:str) -> ChatResult:
+    def run_without_streaming(self, history: List[ChatTurn], max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], llm_name:str) -> ChatResult:
         """calls the llm in blocking mode, returns the full result
 
         Args:
@@ -107,7 +107,7 @@ class Chat:
                 department = department,
                 messagecount=  1,
                 method = "Brainstorm",
-                model = model_name))
+                model = llm_name))
         return ChatResult(content=ai_message.content)
 
 

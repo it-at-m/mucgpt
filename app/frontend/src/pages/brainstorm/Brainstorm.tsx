@@ -65,7 +65,7 @@ const Brainstorm = () => {
             const request: BrainstormRequest = {
                 topic: question,
                 language: language,
-                model: LLM.model_name
+                model: LLM.llm_name
             };
             const result = await brainstormApi(request);
             setAnswers([...answers, [question, result]]);

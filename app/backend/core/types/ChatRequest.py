@@ -1,5 +1,7 @@
 from typing import List, Optional
+
 from pydantic import BaseModel
+
 
 class ChatTurn(BaseModel):
     user: str

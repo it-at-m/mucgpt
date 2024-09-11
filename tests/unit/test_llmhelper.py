@@ -11,7 +11,7 @@ class Test_LLMhelper(unittest.TestCase):
     def setUp(self):
         self.model1 = {
                 "type": "OPENAI",
-                "model_name": "model1",
+                "llm_name": "model1",
                 "endpoint": "TODO",
                 "api_key": "TODO",
                 "max_tokens": 128000
@@ -19,7 +19,7 @@ class Test_LLMhelper(unittest.TestCase):
         self.model2 ={
                 "type": "AZURE",
                 "deployment": "model2",
-                "model_name": "model2",
+                "llm_name": "model2",
                 "api_version": "preview",
                 "endpoint": "TODO",
                 "api_key": "TODO",
@@ -27,7 +27,7 @@ class Test_LLMhelper(unittest.TestCase):
             }
         self.model3 ={
                 "type": "TODO",
-                "model_name": "model2",
+                "llm_name": "model2",
                 "endpoint": "TODO",
                 "api_key": "TODO",
                 "max_tokens": 128000

@@ -1,9 +1,12 @@
+from typing import List
+
 from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
-from typing import List
+
 from core.types.Config import ModelsConfig
+
 
 class ModelsConfigurationException(Exception):
     pass
@@ -36,7 +39,7 @@ def getModel(models: List[ModelsConfig],
                         )
         elif default_model["type"] == "OPENAI":
                llm = ChatOpenAI(
-                        model=default_model["model_name"],
+                        model=default_model["llm_name"],
                         api_key=default_model["api_key"],
                         base_url=default_model["endpoint"],
                         max_tokens=max_tokens,
@@ -63,7 +66,7 @@ def getModel(models: List[ModelsConfig],
                                 )
                 elif model["type"] == "OPENAI":
                         alternative = ChatOpenAI(
-                                        model=model["model_name"],
+                                        model=model["llm_name"],
                                         api_key=model["api_key"],
                                         base_url=model["endpoint"],
                                         max_tokens=max_tokens,
@@ -71,7 +74,7 @@ def getModel(models: List[ModelsConfig],
                                         streaming=streaming,
                                         temperature=temperature,
                         )
-                alternatives[model["model_name"]] = alternative
+                alternatives[model["llm_name"]] = alternative
         llm = llm.configurable_fields(
                         temperature=ConfigurableField(
                                 id="llm_temperature",
@@ -98,7 +101,7 @@ def getModel(models: List[ModelsConfig],
                                 
                         ).configurable_alternatives(
                                 ConfigurableField(id="llm"),
-                                default_key=models[0]["model_name"],
+                                default_key=models[0]["llm_name"],
                                 **alternatives
                                )
         return llm

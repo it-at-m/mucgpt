@@ -72,7 +72,7 @@ const Summarize = () => {
                 text: questionText,
                 detaillevel: detaillevel,
                 language: language,
-                model: LLM.model_name
+                model: LLM.llm_name
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);

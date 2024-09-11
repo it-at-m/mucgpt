@@ -96,9 +96,9 @@ class Summarize:
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_and_cleanup_prompt)
 
 
-    def setup(self, model_name: str) -> SequentialChain:
+    def setup(self, llm_name: str) -> SequentialChain:
         config: LlmConfigs = {
-            "llm": model_name
+            "llm": llm_name
         }
         llm = self.llm.with_config(configurable=config)
 
@@ -158,7 +158,7 @@ class Summarize:
 
 
 
-    async def summarize(self, splits: List[str],  language: str, department: Optional[str], model_name:str) -> SummarizeResult:
+    async def summarize(self, splits: List[str],  language: str, department: Optional[str], llm_name:str) -> SummarizeResult:
         """summarizes text with chain of density prompting. Generates 5 increasingly better summaries per split.
         Concatenates the results and translates it into the target language.
 
@@ -166,13 +166,13 @@ class Summarize:
             splits (List[str]): splits, to be summarized
             language (str): the target language
             department (Optional[str]): department, who is responsible for the call
-            model_name (str): the choosen llm
+            llm_name (str): the choosen llm
 
         Returns:
             SummarizeResult: the best n summarizations
         """
         # setup
-        (summarizeChain, cleanupChain) = self.setup(model_name)
+        (summarizeChain, cleanupChain) = self.setup(llm_name)
         # call chain
         total_tokens = 0
         summarys: List[DenserSummary] = []
@@ -203,7 +203,7 @@ class Summarize:
                 department = department,
                 messagecount=  1,
                 method = "Sum",
-                model = model_name))
+                model = llm_name))
 
         return SummarizeResult(answer= final_summarys)
     

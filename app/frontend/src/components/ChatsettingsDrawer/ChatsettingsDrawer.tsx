@@ -14,7 +14,7 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 interface Props {

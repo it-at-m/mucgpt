@@ -31,14 +31,14 @@
         "models": [
             {
                 "type": "OPENAI",
-                "model_name": "TODO",
+                "llm_name": "TODO",
                 "endpoint": "TODO",
                 "api_key": "TODO",
                 "max_tokens": 128000
             },
             {
                 "type": "AZURE",
-                "model_name": "TODO",
+                "llm_name": "TODO",
                 "deployment": "TODO",
                 "endpoint": "TODO",
                 "api_key": "TODO",

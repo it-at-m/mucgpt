@@ -154,7 +154,8 @@ async def getConfig():
         models_dto_list.append(dto)
     return jsonify({
         "frontend": frontend_features,
-        "models": models_dto_list
+        "models": models_dto_list,
+        "version": cfg["configuration_features"]["version"]
     })
 
 @bp.route("/statistics", methods=["GET"])

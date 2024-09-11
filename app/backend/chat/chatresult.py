@@ -1,5 +1,5 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
 
-class ChatResult(TypedDict):
+class ChatResult(BaseModel):
     content: str

@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import List, cast
 
-from fastapi import FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi import FastAPI, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -15,6 +15,9 @@ from fastapi.staticfiles import StaticFiles
 from langchain_core.messages.human import HumanMessage
 from pydantic_core import from_json
 
+from brainstorm.BrainstormRequest import BrainstormRequest
+from brainstorm.BrainstormResult import BrainstormResult
+from chat.chatresult import ChatResult
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
 from core.modelhelper import num_tokens_from_messages
@@ -45,19 +48,19 @@ async def handleAuthError(error: AuthError):
 
 
 @backend.get("/", include_in_schema=False)
-async def index(request: Request):
+async def index(request: Request) -> HTMLResponse:
     get_config_and_authentificate(request)
     with open("static/index.html") as f:
         return HTMLResponse(content=f.read())
 
 
 @backend.get("/favicon.ico", include_in_schema=False)
-async def favicon():
+async def favicon() -> RedirectResponse:
     return RedirectResponse(url="/static/favicon.ico")
 
 
-@backend.get("/assets/{path}")
-async def assets(request: Request, path: str):
+@backend.get("/assets/{path}", include_in_schema=False)
+async def assets(request: Request, path: str) -> RedirectResponse:
     get_config_and_authentificate(request)
     return RedirectResponse(url="/static/assets/" + path)
 
@@ -98,25 +101,20 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 
 @backend.post("/brainstorm")
-async def brainstorm(request: Request,
+async def brainstorm(request: BrainstormRequest,
                     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
-                    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+                    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> BrainstormResult:
     cfg = get_config_and_authentificate(access_token=access_token)
-    try:
-        request_json = await request.json()
-    except ValueError:
-        return JSONResponse(content={"error": "request must be json"}, status_code=415)
     department = get_department(id_token=id_token)
-
     try:
         impl = cfg["brainstorm_approaches"]
         r = await impl.brainstorm(
-            topic=request_json["topic"],
-            language=request_json["language"] or "Deutsch",
+            topic=request.topic,
+            language=request.language,
             department=department,
-            llm_name=request_json["model"] or "gpt-4o-mini",
+            llm_name=request.model
         )
-        return JSONResponse(r)
+        return r
     except Exception as e:
         logging.exception("Exception in /brainstorm")
         msg = (
@@ -124,13 +122,13 @@ async def brainstorm(request: Request,
             if "Rate limit" in str(e)
             else str(e)
         )
-        return JSONResponse({"error": msg}), 500
+        raise HTTPException(status_code=500,detail=msg)
 
 
 @backend.post("/chat_stream")
 async def chat_stream(request: ChatRequest,
                       access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-                      id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")):
+                      id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> StreamingResponse:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
 
@@ -149,13 +147,13 @@ async def chat_stream(request: ChatRequest,
         return response
     except Exception as e:
         logging.exception("Exception in /chat")
-        return JSONResponse({"error": str(e)}), 500
+        raise HTTPException(status_code=500,detail=str(e))
 
 
 @backend.post("/chat")
 async def chat(request: ChatRequest,
                access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-               id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")):
+               id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     try:
@@ -168,10 +166,10 @@ async def chat(request: ChatRequest,
             department=department,
             llm_name=request.model,
         )
-        return JSONResponse(chatResult)
+        return chatResult
     except Exception as e:
         logging.exception("Exception in /chat")
-        return JSONResponse({"error": str(e)}), 500
+        raise HTTPException(status_code=500,detail=str(e))
 
 
 @backend.get("/config")

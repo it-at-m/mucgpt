@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class CountTokensRequest(BaseModel):
+class CountTokenRequest(BaseModel):
     text: str
     model: str

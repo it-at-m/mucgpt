@@ -41,10 +41,10 @@ const Version = () => {
                                 <h3>{t('version.fixed')}</h3>
                                 <ul>
                                     <li>
-                                        Version wird wieder richtig gespeichert und in den Einstellungen angezeigt.
+                                        Versionsnummer wird wieder richtig gespeichert und in den Einstellungen angezeigt.
                                     </li>
                                     <li>
-                                        Maximale Tokens aus der Config aufgeteilt in Input- und Output- Tokens. Dadurch laufen Modelle mit kleineren Contextfenster (wie z.B. Mistral) nicht mehr in einen Fehler.
+                                        Maximale Tokens aus der Config aufgeteilt in Input- und Output-Tokens. Dadurch laufen Modelle mit kleineren Contextfenster (wie z.B. Mistral) nicht mehr in einen Fehler.
                                     </li>
                                 </ul>
                                 <h3>{t('version.changed')}</h3>

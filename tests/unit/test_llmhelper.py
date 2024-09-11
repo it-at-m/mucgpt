@@ -14,7 +14,8 @@ class Test_LLMhelper(unittest.TestCase):
                 "model_name": "model1",
                 "endpoint": "TODO",
                 "api_key": "TODO",
-                "max_tokens": 128000
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192
             }
         self.model2 ={
                 "type": "AZURE",
@@ -23,14 +24,16 @@ class Test_LLMhelper(unittest.TestCase):
                 "api_version": "preview",
                 "endpoint": "TODO",
                 "api_key": "TODO",
-                "max_tokens": 128000
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192
             }
         self.model3 ={
                 "type": "TODO",
                 "model_name": "model2",
                 "endpoint": "TODO",
                 "api_key": "TODO",
-                "max_tokens": 128000
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192
             }
 
     @pytest.mark.asyncio    
@@ -39,7 +42,7 @@ class Test_LLMhelper(unittest.TestCase):
         
     
         model = getModel(models=[self.model1, self.model2],
-                         max_tokens=10,
+                         max_output_tokens=10,
                          n=1,
                          temperature=0.5,
                          streaming=True)
@@ -50,7 +53,7 @@ class Test_LLMhelper(unittest.TestCase):
     def test_getModel_wrong_type(self):
         with self.assertRaises(ModelsConfigurationException):
             getModel(models=[self.model3],
-                         max_tokens=10,
+                         max_output_tokens=10,
                          n=1,
                          temperature=0.5,
                          streaming=True)
@@ -59,7 +62,7 @@ class Test_LLMhelper(unittest.TestCase):
     @pytest.mark.unit
     def test_getModel_azure_first(self):
         model = getModel(models=[self.model2, self.model1],
-                         max_tokens=10,
+                         max_output_tokens=10,
                          n=1,
                          temperature=0.5,
                          streaming=True)
@@ -70,7 +73,7 @@ class Test_LLMhelper(unittest.TestCase):
     def test_getModel_no_model(self):
         with self.assertRaises(ModelsConfigurationException):
             getModel(models=[],
-                            max_tokens=10,
+                            max_output_tokens=10,
                             n=1,
                             temperature=0.5,
                             streaming=True)
@@ -79,7 +82,7 @@ class Test_LLMhelper(unittest.TestCase):
     @pytest.mark.unit    
     def test_getModel_configurable_fields(self):
         model = getModel(models=[self.model1, self.model2],
-                         max_tokens=10,
+                         max_output_tokens=10,
                          n=1,
                         temperature=0.5,
                          streaming=True)
@@ -91,7 +94,7 @@ class Test_LLMhelper(unittest.TestCase):
     @pytest.mark.unit    
     def test_getModel_configurable_alternatives(self):
         model = getModel(models=[self.model1, self.model2],
-                         max_tokens=10,
+                         max_output_tokens=10,
                          n=1,
                          temperature=0.5,
                          streaming=True)
@@ -101,7 +104,7 @@ class Test_LLMhelper(unittest.TestCase):
     @pytest.mark.unit    
     def test_getModel_fake_llm(self):
         model = getModel(models=[self.model1, self.model2],
-                         max_tokens=10,
+                         max_output_tokens=10,
                          n=1,
                          temperature=0.5,
                          streaming=True)

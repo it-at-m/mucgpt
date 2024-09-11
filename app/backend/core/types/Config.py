@@ -11,11 +11,13 @@ class ModelsConfig(TypedDict):
     endpoint: str
     api_key: str
     api_version: str
-    max_tokens: int
+    max_output_tokens: int
+    max_input_tokens: int
 
 class ModelsDTO(TypedDict):
     model_name: str
-    max_tokens: int
+    max_output_tokens: int
+    max_input_tokens: int
     description: str
 
 class SSOConfig(TypedDict):

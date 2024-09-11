@@ -21,7 +21,7 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext)
-    const wordCount = LLM.max_tokens;
+    const wordCount = LLM.max_input_tokens;
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;

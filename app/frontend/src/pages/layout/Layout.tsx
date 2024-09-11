@@ -30,12 +30,14 @@ export const Layout = () => {
     const [config, setConfig] = useState<ApplicationConfig>({
         models: [{
             "model_name": "KICC GPT",
-            "max_tokens": 128000,
+            "max_input_tokens": 128000,
+            "max_output_tokens": 128000,
             "description": ""
         },
         {
             "model_name": "Unknown GPT",
-            "max_tokens": 100,
+            "max_input_tokens": 128000,
+            "max_output_tokens": 128000,
             "description": ""
         }],
         frontend: {

@@ -32,7 +32,25 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="7">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="8">
+                    <AccordionItem value="8">
+                        <AccordionHeader>[1.1.4] 11.09.2024</AccordionHeader>
+                        <AccordionPanel >
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>
+                                        Version wird wieder richtig gespeichert und in den Einstellungen angezeigt.
+                                    </li>
+                                    <li>
+                                        Maximale Tokens aus der Config aufgeteilt in Input- und Output- Tokens. Dadurch laufen Modelle mit kleineren Contextfenster (wie z.B. Mistral) nicht mehr in einen Fehler.
+                                    </li>
+                                </ul>
+                                <h3>{t('version.changed')}</h3>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem >
                     <AccordionItem value="7">
                         <AccordionHeader>[1.1.3] 28.08.2024</AccordionHeader>
                         <AccordionPanel >

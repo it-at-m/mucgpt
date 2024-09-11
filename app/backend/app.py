@@ -101,12 +101,12 @@ async def chat_stream():
     try:
         impl = cfg["chat_approaches"]
         temperature=request_json['temperature'] or 0.7
-        max_tokens=request_json['max_tokens'] or 4096
+        max_output_tokens=request_json['max_output_tokens'] or 4096
         system_message = request_json['system_message'] or None
         model = request_json['model'] or "gpt-4o-mini"
         response_generator = impl.run_with_streaming(history= request_json["history"],
                                                     temperature=temperature,
-                                                    max_tokens=max_tokens,
+                                                    max_output_tokens=max_output_tokens,
                                                     system_message=system_message,
                                                     model=model,
                                                     department= department)
@@ -128,13 +128,13 @@ async def chat():
     try:
         impl = cfg["chat_approaches"]
         temperature=request_json['temperature'] or 0.7
-        max_tokens=request_json['max_tokens'] or 4096
+        max_output_tokens=request_json['max_output_tokens'] or 4096
         model_name=request_json['model'] or "gpt-4o-mini"
         system_message = request_json['system_message'] or None
         history =  request_json["history"]
         chatResult = impl.run_without_streaming(history= history,
                                                     temperature=temperature,
-                                                    max_tokens=max_tokens,
+                                                    max_output_tokens=max_output_tokens,
                                                     system_message=system_message,
                                                     department= department,
                                                     model_name= model_name)
@@ -150,7 +150,7 @@ async def getConfig():
     models= cast(List[ModelsConfig], cfg["configuration_features"]["backend"]["models"])
     models_dto_list = []
     for model in models:
-        dto = ModelsDTO(model_name=model["model_name"], max_tokens=model["max_tokens"], description=model["description"])
+        dto = ModelsDTO(model_name=model["model_name"], max_output_tokens=model["max_output_tokens"], max_input_tokens=model["max_input_tokens"], description=model["description"])
         models_dto_list.append(dto)
     return jsonify({
         "frontend": frontend_features,

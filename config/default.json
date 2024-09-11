@@ -34,7 +34,8 @@
                 "model_name": "TODO",
                 "endpoint": "TODO",
                 "api_key": "TODO",
-                "max_tokens": 128000
+                "max_input_tokens": 128000,
+                "max_output_tokens": 3000
             },
             {
                 "type": "AZURE",
@@ -43,7 +44,8 @@
                 "endpoint": "TODO",
                 "api_key": "TODO",
                 "api_version": "TODO",
-                "max_tokens": 0
+                "max_input_tokens": 128000,
+                "max_output_tokens": 4000
             }
         ]
     }

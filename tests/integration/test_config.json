@@ -35,7 +35,8 @@
                 "deployment": "NOT USED",
                 "endpoint": "NOT USED",
                 "api_key":"NOT USED",
-                "max_tokens": 128000,
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192,
                 "api_version": "NOT USED",
                 "description": "NOT USED"
             }

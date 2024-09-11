@@ -41,12 +41,12 @@ const Chat = () => {
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE)) || 0.7;
-    const max_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
+    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE) || 0.7);
+    const max_output_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
     const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT) || "";
 
     const [temperature, setTemperature] = useState(temperature_pref);
-    const [max_tokens, setMaxTokens] = useState(max_tokens_pref);
+    const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
     const storage: indexedDBStorage = {
@@ -69,6 +69,9 @@ const Chat = () => {
 
     useEffect(() => {
         makeTokenCountRequest();
+        if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
+            onMaxTokensChanged(LLM.max_output_tokens, currentId)
+        }
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
     useEffect(() => {
@@ -119,7 +122,7 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
         let askResponse: AskResponse = {} as AskResponse;
-        saveToDB([question, { ...askResponse, answer: "", tokens: 0 }, 0], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens, LLM.model_name)
+        saveToDB([question, { ...askResponse, answer: "", tokens: 0 }, 0], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_output_tokens, LLM.model_name)
         try {
             const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: ChatRequest = {
@@ -128,7 +131,7 @@ const Chat = () => {
                 language: language,
                 temperature: temperature,
                 system_message: system ? system : "",
-                max_tokens: max_tokens,
+                max_output_tokens: max_output_tokens,
                 model: LLM.model_name
             };
 
@@ -166,7 +169,7 @@ const Chat = () => {
                     }
                 }
                 if (startId == currentId) {
-                    saveToDB([question, latestResponse, user_tokens], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens, LLM.model_name)
+                    saveToDB([question, latestResponse, user_tokens], storage, startId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_output_tokens, LLM.model_name)
                 }
             } else {
                 const parsedResponse: AskResponse = await response.json();
@@ -175,7 +178,7 @@ const Chat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (startId == currentId) {
-                    saveToDB([question, parsedResponse, 0], storage, currentId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_tokens, LLM.model_name)
+                    saveToDB([question, parsedResponse, 0], storage, currentId, idCounter, setCurrentId, setIdCounter, language, temperature, system ? system : "", max_output_tokens, LLM.model_name)
                 }
             }
         } catch (e) {
@@ -221,7 +224,7 @@ const Chat = () => {
     };
 
     const onMaxTokensChanged = (maxTokens: number, id: number) => {
-        setMaxTokens(maxTokens);
+        setMaxOutputTokens(maxTokens);
         localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString());
         changeMaxTokensInDb(maxTokens, id, storage);
     };
@@ -251,7 +254,7 @@ const Chat = () => {
                 <ChatsettingsDrawer
                     temperature={temperature}
                     setTemperature={onTemperatureChanged}
-                    max_tokens={max_tokens}
+                    max_output_tokens={max_output_tokens}
                     setMaxTokens={onMaxTokensChanged}
                     systemPrompt={systemPrompt}
                     setSystemPrompt={onSystemPromptChanged}

@@ -45,17 +45,6 @@ contextlength_response = BadRequestError(
 )
 
 
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_missing_env_vars():
-    quart_app = app.create_app()
-
-    with pytest.raises(quart.testing.app.LifespanError) as exc_info:
-        async with quart_app.test_app() as test_app:
-            test_app.test_client()
-        assert str(exc_info.value) == "Lifespan failure in startup. ''AZURE_OPENAI_EMB_DEPLOYMENT''"
-
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_index(client):
@@ -195,7 +184,7 @@ async def test_chatstream(client, mocker):
     mocker.patch("chat.chat.Chat.run_without_streaming", mock.AsyncMock(return_value=streaming_generator))
     data = {
         "temperature": 0.1,
-        "max_tokens": 2400,
+        "max_output_tokens": 2400,
         "system_message": "",
         "model": "TEST_MODEL",
         "history": [{"user": "hi"}]

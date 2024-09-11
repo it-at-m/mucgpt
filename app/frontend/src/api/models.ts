@@ -18,7 +18,7 @@ export type ChatRequest = {
     history: ChatTurn[];
     temperature?: number;
     language?: string;
-    max_tokens?: number;
+    max_output_tokens?: number;
     system_message?: string;
     shouldStream?: boolean;
     model?: string;
@@ -50,7 +50,8 @@ export interface Frontend {
 }
 
 export interface Model {
-    max_tokens: number;
+    max_output_tokens: number;
+    max_input_tokens: number;
     model_name: string;
     description: string;
 }

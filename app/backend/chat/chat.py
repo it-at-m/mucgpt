@@ -21,12 +21,12 @@ class Chat:
         self.config = config
         self.repo = repo
     
-    async def run_with_streaming(self, history: 'list[dict[str, str]]',max_tokens: int, temperature: float, system_message: Optional[str], model: str, department: Optional[str]) -> AsyncGenerator[Chunk, None]:
+    async def run_with_streaming(self, history: 'list[dict[str, str]]',max_output_tokens: int, temperature: float, system_message: Optional[str], model: str, department: Optional[str]) -> AsyncGenerator[Chunk, None]:
         """call the llm in streaming mode
 
         Args:
             history (list[dict[str, str]]): the history,user and ai messages 
-            max_tokens (int): max_tokens to generate
+            max_output_tokens (int): max_output_tokens to generate
             temperature (float): temperature of the llm
             system_message (Optional[str]): the system message
             department (Optional[str]): from which department comes the call
@@ -40,7 +40,7 @@ class Chat:
         """
         # configure
         config: LlmConfigs = {
-            "llm_max_tokens": max_tokens,
+            "llm_max_tokens": max_output_tokens,
             "llm_temperature": temperature,
             "llm_streaming": True,
             "llm": model
@@ -74,12 +74,12 @@ class Chat:
             info = ChunkInfo(requesttokens=num_tokens_from_messages([msgs[-1]],model), streamedtokens=num_tokens_from_messages([HumanMessage(result)], model)) 
             yield Chunk(type="I", message=info, order=position)
     
-    def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], model_name:str) -> ChatResult:
+    def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_output_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], model_name:str) -> ChatResult:
         """calls the llm in blocking mode, returns the full result
 
         Args:
             history (list[dict[str, str]]): the history,user and ai messages 
-            max_tokens (int): max_tokens to generate
+            max_output_tokens (int): max_output_tokens to generate
             temperature (float): temperature of the llm
             system_message (Optional[str]): the system message
             department (Optional[str]): from which department comes the call
@@ -88,7 +88,7 @@ class Chat:
             ChatResult: the generated text from the llm
         """
         config: LlmConfigs = {
-            "llm_max_tokens": max_tokens,
+            "llm_max_tokens": max_output_tokens,
             "llm_temperature": temperature,
             "llm_streaming": False,
         }

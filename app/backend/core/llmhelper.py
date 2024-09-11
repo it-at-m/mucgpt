@@ -63,7 +63,27 @@ def getModel(models: List[ModelsConfig],
                                 n=n,
                                 streaming=streaming,
                                 temperature=temperature,
-                                )
+                                ).configurable_fields(
+                        temperature=ConfigurableField(
+                                id="llm_temperature",
+                                name="LLM Temperature",
+                                description="The temperature of the LLM",
+                        ),
+                        max_tokens= ConfigurableField(
+                                id="llm_max_tokens",
+                                name="LLM max Tokens",
+                                description="The token Limit of the LLM",
+                        ),
+                        streaming = ConfigurableField(
+                                id="llm_streaming",
+                                name="Streaming",
+                                description="Should the LLM Stream"),
+                        callbacks = ConfigurableField(
+                                id="llm_callbacks",
+                                name="Callbacks",
+                                description="Callbacks for the llm")
+                                
+                        )
                 elif model["type"] == "OPENAI":
                         alternative = ChatOpenAI(
                                         model=model["model_name"],
@@ -73,6 +93,26 @@ def getModel(models: List[ModelsConfig],
                                         n=n,
                                         streaming=streaming,
                                         temperature=temperature,
+                        ).configurable_fields(
+                        temperature=ConfigurableField(
+                                id="llm_temperature",
+                                name="LLM Temperature",
+                                description="The temperature of the LLM",
+                        ),
+                        max_tokens= ConfigurableField(
+                                id="llm_max_tokens",
+                                name="LLM max Tokens",
+                                description="The token Limit of the LLM",
+                        ),
+                        streaming = ConfigurableField(
+                                id="llm_streaming",
+                                name="Streaming",
+                                description="Should the LLM Stream"),
+                        callbacks = ConfigurableField(
+                                id="llm_callbacks",
+                                name="Callbacks",
+                                description="Callbacks for the llm")
+                                
                         )
                 alternatives[model["model_name"]] = alternative
         llm = llm.configurable_fields(
@@ -86,10 +126,6 @@ def getModel(models: List[ModelsConfig],
                                 name="LLM max Tokens",
                                 description="The token Limit of the LLM",
                         ),
-                        openai_api_key = ConfigurableField(
-                                id="llm_api_key",
-                                name="The api key",
-                                description="The api key"),
                         streaming = ConfigurableField(
                                 id="llm_streaming",
                                 name="Streaming",

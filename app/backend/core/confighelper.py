@@ -1,6 +1,6 @@
 import json
 
-from core.types.Config import Config, to_typed_config
+from core.types.Config import Config
 
 
 class ConfigHelper:
@@ -14,5 +14,4 @@ class ConfigHelper:
             env_config = json.load(f)
         with open(self.base_config) as f:
             base_config = json.load(f)
-        result_dict =  dict(env_config,**base_config)
-        return to_typed_config(result_dict)
+        return Config(version=base_config["version"], frontend=env_config["frontend"], backend=env_config["backend"])

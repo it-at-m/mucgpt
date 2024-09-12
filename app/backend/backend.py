@@ -29,6 +29,7 @@ from core.types.CountTokenRequest import CountTokenRequest
 from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SumRequest import SumRequest
 from init_app import initApp
+from summarize.summarizeresult import SummarizeResult
 
 
 @asynccontextmanager
@@ -70,7 +71,7 @@ async def sum(
     file: UploadFile = None, 
     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  
-):
+) -> SummarizeResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     sumRequest = SumRequest.model_validate(from_json(body))
@@ -88,7 +89,7 @@ async def sum(
             language=sumRequest.language,
             llm_name=sumRequest.model,
         )
-        return JSONResponse(content=r)
+        return r
     except Exception as e:
         logging.exception("Exception in /sum")
         return JSONResponse({"error": str(e)}, status_code=500)
@@ -168,15 +169,15 @@ async def chat(request: ChatRequest,
 @backend.get("/config")
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
-    response = ConfigResponse(frontend=cfg["configuration_features"]["frontend"])
+    response = ConfigResponse(frontend=cfg["configuration_features"].frontend)
     models = cast(
-        List[ModelsConfig], cfg["configuration_features"]["backend"]["models"]
+        List[ModelsConfig], cfg["configuration_features"].backend.models
     )
     for model in models:
         dto = ModelsDTO(
-            llm_name=model["llm_name"],
-            max_tokens=model["max_tokens"],
-            description=model["description"],
+            llm_name=model.llm_name,
+            max_tokens=model.max_tokens,
+            description=model.description,
         )
         response.models.append(dto)
     return response
@@ -222,7 +223,7 @@ def get_config():
 
 def get_config_and_authentificate(access_token):
     cfg = get_config()
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
+    if cfg["configuration_features"].backend.enable_auth:
         ensure_authentification(access_token=access_token)
     return cfg
 
@@ -237,7 +238,7 @@ def ensure_authentification(access_token):
 def get_department(id_token):
     cfg = get_config()
 
-    if cfg["configuration_features"]["backend"]["enable_auth"]:
+    if cfg["configuration_features"].backend.enable_auth:
         auth_client: AuthentificationHelper = cfg["authentification_client"]
         id_claims = auth_client.decode(id_token)
         return auth_client.getDepartment(claims=id_claims)

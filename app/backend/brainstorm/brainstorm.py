@@ -108,7 +108,7 @@ class Brainstorm:
         total_tokens = cb.total_tokens
         translation = self.cleanup(str(result))
 
-        if self.config["log_tokens"]:
+        if self.config.log_tokens:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,

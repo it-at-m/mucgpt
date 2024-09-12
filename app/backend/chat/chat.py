@@ -65,7 +65,7 @@ class Chat:
         
         else:
             history[-1].bot = result
-            if self.config["log_tokens"]:
+            if self.config.log_tokens:
                 self.repo.addInfo(Requestinfo( 
                     tokencount = num_tokens_from_messages(messages=msgs,model=model), #TODO richtiges Modell und tokenizer auswählen
                     department = department,
@@ -101,7 +101,7 @@ class Chat:
             ai_message: AIMessage = llm.invoke(msgs)
         total_tokens = cb.total_tokens
       
-        if self.config["log_tokens"]:
+        if self.config.log_tokens:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,

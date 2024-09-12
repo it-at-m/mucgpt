@@ -197,7 +197,7 @@ class Summarize:
             total_tokens = cb.total_tokens
             final_summarys.append(chunk_summary.content)
         # save total tokens
-        if self.config["log_tokens"]:
+        if self.config.log_tokens:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,

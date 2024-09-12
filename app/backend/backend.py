@@ -131,7 +131,7 @@ async def chat_stream(request: ChatRequest,
         response_generator = impl.run_with_streaming(
             history=request.history,
             temperature=request.temperature,
-            max_tokens=request.max_tokens,
+            max_output_tokens=request.max_output_tokens,
             system_message=request.system_message,
             model=request.model,
             department=department,
@@ -155,7 +155,7 @@ async def chat(request: ChatRequest,
         chatResult = impl.run_without_streaming(
             history=request.history,
             temperature=request.temperature,
-            max_tokens=request.max_tokens,
+            max_output_tokens=request.max_output_tokens,
             system_message=request.system_message,
             department=department,
             llm_name=request.model,
@@ -169,14 +169,15 @@ async def chat(request: ChatRequest,
 @backend.get("/config")
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
-    response = ConfigResponse(frontend=cfg["configuration_features"].frontend)
+    response = ConfigResponse(frontend=cfg["configuration_features"].frontend, version=cfg["configuration_features"].version)
     models = cast(
         List[ModelsConfig], cfg["configuration_features"].backend.models
     )
     for model in models:
         dto = ModelsDTO(
             llm_name=model.llm_name,
-            max_tokens=model.max_tokens,
+            max_output_tokens=model.max_output_tokens,
+            max_input_tokens=model.max_input_tokens,
             description=model.description,
         )
         response.models.append(dto)

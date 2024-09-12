@@ -24,19 +24,19 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
     """
     brainstormllm = getModel(
                     models=cfg.models,
-                    max_tokens =  4000,
+                    max_output_tokens =  4000,
                     n = 1,
                     streaming=False,
                     temperature=0.9)
     sumllm = getModel(
                     models=cfg.models,
-                    max_tokens =  2000,
+                    max_output_tokens =  2000,
                     n = 1,
                     streaming=False,
                     temperature=0)
     chatlllm = getModel(
                     models=cfg.models,
-                    max_tokens=4000,
+                    max_output_tokens=4000,
                     n = 1,
                     streaming=True,
                     temperature=0.7)

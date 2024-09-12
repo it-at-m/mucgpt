@@ -1,15 +1,14 @@
 from typing import AsyncGenerator, List, Optional, Sequence
 
 from langchain_community.callbacks import get_openai_callback
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from chat.chatresult import ChatResult
 from core.datahelper import Repository, Requestinfo
 from core.modelhelper import num_tokens_from_messages
-from core.types.Chunk import Chunk, ChunkInfo
 from core.types.ChatRequest import ChatTurn
+from core.types.Chunk import Chunk, ChunkInfo
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 
@@ -23,12 +22,13 @@ class Chat:
         self.config = config
         self.repo = repo
     
-    async def run_with_streaming(self, history: List[ChatTurn],max_tokens: int, temperature: float, system_message: Optional[str], model: str, department: Optional[str]) -> AsyncGenerator[Chunk, None]:
+
+    async def run_with_streaming(self, history: List[ChatTurn], max_output_tokens: int, temperature: float, system_message: Optional[str], model: str, department: Optional[str]) -> AsyncGenerator[Chunk, None]:
         """call the llm in streaming mode
 
         Args:
             history (List[ChatTurn]): the history,user and ai messages 
-            max_tokens (int): max_tokens to generate
+            max_output_tokens (int): max_output_tokens to generate
             temperature (float): temperature of the llm
             system_message (Optional[str]): the system message
             department (Optional[str]): from which department comes the call
@@ -42,7 +42,7 @@ class Chat:
         """
         # configure
         config: LlmConfigs = {
-            "llm_max_tokens": max_tokens,
+            "llm_max_tokens": max_output_tokens,
             "llm_temperature": temperature,
             "llm_streaming": True,
             "llm": model
@@ -76,12 +76,12 @@ class Chat:
             info = ChunkInfo(requesttokens=num_tokens_from_messages([msgs[-1]],model), streamedtokens=num_tokens_from_messages([HumanMessage(result)], model)) 
             yield Chunk(type="I", message=info, order=position)
     
-    def run_without_streaming(self, history: List[ChatTurn], max_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], llm_name:str) -> ChatResult:
+    def run_without_streaming(self, history: List[ChatTurn], max_output_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], llm_name:str) -> ChatResult:
         """calls the llm in blocking mode, returns the full result
 
         Args:
             history (List[ChatTurn]): the history,user and ai messages 
-            max_tokens (int): max_tokens to generate
+            max_output_tokens (int): max_output_tokens to generate
             temperature (float): temperature of the llm
             system_message (Optional[str]): the system message
             department (Optional[str]): from which department comes the call
@@ -90,7 +90,7 @@ class Chat:
             ChatResult: the generated text from the llm
         """
         config: LlmConfigs = {
-            "llm_max_tokens": max_tokens,
+            "llm_max_tokens": max_output_tokens,
             "llm_temperature": temperature,
             "llm_streaming": False,
         }

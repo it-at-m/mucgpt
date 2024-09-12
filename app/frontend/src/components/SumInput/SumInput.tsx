@@ -24,7 +24,7 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | undefined>(undefined);
     const { LLM } = useContext(LLMContext)
-    const wordCount = LLM.max_tokens;
+    const wordCount = LLM.max_input_tokens;
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;

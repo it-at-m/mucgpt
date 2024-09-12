@@ -13,12 +13,14 @@ class ModelsConfig(BaseModel):
     endpoint: str
     api_key: str
     api_version: str = ""
-    max_tokens: int
+    max_output_tokens: int
+    max_input_tokens: int
     description: str
 
 class ModelsDTO(BaseModel):
     llm_name: str
-    max_tokens: int
+    max_output_tokens: int
+    max_input_tokens: int
     description: str
 
 class SSOConfig(BaseModel):
@@ -58,4 +60,5 @@ class Config(BaseModel):
 class ConfigResponse(BaseModel):
     frontend: FrontendConfig
     models: List[ModelsDTO] =[]
+    version: str
 

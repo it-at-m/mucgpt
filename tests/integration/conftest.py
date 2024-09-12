@@ -1,10 +1,10 @@
 import os
+
 import openai
 import pytest
 import pytest_asyncio
 
 import app
-
 
 
 @pytest.fixture

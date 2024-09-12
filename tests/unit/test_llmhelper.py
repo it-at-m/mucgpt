@@ -4,43 +4,43 @@ import pytest
 from langchain_core.runnables.base import RunnableSerializable
 
 from core.llmhelper import ModelsConfigurationException, getModel
+from core.types.Config import ModelsConfig
 
 
 class Test_LLMhelper(unittest.TestCase):
 
     def setUp(self):
-        self.model1 = {
-                "type": "OPENAI",
-                "llm_name": "model1",
-                "endpoint": "TODO",
-                "api_key": "TODO",
-                "max_input_tokens": 128000,
-                "max_output_tokens": 8192
-            }
-        self.model2 ={
-                "type": "AZURE",
-                "deployment": "model2",
-                "llm_name": "model2",
-                "api_version": "preview",
-                "endpoint": "TODO",
-                "api_key": "TODO",
-                "max_input_tokens": 128000,
-                "max_output_tokens": 8192
-            }
-        self.model3 ={
-                "type": "TODO",
-                "llm_name": "model2",
-                "endpoint": "TODO",
-                "api_key": "TODO",
-                "max_input_tokens": 128000,
-                "max_output_tokens": 8192
-            }
+        self.model1 = ModelsConfig(type="OPENAI",
+                llm_name= "model1",
+                endpoint= "TODO",
+                api_key= "TODO",
+                max_input_tokens= 128000,
+                max_output_tokens= 8192,
+                description=""
+        )
+        self.model2 =ModelsConfig(
+                type= "AZURE",
+                deployment= "model2",
+                llm_name= "model2",
+                api_version= "preview",
+                endpoint= "TODO",
+                api_key= "TODO",
+                max_input_tokens= 128000,
+                max_output_tokens= 8192,
+                description=""
+        )
+        self.model3 =ModelsConfig(type="OPENAI1",
+                llm_name= "model1",
+                endpoint= "TODO",
+                api_key= "TODO",
+                max_input_tokens= 128000,
+                max_output_tokens= 8192,
+                description=""
+        )
 
     @pytest.mark.asyncio    
     @pytest.mark.unit
     def test_getModel_returns_llm(self):
-        
-    
         model = getModel(models=[self.model1, self.model2],
                          max_output_tokens=10,
                          n=1,

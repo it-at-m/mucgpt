@@ -8,7 +8,7 @@ from httpx import Request, Response
 from openai import BadRequestError
 from quart.datastructures import FileStorage
 
-from brainstorm.brainstormresult import BrainstormResult
+from brainstorm.BrainstormResult import BrainstormResult
 from core.types.Chunk import Chunk
 from summarize.summarizeresult import SummarizeResult
 

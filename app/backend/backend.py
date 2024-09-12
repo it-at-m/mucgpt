@@ -30,6 +30,7 @@ from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SumRequest import SumRequest
 from init_app import initApp
 from summarize.summarizeresult import SummarizeResult
+from os.path import realpath
 
 
 @asynccontextmanager
@@ -39,7 +40,7 @@ async def lifespan(backend: FastAPI):
 
 
 backend = FastAPI(title="MUCGPT", lifespan=lifespan)
-backend.mount("/static", StaticFiles(directory="static"), name="static")
+backend.mount("/static", StaticFiles(directory=realpath(f'{realpath(__file__)}/../static')), name="static")
 backend.state.app_config = None
 
 

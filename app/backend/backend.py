@@ -92,13 +92,6 @@ async def sum(
     except Exception as e:
         logging.exception("Exception in /sum")
         return JSONResponse({"error": str(e)}, status_code=500)
-#TODO remove for prod
-@backend.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    logging.error(f"Error processing request: {exc.detail}")
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
-
-
 
 @backend.post("/brainstorm")
 async def brainstorm(request: BrainstormRequest,
@@ -189,7 +182,7 @@ async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Ac
     return response
 
 
-@backend.get("/statistics", response_model=StatisticsResponse)
+@backend.get("/statistics")
 async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> StatisticsResponse:
     try:
         cfg = get_config_and_authentificate(access_token)
@@ -200,7 +193,7 @@ async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmss
         raise HTTPException(status_code=404, detail="Get Statistics failed!")
 
 
-@backend.post("/counttokens", response_model=CountResult)
+@backend.post("/counttokens")
 async def counttokens(request: CountTokenRequest, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> CountResult:
     get_config_and_authentificate(access_token)
     counted_tokens = num_tokens_from_messages([HumanMessage(request.text)], request.model.llm_name)
@@ -208,18 +201,18 @@ async def counttokens(request: CountTokenRequest, access_token: str = Header(Non
 
 
 @backend.get("/statistics/export")
-async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> FileResponse:
     try:
         cfg = get_config_and_authentificate(access_token)
         repo = cfg["repository"]
         export = repo.export()
         return FileResponse(export, filename="statistics.csv", as_attachment=True)
     except Exception as e:
-        return JSONResponse(content={"error": e}, status_code=404)
+        raise HTTPException(status_code=404, detail=e)
 
 
 @backend.get("/health")
-def health_check():
+def health_check() -> str:
     return "OK"
 
 

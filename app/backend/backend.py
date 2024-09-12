@@ -1,6 +1,7 @@
 import io
 import logging
 from contextlib import asynccontextmanager
+from os.path import realpath
 from typing import List, cast
 
 from fastapi import FastAPI, Form, Header, HTTPException, Request, UploadFile
@@ -30,7 +31,6 @@ from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SumRequest import SumRequest
 from init_app import initApp
 from summarize.summarizeresult import SummarizeResult
-from os.path import realpath
 
 
 @asynccontextmanager

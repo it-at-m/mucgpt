@@ -1,6 +1,6 @@
 from typing import List
 
-import PyPDF2
+from pypdf import PdfReader
 from langchain.docstore.document import Document
 from langchain.text_splitter import TokenTextSplitter
 
@@ -33,7 +33,7 @@ def PDFtoDocs(pdf, chunk_size=2500, chunk_overlap=100) -> List[Document]:
         List[Document]: List of documents, containing the splits
     """
      # creating a pdf reader object
-    reader = PyPDF2.PdfReader(pdf)
+    reader = PdfReader(pdf)
     # read alll
     complete = ""
     for page in reader.pages:
@@ -71,7 +71,7 @@ def splitPDF(pdf, chunk_size=2500, chunk_overlap=100) -> List[str]:
         List[str]: list of chunks
     """
      # creating a pdf reader object
-    reader = PyPDF2.PdfReader(pdf)
+    reader = PdfReader(pdf)
     # read alll
     complete = ""
     for page in reader.pages:

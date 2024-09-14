@@ -30,18 +30,12 @@ from core.types.CountTokenRequest import CountTokenRequest
 from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SumRequest import SumRequest
 from init_app import initApp
-from summarize.summarizeresult import SummarizeResult
+from summarize.SummarizeResult import SummarizeResult
 
 
-@asynccontextmanager
-async def lifespan(backend: FastAPI):
-    backend.state.app_config = await initApp()
-    yield
-
-
-backend = FastAPI(title="MUCGPT", lifespan=lifespan)
+backend = FastAPI(title="MUCGPT")
+backend.state.app_config = initApp()
 backend.mount("/static", StaticFiles(directory=realpath(f'{realpath(__file__)}/../static')), name="static")
-backend.state.app_config = None
 
 
 @backend.exception_handler(AuthError)

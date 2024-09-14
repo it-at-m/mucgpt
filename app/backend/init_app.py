@@ -45,7 +45,7 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
     sum_approaches =  Summarize(llm=sumllm, config=cfg.sum, repo=repoHelper)
     return (chat_approaches, brainstorm_approaches, sum_approaches)
 
-async def initApp() -> AppConfig:
+def initApp() -> AppConfig:
     """inits the app
 
     Returns:

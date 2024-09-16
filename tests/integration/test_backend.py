@@ -1,5 +1,6 @@
 from io import BytesIO
 from unittest import mock
+import httpx
 from pypdf import PdfWriter
 from pypdf.annotations import FreeText
 import pytest
@@ -120,19 +121,27 @@ async def test_brainstorm(mocker):
     assert response.status_code == 200
     assert BrainstormResult.model_validate_json(response.content) == mock_result
 
-async def streaming_generator():
-    yield Chunk(type="C", message= "Hello", order=0)
-    yield Chunk(type="C", message= "World", order=1)
-    yield Chunk(type="C", message= "!", order=2)
+chunks = [Chunk(type="C", message= "Hello", order=0), Chunk(type="C", message= "World", order=1), Chunk(type="C", message= "!", order=2)]
+async def streaming_generator(self, **kwargs):
+    yield chunks[0]
+    yield chunks[1]
+    yield chunks[2]
 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_chatstream(mocker):
-    mocker.patch("chat.chat.Chat.run_with_streaming", mock.AsyncMock(return_value=streaming_generator))
+    mocker.patch("chat.chat.Chat.run_with_streaming",streaming_generator)
     data = ChatRequest(temperature=0.1, max_output_tokens=2400, system_message="", model="TEST_MODEL", history=[ChatTurn(user="hi")])
-    response = client.post('/api/chat_stream', json=data.model_dump(), headers=headers)
-    assert response.status_code == 200
-
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=backend), base_url="http://test"
+    ) as ac:
+        async with ac.stream(method="POST",url='/api/chat_stream', json=data.model_dump()) as response:
+            assert response.status_code == 200
+            i = 0
+            async for chunk in response.aiter_lines(): 
+                assert Chunk.model_validate_json(chunk) == chunks[i]
+                i = i+1
+                
 @pytest.mark.integration
 def test_chat(mocker):
     mock_result = ChatResult(content= "result of brainstorming.")

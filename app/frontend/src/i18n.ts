@@ -19,6 +19,7 @@ i18n
                         sum: "Zusammenfassen",
                         chat: "Chat",
                         brainstorm: "Brainstorming",
+                        simply: "Leichte Sprache",
                         nutzungsbedingungen: "Nutzungsbedingungen"
                     },
                     chat: {
@@ -47,6 +48,11 @@ i18n
                         header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
                         prompt: "Ideen zu diesem Thema finden",
                         answer_loading: "Denke nach"
+                    },
+                    simply: {
+                        header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
+                        prompt: "Text zum übersetzen eingeben",
+                        answer_loading: "Übersetze in leichte Sprache"
                     },
                     common: {
                         clear_chat: "Neuer Chat",
@@ -194,6 +200,7 @@ i18n
                         sum: "Summarize",
                         chat: "Chat",
                         brainstorm: "Brainstorming",
+                        simply: "Simplyfied Language",
                         nutzungsbedingungen: "Terms of use"
                     },
                     chat: {
@@ -222,6 +229,11 @@ i18n
                         header: "Find ideas for a topic or try an example",
                         prompt: "Find ideas for this topics",
                         answer_loading: "Thinking"
+                    },
+                    simply: {
+                        header: "Enter the text to be translated or try an example",
+                        prompt: "Enter text to translate",
+                        answer_loading: "Translating to simple language"
                     },
                     common: {
                         clear_chat: "New chat",
@@ -369,6 +381,7 @@ i18n
                         sum: "Zammfassn",
                         chat: "Redn",
                         brainstorm: "Gedanknschmarrn",
+                        simply: "Oafache Sproch",
                         nutzungsbedingungen: "Gebrauchsvorschriftn"
                     },
                     chat: {
@@ -391,6 +404,11 @@ i18n
                         header: "Ideen zu dem Thema aufaspuin oda probier a Beispui",
                         prompt: "Ideen zu dem Thema aufaspuin",
                         answer_loading: "Denk na"
+                    },
+                    simply: {
+                        header: "Gib den zu übasetzenden Text ei oda probier a Beispiel",
+                        prompt: "Text zum übasetzen eigeben",
+                        answer_loading: "Übersetze in oafache Sproch"
                     },
                     common: {
                         clear_chat: "Neia Chat",

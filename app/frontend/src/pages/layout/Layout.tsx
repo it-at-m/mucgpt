@@ -144,6 +144,11 @@ export const Layout = () => {
                                 {t('header.brainstorm')}
                             </NavLink>
                         </div>
+                        <div className={styles.headerNavLeftMargin}>
+                            <NavLink to="/simply" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                {t('header.simply')}
+                            </NavLink>
+                        </div>
                         <SettingsDrawer
                             defaultlang={language_pref}
                             onLanguageSelectionChanged={onLanguageSelectionChanged}

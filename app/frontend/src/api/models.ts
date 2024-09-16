@@ -38,6 +38,17 @@ export type BrainstormRequest = {
     language?: string;
 };
 
+export type SimplyRequest = {
+    topic: string;
+    history: ChatTurn[];
+    temperature?: number;
+    language?: string;
+    max_output_tokens?: number;
+    system_message?: string;
+    shouldStream?: boolean;
+    model?: string;
+};
+
 export interface ApplicationConfig {
     models: Model[];
     frontend: Frontend;

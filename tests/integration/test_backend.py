@@ -11,6 +11,8 @@ from summarize.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.Chunk import Chunk
+from core.types.CountTokenRequest import CountTokenRequest
+from core.types.countresult import CountResult
 from backend import backend
 
 client = TestClient(backend)
@@ -120,9 +122,7 @@ async def test_brainstorm(mocker):
 
 async def streaming_generator():
     yield Chunk(type="C", message= "Hello", order=0)
-
     yield Chunk(type="C", message= "World", order=1)
-
     yield Chunk(type="C", message= "!", order=2)
 
 @pytest.mark.integration
@@ -147,31 +147,25 @@ def test_config():
     response = client.get("/api/config", headers=headers)
     assert response.status_code == 200
 
-@pytest.mark.asyncio
-@pytest.mark.integration
-@pytest.mark.skip(reason="TODO fix")
-def test_statistics():
-    response = client.get("/api/statistics", headers=headers)
-    assert response.status_code == 200
 
-@pytest.mark.asyncio
+
 @pytest.mark.integration
-@pytest.mark.skip(reason="TODO fix")
 def test_counttokens():
-    data = {
-        "text": "Some text to count tokens",
-        "model": {
-            "llm_name": "model_name"
-        }
-    }
-    response = client.post("/api/counttokens", headers=headers, json=data)
+    data = CountTokenRequest(model="gpt-4o", text="Hallo was geht MUCGPT")
+    response = client.post("/api/counttokens", headers=headers, json=data.model_dump())
     assert response.status_code == 200
-
-@pytest.mark.asyncio
+    assert CountResult.model_validate_json(response.content).count == 13
+    
 @pytest.mark.integration
-@pytest.mark.skip(reason="TODO fix")
-def test_statistics_export():
+def test_statistics_failure(mocker):
+    sumbydep = [("dep1", 10), ("dep2",20)]
+    avgbydep = [("dep1", 5), ("dep2",3)]
+    mocker.patch("core.datahelper.Repository.sumByDepartment",  mock.Mock(return_value=sumbydep))
+    mocker.patch("core.datahelper.Repository.avgByDepartment",  mock.Mock(return_value=avgbydep))
+    response = client.get("/api/statistics", headers=headers)
+    assert response.status_code == 501
+
+@pytest.mark.integration
+def test_statistics_export_failure():
     response = client.get("/api/statistics/export", headers=headers)
-    assert response.status_code == 200
-    assert "text/csv" in response.headers
-    assert response.headers == 'attachment; filename="statistics.csv"'
+    assert response.status_code == 501

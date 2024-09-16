@@ -169,31 +169,46 @@ async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Ac
 
 @api_app.get("/statistics")
 async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> StatisticsResponse:
-    try:
-        cfg = get_config_and_authentificate(access_token)
-        repo = cfg["repository"]
-        reponse = StatisticsResponse(sum=float(repo.sumByDepartment()), avg=float(repo.avgByDepartment()))
-        return reponse
-    except Exception:
-        raise HTTPException(status_code=404, detail="Get Statistics failed!")
+    cfg = get_config_and_authentificate(access_token)
+    repo = cfg["repository"]
+    if(repo is None):
+        raise HTTPException(status_code=501, detail="No database for logging statistics configured")
+    else:
+        try:  
+            reponse = StatisticsResponse(sum=float(repo.sumByDepartment()), avg=float(repo.avgByDepartment()))
+            return reponse
+        except Exception as e:
+            logging.exception(str(e))
+            raise HTTPException(status_code=500, detail="Get Statistics failed!")
 
 
 @api_app.post("/counttokens")
 async def counttokens(request: CountTokenRequest, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> CountResult:
     get_config_and_authentificate(access_token)
-    counted_tokens = num_tokens_from_messages([HumanMessage(request.text)], request.model.llm_name)
-    return CountResult(count=counted_tokens)
+    try:
+        counted_tokens = num_tokens_from_messages([HumanMessage(request.text)], request.model)
+        return CountResult(count=counted_tokens)
+    except NotImplementedError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logging.exception(str(e))
+        raise HTTPException(status_code=500, detail="Counttokens failed!")
+
+   
 
 
 @api_app.get("/statistics/export")
 async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> FileResponse:
+    cfg = get_config_and_authentificate(access_token)
+    repo = cfg["repository"]
+    if(repo is None):
+        raise HTTPException(status_code=501, detail="No database for logging statistics configured")
     try:
-        cfg = get_config_and_authentificate(access_token)
-        repo = cfg["repository"]
         export = repo.export()
         return FileResponse(export, filename="statistics.csv", as_attachment=True)
     except Exception as e:
-        raise HTTPException(status_code=404, detail=e)
+        logging.exception(str(e))
+        raise HTTPException(status_code=500, detail=e)
 
 
 @api_app.get("/health")

@@ -52,7 +52,11 @@ i18n
                     simply: {
                         header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
                         prompt: "Text zum übersetzen eingeben",
-                        answer_loading: "Übersetze in leichte Sprache"
+                        answer_loading: "Übersetze in leichte Sprache",
+                        plain: "Einfache Sprache",
+                        easy: "Leichte Sprache",
+                        complete: "Komplette Übersetzung",
+                        condensed: "Gekürzte Übersetzung"
                     },
                     common: {
                         clear_chat: "Neuer Chat",
@@ -233,7 +237,11 @@ i18n
                     simply: {
                         header: "Enter the text to be translated or try an example",
                         prompt: "Enter text to translate",
-                        answer_loading: "Translating to simple language"
+                        answer_loading: "Translating to simple language",
+                        plain: "Plain language",
+                        easy: "easy language",
+                        complete: "Complete",
+                        condensed: "Geküazte Übasetzung"
                     },
                     common: {
                         clear_chat: "New chat",
@@ -408,7 +416,11 @@ i18n
                     simply: {
                         header: "Gib den zu übasetzenden Text ei oda probier a Beispiel",
                         prompt: "Text zum übasetzen eigeben",
-                        answer_loading: "Übersetze in oafache Sproch"
+                        answer_loading: "Übersetze in oafache Sproch",
+                        plain: "Oafache Sproch",
+                        easy: "Leichte Sproch",
+                        complete: "Komplette Übasetzung",
+                        condensed: "Geküazte Übasetzung"
                     },
                     common: {
                         clear_chat: "Neia Chat",

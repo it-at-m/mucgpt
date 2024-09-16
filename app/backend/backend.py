@@ -31,7 +31,7 @@ from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SumRequest import SumRequest
 from init_app import initApp
 from simply.SimplyRequest import SimplyRequest
-from summarize.summarizeresult import SummarizeResult
+from summarize.SummarizeResult import SummarizeResult
 
 
 @asynccontextmanager

@@ -4,7 +4,6 @@ import { Stack } from "@fluentui/react";
 import styles from "./Answer.module.css";
 
 import { AskResponse } from "../../api";
-import { parseAnswerToHtml } from "./AnswerParser";
 import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from 'react-i18next';
 import Markdown from 'react-markdown';
@@ -29,8 +28,6 @@ export const Answer = ({
     onRegenerateResponseClicked,
     setQuestion,
 }: Props) => {
-    const parsedAnswer = useMemo(() => parseAnswerToHtml(answer.answer), [answer]);
-
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -39,7 +36,7 @@ export const Answer = ({
 
     const oncopy = () => {
         setCopied(true);
-        navigator.clipboard.writeText(parsedAnswer.answerHtml);
+        navigator.clipboard.writeText(answer.answer);
         setTimeout(() => {
             setCopied(false);
         }, 1000)
@@ -80,13 +77,13 @@ export const Answer = ({
                         className={styles.answerText}
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeRaw]}
-                        children={parsedAnswer.answerHtml}
+                        children={answer.answer}
                         components={{
                             "code": CodeBlockRenderer
                         }} />
                 }
                 {!formatted &&
-                    <div className={styles.unformattedAnswer} tabIndex={0}>{parsedAnswer.answerHtml}
+                    <div className={styles.unformattedAnswer} tabIndex={0}>{answer.answer}
                     </div>}
             </Stack.Item>
             {onRegenerateResponseClicked &&

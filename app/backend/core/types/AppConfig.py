@@ -1,4 +1,4 @@
-from typing import List, TypedDict
+from typing import TypedDict
 
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat

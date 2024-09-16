@@ -1,6 +1,7 @@
 import openai
 import pytest
 
+
 @pytest.fixture
 def mock_openai_chatcompletion(monkeypatch):
     class AsyncChatCompletionIterator:

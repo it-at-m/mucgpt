@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, List, Optional, Sequence
+from typing import AsyncGenerator, List, Optional
 
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage

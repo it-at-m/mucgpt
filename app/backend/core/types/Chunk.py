@@ -1,5 +1,7 @@
-from pydantic import BaseModel
 from typing import Literal
+
+from pydantic import BaseModel
+
 
 class Chunk(BaseModel):
     """Represents a chunk during streaming. Has 3 modes:

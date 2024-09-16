@@ -1,8 +1,8 @@
 from typing import List
 
-from pypdf import PdfReader
 from langchain.docstore.document import Document
 from langchain.text_splitter import TokenTextSplitter
+from pypdf import PdfReader
 
 
 def textToDocs(text: str, chunk_size=2500, chunk_overlap=100) -> List[Document]:

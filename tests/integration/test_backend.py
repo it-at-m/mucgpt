@@ -1,20 +1,22 @@
 from io import BytesIO
 from unittest import mock
+
 import httpx
-from pypdf import PdfWriter
-from pypdf.annotations import FreeText
 import pytest
 from fastapi.testclient import TestClient
-from chat.chatresult import ChatResult
-from brainstorm.BrainstormResult import BrainstormResult
+from pypdf import PdfWriter
+from pypdf.annotations import FreeText
+
+from backend import backend
 from brainstorm.BrainstormRequest import BrainstormRequest
-from summarize.SummarizeResult import SummarizeResult
-from core.types.SumRequest import SumRequest
+from brainstorm.BrainstormResult import BrainstormResult
+from chat.chatresult import ChatResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.Chunk import Chunk
-from core.types.CountTokenRequest import CountTokenRequest
 from core.types.countresult import CountResult
-from backend import backend
+from core.types.CountTokenRequest import CountTokenRequest
+from core.types.SumRequest import SumRequest
+from summarize.SummarizeResult import SummarizeResult
 
 client = TestClient(backend)
 headers = {

@@ -3,7 +3,7 @@ import logging
 import os
 from typing import List, cast
 
-from fastapi import FastAPI, Form, Header, HTTPException, Request, UploadFile
+from fastapi import FastAPI, Form, Header, HTTPException, UploadFile
 from fastapi.responses import (
     FileResponse,
     StreamingResponse,
@@ -95,7 +95,7 @@ async def brainstorm(request: BrainstormRequest,
         msg = (
             "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
             if "Rate limit" in str(e)
-            else str("Exception in brainstorm: something bad happened")
+            else "Exception in brainstorm: something bad happened"
         )
         raise HTTPException(status_code=500,detail=msg)
 

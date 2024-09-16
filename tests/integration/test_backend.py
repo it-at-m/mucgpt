@@ -1,6 +1,6 @@
 from io import BytesIO
 from unittest import mock
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfWriter
 from pypdf.annotations import FreeText
 import pytest
 from fastapi.testclient import TestClient
@@ -21,32 +21,27 @@ headers = {
 
 
 @pytest.mark.integration
-@pytest.mark.asyncio
-@pytest.mark.skip(reason="TODO fix")
 def test_index():
     response = client.get('/')
     assert response.status_code == 200
-    assert "text/html" in response.headers
+    assert "text/html" in  response.headers["content-type"]
     
 
 @pytest.mark.integration
 def test_unknown_endpoint():
-    response = client.post("/unknownendpoint")
+    response = client.post("/api/unknownendpoint")
     assert response.status_code == 404
     
 @pytest.mark.integration
-@pytest.mark.asyncio
-@pytest.mark.skip(reason="TODO fix")
-async def test_favicon():
+def test_favicon():
     response = client.get("/favicon.ico")
     assert response.status_code == 200
-    assert response.charset_encoding("image")
-    assert response.charset_encoding("icon")
+    assert response.headers["content-type"] == "image/x-icon"
     
 
 @pytest.mark.integration
 def test_health_check():
-    response = client.get("/health")
+    response = client.get("/api/health")
     assert response.status_code == 200
 
 
@@ -58,7 +53,7 @@ async def test_sum_text(mocker):
     data = {
         "body": SumRequest(detaillevel="short", text="To be summarized", language="Deutsch", model="TEST_MODEL").model_dump_json()
     }
-    response = client.post('/sum',  headers=headers,data=data)
+    response = client.post('/api/sum',  headers=headers,data=data)
     assert response.status_code == 200
     assert SummarizeResult.model_validate_json(response.content) == mock_result
 
@@ -94,7 +89,7 @@ async def test_sum_pdf(mocker):
     writer.write(tmp)
     tmp.seek(0)
 
-    response = client.post('/sum', files={"file": ("file", tmp, "pdf")}, headers=headers,data=data)
+    response = client.post('/api/sum', files={"file": ("file", tmp, "pdf")}, headers=headers,data=data)
     assert response.status_code == 200
     assert SummarizeResult.model_validate_json(response.content) == mock_result
 
@@ -108,7 +103,7 @@ async def test_brainstorm_exception(monkeypatch):
         mock.Mock(side_effect=ZeroDivisionError("something bad happened")),
     )
     data = BrainstormRequest(topic="München", language="Deutsch", model="TEST_MODEL")
-    response = client.post('/brainstorm', json=data.model_dump(),  headers=headers )
+    response = client.post('/api/brainstorm', json=data.model_dump(),  headers=headers )
     assert response.status_code == 500
     assert "Exception in brainstorm: something bad happened" in str(response.content)
     
@@ -119,7 +114,7 @@ async def test_brainstorm(mocker):
     mock_result = BrainstormResult(answer= "result of brainstorming.")
     mocker.patch("brainstorm.brainstorm.Brainstorm.brainstorm", mock.AsyncMock(return_value=mock_result))
     data = BrainstormRequest(topic="München", language="Deutsch", model="TEST_MODEL")
-    response = client.post('/brainstorm', json=data.model_dump(), headers=headers )
+    response = client.post('/api/brainstorm', json=data.model_dump(), headers=headers )
     assert response.status_code == 200
     assert BrainstormResult.model_validate_json(response.content) == mock_result
 
@@ -135,7 +130,7 @@ async def streaming_generator():
 async def test_chatstream(mocker):
     mocker.patch("chat.chat.Chat.run_with_streaming", mock.AsyncMock(return_value=streaming_generator))
     data = ChatRequest(temperature=0.1, max_output_tokens=2400, system_message="", model="TEST_MODEL", history=[ChatTurn(user="hi")])
-    response = client.post('/chat_stream', json=data.model_dump(), headers=headers)
+    response = client.post('/api/chat_stream', json=data.model_dump(), headers=headers)
     assert response.status_code == 200
 
 @pytest.mark.integration
@@ -143,20 +138,20 @@ def test_chat(mocker):
     mock_result = ChatResult(content= "result of brainstorming.")
     mocker.patch("chat.chat.Chat.run_without_streaming",  mock.Mock(return_value=mock_result))
     data = ChatRequest(temperature=0.1, max_output_tokens=2400, system_message="", model="TEST_MODEL", history=[ChatTurn(user="hi")])
-    response = client.post("/chat", headers=headers, json=data.model_dump())
+    response = client.post("/api/chat", headers=headers, json=data.model_dump())
     assert response.status_code == 200
     assert ChatResult.model_validate_json(response.content) == mock_result
 
 @pytest.mark.integration
 def test_config():
-    response = client.get("/config", headers=headers)
+    response = client.get("/api/config", headers=headers)
     assert response.status_code == 200
 
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.skip(reason="TODO fix")
 def test_statistics():
-    response = client.get("/statistics", headers=headers)
+    response = client.get("/api/statistics", headers=headers)
     assert response.status_code == 200
 
 @pytest.mark.asyncio
@@ -169,14 +164,14 @@ def test_counttokens():
             "llm_name": "model_name"
         }
     }
-    response = client.post("/counttokens", headers=headers, json=data)
+    response = client.post("/api/counttokens", headers=headers, json=data)
     assert response.status_code == 200
 
 @pytest.mark.asyncio
 @pytest.mark.integration
 @pytest.mark.skip(reason="TODO fix")
 def test_statistics_export():
-    response = client.get("/statistics/export", headers=headers)
+    response = client.get("/api/statistics/export", headers=headers)
     assert response.status_code == 200
     assert "text/csv" in response.headers
     assert response.headers == 'attachment; filename="statistics.csv"'

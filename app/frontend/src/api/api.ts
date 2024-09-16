@@ -1,7 +1,7 @@
 import { ApplicationConfig, AskResponse, BrainstormRequest, ChatRequest, CountTokenRequest, CountTokenResponse, SumRequest, SumResponse } from "./models";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
-    const url = options.shouldStream ? "/chat_stream" : "/chat";
+    const url = options.shouldStream ? "/api/chat_stream" : "/api/chat";
     return await fetch(url, {
         method: "POST",
         headers: {
@@ -33,7 +33,7 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
     );
     if (file) formData.append("file", file);
 
-    const response = await fetch("/sum", {
+    const response = await fetch("/api/sum", {
         method: "POST",
         headers: {},
         mode: "cors",
@@ -65,7 +65,7 @@ export async function handleResponse(response: Response) {
 }
 
 export async function configApi(): Promise<ApplicationConfig> {
-    const response = await fetch("/config", {
+    const response = await fetch("/api/config", {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -79,7 +79,7 @@ export async function configApi(): Promise<ApplicationConfig> {
 }
 
 export async function brainstormApi(options: BrainstormRequest): Promise<AskResponse> {
-    const response = await fetch("/brainstorm", {
+    const response = await fetch("/api/brainstorm", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -100,7 +100,7 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
 }
 
 export async function countTokensAPI(options: CountTokenRequest): Promise<CountTokenResponse> {
-    const response = await fetch("/counttokens", {
+    const response = await fetch("/api/counttokens", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

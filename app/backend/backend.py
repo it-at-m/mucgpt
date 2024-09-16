@@ -1,14 +1,11 @@
 import io
 import logging
-from os.path import realpath
+import os
 from typing import List, cast
 
 from fastapi import FastAPI, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import (
     FileResponse,
-    HTMLResponse,
-    JSONResponse,
-    RedirectResponse,
     StreamingResponse,
 )
 from fastapi.staticfiles import StaticFiles
@@ -31,35 +28,23 @@ from core.types.SumRequest import SumRequest
 from init_app import initApp
 from summarize.SummarizeResult import SummarizeResult
 
-
+# serves static files and the api
 backend = FastAPI(title="MUCGPT")
+# serves the api
+api_app = FastAPI(title="MUCGPT-API")
+backend.mount("/api", api_app)
+
 backend.state.app_config = initApp()
-backend.mount("/static", StaticFiles(directory=realpath(f'{realpath(__file__)}/../static')), name="static")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(current_dir, 'static')
+backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 
 @backend.exception_handler(AuthError)
 async def handleAuthError(error: AuthError):
     return error.error, error.status_code
 
-
-@backend.get("/", include_in_schema=False)
-async def index(request: Request) -> HTMLResponse:
-    get_config_and_authentificate(request)
-    with open("static/index.html") as f:
-        return HTMLResponse(content=f.read())
-
-
-@backend.get("/favicon.ico", include_in_schema=False)
-async def favicon() -> RedirectResponse:
-    return RedirectResponse(url="/static/favicon.ico")
-
-
-@backend.get("/assets/{path}", include_in_schema=False)
-async def assets(request: Request, path: str) -> RedirectResponse:
-    get_config_and_authentificate(request)
-    return RedirectResponse(url="/static/assets/" + path)
-
-@backend.post("/sum")
+@api_app.post("/sum")
 async def sum(
     body: str = Form(...),
     file: UploadFile = None, 
@@ -89,7 +74,7 @@ async def sum(
         logging.exception(str(e))
         raise HTTPException(status_code=500,detail="Exception in summarize: something bad happened")
 
-@backend.post("/brainstorm")
+@api_app.post("/brainstorm")
 async def brainstorm(request: BrainstormRequest,
                     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
                     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> BrainstormResult:
@@ -115,7 +100,7 @@ async def brainstorm(request: BrainstormRequest,
         raise HTTPException(status_code=500,detail=msg)
 
 
-@backend.post("/chat_stream")
+@api_app.post("/chat_stream")
 async def chat_stream(request: ChatRequest,
                       access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
                       id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> StreamingResponse:
@@ -141,7 +126,7 @@ async def chat_stream(request: ChatRequest,
         raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 
-@backend.post("/chat")
+@api_app.post("/chat")
 async def chat(request: ChatRequest,
                access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
                id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> ChatResult:
@@ -164,7 +149,7 @@ async def chat(request: ChatRequest,
         raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 
-@backend.get("/config")
+@api_app.get("/config")
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
     response = ConfigResponse(frontend=cfg["configuration_features"].frontend, version=cfg["configuration_features"].version)
@@ -182,7 +167,7 @@ async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Ac
     return response
 
 
-@backend.get("/statistics")
+@api_app.get("/statistics")
 async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> StatisticsResponse:
     try:
         cfg = get_config_and_authentificate(access_token)
@@ -193,14 +178,14 @@ async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmss
         raise HTTPException(status_code=404, detail="Get Statistics failed!")
 
 
-@backend.post("/counttokens")
+@api_app.post("/counttokens")
 async def counttokens(request: CountTokenRequest, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> CountResult:
     get_config_and_authentificate(access_token)
     counted_tokens = num_tokens_from_messages([HumanMessage(request.text)], request.model.llm_name)
     return CountResult(count=counted_tokens)
 
 
-@backend.get("/statistics/export")
+@api_app.get("/statistics/export")
 async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> FileResponse:
     try:
         cfg = get_config_and_authentificate(access_token)
@@ -211,7 +196,7 @@ async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lh
         raise HTTPException(status_code=404, detail=e)
 
 
-@backend.get("/health")
+@api_app.get("/health")
 def health_check() -> str:
     return "OK"
 

@@ -89,3 +89,7 @@ export type CountTokenRequest = {
 export type CountTokenResponse = {
     count: number;
 };
+export type SimplyResponse = {
+    content: string;
+    error?: string;
+};

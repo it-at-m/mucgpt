@@ -41,6 +41,7 @@ class BackendConfig(BaseModel):
     chat: ApproachConfig
     brainstorm: ApproachConfig
     sum: ApproachConfig
+    simply: ApproachConfig
     models: List[ModelsConfig]
 
 class LabelsConfig(BaseModel):

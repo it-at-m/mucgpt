@@ -6,6 +6,7 @@ import {
     CountTokenRequest,
     CountTokenResponse,
     SimplyRequest,
+    SimplyResponse,
     SumRequest,
     SumResponse
 } from "./models";
@@ -109,7 +110,7 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
     return parsedResponse;
 }
 
-export async function simplyApi(options: SimplyRequest): Promise<AskResponse> {
+export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse> {
     const response = await fetch("/simply", {
         method: "POST",
         headers: {
@@ -127,9 +128,8 @@ export async function simplyApi(options: SimplyRequest): Promise<AskResponse> {
             system_message: options.system_message
         })
     });
-
     handleRedirect(response);
-    const parsedResponse: AskResponse = await handleResponse(response);
+    const parsedResponse: SimplyResponse = await handleResponse(response);
     return parsedResponse;
 }
 

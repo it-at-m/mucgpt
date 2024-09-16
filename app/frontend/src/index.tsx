@@ -15,7 +15,7 @@ import Brainstorm from "./pages/brainstorm/Brainstorm";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
-import Simply from "./pages/simplyfied-language/simply";
+import Simply from "./pages/simplyfied-language/Simply";
 initializeIcons();
 
 const router = createHashRouter([

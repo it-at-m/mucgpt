@@ -9,6 +9,7 @@ from core.datahelper import Base, Repository
 from core.llmhelper import getModel
 from core.types.AppConfig import AppConfig
 from core.types.Config import BackendConfig, DatabaseConfig
+from simply.simply import Simply
 from summarize.summarize import Summarize
 
 
@@ -34,16 +35,23 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
                     n = 1,
                     streaming=False,
                     temperature=0)
-    chatlllm = getModel(
+    chatllm = getModel(
                     models=cfg.models,
                     max_output_tokens=4000,
                     n = 1,
                     streaming=True,
                     temperature=0.7)
-    chat_approaches = Chat(llm=chatlllm, config=cfg.chat, repo=repoHelper)
+    simplyllm = getModel(
+                    models=cfg.models,
+                    max_output_tokens=4000,
+                    n = 1,
+                    streaming=True,
+                    temperature=0.7)
+    chat_approaches = Chat(llm=chatllm, config=cfg.chat, repo=repoHelper)
     brainstorm_approaches = Brainstorm(llm=brainstormllm,  config=cfg.brainstorm, repo=repoHelper)
     sum_approaches =  Summarize(llm=sumllm, config=cfg.sum, repo=repoHelper)
-    return (chat_approaches, brainstorm_approaches, sum_approaches)
+    simply_approaches =  Simply(llm=simplyllm, config=cfg.simply, repo=repoHelper)
+    return (chat_approaches, brainstorm_approaches, sum_approaches, simply_approaches)
 
 async def initApp() -> AppConfig:
     """inits the app
@@ -74,7 +82,7 @@ async def initApp() -> AppConfig:
     else:
         repoHelper = None
 
-    (chat_approaches, brainstorm_approaches, sum_approaches) = initApproaches(cfg=cfg.backend, repoHelper=repoHelper)
+    (chat_approaches, brainstorm_approaches, sum_approaches, simply_approaches) = initApproaches(cfg=cfg.backend, repoHelper=repoHelper)
 
 
         
@@ -84,6 +92,7 @@ async def initApp() -> AppConfig:
         configuration_features=cfg,
         chat_approaches= chat_approaches,
         brainstorm_approaches= brainstorm_approaches,
+        simply_approaches=simply_approaches,
         sum_approaches= sum_approaches,
         repository=repoHelper,
         backend_config=cfg.backend

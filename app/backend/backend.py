@@ -1,6 +1,5 @@
 import io
 import logging
-from contextlib import asynccontextmanager
 from os.path import realpath
 from typing import List, cast
 
@@ -87,7 +86,8 @@ async def sum(
         return r
     except Exception as e:
         logging.exception("Exception in /sum")
-        return JSONResponse({"error": str(e)}, status_code=500)
+        logging.exception(str(e))
+        raise HTTPException(status_code=500,detail="Exception in summarize: something bad happened")
 
 @backend.post("/brainstorm")
 async def brainstorm(request: BrainstormRequest,
@@ -106,10 +106,11 @@ async def brainstorm(request: BrainstormRequest,
         return r
     except Exception as e:
         logging.exception("Exception in /brainstorm")
+        logging.exception(str(e))
         msg = (
             "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
             if "Rate limit" in str(e)
-            else str(e)
+            else str("Exception in brainstorm: something bad happened")
         )
         raise HTTPException(status_code=500,detail=msg)
 
@@ -136,7 +137,8 @@ async def chat_stream(request: ChatRequest,
         return response
     except Exception as e:
         logging.exception("Exception in /chat")
-        raise HTTPException(status_code=500,detail=str(e))
+        logging.exception(str(e))
+        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 
 @backend.post("/chat")
@@ -158,7 +160,8 @@ async def chat(request: ChatRequest,
         return chatResult
     except Exception as e:
         logging.exception("Exception in /chat")
-        raise HTTPException(status_code=500,detail=str(e))
+        logging.exception(str(e))
+        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 
 @backend.get("/config")

@@ -6,7 +6,7 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
-from brainstorm.brainstormresult import BrainstormResult
+from brainstorm.BrainstormResult import BrainstormResult
 from core.datahelper import Repository, Requestinfo
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
@@ -77,21 +77,21 @@ class Brainstorm:
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def brainstorm(self, topic: str, language: str, department: Optional[str], model_name:str) -> BrainstormResult:
+    async def brainstorm(self, topic: str, language: str, department: Optional[str], llm_name:str) -> BrainstormResult:
         """Generates ideas for a given topic structured in markdown, translates the result into the target language 
 
         Args:
             topic (str): topic of the brainstorming
             language (str): target language
             department (Optional[str]): department, who is responsible for the call
-            model_name (str): the choosen llm
+            llm_name (str): the choosen llm
 
         Returns:
             BrainstormResult: the structured markdown with ideas about the topic
         """
         # configure
         config: LlmConfigs = {
-            "llm": model_name
+            "llm": llm_name
         }
         llm = self.llm.with_config(configurable=config)
         # get prompts
@@ -108,13 +108,13 @@ class Brainstorm:
         total_tokens = cb.total_tokens
         translation = self.cleanup(str(result))
 
-        if self.config["log_tokens"]:
+        if self.config.log_tokens:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
                 method = "Brainstorm",
-                model = model_name))
+                model = llm_name))
         return BrainstormResult(answer=translation)
 
     def cleanup(self, chat_translate_result: str) -> str:

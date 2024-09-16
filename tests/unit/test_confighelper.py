@@ -4,6 +4,7 @@ import unittest
 import pytest
 
 from core.confighelper import ConfigHelper
+from core.types.Config import BackendConfig, Config, FrontendConfig
 
 
 class Test_Confighelper(unittest.TestCase):
@@ -18,6 +19,7 @@ class Test_Confighelper(unittest.TestCase):
         assert os.path.exists(base_path), "File does not exist"
         helper = ConfigHelper(env_config=env_path, base_config=base_path)
         data = helper.loadData()
-        self.assertIn("frontend", data)
-        self.assertIn("backend", data)
-        self.assertIn("version", data)
+        self.assertEqual(FrontendConfig, type(data.frontend))
+        self.assertEqual(BackendConfig, type(data.backend))
+        self.assertEqual(str, type(data.version))
+        self.assertEqual(Config, type(data))

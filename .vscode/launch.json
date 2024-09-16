@@ -5,24 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Quart",
-            "type": "python",
+            "name": "Python: Fastapi",
+            "type": "debugpy",
             "request": "launch",
-            "module": "quart",
+            "module": "uvicorn",
             "cwd": "${workspaceFolder}/app/backend",
-            "env": {
-                "QUART_APP": "main:app",
-                "QUART_ENV": "development",
-                "QUART_DEBUG": "0"
-            },
             "args": [
-                "run",
-                "--no-reload",
-                "-p 50505"
+                "app:backend",
+                "--reload",
             ],
+            "env": 
+            {
+                "MUCGPT_CONFIG": "${workspaceFolder}/config/local.json",
+                "BASE_CONFIG": "${workspaceFolder}/config/base.json",
+            }
+            ,
             "console": "integratedTerminal",
-            "justMyCode": false,
-            "envFile": "${input:dotEnvFilePath}",
         },
         {
             "name": "Frontend: watch",

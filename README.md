@@ -74,7 +74,7 @@ npm run build
 cd ..\backend
 $env:MUCGPT_CONFIG="path to default.json"
 $env:MUCGPT_BASE_CONFIG="path to base.json"
-python -m  quart --app main:app run
+uvicorn app:backend --reload   
 ```
 
 

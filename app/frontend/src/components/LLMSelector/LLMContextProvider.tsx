@@ -8,10 +8,10 @@ interface ILLMProvider {
 }
 
 export const DEFAULTLLM = "gpt-4o-mini";
-export const LLMContext = React.createContext<ILLMProvider>({ LLM: { model_name: DEFAULTLLM, max_output_tokens: 0, max_input_tokens: 0, description: "" }, setLLM: () => { } });
+export const LLMContext = React.createContext<ILLMProvider>({ LLM: { llm_name: DEFAULTLLM, max_output_tokens: 0, max_input_tokens: 0, description: "" }, setLLM: () => { } });
 
 export const LLMContextProvider = (props: React.PropsWithChildren<{}>) => {
-    const [LLM, setLLM] = useState<Model>({ model_name: DEFAULTLLM, max_output_tokens: 0, max_input_tokens: 0, description: "" });
+    const [LLM, setLLM] = useState<Model>({ llm_name: DEFAULTLLM, max_output_tokens: 0, max_input_tokens: 0, description: "" });
 
     return (
         <LLMContext.Provider value={{ LLM, setLLM }}>

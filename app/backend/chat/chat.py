@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Optional, Sequence
+from typing import AsyncGenerator, List, Optional, Sequence
 
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -7,6 +7,7 @@ from langchain_core.runnables.base import RunnableSerializable
 from chat.chatresult import ChatResult
 from core.datahelper import Repository, Requestinfo
 from core.modelhelper import num_tokens_from_messages
+from core.types.ChatRequest import ChatTurn
 from core.types.Chunk import Chunk, ChunkInfo
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
@@ -21,11 +22,12 @@ class Chat:
         self.config = config
         self.repo = repo
     
-    async def run_with_streaming(self, history: 'list[dict[str, str]]',max_output_tokens: int, temperature: float, system_message: Optional[str], model: str, department: Optional[str]) -> AsyncGenerator[Chunk, None]:
+
+    async def run_with_streaming(self, history: List[ChatTurn], max_output_tokens: int, temperature: float, system_message: Optional[str], model: str, department: Optional[str]) -> AsyncGenerator[Chunk, None]:
         """call the llm in streaming mode
 
         Args:
-            history (list[dict[str, str]]): the history,user and ai messages 
+            history (List[ChatTurn]): the history,user and ai messages 
             max_output_tokens (int): max_output_tokens to generate
             temperature (float): temperature of the llm
             system_message (Optional[str]): the system message
@@ -62,8 +64,8 @@ class Chat:
         # TODO use callbacks https://clemenssiebler.com/posts/azure_openai_load_balancing_langchain_with_fallbacks/
         
         else:
-            history[-1]["bot"] = result
-            if self.config["log_tokens"]:
+            history[-1].bot = result
+            if self.config.log_tokens:
                 self.repo.addInfo(Requestinfo( 
                     tokencount = num_tokens_from_messages(messages=msgs,model=model), #TODO richtiges Modell und tokenizer auswählen
                     department = department,
@@ -74,11 +76,11 @@ class Chat:
             info = ChunkInfo(requesttokens=num_tokens_from_messages([msgs[-1]],model), streamedtokens=num_tokens_from_messages([HumanMessage(result)], model)) 
             yield Chunk(type="I", message=info, order=position)
     
-    def run_without_streaming(self, history: "Sequence[dict[str, str]]", max_output_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], model_name:str) -> ChatResult:
+    def run_without_streaming(self, history: List[ChatTurn], max_output_tokens: int, temperature: float, system_message: Optional[str], department: Optional[str], llm_name:str) -> ChatResult:
         """calls the llm in blocking mode, returns the full result
 
         Args:
-            history (list[dict[str, str]]): the history,user and ai messages 
+            history (List[ChatTurn]): the history,user and ai messages 
             max_output_tokens (int): max_output_tokens to generate
             temperature (float): temperature of the llm
             system_message (Optional[str]): the system message
@@ -99,31 +101,29 @@ class Chat:
             ai_message: AIMessage = llm.invoke(msgs)
         total_tokens = cb.total_tokens
       
-        if self.config["log_tokens"]:
+        if self.config.log_tokens:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
                 method = "Brainstorm",
-                model = model_name))
+                model = llm_name))
         return ChatResult(content=ai_message.content)
 
 
-    def init_messages(self, history:"Sequence[dict[str, str]]", system_message:  Optional[str] ) :
+    def init_messages(self, history:List[ChatTurn], system_message:  Optional[str] ) :
         """initialises memory with chat messages
 
         Args:
-            messages (Sequence[dict[str, str]]): history of messages, are converted into langchain format
+            messages (List[ChatTurn]): history of messages, are converted into langchain format
             system_message ( Optional[str]): the system message
         """
         langchain_messages = []
         if(system_message and  system_message.strip() !=""):
              langchain_messages.append(SystemMessage(system_message))
         for conversation in history:
-            if("user" in conversation and conversation["user"]):
-                userMsg = conversation["user"]
-                langchain_messages.append(HumanMessage(userMsg))
-            if("bot" in conversation and conversation["bot"]):
-                aiMsg = conversation["bot"]
-                langchain_messages.append(AIMessage(aiMsg))
+            if(conversation.user):
+                langchain_messages.append(HumanMessage(content=conversation.user))
+            if(conversation.bot):
+                langchain_messages.append(AIMessage(content=conversation.bot))
         return langchain_messages

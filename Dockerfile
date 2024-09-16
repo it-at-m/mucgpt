@@ -21,4 +21,4 @@ COPY "./config/base.json"  /code/base.json
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 EXPOSE 8000
-CMD ["gunicorn","main:app"]
+CMD ["gunicorn","app:backend"]

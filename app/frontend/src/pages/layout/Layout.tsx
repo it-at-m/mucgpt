@@ -29,13 +29,13 @@ export const Layout = () => {
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
     const [config, setConfig] = useState<ApplicationConfig>({
         models: [{
-            "model_name": "KICC GPT",
+            "llm_name": "KICC GPT",
             "max_input_tokens": 128000,
             "max_output_tokens": 128000,
             "description": ""
         },
         {
-            "model_name": "Unknown GPT",
+            "llm_name": "Unknown GPT",
             "max_input_tokens": 128000,
             "max_output_tokens": 128000,
             "description": ""
@@ -48,7 +48,7 @@ export const Layout = () => {
         },
         version: "DEV 1.0.0"
     });
-    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || config.models[0].model_name;
+    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || config.models[0].llm_name;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
     const { language, setLanguage } = useContext(LanguageContext);
@@ -80,7 +80,7 @@ export const Layout = () => {
             if (result.models.length === 0) {
                 console.error("Keine Modelle vorhanden");
             }
-            setLLM(result.models.find((model) => model.model_name == llm_pref) || result.models[0])
+            setLLM(result.models.find((model) => model.llm_name == llm_pref) || result.models[0])
         }, () => { console.error("Config nicht geladen"); });
         i18n.changeLanguage(language_pref);
     }, []);
@@ -101,7 +101,7 @@ export const Layout = () => {
     };
     const onLLMSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let llm = selection.optionValue || DEFAULTLLM;
-        let found_llm = models.find((model) => model.model_name == llm);
+        let found_llm = models.find((model) => model.llm_name == llm);
         if (found_llm) {
             setLLM(found_llm);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);

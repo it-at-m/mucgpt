@@ -1,5 +1,5 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
 
-class BrainstormResult(TypedDict):
+class BrainstormResult(BaseModel):
     answer: str

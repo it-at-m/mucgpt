@@ -21,6 +21,7 @@ const enum STORAGE_KEYS {
 }
 
 const SYSTEM_MESSAGE_ES = "Du bist ein hilfreicher Assistent, der Texte in Einfache Sprache, Sprachniveau B1 bis A2, umschreibt. Sei immer wahrheitsgemäß und objektiv. Schreibe nur das, was du sicher aus dem Text des Benutzers weisst. Arbeite die Texte immer vollständig durch und kürze nicht. Mache keine Annahmen. Schreibe einfach und klar und immer in deutscher Sprache. Gib dein Ergebnis innerhalb von <einfachesprache> Tags aus."
+const SYSTEM_MESSAGE_LS = "Du bist ein hilfreicher Assistent, der Texte in Leichte Sprache, Sprachniveau A2, umschreibt. Sei immer wahrheitsgemäß und objektiv. Schreibe nur das, was du sicher aus dem Text des Benutzers weisst. Arbeite die Texte immer vollständig durch und kürze nicht. Mache keine Annahmen. Schreibe einfach und klar und immer in deutscher Sprache. Gib dein Ergebnis innerhalb von <leichtesprache> Tags aus."
 
 const RULES_LS = `- Wichtiges zuerst: Beginne den Text mit den wichtigsten Informationen, so dass diese sofort klar werden.
 - Verwende einfache, kurze, häufig gebräuchliche Wörter. 
@@ -117,13 +118,13 @@ const Simply = () => {
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
-    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_SYSTEM_PROMPT) || SYSTEM_MESSAGE_ES;
-    const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
-
     const outputType_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE) || "plain";
     const [outputType, setOutputType] = useState<string>(outputType_pref);
     const outputLength_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_LENGTH) || "complete";
     const [outputLength, setOutputLength] = useState<string>(outputLength_pref);
+
+    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_SYSTEM_PROMPT) || outputType == "plain" ? SYSTEM_MESSAGE_ES : SYSTEM_MESSAGE_LS;
+    const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
@@ -154,51 +155,81 @@ const Simply = () => {
     }, [])
 
     const buildMessagePlain = (prompt: string) => {
-        let completeness;
-        if (outputLength == 'complete') {
-            completeness = REWRITE_COMPLETE
+        let completeness = outputLength == 'complete' ? REWRITE_COMPLETE : REWRITE_CONDENSED;
+
+        if (LLM.llm_name.toLowerCase().includes("mistral")) {
+            return `
+            Hier ist ein schwer verständlicher Text, den du vollständig in Einfache Sprache, Sprachniveau B1 bis A2, umschreiben sollst:
+
+            <schwer-verständlicher-text>
+            ${prompt}
+            </schwer-verständlicher-text>
+
+            Bitte lies den Text sorgfältig durch und schreibe ihn vollständig in Einfache Sprache (B1 bis A2) um. 
+
+            Beachte dabei folgende Regeln für Einfache Sprache (B1 bis A2):
+
+            ${completeness}
+            ${RULES_ES}
+
+            Formuliere den Text jetzt in Einfache Sprache, Sprachniveau B1 bis A2, um. Schreibe den vereinfachten Text innerhalb von <einfachesprache> Tags.
+            `
         } else {
-            completeness = REWRITE_CONDENSED
+            return `Bitte schreibe den folgenden schwer verständlichen Text vollständig in Einfache Sprache, Sprachniveau B1 bis A2, um. 
+
+            Beachte dabei folgende Regeln für Einfache Sprache (B1 bis A2):
+
+            ${completeness}
+            ${RULES_ES}
+
+            Schreibe den vereinfachten Text innerhalb von <einfachesprache> Tags.
+
+            Hier ist der schwer verständliche Text:
+
+            --------------------------------------------------------------------------------
+
+            ${prompt}
+            `
         }
-        return `Bitte schreibe den folgenden schwer verständlichen Text vollständig in Einfache Sprache, Sprachniveau B1 bis A2, um. 
-
-        Beachte dabei folgende Regeln für Einfache Sprache (B1 bis A2):
-
-        ${completeness}
-        ${RULES_ES}
-
-        Schreibe den vereinfachten Text innerhalb von <einfachesprache> Tags.
-
-        Hier ist der schwer verständliche Text:
-
-        --------------------------------------------------------------------------------
-
-        ${prompt}
-        `
     }
 
     const buildMessageEasy = (prompt: string) => {
-        let completeness;
-        if (outputLength == 'complete') {
-            completeness = REWRITE_COMPLETE
-        } else {
-            completeness = REWRITE_CONDENSED
-        }
-        return `Bitte schreibe den folgenden schwer verständlichen Text vollständig in Leichte Sprache, Sprachniveau A2, um. 
+        let completeness = outputLength == 'complete' ? REWRITE_COMPLETE : REWRITE_CONDENSED;
 
-        Beachte dabei folgende Regeln für Leichte Sprache (A2):
-        
-        ${completeness}
-        ${RULES_LS}
-        
-        Schreibe den vereinfachten Text innerhalb von <leichtesprache> Tags.
-        
-        Hier ist der schwer verständliche Text:
-        
-        --------------------------------------------------------------------------------
-        
-        ${prompt}
-        `
+        if (LLM.llm_name.toLowerCase().includes("mistral")) {
+            return `
+            Hier ist ein schwer verständlicher Text, den du vollständig in Leichte Sprache, Sprachniveau A2, umschreiben sollst:
+
+            <schwer-verständlicher-text>
+            ${prompt}
+            </schwer-verständlicher-text>
+
+            Bitte lies den Text sorgfältig durch und schreibe ihn vollständig in Leichte Sprache, Sprachniveau A2 um. 
+
+            Beachte dabei folgende Regeln für Leichte Sprache (A2):
+
+            ${completeness}
+            ${RULES_LS}
+
+            Formuliere den Text jetzt in Leichte Sprache, Sprachniveau A2, um. Schreibe den vereinfachten Text innerhalb von <leichtesprache> Tags.
+            `
+        } else {
+            return `Bitte schreibe den folgenden schwer verständlichen Text vollständig in Leichte Sprache, Sprachniveau A2, um. 
+
+            Beachte dabei folgende Regeln für Leichte Sprache (A2):
+            
+            ${completeness}
+            ${RULES_LS}
+            
+            Schreibe den vereinfachten Text innerhalb von <leichtesprache> Tags.
+            
+            Hier ist der schwer verständliche Text:
+            
+            --------------------------------------------------------------------------------
+            
+            ${prompt}
+            `
+        }
     }
 
     const onExampleClicked = (example: string) => {
@@ -218,12 +249,8 @@ const Simply = () => {
 
 
     const makeApiRequest = async (question: string) => {
-        lastQuestionRef.current = question;
-        console.log("outputLength")
-        console.log(outputLength)
-        console.log("outputType")
-        console.log(outputType)
         error && setError(undefined);
+        lastQuestionRef.current = question
         setIsLoading(true);
         let userMsg: string;
         if (outputType == "plain") {
@@ -232,20 +259,19 @@ const Simply = () => {
             userMsg = buildMessageEasy(question)
         }
         try {
-            const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
             const request: SimplyRequest = {
                 topic: question,
                 language: language,
                 model: LLM.llm_name,
                 max_output_tokens: LLM.max_output_tokens,
-                history: [...history, { user: userMsg, bot: undefined }],
+                history: [{ user: userMsg, bot: undefined }],
                 shouldStream: true,
                 system_message: systemPrompt
             };
             const parsedResponse: SimplyResponse = await simplyApi(request);
             const askResponse: AskResponse = { answer: extractText(parsedResponse.content), error: parsedResponse.error }
             setAnswers([...answers, [question, askResponse]]);
-            saveToDB([question, parsedResponse], storage, currentId, idCounter, setCurrentId, setIdCounter, language)
+            saveToDB([question, askResponse], storage, currentId, idCounter, setCurrentId, setIdCounter, language)
         } catch (e) {
             setError(e);
         } finally {
@@ -274,6 +300,7 @@ const Simply = () => {
     }
     const onOutputTypeChanged = (e: any, selection: RadioGroupOnChangeData) => {
         setOutputType(selection.value as ("plain" | "easy"));
+        setSystemPrompt(selection.value == "plain" ? SYSTEM_MESSAGE_ES : SYSTEM_MESSAGE_LS)
         localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);
     };
 
@@ -325,7 +352,6 @@ const Simply = () => {
                                             key={index}
                                             answer={answer[1]}
                                             isSelected={selectedAnswer === index}
-                                            onRegenerateResponseClicked={onRegeneratResponseClicked}
                                             setQuestion={question => setQuestion(question)}
                                         />
                                     </li>

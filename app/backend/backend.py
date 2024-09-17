@@ -13,7 +13,7 @@ from langchain_core.messages.human import HumanMessage
 from pydantic_core import from_json
 
 from brainstorm.BrainstormRequest import BrainstormRequest
-from brainstorm.BrainstormResult import BrainstormResult
+from brainstorm.brainstormresult import BrainstormResult
 from chat.chatresult import ChatResult
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
@@ -26,7 +26,7 @@ from core.types.CountTokenRequest import CountTokenRequest
 from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SumRequest import SumRequest
 from init_app import initApp
-from summarize.SummarizeResult import SummarizeResult
+from summarize.summarizeresult import SummarizeResult
 
 # serves static files and the api
 backend = FastAPI(title="MUCGPT")

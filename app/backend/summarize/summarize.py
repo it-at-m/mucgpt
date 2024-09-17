@@ -11,7 +11,7 @@ from core.datahelper import Repository, Requestinfo
 from core.textsplit import splitPDF, splitText
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
-from summarize.SummarizeResult import SummarizeResult
+from summarize.summarizeresult import SummarizeResult
 
 
 class DenserSummary(BaseModel):

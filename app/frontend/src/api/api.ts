@@ -14,7 +14,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             temperature: options.temperature,
             language: options.language,
             system_message: options.system_message,
-            max_tokens: options.max_tokens
+            max_output_tokens: options.max_output_tokens,
+            model: options.model
         })
     });
 }
@@ -27,7 +28,8 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
             text: options.text,
             detaillevel: options.detaillevel,
             temperature: options.temperature,
-            language: options.language
+            language: options.language,
+            model: options.model
         })
     );
     if (file) formData.append("file", file);
@@ -88,7 +90,8 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
         body: JSON.stringify({
             topic: options.topic,
             temperature: options.temperature,
-            language: options.language
+            language: options.language,
+            model: options.model
         })
     });
 
@@ -106,7 +109,8 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
         mode: "cors",
         redirect: "manual",
         body: JSON.stringify({
-            text: options.text
+            text: options.text,
+            model: options.model
         })
     });
 

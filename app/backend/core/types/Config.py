@@ -4,11 +4,39 @@ from typing import Any, Mapping, TypedDict
 class ApproachConfig(TypedDict):
     log_tokens: bool
 
+class ModelsConfig(TypedDict):
+    type: str
+    model_name: str
+    deployment: str
+    endpoint: str
+    api_key: str
+    api_version: str
+    max_output_tokens: int
+    max_input_tokens: int
+
+class ModelsDTO(TypedDict):
+    model_name: str
+    max_output_tokens: int
+    max_input_tokens: int
+    description: str
+
+class SSOConfig(TypedDict):
+    sso_issuer: str
+    role: str
+class DatabaseConfig(TypedDict):
+    db_host: str
+    db_name: str
+    db_user: str
+    db_passwort: str
 class BackendConfig(TypedDict):
+    enable_auth: bool
     enable_database: bool
+    sso_config: SSOConfig
+    db_config: DatabaseConfig
     chat: ApproachConfig
     brainstorm: ApproachConfig
     sum: ApproachConfig
+    models: ModelsConfig
 
 class LabelsConfig(TypedDict):
     env_name: str

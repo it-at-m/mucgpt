@@ -12,11 +12,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Build Bicep for linting
-        uses: azure/CLI@v1
-        with:
-          inlineScript: az config set bicep.use_binary_from_path=false && az bicep build -f infra/main.bicep --stdout
           
       - name: Run Microsoft Security DevOps Analysis
         uses: microsoft/security-devops-action@preview

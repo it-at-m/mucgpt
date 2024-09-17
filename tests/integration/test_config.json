@@ -1,0 +1,45 @@
+{
+    "frontend": {
+        "labels": {
+            "env_name": "MUC tschibidi-test"
+        },
+        "alternative_logo": true
+    },
+    "backend": {
+        "enable_auth": false,
+        "enable_database": false,
+        "sso_config": {
+            "sso_issuer": "str",
+            "role": "lhm-ab-mucgpt-user"
+        },
+        "db_config": {
+            "db_host": "NOT USED",
+            "db_name": "NOT USED",
+            "db_user": "NOT USED",
+            "db_passwort": "NOT USED"
+        },
+        "chat": {
+            "log_tokens": false
+        },
+        "brainstorm": {
+            "log_tokens": false
+        },
+        "sum": {
+            "log_tokens": false
+        },
+
+        "models": [
+            {
+                "type": "AZURE",
+                "model_name": "TEST_MODEL",
+                "deployment": "NOT USED",
+                "endpoint": "NOT USED",
+                "api_key":"NOT USED",
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192,
+                "api_version": "NOT USED",
+                "description": "NOT USED"
+            }
+        ] 
+    }
+}

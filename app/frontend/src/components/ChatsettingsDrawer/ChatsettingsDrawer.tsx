@@ -1,7 +1,5 @@
-import { ChatSettings24Regular, ChatWarning24Regular, CheckboxWarning24Regular, Delete24Regular, Dismiss24Regular } from "@fluentui/react-icons";
+import { ChatSettings24Regular, ChatWarning24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import {
-    DrawerHeader,
-    DrawerHeaderTitle,
     OverlayDrawer,
     Button,
     Slider,
@@ -12,26 +10,27 @@ import {
     InfoLabel,
     Tooltip,
     Textarea,
-    TextareaOnChangeData,
-    Badge
+    TextareaOnChangeData
 } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useTranslation } from 'react-i18next';
+import { LLMContext } from "../LLMSelector/LLMContextProvider";
 interface Props {
     temperature: number;
     setTemperature: (temp: number, id: number) => void;
-    max_tokens: number;
+    max_output_tokens: number;
     setMaxTokens: (maxTokens: number, id: number) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string, id: number) => void;
     current_id: number;
 }
 
-export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, setMaxTokens, systemPrompt, setSystemPrompt, current_id }: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt, current_id }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
+    const { LLM } = useContext(LLMContext)
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
     }, [])
@@ -42,10 +41,9 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
     const max_tokensID = useId("input-max_tokens");
 
     const min_max_tokens = 10;
-    const max_max_tokens = 4000;
+    const max_max_tokens = LLM.max_output_tokens;
     const min_temp = 0;
     const max_temp = 1;
-
 
     const isEmptySystemPrompt = systemPrompt.trim() === "";
 
@@ -145,12 +143,12 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_tokens, se
                             defaultValue={20}
                             onChange={onMaxtokensChange}
                             aria-valuetext={t('components.chattsettingsdrawer.max_lenght') + ` ist ${max_tokensID}`}
-                            value={max_tokens}
+                            value={max_output_tokens}
                             aria-labelledby={max_tokens_headerID}
                             id={max_tokensID} />
                         <br></br>
                         <Label htmlFor={max_tokensID} aria-hidden>
-                            {max_tokens} Tokens
+                            {max_output_tokens} Tokens
                         </Label>
                     </div>
                 </div>

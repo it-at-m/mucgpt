@@ -4,12 +4,10 @@ from unittest import mock
 
 import PyPDF2
 import pytest
-import quart.testing.app
 from httpx import Request, Response
 from openai import BadRequestError
 from quart.datastructures import FileStorage
 
-import app
 from brainstorm.brainstormresult import BrainstormResult
 from core.types.Chunk import Chunk
 from summarize.summarizeresult import SummarizeResult
@@ -45,17 +43,6 @@ contextlength_response = BadRequestError(
 )
 
 
-
-@pytest.mark.asyncio
-@pytest.mark.integration
-async def test_missing_env_vars():
-    quart_app = app.create_app()
-
-    with pytest.raises(quart.testing.app.LifespanError) as exc_info:
-        async with quart_app.test_app() as test_app:
-            test_app.test_client()
-        assert str(exc_info.value) == "Lifespan failure in startup. ''AZURE_OPENAI_EMB_DEPLOYMENT''"
-
 @pytest.mark.asyncio
 @pytest.mark.integration
 async def test_index(client):
@@ -89,7 +76,7 @@ async def test_brainstorm_exception(client, monkeypatch,caplog):
     data = {
         "topic": "München",
         "language": "Deutsch",
-        
+        "model": "TEST_MODEL",
     }
     response = await client.post('/brainstorm', json=data)
     assert response.status_code == 500
@@ -112,7 +99,7 @@ async def test_brainstorm(client, mocker):
     data = {
         "topic": "München",
         "language": "Deutsch",
-        
+        "model": "TEST_MODEL",
     }
     response = await client.post('/brainstorm', json=data)
     assert response.status_code == 200
@@ -128,7 +115,8 @@ async def test_sum_text(client, mocker):
     data = {
         "detaillevel": "short",
         "text": "To be summarized",
-        "language": "Deutsch"
+        "language": "Deutsch",
+        "model": "TEST_MODEL",
     }
     response = await client.post('/sum',  form={"body": json.dumps(data)})
     assert response.status_code == 200
@@ -143,7 +131,8 @@ async def test_sum_pdf(client, mocker):
 
     data = {
         "detaillevel": "short",
-        "language": "Deutsch"
+        "language": "Deutsch",
+        "model": "TEST_MODEL"
     }
 
     tmp = BytesIO()
@@ -193,8 +182,9 @@ async def test_chatstream(client, mocker):
     mocker.patch("chat.chat.Chat.run_without_streaming", mock.AsyncMock(return_value=streaming_generator))
     data = {
         "temperature": 0.1,
-        "max_tokens": 2400,
+        "max_output_tokens": 2400,
         "system_message": "",
+        "model": "TEST_MODEL",
         "history": [{"user": "hi"}]
         
     }

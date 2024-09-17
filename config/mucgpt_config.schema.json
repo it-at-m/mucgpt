@@ -1,0 +1,447 @@
+{
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "default": {},
+    "title": "MUCGPT config",
+    "required": [
+        "frontend",
+        "backend"
+    ],
+    "properties": {
+        "frontend": {
+            "type": "object",
+            "default": {},
+            "title": "The frontend configuration",
+            "required": [
+                "labels",
+                "alternative_logo"
+            ],
+            "properties": {
+                "labels": {
+                    "type": "object",
+                    "default": {},
+                    "title": "Labels used in the frontend",
+                    "required": [
+                        "env_name"
+                    ],
+                    "properties": {
+                        "env_name": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The env_name Schema",
+                            "examples": [
+                                "MUCGPT"
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "env_name": "MUCGPT"
+                    }]
+                },
+                "alternative_logo": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "use the alternative logo, more of an easter egg",
+                    "examples": [
+                        false
+                    ]
+                }
+            },
+            "examples": [{
+                "labels": {
+                    "env_name": "MUCGPT"
+                },
+                "alternative_logo": false
+            }]
+        },
+        "backend": {
+            "type": "object",
+            "default": {},
+            "title": "The backend configuration",
+            "required": [
+                "enable_auth",
+                "enable_database",
+                "sso_config",
+                "db_config",
+                "chat",
+                "brainstorm",
+                "sum",
+                "models"
+            ],
+            "properties": {
+                "enable_auth": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "Enable authentification over OpenID Connect, currently only works with Azure Easy Auth..",
+                    "examples": [
+                        false
+                    ]
+                },
+                "enable_database": {
+                    "type": "boolean",
+                    "default": false,
+                    "title": "Use a postgresql database to save usage information",
+                    "examples": [
+                        false
+                    ]
+                },
+                "sso_config": {
+                    "type": "object",
+                    "default": {},
+                    "title": "Describes the OpenidConnect Provider",
+                    "required": [
+                        "sso_issuer",
+                        "role"
+                    ],
+                    "properties": {
+                        "sso_issuer": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The sso_issuer. Something like: https://mysso/auth/realms/myrealm\"",
+                            "examples": [
+                                "TODO"
+                            ]
+                        },
+                        "role": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The role, we look if the user has a certain role.",
+                            "examples": [
+                                "lhm-ab-mucgpt-user"
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "sso_issuer": "TODO",
+                        "role": "lhm-ab-mucgpt-user"
+                    }]
+                },
+                "db_config": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The database configuration. Has to be a postgresql database.",
+                    "required": [
+                        "db_host",
+                        "db_name",
+                        "db_user",
+                        "db_passwort"
+                    ],
+                    "properties": {
+                        "db_host": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The db_host",
+                            "examples": [
+                                "TODO"
+                            ]
+                        },
+                        "db_name": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The db_name ",
+                            "examples": [
+                                "postgres"
+                            ]
+                        },
+                        "db_user": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The db_user",
+                            "examples": [
+                                "TODO"
+                            ]
+                        },
+                        "db_passwort": {
+                            "type": "string",
+                            "default": "",
+                            "title": "The db_passwort ",
+                            "examples": [
+                                "TODO"
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "db_host": "TODO",
+                        "db_name": "postgres",
+                        "db_user": "TODO",
+                        "db_passwort": "TODO"
+                    }]
+                },
+                "chat": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The chat configuration",
+                    "required": [
+                        "log_tokens"
+                    ],
+                    "properties": {
+                        "log_tokens": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Log usage in database?",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "log_tokens": false
+                    }]
+                },
+                "brainstorm": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The brainstorm configuration",
+                    "required": [
+                        "log_tokens"
+                    ],
+                    "properties": {
+                        "log_tokens": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Log usage in database?",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "log_tokens": false
+                    }]
+                },
+                "sum": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The sumarization configuration",
+                    "required": [
+                        "log_tokens"
+                    ],
+                    "properties": {
+                        "log_tokens": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Log usage in database?",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "log_tokens": false
+                    }]
+                },
+                "models": {
+                    "type": "array",
+                    "default": [],
+                    "title": "Configuration for models",
+                    "items": {
+                        "type": "object",
+                        "title": "One model configuration",
+                        "required": [
+                            "type",
+                            "model_name",
+                            "endpoint",
+                            "api_key",
+                            "max_input_tokens",
+                            "max_output_tokens",
+                            "deployment",
+                            "api_version"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "title": "Either AZURE or OPENAI",
+                                "examples": [
+                                    "OPENAI",
+                                    "AZURE"
+                                ]
+                            },
+                            "model_name": {
+                                "type": "string",
+                                "title": "The name of the model",
+                                "examples": [
+                                    "gpt-4o-mini"
+                                ]
+                            },
+                            "endpoint": {
+                                "type": "string",
+                                "title": "The model endpoint",
+                                "examples": [
+                                    "mymodel.openai.azure.com/"
+                                ]
+                            },
+                            "api_key": {
+                                "type": "string",
+                                "title": "The api_key",
+                                "examples": [
+                                    "BLABLUBLAUBLAUBLA"
+                                ]
+                            },
+                            "max_input_tokens": {
+                                "type": "integer",
+                                "title": "The input context length of the LLM",
+                                "examples": [
+                                    128000,
+                                    0
+                                ]
+                            },
+                            "max_output_tokens": {
+                                "type": "integer",
+                                "title": "The output context length of the LLM",
+                                "examples": [
+                                    8192,
+                                    0
+                                ]
+                            },
+                            "deployment": {
+                                "type": "string",
+                                "default": "",
+                                "title": "The deployment, only needed for AZURE type Models",
+                                "examples": [
+                                    "chat"
+                                ]
+                            },
+                            "api_version": {
+                                "type": "string",
+                                "default": "",
+                                "title": "The api_version",
+                                "examples": [
+                                    "\"2023-03-15-preview\""
+                                ]
+                            }
+                        },
+                        "examples": [{
+                            "type": "OPENAI",
+                            "model_name": "mucgpt-mini",
+                            "endpoint": "mucgptmini.openai.azure.com",
+                            "api_key": "BALBLBLABUALB",
+                            "max_input_tokens": 128000,
+                            "max_output_tokens": 8192
+                        },
+                        {
+                            "type": "AZURE",
+                            "model_name": "mucgpt-maxi",
+                            "deployment": "chat",
+                            "endpoint": "mucgpt-maxi.openai.azure.com",
+                            "api_key": "BALBABUALB",
+                            "api_version": "2024-01",
+                            "max_input_tokens": 128000,
+                            "max_output_tokens": 8192
+                        }]
+                    },
+                    "examples": [
+                        [{
+                            "type": "OPENAI",
+                            "model_name": "mucgpt-mini",
+                            "endpoint": "mucgptmini.openai.azure.com",
+                            "api_key": "BALBLBLABUALB",
+                            "max_input_tokens": 128000,
+                            "max_output_tokens": 8192
+                        },
+                        {
+                            "type": "AZURE",
+                            "model_name": "mucgpt-maxi",
+                            "deployment": "chat",
+                            "endpoint": "mucgpt-maxi.openai.azure.com",
+                            "api_key": "BALBABUALB",
+                            "api_version": "2024-01",
+                            "max_input_tokens": 128000,
+                            "max_output_tokens": 8192
+                        }]
+                    ]
+                }
+            },
+            "examples": [{
+                "enable_auth": false,
+                "enable_database": false,
+                "sso_config": {
+                    "sso_issuer": "TODO",
+                    "role": "lhm-ab-mucgpt-user"
+                },
+                "db_config": {
+                    "db_host": "TODO",
+                    "db_name": "postgres",
+                    "db_user": "TODO",
+                    "db_passwort": "TODO"
+                },
+                "chat": {
+                    "log_tokens": false
+                },
+                "brainstorm": {
+                    "log_tokens": false
+                },
+                "sum": {
+                    "log_tokens": false
+                },
+                "models": [{
+                    "type": "OPENAI",
+                    "model_name": "mucgpt-mini",
+                    "endpoint": "mucgptmini.openai.azure.com",
+                    "api_key": "BALBLBLABUALB",
+                    "max_input_tokens": 128000,
+                    "max_output_tokens": 8192
+                },
+                {
+                    "type": "AZURE",
+                    "model_name": "mucgpt-maxi",
+                    "deployment": "chat",
+                    "endpoint": "mucgpt-maxi.openai.azure.com",
+                    "api_key": "BALBABUALB",
+                    "api_version": "2024-01",
+                    "max_input_tokens": 128000,
+                    "max_output_tokens": 8192
+                }]
+            }]
+        }
+    },
+    "examples": [{
+        "frontend": {
+            "labels": {
+                "env_name": "MUCGPT"
+            },
+            "alternative_logo": false
+        },
+        "backend": {
+            "enable_auth": false,
+            "enable_database": false,
+            "sso_config": {
+                "sso_issuer": "TODO",
+                "role": "lhm-ab-mucgpt-user"
+            },
+            "db_config": {
+                "db_host": "TODO",
+                "db_name": "postgres",
+                "db_user": "TODO",
+                "db_passwort": "TODO"
+            },
+            "chat": {
+                "log_tokens": false
+            },
+            "brainstorm": {
+                "log_tokens": false
+            },
+            "sum": {
+                "log_tokens": false
+            },
+            "models": [{
+                "type": "OPENAI",
+                "model_name": "mucgpt-mini",
+                "endpoint": "mucgptmini.openai.azure.com",
+                "api_key": "BALBLBLABUALB",
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192
+            },
+            {
+                "type": "AZURE",
+                "model_name": "mucgpt-maxi",
+                "deployment": "chat",
+                "endpoint": "mucgpt-maxi.openai.azure.com",
+                "api_key": "BALBABUALB",
+                "api_version": "2024-01",
+                "max_input_tokens": 128000,
+                "max_output_tokens": 8192
+            }]
+        }
+    }]
+}

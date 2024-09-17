@@ -1,19 +1,10 @@
-from collections import namedtuple
-from unittest import mock
+import os
 
 import openai
 import pytest
 import pytest_asyncio
 
 import app
-
-MockToken = namedtuple("MockToken", ["token", "expires_on"])
-
-
-class MockAzureCredential:
-    async def get_token(self, uri):
-        return MockToken("mock_token", 9999999999)
-
 
 
 @pytest.fixture
@@ -50,24 +41,12 @@ def mock_openai_chatcompletion(monkeypatch):
 
 @pytest_asyncio.fixture
 async def client(monkeypatch, mock_openai_chatcompletion):
-    monkeypatch.setenv("AZURE_OPENAI_SERVICE", "test-openai-service")
-    monkeypatch.setenv("AZURE_OPENAI_CHATGPT_DEPLOYMENT", "test-chatgpt")
-    monkeypatch.setenv("AZURE_OPENAI_CHATGPT_MODEL", "gpt-35-turbo")
-    monkeypatch.setenv("AZURE_OPENAI_EMB_DEPLOYMENT", "test-ada")
-    monkeypatch.setenv("SSO_ISSUER", "testissuer.de")
-    monkeypatch.setenv("CONFIG_NAME", "test")
-    monkeypatch.setenv("DB_HOST", "not used")
-    monkeypatch.setenv("DB_NAME", "not used")
-    monkeypatch.setenv("DB_PASSWORD", "not used")
-    monkeypatch.setenv("DB_USER", "not used")
+    monkeypatch.setenv("MUCGPT_CONFIG", os.path.dirname(os.path.realpath(__file__))+"/test_config.json")
+    monkeypatch.setenv("MUCGPT_BASE_CONFIG", os.path.dirname(os.path.realpath(__file__))+"/base.json")
 
+    quart_app = app.create_app()
+    async with quart_app.test_app() as test_app:
+        quart_app.config.update({"TESTING": True})
 
-    with mock.patch("init_app.DefaultAzureCredential") as mock_default_azure_credential:
-        mock_default_azure_credential.return_value = MockAzureCredential()
-        quart_app = app.create_app()
-
-        async with quart_app.test_app() as test_app:
-            quart_app.config.update({"TESTING": True})
-
-            yield test_app.test_client()
+        yield test_app.test_client()
 

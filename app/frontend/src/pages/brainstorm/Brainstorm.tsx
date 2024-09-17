@@ -12,9 +12,11 @@ import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrain
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from 'react-i18next';
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 
-const Summarize = () => {
+const Brainstorm = () => {
     const { language } = useContext(LanguageContext)
+    const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
 
     const lastQuestionRef = useRef<string>("");
@@ -63,6 +65,7 @@ const Summarize = () => {
             const request: BrainstormRequest = {
                 topic: question,
                 language: language,
+                model: LLM.model_name
             };
             const result = await brainstormApi(request);
             setAnswers([...answers, [question, result]]);
@@ -170,4 +173,4 @@ const Summarize = () => {
     );
 };
 
-export default Summarize;
+export default Brainstorm;

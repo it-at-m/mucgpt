@@ -32,7 +32,57 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="6">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="8">
+                    <AccordionItem value="8">
+                        <AccordionHeader>[1.1.4] 11.09.2024</AccordionHeader>
+                        <AccordionPanel >
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>
+                                        Versionsnummer wird wieder richtig gespeichert und in den Einstellungen angezeigt.
+                                    </li>
+                                    <li>
+                                        Maximale Tokens aus der Config aufgeteilt in Input- und Output-Tokens. Dadurch laufen Modelle mit kleineren Contextfenster (wie z.B. Mistral) nicht mehr in einen Fehler.
+                                    </li>
+                                </ul>
+                                <h3>{t('version.changed')}</h3>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem >
+                    <AccordionItem value="7">
+                        <AccordionHeader>[1.1.3] 28.08.2024</AccordionHeader>
+                        <AccordionPanel >
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <ul>
+                                    <li>
+                                        Benutzer haben nun die Möglichkeit zwischen 3 verschiedenen Sprachmodellen zu wählen, welches für ihren Anwendungsfall am besten passt.
+                                        <ul>
+                                            <li>GPT-4o-mini</li>
+                                            <li>GPT-4o</li>
+                                            <li>Mistral-Large-2407</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                <h3>{t('version.fixed')}</h3>
+                                <h3>{t('version.changed')}</h3>
+                                <ul>
+                                    <li>
+                                        Das standardmäßig benutze Sprachmodell wurde von GPT-3.5 auf die neuere Version GPT-4o-mini geändert.
+                                    </li>
+                                    <li>
+                                        Verbesserung der "Zusammenfassen"-Funktion
+                                        <ul>
+                                            <li>weniger Fehler</li>
+                                            <li>zuverlässigere Zusammenfassungen in der gewünschten Struktur</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem >
                     <AccordionItem value="6">
                         <AccordionHeader>[1.1.2] 31.07.2024</AccordionHeader>
                         <AccordionPanel >

@@ -34,7 +34,8 @@ export async function saveToDB(
     language?: string,
     temperature?: number,
     system_message?: string,
-    max_tokens?: number
+    max_output_tokens?: number,
+    model?: string
 ) {
     let openRequest = indexedDB.open(storage.db_name, storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
@@ -58,7 +59,7 @@ export async function saveToDB(
                 result.Data.LastEdited = Date.now();
                 if (storage.objectStore_name === "chat") {
                     result.Options.system = system_message;
-                    result.Options.maxTokens = max_tokens;
+                    result.Options.maxTokens = max_output_tokens;
                     result.Options.temperature = temperature;
                 }
                 data = result;
@@ -66,8 +67,8 @@ export async function saveToDB(
                 // if the chat does not exist in the DB
                 let name: string = "";
                 let new_idcounter = id_counter;
-                if (language != undefined && temperature != undefined && system_message != undefined && max_tokens != undefined) {
-                    name = await (await getChatName(a, language, temperature, system_message, max_tokens)).content;
+                if (language != undefined && temperature != undefined && system_message != undefined && max_output_tokens != undefined && model != undefined) {
+                    name = await (await getChatName(a, language, temperature, system_message, max_output_tokens, model)).content;
                     name = name.replaceAll('"', "").replaceAll(".", "");
                 }
                 if (storage.objectStore_name === "chat") {
@@ -77,7 +78,7 @@ export async function saveToDB(
                     data = {
                         Data: { Answers: [a], Name: name, LastEdited: Date.now() },
                         id: new_idcounter,
-                        Options: { favorite: false, system: system_message, maxTokens: max_tokens, temperature: temperature }
+                        Options: { favorite: false, system: system_message, maxTokens: max_output_tokens, temperature: temperature }
                     };
                 } else {
                     data = {
@@ -99,7 +100,7 @@ export async function saveToDB(
     };
 }
 
-export async function getChatName(answers: any, language: string, temperature: number, system_message: string, max_tokens: number) {
+export async function getChatName(answers: any, language: string, temperature: number, system_message: string, max_output_tokens: number, model: string) {
     const history: ChatTurn[] = [{ user: answers[0], bot: answers[1].answer }];
     const request: ChatRequest = {
         history: [
@@ -113,7 +114,8 @@ export async function getChatName(answers: any, language: string, temperature: n
         language: language,
         temperature: temperature,
         system_message: system_message,
-        max_tokens: max_tokens
+        max_output_tokens: max_output_tokens,
+        model: model
     };
     const response = await chatApi(request);
     handleRedirect(response);

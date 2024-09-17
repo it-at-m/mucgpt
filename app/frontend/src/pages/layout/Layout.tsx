@@ -12,6 +12,7 @@ import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from '@fluentui/react-components';
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
+import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 
 const formatDate = (date: Date) => {
     let formatted_date =
@@ -26,14 +27,19 @@ export const Layout = () => {
     const navigate = useNavigate()
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
-    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
-    const { language, setLanguage } = useContext(LanguageContext);
-    const { t, i18n } = useTranslation();
     const [config, setConfig] = useState<ApplicationConfig>({
-        backend: {
-            enable_auth: true
+        models: [{
+            "model_name": "KICC GPT",
+            "max_input_tokens": 128000,
+            "max_output_tokens": 128000,
+            "description": ""
         },
+        {
+            "model_name": "Unknown GPT",
+            "max_input_tokens": 128000,
+            "max_output_tokens": 128000,
+            "description": ""
+        }],
         frontend: {
             labels: {
                 "env_name": "MUC tschibidi-C"
@@ -42,10 +48,16 @@ export const Layout = () => {
         },
         version: "DEV 1.0.0"
     });
+    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || config.models[0].model_name;
+    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
+    const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
+    const { language, setLanguage } = useContext(LanguageContext);
+    const { LLM, setLLM } = useContext(LLMContext);
+    const { t, i18n } = useTranslation();
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
     const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
 
-
+    const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
 
@@ -64,7 +76,12 @@ export const Layout = () => {
     useEffect(() => {
         configApi().then(result => {
             setConfig(result);
-        }, () => { console.log("Config nicht geladen"); });
+            setModels(result.models);
+            if (result.models.length === 0) {
+                console.error("Keine Modelle vorhanden");
+            }
+            setLLM(result.models.find((model) => model.model_name == llm_pref) || result.models[0])
+        }, () => { console.error("Config nicht geladen"); });
         i18n.changeLanguage(language_pref);
     }, []);
 
@@ -82,6 +99,18 @@ export const Layout = () => {
         setLanguage(lang);
         localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
     };
+    const onLLMSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        let llm = selection.optionValue || DEFAULTLLM;
+        let found_llm = models.find((model) => model.model_name == llm);
+        if (found_llm) {
+            setLLM(found_llm);
+            localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
+        }
+
+    };
+
+
+
     return (
 
         <FluentProvider theme={theme}>
@@ -122,7 +151,12 @@ export const Layout = () => {
                             fontscale={fontscaling}
                             setFontscale={onFontscaleChange}
                             isLight={isLight}
-                            setTheme={onThemeChange}></SettingsDrawer>
+                            setTheme={onThemeChange}
+                            defaultLLM={llm_pref}
+                            onLLMSelectionChanged={onLLMSelectionChanged}
+                            llmOptions={models}
+                            currentLLM={LLM}
+                        ></SettingsDrawer>
                     </div>
                 </header>
                 <Outlet />

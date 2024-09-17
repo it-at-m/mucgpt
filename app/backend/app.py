@@ -1,11 +1,9 @@
 import json
 import logging
 import os
-import time
-from typing import cast
+from typing import List, cast
 
-from azure.monitor.opentelemetry import configure_azure_monitor
-from opentelemetry.instrumentation.aiohttp_client import AioHttpClientInstrumentor
+from langchain_core.messages.human import HumanMessage
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from quart import (
     Blueprint,
@@ -21,8 +19,9 @@ from quart import (
 
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
-from core.modelhelper import num_tokens_from_message
+from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
+from core.types.Config import ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from init_app import initApp
 
@@ -67,7 +66,7 @@ async def sum():
         text = request_json["text"] if file is None else None
         splits = impl.split(detaillevel=detaillevel, file=file, text=text)
 
-        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch")
+        r = await impl.summarize(splits = splits, department=department, language=request_json["language"] or "Deutsch", model_name=request_json["model"] or "gpt-4o-mini")
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /sum")
@@ -84,7 +83,7 @@ async def brainstorm():
 
     try:
         impl = cfg["brainstorm_approaches"]
-        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department)
+        r = await impl.brainstorm(topic=request_json["topic"],language= request_json["language"] or "Deutsch", department=department, model_name=request_json["model"] or "gpt-4o-mini")
         return jsonify(r)
     except Exception as e:
         logging.exception("Exception in /brainstorm")
@@ -102,12 +101,14 @@ async def chat_stream():
     try:
         impl = cfg["chat_approaches"]
         temperature=request_json['temperature'] or 0.7
-        max_tokens=request_json['max_tokens'] or 4096
+        max_output_tokens=request_json['max_output_tokens'] or 4096
         system_message = request_json['system_message'] or None
+        model = request_json['model'] or "gpt-4o-mini"
         response_generator = impl.run_with_streaming(history= request_json["history"],
                                                     temperature=temperature,
-                                                    max_tokens=max_tokens,
+                                                    max_output_tokens=max_output_tokens,
                                                     system_message=system_message,
+                                                    model=model,
                                                     department= department)
         response = await make_response(format_as_ndjson(response_generator))
         response.timeout = None # type: ignore
@@ -127,14 +128,16 @@ async def chat():
     try:
         impl = cfg["chat_approaches"]
         temperature=request_json['temperature'] or 0.7
-        max_tokens=request_json['max_tokens'] or 4096
+        max_output_tokens=request_json['max_output_tokens'] or 4096
+        model_name=request_json['model'] or "gpt-4o-mini"
         system_message = request_json['system_message'] or None
         history =  request_json["history"]
         chatResult = impl.run_without_streaming(history= history,
                                                     temperature=temperature,
-                                                    max_tokens=max_tokens,
+                                                    max_output_tokens=max_output_tokens,
                                                     system_message=system_message,
-                                                    department= department)
+                                                    department= department,
+                                                    model_name= model_name)
         return jsonify(chatResult)
     except Exception as e:
         logging.exception("Exception in /chat")
@@ -143,7 +146,17 @@ async def chat():
 @bp.route("/config", methods=["GET"])
 async def getConfig():
     cfg = get_config_and_authentificate()
-    return jsonify(cfg["configuration_features"])
+    frontend_features = cfg["configuration_features"]["frontend"]
+    models= cast(List[ModelsConfig], cfg["configuration_features"]["backend"]["models"])
+    models_dto_list = []
+    for model in models:
+        dto = ModelsDTO(model_name=model["model_name"], max_output_tokens=model["max_output_tokens"], max_input_tokens=model["max_input_tokens"], description=model["description"])
+        models_dto_list.append(dto)
+    return jsonify({
+        "frontend": frontend_features,
+        "models": models_dto_list,
+        "version": cfg["configuration_features"]["version"]
+    })
 
 @bp.route("/statistics", methods=["GET"])
 async def getStatistics():
@@ -158,14 +171,14 @@ async def getStatistics():
 
 @bp.route("/counttokens", methods=["POST"])
 async def counttokens():
-    cfg = get_config_and_authentificate()
+    get_config_and_authentificate()
     if not request.is_json:
         return jsonify({"error": "request must be json"}), 415
     
-    model = cfg["model_info"]["model"]
     request_json = await request.get_json()
     message=request_json['text'] or ""
-    counted_tokens = num_tokens_from_message(message,model)
+    model = request_json['model']['model_name'] or "gpt-4o-mini"
+    counted_tokens = num_tokens_from_messages([HumanMessage(message)], model)
     return jsonify(CountResult(count=counted_tokens))
 
 @bp.route("/statistics/export", methods=["GET"])
@@ -207,29 +220,14 @@ def get_department(request: Request):
     else:
         return None
     
-
-
-@bp.before_request
-async def ensure_openai_token():
-    cfg = get_config()
-    openai_token = cfg["model_info"]["openai_token"]
-    if openai_token.expires_on < time.time() + 60:
-        openai_token = await cfg["azure_credential"].get_token("https://cognitiveservices.azure.com/.default")
-        # updates tokens, the approaches should get the newest version of the token via reference 
-        cfg["model_info"]["openai_token"] = openai_token
-        cfg["model_info"]["openai_api_key"] = openai_token.token
-
 @bp.before_app_serving
 async def setup_clients():
     current_app.config[APPCONFIG_KEY] = await initApp()
 
 def create_app():
-    if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
-        configure_azure_monitor()
-        AioHttpClientInstrumentor().instrument()
     app = Quart(__name__)
     app.register_blueprint(bp)
-    app.asgi_app = OpenTelemetryMiddleware(app.asgi_app)
+    app.asgi_app = OpenTelemetryMiddleware(app = app.asgi_app)
     # Level should be one of https://docs.python.org/3/library/logging.html#logging-levels
     logging.basicConfig(level=os.getenv("APP_LOG_LEVEL", "ERROR"))
     return app

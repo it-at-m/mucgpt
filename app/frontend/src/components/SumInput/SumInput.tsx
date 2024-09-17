@@ -1,10 +1,11 @@
-import { DragEventHandler, useState } from "react";
-import { Stack, classNamesFunction, } from "@fluentui/react";
+import { useContext, useState } from "react";
+import { Stack, } from "@fluentui/react";
 import { Button, Tooltip, Textarea, TextareaOnChangeData, } from "@fluentui/react-components";
 import { Delete24Regular, Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./SumInput.module.css";
 import { useTranslation } from 'react-i18next';
+import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
 interface Props {
     onSend: (question: string, file?: File) => void;
@@ -22,7 +23,8 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
     const { t, i18n } = useTranslation();
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | undefined>(undefined);
-    const wordCount = 4000;
+    const { LLM } = useContext(LLMContext)
+    const wordCount = LLM.max_input_tokens;
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;

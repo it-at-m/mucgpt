@@ -1,13 +1,13 @@
+from operator import itemgetter
 from typing import Optional
 
-from langchain.chains import LLMChain, SequentialChain
 from langchain.prompts import PromptTemplate
+from langchain.schema.output_parser import StrOutputParser
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
 from brainstorm.brainstormresult import BrainstormResult
 from core.datahelper import Repository, Requestinfo
-from core.types.AzureChatGPTConfig import AzureChatGPTConfig
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 
@@ -56,10 +56,9 @@ class Brainstorm:
     Text: 
     {brainstorm}"""
 
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, model_info: AzureChatGPTConfig, repo: Repository):
+    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository):
         self.llm = llm
         self.config = config
-        self.model_info = model_info
         self.repo = repo
     
     def getBrainstormPrompt(self) -> PromptTemplate:
@@ -78,45 +77,44 @@ class Brainstorm:
         return PromptTemplate(input_variables=["language", "brainstorm"], template=self.user_translate_prompt)
 
 
-    async def brainstorm(self, topic: str, language: str, department: Optional[str]) -> BrainstormResult:
+    async def brainstorm(self, topic: str, language: str, department: Optional[str], model_name:str) -> BrainstormResult:
         """Generates ideas for a given topic structured in markdown, translates the result into the target language 
 
         Args:
             topic (str): topic of the brainstorming
             language (str): target language
             department (Optional[str]): department, who is responsible for the call
+            model_name (str): the choosen llm
 
         Returns:
             BrainstormResult: the structured markdown with ideas about the topic
         """
         # configure
         config: LlmConfigs = {
-            "llm_api_key": self.model_info["openai_api_key"]
+            "llm": model_name
         }
         llm = self.llm.with_config(configurable=config)
-        
+        # get prompts
+        brainstorm_prompt = self.getBrainstormPrompt()
+        translation_prompt = self.getTranslationPrompt()
         # construct chains
-        brainstormChain = LLMChain(llm=llm, prompt=self.getBrainstormPrompt(), output_key="brainstorm")
-        translationChain = LLMChain(llm=llm, prompt=self.getTranslationPrompt(), output_key="translation")
-        overall_chain = SequentialChain(
-            chains=[brainstormChain, translationChain], 
-            input_variables=["language", "topic"],
-            output_variables=["brainstorm","translation"])
-            
-
+        brainstormChain =  brainstorm_prompt |llm | StrOutputParser()
+        translationChain = translation_prompt |llm | StrOutputParser()
+        # build complete chain
+        overall_chain = ({"brainstorm": brainstormChain,"language": itemgetter("language") }| translationChain )
+        
         with get_openai_callback() as cb:
-            result = await overall_chain.acall({"topic": topic, "language": language})
+            result = await overall_chain.ainvoke({"topic": topic, "language": language})
         total_tokens = cb.total_tokens
-
-        translation = result['translation']     
-        translation = self.cleanup(str(translation))
+        translation = self.cleanup(str(result))
 
         if self.config["log_tokens"]:
             self.repo.addInfo(Requestinfo( 
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
-                method = "Brainstorm"))
+                method = "Brainstorm",
+                model = model_name))
         return BrainstormResult(answer=translation)
 
     def cleanup(self, chat_translate_result: str) -> str:

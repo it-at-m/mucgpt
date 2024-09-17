@@ -106,7 +106,8 @@ i18n
                             theme: "Design",
                             change_theme: "Design wechseln",
                             theme_light: "Hell",
-                            theme_dark: "Dunkel"
+                            theme_dark: "Dunkel",
+                            llm: "Sprachmodell"
                         },
                         questioninput: {
                             tokensused: "Token verbraucht",
@@ -280,7 +281,8 @@ i18n
                             theme: "Theme",
                             change_theme: "Switch theme",
                             theme_light: "Light",
-                            theme_dark: "Dark"
+                            theme_dark: "Dark",
+                            llm: "language model"
                         },
                         questioninput: {
                             tokensused: "Token used",
@@ -454,7 +456,8 @@ i18n
                             theme: "Design",
                             change_theme: "Design wechseln",
                             theme_light: "Hell",
-                            theme_dark: "Dunkel"
+                            theme_dark: "Dunkel",
+                            llm: "Sprachmodell"
                         },
                         questioninput: {
                             tokensused: "Token vabrocht",

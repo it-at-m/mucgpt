@@ -32,7 +32,7 @@ Why should you use MUCGPT? See for yourself:
 The documentation project is built with technologies we use in our projects (see [requirements-dev.txt](/requirements-dev.txt)):
 ### Backend:
 * [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
-* [Quart](https://pgjones.gitlab.io/quart/)
+* [FastAPI](https://fastapi.tiangolo.com/)
 * [LangChain](https://www.langchain.com/)
 
 ### Frontend:
@@ -90,7 +90,7 @@ uvicorn app:backend --reload
   
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
   
-The framework used to implement the backend of MUCGPT is called [Quart](https://pgjones.gitlab.io/quart/). It is a fast Python web microframework for building JSON APIs, rendering and serving HTML, serving web sockets and much more. The backend uses LangChain to connect to LLMs. In the [config](config/default.json) file, you can provide the user with various LLM options to select from in the frontend.
+The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [config](config/default.json) file, you can provide the user with various LLM options to select from in the frontend.
 
   
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).  

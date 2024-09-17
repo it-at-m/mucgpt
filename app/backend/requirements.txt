@@ -11,7 +11,7 @@ opentelemetry-instrumentation-aiohttp-client
 werkzeug==3.0.3
 joserfc
 requests
-sqlalchemy==2.0.31
+sqlalchemy==2.0.35
 psycopg2==2.9.9
 pypdf2==3.0.1
 tenacity==8.5.0

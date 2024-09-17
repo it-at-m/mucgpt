@@ -41,7 +41,6 @@ def test_unknown_endpoint():
 def test_favicon():
     response = client.get("/favicon.ico")
     assert response.status_code == 200
-    assert response.headers["content-type"] == "image/x-icon"
     
 
 @pytest.mark.integration

@@ -3,7 +3,7 @@ langchain==0.2.6
 langchain_openai
 langchain_community 
 tiktoken
-uvicorn[standard]==0.30.3
+uvicorn[standard]==0.30.6
 aiohttp==3.10.2
 opentelemetry-instrumentation-asgi==0.47b0
 opentelemetry-instrumentation-requests

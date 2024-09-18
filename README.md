@@ -12,10 +12,12 @@
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![GitHub license][license-shield]][license]
 [![GitHub release version][github-release-shield]][releases]
+![Supported python versions][python-versions-shield]
 
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
 [github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge
+[python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
 
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE

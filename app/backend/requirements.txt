@@ -18,4 +18,4 @@ gunicorn
 mistral-common==1.3.4
 python-multipart
 fastapi[standard]==0.112.2
-pydantic==2.9.0
+pydantic==2.9.2

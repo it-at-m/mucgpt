@@ -1,5 +1,7 @@
-from typing import List, TypedDict
+from typing import List
+
+from openai import BaseModel
 
 
-class SummarizeResult(TypedDict):
+class SummarizeResult(BaseModel):
     answer: List[str]

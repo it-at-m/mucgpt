@@ -27,7 +27,6 @@ export type ChatRequest = {
 export type SumRequest = {
     text: string;
     detaillevel?: "short" | "medium" | "long";
-    temperature?: number;
     language?: string;
     model: string;
 };
@@ -50,9 +49,9 @@ export interface Frontend {
 }
 
 export interface Model {
+    llm_name: string;
     max_output_tokens: number;
     max_input_tokens: number;
-    model_name: string;
     description: string;
 }
 

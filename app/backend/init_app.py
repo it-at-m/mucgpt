@@ -23,29 +23,29 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
         Tuple[Chat, Brainstorm, Summarize]: the implementation behind chat, brainstorm and summarize
     """
     brainstormllm = getModel(
-                    models=cfg["models"],
+                    models=cfg.models,
                     max_output_tokens =  4000,
                     n = 1,
                     streaming=False,
                     temperature=0.9)
     sumllm = getModel(
-                    models=cfg["models"],
+                    models=cfg.models,
                     max_output_tokens =  2000,
                     n = 1,
                     streaming=False,
                     temperature=0)
     chatlllm = getModel(
-                    models=cfg["models"],
+                    models=cfg.models,
                     max_output_tokens=4000,
                     n = 1,
                     streaming=True,
                     temperature=0.7)
-    chat_approaches = Chat(llm=chatlllm, config=cfg["chat"], repo=repoHelper)
-    brainstorm_approaches = Brainstorm(llm=brainstormllm,  config=cfg["brainstorm"], repo=repoHelper)
-    sum_approaches =  Summarize(llm=sumllm, config=cfg["sum"], repo=repoHelper)
+    chat_approaches = Chat(llm=chatlllm, config=cfg.chat, repo=repoHelper)
+    brainstorm_approaches = Brainstorm(llm=brainstormllm,  config=cfg.brainstorm, repo=repoHelper)
+    sum_approaches =  Summarize(llm=sumllm, config=cfg.sum, repo=repoHelper)
     return (chat_approaches, brainstorm_approaches, sum_approaches)
 
-async def initApp() -> AppConfig:
+def initApp() -> AppConfig:
     """inits the app
 
     Returns:
@@ -58,23 +58,23 @@ async def initApp() -> AppConfig:
     cfg = config_helper.loadData()
      # Set up authentication helper
     auth_helper = AuthentificationHelper(
-        issuer=cfg["backend"]["sso_config"]["sso_issuer"],
-        role=cfg["backend"]["sso_config"]["role"]
+        issuer=cfg.backend.sso_config.sso_issuer,
+        role=cfg.backend.sso_config.role
     )  
     # set up repositorty
-    if(cfg["backend"]["enable_database"]):
-        db_config: DatabaseConfig = cfg["backend"]["db_config"]
+    if(cfg.backend.enable_database):
+        db_config: DatabaseConfig = cfg.backend.db_config
         repoHelper = Repository(
-            username=db_config["db_user"],
-            host=db_config["db_host"],
-            database=db_config["db_name"],
-            password=db_config["db_passwort"]
+            username=db_config.db_user,
+            host=db_config.db_host,
+            database=db_config.db_name,
+            password=db_config.db_passwort
         )
         repoHelper.setup_schema(base=Base)
     else:
         repoHelper = None
 
-    (chat_approaches, brainstorm_approaches, sum_approaches) = initApproaches(cfg=cfg["backend"], repoHelper=repoHelper)
+    (chat_approaches, brainstorm_approaches, sum_approaches) = initApproaches(cfg=cfg.backend, repoHelper=repoHelper)
 
 
         
@@ -86,5 +86,5 @@ async def initApp() -> AppConfig:
         brainstorm_approaches= brainstorm_approaches,
         sum_approaches= sum_approaches,
         repository=repoHelper,
-        backend_config=cfg["backend"]
+        backend_config=cfg.backend
     )

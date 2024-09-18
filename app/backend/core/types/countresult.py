@@ -1,5 +1,5 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
 
-class CountResult(TypedDict):
+class CountResult(BaseModel):
     count: int

@@ -31,7 +31,7 @@
         "models": [
             {
                 "type": "AZURE",
-                "model_name": "TEST_MODEL",
+                "llm_name": "TEST_MODEL",
                 "deployment": "NOT USED",
                 "endpoint": "NOT USED",
                 "api_key":"NOT USED",

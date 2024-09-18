@@ -8,15 +8,15 @@ from pypdf import PdfWriter
 from pypdf.annotations import FreeText
 
 from backend import backend
-from brainstorm.BrainstormRequest import BrainstormRequest
-from brainstorm.brainstormresult import BrainstormResult
-from chat.chatresult import ChatResult
+from core.types.BrainstormRequest import BrainstormRequest
+from core.types.BrainstormResult import BrainstormResult
+from core.types.ChatResult import ChatResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.Chunk import Chunk
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
 from core.types.SumRequest import SumRequest
-from summarize.summarizeresult import SummarizeResult
+from core.types.SummarizeResult import SummarizeResult
 
 client = TestClient(backend)
 headers = {

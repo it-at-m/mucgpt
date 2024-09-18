@@ -4,10 +4,10 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
-from chat.chatresult import ChatResult
 from core.datahelper import Repository, Requestinfo
 from core.modelhelper import num_tokens_from_messages
 from core.types.ChatRequest import ChatTurn
+from core.types.ChatResult import ChatResult
 from core.types.Chunk import Chunk, ChunkInfo
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs

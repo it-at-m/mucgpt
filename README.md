@@ -12,15 +12,17 @@
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![GitHub license][license-shield]][license]
 [![GitHub release version][github-release-shield]][releases]
+![Supported python versions][python-versions-shield]
 
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
 [github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge
+[python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
 
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
 [releases]: https://github.com/it-at-m/mucgpt/releases
-MUCGPT provides a web interface based on a large language model (LLM). The interface currently uses ChatGPT3.5, which allows users to chat, summarise text and brainstorm. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. The included IAC files for Azure make it easy to deploy the project in just a few steps.
+MUCGPT provides a web interface based on a large language model (LLM). The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text and brainstorm. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. The included IAC files for Azure make it easy to deploy the project in just a few steps.
 
 Why should you use MUCGPT? See for yourself:  
   
@@ -32,7 +34,7 @@ Why should you use MUCGPT? See for yourself:
 The documentation project is built with technologies we use in our projects (see [requirements-dev.txt](/requirements-dev.txt)):
 ### Backend:
 * [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
-* [Quart](https://pgjones.gitlab.io/quart/)
+* [FastAPI](https://fastapi.tiangolo.com/)
 * [LangChain](https://www.langchain.com/)
 
 ### Frontend:
@@ -74,7 +76,7 @@ npm run build
 cd ..\backend
 $env:MUCGPT_CONFIG="path to default.json"
 $env:MUCGPT_BASE_CONFIG="path to base.json"
-python -m  quart --app main:app run
+uvicorn app:backend --reload   
 ```
 
 
@@ -90,7 +92,7 @@ python -m  quart --app main:app run
   
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
   
-The framework used to implement the backend of MUCGPT is called [Quart](https://pgjones.gitlab.io/quart/). It is a fast Python web microframework for building JSON APIs, rendering and serving HTML, serving web sockets and much more. The backend uses LangChain to connect to LLMs. In the [config](config/default.json) file, you can provide the user with various LLM options to select from in the frontend.
+The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [config](config/default.json) file, you can provide the user with various LLM options to select from in the frontend.
 
   
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).  

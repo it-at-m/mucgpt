@@ -1,4 +1,4 @@
-from typing import List, TypedDict
+from typing import TypedDict
 
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
@@ -15,6 +15,6 @@ class AppConfig(TypedDict):
     sum_approaches: Summarize
     brainstorm_approaches: Brainstorm
     authentification_client: AuthentificationHelper
-    configuration_features: List[Config]
+    configuration_features: Config
     repository: Repository
     backend_config: BackendConfig

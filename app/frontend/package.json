@@ -1,7 +1,7 @@
 {
   "name": "mucgpt",
   "private": true,
-  "version": "1.1.4",
+  "version": "1.2.0",
   "type": "module",
   "engines": {
     "node": ">=16.0.0"
@@ -43,6 +43,6 @@
     "@vitejs/plugin-react": "^4.3.1",
     "prettier": "^3.3.2",
     "typescript": "^5.5.2",
-    "vite": "^4.5.3"
+    "vite": "^4.5.5"
   }
 }

@@ -34,6 +34,18 @@ const Version = () => {
                 <h1 className={styles.header}>{t('version.header')}</h1>
                 <Accordion multiple collapsible navigation="linear" defaultOpenItems="8">
                     <AccordionItem value="8">
+                        <AccordionHeader>[1.2.0] 18.09.2024</AccordionHeader>
+                        <div className={styles.panel}>
+                            <h3>{t('version.added')}</h3>
+                            <h3>{t('version.fixed')}</h3>
+                            <ul>
+                                <li>
+                                    Generierter Code wurde manchmal nicht korrekt dargestellt (Klammern entfernt)
+                                </li>
+                            </ul>
+                            <h3>{t('version.changed')}</h3>
+                        </div>
+                        <AccordionPanel></AccordionPanel>
                         <AccordionHeader>[1.1.4] 11.09.2024</AccordionHeader>
                         <AccordionPanel >
                             <div className={styles.panel}>

@@ -10,13 +10,13 @@ from pypdf.annotations import FreeText
 from backend import backend
 from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
-from core.types.ChatResult import ChatResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
+from core.types.ChatResult import ChatResult
 from core.types.Chunk import Chunk
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
-from core.types.SumRequest import SumRequest
 from core.types.SummarizeResult import SummarizeResult
+from core.types.SumRequest import SumRequest
 
 client = TestClient(backend)
 headers = {

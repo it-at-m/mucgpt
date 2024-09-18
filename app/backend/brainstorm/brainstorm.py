@@ -7,9 +7,9 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
+from core.types.BrainstormResult import BrainstormResult
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
-from core.types.BrainstormResult import BrainstormResult
 
 
 class Brainstorm:

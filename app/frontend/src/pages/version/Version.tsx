@@ -32,8 +32,8 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="8">
-                    <AccordionItem value="8">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="9">
+                    <AccordionItem value="9">
                         <AccordionHeader>[1.2.0] 18.09.2024</AccordionHeader>
                         <div className={styles.panel}>
                             <h3>{t('version.added')}</h3>
@@ -46,6 +46,8 @@ const Version = () => {
                             <h3>{t('version.changed')}</h3>
                         </div>
                         <AccordionPanel></AccordionPanel>
+                    </AccordionItem>
+                    <AccordionItem value="8">
                         <AccordionHeader>[1.1.4] 11.09.2024</AccordionHeader>
                         <AccordionPanel >
                             <div className={styles.panel}>

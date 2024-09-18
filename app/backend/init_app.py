@@ -53,7 +53,7 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
     simply_approaches =  Simply(llm=simplyllm, config=cfg.simply, repo=repoHelper)
     return (chat_approaches, brainstorm_approaches, sum_approaches, simply_approaches)
 
-async def initApp() -> AppConfig:
+def initApp() -> AppConfig:
     """inits the app
 
     Returns:

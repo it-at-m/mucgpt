@@ -6,8 +6,8 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
-from brainstorm.BrainstormResult import BrainstormResult
 from core.datahelper import Repository, Requestinfo
+from core.types.BrainstormResult import BrainstormResult
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 

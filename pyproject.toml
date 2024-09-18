@@ -16,6 +16,10 @@ markers = [
     "integration: mark a test as a integration test",
     "unit: mark test as a unit test"
 ]
+env = [
+    "MUCGPT_CONFIG=tests/integration/test_config.json",
+    "MUCGPT_BASE_CONFIG=tests/integration/base.json",
+]
 
 [tool.coverage.paths]
 source = ["scripts", "app"]

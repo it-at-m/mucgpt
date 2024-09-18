@@ -147,3 +147,8 @@ static/
 
 # notebooks
 notebooks
+
+#configs
+config/c.json
+config/k.json
+config/local.json

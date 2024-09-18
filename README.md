@@ -12,15 +12,17 @@
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![GitHub license][license-shield]][license]
 [![GitHub release version][github-release-shield]][releases]
+![Supported python versions][python-versions-shield]
 
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
 [github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge
+[python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
 
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
 [releases]: https://github.com/it-at-m/mucgpt/releases
-MUCGPT provides a web interface based on a large language model (LLM). The interface currently uses ChatGPT3.5, which allows users to chat, summarise text and brainstorm. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. The included IAC files for Azure make it easy to deploy the project in just a few steps.
+MUCGPT provides a web interface based on a large language model (LLM). The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text and brainstorm. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. The included IAC files for Azure make it easy to deploy the project in just a few steps.
 
 Why should you use MUCGPT? See for yourself:  
   

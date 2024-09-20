@@ -23,11 +23,11 @@ from core.types.ChatResult import ChatResult
 from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
+from core.types.SimplyRequest import SimplyRequest
 from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
 from init_app import initApp
-from simply.SimplyRequest import SimplyRequest
 
 # serves static files and the api
 backend = FastAPI(title="MUCGPT")
@@ -100,7 +100,7 @@ async def brainstorm(request: BrainstormRequest,
         )
         raise HTTPException(status_code=500,detail=msg)
     
-@backend.post("/simply")
+@api_app.post("/simply")
 async def simply(request: SimplyRequest,
                     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
                     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ChatResult:
@@ -109,13 +109,12 @@ async def simply(request: SimplyRequest,
     try:
         impl = cfg["simply_approaches"]
         r = impl.simply(
-            topic=request.topic,
-            language=request.language,
+            message=request.topic,
             department=department,
             llm_name=request.model,
-            history=request.history,
             temperature=request.temperature,
-            system_message=request.system_message,
+            output_type=request.output_type,
+            completeness= request.completness
         )
         return r
     except Exception as e:

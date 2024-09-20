@@ -111,7 +111,7 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
 }
 
 export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse> {
-    const response = await fetch("/simply", {
+    const response = await fetch("/api/simply", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -121,11 +121,10 @@ export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse>
         body: JSON.stringify({
             topic: options.topic,
             temperature: options.temperature,
-            language: options.language,
             model: options.model,
-            history: options.history,
             max_output_tokens: options.max_output_tokens,
-            system_message: options.system_message
+            output_type: options.output_type,
+            completeness: options.completeness
         })
     });
     handleRedirect(response);

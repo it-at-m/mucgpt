@@ -39,13 +39,11 @@ export type BrainstormRequest = {
 
 export type SimplyRequest = {
     topic: string;
-    history: ChatTurn[];
     temperature?: number;
-    language?: string;
     max_output_tokens?: number;
-    system_message?: string;
-    shouldStream?: boolean;
     model?: string;
+    output_type: string;
+    completeness: string;
 };
 
 export interface ApplicationConfig {

@@ -101,16 +101,6 @@ const Simply = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0) {
-            let last = answers.pop();
-            setAnswers(answers);
-            popLastMessageInDB(storage, currentId);
-            if (last) {
-                makeApiRequest(last[0])
-            }
-        };
-    }
     const onOutputTypeChanged = (e: any, selection: RadioGroupOnChangeData) => {
         setOutputType(selection.value as ("plain" | "easy"));
         localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);

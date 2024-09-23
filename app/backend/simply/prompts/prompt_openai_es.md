@@ -2,7 +2,6 @@ Bitte schreibe den folgenden schwer verständlichen Text vollständig in Einfach
 
 Beachte dabei folgende Regeln für Einfache Sprache (B1 bis A2):
 
-{completeness}
 {rules}
 
 Schreibe den vereinfachten Text innerhalb von <einfachesprache> Tags.

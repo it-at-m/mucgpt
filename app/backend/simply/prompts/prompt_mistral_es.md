@@ -8,7 +8,6 @@ Bitte lies den Text sorgfältig durch und schreibe ihn vollständig in Einfache 
 
 Beachte dabei folgende Regeln für Einfache Sprache (B1 bis A2):
 
-{completeness}
 {rules}
 
 Formuliere den Text jetzt in Einfache Sprache, Sprachniveau B1 bis A2, um. Schreibe den vereinfachten Text innerhalb von <einfachesprache> Tags.

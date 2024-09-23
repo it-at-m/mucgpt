@@ -55,8 +55,7 @@ i18n
                         answer_loading: "Übersetze in leichte Sprache",
                         plain: "Einfache Sprache",
                         easy: "Leichte Sprache",
-                        complete: "Komplette Übersetzung",
-                        condensed: "Gekürzte Übersetzung"
+                        outputType: "Output Sprache"
                     },
                     common: {
                         clear_chat: "Neuer Chat",
@@ -240,8 +239,7 @@ i18n
                         answer_loading: "Translating to simple language",
                         plain: "Plain language",
                         easy: "easy language",
-                        complete: "Complete",
-                        condensed: "Geküazte Übasetzung"
+                        outputType: "Output Language"
                     },
                     common: {
                         clear_chat: "New chat",
@@ -419,8 +417,7 @@ i18n
                         answer_loading: "Übersetze in oafache Sproch",
                         plain: "Oafache Sproch",
                         easy: "Leichte Sproch",
-                        complete: "Komplette Übasetzung",
-                        condensed: "Geküazte Übasetzung"
+                        outputType: "Output Sproch"
                     },
                     common: {
                         clear_chat: "Neia Chat",

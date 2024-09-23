@@ -2,7 +2,7 @@ import { useRef, useState, useEffect, useContext } from "react";
 
 import styles from "./Simply.module.css";
 
-import { AskResponse, ChatTurn, handleRedirect, simplyApi, SimplyRequest, SimplyResponse } from "../../api";
+import { AskResponse, simplyApi, SimplyRequest, SimplyResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -16,8 +16,7 @@ import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/reac
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = 'SIMPLY_SYSTEM_PROMPT',
-    SIMPLY_OUTPUT_TYPE = 'SIMPLY_OUTPUT_TYPE',
-    SIMPLY_OUTPUT_LENGTH = 'SIMPLY_OUTPUT_LENGTH'
+    SIMPLY_OUTPUT_TYPE = 'SIMPLY_OUTPUT_TYPE'
 }
 
 const Simply = () => {
@@ -31,8 +30,6 @@ const Simply = () => {
 
     const outputType_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE) || "plain";
     const [outputType, setOutputType] = useState<string>(outputType_pref);
-    const outputLength_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_LENGTH) || "complete";
-    const [outputLength, setOutputLength] = useState<string>(outputLength_pref);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
@@ -78,7 +75,6 @@ const Simply = () => {
                 model: LLM.llm_name,
                 max_output_tokens: LLM.max_output_tokens,
                 temperature: 0.5,
-                completeness: outputLength,
                 output_type: outputType
             };
             const parsedResponse: SimplyResponse = await simplyApi(request);
@@ -106,24 +102,13 @@ const Simply = () => {
         localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);
     };
 
-    const onOutputLengthChanged = (e: any, selection: RadioGroupOnChangeData) => {
-        setOutputLength(selection.value as ("complete" | "condensed"));
-        localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_LENGTH, selection.value);
-    };
-
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
-                <Field label={t('sum.levelofdetail')}>
+                <Field label={t('simply.outputType')}>
                     <RadioGroup layout="horizontal" onChange={onOutputTypeChanged} value={outputType}>
                         <Radio value="plain" label={t('simply.plain')} />
                         <Radio value="easy" label={t('simply.easy')} />
-                    </RadioGroup>
-                </Field>
-                <Field label={t('sum.levelofdetail')}>
-                    <RadioGroup layout="horizontal" onChange={onOutputLengthChanged} value={outputLength}>
-                        <Radio value="complete" label={t('simply.complete')} />
-                        <Radio value="condensed" label={t('simply.condensed')} />
                     </RadioGroup>
                 </Field>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />

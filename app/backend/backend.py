@@ -113,8 +113,7 @@ async def simply(request: SimplyRequest,
             department=department,
             llm_name=request.model,
             temperature=request.temperature,
-            output_type=request.output_type,
-            completeness= request.completness
+            output_type=request.output_type
         )
         return r
     except Exception as e:

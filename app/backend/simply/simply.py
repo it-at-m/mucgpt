@@ -22,18 +22,18 @@ class Simply:
         self.repo = repo
     
     
-    def simply(self, temperature: float, department: Optional[str], llm_name:str, output_type:str, message:str, completeness:str) -> ChatResult:
+    def simply(self, temperature: float, department: Optional[str], llm_name:str, output_type:str, message:str) -> ChatResult:
         config: LlmConfigs = {
             "llm_temperature": temperature,
             "llm_streaming": False,
         }
 
         if output_type == "plain":
-            prompt = self.build_prompt_plain(llm_name=llm_name, message=message, completeness=completeness)
+            prompt = self.build_prompt_plain(llm_name=llm_name, message=message)
             with open("simply/prompts/system_message_es.md", encoding="utf-8") as f:
                 system_message = f.read()
         else:
-            prompt = self.build_prompt_easy(llm_name=llm_name, message=message, completeness=completeness)
+            prompt = self.build_prompt_easy(llm_name=llm_name, message=message)
             with open("simply/prompts/system_message_ls.md", encoding="utf-8") as f:
                 system_message = f.read()
     
@@ -72,7 +72,7 @@ class Simply:
                 langchain_messages.append(AIMessage(content=conversation.bot))
         return langchain_messages
     
-    def build_prompt_plain(self, llm_name:str, message:str, completeness:str) -> str:
+    def build_prompt_plain(self, llm_name:str, message:str) -> str:
         with open("simply/prompts/rules_es.md", encoding="utf-8") as f:
             rules = f.read()
         if "mistral" in llm_name.lower():
@@ -82,9 +82,9 @@ class Simply:
             with open("simply/prompts/prompt_openai_es.md", encoding="utf-8") as f:
                 prompt = f.read()
             
-        return prompt.format(message=message, completeness=completeness, rules=rules)
+        return prompt.format(message=message,rules=rules)
     
-    def build_prompt_easy(self, llm_name:str, message:str, completeness:str) -> str:
+    def build_prompt_easy(self, llm_name:str, message:str) -> str:
         with open("simply/prompts/rules_ls.md", encoding="utf-8") as f:
             rules = f.read()
         if "mistral" in llm_name.lower():
@@ -94,7 +94,7 @@ class Simply:
             with open("simply/prompts/prompt_openai_ls.md", encoding="utf-8") as f:
                 prompt = f.read()
             
-        return prompt.format(message=message, completeness=completeness, rules=rules)
+        return prompt.format(message=message, rules=rules)
     
     def extractText(self, response: str, output_type:str)-> str :
         """Extract text between tags from response."""

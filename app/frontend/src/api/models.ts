@@ -43,7 +43,6 @@ export type SimplyRequest = {
     max_output_tokens?: number;
     model?: string;
     output_type: string;
-    completeness: string;
 };
 
 export interface ApplicationConfig {

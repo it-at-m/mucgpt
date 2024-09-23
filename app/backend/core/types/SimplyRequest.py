@@ -9,4 +9,3 @@ class SimplyRequest(BaseModel):
     max_output_tokens: Optional[int] = 4096
     model: Optional[str] = "gpt-4o-mini"
     output_type: str = "plain"
-    completness: str = "complete"

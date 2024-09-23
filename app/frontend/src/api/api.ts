@@ -123,8 +123,7 @@ export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse>
             temperature: options.temperature,
             model: options.model,
             max_output_tokens: options.max_output_tokens,
-            output_type: options.output_type,
-            completeness: options.completeness
+            output_type: options.output_type
         })
     });
     handleRedirect(response);

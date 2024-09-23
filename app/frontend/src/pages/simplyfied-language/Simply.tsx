@@ -105,12 +105,10 @@ const Simply = () => {
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
-                <Field label={t('simply.outputType')}>
-                    <RadioGroup layout="horizontal" onChange={onOutputTypeChanged} value={outputType}>
-                        <Radio value="plain" label={t('simply.plain')} />
-                        <Radio value="easy" label={t('simply.easy')} />
-                    </RadioGroup>
-                </Field>
+                <RadioGroup layout="horizontal" onChange={onOutputTypeChanged} value={outputType}>
+                    <Radio value="plain" label={t('simply.plain')} />
+                    <Radio value="easy" label={t('simply.easy')} />
+                </RadioGroup>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
             </div>
             <div className={styles.chatRoot}>

@@ -1,0 +1,13 @@
+-r app/backend/requirements.txt
+ruff
+black
+pytest
+pytest-asyncio
+pytest-snapshot
+pytest-mock
+coverage
+pytest-cov
+pre-commit
+locust
+pytest-env==1.1.5
+psycopg2

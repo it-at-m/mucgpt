@@ -4,8 +4,8 @@ from typing import List, Optional, Tuple
 from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.prompts import PromptTemplate
-from langchain_core.pydantic_v1 import BaseModel, Field
 from langchain_core.runnables.base import RunnableSerializable
+from pydantic import BaseModel, Field
 
 from core.datahelper import Repository, Requestinfo
 from core.textsplit import splitPDF, splitText

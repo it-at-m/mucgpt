@@ -109,7 +109,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
         redirect: "manual",
         body: JSON.stringify({
             text: options.text,
-            model: options.model
+            model: options.model.llm_name
         })
     });
 

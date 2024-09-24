@@ -44,7 +44,8 @@ backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 @api_app.exception_handler(AuthError)
 async def handleAuthError(request, exc: AuthError):
     #return error.error, error.status_code
-    return RedirectResponse(url="https://it-services.muenchen.de/sp?id=sc_cat_item&table=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&searchTerm=mucgpt", status_code=302)
+    return RedirectResponse(url="https://it-services.muenchen.de/sp?id=sc_cat_item&table=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&searchTerm=mucgpt",
+                            status_code=302)
 
 
 
@@ -161,13 +162,10 @@ async def chat(request: ChatRequest,
 @api_app.get("/config")
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     response = ConfigResponse(redirect=None)
-    try:
-        cfg = get_config_and_authentificate(access_token)
-        response.frontend = cfg["configuration_features"].frontend
-        response.version = cfg["configuration_features"].version
-    except AuthError:
-        response.redirect = "https://it-services.muenchen.de/sp?id=sc_cat_item&table=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&searchTerm=mucgpt"
-        return response
+    cfg = get_config_and_authentificate(access_token)
+    response.frontend = cfg["configuration_features"].frontend
+    response.version = cfg["configuration_features"].version
+
     
     models = cast(
         List[ModelsConfig], cfg["configuration_features"].backend.models

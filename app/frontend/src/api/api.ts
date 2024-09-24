@@ -65,17 +65,23 @@ export async function handleResponse(response: Response) {
 }
 
 export async function configApi(): Promise<ApplicationConfig> {
-    const response = await fetch("/api/config", {
+    return await fetch("/api/config", {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
         },
         mode: "cors",
         redirect: "manual"
+    }).then(async response => {
+        let parsedResponse = await handleResponse(response);
+        console.log(parsedResponse);
+        console.log(parsedResponse.redirect);
+        if (parsedResponse.redirect != null) {
+            window.location.href = parsedResponse.redirect; // Manually redirect
+        } else {
+            return parsedResponse;
+        }
     });
-
-    const parsedResponse: ApplicationConfig = await handleResponse(response);
-    return parsedResponse;
 }
 
 export async function brainstormApi(options: BrainstormRequest): Promise<AskResponse> {

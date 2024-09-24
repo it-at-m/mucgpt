@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -58,7 +58,8 @@ class Config(BaseModel):
     backend: BackendConfig
 
 class ConfigResponse(BaseModel):
-    frontend: FrontendConfig
+    frontend: FrontendConfig = None
     models: List[ModelsDTO] =[]
-    version: str
+    version: str = ""
+    redirect: Optional[str]
 

@@ -13,12 +13,14 @@ RUN npm run build
 FROM python:3.12
 WORKDIR /code
 COPY --from=builder /build/backend .
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 ARG fromconfig="./config/default.json"
 COPY $fromconfig /code/config.json
 COPY "./config/base.json"  /code/base.json
 
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+COPY app/backend/requirements.txt .
+RUN uv pip install -r requirements.txt --system
 
 EXPOSE 8000
 CMD ["gunicorn","app:backend"]

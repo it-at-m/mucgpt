@@ -48,12 +48,6 @@ async def handleAuthError(request, exc: AuthError):
                             status_code=302)
 
 
-
-@api_app.get("/noauth")
-async def noAuth():
-    raise AuthError(error="huhu", status_code=402)
-
-
 @api_app.post("/sum")
 async def sum(
     body: str = Form(...),
@@ -161,11 +155,8 @@ async def chat(request: ChatRequest,
 
 @api_app.get("/config")
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
-    response = ConfigResponse(redirect=None)
     cfg = get_config_and_authentificate(access_token)
-    response.frontend = cfg["configuration_features"].frontend
-    response.version = cfg["configuration_features"].version
-
+    response = ConfigResponse(frontend=cfg["configuration_features"].frontend, version=cfg["configuration_features"].version)
     
     models = cast(
         List[ModelsConfig], cfg["configuration_features"].backend.models
@@ -235,7 +226,6 @@ def get_config():
 
 
 def get_config_and_authentificate(access_token):
-    raise AuthError(error="test", status_code=402)
     cfg = get_config()
     if cfg["configuration_features"].backend.enable_auth:
         ensure_authentification(access_token=access_token)

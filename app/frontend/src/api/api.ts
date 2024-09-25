@@ -46,15 +46,15 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
     return parsedResponse;
 }
 
-export function handleRedirect(response: Response, reload= true) {
+export function handleRedirect(response: Response, reload = true) {
     if (response.type === "opaqueredirect") {
-        if(reload){
+        if (reload) {
             console.log("reloading shortly");
             setTimeout(() => {
                 location.reload();
             }, 5000);
             throw Error("Die Authentifizierungsinformationen sind abgelaufen. Die Seite wird in wenigen Sekunden neu geladen.");
-        } else{
+        } else {
             const redirectUrl = response.url;
             if (redirectUrl) {
                 window.location.href = redirectUrl; // Manually redirect
@@ -82,10 +82,8 @@ export async function configApi(): Promise<ApplicationConfig> {
         mode: "cors",
         redirect: "manual"
     }).then(async response => {
-        console.log(response.status)
         handleRedirect(response, false);
         const parsedResponse = await handleResponse(response);
-        console.log(parsedResponse);
         return parsedResponse;
     });
 }

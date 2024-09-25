@@ -58,8 +58,7 @@ class Config(BaseModel):
     backend: BackendConfig
 
 class ConfigResponse(BaseModel):
-    frontend: FrontendConfig = None
+    frontend: FrontendConfig 
     models: List[ModelsDTO] =[]
-    version: str = ""
-    redirect: Optional[str]
+    version: str 
 

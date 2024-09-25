@@ -44,7 +44,7 @@ backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 @api_app.exception_handler(AuthError)
 async def handleAuthError(request, exc: AuthError):
     #return error.error, error.status_code
-    return RedirectResponse(url="https://it-services.muenchen.de/sp?id=sc_cat_item&table=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&searchTerm=mucgpt",
+    return RedirectResponse(url=os.getenv("UNAUTHORIZED_USER_REDIRECT_URL"),
                             status_code=302)
 
 
@@ -226,6 +226,7 @@ def get_config():
 
 
 def get_config_and_authentificate(access_token):
+    raise AuthError(error="qweqwe", status_code=404)
     cfg = get_config()
     if cfg["configuration_features"].backend.enable_auth:
         ensure_authentification(access_token=access_token)

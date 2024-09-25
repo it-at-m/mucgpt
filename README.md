@@ -68,7 +68,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 ## Run
  Configure your environment in [config/default.json](config/default.json). The schema of the configuration is [cofnig/mucgpt_config.schema.json](config/mucgpt_config.schema.json) described.  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
 ### Run locally
-```
+```bash
 cd app\backend
 pip install --no-cache-dir --upgrade -r requirements.txt   
 cd ..\frontend
@@ -76,14 +76,16 @@ npm run build
 cd ..\backend
 $env:MUCGPT_CONFIG="path to default.json"
 $env:MUCGPT_BASE_CONFIG="path to base.json"
+$env:UNAUTHORIZED_USER_REDIRECT_URL="your-redirect-url"
 uvicorn app:backend --reload   
 ```
 
 
 ### Run with docker
-1. Build an Image
+1. Change `UNAUTHORIZED_USER_REDIRECT_URL` in [.env](/.env) to your redirect url
+2. Build an Image
    ``` docker build --tag mucgpt-local . --build-arg   fromconfig="./config/default.json"```
-2. Run the image ```docker run --detach --publish 8080:8000  mucgpt-local```
+3. Run the image ```docker run --detach --publish 8080:8000  --env-file .env mucgpt-local```
 
 
 ## Documentation

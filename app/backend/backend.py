@@ -226,7 +226,6 @@ def get_config():
 
 
 def get_config_and_authentificate(access_token):
-    raise AuthError(error="qweqwe", status_code=404)
     cfg = get_config()
     if cfg["configuration_features"].backend.enable_auth:
         ensure_authentification(access_token=access_token)

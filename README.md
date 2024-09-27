@@ -46,7 +46,7 @@ The documentation project is built with technologies we use in our projects (see
 ### Deployment:
   * [Node.js 14+](https://nodejs.org/en/download/package-manager)
   * [Git](https://git-scm.com/downloads)
-  * Python 12
+  * Python 3.12
   * Docker
 
 ## Table of contents

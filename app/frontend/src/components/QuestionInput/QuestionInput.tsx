@@ -4,7 +4,7 @@ import { Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from 'react-i18next';
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
 interface Props {
@@ -21,19 +21,20 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext)
-    const wordCount = LLM.max_input_tokens;
+    const [description, setDescription] = useState<string>("0");
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;
         if (token_limit_tracking) {
-            text = `${actual}/ ${wordCount} ${t('components.questioninput.tokensused')}`;
-            if (actual > wordCount)
+            text = `${actual}/ ${LLM.max_input_tokens} ${t('components.questioninput.tokensused')}`;
+            if (actual > LLM.max_input_tokens)
                 text += `${t('components.questioninput.limit')}`
         }
         else
             text = `${actual} ${t('components.questioninput.tokensused')}`;
         return text;
     }
+    useEffect(() => setDescription(getDescription()), [tokens_used])
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -81,7 +82,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
             />
             <div className={styles.questionInputContainerFooter}>
                 <div>
-                    {getDescription()}
+                    {description}
                 </div>
                 <div className={styles.errorhint}>
                     {t('components.questioninput.errorhint')}

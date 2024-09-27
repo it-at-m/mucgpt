@@ -231,6 +231,27 @@
                         "log_tokens": false
                     }]
                 },
+                "simply": {
+                    "type": "object",
+                    "default": {},
+                    "title": "The simplified language configuration",
+                    "required": [
+                        "log_tokens"
+                    ],
+                    "properties": {
+                        "log_tokens": {
+                            "type": "boolean",
+                            "default": false,
+                            "title": "Log usage in database?",
+                            "examples": [
+                                false
+                            ]
+                        }
+                    },
+                    "examples": [{
+                        "log_tokens": false
+                    }]
+                },
                 "models": {
                     "type": "array",
                     "default": [],

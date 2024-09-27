@@ -12,7 +12,8 @@ import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from 'react-i18next';
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, popLastMessageInDB, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
+import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Field, Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
+import { Checkmark24Filled } from "@fluentui/react-icons";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = 'SIMPLY_SYSTEM_PROMPT',
@@ -104,10 +105,40 @@ const Simply = () => {
 
     return (
         <div className={styles.container}>
+            <div>
+                <Dialog modalType="alert" defaultOpen={true}>
+                    <DialogSurface className={styles.dialog}>
+                        <DialogBody className={styles.dialogContent} >
+                            <DialogTitle >Hinweis zur Funktion "Leichte Sprache"</DialogTitle>
+                            <DialogContent>
+                                Vielen Dank für Ihr Interesse an unserer Funktion "Leichte Sprache". Wir möchten Sie darauf hinweisen, dass diese Funktion derzeit noch in einer Demo-Version verfügbar ist und noch nicht vollständig getestet wurde.<br />
+                                <br />
+                                Bitte beachten Sie, dass die aktuellen Ergebnisse möglicherweise nicht immer vollständig den Regeln der leichten/einfachen Sprache entsprechen. Wir arbeiten intensiv daran, die Funktion zu verbessern und zuverlässig zu machen.<br />
+                                <br />
+                                Ihr Feedback ist uns sehr wichtig. Wenn Sie Anmerkungen oder Verbesserungsvorschläge haben, lassen Sie es uns bitte wissen.<br />
+                                <br />
+                                Vielen Dank für Ihr Verständnis und Ihre Geduld.<br />
+                                <br />
+                                Ihr MUCGPT-Team
+                            </DialogContent>
+                            <DialogActions>
+                                <DialogTrigger disableButtonEnhancement>
+                                    <Button appearance="secondary" size="small">
+                                        <Checkmark24Filled className={styles.checkIcon} /> Verstanden</Button>
+                                </DialogTrigger>
+                            </DialogActions>
+                        </DialogBody>
+                    </DialogSurface>
+                </Dialog>
+            </div>
             <div className={styles.commandsContainer}>
                 <RadioGroup layout="horizontal" onChange={onOutputTypeChanged} value={outputType}>
-                    <Radio value="plain" label={t('simply.plain')} />
-                    <Radio value="easy" label={t('simply.easy')} />
+                    <Tooltip content={t('simply.plain_description')} relationship="description" positioning="below">
+                        <Radio value="plain" label={t('simply.plain')} />
+                    </Tooltip>
+                    <Tooltip content={t('simply.easy_description')} relationship="description" positioning="below">
+                        <Radio value="easy" label={t('simply.easy')} />
+                    </Tooltip>
                 </RadioGroup>
                 <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
             </div>

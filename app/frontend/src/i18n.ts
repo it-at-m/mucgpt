@@ -55,7 +55,10 @@ i18n
                         answer_loading: "Übersetze in leichte Sprache",
                         plain: "Einfache Sprache",
                         easy: "Leichte Sprache",
-                        outputType: "Output Sprache"
+                        outputType: "Output Sprache",
+                        plain_description:
+                            "Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine breitere Zielgruppe zu erreichen.",
+                        easy_description: "Leichte Sprache verwendet einfache Wörter und kurze Sätze, um Informationen klar und verständlich zu vermitteln."
                     },
                     common: {
                         clear_chat: "Neuer Chat",
@@ -239,7 +242,9 @@ i18n
                         answer_loading: "Translating to simple language",
                         plain: "Plain language",
                         easy: "easy language",
-                        outputType: "Output Language"
+                        outputType: "Output Language",
+                        plain_description: "Plain language is a simplified form of standard language that avoids complexity to reach a broader audience.",
+                        easy_description: "Easy language uses simple words and short sentences to convey information clearly and understandably."
                     },
                     common: {
                         clear_chat: "New chat",
@@ -417,7 +422,10 @@ i18n
                         answer_loading: "Übersetze in oafache Sproch",
                         plain: "Oafache Sproch",
                         easy: "Leichte Sproch",
-                        outputType: "Output Sproch"
+                        outputType: "Output Sproch",
+                        plain_description:
+                            "Oafache Sproch is a veroafachte Form der Standardsprache, die auf Komplexität verzichtet, um a breitare Zielgruppn zu erreichen.",
+                        easy_description: "Leichte Sproch benutzt oafache Wörter und kuaze Sätze, um Informationen klar und verständlich zu vermitteln."
                     },
                     common: {
                         clear_chat: "Neia Chat",

@@ -62,6 +62,7 @@
             "required": [
                 "enable_auth",
                 "enable_database",
+                "unauthorized_user_redirect_url",
                 "sso_config",
                 "db_config",
                 "chat",
@@ -77,6 +78,11 @@
                     "examples": [
                         false
                     ]
+                },
+                "unauthorized_user_redirect_url": {
+                    "type": "string",
+                    "default": "",
+                    "title": "The url to redirect to if the user is not authorized"
                 },
                 "enable_database": {
                     "type": "boolean",
@@ -240,13 +246,11 @@
                         "title": "One model configuration",
                         "required": [
                             "type",
-                            "model_name",
+                            "llm_name",
                             "endpoint",
                             "api_key",
                             "max_input_tokens",
-                            "max_output_tokens",
-                            "deployment",
-                            "api_version"
+                            "max_output_tokens"
                         ],
                         "properties": {
                             "type": {
@@ -257,7 +261,7 @@
                                     "AZURE"
                                 ]
                             },
-                            "model_name": {
+                            "llm_name": {
                                 "type": "string",
                                 "title": "The name of the model",
                                 "examples": [
@@ -313,7 +317,7 @@
                         },
                         "examples": [{
                             "type": "OPENAI",
-                            "model_name": "mucgpt-mini",
+                            "llm_name": "mucgpt-mini",
                             "endpoint": "mucgptmini.openai.azure.com",
                             "api_key": "BALBLBLABUALB",
                             "max_input_tokens": 128000,
@@ -321,7 +325,7 @@
                         },
                         {
                             "type": "AZURE",
-                            "model_name": "mucgpt-maxi",
+                            "llm_name": "mucgpt-maxi",
                             "deployment": "chat",
                             "endpoint": "mucgpt-maxi.openai.azure.com",
                             "api_key": "BALBABUALB",
@@ -333,7 +337,7 @@
                     "examples": [
                         [{
                             "type": "OPENAI",
-                            "model_name": "mucgpt-mini",
+                            "llm_name": "mucgpt-mini",
                             "endpoint": "mucgptmini.openai.azure.com",
                             "api_key": "BALBLBLABUALB",
                             "max_input_tokens": 128000,
@@ -341,7 +345,7 @@
                         },
                         {
                             "type": "AZURE",
-                            "model_name": "mucgpt-maxi",
+                            "llm_name": "mucgpt-maxi",
                             "deployment": "chat",
                             "endpoint": "mucgpt-maxi.openai.azure.com",
                             "api_key": "BALBABUALB",
@@ -355,6 +359,7 @@
             "examples": [{
                 "enable_auth": false,
                 "enable_database": false,
+                "unauthorized_user_redirect_url": "",
                 "sso_config": {
                     "sso_issuer": "TODO",
                     "role": "lhm-ab-mucgpt-user"
@@ -376,7 +381,7 @@
                 },
                 "models": [{
                     "type": "OPENAI",
-                    "model_name": "mucgpt-mini",
+                    "llm_name": "mucgpt-mini",
                     "endpoint": "mucgptmini.openai.azure.com",
                     "api_key": "BALBLBLABUALB",
                     "max_input_tokens": 128000,
@@ -384,7 +389,7 @@
                 },
                 {
                     "type": "AZURE",
-                    "model_name": "mucgpt-maxi",
+                    "llm_name": "mucgpt-maxi",
                     "deployment": "chat",
                     "endpoint": "mucgpt-maxi.openai.azure.com",
                     "api_key": "BALBABUALB",
@@ -405,6 +410,7 @@
         "backend": {
             "enable_auth": false,
             "enable_database": false,
+            "unauthorized_user_redirect_url": "",
             "sso_config": {
                 "sso_issuer": "TODO",
                 "role": "lhm-ab-mucgpt-user"
@@ -426,7 +432,7 @@
             },
             "models": [{
                 "type": "OPENAI",
-                "model_name": "mucgpt-mini",
+                "llm_name": "mucgpt-mini",
                 "endpoint": "mucgptmini.openai.azure.com",
                 "api_key": "BALBLBLABUALB",
                 "max_input_tokens": 128000,
@@ -434,7 +440,7 @@
             },
             {
                 "type": "AZURE",
-                "model_name": "mucgpt-maxi",
+                "llm_name": "mucgpt-maxi",
                 "deployment": "chat",
                 "endpoint": "mucgpt-maxi.openai.azure.com",
                 "api_key": "BALBABUALB",

@@ -43,8 +43,9 @@ backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 @api_app.exception_handler(AuthError)
 async def handleAuthError(request, exc: AuthError):
+    cfg = get_config()
     #return error.error, error.status_code
-    return RedirectResponse(url=os.getenv("UNAUTHORIZED_USER_REDIRECT_URL"),
+    return RedirectResponse(url=cfg["backend_config"].unauthorized_user_redirect_url,
                             status_code=302)
 
 

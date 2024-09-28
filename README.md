@@ -76,16 +76,14 @@ npm run build
 cd ..\backend
 $env:MUCGPT_CONFIG="path to default.json"
 $env:MUCGPT_BASE_CONFIG="path to base.json"
-$env:UNAUTHORIZED_USER_REDIRECT_URL="your-redirect-url"
 uvicorn app:backend --reload   
 ```
 
 
 ### Run with docker
-1. Change `UNAUTHORIZED_USER_REDIRECT_URL` in [.env_template](/.env_template) to your redirect url and rename to `.env`
-2. Build an Image
+1. Build an Image
    ``` docker build --tag mucgpt-local . --build-arg   fromconfig="./config/default.json"```
-3. Run the image ```docker run --detach --publish 8080:8000  --env-file .env mucgpt-local```
+2. Run the image ```docker run --detach --publish 8080:8000 mucgpt-local```
 
 
 ## Documentation

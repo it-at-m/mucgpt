@@ -61,5 +61,5 @@ class Config(BaseModel):
 class ConfigResponse(BaseModel):
     frontend: FrontendConfig 
     models: List[ModelsDTO] =[]
-    version: str 
+    version: str
 

@@ -7,7 +7,7 @@ uvicorn[standard]==0.30.6
 opentelemetry-instrumentation-asgi==0.47b0
 opentelemetry-instrumentation-requests
 opentelemetry-instrumentation-aiohttp-client
-werkzeug==3.0.3
+werkzeug==3.0.4
 joserfc
 requests
 sqlalchemy==2.0.35

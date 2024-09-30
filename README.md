@@ -44,7 +44,7 @@ The documentation project is built with technologies we use in our projects (see
 * [Javascript](https://wiki.selfhtml.org/wiki/JavaScript)
 
 ### Deployment:
-  * [Node.js 14+](https://nodejs.org/en/download/package-manager)
+  * [Node.js 20+](https://nodejs.org/en/download/package-manager)
   * [Git](https://git-scm.com/downloads)
   * Python 3.12
   * Docker

@@ -44,9 +44,9 @@ The documentation project is built with technologies we use in our projects (see
 * [Javascript](https://wiki.selfhtml.org/wiki/JavaScript)
 
 ### Deployment:
-  * [Node.js 14+](https://nodejs.org/en/download/package-manager)
+  * [Node.js 20+](https://nodejs.org/en/download/package-manager)
   * [Git](https://git-scm.com/downloads)
-  * Python 12
+  * Python 3.12
   * Docker
 
 ## Table of contents
@@ -68,7 +68,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 ## Run
  Configure your environment in [config/default.json](config/default.json). The schema of the configuration is [cofnig/mucgpt_config.schema.json](config/mucgpt_config.schema.json) described.  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
 ### Run locally
-```
+```bash
 cd app\backend
 pip install --no-cache-dir --upgrade -r requirements.txt   
 cd ..\frontend
@@ -83,7 +83,7 @@ uvicorn app:backend --reload
 ### Run with docker
 1. Build an Image
    ``` docker build --tag mucgpt-local . --build-arg   fromconfig="./config/default.json"```
-2. Run the image ```docker run --detach --publish 8080:8000  mucgpt-local```
+2. Run the image ```docker run --detach --publish 8080:8000 mucgpt-local```
 
 
 ## Documentation
@@ -123,5 +123,5 @@ Distributed under the MIT License. See [LICENSE](LICENSE) file for more informat
 
 ## Contact
 
-it@M - opensource@muenchen.de
+it@M - itm.kicc@muenchen.de
 

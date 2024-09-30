@@ -57,13 +57,22 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
     return parsedResponse;
 }
 
-export function handleRedirect(response: Response) {
+export function handleRedirect(response: Response, reload = true) {
     if (response.type === "opaqueredirect") {
-        console.log("reloading shortly");
-        setTimeout(() => {
-            location.reload();
-        }, 5000);
-        throw Error("Die Authentifizierungsinformationen sind abgelaufen. Die Seite wird in wenigen Sekunden neu geladen.");
+        if (reload) {
+            console.log("reloading shortly");
+            setTimeout(() => {
+                location.reload();
+            }, 5000);
+            throw Error("Die Authentifizierungsinformationen sind abgelaufen. Die Seite wird in wenigen Sekunden neu geladen.");
+        } else {
+            const redirectUrl = response.url;
+            if (redirectUrl) {
+                window.location.href = redirectUrl; // Manually redirect
+            } else {
+                throw new Error("Redirect URL not found");
+            }
+        }
     }
 }
 
@@ -76,17 +85,18 @@ export async function handleResponse(response: Response) {
 }
 
 export async function configApi(): Promise<ApplicationConfig> {
-    const response = await fetch("/api/config", {
+    return await fetch("/api/config", {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
         },
         mode: "cors",
         redirect: "manual"
+    }).then(async response => {
+        handleRedirect(response, false);
+        const parsedResponse = await handleResponse(response);
+        return parsedResponse;
     });
-
-    const parsedResponse: ApplicationConfig = await handleResponse(response);
-    return parsedResponse;
 }
 
 export async function brainstormApi(options: BrainstormRequest): Promise<AskResponse> {
@@ -105,7 +115,7 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
         })
     });
 
-    handleRedirect(response);
+    handleRedirect(response, true);
     const parsedResponse: AskResponse = await handleResponse(response);
     return parsedResponse;
 }
@@ -145,7 +155,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
         })
     });
 
-    handleRedirect(response);
+    handleRedirect(response, true);
     const parsedResponse: CountTokenResponse = await handleResponse(response);
     return parsedResponse;
 }

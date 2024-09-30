@@ -35,6 +35,7 @@ class DatabaseConfig(BaseModel):
 
 class BackendConfig(BaseModel):
     enable_auth: bool
+    unauthorized_user_redirect_url: str
     enable_database: bool
     sso_config: SSOConfig
     db_config: DatabaseConfig
@@ -59,7 +60,7 @@ class Config(BaseModel):
     backend: BackendConfig
 
 class ConfigResponse(BaseModel):
-    frontend: FrontendConfig
+    frontend: FrontendConfig 
     models: List[ModelsDTO] =[]
     version: str
 

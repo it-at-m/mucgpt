@@ -8,6 +8,7 @@
     "backend": {
         "enable_auth": false,
         "enable_database": false,
+        "unauthorized_user_redirect_url": "",
         "sso_config": {
             "sso_issuer": "TODO",
             "role": "lhm-ab-mucgpt-user"

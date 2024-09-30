@@ -6,6 +6,7 @@ from typing import List, cast
 from fastapi import FastAPI, Form, Header, HTTPException, UploadFile
 from fastapi.responses import (
     FileResponse,
+    RedirectResponse,
     StreamingResponse,
 )
 from fastapi.staticfiles import StaticFiles
@@ -41,9 +42,13 @@ static_dir = os.path.join(current_dir, 'static')
 backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 
-@backend.exception_handler(AuthError)
-async def handleAuthError(error: AuthError):
-    return error.error, error.status_code
+@api_app.exception_handler(AuthError)
+async def handleAuthError(request, exc: AuthError):
+    cfg = get_config()
+    #return error.error, error.status_code
+    return RedirectResponse(url=cfg["backend_config"].unauthorized_user_redirect_url,
+                            status_code=302)
+
 
 @api_app.post("/sum")
 async def sum(
@@ -179,6 +184,7 @@ async def chat(request: ChatRequest,
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
     response = ConfigResponse(frontend=cfg["configuration_features"].frontend, version=cfg["configuration_features"].version)
+    
     models = cast(
         List[ModelsConfig], cfg["configuration_features"].backend.models
     )

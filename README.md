@@ -47,6 +47,7 @@ The documentation project is built with technologies we use in our projects (see
   * [Node.js 14+](https://nodejs.org/en/download/package-manager)
   * [Git](https://git-scm.com/downloads)
   * Python 3.12
+  * [uv](https://github.com/astral-sh/uv)
   * Docker
 
 ## Table of contents
@@ -67,6 +68,13 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 ## Run
  Configure your environment in [config/default.json](config/default.json). The schema of the configuration is [cofnig/mucgpt_config.schema.json](config/mucgpt_config.schema.json) described.  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
+
+### Generate python requirements for your python version
+```bash
+pip install uv # in case it isn't installed
+uv pip compile pyproject.toml  -o app/backend/requirements.txt --python-version <python-version>  # generate deps
+uv pip compile pyproject.toml  -o requirements-dev.txt --python-version <python-version> --all-extras # generate dev deps
+```
 ### Run locally
 ```bash
 cd app\backend

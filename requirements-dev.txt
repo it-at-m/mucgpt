@@ -145,7 +145,7 @@ marshmallow==3.22.0
     # via dataclasses-json
 mdurl==0.1.2
     # via markdown-it-py
-mistral-common==1.3.4
+mistral-common==1.4.4
     # via mucgpt (pyproject.toml)
 multidict==6.1.0
     # via

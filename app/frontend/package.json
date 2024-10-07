@@ -4,7 +4,7 @@
   "version": "1.2.0",
   "type": "module",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "dev": "vite",
@@ -14,23 +14,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fluentui/react": "^8.119.0",
-    "@fluentui/react-components": "^9.54.15",
-    "@fluentui/react-icons": "^2.0.258",
+    "@fluentui/react": "^8.120.10",
+    "@fluentui/react-components": "^9.54.17",
+    "@fluentui/react-icons": "^2.0.259",
     "@react-spring/web": "^9.7.3",
-    "dompurify": "^3.1.5",
-    "i18next": "^23.11.5",
-    "markmap-common": "^0.17.0",
-    "markmap-lib": "^0.17.0",
-    "markmap-toolbar": "^0.17.0",
-    "markmap-view": "^0.17.0",
-    "mermaid": "^10.9.1",
+    "dompurify": "^3.1.7",
+    "i18next": "^23.15.1",
+    "markmap-common": "^0.17.1",
+    "markmap-lib": "^0.17.2",
+    "markmap-toolbar": "^0.17.2",
+    "markmap-view": "^0.17.2",
+    "mermaid": "^11",
     "ndjson-readablestream": "^1.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^13.5.0",
     "react-markdown": "^9.0.1",
-    "react-router-dom": "^6.24.0",
+    "react-router-dom": "^6.26.2",
     "react-syntax-highlighter": "^15.5.0",
     "rehype-raw": "^7.0.0",
     "remark": "^15.0.1",
@@ -38,12 +38,12 @@
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
-    "@types/react": "^18.3.7",
+    "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@vitejs/plugin-react": "^4.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
     "prettier": "^3.3.2",
     "typescript": "^5.5.2",
-    "vite": "^4.5.5"
+    "vite": "^5"
   }
 }

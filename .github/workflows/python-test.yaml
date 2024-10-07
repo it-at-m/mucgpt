@@ -30,7 +30,7 @@ jobs:
           run: |
             cd ./app/frontend
             npm install
-            npm run build
+            npm run buildlocal
         - name: Install dependencies
           run: |
             python -m pip install --upgrade pip

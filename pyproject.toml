@@ -7,7 +7,7 @@ dependencies = [
     "mistral-common==1.4.4",
     "fastapi[standard]==0.115.0",
     "langchain==0.3.2",
-    "langchain_community",
+    "langchain_community==0.3.1",
     "langchain_openai",
     "joserfc",
     "tiktoken",
@@ -17,7 +17,8 @@ dependencies = [
     "psycopg2",
     "werkzeug==3.0.4",
     "aiohttp==3.10.9",
-    "aiohappyeyeballs==2.4.3"
+    "aiohappyeyeballs==2.4.3",
+    "httpcore==1.0.6",
 ] 
 
 [project.optional-dependencies]

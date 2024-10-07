@@ -112,12 +112,13 @@ langchain-core==0.3.9
     #   langchain-community
     #   langchain-openai
     #   langchain-text-splitters
-langchain-openai==0.2.0
+langchain-openai==0.2.2
     # via mucgpt (pyproject.toml)
 langchain-text-splitters==0.3.0
     # via langchain
-langsmith==0.1.126
+langsmith==0.1.131
     # via
+    #   mucgpt (pyproject.toml)
     #   langchain
     #   langchain-community
     #   langchain-core
@@ -200,7 +201,10 @@ requests==2.32.3
     #   langchain-community
     #   langsmith
     #   mistral-common
+    #   requests-toolbelt
     #   tiktoken
+requests-toolbelt==1.0.0
+    # via langsmith
 rich==13.8.1
     # via typer
 rpds-py==0.20.0

@@ -46,7 +46,7 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
                     max_output_tokens=4000,
                     n = 1,
                     streaming=True,
-                    temperature=0.7)
+                    temperature=0)
     chat_approaches = Chat(llm=chatllm, config=cfg.chat, repo=repoHelper)
     brainstorm_approaches = Brainstorm(llm=brainstormllm,  config=cfg.brainstorm, repo=repoHelper)
     sum_approaches =  Summarize(llm=sumllm, config=cfg.sum, repo=repoHelper)

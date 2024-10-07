@@ -23,6 +23,20 @@ class Simply:
     
     
     def simply(self, temperature: float, department: Optional[str], llm_name:str, output_type:str, message:str) -> ChatResult:
+        """
+        Generate a simplified text.
+
+        Args:
+            temperature (float): The temperature parameter controls the randomness of the output. Higher values (e.g., 0.8) make the output more random, while lower values (e.g., 0.2) make it more deterministic.
+            department (Optional[str]): The department associated with the request.
+            llm_name (str): The name of the language model to use.
+            output_type (str): The type of output to generate. Valid values are "plain" and "easy".
+            message (str): The user's message to be simplified.
+
+        Returns:
+            ChatResult: The generated simplified text.
+        """
+
         config: LlmConfigs = {
             "llm_temperature": temperature,
             "llm_streaming": False,
@@ -36,12 +50,12 @@ class Simply:
             prompt = self.build_prompt_easy(llm_name=llm_name, message=message)
             with open("simply/prompts/system_message_ls.md", encoding="utf-8") as f:
                 system_message = f.read()
-    
+
         history : List[ChatTurn] = [ChatTurn(user=prompt)]
 
         llm = self.llm.with_config(configurable=config)
         msgs = self.init_messages(history = history, system_message=system_message)
-        
+
         with get_openai_callback() as cb:
             ai_message: AIMessage = llm.invoke(msgs)
         total_tokens = cb.total_tokens

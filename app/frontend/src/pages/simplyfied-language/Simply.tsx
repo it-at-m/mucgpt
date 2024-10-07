@@ -10,9 +10,9 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from 'react-i18next';
-import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, popLastMessageInDB, saveToDB } from "../../service/storage";
+import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Field, Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
+import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
 import { Checkmark24Filled } from "@fluentui/react-icons";
 
 const enum STORAGE_KEYS {
@@ -74,8 +74,7 @@ const Simply = () => {
             const request: SimplyRequest = {
                 topic: question,
                 model: LLM.llm_name,
-                max_output_tokens: LLM.max_output_tokens,
-                temperature: 0.5,
+                temperature: 0,
                 output_type: outputType
             };
             const parsedResponse: SimplyResponse = await simplyApi(request);

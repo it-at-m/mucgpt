@@ -40,7 +40,6 @@ export type BrainstormRequest = {
 export type SimplyRequest = {
     topic: string;
     temperature?: number;
-    max_output_tokens?: number;
     model?: string;
     output_type: string;
 };

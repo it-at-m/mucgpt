@@ -24,7 +24,7 @@ attrs==24.2.0
     #   aiohttp
     #   jsonschema
     #   referencing
-black==24.8.0
+black==24.10.0
     # via mucgpt (pyproject.toml)
 certifi==2024.8.30
     # via

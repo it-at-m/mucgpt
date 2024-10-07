@@ -28,7 +28,9 @@
         "sum": {
             "log_tokens": false
         },
-
+        "simply": {
+            "log_tokens": false
+        },
         "models": [
             {
                 "type": "AZURE",

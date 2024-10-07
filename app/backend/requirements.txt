@@ -167,7 +167,7 @@ pydantic-settings==2.5.2
     # via langchain-community
 pygments==2.18.0
     # via rich
-pypdf==5.0.0
+pypdf==5.0.1
     # via mucgpt (pyproject.toml)
 python-dotenv==1.0.1
     # via

@@ -11,7 +11,7 @@ dependencies = [
     "langchain_openai",
     "joserfc",
     "tiktoken",
-    "pypdf==5",
+    "pypdf==5.0.1",
     "gunicorn",
     "uvicorn==0.31.0",
     "psycopg2",

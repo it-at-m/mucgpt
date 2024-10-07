@@ -153,6 +153,3 @@ config/c.json
 config/k.json
 config/p.json
 config/local.json
-
-#Environments
-.env

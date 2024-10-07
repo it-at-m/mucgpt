@@ -5,15 +5,18 @@ description = "a web interface for large language models for the public administ
 readme = "README.md"
 dependencies = [
     "mistral-common",
-    "fastapi[standard]",
-    "langchain",
+    "fastapi[standard]==0.115.0",
+    "langchain==0.3.2",
     "langchain_community",
     "langchain_openai",
     "joserfc",
     "tiktoken",
-    "pypdf",
+    "pypdf==5",
     "gunicorn",
-    "psycopg2"
+    "uvicorn==0.31.0",
+    "psycopg2",
+    "werkzeug==3.0.4",
+    "aiohttp==3.10.9"
 ] 
 
 [project.optional-dependencies]

@@ -145,7 +145,7 @@ numpy==1.26.4
     #   langchain
     #   langchain-community
     #   mistral-common
-openai==1.47.1
+openai==1.51.2
     # via langchain-openai
 orjson==3.10.7
     # via langsmith

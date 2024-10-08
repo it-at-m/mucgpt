@@ -310,7 +310,7 @@ typing-inspect==0.9.0
     # via dataclasses-json
 urllib3==2.2.3
     # via requests
-uv==0.4.18
+uv==0.4.20
     # via mucgpt (pyproject.toml)
 uvicorn==0.31.0
     # via

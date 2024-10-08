@@ -13,7 +13,7 @@ import history from "../../assets/History.png"
 import simply from "../../assets/simply.png"
 import { useTranslation } from "react-i18next";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 const Version = () => {
@@ -40,8 +40,8 @@ const Version = () => {
                             <div className={styles.panel}>
                                 <h3>{t('version.added')}</h3>
                                 <ul>
-                                    <li>
-                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an.
+                                    <li><strong>Preview</strong><br />
+                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an. Dieses Feature ist allerdings noch nicht final getestet und ist somit nur auf der <Link to={"http://mucgpt-demo.muenchen.de"} >Demo Version von MUCGPT</Link> verfügbar.
                                         <p>
                                             <img width="70%" src={simply} alt="Bild zur Leichten Sprache"></img>
                                         </p>

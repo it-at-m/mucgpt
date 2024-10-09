@@ -48,8 +48,10 @@ dataclasses-json==0.6.7
     # via langchain-community
 distro==1.9.0
     # via openai
-dnspython==2.6.1
-    # via email-validator
+dnspython==2.7.0
+    # via
+    #   mucgpt (pyproject.toml)
+    #   email-validator
 email-validator==2.2.0
     # via fastapi
 fastapi==0.115.0
@@ -100,13 +102,13 @@ jsonschema==4.23.0
     # via mistral-common
 jsonschema-specifications==2023.12.1
     # via jsonschema
-langchain==0.3.2
+langchain==0.3.3
     # via
     #   mucgpt (pyproject.toml)
     #   langchain-community
-langchain-community==0.3.1
+langchain-community==0.3.2
     # via mucgpt (pyproject.toml)
-langchain-core==0.3.9
+langchain-core==0.3.10
     # via
     #   langchain
     #   langchain-community
@@ -116,7 +118,7 @@ langchain-openai==0.2.2
     # via mucgpt (pyproject.toml)
 langchain-text-splitters==0.3.0
     # via langchain
-langsmith==0.1.131
+langsmith==0.1.132
     # via
     #   mucgpt (pyproject.toml)
     #   langchain
@@ -145,8 +147,10 @@ numpy==1.26.4
     #   langchain
     #   langchain-community
     #   mistral-common
-openai==1.47.1
-    # via langchain-openai
+openai==1.51.2
+    # via
+    #   mucgpt (pyproject.toml)
+    #   langchain-openai
 orjson==3.10.7
     # via langsmith
 packaging==24.1

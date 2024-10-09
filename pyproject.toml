@@ -6,10 +6,12 @@ readme = "README.md"
 dependencies = [
     "mistral-common==1.4.4",
     "fastapi[standard]==0.115.0",
-    "langchain==0.3.2",
-    "langchain_community==0.3.1",
+    "dnspython==2.7.0",
+    "langchain==0.3.3",
+    "langchain_community==0.3.2",
     "langchain-openai==0.2.2",
-    "langsmith==0.1.131",
+    "openai==1.51.2",
+    "langsmith==0.1.132",
     "joserfc",
     "tiktoken",
     "pypdf==5.0.1",
@@ -24,9 +26,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "uv",
+    "uv==0.4.20",
     "ruff",
-    "black",
+    "black==24.10.0",
     "pre-commit"
 ]
 test = [

@@ -59,6 +59,9 @@ const Version = () => {
                                     <li>
                                         Benutzer, die sich noch nicht in ServiceNow für MUCGPT registriert haben, werden beim Aufrufen des Dienstes automatisch zu ServiceNow weitergeleitet.
                                     </li>
+                                    <li>
+                                        Die Performance bei längeren Chats mit einer hohen Anzahl an generierten Tokens wurde optimiert.
+                                    </li>
                                 </ul>
                                 <h3>{t('version.changed')}</h3>
                             </div>

@@ -192,7 +192,7 @@ platformdirs==4.3.6
     #   virtualenv
 pluggy==1.5.0
     # via pytest
-pre-commit==4.0.0
+pre-commit==4.0.1
     # via mucgpt (pyproject.toml)
 psycopg2==2.9.9
     # via mucgpt (pyproject.toml)

@@ -281,7 +281,7 @@ sqlalchemy==2.0.35
     #   langchain-community
 starlette==0.38.6
     # via fastapi
-tenacity==8.5.0
+tenacity==9.0.0
     # via
     #   langchain
     #   langchain-community

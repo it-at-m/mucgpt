@@ -105,7 +105,7 @@ const Faq = () => {
                         <AccordionHeader>Wie aktuell sind die Quellen, die MUCGPT zur Antwortfindung nutzt?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
-                                Als Datengrundlage von MUCGPT wird GPT-3.5 von ChatGPT verwendet. Die Datengrundlage reicht bis zum Jahr 2021. Dies ist bei den generierten Antworten unbedingt zu beachten. Um an aktuelle Informationen zu gelangen, können Suchmaschinen wie Ecosia oder Google verwendet werden.
+                                Als Datengrundlage wird das jeweils ausgewählte Sprachmodell verwendet. Die Datengrundlage und den Stand können Sie bei Auswahl des Modells entnehmen. Dies ist bei den generierten Antworten unbedingt zu beachten. Um an aktuelle Informationen zu gelangen, können Suchmaschinen wie Ecosia oder Google verwendet werden.
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
@@ -118,13 +118,13 @@ const Faq = () => {
                                     MUCGPT sagt für seine Antworten auf Basis der Nutzereingaben Wörter voraus, die häufig in diesem Kontext vorkommen, weiß aber nicht, ob die darin enthaltene Information richtig ist. Bei allgemeinen Informationen, die häufig im Internet zu finden sind, ist es sehr wahrscheinlich, dass die Antwort richtig ist. Bei Randthemen ist das nicht der Fall. Trotzdem wird das Sprachmodell immer eine grammatikalisch/sprachlich korrekte Antwort geben. Inhaltlich muss sie aber nicht korrekt sein.
                                 </p>
                                 <p>
-                                    Einen großen Einfluss auf die Qualität der Antworten des Sprachmodells haben die Texte, die für das Training des Sprachmodells genutzt wurden. Für ChatGPT3.5, auf dem MUCGPT basiert, sind dies über 300 Milliarden Wörter. Darin enthalten sind vor allem Texte aus dem Internet.
+                                    Einen großen Einfluss auf die Qualität der Antworten des Sprachmodells haben die Texte, die für das Training des Sprachmodells genutzt wurden.
                                 </p>
                                 <p>
                                     Viele Informationen sind in den Trainingsdaten nicht vorhanden, z.B.:
                                     <ul>
                                         <li>
-                                            Wissen, das zum Zeitpunkt des Trainings noch nicht verfügbar war (alles, was nach dem Jahr 2021 liegt)
+                                            Wissen, das zum Zeitpunkt des Trainings noch nicht verfügbar war
                                         </li>
                                         <li>
                                             Internes Wissen, das z.B. nur im Intranet der Stadt verfügbar ist
@@ -136,7 +136,6 @@ const Faq = () => {
                                 </p>
                                 <p>
                                     Insbesondere ist Vorsicht geboten, wenn MUCGPT nach Zahlen gefragt wird oder Zahlen in dessen Antwort vorhanden sind, da MUCGPT, bzw. Sprachmodelle im Allgemeinen, Probleme mit Mathematik oder Zahlen haben. Sie wurden darauf trainiert, Wörter vorherzusagen. Für ein Sprachmodell ist jede Zahl auch eine Art „Wort“. Wörter haben oft einen ganz bestimmten Kontext, in dem sie eine Bedeutung haben. Zum Beispiel ist es sehr wahrscheinlich, dass das Wort „Krönung“ im Kontext des Wortes „König“ oder „Königin“ vorkommt. Bei der Zahl „2“ ist das nicht so klar. Sie kann in sehr vielen Kontexten vorkommen. Ähnlich verhält es sich mit konkreten Anfragen an die Statistik.
-
                                 </p>
                                 <p>
                                     Sprachmodelle sind daher sehr gut geeignet, um allgemeine (nicht aktuelle) Informationen zu erhalten. Je spezifischer das abgefragte Wissen ist, desto geringer ist die Wahrscheinlichkeit einer korrekten Antwort.
@@ -151,7 +150,7 @@ const Faq = () => {
                         <AccordionHeader>Was muss ich bezüglich der Weiterverwendung der Ergebnisse beachten?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
-                                Es ist möglich, dass Texte (Antworten) von MUCGPT sich nur minimal von der ursprünglichen Version unterscheiden oder sogar wesentliche Elemente des Ursprungstextes identisch übernommen werden. Wer dann einen solchen Text vervielfältigt oder veröffentlicht, begeht damit – ohne es beabsichtigt zu haben – eine Urheberrechtsverletzung. Der Urheber des Originals kann in einem solchen Fall Unterlassungs-, Schadensersatz- und Beseitigungsansprüche geltend machen. Bei unveränderter bzw. nur geringfügig veränderter externer Nutzung, müssen diese als solche gekennzeichnet werden („Quelle: MUCGPT“). Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der MUCGPT Nutzer*in.
+                                Es ist möglich, dass Texte (Antworten) von MUCGPT sich nur minimal von der ursprünglichen Version unterscheiden oder sogar wesentliche Elemente des Ursprungstextes identisch übernommen werden. Wer dann einen solchen Text vervielfältigt oder veröffentlicht, begeht damit – ohne es beabsichtigt zu haben – eine Urheberrechtsverletzung. Der Urheber des Originals kann in einem solchen Fall Unterlassungs-, Schadensersatz- und Beseitigungsansprüche geltend machen. Bei jeglicher Nutzung der Ergebnisse (egal ob intern oder extern), muss daher eine Kennzeichnung erfolgen („Quelle: MUCGPT“). Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der MUCGPT Nutzer*in.
                                 <p>
                                     Weiterhin muss beachtet werden, dass die Ergebnisse entsprechend dem jeweiligen Rechtsgebiet angemessen weiterverwendet werden. Das bedeutet, dass es (je nach betroffenem Rechtsgebiet) wichtig ist, nahe am üblichen Standard der Formulierungen zu bleiben, damit hier keine Ungleichheit oder Unverständlichkeit z.B. aufgrund von (durch die KI) anders gewählten Fachbegriffen o.ä. entsteht. Bei der Nutzung von solch künstlich erzeugten Ergebnissen, sollte immer auch der gesunde Menschenverstand angewendet werden, damit die Adressaten dieser Texte diese sowohl verstehen, als auch sich darauf verlassen können.
                                 </p>
@@ -159,6 +158,18 @@ const Faq = () => {
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="10">
+                        <AccordionHeader>Formulierungshilfen Zitierstile</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <ul>
+                                    <li>Dieser Text wurde mit Hilfe von MUCGPT erstellt und redaktionell auf Richtigkeit geprüft.</li>
+                                    <li>Der vorliegende Text wurde mit Hilfe von MUCGPT erstellt und im Anschluss sorgfältig auf seine Korrektheit hin überprüft.</li>
+                                    <li>Quelle: MUCGPT</li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
+                    <AccordionItem value="11">
                         <AccordionHeader>Was muss ich bezüglich der Informationssicherheit und des Datenschutzes beachten?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
@@ -168,7 +179,7 @@ const Faq = () => {
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
-                    <AccordionItem value="11">
+                    <AccordionItem value="12">
                         <AccordionHeader>Werden meine Eingaben irgendwo gespeichert? Wer hat Zugriff auf die Daten?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
@@ -176,7 +187,7 @@ const Faq = () => {
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
-                    <AccordionItem value="14">
+                    <AccordionItem value="13">
                         <AccordionHeader>Wo werden die Chats der Chat-Historie gespeichert?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
@@ -185,7 +196,7 @@ const Faq = () => {
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
-                    <AccordionItem value="12">
+                    <AccordionItem value="14">
                         <AccordionHeader>Werden meine Eingaben für Trainingszwecke der Software verwendet?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
@@ -193,7 +204,7 @@ const Faq = () => {
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
-                    <AccordionItem value="13">
+                    <AccordionItem value="15">
                         <AccordionHeader>Werden meine Eingaben anderweitig verwendet?</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>

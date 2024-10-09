@@ -20,7 +20,7 @@ The Brainstorming feature allows users to create mind maps to help them find ins
 The resulting mindmaps can be downloaded and further processed using [Freeplane](https://docs.freeplane.org/).
 ## Simplified language
 ![Simplyfied Lannguage](/docs/simply.png)
-Simplified language is a feature that enables users to translate complex texts into plain or easy language. This functionality is particularly useful for individuals who struggle with reading comprehension or for whom the original language is not their native tongue. By converting intricate sentences and advanced vocabulary into simpler structures and more familiar words, the tool makes the text more understandable and easier to read. This not only enhances the accessibility of the content but also promotes inclusivity by catering to a broader audience with varying levels of language proficiency.
+Simplified language is a feature that enables users to translate complex texts into plain or easy language. This functionality is particularly useful for individuals who struggle with reading comprehension or for whom the original language is not their native tongue. By converting intricate sentences and advanced vocabulary into simpler structures and more familiar words, the tool makes the text more understandable and easier to read. This not only enhances the accessibility of the content but also promotes inclusivity by catering to a broader audience with varying levels of language proficiency. The prompts and logic of this feature are rooted in the Project of the Cantonal Administration of Zurich ([Github](https://github.com/machinelearningZH/simply-simplify-language)).
 
 ## General Features
 Generated text in various formats is displayed correctly. The formats currently supported are

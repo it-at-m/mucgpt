@@ -1,3 +1,44 @@
+[project]
+name = "MUCGPT"
+version = "1.2.0"
+description = "a web interface for large language models for the public administration"
+readme = "README.md"
+dependencies = [
+    "mistral-common==1.4.4",
+    "fastapi[standard]==0.115.0",
+    "langchain==0.3.2",
+    "langchain_community==0.3.1",
+    "langchain-openai==0.2.2",
+    "langsmith==0.1.131",
+    "joserfc",
+    "tiktoken",
+    "pypdf==5.0.1",
+    "gunicorn",
+    "uvicorn==0.31.0",
+    "psycopg2",
+    "werkzeug==3.0.4",
+    "aiohttp==3.10.9",
+    "aiohappyeyeballs==2.4.3",
+    "httpcore==1.0.6",
+] 
+
+[project.optional-dependencies]
+dev = [
+    "uv",
+    "ruff",
+    "black",
+    "pre-commit"
+]
+test = [
+    "pytest-env",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-snapshot",
+    "pytest-mock",
+    "coverage",
+    "pytest-cov"
+]
+
 [tool.ruff]
 target-version = "py38"
 lint.select = ["E", "F", "I", "UP"]

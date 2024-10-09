@@ -1,4 +1,6 @@
 .git*
+/app/backend/static
+/app/frontend/dist
 **/*.pyc
 .venv/
 /tests

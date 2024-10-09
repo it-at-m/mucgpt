@@ -24,6 +24,7 @@ from core.types.ChatResult import ChatResult
 from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
+from core.types.SimplyRequest import SimplyRequest
 from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
@@ -101,6 +102,31 @@ async def brainstorm(request: BrainstormRequest,
             "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
             if "Rate limit" in str(e)
             else "Exception in brainstorm: something bad happened"
+        )
+        raise HTTPException(status_code=500,detail=msg)
+    
+@api_app.post("/simply")
+async def simply(request: SimplyRequest,
+                    id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
+                    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ChatResult:
+    cfg = get_config_and_authentificate(access_token=access_token)
+    department = get_department(id_token=id_token)
+    try:
+        impl = cfg["simply_approaches"]
+        r = impl.simply(
+            message=request.topic,
+            department=department,
+            llm_name=request.model,
+            temperature=request.temperature,
+            output_type=request.output_type
+        )
+        return r
+    except Exception as e:
+        logging.exception("Exception in /simply")
+        msg = (
+            "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
+            if "Rate limit" in str(e)
+            else str(e)
         )
         raise HTTPException(status_code=500,detail=msg)
 

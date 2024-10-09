@@ -1,4 +1,15 @@
-import { ApplicationConfig, AskResponse, BrainstormRequest, ChatRequest, CountTokenRequest, CountTokenResponse, SumRequest, SumResponse } from "./models";
+import {
+    ApplicationConfig,
+    AskResponse,
+    BrainstormRequest,
+    ChatRequest,
+    CountTokenRequest,
+    CountTokenResponse,
+    SimplyRequest,
+    SimplyResponse,
+    SumRequest,
+    SumResponse
+} from "./models";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/api/chat_stream" : "/api/chat";
@@ -106,6 +117,26 @@ export async function brainstormApi(options: BrainstormRequest): Promise<AskResp
 
     handleRedirect(response, true);
     const parsedResponse: AskResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse> {
+    const response = await fetch("/api/simply", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual",
+        body: JSON.stringify({
+            topic: options.topic,
+            temperature: options.temperature,
+            model: options.model,
+            output_type: options.output_type
+        })
+    });
+    handleRedirect(response);
+    const parsedResponse: SimplyResponse = await handleResponse(response);
     return parsedResponse;
 }
 

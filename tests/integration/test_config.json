@@ -3,7 +3,8 @@
         "labels": {
             "env_name": "MUC tschibidi-test"
         },
-        "alternative_logo": true
+        "alternative_logo": true,
+        "enable_simply": true
     },
     "backend": {
         "enable_auth": false,
@@ -28,7 +29,9 @@
         "sum": {
             "log_tokens": false
         },
-
+        "simply": {
+            "log_tokens": false
+        },
         "models": [
             {
                 "type": "AZURE",

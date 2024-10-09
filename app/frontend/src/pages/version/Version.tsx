@@ -10,9 +10,10 @@ import {
 import vorgeschlageneAntworten from "../../assets/vorgeschlagene_antworten.png";
 import zurückziehen from "../../assets/zurückziehen.png";
 import history from "../../assets/History.png"
+import simply from "../../assets/simply.png"
 import { useTranslation } from "react-i18next";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 const Version = () => {
@@ -32,20 +33,51 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="9">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="10">
+                    <AccordionItem value="10">
+                        <AccordionHeader>[1.2.1] 27.09.2024</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <ul>
+                                    <li><strong>Preview</strong><br />
+                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an. Dieses Feature ist allerdings noch nicht final getestet und ist somit nur auf der <Link to={"http://mucgpt-demo.muenchen.de"} >Demo Version von MUCGPT</Link> verfügbar.
+                                        <p>
+                                            <img width="70%" src={simply} alt="Bild zur Leichten Sprache"></img>
+                                        </p>
+                                        <ul>
+                                            <li>Über einen Chat können Texte an das Sprachmodell gesendet werden, die in leichte oder einfache Sprache übersetzt werden.</li>
+                                            <li>Oben rechts können Sie auswählen, ob der Text in leichte oder einfache Sprache übersetzt werden soll.</li>
+                                            <li>Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine breitere Zielgruppe zu erreichen.</li>
+                                            <li>Leichte Sprache verwendet einfache Wörter und kurze Sätze, um Informationen klar und verständlich zu vermitteln.</li>
+                                            <li>Das Feature "Leichte Sprache" nutzt dasselbe Sprachmodell wie die anderen Features, das über die Einstellungen ausgewählt wird. Wir empfehlen jedoch für die Nutzung von "Leichte Sprache" die Modelle <strong>mistral-large-2407</strong> oder <strong>gpt-4o</strong> zu verwenden.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                                <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>
+                                        Benutzer, die sich noch nicht in ServiceNow für MUCGPT registriert haben, werden beim Aufrufen des Dienstes automatisch zu ServiceNow weitergeleitet.
+                                    </li>
+                                </ul>
+                                <h3>{t('version.changed')}</h3>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="9">
                         <AccordionHeader>[1.2.0] 18.09.2024</AccordionHeader>
-                        <div className={styles.panel}>
-                            <h3>{t('version.added')}</h3>
-                            <h3>{t('version.fixed')}</h3>
-                            <ul>
-                                <li>
-                                    Generierter Code wurde manchmal nicht korrekt dargestellt (Klammern entfernt)
-                                </li>
-                            </ul>
-                            <h3>{t('version.changed')}</h3>
-                        </div>
-                        <AccordionPanel></AccordionPanel>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>
+                                        Generierter Code wurde manchmal nicht korrekt dargestellt (Klammern entfernt)
+                                    </li>
+                                </ul>
+                                <h3>{t('version.changed')}</h3>
+                            </div>
+                        </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="8">
                         <AccordionHeader>[1.1.4] 11.09.2024</AccordionHeader>

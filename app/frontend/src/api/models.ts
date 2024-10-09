@@ -37,6 +37,13 @@ export type BrainstormRequest = {
     language?: string;
 };
 
+export type SimplyRequest = {
+    topic: string;
+    temperature?: number;
+    model?: string;
+    output_type: string;
+};
+
 export interface ApplicationConfig {
     models: Model[];
     frontend: Frontend;
@@ -46,6 +53,7 @@ export interface ApplicationConfig {
 export interface Frontend {
     alternative_logo: boolean;
     labels: Labels;
+    enable_simply: boolean;
 }
 
 export interface Model {
@@ -77,4 +85,8 @@ export type CountTokenRequest = {
 
 export type CountTokenResponse = {
     count: number;
+};
+export type SimplyResponse = {
+    content: string;
+    error?: string;
 };

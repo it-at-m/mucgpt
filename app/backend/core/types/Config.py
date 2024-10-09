@@ -42,6 +42,7 @@ class BackendConfig(BaseModel):
     chat: ApproachConfig
     brainstorm: ApproachConfig
     sum: ApproachConfig
+    simply: ApproachConfig
     models: List[ModelsConfig]
 
 class LabelsConfig(BaseModel):
@@ -50,6 +51,7 @@ class LabelsConfig(BaseModel):
 class FrontendConfig(BaseModel):
     labels: LabelsConfig 
     alternative_logo: bool = False
+    enable_simply: bool = True
 
 class Config(BaseModel):
     """Config for an environment, is loaded from ressources/env.json

@@ -45,6 +45,7 @@ export const Layout = () => {
                 "env_name": "MUC tschibidi-C"
             },
             alternative_logo: true,
+            enable_simply: true
         },
         version: "DEV 1.0.0"
     });
@@ -56,6 +57,7 @@ export const Layout = () => {
     const { t, i18n } = useTranslation();
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
     const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
+    const [simply, setSimply] = useState<boolean>(true);
 
     const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
@@ -77,6 +79,7 @@ export const Layout = () => {
         configApi().then(result => {
             setConfig(result);
             setModels(result.models);
+            setSimply(result.frontend.enable_simply);
             if (result.models.length === 0) {
                 console.error("Keine Modelle vorhanden");
             }
@@ -144,6 +147,13 @@ export const Layout = () => {
                                 {t('header.brainstorm')}
                             </NavLink>
                         </div>
+                        {simply &&
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to="/simply" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    {t('header.simply')}
+                                </NavLink>
+                            </div>
+                        }
                         <SettingsDrawer
                             defaultlang={language_pref}
                             onLanguageSelectionChanged={onLanguageSelectionChanged}

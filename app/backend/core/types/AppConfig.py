@@ -5,6 +5,7 @@ from chat.chat import Chat
 from core.authentification import AuthentificationHelper
 from core.datahelper import Repository
 from core.types.Config import BackendConfig, Config
+from simply.simply import Simply
 from summarize.summarize import Summarize
 
 
@@ -14,6 +15,7 @@ class AppConfig(TypedDict):
     chat_approaches: Chat
     sum_approaches: Summarize
     brainstorm_approaches: Brainstorm
+    simply_approaches: Simply
     authentification_client: AuthentificationHelper
     configuration_features: Config
     repository: Repository

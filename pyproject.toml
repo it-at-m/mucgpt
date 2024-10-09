@@ -1,6 +1,6 @@
 [project]
 name = "MUCGPT"
-version = "1.2.0"
+version = "1.2.1"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 dependencies = [

@@ -122,7 +122,7 @@ langchain==0.3.2
     # via
     #   mucgpt (pyproject.toml)
     #   langchain-community
-langchain-community==0.3.1
+langchain-community==0.3.2
     # via mucgpt (pyproject.toml)
 langchain-core==0.3.9
     # via

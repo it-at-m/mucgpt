@@ -6,7 +6,7 @@ readme = "README.md"
 dependencies = [
     "mistral-common==1.4.4",
     "fastapi[standard]==0.115.0",
-    "langchain==0.3.2",
+    "langchain==0.3.3",
     "langchain_community==0.3.1",
     "langchain-openai==0.2.2",
     "langsmith==0.1.131",

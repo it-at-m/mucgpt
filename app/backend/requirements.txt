@@ -4,7 +4,7 @@ aiohappyeyeballs==2.4.3
     # via
     #   mucgpt (pyproject.toml)
     #   aiohttp
-aiohttp==3.10.9
+aiohttp==3.10.10
     # via
     #   mucgpt (pyproject.toml)
     #   langchain

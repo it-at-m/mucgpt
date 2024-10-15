@@ -16,7 +16,7 @@ dependencies = [
     "tiktoken",
     "pypdf==5.0.1",
     "gunicorn",
-    "uvicorn==0.31.0",
+    "uvicorn==0.32.0",
     "psycopg2",
     "werkzeug==3.0.4",
     "aiohttp==3.10.9",

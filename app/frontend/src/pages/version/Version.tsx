@@ -41,7 +41,7 @@ const Version = () => {
                                 <h3>{t('version.added')}</h3>
                                 <ul>
                                     <li><strong>Preview</strong><br />
-                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an. Dieses Feature ist allerdings noch nicht final getestet und ist somit nur auf der <Link to={"http://mucgpt-demo.muenchen.de"} >Demo Version von MUCGPT</Link> verfügbar.
+                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an.
                                         <p>
                                             <img width="70%" src={simply} alt="Bild zur Leichten Sprache"></img>
                                         </p>

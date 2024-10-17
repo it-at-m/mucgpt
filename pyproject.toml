@@ -5,31 +5,39 @@ description = "a web interface for large language models for the public administ
 readme = "README.md"
 dependencies = [
     "mistral-common==1.4.4",
-    "fastapi[standard]==0.115.0",
+    "fastapi[standard]==0.115.2",
     "dnspython==2.7.0",
     "langchain==0.3.3",
+    "langchain-core==0.3.11",
     "langchain_community==0.3.2",
     "langchain-openai==0.2.2",
     "openai==1.51.2",
-    "langsmith==0.1.132",
+    "langsmith==0.1.135",
     "joserfc",
     "tiktoken",
     "pypdf==5.0.1",
     "gunicorn",
-    "uvicorn==0.31.0",
-    "psycopg2",
+    "uvicorn==0.32.0",
+    "psycopg2==2.9.10",
     "werkzeug==3.0.4",
-    "aiohttp==3.10.9",
+    "aiohttp==3.10.10",
     "aiohappyeyeballs==2.4.3",
     "httpcore==1.0.6",
-] 
+    "jsonschema-specifications==2024.10.1",
+    "markupsafe==3",
+    "yarl==1.15.4",
+    "rich==13.9.2",
+    "starlette==0.40.0",
+    "python-multipart==0.0.12",
+    "sqlalchemy==2.0.36",
+]
 
 [project.optional-dependencies]
 dev = [
-    "uv==0.4.20",
+    "uv==0.4.22",
     "ruff",
     "black==24.10.0",
-    "pre-commit"
+    "pre-commit==4.0.1"
 ]
 test = [
     "pytest-env",
@@ -37,7 +45,7 @@ test = [
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage",
+    "coverage==7.6.3",
     "pytest-cov"
 ]
 

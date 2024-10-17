@@ -8,7 +8,7 @@ dependencies = [
     "fastapi[standard]==0.115.2",
     "dnspython==2.7.0",
     "langchain==0.3.3",
-    "langchain-core==0.3.11",
+    "langchain-core==0.3.12",
     "langchain_community==0.3.2",
     "langchain-openai==0.2.2",
     "openai==1.51.2",

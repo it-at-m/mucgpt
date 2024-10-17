@@ -110,7 +110,7 @@ langchain==0.3.3
     #   langchain-community
 langchain-community==0.3.2
     # via mucgpt (pyproject.toml)
-langchain-core==0.3.11
+langchain-core==0.3.12
     # via
     #   mucgpt (pyproject.toml)
     #   langchain

@@ -281,7 +281,7 @@ watchfiles==0.24.0
     # via uvicorn
 websockets==13.1
     # via uvicorn
-werkzeug==3.0.4
+werkzeug==3.0.6
     # via mucgpt (pyproject.toml)
 yarl==1.15.4
     # via

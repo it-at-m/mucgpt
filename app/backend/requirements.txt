@@ -54,7 +54,7 @@ dnspython==2.7.0
     #   email-validator
 email-validator==2.2.0
     # via fastapi
-fastapi==0.115.2
+fastapi==0.115.4
     # via mucgpt (pyproject.toml)
 fastapi-cli==0.0.5
     # via fastapi

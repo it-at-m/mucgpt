@@ -5,7 +5,7 @@ description = "a web interface for large language models for the public administ
 readme = "README.md"
 dependencies = [
     "mistral-common==1.4.4",
-    "fastapi[standard]==0.115.2",
+    "fastapi[standard]==0.115.4",
     "dnspython==2.7.0",
     "langchain==0.3.3",
     "langchain-core==0.3.11",

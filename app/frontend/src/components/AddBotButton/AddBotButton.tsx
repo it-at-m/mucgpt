@@ -13,6 +13,7 @@ export const AddBotButton = ({ onClick }: Props) => {
         <div className={styles.container}>
             <Tooltip content={t('components.add_bot_button.add_bot')} relationship="description" positioning="below">
                 <Button appearance="secondary" aria-label={t('components.add_bot_button.add_bot')} icon={<BotAdd24Regular className={styles.iconLeftMargin} />} onClick={onClick} size="large">
+                    {t('components.add_bot_button.add_bot')}
                 </Button>
             </Tooltip>
         </div >

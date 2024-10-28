@@ -23,9 +23,6 @@ const Menu = () => {
 
     return (
         <div className={styles.container}>
-            <div className={styles.rowheader}>
-                Offizielle Funktionen
-            </div>
             <div className={styles.row}>
                 <Link to="/chat" className={styles.box}>
                     {t('header.chat')}
@@ -57,11 +54,10 @@ const Menu = () => {
                 Community Assistenten
             </div>
             <div className={styles.row}>
-                <h2>Comming soon...</h2>
+                Comming soon...
             </div>
         </div >
     );
 };
 
 export default Menu;
-

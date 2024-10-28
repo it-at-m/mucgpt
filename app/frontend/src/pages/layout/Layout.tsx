@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, Navigate, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
@@ -112,16 +112,13 @@ export const Layout = () => {
 
     };
 
-
-
     return (
 
         <FluentProvider theme={theme}>
 
             <div className={styles.layout}>
-                <header className={styles2.header} role={"banner"}>
-                    <div className={styles.headerNavList}>
-
+                <header className={styles2.header} role={"banner"} >
+                    <div className={styles.header}>
                         <Link to="/" className={styles.headerTitleContainer}>
                             <img
                                 src={config.frontend.alternative_logo ? alternative_logo : (isLight ? logo : logo_black)}
@@ -131,42 +128,60 @@ export const Layout = () => {
                             ></img>
                             <h3 className={styles.headerTitle} aria-description="Umgebung:">{config.frontend.labels.env_name}</h3>
                         </Link>
-
-                        <div className={styles.headerNavLeftMargin}>
-                            <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                {t('header.chat')}
-                            </NavLink>
-                        </div>
-                        <div className={styles.headerNavLeftMargin}>
-                            <NavLink to="/sum" state={{ from: "This is my props" }} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                {t('header.sum')}
-                            </NavLink>
-                        </div>
-                        <div className={styles.headerNavLeftMargin}>
-                            <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                {t('header.brainstorm')}
-                            </NavLink>
-                        </div>
-                        {simply &&
+                        <div className={styles.headerNavList}>
                             <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/simply" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.simply')}
+                                <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    MUCGPT
                                 </NavLink>
                             </div>
-                        }
-                        <SettingsDrawer
-                            defaultlang={language_pref}
-                            onLanguageSelectionChanged={onLanguageSelectionChanged}
-                            version={config.version}
-                            fontscale={fontscaling}
-                            setFontscale={onFontscaleChange}
-                            isLight={isLight}
-                            setTheme={onThemeChange}
-                            defaultLLM={llm_pref}
-                            onLLMSelectionChanged={onLLMSelectionChanged}
-                            llmOptions={models}
-                            currentLLM={LLM}
-                        ></SettingsDrawer>
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to="/bot" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    Eigener Assistent
+                                </NavLink>
+                            </div>
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to="/create" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    Assistenten erstellen
+                                </NavLink>
+                            </div>
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    {t('header.chat')}
+                                </NavLink>
+                            </div>
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to="/sum" state={{ from: "This is my props" }} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    {t('header.sum')}
+                                </NavLink>
+                            </div>
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    {t('header.brainstorm')}
+                                </NavLink>
+                            </div>
+                            {simply &&
+                                <div className={styles.headerNavLeftMargin}>
+                                    <NavLink to="/simply" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                        {t('header.simply')}
+                                    </NavLink>
+                                </div>
+                            }
+                        </div>
+                        <div className={styles.SettingsDrawer}>
+                            <SettingsDrawer
+                                defaultlang={language_pref}
+                                onLanguageSelectionChanged={onLanguageSelectionChanged}
+                                version={config.version}
+                                fontscale={fontscaling}
+                                setFontscale={onFontscaleChange}
+                                isLight={isLight}
+                                setTheme={onThemeChange}
+                                defaultLLM={llm_pref}
+                                onLLMSelectionChanged={onLLMSelectionChanged}
+                                llmOptions={models}
+                                currentLLM={LLM}
+                            ></SettingsDrawer>
+                        </div>
                     </div>
                 </header>
                 <Outlet />
@@ -181,7 +196,7 @@ export const Layout = () => {
                     </div>
                 </footer>
             </div>
-        </FluentProvider>
+        </FluentProvider >
     );
 };
 

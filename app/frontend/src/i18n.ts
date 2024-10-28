@@ -67,6 +67,12 @@ i18n
                         messages: "Nachrichten",
                         examples: "Beispiele"
                     },
+                    create_bot: {
+                        title: "Titel",
+                        description: "Beschreibung",
+                        prompt: "System Prompt",
+                        create: "Erstellen"
+                    },
                     components: {
                         roles: {
                             student: "Student*innnen",
@@ -196,6 +202,9 @@ i18n
                             unsave: "Aus Favoriten entfernen",
                             error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!",
                             saved_in_browser: "Im Browser gespeicherte Chats"
+                        },
+                        add_bot_button: {
+                            add_bot: "Erstelle deinen eigenen Assistenten"
                         }
                     }
                 }
@@ -252,6 +261,12 @@ i18n
                         close: "Close",
                         messages: "Messages",
                         examples: "Examples"
+                    },
+                    create_bot: {
+                        title: "Title",
+                        description: "Description",
+                        prompt: "System prompt",
+                        create: "Create"
                     },
                     components: {
                         roles: {
@@ -382,6 +397,9 @@ i18n
                             unsave: "Remove from Favourites",
                             error: "Do not change the Tab before the Answer is fully generated!",
                             saved_in_browser: "Chats saved in Browser"
+                        },
+                        add_bot_button: {
+                            add_bot: "Create your own Assistem"
                         }
                     }
                 }
@@ -439,6 +457,12 @@ i18n
                         added: "Nei",
                         fixed: "Fehla beseitigt",
                         changed: "Änderunga"
+                    },
+                    create_bot: {
+                        title: "Titel",
+                        description: "Beschreibung",
+                        prompt: "System Prompt",
+                        create: "Erstellen"
                     },
                     components: {
                         roles: {
@@ -569,6 +593,9 @@ i18n
                             unsave: "Vo Favoritn entfernen",
                             error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!",
                             saved_in_browser: "Im Browser gespeichade Chats"
+                        },
+                        add_bot_button: {
+                            add_bot: "Erstell dein eigenen Assistenten"
                         }
                     }
                 }

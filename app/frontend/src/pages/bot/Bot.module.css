@@ -1,0 +1,217 @@
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+}
+
+.chatRoot {
+    flex: 1;
+    display: flex;
+}
+
+.chatContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.chatEmptyState {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-height: 1024px;
+    padding-top: 20px;
+}
+
+.chatEmptyStateTitle {
+    font-size: 4rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+.chatEmptyStateSubtitle {
+    font-weight: 600;
+    margin: 1em;
+    text-align: center;
+}
+
+@media (max-height: 780px) {
+    .chatEmptyState {
+        padding-top: 0;
+    }
+
+    .chatEmptyStateTitle {
+        font-size: 3rem;
+        margin-bottom: 0px;
+    }
+}
+
+@media (max-width: 650px) {
+    .commandsContainer {
+        flex-direction: column;
+        display: flex;
+    }
+}
+
+.chatMessageStream {
+    flex-grow: 1;
+    max-height: 1024px;
+    max-width: 1028px;
+    width: 100%;
+    overflow-y: auto;
+    padding-left: 24px;
+    padding-right: 24px;
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+
+.chatMessageGpt {
+    margin-bottom: 20px;
+    max-width: 80%;
+    display: flex;
+    min-width: 500px;
+}
+
+.chatMessageGptMinWidth {
+    max-width: 500px;
+    margin-bottom: 20px;
+}
+
+.chatInput {
+    position: sticky;
+    bottom: 0;
+    flex: 0 0 100px;
+    padding-top: 12px;
+    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    width: 100%;
+    max-width: 1028px;
+}
+
+.chatAnalysisPanel {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 89vh;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.chatSettingsSeparator {
+    margin-top: 15px;
+}
+
+.loadingLogo {
+    font-size: 28px;
+}
+
+.commandsContainer {
+    display: flex;
+    justify-content: end;
+}
+
+.commandButton {
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+/* Styles für den Container */
+.create_container {
+    max-width: 60%;
+    max-height: 60%;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    justify-content: space-between;
+}
+
+/* Styles für die Textarea-Elemente */
+.TextAreaTitle,
+.TextAreaDescription,
+.TextAreaSystemprompt {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+/* Platzhalter-Text */
+.TextAreaTitle::placeholder,
+.TextAreaDescription::placeholder,
+.TextAreaSystemprompt::placeholder {
+    color: #999;
+}
+
+/* Styles für das Dropdown-Menü */
+.Dropdown {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    background-color: #fff;
+}
+
+/* Styles für die Dropdown-Optionen */
+.option {
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.option:hover {
+    background-color: #f0f0f0;
+}
+
+/* Styles für den Button */
+.Button {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.Button:hover {
+    background-color: #0056b3;
+}
+
+.create_button {
+    margin-top: 20;
+    align-self: center;
+}
+.systempromptTextArea {
+    width: 95%;
+    max-width: 95%;
+    height: 50%;
+    max-height: 80%;
+}
+
+.backButton {
+    left: 20;
+}
+
+.saveButton {
+    right: 20;
+}
+.field {
+    max-width: 50%;
+    margin-left: 10px;
+    margin-right: 10px;
+}

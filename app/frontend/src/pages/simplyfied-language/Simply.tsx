@@ -122,7 +122,7 @@ const Simply = () => {
                             </DialogContent>
                             <DialogActions>
                                 <DialogTrigger disableButtonEnhancement>
-                                    <Button appearance="secondary" size="small">
+                                    <Button appearance="secondary" size="small" >
                                         <Checkmark24Filled className={styles.checkIcon} /> Verstanden</Button>
                                 </DialogTrigger>
                             </DialogActions>

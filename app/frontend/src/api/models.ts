@@ -90,3 +90,12 @@ export type SimplyResponse = {
     content: string;
     error?: string;
 };
+export type Bot = {
+    title: string;
+    description: string;
+    system_message: string;
+    publish: boolean;
+    id: number;
+    temperature: number;
+    max_output_tokens: number;
+};

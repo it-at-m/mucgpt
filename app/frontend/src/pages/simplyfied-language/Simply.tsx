@@ -131,7 +131,9 @@ const Simply = () => {
                 </Dialog>
             </div>
             <div className={styles.commandsContainer}>
-                <RadioGroup layout="horizontal" onChange={onOutputTypeChanged} value={outputType}>
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+
+                <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
                     <Tooltip content={t('simply.plain_description')} relationship="description" positioning="below">
                         <Radio value="plain" label={t('simply.plain')} />
                     </Tooltip>
@@ -139,7 +141,6 @@ const Simply = () => {
                         <Radio value="easy" label={t('simply.easy')} />
                     </Tooltip>
                 </RadioGroup>
-                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>

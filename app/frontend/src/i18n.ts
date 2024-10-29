@@ -399,7 +399,7 @@ i18n
                             saved_in_browser: "Chats saved in Browser"
                         },
                         add_bot_button: {
-                            add_bot: "Create your own Assistem"
+                            add_bot: "Create your own Assistent"
                         }
                     }
                 }

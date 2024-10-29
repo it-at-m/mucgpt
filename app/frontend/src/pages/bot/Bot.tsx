@@ -258,7 +258,7 @@ const BotChat = () => {
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
-                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
                 <BotsettingsDrawer
                     temperature={temperature}
                     setTemperature={onTemperatureChanged}
@@ -360,4 +360,3 @@ const BotChat = () => {
 };
 
 export default BotChat;
-

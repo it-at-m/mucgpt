@@ -1,5 +1,6 @@
 .answerContainer {
-    padding: 20px;
+    padding: 1em;
+    margin: 1em;
     background: var(--colorNeutralBackground1Hover);
     border-radius: 8px;
     box-shadow:

@@ -22,7 +22,6 @@
     height: auto;
     flex: 1;
     display: flex;
-    margin-right: 10px;
     overflow: auto;
     flex-wrap: wrap;
     font-size: var(--fontSizeBase400);

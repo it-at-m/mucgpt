@@ -1,8 +1,10 @@
 .container {
     flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: row-reverse;
     margin-top: 20px;
+    margin-right: 1em;
+    margin-left: 1em;
 }
 
 .chatRoot {
@@ -53,20 +55,25 @@
 }
 
 @media (max-width: 650px) {
+    .container {
+        flex-direction: column;
+    }
     .commandsContainer {
         flex-direction: column;
         display: flex;
+    }
+    .chatRoot {
+        flex-direction: column-reverse;
+        align-items: center;
     }
 }
 
 .chatMessageStream {
     flex-grow: 1;
     max-height: 1024px;
-    max-width: 1028px;
-    width: 100%;
     overflow-y: auto;
-    padding-left: 24px;
-    padding-right: 24px;
+    margin-left: 3em;
+    margin-right: 3em;
     display: flex;
     flex-direction: column;
     list-style: none;
@@ -76,11 +83,11 @@
     margin-bottom: 20px;
     max-width: 80%;
     display: flex;
-    min-width: 500px;
+    min-width: 50%;
 }
 
 .chatMessageGptMinWidth {
-    max-width: 500px;
+    max-width: 50%;
     margin-bottom: 20px;
 }
 
@@ -96,14 +103,6 @@
     max-width: 1028px;
 }
 
-.chatAnalysisPanel {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 89vh;
-    margin-left: 20px;
-    margin-right: 20px;
-}
-
 .chatSettingsSeparator {
     margin-top: 15px;
 }
@@ -113,11 +112,9 @@
 }
 
 .commandsContainer {
+    margin-left: 5px;
     display: flex;
-    justify-content: end;
-}
-
-.commandButton {
-    margin-right: 20px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
 }

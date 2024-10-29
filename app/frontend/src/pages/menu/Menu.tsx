@@ -49,6 +49,7 @@ const Menu = () => {
                         {bot.title}
                     </Link>
                 ))}
+                {bots.length === 0 && <div>Keine Assistenten gefunden</div>}
             </div>
             <div className={styles.rowheader}>
                 Community Assistenten

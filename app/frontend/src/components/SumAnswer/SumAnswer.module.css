@@ -1,5 +1,6 @@
 .sumanswerContainer {
-    padding: 20px;
+    padding: 1em;
+    margin: 1em;
     border-radius: 8px;
     background: var(--colorNeutralBackground1Hover);
     box-shadow:

@@ -177,7 +177,7 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
             </Drawer>
             <div className={styles.button}>
                 <Tooltip content={t('components.history.button')} relationship="description" positioning="below">
-                    <Button aria-label={t('components.history.button')} icon={<History24Regular />} appearance="secondary" onClick={() => open()} size="large">
+                    <Button aria-label={t('components.history.button')} icon={<History24Regular />} appearance="subtle" onClick={() => open()} size="large">
                     </Button>
                 </Tooltip>
             </div>

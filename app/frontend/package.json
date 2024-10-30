@@ -16,10 +16,10 @@
   "dependencies": {
     "@fluentui/react": "^8.120.10",
     "@fluentui/react-components": "^9.55.1",
-    "@fluentui/react-icons": "^2.0.261",
+    "@fluentui/react-icons": "^2.0.263",
     "@react-spring/web": "^9.7.3",
     "dompurify": "^3.1.7",
-    "i18next": "^23.16.0",
+    "i18next": "^23.16.4",
     "markmap-common": "^0.17.1",
     "markmap-lib": "^0.17.2",
     "markmap-toolbar": "^0.17.2",
@@ -28,7 +28,7 @@
     "ndjson-readablestream": "^1.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-i18next": "^15.0.3",
+    "react-i18next": "^15.1.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.27.0",
     "react-syntax-highlighter": "^15.6.1",
@@ -41,9 +41,9 @@
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@vitejs/plugin-react": "^4.3.2",
+    "@vitejs/plugin-react": "^4.3.3",
     "prettier": "^3.3.2",
     "typescript": "^5.6.3",
-    "vite": "^5.4.9"
+    "vite": "^5.4.10"
   }
 }

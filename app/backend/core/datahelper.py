@@ -46,7 +46,7 @@ class Repository:
             password=password
         )
         self.engine = create_engine(url)
-    
+
     def setup_schema(self, base):
         base.metadata.create_all(self.engine)
 
@@ -65,7 +65,7 @@ class Repository:
             infos_objs = session.query(Requestinfo)
             results = infos_objs.all()
             return results
-    
+
     def countByDepartment(self):
         with Session(self.engine) as session:
             queryResult = session.query(Requestinfo.department, func.count(Requestinfo.tokencount)).group_by(Requestinfo.department)
@@ -77,21 +77,21 @@ class Repository:
         with Session(self.engine) as session:
             queryResult = session.query(Requestinfo.department, func.sum(Requestinfo.tokencount)).group_by(Requestinfo.department)
             results = queryResult.all()
-            results = [tuple(row) for row in results]
+            results = [{"department": row[0], "tokencount": float(row[1])} for row in results]
             return results
 
     def avgByDepartment(self):
         with Session(self.engine) as session:
             queryResult = session.query(Requestinfo.department, func.avg(Requestinfo.tokencount)).group_by(Requestinfo.department)
             results = queryResult.all()
-            results = [tuple(row) for row in results]
+            results = [{"department": row[0], "tokencount": float(row[1])} for row in results]
             return results
-    
+
     def clear(self):
         with Session(self.engine) as session:
             session.query(Requestinfo).delete()
             session.commit()
-            
+
     def export(self):
         memfile = io.StringIO()
         outcsv = csv.writer(memfile, delimiter=',',quotechar='"', quoting = csv.QUOTE_MINIMAL)
@@ -99,13 +99,9 @@ class Repository:
         [outcsv.writerow([getattr(curr, column.name) for column in Requestinfo.__mapper__.columns]) for curr in self.getAll()]
 
         memfile.seek(0)
-        # Das StringIO-Objekt in ein BytesIO-Objekt umwandeln
-        memfile_bytesio = io.BytesIO(memfile.getvalue().encode())
-        return memfile_bytesio
-    
+        return memfile
+
     def truncate_string(self, s, length):
         if len(s) > length:
             return s[:length]
         return s
-            
-    

@@ -5,29 +5,29 @@ description = "a web interface for large language models for the public administ
 readme = "README.md"
 dependencies = [
     "mistral-common==1.4.4",
-    "fastapi[standard]==0.115.2",
+    "fastapi[standard]==0.115.4",
     "dnspython==2.7.0",
-    "langchain==0.3.3",
-    "langchain-core==0.3.11",
-    "langchain_community==0.3.2",
-    "langchain-openai==0.2.2",
-    "openai==1.51.2",
-    "langsmith==0.1.135",
+    "langchain==0.3.5",
+    "langchain-core==0.3.13",
+    "langchain_community==0.3.3",
+    "langchain-openai==0.2.4",
+    "openai==1.52.2",
+    "langsmith==0.1.137",
     "joserfc",
     "tiktoken",
-    "pypdf==5.0.1",
+    "pypdf==5.1.0",
     "gunicorn",
     "uvicorn==0.32.0",
     "psycopg2==2.9.10",
-    "werkzeug==3.0.4",
+    "werkzeug==3.0.6",
     "aiohttp==3.10.10",
     "aiohappyeyeballs==2.4.3",
     "httpcore==1.0.6",
     "jsonschema-specifications==2024.10.1",
-    "markupsafe==3",
+    "markupsafe==3.0.2",
     "yarl==1.15.4",
-    "rich==13.9.2",
-    "starlette==0.40.0",
+    "rich==13.9.3",
+    "starlette==0.41.2",
     "python-multipart==0.0.12",
     "sqlalchemy==2.0.36",
 ]
@@ -35,7 +35,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "uv==0.4.22",
-    "ruff",
+    "ruff==0.7.1",
     "black==24.10.0",
     "pre-commit==4.0.1"
 ]
@@ -51,9 +51,12 @@ test = [
 
 [tool.ruff]
 target-version = "py38"
-lint.select = ["E", "F", "I", "UP"]
-lint.ignore = ["E501", "E701"] # line too long, multiple statements on one line
 src = ["app/backend"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501", "E701"] # line too long, multiple statements on one line
+
 
 [tool.black]
 line-length = 300

@@ -11,6 +11,15 @@
     justify-content: space-between;
 }
 
+.title_text {
+    width: 95%;
+    overflow-wrap: break-word;
+}
+
+.title_close {
+    width: 5%;
+}
+
 .list {
     list-style: none;
     padding: 0;

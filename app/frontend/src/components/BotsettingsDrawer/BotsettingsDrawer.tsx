@@ -139,6 +139,7 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
                                 value={title}
                                 size="large"
                                 rows={1}
+                                maxLength={100}
                                 onChange={onTitleChange}
                             />
                         </Field>

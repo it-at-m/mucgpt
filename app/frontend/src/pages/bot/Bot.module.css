@@ -121,6 +121,7 @@
 
 /* Styles für den Container */
 .create_container {
+    justify-content: space-between;
     max-width: 60%;
     max-height: 60%;
     margin: auto;
@@ -130,47 +131,6 @@
     background-color: #f9f9f9;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     justify-content: space-between;
-}
-
-/* Styles für die Textarea-Elemente */
-.TextAreaTitle,
-.TextAreaDescription,
-.TextAreaSystemprompt {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    resize: vertical;
-    font-size: 16px;
-    margin-bottom: 15px;
-}
-
-/* Platzhalter-Text */
-.TextAreaTitle::placeholder,
-.TextAreaDescription::placeholder,
-.TextAreaSystemprompt::placeholder {
-    color: #999;
-}
-
-/* Styles für das Dropdown-Menü */
-.Dropdown {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-    margin-bottom: 15px;
-    background-color: #fff;
-}
-
-/* Styles für die Dropdown-Optionen */
-.option {
-    padding: 10px;
-    border-radius: 4px;
-}
-
-.option:hover {
-    background-color: #f0f0f0;
 }
 
 /* Styles für den Button */

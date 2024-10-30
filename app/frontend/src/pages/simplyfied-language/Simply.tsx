@@ -106,8 +106,8 @@ const Simply = () => {
         <div className={styles.container}>
             <div>
                 <Dialog modalType="alert" defaultOpen={true}>
-                    <DialogSurface className={styles.dialog}>
-                        <DialogBody className={styles.dialogContent} >
+                    <DialogSurface>
+                        <DialogBody>
                             <DialogTitle >Hinweis zur Funktion "Leichte Sprache"</DialogTitle>
                             <DialogContent>
                                 Vielen Dank für Ihr Interesse an unserer Funktion "Leichte Sprache". Wir möchten Sie darauf hinweisen, dass diese Funktion derzeit noch in einer Demo-Version verfügbar ist und noch nicht vollständig getestet wurde.<br />

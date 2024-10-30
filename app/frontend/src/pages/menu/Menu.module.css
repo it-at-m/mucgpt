@@ -30,7 +30,8 @@
     flex: 1;
     text-align: center;
     margin-top: 0px;
-    overflow-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
     min-width: 200px;
     height: 100px;
     border-radius: 20px;
@@ -58,4 +59,20 @@
     top: 45%;
     align-self: center;
     overflow-wrap: break-word;
+}
+
+.dialog {
+    padding: 0 !important;
+    min-width: 1100px;
+    line-height: 1.5;
+}
+
+@media (max-width: 650px) {
+    .dialog {
+        min-width: 400px;
+    }
+}
+
+.dialogContent {
+    padding: 20px;
 }

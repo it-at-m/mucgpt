@@ -79,10 +79,6 @@ const BotChat = () => {
     }, []);
 
     useEffect(() => {
-        console.log(title, description)
-    }, [title, description, systemPrompt]);
-
-    useEffect(() => {
         makeTokenCountRequest();
         if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
             onMaxTokensChanged(LLM.max_output_tokens)
@@ -278,7 +274,6 @@ const BotChat = () => {
                 <div className={styles.chatContainer}>
                     {!lastQuestionRef.current ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>{title}</h2>
                             <h3 className={styles.chatEmptyStateSubtitle}>{description}</h3>
                         </div>
                     ) : (

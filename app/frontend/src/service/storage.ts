@@ -347,7 +347,6 @@ export async function getAllBots() {
             }
             let getRequest = openRequest.result.transaction(bot_storage.objectStore_name, "readonly").objectStore(bot_storage.objectStore_name).getAll();
             getRequest.onsuccess = function () {
-                console.log(getRequest.result);
                 resolve(getRequest.result);
             };
             getRequest.onerror = () => reject(getRequest.error);
@@ -382,4 +381,9 @@ export async function deleteBotWithId(id: number) {
     openRequest.onsuccess = function () {
         let getRequest = openRequest.result.transaction(bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).delete(id);
     };
+}
+
+export async function getBotName(id: number): Promise<string> {
+    const bot = await getBotWithId(id);
+    return bot ? bot.title : "";
 }

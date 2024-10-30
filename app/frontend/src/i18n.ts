@@ -20,7 +20,8 @@ i18n
                         chat: "Chat",
                         brainstorm: "Brainstorming",
                         simply: "Leichte Sprache",
-                        nutzungsbedingungen: "Nutzungsbedingungen"
+                        nutzungsbedingungen: "Nutzungsbedingungen",
+                        create_bot: "Assistent erstellen"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -216,7 +217,8 @@ i18n
                         chat: "Chat",
                         brainstorm: "Brainstorming",
                         simply: "Simplyfied Language",
-                        nutzungsbedingungen: "Terms of use"
+                        nutzungsbedingungen: "Terms of use",
+                        create_bot: "Create assistant"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -411,7 +413,8 @@ i18n
                         chat: "Redn",
                         brainstorm: "Gedanknschmarrn",
                         simply: "Oafache Sproch",
-                        nutzungsbedingungen: "Gebrauchsvorschriftn"
+                        nutzungsbedingungen: "Gebrauchsvorschriftn",
+                        create_bot: "Assistenten erstoin"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",

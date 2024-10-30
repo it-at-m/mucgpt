@@ -13,6 +13,7 @@ import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from '@fluentui/react-components';
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { getBotName } from "../../service/storage";
 
 const formatDate = (date: Date) => {
     let formatted_date =
@@ -23,6 +24,7 @@ const formatDate = (date: Date) => {
 
 
 export const Layout = () => {
+    const { id } = useParams();
     const styles2 = useStyles();
     const navigate = useNavigate()
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
@@ -62,6 +64,8 @@ export const Layout = () => {
     const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
+    const [title, setTitle] = useState<string>("");
+
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
@@ -76,6 +80,11 @@ export const Layout = () => {
     };
 
     useEffect(() => {
+        if (id) {
+            getBotName(+id).then(title => {
+                setTitle(title);
+            });
+        }
         configApi().then(result => {
             setConfig(result);
             setModels(result.models);
@@ -87,6 +96,14 @@ export const Layout = () => {
         }, () => { console.error("Config nicht geladen"); });
         i18n.changeLanguage(language_pref);
     }, []);
+
+    useEffect(() => {
+        if (id) {
+            getBotName(+id).then(title => {
+                setTitle(title);
+            });
+        }
+    }, [id]);
 
     const onAcceptTermsOfUse = () => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
@@ -136,12 +153,12 @@ export const Layout = () => {
                             </div>
                             <div className={styles.headerNavLeftMargin}>
                                 <NavLink to="/bot" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    Eigener Assistent
+                                    {title}
                                 </NavLink>
                             </div>
                             <div className={styles.headerNavLeftMargin}>
                                 <NavLink to="/create" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    Assistenten erstellen
+                                    {t('header.create_bot')}
                                 </NavLink>
                             </div>
                             <div className={styles.headerNavLeftMargin}>

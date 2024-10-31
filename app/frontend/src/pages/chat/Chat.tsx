@@ -294,7 +294,6 @@ const Chat = () => {
                                         {index === answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index}
                                             onRegenerateResponseClicked={onRegeneratResponseClicked}
                                             setQuestion={question => setQuestion(question)}
                                         />
@@ -302,7 +301,6 @@ const Chat = () => {
                                         {index !== answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index}
                                             setQuestion={question => setQuestion(question)}
                                         />
                                         }

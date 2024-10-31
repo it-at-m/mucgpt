@@ -6,8 +6,12 @@
     box-shadow:
         0px 2px 4px var(--colorBrandForeground2),
         0px 0px 2px var(--colorBrandForeground2);
-    outline: transparent solid 1px;
-    border-style: groove;
+    border: transparent solid 1px;
+    max-width: 100%;
+}
+
+.answerContainer:hover {
+    border-left: 1px solid rgb(0, 0, 0);
 }
 
 .iconRightMargin {
@@ -32,28 +36,6 @@
 .answerText th {
     border: 1px solid;
     padding: 5px;
-}
-
-.selected {
-    outline: 2px solid rgba(115, 118, 225, 1);
-}
-
-.citationLearnMore {
-    margin-right: 5px;
-    font-weight: 600;
-    line-height: 24px;
-}
-
-.citation {
-    font-weight: 500;
-    line-height: 24px;
-    text-align: center;
-    border-radius: 4px;
-    padding: 0px 8px;
-    background: #d1dbfa;
-    color: #123bb6;
-    text-decoration: none;
-    cursor: pointer;
 }
 
 @keyframes loading {

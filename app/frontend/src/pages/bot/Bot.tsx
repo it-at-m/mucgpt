@@ -294,7 +294,6 @@ const BotChat = () => {
                                         <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index}
                                             setQuestion={question => setQuestion(question)}
                                         />
                                     </li>

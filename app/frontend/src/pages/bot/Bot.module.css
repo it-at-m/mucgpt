@@ -26,7 +26,6 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    max-height: 1024px;
     padding-top: 20px;
 }
 
@@ -70,9 +69,8 @@
 
 .chatMessageStream {
     flex-grow: 1;
-    max-height: 1024px;
     overflow-y: auto;
-    margin-left: 3em;
+    margin-left: 1em;
     margin-right: 3em;
     display: flex;
     flex-direction: column;
@@ -112,6 +110,7 @@
 }
 
 .commandsContainer {
+    position: fixed;
     margin-left: 5px;
     display: flex;
     flex-direction: column;

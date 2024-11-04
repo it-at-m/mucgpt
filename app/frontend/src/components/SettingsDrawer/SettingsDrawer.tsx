@@ -47,25 +47,31 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
     const onFontscaleChange: SliderProps["onChange"] = (_, data) =>
         setFontscale(data.value);
 
+    const closeDrawer = () => {
+        setIsOpen(false);
+    }
+
     return (
         <div>
             <OverlayDrawer
                 size="small"
                 position="end"
                 open={isOpen}
-                style={{ 'padding': "30px", 'alignItems': 'stretch' }}
+                style={{ 'padding': "30px", 'alignItems': 'stretch', 'overflowY': 'auto', 'height': '100vh' }}
             >
                 <div className={styles.title} role="heading" aria-level={2}>
 
-                    {t('components.settingsdrawer.settings')}
-                    <Tooltip content={t('components.settingsdrawer.settings_button_close')} relationship="description" positioning="below">
-                        <Button
-                            appearance="subtle"
-                            aria-label={t('components.settingsdrawer.settings_button_close')}
-                            icon={<Dismiss24Regular />}
-                            onClick={() => setIsOpen(false)}
-                        />
-                    </Tooltip>
+                    <div className={styles.title_text}>{t('components.settingsdrawer.settings')}</div>
+                    <div className={styles.title_close}>
+                        <Tooltip content={t('components.settingsdrawer.settings_button_close')} relationship="description" positioning="below">
+                            <Button
+                                appearance="subtle"
+                                aria-label={t('components.settingsdrawer.settings_button_close')}
+                                icon={<Dismiss24Regular />}
+                                onClick={closeDrawer}
+                            />
+                        </Tooltip>
+                    </div>
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t('components.settingsdrawer.language')}

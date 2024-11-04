@@ -612,12 +612,377 @@ i18n
                     }
                 }
             },
+            French: {
+                translation: {
+                    header: {
+                        sum: "Résumer",
+                        chat: "Chat",
+                        brainstorm: "Brainstorming",
+                        simply: "Langage facile",
+                        nutzungsbedingungen: "Conditions d'utilisation"
+                    },
+                    chat: {
+                        header: "Posez une question ou essayez un exemple",
+                        prompt: "Posez une question",
+                        answer_loading: "Créer une réponse"
+                    },
+                    sum: {
+                        header: "Faites résumer le texte ou essayez un exemple",
+                        prompt: "Résumer ce texte ou faites glisser un PDF ici",
+                        rolelabel: "Résumer pour",
+                        lengthlabel: "en",
+                        answer_loading: "Résumer",
+                        levelofdetail: "Niveau de détail",
+                        short: "Court",
+                        medium: "Moyen",
+                        long: "Long"
+                    },
+                    version: {
+                        header: "Quoi de neuf ?",
+                        added: "Nouveau",
+                        fixed: "Bugs corrigés",
+                        changed: "Changements"
+                    },
+                    brainstorm: {
+                        header: "Trouvez des idées sur un sujet ou essayez un exemple",
+                        prompt: "Trouver des idées sur ce sujet",
+                        answer_loading: "Réfléchir"
+                    },
+                    simply: {
+                        header: "Entrez le texte à traduire ou essayez un exemple",
+                        prompt: "Entrez le texte à traduire",
+                        answer_loading: "Traduire en langage facile",
+                        plain: "Langage simple",
+                        easy: "Langage facile",
+                        outputType: "Langue de sortie",
+                        plain_description:
+                            "Le langage simple est une forme simplifiée de la langue standard, qui évite la complexité pour atteindre un public plus large.",
+                        easy_description:
+                            "Le langage facile utilise des mots simples et des phrases courtes pour transmettre des informations de manière claire et compréhensible."
+                    },
+                    common: {
+                        clear_chat: "Nouveau chat",
+                        settings: "Paramètres",
+                        close: "Fermer",
+                        messages: "Messages",
+                        examples: "Exemples"
+                    },
+                    components: {
+                        roles: {
+                            student: "Étudiant·e·s",
+                            secondgrader: "Élèves de primaire",
+                            retired: "Retraité·e·s"
+                        },
+                        sumlength: {
+                            sentences: "Deux phrases",
+                            bullets: "Cinq points",
+                            quarter: "1/4 de la longueur"
+                        },
+                        answererror: {
+                            retry: "Réessayer"
+                        },
+                        answer: {
+                            regenerate: "Regénérer la réponse",
+                            copy: "Copier la réponse",
+                            unformat: "Réponse non formatée"
+                        },
+                        mermaid: {
+                            download: "Télécharger le diagramme",
+                            render: "Dessiner le diagramme...",
+                            error: "Le diagramme ne peut malheureusement pas être affiché en raison d'erreurs."
+                        },
+                        mindmap: {
+                            download: "Télécharger",
+                            reset: "Réinitialiser la vue",
+                            source: "Vue des données",
+                            mindmap: "Vue de la carte mentale"
+                        },
+                        sumanswer: {
+                            header: "Aspects/entités uniques :",
+                            alternative: "Résumé",
+                            copy: "Copier le résumé"
+                        },
+                        settingsdrawer: {
+                            settings_button: "Paramètres et feedback",
+                            feedback_button: "Retour/Signalement de bug",
+                            settings_button_close: "Fermer les paramètres et le feedback",
+                            settings: "Paramètres",
+                            feedback: "Feedback",
+                            about: "À propos",
+                            help: "Aide",
+                            snow: "Neige",
+                            snow_checkbox: "Activé",
+                            language: "Langue",
+                            fontsize: "Taille de police",
+                            change_font: "Ajuster la taille de police",
+                            theme: "Thème",
+                            change_theme: "Changer de thème",
+                            theme_light: "Clair",
+                            theme_dark: "Sombre",
+                            llm: "Modèle de langage"
+                        },
+                        questioninput: {
+                            tokensused: "Tokens utilisés",
+                            limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
+                            errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes."
+                        },
+                        suminput: {
+                            tokensused: "Tokens utilisés",
+                            limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
+                            removedocument: "Supprimer le document"
+                        },
+                        chattsettingsdrawer: {
+                            settings_button: "Paramètres de chat",
+                            settings_button_system_prompt: "Paramètres de chat, Prompt système est actif !",
+                            settings_button_close: "Fermer les paramètres de chat",
+                            temperature: "Température",
+                            min_temperature: "conservatrice",
+                            max_temperatur: "créative",
+                            temperature_article: "La",
+                            temperature_info: `influence la "créativité" du modèle de langage. Une valeur plus élevée produit des réponses moins prévisibles (des mots improbables par rapport au contexte actuel sont générés), tandis qu'une valeur plus basse produit des réponses plus conservatrices et précises.`,
+                            max_lenght: "Longueur maximale de la réponse",
+                            max_lenght_info: "Nombre maximal de tokens pouvant être générés pour une réponse.",
+                            system_prompt_clear: "Effacer le Prompt système",
+                            system_prompt: "Prompt système",
+                            system_prompt_info:
+                                "sont des requêtes ou des instructions prédéfinies destinées à rendre les réponses de MUCGPT plus ciblées et contrôlées. L'IA prend souvent un rôle spécifique, répond dans un format particulier ou respecte d'autres contraintes."
+                        },
+                        answericon: {
+                            label: "Message de MUCGPT"
+                        },
+                        usericon: {
+                            label: "Votre message"
+                        },
+                        example: {
+                            label: "Exemple"
+                        },
+                        deleteMessage: {
+                            label: "Retirer le message"
+                        },
+                        recommendanswers: {
+                            name: "Réponses suggérées",
+                            shorter_tooltip: "Écrire une réponse plus courte",
+                            longer_tooltip: "Écrire une réponse plus longue",
+                            formal_tooltip: "Écrire une réponse plus formelle",
+                            informal_tooltip: "Écrire une réponse plus informelle",
+                            shorter: "Plus court",
+                            longer: "Plus long",
+                            formal: "Plus formel",
+                            informal: "Plus informel",
+                            shorter_prompt:
+                                "Formulez votre dernier message en un nouveau texte plus court qui reflète le contenu original sous une forme plus courte et plus concise. Ce texte doit contenir les informations les plus importantes et améliorer la compréhension du lecteur.",
+                            longer_prompt:
+                                "Formulez votre dernier message en un nouveau texte plus long qui développe le contenu original et ajoute plus de détails et d'informations de contexte. Ce texte doit approfondir la compréhension du lecteur et offrir une perspective plus complète sur le sujet.",
+                            formal_prompt:
+                                "Formulez votre dernier message en un nouveau texte formel qui présente le contenu original dans un style académique. Ce texte doit avoir une structure claire, utiliser une expression précise et factuelle et offrir au lecteur une expérience de lecture professionnelle",
+                            informal_prompt:
+                                "Formulez votre dernier message en un nouveau texte plus informel qui reflète le contenu original dans un style plus décontracté. Ce texte doit offrir au lecteur une expérience de lecture détendue en utilisant un langage facile à comprendre et, le cas échéant, des éléments humoristiques."
+                        },
+                        history: {
+                            button: "Chats sauvegardés",
+                            today: "Aujourd'hui",
+                            yesterday: "Hier",
+                            sevendays: "7 derniers jours",
+                            older: "Plus ancien",
+                            history: "Historique",
+                            newchat: "Donnez un nouveau nom au chat :",
+                            options: "Options de chat",
+                            close: "Fermer",
+                            lastEdited: "Dernière modification : ",
+                            rename: "Renommer le chat",
+                            delete: "Supprimer le chat",
+                            favourites: "Favoris",
+                            save: "Ajouter aux favoris",
+                            unsave: "Retirer des favoris",
+                            error: "Ne changez pas d'onglet avant que la réponse soit générée !",
+                            saved_in_browser: "Chats sauvegardés dans le navigateur"
+                        }
+                    }
+                }
+            },
             Ukrainisch: {
                 translation: {
                     header: {
-                        sum: "підсумовувати",
-                        chat: "чат",
-                        brainstorm: "мозковий штурм"
+                        sum: "Резюме",
+                        chat: "Чат",
+                        brainstorm: "Брейнштурм",
+                        simply: "Проста мова",
+                        nutzungsbedingungen: "Умови використання"
+                    },
+                    chat: {
+                        header: "Задайте питання або спробуйте приклад",
+                        prompt: "Задайте питання",
+                        answer_loading: "Створення відповіді"
+                    },
+                    sum: {
+                        header: "Зробіть резюме тексту або спробуйте приклад",
+                        prompt: "Резюме цього тексту або завантажте PDF перетягуванням",
+                        rolelabel: "Резюме для",
+                        lengthlabel: "в",
+                        answer_loading: "Резюме",
+                        levelofdetail: "Рівень деталізації",
+                        short: "Короткий",
+                        medium: "Середній",
+                        long: "Довгий"
+                    },
+                    version: {
+                        header: "Що нового?",
+                        added: "Нове",
+                        fixed: "Виправлено помилки",
+                        changed: "Зміни"
+                    },
+                    brainstorm: {
+                        header: "Знайдіть ідеї за темою або спробуйте приклад",
+                        prompt: "Знайти ідеї за цією темою",
+                        answer_loading: "Думаю"
+                    },
+                    simply: {
+                        header: "Введіть текст для перекладу або спробуйте приклад",
+                        prompt: "Введіть текст для перекладу",
+                        answer_loading: "Переклад простою мовою",
+                        plain: "Проста мова",
+                        easy: "Легка мова",
+                        outputType: "Вихідна мова",
+                        plain_description: "Проста мова - це спрощена форма стандартної мови, яка уникає складності для охоплення ширшої аудиторії.",
+                        easy_description: "Легка мова використовує прості слова та короткі речення для чіткої та зрозумілої передачі інформації."
+                    },
+                    common: {
+                        clear_chat: "Новий чат",
+                        settings: "Налаштування",
+                        close: "Закрити",
+                        messages: "Повідомлення",
+                        examples: "Приклади"
+                    },
+                    components: {
+                        roles: {
+                            student: "Студент(к)и",
+                            secondgrader: "Учні початкової школи",
+                            retired: "Пенсіонери"
+                        },
+                        sumlength: {
+                            sentences: "Два речення",
+                            bullets: "П'ять пунктів",
+                            quarter: "1/4 довжини"
+                        },
+                        answererror: {
+                            retry: "Спробувати знову"
+                        },
+                        answer: {
+                            regenerate: "Регенерувати відповідь",
+                            copy: "Копіювати відповідь",
+                            unformat: "Неформатована відповідь"
+                        },
+                        mermaid: {
+                            download: "Завантажити діаграму",
+                            render: "Малювати діаграму...",
+                            error: "На жаль, діаграму не можна відобразити через помилки."
+                        },
+                        mindmap: {
+                            download: "Завантажити",
+                            reset: "Скинути вигляд",
+                            source: "Вигляд даних",
+                            mindmap: "Вигляд інтелектуальної карти"
+                        },
+                        sumanswer: {
+                            header: "Унікальні аспекти/сутності:",
+                            alternative: "Резюме",
+                            copy: "Копіювати резюме"
+                        },
+                        settingsdrawer: {
+                            settings_button: "Налаштування та зворотний зв'язок",
+                            feedback_button: "Зворотній зв'язок/Повідомити про помилку",
+                            settings_button_close: "Закрити налаштування та зворотний зв'язок",
+                            settings: "Налаштування",
+                            feedback: "Зворотний зв'язок",
+                            about: "Про нас",
+                            help: "Допомога",
+                            snow: "Сніг",
+                            snow_checkbox: "Активувати",
+                            language: "Мова",
+                            fontsize: "Розмір шрифту",
+                            change_font: "Налаштувати розмір шрифту",
+                            theme: "Тема",
+                            change_theme: "Змінити тему",
+                            theme_light: "Світла",
+                            theme_dark: "Темна",
+                            llm: "Мовна модель"
+                        },
+                        questioninput: {
+                            tokensused: "Використано токени",
+                            limit: ". Старіші введення не будуть враховані при генерації!",
+                            errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію."
+                        },
+                        suminput: {
+                            tokensused: "Використано токени",
+                            limit: ". Старіші введення не будуть враховані при генерації!",
+                            removedocument: "Видалити документ"
+                        },
+                        chattsettingsdrawer: {
+                            settings_button: "Налаштування чату",
+                            settings_button_system_prompt: "Налаштування чату, системний запит активний!",
+                            settings_button_close: "Закрити налаштування чату",
+                            temperature: "Температура",
+                            min_temperature: "консервативна",
+                            max_temperatur: "креативна",
+                            temperature_article: "Температура",
+                            temperature_info: `впливає на "креативність" мовної моделі. Вища вартість призводить до менш передбачуваних відповідей (неймовірні слова порівняно з поточним контекстом генеруються), тоді як нижча вартість створює більш консервативні та точні відповіді.`,
+                            max_lenght: "Максимальна довжина відповіді",
+                            max_lenght_info: "Яка кількість токенів може бути згенерована при відповіді.",
+                            system_prompt_clear: "Очистити системний запит",
+                            system_prompt: "Системний запит",
+                            system_prompt_info:
+                                "це передвизначені запити або вказівки, які спрямовані на точне та контрольоване створення відповідей від MUCGPT. ШІ часто бере на себе певну роль, відповідає в певному форматі або дотримується інших обмежень."
+                        },
+                        answericon: {
+                            label: "Повідомлення MUCGPT"
+                        },
+                        usericon: {
+                            label: "Ваше повідомлення"
+                        },
+                        example: {
+                            label: "Приклад"
+                        },
+                        deleteMessage: {
+                            label: "Видалити повідомлення"
+                        },
+                        recommendanswers: {
+                            name: "Рекомендовані відповіді",
+                            shorter_tooltip: "Написати коротшу відповідь",
+                            longer_tooltip: "Написати довшу відповідь",
+                            formal_tooltip: "Написати офіційнішу відповідь",
+                            informal_tooltip: "Написати неофіційнішу відповідь",
+                            shorter: "Коротше",
+                            longer: "Довше",
+                            formal: "Офіційніше",
+                            informal: "Неофіційніше",
+                            shorter_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий коротший текст, який відображає оригінальний зміст у скороченому та стислому вигляді. Цей текст має містити найважливішу інформацію та покращити розуміння читача.",
+                            longer_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий довший текст, який розширює оригінальний зміст та додає більше деталей і контекстної інформації. Цей текст має поглибити розуміння читача та надати більш всебічний погляд на тему.",
+                            formal_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий офіційний текст, який представляє оригінальний зміст у академічному стилі. Цей текст має мати чітку структуру, використовувати точну та фактичну мову та надавати читачеві професійний досвід читання",
+                            informal_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий неофіційний текст, який відображає оригінальний зміст у невимушеному стилі. Цей текст має надавати читачеві розслаблений досвід читання за допомогою легкої та зрозумілої мови та, можливо, гумористичних елементів."
+                        },
+                        history: {
+                            button: "Збережені чати",
+                            today: "Сьогодні",
+                            yesterday: "Вчора",
+                            sevendays: "Останні 7 днів",
+                            older: "Старіше",
+                            history: "Історія",
+                            newchat: "Дайте нову назву чату:",
+                            options: "Опції чату",
+                            close: "Закрити",
+                            lastEdited: "Останній раз редагувалося: ",
+                            rename: "Перейменувати чат",
+                            delete: "Видалити чат",
+                            favourites: "Обране",
+                            save: "Додати до обраного",
+                            unsave: "Видалити з обраного",
+                            error: "Не переходьте на іншу вкладку, доки відповідь не буде згенерована!",
+                            saved_in_browser: "Чати, збережені в браузері"
+                        }
                     }
                 }
             }

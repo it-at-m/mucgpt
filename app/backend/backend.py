@@ -5,7 +5,6 @@ from typing import List, cast
 
 from fastapi import FastAPI, Form, Header, HTTPException, UploadFile
 from fastapi.responses import (
-    FileResponse,
     RedirectResponse,
     StreamingResponse,
 )
@@ -25,7 +24,6 @@ from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
 from core.types.SimplyRequest import SimplyRequest
-from core.types.StatisticsResponse import StatisticsResponse
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
 from init_app import initApp
@@ -53,9 +51,9 @@ async def handleAuthError(request, exc: AuthError):
 @api_app.post("/sum")
 async def sum(
     body: str = Form(...),
-    file: UploadFile = None, 
+    file: UploadFile = None,
     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")  
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")
 ) -> SummarizeResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
@@ -104,7 +102,7 @@ async def brainstorm(request: BrainstormRequest,
             else "Exception in brainstorm: something bad happened"
         )
         raise HTTPException(status_code=500,detail=msg)
-    
+
 @api_app.post("/simply")
 async def simply(request: SimplyRequest,
                     id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
@@ -184,7 +182,7 @@ async def chat(request: ChatRequest,
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
     response = ConfigResponse(frontend=cfg["configuration_features"].frontend, version=cfg["configuration_features"].version)
-    
+
     models = cast(
         List[ModelsConfig], cfg["configuration_features"].backend.models
     )
@@ -200,15 +198,16 @@ async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Ac
 
 
 @api_app.get("/statistics")
-async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> StatisticsResponse:
+async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
     if(repo is None):
         raise HTTPException(status_code=501, detail="No database for logging statistics configured")
     else:
-        try:  
-            reponse = StatisticsResponse(sum=float(repo.sumByDepartment()), avg=float(repo.avgByDepartment()))
-            return reponse
+        try:
+            sum= repo.sumByDepartment()
+            avg = repo.avgByDepartment()
+            return  {"sum": sum, "avg": avg}
         except Exception as e:
             logging.exception(str(e))
             raise HTTPException(status_code=500, detail="Get Statistics failed!")
@@ -226,21 +225,23 @@ async def counttokens(request: CountTokenRequest, access_token: str = Header(Non
         logging.exception(str(e))
         raise HTTPException(status_code=500, detail="Counttokens failed!")
 
-   
+
 
 
 @api_app.get("/statistics/export")
-async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> FileResponse:
+async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
     if(repo is None):
         raise HTTPException(status_code=501, detail="No database for logging statistics configured")
     try:
         export = repo.export()
-        return FileResponse(export, filename="statistics.csv", as_attachment=True)
+        response = StreamingResponse(export, media_type="text/csv")
+        response.headers["Content-Disposition"] = "attachment; filename=statistics.csv"
+        return response
     except Exception as e:
         logging.exception(str(e))
-        raise HTTPException(status_code=500, detail=e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_app.get("/health")

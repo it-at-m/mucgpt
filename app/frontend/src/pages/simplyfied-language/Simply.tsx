@@ -104,35 +104,8 @@ const Simply = () => {
 
     return (
         <div className={styles.container}>
-            <div>
-                <Dialog modalType="alert" defaultOpen={true}>
-                    <DialogSurface>
-                        <DialogBody>
-                            <DialogTitle >Hinweis zur Funktion "Leichte Sprache"</DialogTitle>
-                            <DialogContent>
-                                Vielen Dank für Ihr Interesse an unserer Funktion "Leichte Sprache". Wir möchten Sie darauf hinweisen, dass diese Funktion derzeit noch in einer Demo-Version verfügbar ist und noch nicht vollständig getestet wurde.<br />
-                                <br />
-                                Bitte beachten Sie, dass die aktuellen Ergebnisse möglicherweise nicht immer vollständig den Regeln der leichten/einfachen Sprache entsprechen. Wir arbeiten intensiv daran, die Funktion zu verbessern und zuverlässig zu machen.<br />
-                                <br />
-                                Ihr Feedback ist uns sehr wichtig. Wenn Sie Anmerkungen oder Verbesserungsvorschläge haben, lassen Sie es uns bitte wissen.<br />
-                                <br />
-                                Vielen Dank für Ihr Verständnis und Ihre Geduld.<br />
-                                <br />
-                                Ihr MUCGPT-Team
-                            </DialogContent>
-                            <DialogActions>
-                                <DialogTrigger disableButtonEnhancement>
-                                    <Button appearance="secondary" size="small" >
-                                        <Checkmark24Filled className={styles.checkIcon} /> Verstanden</Button>
-                                </DialogTrigger>
-                            </DialogActions>
-                        </DialogBody>
-                    </DialogSurface>
-                </Dialog>
-            </div>
             <div className={styles.commandsContainer}>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-
                 <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
                     <Tooltip content={t('simply.plain_description')} relationship="description" positioning="below">
                         <Radio value="plain" label={t('simply.plain')} />

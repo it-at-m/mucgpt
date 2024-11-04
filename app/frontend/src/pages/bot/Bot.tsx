@@ -10,12 +10,13 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
-import { bot_storage, getBotWithId, storeBot } from "../../service/storage"
+import { bot_history_storage, bot_storage, deleteChatFromDB, getBotWithId, getStartDataFromDB, saveBotChatToDB, storeBot } from "../../service/storage"
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
+import { MessageError } from "../chat/MessageError";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
@@ -25,6 +26,7 @@ const enum STORAGE_KEYS {
 
 const BotChat = () => {
     const { id } = useParams();
+    const bot_id = id || "0"
     const { language } = useContext(LanguageContext)
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
@@ -45,8 +47,6 @@ const BotChat = () => {
     const [max_output_tokens, setMaxOutputTokens] = useState(LLM.max_output_tokens);
     const [systemPrompt, setSystemPrompt] = useState<string>("");
 
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
     const [title, setTitle] = useState<string>("Titel");
     const [description, setDescription] = useState<string>("Beschreibung");
     const [publish, setPublish] = useState<boolean>(false);
@@ -54,6 +54,7 @@ const BotChat = () => {
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
     const storage = bot_storage;
+    const storage_history = bot_history_storage;
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
             const response = await countTokensAPI({ "text": debouncedSystemPrompt, "model": LLM });
@@ -63,8 +64,8 @@ const BotChat = () => {
             setSystemPromptTokens(0);
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
-        if (id) {
-            getBotWithId(+id).then((bot) => {
+        if (bot_id) {
+            getBotWithId(+bot_id).then((bot) => {
                 if (bot) {
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
@@ -75,6 +76,24 @@ const BotChat = () => {
                 }
             }
             )
+            error && setError(undefined);
+            setIsLoading(true);
+            getStartDataFromDB(storage_history, +bot_id).then((stored) => {
+                if (stored) {
+                    let storedAnswers = stored.Answers;
+                    lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
+                    if (storedAnswers[storedAnswers.length - 1][1].answer == "") {// if the answer of the LLM has not (yet) returned
+                        if (storedAnswers.length > 1) {
+                            storedAnswers.pop();
+                            setAnswers([...answers.concat(storedAnswers)]);
+                        }
+                        setError(new MessageError(t('components.history.error')))
+                    } else {
+                        setAnswers([...answers.concat(storedAnswers)]);
+                    }
+                }
+            });
+            setIsLoading(false);
         }
     }, []);
 
@@ -135,12 +154,18 @@ const BotChat = () => {
                         setAnswers([...answers, [question, latestResponse, user_tokens]]);
                     }
                 }
+                if (bot_id) {
+                    saveBotChatToDB([question, latestResponse, user_tokens], +bot_id)
+                }
             } else {
                 const parsedResponse: AskResponse = await response.json();
                 if (response.status > 299 || !response.ok) {
                     throw Error(parsedResponse.error || "Unknown error");
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
+                if (bot_id) {
+                    saveBotChatToDB([question, parsedResponse, 0], +bot_id)
+                }
             }
         } catch (e) {
             setError(e);
@@ -150,9 +175,9 @@ const BotChat = () => {
     };
 
     const clearChat = () => {
-        setCurrentId(idCounter + 1)
         lastQuestionRef.current = "";
         error && setError(undefined);
+        deleteChatFromDB(storage_history, +bot_id, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -167,7 +192,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +(id || "0"),
+            id: +bot_id,
             temperature: temp,
             max_output_tokens: max_output_tokens,
         }
@@ -185,7 +210,7 @@ const BotChat = () => {
                 description: description,
                 system_message: systemPrompt,
                 publish: publish,
-                id: +(id || "0"),
+                id: +bot_id,
                 temperature: temperature,
                 max_output_tokens: maxTokens,
             }
@@ -201,7 +226,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +(id || "0"),
+            id: +bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
         }
@@ -215,7 +240,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +(id || "0"),
+            id: +bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
         }
@@ -229,7 +254,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +(id || "0"),
+            id: +bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
         }
@@ -243,7 +268,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +(id || "0"),
+            id: +bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
         }
@@ -266,7 +291,7 @@ const BotChat = () => {
                     setTitle={onTitleChanged}
                     description={description}
                     setDescription={onDescriptionChanged}
-                    bot_id={id}
+                    bot_id={bot_id}
                     setPublish={onPublishChanged}
                 ></BotsettingsDrawer>
             </div>
@@ -287,7 +312,7 @@ const BotChat = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
+                                            current_id={+bot_id}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
@@ -308,7 +333,7 @@ const BotChat = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
+                                            current_id={+bot_id}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
@@ -325,7 +350,7 @@ const BotChat = () => {
                                             answers={answers}
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
+                                            current_id={+bot_id}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >

@@ -115,15 +115,7 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>
-                        <InfoLabel
-                            info={
-                                <div>
-                                    <i>{t('create_bot.title')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
-                                </div>
-                            }
-                        >
-                            {t('create_bot.title')}
-                        </InfoLabel>
+                        {t('create_bot.title')}
                     </div>
 
                 </div>
@@ -148,15 +140,7 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
 
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>
-                        <InfoLabel
-                            info={
-                                <div>
-                                    <i>{t('create_bot.description')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
-                                </div>
-                            }
-                        >
-                            {t('create_bot.description')}
-                        </InfoLabel>
+                        {t('create_bot.description')}
                     </div>
 
                 </div>
@@ -214,6 +198,11 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
                             />
                         </Field>
                     </div>
+                </div>
+                <div className={styles.deleteButton}>
+                    <Tooltip content={t('components.botsettingsdrawer.delete')} relationship="description" positioning="below">
+                        <Button onClick={onDelteClick}>{t('components.botsettingsdrawer.delete')}</Button>
+                    </Tooltip>
                 </div>
 
                 <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
@@ -286,6 +275,7 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
                     size="small"
                     positioning="below-start"
                     onOptionSelect={onPublishSelected}
+                    disabled
                 >
                     <Option text="Ja" className={styles.option} key={1}>
                         Ja
@@ -294,9 +284,6 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
                         Nein
                     </Option>
                 </Dropdown>
-                <div className={styles.deleteButton}>
-                    <Button onClick={onDelteClick}>Delete</Button>
-                </div>
             </OverlayDrawer >
 
             <div className={styles.button}>

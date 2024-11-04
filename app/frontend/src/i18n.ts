@@ -154,6 +154,9 @@ i18n
                             system_prompt_info:
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
                         },
+                        botsettingsdrawer: {
+                            delete: "Assitent löschen"
+                        },
                         answericon: {
                             label: "MUCGPT Nachricht"
                         },
@@ -350,6 +353,9 @@ i18n
                             system_prompt_info:
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
+                        botsettingsdrawer: {
+                            delete: "Delete assistent"
+                        },
                         answericon: {
                             label: "MUCGPT message"
                         },
@@ -401,7 +407,7 @@ i18n
                             saved_in_browser: "Chats saved in Browser"
                         },
                         add_bot_button: {
-                            add_bot: "Create your own Assistent"
+                            add_bot: "Create your own assistent"
                         }
                     }
                 }
@@ -546,6 +552,9 @@ i18n
                             system_prompt: "System Prompt",
                             system_prompt_info:
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
+                        },
+                        botsettingsdrawer: {
+                            delete: "Assistent löschn"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"

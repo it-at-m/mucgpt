@@ -318,7 +318,11 @@ export function checkStructurOfDB(storage: indexedDBStorage) {
         }
     };
 }
-export const bot_storage: indexedDBStorage = { db_name: "MUCGPT-BOTS", objectStore_name: "bots", db_version: 2 };
+
+// Bot - Storage
+
+export const bot_storage: indexedDBStorage = { db_name: "MUCGPT-BOTS", objectStore_name: "bots", db_version: 3 };
+export const bot_history_storage: indexedDBStorage = { db_name: "MUCGPT-BOTS-HISTORY", objectStore_name: "bots-history", db_version: 2 };
 
 export async function storeBot(bot: Bot) {
     let openRequest = indexedDB.open(bot_storage.db_name, bot_storage.db_version);
@@ -379,11 +383,50 @@ export async function deleteBotWithId(id: number) {
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_storage);
     openRequest.onerror = () => onError(openRequest);
     openRequest.onsuccess = function () {
-        let getRequest = openRequest.result.transaction(bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).delete(id);
+        openRequest.result.transaction(bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).delete(id);
+    };
+    let openRequest2 = indexedDB.open(bot_history_storage.db_name, bot_history_storage.db_version);
+    openRequest2.onupgradeneeded = () => onUpgrade(openRequest2, bot_history_storage);
+    openRequest2.onerror = () => onError(openRequest2);
+    openRequest2.onsuccess = function () {
+        openRequest2.result.transaction(bot_history_storage.objectStore_name, "readwrite").objectStore(bot_history_storage.objectStore_name).delete(id);
     };
 }
 
 export async function getBotName(id: number): Promise<string> {
     const bot = await getBotWithId(id);
     return bot ? bot.title : "";
+}
+
+export async function saveBotChatToDB(a: any[], id: number) {
+    let openRequest = indexedDB.open(bot_history_storage.db_name, bot_history_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_history_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        let stored = openRequest.result.transaction(bot_history_storage.objectStore_name, "readonly").objectStore(bot_history_storage.objectStore_name).get(id);
+        stored.onsuccess = async () => {
+            let data;
+            let result = stored.result;
+            if (result) {
+                // if the chat allready exist in the DB
+                let storedAnswers = result.Answers;
+                if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                    storedAnswers[storedAnswers.length - 1][1] = a[1];
+                } else {
+                    storedAnswers.push(a);
+                }
+                data = result;
+            } else {
+                // if the chat does not exist in the DB
+                let name: string = "";
+                data = {
+                    Answers: [a],
+                    id: id
+                };
+            }
+            let chat = openRequest.result.transaction(bot_history_storage.objectStore_name, "readwrite").objectStore(bot_history_storage.objectStore_name);
+            let request = chat.put(data);
+            request.onerror = () => onError(request);
+        };
+    };
 }

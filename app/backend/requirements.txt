@@ -90,7 +90,7 @@ idna==3.10
     #   yarl
 jinja2==3.1.4
     # via fastapi
-jiter==0.5.0
+jiter==0.7.0
     # via openai
 joserfc==1.0.0
     # via mucgpt (pyproject.toml)

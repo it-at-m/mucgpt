@@ -88,7 +88,7 @@ httpcore==1.0.6
     # via
     #   mucgpt (pyproject.toml)
     #   httpx
-httptools==0.6.1
+httptools==0.6.4
     # via uvicorn
 httpx==0.27.2
     # via

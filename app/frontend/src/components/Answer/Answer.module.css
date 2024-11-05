@@ -8,6 +8,7 @@
         0px 0px 2px var(--colorBrandForeground2);
     border: transparent solid 1px;
     max-width: 100%;
+    min-width: 100%;
 }
 
 .answerContainer:hover {
@@ -63,4 +64,8 @@
 
 .unformattedAnswer {
     white-space: pre-wrap;
+}
+
+.growItem {
+    min-width: 50%;
 }

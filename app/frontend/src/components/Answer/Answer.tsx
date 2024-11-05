@@ -69,7 +69,7 @@ export const Answer = ({
                 </Stack>
             </Stack.Item>
 
-            <Stack.Item grow>
+            <Stack.Item className={styles.growItem} grow>
                 {formatted &&
                     <Markdown
                         className={styles.answerText}

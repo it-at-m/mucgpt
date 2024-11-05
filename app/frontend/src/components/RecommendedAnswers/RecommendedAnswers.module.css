@@ -1,3 +1,6 @@
 .divider {
     margin-bottom: 12px;
 }
+.item {
+    width: auto;
+}

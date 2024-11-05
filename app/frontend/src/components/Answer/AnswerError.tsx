@@ -11,12 +11,12 @@ interface Props {
 }
 
 export const AnswerError = ({ error, onRetry }: Props) => {
-    const { t} = useTranslation ();
+    const { t } = useTranslation();
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
             <ErrorCircle24Regular aria-hidden="true" aria-label="Error icon" primaryFill="red" />
 
-            <Stack.Item grow>
+            <Stack.Item className={styles.growItem} grow>
                 <p className={styles.answerText}>{error}</p>
             </Stack.Item>
 

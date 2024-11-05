@@ -243,7 +243,7 @@ starlette==0.41.2
     # via
     #   mucgpt (pyproject.toml)
     #   fastapi
-tenacity==8.5.0
+tenacity==9.0.0
     # via
     #   langchain
     #   langchain-community

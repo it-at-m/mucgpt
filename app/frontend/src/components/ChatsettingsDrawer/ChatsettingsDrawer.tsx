@@ -185,12 +185,12 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
                 </div>
             </OverlayDrawer >
 
-            <div>
+            <div className={styles.container}>
 
                 {isEmptySystemPrompt ?
                     <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
 
-                        <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={< ChatSettings24Regular />} appearance="subtle" onClick={onClickRightButton} size="medium">
+                        <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={< ChatSettings24Regular className={styles.iconRightMargin} />} appearance="subtle" onClick={onClickRightButton} size="large">
                         </Button>
                     </Tooltip>
                     :

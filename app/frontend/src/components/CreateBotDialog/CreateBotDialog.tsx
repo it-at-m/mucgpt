@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { bot_storage, getHighestKeyInDB, storeBot } from "../../service/storage";
-import { Bot, ChatRequest, chatApi } from "../../api";
+import { Bot, ChatRequest, chatApi, createBotApi } from "../../api";
 
 const prompt_for_systemprompt = `
 You are a dedicated assistant tasked with creating system prompts for other assistants. You will receive messages that include the function for the assistant for which you need to generate a system prompt. These messages will always follow this format: "Funktion: <function>".
@@ -54,43 +54,8 @@ The final prompt you output should adhere to the following structure below.Do no
 [optional: edge cases, details, and an area to call or repeat out specific important considerations]`
 
 const prompt_for_description = `
-Formuliere eine prägnante Beschreibung für den Assistenten, die in genau einem Satz erklärt, welche Fähigkeiten oder Funktionen er hat. Die Beschreibung soll KEIN Besispiel sein sondern ein Satz welcher die Funktion des Assistenten klar beschreibt.
-
-# Output Format
-
-Die Ausgabe sollte ein einzelner Satz sein, der die Hauptfunktion des Assistenten klar und verständlich beschreibt.
-
-# Examples
-
-Input: "Der Assistent hilft dabei, Termine zu verwalten."  
-Output: "Dieser Assistent organisiert und erinnert an Termine."
-
-Input: "Der Assistent berechnet mathematische Formeln."  
-Output: "Dieser Assistent führt komplexe mathematische Berechnungen durch."
-
-Input: "Der Assistent gibt Reisempfehlungen."  
-Output: "Dieser Assistent bietet maßgeschneiderte Reiseempfehlungen basierend auf den Vorlieben des Nutzers." 
-
-(*Echte Beispiele sollten jeweils ähnliche, spezifische Aufgaben des Assistenten beschreiben.*)
 `
-const prompt_for_title = `Erstelle einen prägnanten Titel, der die Hauptfunktion des Assistenten in 1-2 Wörtern klar widerspiegelt.
-
-- Berücksichtige die bereitgestellte Beschreibung und den Systemprompt.
-- Der Titel sollte leicht verständlich und einprägsam sein.
-
-# Output Format
-
-Der Titel sollte in einer einzigen Zeile ohne zusätzliche Erklärungen präsentiert werden.
-
-# Examples
-
-**Input:** Beschreibung: "Dieser Assistent plant effektive Meetings." Systemprompt: "Hilfreicher Meetingplaner."  
-**Output:** Meetingplaner
-
-**Input:** Beschreibung: "Der Assistent hilft bei der Ernährung und diätetischen Beratung." Systemprompt: "Ernährungsberater."  
-**Output:** Ernährungsberatung
-
-(Die Beispiele sollten den Charakter des Titels deutlich machen, realistische Beispiele sollten im relevanten Kontext länger oder spezifischer sein.)`
+const prompt_for_title = ``
 
 const example1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische."
 const example2 = "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails."
@@ -174,39 +139,12 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     const createBot = async () => {
         if (input != "") {
             setLoading(true)
-            let question = "Funktion: " + input
-            let request: ChatRequest = {
-                history: [{ user: question, bot: undefined }],
-                shouldStream: false,
-                temperature: 1.0,
-                system_message: prompt_for_systemprompt,
-                model: "gpt-4o"
-            };
-            let response1 = await chatApi(request)
-            const sys_prompt = (await response1.json()).content
-            setSystemPrompt(sys_prompt)
-            question = "Systempromt: ```" + sys_prompt + "```"
-            request = {
-                history: [{ user: question, bot: undefined }],
-                shouldStream: false,
-                temperature: 1.0,
-                system_message: prompt_for_description,
-                model: "gpt-4o"
-            };
-            let response2 = await chatApi(request)
-            const description = (await response2.json()).content
-            setDescription(description)
-            question = "Systempromt: ```" + sys_prompt + "```\nBeschreibung: ```" + description + "```"
-            request = {
-                history: [{ user: question, bot: undefined }],
-                shouldStream: false,
-                temperature: 1.0,
-                system_message: prompt_for_title,
-                model: "gpt-4o"
-            };
-            let response3 = await chatApi(request)
-            const title = (await response3.json()).content
-            setTitle(title)
+            const result = await (await createBotApi({ input: input, model: "gpt-4o", max_output_tokens: LLM.max_output_tokens })).json()
+
+
+            setSystemPrompt(result.system_prompt)
+            setDescription(result.description)
+            setTitle(result.title)
             setLoading(false)
             setShowDialogOutput(true)
             setShowDialogInput(false)

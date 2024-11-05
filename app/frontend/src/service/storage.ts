@@ -334,7 +334,7 @@ export async function storeBot(bot: Bot) {
         if (!db.objectStoreNames.contains(storeName)) {
             db.createObjectStore(storeName, { keyPath: "id" });
         }
-        let putRequest = openRequest.result.transaction(bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).put(bot);
+        openRequest.result.transaction(bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).put(bot);
     };
 }
 
@@ -393,9 +393,9 @@ export async function deleteBotWithId(id: number) {
     };
 }
 
-export async function getBotName(id: number): Promise<string> {
+export async function getBotName(id: number): Promise<[number, string]> {
     const bot = await getBotWithId(id);
-    return bot ? bot.title : "";
+    return bot ? [bot.id, bot.title] : [0, ""];
 }
 
 export async function saveBotChatToDB(a: any[], id: number) {
@@ -428,5 +428,27 @@ export async function saveBotChatToDB(a: any[], id: number) {
             let request = chat.put(data);
             request.onerror = () => onError(request);
         };
+    };
+}
+
+export function popLastBotMessageInDB(id: number) {
+    let openRequest = indexedDB.open(bot_history_storage.db_name, bot_history_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_history_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        let chat = openRequest.result.transaction(bot_history_storage.objectStore_name, "readwrite").objectStore(bot_history_storage.objectStore_name);
+        let stored = chat.get(id);
+        stored.onsuccess = function () {
+            let deleted = chat.delete(id);
+            deleted.onsuccess = function () {
+                if (stored.result) {
+                    stored.result.Answers.pop();
+                    let put = chat.put(stored.result);
+                    put.onerror = () => onError(put);
+                }
+            };
+            deleted.onerror = () => onError(deleted);
+        };
+        stored.onerror = () => onError(stored);
     };
 }

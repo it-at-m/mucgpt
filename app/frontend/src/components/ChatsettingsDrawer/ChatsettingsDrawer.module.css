@@ -52,4 +52,16 @@
 
 .system_prompt_warining_icon {
     color: red;
+    margin-right: 5 px;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.iconRightMargin {
+    margin-right: 5 px;
 }

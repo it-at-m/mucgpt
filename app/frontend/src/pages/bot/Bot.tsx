@@ -10,19 +10,13 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from 'react-i18next';
-import { bot_history_storage, bot_storage, deleteChatFromDB, getBotWithId, getStartDataFromDB, saveBotChatToDB, storeBot } from "../../service/storage"
+import { bot_history_storage, bot_storage, deleteChatFromDB, getBotWithId, getStartDataFromDB, popLastBotMessageInDB, saveBotChatToDB, storeBot } from "../../service/storage"
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
 import { MessageError } from "../chat/MessageError";
-
-const enum STORAGE_KEYS {
-    CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
-    CHAT_SYSTEM_PROMPT = 'CHAT_SYSTEM_PROMPT',
-    CHAT_MAX_TOKENS = 'CHAT_MAX_TOKENS',
-}
 
 const BotChat = () => {
     const { id } = useParams();
@@ -37,8 +31,6 @@ const BotChat = () => {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
-
-    const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
     const [question, setQuestion] = useState<string>("");
@@ -275,6 +267,17 @@ const BotChat = () => {
         storeBot(newBot)
     };
 
+    const onRegeneratResponseClicked = async () => {
+        if (answers.length > 0) {
+            let last = answers.pop();
+            setAnswers(answers);
+            popLastBotMessageInDB(+bot_id);
+            if (last) {
+                makeApiRequest(last[0], systemPrompt)
+            }
+        };
+    }
+
 
     return (
         <div className={styles.container}>
@@ -316,11 +319,19 @@ const BotChat = () => {
                                         />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
-                                        <Answer
+                                        {index === answers.length - 1 && <Answer
+                                            key={index}
+                                            answer={answer[1]}
+                                            onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                            setQuestion={question => setQuestion(question)}
+                                        />
+                                        }
+                                        {index !== answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
                                             setQuestion={question => setQuestion(question)}
                                         />
+                                        }
                                     </li>
                                 </div>
                             ))}

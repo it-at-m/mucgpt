@@ -31,7 +31,7 @@ interface Props {
     setSystemPrompt: (systemPrompt: string) => void;
     title: string;
     setTitle: (title: string) => void;
-    bot_id: string | unknown;
+    bot_id: string;
     description: string;
     setDescription: (description: string) => void;
     setPublish: (publish: boolean) => void;
@@ -64,8 +64,7 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
 
     const onDelteClick = () => {
         window.location.href = "/"
-        if (bot_id)
-            deleteBotWithId(+bot_id);
+        deleteBotWithId(+bot_id);
     }
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value)
@@ -286,12 +285,12 @@ export const BotsettingsDrawer = ({ temperature, setTemperature, max_output_toke
                 </Dropdown>
             </OverlayDrawer >
 
-            <div className={styles.button}>
+            <div className={styles.container}>
 
                 {isEmptySystemPrompt ?
                     <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
 
-                        <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={< ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
+                        <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={< ChatSettings24Regular className={styles.iconRightMargin} />} appearance="secondary" onClick={onClickRightButton} size="large">
 
                         </Button>
                     </Tooltip>

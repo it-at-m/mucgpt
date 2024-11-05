@@ -64,7 +64,7 @@ export const Layout = () => {
     const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
-    const [title, setTitle] = useState<string>("");
+    const [title, setTitle] = useState<[number, string]>([0, ""]);
 
 
     const onFontscaleChange = (fontscale: number) => {
@@ -152,16 +152,6 @@ export const Layout = () => {
                                 </NavLink>
                             </div>
                             <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/bot" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {title}
-                                </NavLink>
-                            </div>
-                            <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/create" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.create_bot')}
-                                </NavLink>
-                            </div>
-                            <div className={styles.headerNavLeftMargin}>
                                 <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
                                     {t('header.chat')}
                                 </NavLink>
@@ -183,6 +173,11 @@ export const Layout = () => {
                                     </NavLink>
                                 </div>
                             }
+                            <div className={styles.headerNavLeftMargin}>
+                                <NavLink to={"/bot/" + title[0]} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                    {title[1]}
+                                </NavLink>
+                            </div>
                         </div>
                         <div className={styles.SettingsDrawer}>
                             <SettingsDrawer

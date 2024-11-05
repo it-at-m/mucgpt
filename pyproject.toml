@@ -34,7 +34,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "uv==0.4.22",
+    "uv==0.4.30",
     "ruff==0.7.1",
     "black==24.10.0",
     "pre-commit==4.0.1"

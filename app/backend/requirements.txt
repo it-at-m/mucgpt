@@ -191,7 +191,7 @@ python-dotenv==1.0.1
     # via
     #   pydantic-settings
     #   uvicorn
-python-multipart==0.0.12
+python-multipart==0.0.17
     # via
     #   mucgpt (pyproject.toml)
     #   fastapi

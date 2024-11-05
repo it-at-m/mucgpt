@@ -28,7 +28,7 @@ dependencies = [
     "yarl==1.15.4",
     "rich==13.9.3",
     "starlette==0.41.2",
-    "python-multipart==0.0.12",
+    "python-multipart==0.0.17",
     "sqlalchemy==2.0.36",
 ]
 

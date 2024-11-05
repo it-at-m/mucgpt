@@ -6,10 +6,6 @@
     cursor: pointer;
 }
 
-.iconRightMargin {
-    margin-right: 5 px;
-}
-
 .savedChatButton {
     width: 80%;
     align-items: center;

@@ -10,7 +10,6 @@ import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialo
 
 const Menu = () => {
     const { t, i18n } = useTranslation();
-    const simply = true;
     const [bots, setBots] = useState<Bot[]>([]);
 
 
@@ -34,23 +33,29 @@ const Menu = () => {
         <div className={styles.container}>
             <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
             <div className={styles.row}>
-                <Link to="/chat" className={styles.box}>
-                    {t('header.chat')}
-                </Link>
-                <Link to="/sum" className={styles.box}>
-                    {t('header.sum')}
-                </Link>
-                <Link to="/brainstorm" className={styles.box}>
-                    {t('header.brainstorm')}
-                </Link>
-                {simply &&
+                <Tooltip content={t('header.chat')} relationship="description" positioning="below">
+                    <Link to="/chat" className={styles.box}>
+                        {t('header.chat')}
+                    </Link>
+                </Tooltip>
+                <Tooltip content={t('header.sum')} relationship="description" positioning="below">
+                    <Link to="/sum" className={styles.box}>
+                        {t('header.sum')}
+                    </Link>
+                </Tooltip>
+                <Tooltip content={t('header.brainstorm')} relationship="description" positioning="below">
+                    <Link to="/brainstorm" className={styles.box}>
+                        {t('header.brainstorm')}
+                    </Link>
+                </Tooltip>
+                <Tooltip content={t('header.simply')} relationship="description" positioning="below">
                     <Link to="/simply" className={styles.box}>
                         <p className={styles.btnText}>{t('header.simply')}</p>
                     </Link>
-                }
+                </Tooltip>
             </div>
             <div className={styles.rowheader}>
-                Eigene Assistenten <AddBotButton onClick={onAddBot}></AddBotButton>
+                {t('menu.own_bots')} <AddBotButton onClick={onAddBot}></AddBotButton>
             </div>
 
             <div className={styles.row}>
@@ -61,13 +66,13 @@ const Menu = () => {
                         </Link>
                     </Tooltip>
                 ))}
-                {bots.length === 0 && <div>Keine Assistenten gefunden</div>}
+                {bots.length === 0 && <div>{t('menu.no_bots')}</div>}
             </div>
             <div className={styles.rowheader}>
-                Community Assistenten
+                {t('menu.community_bots')}
             </div>
             <div className={styles.row}>
-                Comming soon...
+                {t('menu.soon')}
             </div>
         </div >
     );

@@ -75,13 +75,14 @@
     display: flex;
     flex-direction: column;
     list-style: none;
+    min-width: 50%;
 }
 
 .chatMessageGpt {
     margin-bottom: 20px;
     max-width: 80%;
     display: flex;
-    min-width: 50%;
+    min-width: 60%;
 }
 
 .chatMessageGptMinWidth {

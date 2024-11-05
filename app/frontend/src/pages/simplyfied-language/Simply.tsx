@@ -12,8 +12,7 @@ import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from 'react-i18next';
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger, Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Checkmark24Filled } from "@fluentui/react-icons";
+import { Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = 'SIMPLY_SYSTEM_PROMPT',
@@ -27,7 +26,6 @@ const Simply = () => {
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
-    const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
     const outputType_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE) || "plain";
     const [outputType, setOutputType] = useState<string>(outputType_pref);
@@ -158,7 +156,7 @@ const Simply = () => {
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerLoading text={t('simply.answer_loading')} />
+                                        <AnswerLoading text={outputType === "plain" ? t('simply.answer_loading_plain') : t('simply.answer_loading_easy')} />
                                     </li>
                                 </>
                             )}

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import styles from "./Bot.module.css";
+import styles from "../chat/Chat.module.css";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";

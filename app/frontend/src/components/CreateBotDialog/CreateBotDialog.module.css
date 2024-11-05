@@ -1,10 +1,10 @@
 .dialog {
-    width: 70%;
-    min-width: 400px;
+    padding: 0 !important;
+    min-width: 1100px;
     line-height: 1.5;
 }
 
-@media (max-width: 70%) {
+@media (max-width: 650px) {
     .dialog {
         min-width: 400px;
     }

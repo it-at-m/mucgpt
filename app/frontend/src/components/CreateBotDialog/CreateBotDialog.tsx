@@ -175,7 +175,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                                 {t('create_bot.prompt')}:
                                 <Textarea
                                     placeholder={t('create_bot.prompt')}
-                                    resize="vertical"
+                                    rows={10}
                                     value={systemPrompt}
                                     size="large"
                                     onChange={onRefinedPromptChanged}

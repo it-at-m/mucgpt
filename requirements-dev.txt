@@ -48,7 +48,7 @@ colorama==0.4.6
     #   pytest
     #   tqdm
     #   uvicorn
-coverage==7.6.3
+coverage==7.6.4
     # via
     #   mucgpt (pyproject.toml)
     #   pytest-cov

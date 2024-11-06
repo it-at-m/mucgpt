@@ -139,7 +139,7 @@ langchain-openai==0.2.4
     # via mucgpt (pyproject.toml)
 langchain-text-splitters==0.3.0
     # via langchain
-langsmith==0.1.137
+langsmith==0.1.140
     # via
     #   mucgpt (pyproject.toml)
     #   langchain

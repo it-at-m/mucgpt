@@ -45,7 +45,7 @@ colorama==0.4.6
     #   click
     #   tqdm
     #   uvicorn
-cryptography==43.0.1
+cryptography==43.0.3
     # via joserfc
 dataclasses-json==0.6.7
     # via langchain-community

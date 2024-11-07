@@ -152,6 +152,7 @@ export const History = ({ storage, setAnswers, lastQuestionRef, currentId, setCu
                 type={"overlay"}
                 separator
                 open={isOpen}
+                position="end"
                 onOpenChange={(_, { open }) => setIsOpen(open)}
             >
                 <DrawerHeader>

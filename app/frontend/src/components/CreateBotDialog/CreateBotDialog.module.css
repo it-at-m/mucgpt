@@ -1,0 +1,48 @@
+.dialog {
+    padding: 0 !important;
+    min-width: 1100px;
+    line-height: 1.5;
+}
+
+@media (max-width: 650px) {
+    .dialog {
+        min-width: 400px;
+    }
+}
+
+.dialogContent {
+    padding: 20px;
+}
+
+.exampleList {
+    display: grid;
+    gap: 2%;
+    grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.exampleBox {
+    flex: 1 1 30%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 100px;
+    border-radius: 20px;
+    color: var(--colorNeutralBackround1Hover);
+    text-decoration: none;
+    opacity: 0.75;
+    font-size: var(--fontSizeBase400);
+    background: var(--colorNeutralBackground4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.exampleBox:hover {
+    opacity: 1;
+    box-shadow:
+        0px 8px 16px rgba(0, 0, 0, 0.14),
+        0px 0px 2px rgba(0, 0, 0, 0.12);
+    outline: 2px solid var(--colorNeutralForeground3Selected);
+}

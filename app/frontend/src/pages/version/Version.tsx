@@ -33,15 +33,54 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t('version.header')}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="10">
+                <Accordion multiple collapsible navigation="linear" defaultOpenItems="11">
+                    <AccordionItem value="11">
+                        <AccordionHeader>[1.2.2] 07.11.2024</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t('version.added')}</h3>
+                                <ul>
+                                    <li>
+                                        Es besteht nun die Möglichkeit, eigene Assistenten zu erstellen. Diese Funktion ermöglicht es den Benutzern, für wiederkehrende Aufgaben spezialisierte Assistenten zu entwickeln, die mit einem Systemprompt ausgestattet sind.
+                                        <ul>
+                                            Beispiele für Assistenten sind:
+                                            <li>
+                                                Englisch-Übersetzer: Übersetzt alle Eingaben ins Englische.
+                                            </li>
+                                            <li>
+                                                Testgenerator: Erstellt hilfreiche Testfälle basierend auf dem eingegebenen Programmcode.
+                                            </li>
+                                            <li>
+                                                Lektor: Korrigiert eingegebene Texte und schlägt alternative Formulierungen vor.
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Um einen Assistenten zu erstellen, beschreibt der Benutzer die gewünschte Funktion in einem Textfeld. MUCGPT generiert daraufhin einen passenden Titel, eine Beschreibung und einen Systemprompt, die anschließend weiter angepasst werden können.
+                                    </li>
+                                </ul>
+                                <h3>{t('version.fixed')}</h3>
+                                <ul>
+                                    <li>
+                                        Verschiedene Fehler im Frontend wurden behoben.
+                                    </li>
+                                </ul>
+                                <h3>{t('version.changed')}</h3>
+                                <ul>
+                                    <li>
+                                        Das Design der Benutzeroberfläche von MUCGPT wurde aktualisiert.
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="10">
                         <AccordionHeader>[1.2.1] 27.09.2024</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t('version.added')}</h3>
                                 <ul>
-                                    <li><strong>Preview</strong><br />
-                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an.
+                                    <li>Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an.
                                         <p>
                                             <img width="70%" src={simply} alt="Bild zur Leichten Sprache"></img>
                                         </p>

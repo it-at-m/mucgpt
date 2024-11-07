@@ -70,6 +70,9 @@ const Version = () => {
                                     <li>
                                         Das Design der Benutzeroberfläche von MUCGPT wurde aktualisiert.
                                     </li>
+                                    <li>
+                                        🧜‍♀️ Arielle die Diagramm Assistentin ist jetzt unter "Community Assistenten" zu finden und nicht mehr im Chat.
+                                    </li>
                                 </ul>
                             </div>
                         </AccordionPanel>

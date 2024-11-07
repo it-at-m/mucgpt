@@ -162,7 +162,7 @@ i18n
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
                         },
                         botsettingsdrawer: {
-                            delete: "Assitent löschen"
+                            delete: "Assistent löschen"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"

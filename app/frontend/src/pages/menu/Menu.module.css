@@ -7,6 +7,7 @@
     max-width: 80%;
     margin-right: 10%;
     margin-left: 10%;
+    height: 100%;
 }
 .rowheader {
     flex: 1;
@@ -21,7 +22,8 @@
     padding-top: 10px;
     padding-bottom: 20px;
     width: 100%;
-    height: auto;
+    height: 33%;
+    justify-content: center;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 10px;

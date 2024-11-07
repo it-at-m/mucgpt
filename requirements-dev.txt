@@ -188,7 +188,7 @@ openai==1.54.3
     # via
     #   mucgpt (pyproject.toml)
     #   langchain-openai
-orjson==3.10.7
+orjson==3.10.11
     # via langsmith
 packaging==24.1
     # via

@@ -2,6 +2,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 .headerContainer {
@@ -18,6 +19,8 @@
     margin-right: 40px;
     color: var(--colorNeutralBackground1Hover);
     text-decoration: none;
+    width: 20%;
+    left: 1em;
 }
 
 .headerLogo {
@@ -36,7 +39,10 @@
     align-items: center;
     flex-wrap: wrap;
     justify-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    align-self: center;
+    justify-self: center;
+    width: 60%;
 }
 
 .headerNavPageLink {
@@ -48,6 +54,7 @@
     transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
     transition-duration: 500ms;
     transition-property: opacity;
+    display: none;
 }
 
 .headerNavPageLink:hover {
@@ -78,4 +85,18 @@
     height: 50px;
     padding: 2px;
     margin-left: 1em;
+}
+.SettingsDrawer {
+    right: 0;
+    margin: auto;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin: auto;
+    align-self: flex-end;
+    width: auto;
+    display: flex;
+}
+
+.header {
+    display: flex;
 }

@@ -18,11 +18,13 @@ from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
 from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
-from core.types.ChatRequest import ChatRequest
+from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.ChatResult import ChatResult
 from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
+from core.types.CreateBotRequest import CreateBotRequest
+from core.types.CreateBotResult import CreateBotResult
 from core.types.SimplyRequest import SimplyRequest
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
@@ -176,6 +178,53 @@ async def chat(request: ChatRequest,
     except Exception as e:
         logger.exception("Exception in /chat")
         logger.exception(str(e))
+        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+    
+@api_app.post("/create_bot")
+async def create_bot(request: CreateBotRequest,
+               access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+               id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> CreateBotResult:
+    cfg = get_config_and_authentificate(access_token=access_token)
+    department = get_department(id_token=id_token)
+    try:
+        impl = cfg["chat_approaches"]
+        with open("create_bot/prompt_for_systemprompt.md", encoding="utf-8") as f:
+            system_message = f.read()
+        history= [ChatTurn(user="Funktion: " + request.input)]
+        system_prompt = impl.run_without_streaming(
+            history=history,
+            temperature=1.0,
+            system_message=system_message,
+            department=department,
+            llm_name=request.model,
+            max_output_tokens=request.max_output_tokens
+        )
+        with open("create_bot/prompt_for_description.md", encoding="utf-8") as f:
+            system_message = f.read()
+        history= [ChatTurn(user="Systempromt: ```" + system_prompt.content + "```" )]
+        description = impl.run_without_streaming(
+            history=history,
+            temperature=1.0,
+            system_message=system_message,
+            department=department,
+            llm_name=request.model,
+            max_output_tokens=request.max_output_tokens
+        )
+        with open("create_bot/prompt_for_title.md", encoding="utf-8") as f:
+            system_message = f.read()
+        history= [ChatTurn(user="Systempromt: ```" + system_prompt.content + "```\nBeschreibung: ```" + description.content + "```")]
+        title = impl.run_without_streaming(
+            history=history,
+            temperature=1.0,
+            system_message=system_message,
+            department=department,
+            llm_name=request.model,
+            max_output_tokens=request.max_output_tokens
+        )
+        return {"title": title.content, "description": description.content, "system_prompt":system_prompt.content}
+    except Exception as e:
+        logging.exception("Exception in /create_bot")
+        logging.exception(str(e))
         raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 

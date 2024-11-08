@@ -7,8 +7,8 @@
 }
 
 .message {
-    padding: 20px;
-    max-width: 80%;
+    padding: 1em;
+    margin: 1em;
     background: var(--colorNeutralBackground1);
     border-radius: 8px;
     overflow-x: auto;

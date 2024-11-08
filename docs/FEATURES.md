@@ -1,7 +1,7 @@
 # Features
 In the following some important Features of MUCGPT are listed. Future Features are listed in the [Roadmap](/README.md/#-Roadmap).  
   
-Currently MUCGPT is divided into the areas [Chat](#chat) to chat with the underlying LLM, [Summarize](#summarize) to summarize long texts and files and [Brainstorming](#brainstorming) to get a mind map on a given topic.
+MUCGPT has4 main features and it offers the possibilty to create your own assitents with your specific features. The main features ar [Chat](#chat) to chat with the underlying LLM, [Summarize](#summarize) to summarize long texts and files, [Brainstorming](#brainstorming) to get a mind map on a given topic and [Simplified Language](#simplified-language) to translate text to easier langaugae and make it more understandable.
 
 ## Chat
 ![Chat](/docs/chatscreen.png)  

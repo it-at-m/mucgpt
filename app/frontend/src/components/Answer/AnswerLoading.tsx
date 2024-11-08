@@ -18,7 +18,7 @@ export const AnswerLoading = ({ text }: Props) => {
         <animated.div style={{ ...animatedStyles }}>
             <Stack className={styles.answerContainer} verticalAlign="space-between">
                 <AnswerIcon />
-                <Stack.Item grow>
+                <Stack.Item className={styles.growItem} grow>
                     <p className={styles.answerText}>
                         {text}
                         <span className={styles.loadingdots} />

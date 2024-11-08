@@ -24,6 +24,8 @@ export type ChatRequest = {
     model?: string;
 };
 
+export type CreateBotRequest = { input: string; max_output_tokens: number; model?: string };
+
 export type SumRequest = {
     text: string;
     detaillevel?: "short" | "medium" | "long";
@@ -89,4 +91,13 @@ export type CountTokenResponse = {
 export type SimplyResponse = {
     content: string;
     error?: string;
+};
+export type Bot = {
+    title: string;
+    description: string;
+    system_message: string;
+    publish: boolean;
+    id: number;
+    temperature: number;
+    max_output_tokens: number;
 };

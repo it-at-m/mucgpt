@@ -11,7 +11,7 @@
 .example {
     word-break: break-word;
     background: var(--colorNeutralBackground4);
-    border-radius: 8px;
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
     padding: 20px;

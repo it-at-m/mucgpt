@@ -244,19 +244,9 @@ const Chat = () => {
 
     return (
         <div className={styles.container}>
-            <History
-                storage={storage}
-                setAnswers={setAnswers}
-                lastQuestionRef={lastQuestionRef}
-                currentId={currentId}
-                setCurrentId={setCurrentId}
-                onTemperatureChanged={onTemperatureChanged}
-                onMaxTokensChanged={onMaxTokensChanged}
-                onSystemPromptChanged={onSystemPromptChanged}
-                setError={setError}
-            ></History>
             <div className={styles.commandsContainer}>
-                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+
                 <ChatsettingsDrawer
                     temperature={temperature}
                     setTemperature={onTemperatureChanged}
@@ -266,6 +256,18 @@ const Chat = () => {
                     setSystemPrompt={onSystemPromptChanged}
                     current_id={currentId}
                 ></ChatsettingsDrawer>
+
+                <History
+                    storage={storage}
+                    setAnswers={setAnswers}
+                    lastQuestionRef={lastQuestionRef}
+                    currentId={currentId}
+                    setCurrentId={setCurrentId}
+                    onTemperatureChanged={onTemperatureChanged}
+                    onMaxTokensChanged={onMaxTokensChanged}
+                    onSystemPromptChanged={onSystemPromptChanged}
+                    setError={setError}
+                ></History>
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
@@ -292,7 +294,6 @@ const Chat = () => {
                                         {index === answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index}
                                             onRegenerateResponseClicked={onRegeneratResponseClicked}
                                             setQuestion={question => setQuestion(question)}
                                         />
@@ -300,7 +301,6 @@ const Chat = () => {
                                         {index !== answers.length - 1 && <Answer
                                             key={index}
                                             answer={answer[1]}
-                                            isSelected={selectedAnswer === index}
                                             setQuestion={question => setQuestion(question)}
                                         />
                                         }
@@ -363,4 +363,3 @@ const Chat = () => {
 };
 
 export default Chat;
-

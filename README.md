@@ -10,23 +10,34 @@
 
 <!-- ABOUT THE PROJECT -->
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
+[![Gitmoij][gitmoij-shield]][gitmoij]
 [![GitHub license][license-shield]][license]
 [![GitHub release version][github-release-shield]][releases]
+[![uv][uv-shield]][uv]
 ![Supported python versions][python-versions-shield]
+![Supported npm versions][npm-versions-shield]
 
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
-[github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge
+[github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge&color=orange
 [python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
+[gitmoij-shield]: https://img.shields.io/badge/gitmoij-😜😍-yellow?style=for-the-badge
+[npm-versions-shield]: https://img.shields.io/badge/node-20+-blue?style=for-the-badge
+[uv-shield]: https://img.shields.io/badge/⚡-uv-blue?style=for-the-badge
 
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
 [releases]: https://github.com/it-at-m/mucgpt/releases
-MUCGPT provides a web interface based on a large language model (LLM). The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text. The included IAC files for Azure make it easy to deploy the project in just a few steps.
+[gitmoij]: https://gitmoji.dev/
+[uv]: https://github.com/astral-sh/uv
 
-Why should you use MUCGPT? See for yourself:  
-  
-![Essay of MUCGPT to convince the user to use it!](/docs/convince-the-user.png) 
+MUCGPT provides a web interface based on a large language model (LLM). The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
+
+In addition custom GPTs can be generated and saved. A own GPT is an assistant for a specific task with an custom system prompt.
+
+Why should you use MUCGPT? See for yourself:
+
+![Essay of MUCGPT to convince the user to use it!](/docs/convince-the-user.png)
 
 
 ## Built With
@@ -78,13 +89,13 @@ uv pip compile pyproject.toml  -o requirements-dev.txt --python-version <python-
 ### Run locally
 ```bash
 cd app\backend
-pip install --no-cache-dir --upgrade -r requirements.txt   
+pip install --no-cache-dir --upgrade -r requirements.txt
 cd ..\frontend
 npm run build
 cd ..\backend
 $env:MUCGPT_CONFIG="path to default.json"
 $env:MUCGPT_BASE_CONFIG="path to base.json"
-uvicorn app:backend --reload   
+uvicorn app:backend --reload
 ```
 
 
@@ -95,16 +106,16 @@ uvicorn app:backend --reload
 
 
 ## Documentation
-![Architecture](docs/appcomponents_en.png)  
+![Architecture](docs/appcomponents_en.png)
  The architecture of MUCGPT is divided into two parts, the frontend and the backend. MUCGPT is deployed on Microsoft Azure as an AppService with a PostgreSQL database and an Azure OpenAI resource.
-  
+
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
-  
+
 The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [config](config/default.json) file, you can provide the user with various LLM options to select from in the frontend.
 
-  
-For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).  
-  
+
+For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
+
 A cheatsheat to use MUCGPT is located [here](app/frontend/src/assets/mucgpt_cheatsheet.pdf).
 
 ## Contributing
@@ -132,4 +143,3 @@ Distributed under the MIT License. See [LICENSE](LICENSE) file for more informat
 ## Contact
 
 it@M - itm.kicc@muenchen.de
-

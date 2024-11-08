@@ -8,11 +8,13 @@ from langchain_core.runnables.base import RunnableSerializable
 from pydantic import BaseModel, Field
 
 from core.datahelper import Repository, Requestinfo
+from core.logtools import getLogger
 from core.textsplit import splitPDF, splitText
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 from core.types.SummarizeResult import SummarizeResult
 
+logger = getLogger(name="mucgpt-backend-summarize")
 
 class DenserSummary(BaseModel):
     missing_entities: List[str] = Field(description="An list of missing entitys")
@@ -88,7 +90,7 @@ class Summarize:
 
     def getSummarizationPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["text"], template=self.user_sum_prompt)
-    
+
     def getTranslationCleanupPrompt(self) -> PromptTemplate:
         return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_and_cleanup_prompt)
 
@@ -104,9 +106,9 @@ class Summarize:
         translationChain = self.getTranslationCleanupPrompt() | llm
 
         return (summarizationChain, translationChain)
-    
-    
-    
+
+
+
     def run_io_tasks_in_parallel(self, tasks) -> List[Tuple[Summarys, int]]:
         """execute tasks in parallel
 
@@ -123,7 +125,7 @@ class Summarize:
                 results.append(running_task.result())
         return results
 
-    
+
     def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int]:
         """calls summarization chain and cleans the data
 
@@ -135,13 +137,14 @@ class Summarize:
             Tuple[List[str], int]: the last n summaries, the number of consumed tokens
         """
         try:
+            logger.info("Summarize text for split")
             with get_openai_callback() as cb:
                 result: Summarys = summarizeChain.invoke({"text": text})
-  
+            logger.info("Summarize text for split completed with %s tokens", cb.total_tokens)
             total_tokens = cb.total_tokens
-        
+
         except Exception as ex:
-            print(ex)
+            logger.exception(ex)
             # error message
             total_tokens = 0
             result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
@@ -168,15 +171,19 @@ class Summarize:
         Returns:
             SummarizeResult: the best n summarizations
         """
+        logger.info("Summarize started")
         # setup
         (summarizeChain, cleanupChain) = self.setup(llm_name)
         # call chain
         total_tokens = 0
         summarys: List[DenserSummary] = []
+
+        logger.info("Summarize in parallel, having %s splits", len(splits))
         # call summarization in parallel
         chunk_summaries  =  self.run_io_tasks_in_parallel(
              list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, summarizeChain=summarizeChain), splits)))
 
+        logger.info("Concatenate summaries")
         # concatenate all summarys
         for i in range(0,5):
             next_summary = DenserSummary(missing_entities=[], denser_summary="")
@@ -186,16 +193,18 @@ class Summarize:
                 next_summary.missing_entities += chunk_summary.data[i].missing_entities
             summarys.append(next_summary)
 
+        logger.info("Translate and cleanup concatenated summaries")
         final_summarys = []
         for summary in summarys[self.use_last_n_summaries:]:
             # translate and beautify the concatenated summaries
             with get_openai_callback() as cb:
-                chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})        
+                chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})
             total_tokens = cb.total_tokens
             final_summarys.append(chunk_summary.content)
+        logger.info("Summarize completed with total tokens %s", total_tokens)
         # save total tokens
         if self.config.log_tokens:
-            self.repo.addInfo(Requestinfo( 
+            self.repo.addInfo(Requestinfo(
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
@@ -203,7 +212,7 @@ class Summarize:
                 model = llm_name))
 
         return SummarizeResult(answer= final_summarys)
-    
+
     def split(self, detaillevel: str, file = None, text = None) -> List[str]:
         """splits the text (either a pdf or text) into equal chunks
 
@@ -218,8 +227,9 @@ class Summarize:
         splitsize = self.switcher.get(detaillevel, 700)
 
         if(file is not None):
+            logger.info("Split pdf")
             splits = splitPDF(file, splitsize, 0)
         else:
+            logger.info("Split text")
             splits = splitText(text, splitsize, 0)
         return splits
-    

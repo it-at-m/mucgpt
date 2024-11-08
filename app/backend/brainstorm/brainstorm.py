@@ -7,10 +7,12 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
+from core.logtools import getLogger
 from core.types.BrainstormResult import BrainstormResult
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 
+logger = getLogger(name="mucgpt-backend-brainstorm")
 
 class Brainstorm:
     """
@@ -53,14 +55,14 @@ class Brainstorm:
     user_translate_prompt = """
     Übersetze den folgenden Text in {language}. Beinhalte die Markdown Formatierung bei.
 
-    Text: 
+    Text:
     {brainstorm}"""
 
     def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository):
         self.llm = llm
         self.config = config
         self.repo = repo
-    
+
     def getBrainstormPrompt(self) -> PromptTemplate:
         """Returns the brainstrom prompt template
         Returns:
@@ -78,7 +80,7 @@ class Brainstorm:
 
 
     async def brainstorm(self, topic: str, language: str, department: Optional[str], llm_name:str) -> BrainstormResult:
-        """Generates ideas for a given topic structured in markdown, translates the result into the target language 
+        """Generates ideas for a given topic structured in markdown, translates the result into the target language
 
         Args:
             topic (str): topic of the brainstorming
@@ -89,6 +91,7 @@ class Brainstorm:
         Returns:
             BrainstormResult: the structured markdown with ideas about the topic
         """
+        logger.info("Brainstorm started with language %s", language)
         # configure
         config: LlmConfigs = {
             "llm": llm_name
@@ -102,19 +105,22 @@ class Brainstorm:
         translationChain = translation_prompt |llm | StrOutputParser()
         # build complete chain
         overall_chain = ({"brainstorm": brainstormChain,"language": itemgetter("language") }| translationChain )
-        
+
         with get_openai_callback() as cb:
             result = await overall_chain.ainvoke({"topic": topic, "language": language})
         total_tokens = cb.total_tokens
         translation = self.cleanup(str(result))
 
         if self.config.log_tokens:
-            self.repo.addInfo(Requestinfo( 
+            self.repo.addInfo(Requestinfo(
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
                 method = "Brainstorm",
                 model = llm_name))
+
+
+        logger.info("Brainstorm completed with total tokens %s", cb.total_tokens)
         return BrainstormResult(answer=translation)
 
     def cleanup(self, chat_translate_result: str) -> str:
@@ -131,4 +137,3 @@ class Brainstorm:
             if(len(splitted) == 3):
                 chat_translate_result = splitted[1]
         return chat_translate_result
-    

@@ -34,7 +34,19 @@ loggers:
     level: INFO
     handlers: [console]
     propagate: no
+  mucgpt-backend-chat:
+    level: INFO
+    handlers: [console]
+    propagate: no
   mucgpt-backend-simply:
+    level: INFO
+    handlers: [console]
+    propagate: no
+  mucgpt-backend-summarize:
+    level: INFO
+    handlers: [console]
+    propagate: no
+  mucgpt-backend-brainstorm:
     level: INFO
     handlers: [console]
     propagate: no

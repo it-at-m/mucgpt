@@ -38,7 +38,7 @@ class Simply:
         Returns:
             ChatResult: The generated simplified text.
         """
-
+        logger.info("Simply started")
         config: LlmConfigs = {
             "llm_temperature": temperature,
             "llm_streaming": False,
@@ -94,24 +94,30 @@ class Simply:
         return langchain_messages
 
     def build_prompt_plain(self, llm_name:str, message:str) -> str:
+        logger.info("Building prompt for plain output")
         with open("simply/prompts/rules_es.md", encoding="utf-8") as f:
             rules = f.read()
         if "mistral" in llm_name.lower():
+            logger.info("Using Mistral plain prompt")
             with open("simply/prompts/prompt_mistral_es.md", encoding="utf-8") as f:
                 prompt = f.read()
         else:
+            logger.info("Using OpenAI plain prompt")
             with open("simply/prompts/prompt_openai_es.md", encoding="utf-8") as f:
                 prompt = f.read()
 
         return prompt.format(message=message,rules=rules)
 
     def build_prompt_easy(self, llm_name:str, message:str) -> str:
+        logger.info("Building prompt for easy output")
         with open("simply/prompts/rules_ls.md", encoding="utf-8") as f:
             rules = f.read()
         if "mistral" in llm_name.lower():
+            logger.info("Using Mistral easy prompt")
             with open("simply/prompts/prompt_mistral_ls.md", encoding="utf-8") as f:
                 prompt = f.read()
         else:
+            logger.info("Using OpenAI easy prompt")
             with open("simply/prompts/prompt_openai_ls.md", encoding="utf-8") as f:
                 prompt = f.read()
 
@@ -119,6 +125,7 @@ class Simply:
 
     def extractText(self, response: str, output_type:str)-> str :
         """Extract text between tags from response."""
+        logger.info("Extracting text")
         if output_type == "easy":
             result = re.findall(
                 r"<leichtesprache>(.*?)</leichtesprache>", response, re.DOTALL

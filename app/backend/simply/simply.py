@@ -6,11 +6,13 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
+from core.logtools import getLogger
 from core.types.ChatRequest import ChatTurn
 from core.types.ChatResult import ChatResult
 from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 
+logger = getLogger(name="mucgpt-backend-simply")
 
 class Simply:
     """Chat with a llm via multiple steps.
@@ -20,8 +22,8 @@ class Simply:
         self.llm = llm
         self.config = config
         self.repo = repo
-    
-    
+
+
     def simply(self, temperature: float, department: Optional[str], llm_name:str, output_type:str, message:str) -> ChatResult:
         """
         Generate a simplified text.
@@ -42,6 +44,8 @@ class Simply:
             "llm_streaming": False,
         }
 
+        logger.info("Simplify output_tpye: %s", output_type)
+
         if output_type == "plain":
             prompt = self.build_prompt_plain(llm_name=llm_name, message=message)
             with open("simply/prompts/system_message_es.md", encoding="utf-8") as f:
@@ -60,13 +64,16 @@ class Simply:
             ai_message: AIMessage = llm.invoke(msgs)
         total_tokens = cb.total_tokens
         if self.config.log_tokens:
-            self.repo.addInfo(Requestinfo( 
+            self.repo.addInfo(Requestinfo(
                 tokencount = total_tokens,
                 department = department,
                 messagecount=  1,
                 method = "Simplyfied Language",
                 model = llm_name))
-        return ChatResult(content=self.extractText(ai_message.content, output_type))
+        result =  ChatResult(content=self.extractText(ai_message.content, output_type))
+        logger.info("Total tokens: %s", total_tokens)
+        logger.info("Simply completed")
+        return result
 
 
     def init_messages(self, history:List[ChatTurn], system_message:  Optional[str] ) :
@@ -85,7 +92,7 @@ class Simply:
             if(conversation.bot):
                 langchain_messages.append(AIMessage(content=conversation.bot))
         return langchain_messages
-    
+
     def build_prompt_plain(self, llm_name:str, message:str) -> str:
         with open("simply/prompts/rules_es.md", encoding="utf-8") as f:
             rules = f.read()
@@ -95,9 +102,9 @@ class Simply:
         else:
             with open("simply/prompts/prompt_openai_es.md", encoding="utf-8") as f:
                 prompt = f.read()
-            
+
         return prompt.format(message=message,rules=rules)
-    
+
     def build_prompt_easy(self, llm_name:str, message:str) -> str:
         with open("simply/prompts/rules_ls.md", encoding="utf-8") as f:
             rules = f.read()
@@ -107,9 +114,9 @@ class Simply:
         else:
             with open("simply/prompts/prompt_openai_ls.md", encoding="utf-8") as f:
                 prompt = f.read()
-            
+
         return prompt.format(message=message, rules=rules)
-    
+
     def extractText(self, response: str, output_type:str)-> str :
         """Extract text between tags from response."""
         if output_type == "easy":

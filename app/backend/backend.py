@@ -1,5 +1,4 @@
 import io
-import logging
 import os
 from typing import List, cast
 
@@ -14,6 +13,7 @@ from pydantic_core import from_json
 
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
+from core.logtools import getLogger
 from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
 from core.types.BrainstormRequest import BrainstormRequest
@@ -28,6 +28,7 @@ from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
 from init_app import initApp
 
+logger = getLogger()
 # serves static files and the api
 backend = FastAPI(title="MUCGPT")
 # serves the api
@@ -74,8 +75,8 @@ async def sum(
         )
         return r
     except Exception as e:
-        logging.exception("Exception in /sum")
-        logging.exception(str(e))
+        logger.exception("Exception in /sum")
+        logger.exception(str(e))
         raise HTTPException(status_code=500,detail="Exception in summarize: something bad happened")
 
 @api_app.post("/brainstorm")
@@ -94,8 +95,8 @@ async def brainstorm(request: BrainstormRequest,
         )
         return r
     except Exception as e:
-        logging.exception("Exception in /brainstorm")
-        logging.exception(str(e))
+        logger.exception("Exception in /brainstorm")
+        logger.exception(str(e))
         msg = (
             "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
             if "Rate limit" in str(e)
@@ -120,7 +121,7 @@ async def simply(request: SimplyRequest,
         )
         return r
     except Exception as e:
-        logging.exception("Exception in /simply")
+        logger.exception("Exception in /simply")
         msg = (
             "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
             if "Rate limit" in str(e)
@@ -146,12 +147,12 @@ async def chat_stream(request: ChatRequest,
             model=request.model,
             department=department,
         )
-        response = StreamingResponse(format_as_ndjson(response_generator))
+        response = StreamingResponse(format_as_ndjson(r=response_generator, logger=logger))
         response.timeout = None  # type: ignore
         return response
     except Exception as e:
-        logging.exception("Exception in /chat")
-        logging.exception(str(e))
+        logger.exception("Exception in /chat")
+        logger.exception(str(e))
         raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 
@@ -173,8 +174,8 @@ async def chat(request: ChatRequest,
         )
         return chatResult
     except Exception as e:
-        logging.exception("Exception in /chat")
-        logging.exception(str(e))
+        logger.exception("Exception in /chat")
+        logger.exception(str(e))
         raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
 
 
@@ -209,7 +210,7 @@ async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmss
             avg = repo.avgByDepartment()
             return  {"sum": sum, "avg": avg}
         except Exception as e:
-            logging.exception(str(e))
+            logger.exception(str(e))
             raise HTTPException(status_code=500, detail="Get Statistics failed!")
 
 
@@ -222,7 +223,7 @@ async def counttokens(request: CountTokenRequest, access_token: str = Header(Non
     except NotImplementedError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        logging.exception(str(e))
+        logger.exception(str(e))
         raise HTTPException(status_code=500, detail="Counttokens failed!")
 
 
@@ -240,7 +241,7 @@ async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lh
         response.headers["Content-Disposition"] = "attachment; filename=statistics.csv"
         return response
     except Exception as e:
-        logging.exception(str(e))
+        logger.exception(str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 

@@ -10,4 +10,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     host = "localhost" if args.development else "0.0.0.0"
-    uvicorn.run(backend, host=host, port=8080)
+    uvicorn.run(backend, host=host, port=8080, log_config="logconf.yaml")

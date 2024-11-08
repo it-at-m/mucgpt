@@ -7,10 +7,13 @@ from core.authentification import AuthentificationHelper
 from core.confighelper import ConfigHelper
 from core.datahelper import Base, Repository
 from core.llmhelper import getModel
+from core.logtools import getLogger
 from core.types.AppConfig import AppConfig
 from core.types.Config import BackendConfig, DatabaseConfig
 from simply.simply import Simply
 from summarize.summarize import Summarize
+
+logger = getLogger()
 
 
 def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Brainstorm, Summarize]:
@@ -23,6 +26,10 @@ def initApproaches(cfg: BackendConfig, repoHelper: Repository) -> Tuple[Chat, Br
     Returns:
         Tuple[Chat, Brainstorm, Summarize]: the implementation behind chat, brainstorm and summarize
     """
+    logger.info("Init approaches")
+    logger.info("%s llms configured", len(cfg.models))
+    for model in cfg.models:
+        logger.info("Model: %s", model.llm_name)
     brainstormllm = getModel(
                     models=cfg.models,
                     max_output_tokens =  4000,
@@ -59,18 +66,21 @@ def initApp() -> AppConfig:
     Returns:
         AppConfig: contains the configuration for the webservice
     """
+    logger.info("Init app")
     # read enviornment config
     env_config = os.environ['MUCGPT_CONFIG'] if "MUCGPT_CONFIG" in os.environ else os.path.dirname(os.path.realpath(__file__))+"/config.json"
     base_config = os.environ['MUCGPT_BASE_CONFIG'] if "MUCGPT_BASE_CONFIG" in os.environ is not None else os.path.dirname(os.path.realpath(__file__))+"/base.json"
     config_helper = ConfigHelper(env_config=env_config, base_config=base_config)
     cfg = config_helper.loadData()
      # Set up authentication helper
+    logger.info("Authentification enabled?:  " + str(cfg.backend.enable_auth))
     auth_helper = AuthentificationHelper(
         issuer=cfg.backend.sso_config.sso_issuer,
         role=cfg.backend.sso_config.role
-    )  
+    )
     # set up repositorty
     if(cfg.backend.enable_database):
+        logger.info("Setting up database connection: " + cfg.backend.db_config.db_host)
         db_config: DatabaseConfig = cfg.backend.db_config
         repoHelper = Repository(
             username=db_config.db_user,
@@ -80,12 +90,13 @@ def initApp() -> AppConfig:
         )
         repoHelper.setup_schema(base=Base)
     else:
+        logger.info("No database provided")
         repoHelper = None
 
     (chat_approaches, brainstorm_approaches, sum_approaches, simply_approaches) = initApproaches(cfg=cfg.backend, repoHelper=repoHelper)
 
 
-        
+    logger.info("finished init App")
 
     return  AppConfig(
         authentification_client=auth_helper,

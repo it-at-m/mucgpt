@@ -126,7 +126,7 @@ class Summarize:
         return results
 
 
-    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int]:
+    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int, Optional[str]]:
         """calls summarization chain and cleans the data
 
         Args:
@@ -134,8 +134,9 @@ class Summarize:
             summarizeChain (RunnableSerializable): the chain, that summarizes and cleans the data
 
         Returns:
-            Tuple[List[str], int]: the last n summaries, the number of consumed tokens
+            Tuple[List[str], int, Optional[str]]: the last n summaries, the number of consumed tokens, the error message if an exception occured
         """
+        error = None
         try:
             logger.info("Summarize text for split")
             with get_openai_callback() as cb:
@@ -144,17 +145,13 @@ class Summarize:
             total_tokens = cb.total_tokens
 
         except Exception as ex:
-            logger.exception(ex)
+            logger.error("Error in call and cleanup: %s", ex)
             # error message
             total_tokens = 0
-            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' ),
-                                     DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' )])
+            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' )])
+            error = ex.message
 
-
-        return (result,total_tokens)
+        return (result,total_tokens, error)
 
 
 
@@ -187,20 +184,25 @@ class Summarize:
         # concatenate all summarys
         for i in range(0,5):
             next_summary = DenserSummary(missing_entities=[], denser_summary="")
-            for (chunk_summary, tokens) in chunk_summaries:
-                total_tokens += tokens
-                next_summary.denser_summary += " "+ chunk_summary.data[i].denser_summary
-                next_summary.missing_entities += chunk_summary.data[i].missing_entities
-            summarys.append(next_summary)
+            for (chunk_summary, tokens, error) in chunk_summaries:
+                if(error is None):
+                    total_tokens += tokens
+                    next_summary.denser_summary += " "+ chunk_summary.data[i].denser_summary
+                    next_summary.missing_entities += chunk_summary.data[i].missing_entities
+                    summarys.append(next_summary)
 
-        logger.info("Translate and cleanup concatenated summaries")
-        final_summarys = []
-        for summary in summarys[self.use_last_n_summaries:]:
-            # translate and beautify the concatenated summaries
-            with get_openai_callback() as cb:
-                chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})
-            total_tokens += cb.total_tokens
-            final_summarys.append(chunk_summary.content)
+        if(summarys == [] or len(summarys) < self.use_last_n_summaries):
+            logger.error("No summaries generated")
+            final_summarys =  ["Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen."]
+        else:
+            logger.info("Translate and cleanup concatenated summaries")
+            final_summarys = []
+            for summary in summarys[self.use_last_n_summaries:]:
+                # translate and beautify the concatenated summaries
+                with get_openai_callback() as cb:
+                    chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})
+                total_tokens += cb.total_tokens
+                final_summarys.append(chunk_summary.content)
         logger.info("Summarize completed with total tokens %s", total_tokens)
         # save total tokens
         if self.config.log_tokens:

@@ -62,7 +62,7 @@ class Chat:
                 position += 1
         except Exception as ex:
              logger.error("Error in chat streaming: %s", ex)
-             yield Chunk(type="E",message= ex.exception(), order=position)
+             yield Chunk(type="E",message= ex.message, order=position)
         # handle exceptions
         # TODO find ratelimits
         # TODO use callbacks https://clemenssiebler.com/posts/azure_openai_load_balancing_langchain_with_fallbacks/

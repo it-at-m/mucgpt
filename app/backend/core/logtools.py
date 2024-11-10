@@ -44,7 +44,7 @@ class JsonFormatter(logging.Formatter):
 
         # Add exception information if present
         if record.exc_info:
-            log_data["exception"] = record.exc_info
+            log_data["exception"] = str(record.exc_info)
 
         # Add extra fields if needed
         if hasattr(record, "extra"):

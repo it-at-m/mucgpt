@@ -42,6 +42,7 @@ class Simply:
         config: LlmConfigs = {
             "llm_temperature": temperature,
             "llm_streaming": False,
+            "llm": llm_name,
         }
 
         logger.info("Simplify output_tpye: %s", output_type)

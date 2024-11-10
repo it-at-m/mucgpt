@@ -199,7 +199,7 @@ class Summarize:
             # translate and beautify the concatenated summaries
             with get_openai_callback() as cb:
                 chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})
-            total_tokens = cb.total_tokens
+            total_tokens += cb.total_tokens
             final_summarys.append(chunk_summary.content)
         logger.info("Summarize completed with total tokens %s", total_tokens)
         # save total tokens

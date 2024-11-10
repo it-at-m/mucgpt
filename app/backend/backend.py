@@ -1,8 +1,9 @@
 import io
 import os
+import time
 from typing import List, cast
 
-from fastapi import FastAPI, Form, Header, HTTPException, UploadFile
+from fastapi import FastAPI, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import (
     RedirectResponse,
     StreamingResponse,
@@ -50,6 +51,12 @@ async def handleAuthError(request, exc: AuthError):
     return RedirectResponse(url=cfg["backend_config"].unauthorized_user_redirect_url,
                             status_code=302)
 
+@api_app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    logger.info("Request %s took %.3f seconds", request.url.path, time.time() - start_time)
+    return response
 
 @api_app.post("/sum")
 async def sum(

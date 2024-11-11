@@ -161,7 +161,6 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
 }
 
 export async function createBotApi(options: CreateBotRequest): Promise<Response> {
-    console.log(options);
     return await fetch("/api/create_bot", {
         method: "POST",
         headers: {

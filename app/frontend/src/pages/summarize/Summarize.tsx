@@ -128,6 +128,7 @@ const Summarize = () => {
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
                                             current_id={currentId}
+                                            is_bot={false}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
@@ -145,6 +146,7 @@ const Summarize = () => {
                                             storage={storage}
                                             lastQuestionRef={lastQuestionRef}
                                             current_id={currentId}
+                                            is_bot={false}
                                         />
                                     </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
@@ -161,6 +163,7 @@ const Summarize = () => {
                                         storage={storage}
                                         lastQuestionRef={lastQuestionRef}
                                         current_id={currentId}
+                                        is_bot={false}
                                     />
                                 </li>
                                     <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>

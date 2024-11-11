@@ -313,7 +313,7 @@ const BotChat = () => {
                                             setAnswers={setAnswers}
                                             setQuestion={setQuestion}
                                             answers={answers}
-                                            storage={storage}
+                                            storage={storage_history}
                                             lastQuestionRef={lastQuestionRef}
                                             current_id={+bot_id}
                                         />

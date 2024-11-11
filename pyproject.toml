@@ -78,6 +78,7 @@ markers = [
 env = [
     "MUCGPT_CONFIG=tests/integration/test_config.json",
     "MUCGPT_BASE_CONFIG=tests/integration/base.json",
+    "LOG_CONFIG=app/backend/logconf.yaml",
 ]
 
 [tool.coverage.paths]

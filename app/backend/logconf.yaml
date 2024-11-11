@@ -1,4 +1,9 @@
 version: 1
+filters:
+  correlation_id:
+    (): asgi_correlation_id.CorrelationIdFilter
+    uuid_length: 32
+    default_value: '-'
 formatters:
   simple:
     format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -12,10 +17,12 @@ handlers:
     class: logging.StreamHandler
     level: INFO
     formatter: json
+    filters: [correlation_id]
     stream: ext://sys.stdout
   httpx:
     class: logging.StreamHandler
     formatter: json
+    filters: [correlation_id]
     stream: ext://sys.stderr
 loggers:
   uvicorn.error:

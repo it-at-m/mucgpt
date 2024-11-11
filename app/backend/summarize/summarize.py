@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional, Tuple
 
+from asgi_correlation_id import correlation_id
 from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.prompts import PromptTemplate
@@ -126,17 +127,19 @@ class Summarize:
         return results
 
 
-    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable) -> Tuple[Summarys, int, Optional[str]]:
+    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable, trace_id: str) -> Tuple[Summarys, int, Optional[str]]:
         """calls summarization chain and cleans the data
 
         Args:
             text (str): text, to be summarized
             summarizeChain (RunnableSerializable): the chain, that summarizes and cleans the data
+            trace_id (str): the trace id
 
         Returns:
             Tuple[List[str], int, Optional[str]]: the last n summaries, the number of consumed tokens, the error message if an exception occured
         """
         error = None
+        correlation_id.set(trace_id)
         try:
             logger.info("Summarize text for split")
             with get_openai_callback() as cb:
@@ -177,8 +180,10 @@ class Summarize:
 
         logger.info("Summarize in parallel, having %s splits", len(splits))
         # call summarization in parallel
+
+        trace_id = correlation_id.get()
         chunk_summaries  =  self.run_io_tasks_in_parallel(
-             list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, summarizeChain=summarizeChain), splits)))
+             list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, summarizeChain=summarizeChain, trace_id=trace_id), splits)))
 
         logger.info("Concatenate summaries")
         # concatenate all summarys

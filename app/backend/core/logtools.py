@@ -38,6 +38,7 @@ class JsonFormatter(logging.Formatter):
         log_data = {
             "time": datetime.fromtimestamp(record.created).strftime("%Y-%m-%d %H:%M:%S"),
             "level": record.levelname,
+            "id": record.correlation_id,
             "message": record.getMessage(),
             "name": record.name,
         }

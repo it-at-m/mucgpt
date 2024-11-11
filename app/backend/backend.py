@@ -3,6 +3,7 @@ import os
 import time
 from typing import List, cast
 
+from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from fastapi import FastAPI, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import (
     RedirectResponse,
@@ -38,6 +39,8 @@ backend = FastAPI(title="MUCGPT")
 api_app = FastAPI(title="MUCGPT-API")
 backend.mount("/api", api_app)
 
+api_app.add_middleware(CorrelationIdMiddleware)
+
 backend.state.app_config = initApp()
 current_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(current_dir, 'static')
@@ -55,7 +58,12 @@ async def handleAuthError(request, exc: AuthError):
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
+    # add trace information
+    if("x-request-id" in response.headers):
+        correlation_id.set(response.headers["x-request-id"])
     logger.info("Request %s took %.3f seconds", request.url.path, time.time() - start_time)
+    # remove trace information
+    correlation_id.set(None)
     return response
 
 @api_app.post("/sum")

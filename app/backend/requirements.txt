@@ -20,6 +20,8 @@ anyio==4.6.2.post1
     #   openai
     #   starlette
     #   watchfiles
+asgi-correlation-id==4.3.4
+    # via mucgpt (pyproject.toml)
 attrs==24.2.0
     # via
     #   aiohttp
@@ -132,7 +134,7 @@ langchain-openai==0.2.6
     # via mucgpt (pyproject.toml)
 langchain-text-splitters==0.3.0
     # via langchain
-langsmith==0.1.140
+langsmith==0.1.142
     # via
     #   mucgpt (pyproject.toml)
     #   langchain
@@ -170,6 +172,7 @@ orjson==3.10.7
     # via langsmith
 packaging==24.1
     # via
+    #   asgi-correlation-id
     #   gunicorn
     #   langchain-core
     #   marshmallow
@@ -252,6 +255,7 @@ sqlalchemy==2.0.35
 starlette==0.41.2
     # via
     #   mucgpt (pyproject.toml)
+    #   asgi-correlation-id
     #   fastapi
 tenacity==8.5.0
     # via

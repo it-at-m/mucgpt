@@ -157,7 +157,6 @@ langchain-text-splitters==0.3.2
     # via
     #   mucgpt (pyproject.toml)
     #   langchain
-    # via langchain
 langsmith==0.1.142
     # via
     #   mucgpt (pyproject.toml)

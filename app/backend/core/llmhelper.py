@@ -39,6 +39,7 @@ def getModel(models: List[ModelsConfig],
                         )
         elif default_model.type == "OPENAI":
                llm = ChatOpenAI(
+                        default_headers={"extra-parameters": "pass-through"},
                         model=default_model.llm_name,
                         api_key=default_model.api_key,
                         base_url=default_model.endpoint,
@@ -86,6 +87,7 @@ def getModel(models: List[ModelsConfig],
                         )
                 elif model.type == "OPENAI":
                         alternative = ChatOpenAI(
+                                        default_headers={"extra-parameters": "pass-through"},
                                         model=model.llm_name,
                                         api_key=model.api_key,
                                         base_url=model.endpoint,

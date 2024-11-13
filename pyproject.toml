@@ -8,9 +8,10 @@ dependencies = [
     "fastapi[standard]==0.115.4",
     "dnspython==2.7.0",
     "langchain==0.3.7",
-    "langchain-core==0.3.15",
-    "langchain_community==0.3.5",
-    "langchain-openai==0.2.6",
+    "langchain-core==0.3.17",
+    "langchain_community==0.3.7",
+    "langchain-openai==0.2.8",
+    "langchain-text-splitters==0.3.2",
     "openai==1.54.3",
     "langsmith==0.1.140",
     "joserfc",
@@ -33,13 +34,16 @@ dependencies = [
     "charset-normalizer==3.4.0",
     "anyio==4.6.2.post1",
     "distlib==0.3.9",
-    "httptools==0.6.4"
+    "httptools==0.6.4",
+    "cryptography==43.0.3",
+    "orjson==3.10.11",
+    "frozenlist==1.5.0"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "uv==0.4.30",
-    "ruff==0.7.2",
+    "uv==0.5.1",
+    "ruff==0.7.3",
     "black==24.10.0",
     "pre-commit==4.0.1"
 ]

@@ -56,7 +56,9 @@ coverage==7.6.4
     #   mucgpt (pyproject.toml)
     #   pytest-cov
 cryptography==43.0.3
-    # via joserfc
+    # via
+    #   mucgpt (pyproject.toml)
+    #   joserfc
 dataclasses-json==0.6.7
     # via langchain-community
 distlib==0.3.9
@@ -77,8 +79,9 @@ fastapi-cli==0.0.5
     # via fastapi
 filelock==3.16.1
     # via virtualenv
-frozenlist==1.4.1
+frozenlist==1.5.0
     # via
+    #   mucgpt (pyproject.toml)
     #   aiohttp
     #   aiosignal
 greenlet==3.1.1
@@ -137,19 +140,21 @@ langchain==0.3.7
     # via
     #   mucgpt (pyproject.toml)
     #   langchain-community
-langchain-community==0.3.5
+langchain-community==0.3.7
     # via mucgpt (pyproject.toml)
-langchain-core==0.3.15
+langchain-core==0.3.17
     # via
     #   mucgpt (pyproject.toml)
     #   langchain
     #   langchain-community
     #   langchain-openai
     #   langchain-text-splitters
-langchain-openai==0.2.6
+langchain-openai==0.2.8
     # via mucgpt (pyproject.toml)
-langchain-text-splitters==0.3.0
-    # via langchain
+langchain-text-splitters==0.3.2
+    # via
+    #   mucgpt (pyproject.toml)
+    #   langchain
 langsmith==0.1.140
     # via
     #   mucgpt (pyproject.toml)
@@ -188,8 +193,10 @@ openai==1.54.3
     # via
     #   mucgpt (pyproject.toml)
     #   langchain-openai
-orjson==3.10.7
-    # via langsmith
+orjson==3.10.11
+    # via
+    #   mucgpt (pyproject.toml)
+    #   langsmith
 packaging==24.1
     # via
     #   black
@@ -289,7 +296,7 @@ rpds-py==0.20.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.7.2
+ruff==0.7.3
     # via mucgpt (pyproject.toml)
 sentencepiece==0.2.0
     # via mistral-common
@@ -337,7 +344,7 @@ typing-inspect==0.9.0
     # via dataclasses-json
 urllib3==2.2.3
     # via requests
-uv==0.4.30
+uv==0.5.1
     # via mucgpt (pyproject.toml)
 uvicorn==0.32.0
     # via

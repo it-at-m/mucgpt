@@ -17,6 +17,7 @@ import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
+import { ChatSettingsButton } from "../ChatSettingsButton/ChatSettingsButton";
 interface Props {
     temperature: number;
     setTemperature: (temp: number, id: number) => void;
@@ -185,24 +186,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
                 </div>
             </OverlayDrawer >
 
-            <div className={styles.button}>
-
-                {isEmptySystemPrompt ?
-                    <Tooltip content={t('components.chattsettingsdrawer.settings_button')} relationship="description" positioning="below">
-
-                        <Button aria-label={t('components.chattsettingsdrawer.settings_button')} icon={< ChatSettings24Regular />} appearance="secondary" onClick={onClickRightButton} size="large">
-
-                        </Button>
-                    </Tooltip>
-                    :
-                    <Tooltip content={t('components.chattsettingsdrawer.settings_button_system_prompt')} relationship="description" positioning="below">
-
-                        <Button aria-label={t('components.chattsettingsdrawer.settings_button_system_prompt')} icon={<ChatWarning24Regular className={styles.system_prompt_warining_icon} />} appearance="secondary" onClick={onClickRightButton} size="large">
-
-                        </Button>
-                    </Tooltip>
-                }
-            </div>
+            <ChatSettingsButton isEmptySystemPrompt={isEmptySystemPrompt} onClick={onClickRightButton} />
         </div >
     );
 };

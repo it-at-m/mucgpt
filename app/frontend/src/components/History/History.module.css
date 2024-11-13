@@ -1,5 +1,9 @@
 .button {
-    margin-left: 20px;
+    margin-left: 0px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
 }
 
 .savedChatButton {

@@ -100,14 +100,14 @@ const Summarize = () => {
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
                 <Field label={t('sum.levelofdetail')}>
-                    <RadioGroup layout="horizontal" onChange={onDetaillevelChanged} value={detaillevel_pref}>
+                    <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
                         <Radio value="short" label={t('sum.short')} />
                         <Radio value="medium" label={t('sum.medium')} />
                         <Radio value="long" label={t('sum.long')} />
                     </RadioGroup>
                 </Field>
-                <ClearChatButton className={styles.commandButton} onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>

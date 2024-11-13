@@ -1,0 +1,11 @@
+.container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.iconLeftMargin {
+    margin-left: 5px;
+}

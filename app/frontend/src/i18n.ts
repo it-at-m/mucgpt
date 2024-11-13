@@ -20,7 +20,14 @@ i18n
                         chat: "Chat",
                         brainstorm: "Brainstorming",
                         simply: "Leichte Sprache",
-                        nutzungsbedingungen: "Nutzungsbedingungen"
+                        nutzungsbedingungen: "Nutzungsbedingungen",
+                        create_bot: "Assistent erstellen"
+                    },
+                    menu: {
+                        own_bots: "Eigene Assistenten",
+                        community_bots: "Community Assistenten",
+                        no_bots: "Keine Assisteneten gefunden",
+                        soon: "In Entwicklung..."
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -52,7 +59,8 @@ i18n
                     simply: {
                         header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
                         prompt: "Text zum übersetzen eingeben",
-                        answer_loading: "Übersetze in leichte Sprache",
+                        answer_loading_easy: "Übersetze in leichte Sprache",
+                        answer_loading_plain: "Übersetze in einfache Sprache",
                         plain: "Einfache Sprache",
                         easy: "Leichte Sprache",
                         outputType: "Output Sprache",
@@ -66,6 +74,12 @@ i18n
                         close: "Schließen",
                         messages: "Nachrichten",
                         examples: "Beispiele"
+                    },
+                    create_bot: {
+                        title: "Titel",
+                        description: "Beschreibung",
+                        prompt: "System Prompt",
+                        create: "Erstellen"
                     },
                     components: {
                         roles: {
@@ -147,6 +161,9 @@ i18n
                             system_prompt_info:
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
                         },
+                        botsettingsdrawer: {
+                            delete: "Assistent löschen"
+                        },
                         answericon: {
                             label: "MUCGPT Nachricht"
                         },
@@ -196,6 +213,19 @@ i18n
                             unsave: "Aus Favoriten entfernen",
                             error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!",
                             saved_in_browser: "Im Browser gespeicherte Chats"
+                        },
+                        add_bot_button: {
+                            add_bot: "Erstelle deinen eigenen Assistenten"
+                        },
+                        create_bot_dialog: {
+                            what_function: "Was soll dein Assistent können?",
+                            generating_prompt: "Generiere Prompt...",
+                            dismiss: "Abbrechen",
+                            create: "Erstellen",
+                            prompt_title_desc: "Vorgeschlagener System Prompt, Titel und Beschreibung:",
+                            back: "Zurück",
+                            save: "Speichern",
+                            describe: "Beschreibe die Funktion..."
                         }
                     }
                 }
@@ -207,7 +237,14 @@ i18n
                         chat: "Chat",
                         brainstorm: "Brainstorming",
                         simply: "Simplyfied Language",
-                        nutzungsbedingungen: "Terms of use"
+                        nutzungsbedingungen: "Terms of use",
+                        create_bot: "Create assistant"
+                    },
+                    menu: {
+                        own_bots: "Own Assistants",
+                        community_bots: "Community Assistants",
+                        no_bots: "No Assistants found",
+                        soon: "In Development..."
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -239,7 +276,8 @@ i18n
                     simply: {
                         header: "Enter the text to be translated or try an example",
                         prompt: "Enter text to translate",
-                        answer_loading: "Translating to simple language",
+                        answer_loading_easy: "Translating to easy language",
+                        answer_loading_plain: "Translating to plain language",
                         plain: "Plain language",
                         easy: "easy language",
                         outputType: "Output Language",
@@ -252,6 +290,12 @@ i18n
                         close: "Close",
                         messages: "Messages",
                         examples: "Examples"
+                    },
+                    create_bot: {
+                        title: "Title",
+                        description: "Description",
+                        prompt: "System prompt",
+                        create: "Create"
                     },
                     components: {
                         roles: {
@@ -333,6 +377,9 @@ i18n
                             system_prompt_info:
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
+                        botsettingsdrawer: {
+                            delete: "Delete assistent"
+                        },
                         answericon: {
                             label: "MUCGPT message"
                         },
@@ -382,6 +429,19 @@ i18n
                             unsave: "Remove from Favourites",
                             error: "Do not change the Tab before the Answer is fully generated!",
                             saved_in_browser: "Chats saved in Browser"
+                        },
+                        add_bot_button: {
+                            add_bot: "Create your own assistent"
+                        },
+                        create_bot_dialog: {
+                            what_function: "What should your assistant be able to do?",
+                            generating_prompt: "Generating prompt...",
+                            dismiss: "Cancel",
+                            create: "Create",
+                            prompt_title_desc: "Suggested system prompt, title, and description:",
+                            back: "Back",
+                            save: "Save",
+                            describe: "Describe the function..."
                         }
                     }
                 }
@@ -393,7 +453,14 @@ i18n
                         chat: "Redn",
                         brainstorm: "Gedanknschmarrn",
                         simply: "Oafache Sproch",
-                        nutzungsbedingungen: "Gebrauchsvorschriftn"
+                        nutzungsbedingungen: "Gebrauchsvorschriftn",
+                        create_bot: "Assistenten erstoin"
+                    },
+                    menu: {
+                        own_bots: "Eigene Assitentn",
+                        community_bots: "Community Assistentn",
+                        no_bots: "Koane Assitentn gfundn",
+                        soon: "In Entwicklung..."
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -419,7 +486,8 @@ i18n
                     simply: {
                         header: "Gib den zu übasetzenden Text ei oda probier a Beispiel",
                         prompt: "Text zum übasetzen eigeben",
-                        answer_loading: "Übersetze in oafache Sproch",
+                        answer_loading_plain: "Übersetze in oafache Sproch",
+                        answer_loading_easy: "Übersetze in leichte Sproch",
                         plain: "Oafache Sproch",
                         easy: "Leichte Sproch",
                         outputType: "Output Sproch",
@@ -439,6 +507,12 @@ i18n
                         added: "Nei",
                         fixed: "Fehla beseitigt",
                         changed: "Änderunga"
+                    },
+                    create_bot: {
+                        title: "Titel",
+                        description: "Beschreibung",
+                        prompt: "System Prompt",
+                        create: "Erstellen"
                     },
                     components: {
                         roles: {
@@ -520,6 +594,9 @@ i18n
                             system_prompt_info:
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
                         },
+                        botsettingsdrawer: {
+                            delete: "Assistent löschn"
+                        },
                         answericon: {
                             label: "MUCGPT Nochricht"
                         },
@@ -569,6 +646,19 @@ i18n
                             unsave: "Vo Favoritn entfernen",
                             error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!",
                             saved_in_browser: "Im Browser gespeichade Chats"
+                        },
+                        add_bot_button: {
+                            add_bot: "Erstell dein eigenen Assistenten"
+                        },
+                        create_bot_dialog: {
+                            what_function: "Was soll dein Assistent können?",
+                            generating_prompt: "Prompt wird erstellt...",
+                            dismiss: "Abbrechen",
+                            create: "Erstellen",
+                            prompt_title_desc: "Vorgeschlagener System-Prompt, Titel und Beschreibung:",
+                            back: "Zruck",
+                            save: "Speichern",
+                            describe: "Beschreib die Funktion..."
                         }
                     }
                 }
@@ -581,6 +671,12 @@ i18n
                         brainstorm: "Brainstorming",
                         simply: "Langage facile",
                         nutzungsbedingungen: "Conditions d'utilisation"
+                    },
+                    menu: {
+                        own_bots: "Assistants Personnels",
+                        community_bots: "Assistants Communautaires",
+                        no_bots: "Aucun Assistant trouvé",
+                        soon: "En Développement..."
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -612,7 +708,8 @@ i18n
                     simply: {
                         header: "Entrez le texte à traduire ou essayez un exemple",
                         prompt: "Entrez le texte à traduire",
-                        answer_loading: "Traduire en langage facile",
+                        answer_loading_easy: "Traduction en langage facile",
+                        answer_loading_plain: "Traduction en langage simple",
                         plain: "Langage simple",
                         easy: "Langage facile",
                         outputType: "Langue de sortie",
@@ -757,6 +854,19 @@ i18n
                             unsave: "Retirer des favoris",
                             error: "Ne changez pas d'onglet avant que la réponse soit générée !",
                             saved_in_browser: "Chats sauvegardés dans le navigateur"
+                        },
+                        add_bot_button: {
+                            add_bot: "Crée ton propre assistant"
+                        },
+                        create_bot_dialog: {
+                            what_function: "Que doit pouvoir faire votre assistant?",
+                            generating_prompt: "Génération du prompt...",
+                            dismiss: "Annuler",
+                            create: "Créer",
+                            prompt_title_desc: "Prompt système proposé, titre et description :",
+                            back: "Retour",
+                            save: "Enregistrer",
+                            describe: "Décrivez la fonction..."
                         }
                     }
                 }
@@ -769,6 +879,12 @@ i18n
                         brainstorm: "Брейнштурм",
                         simply: "Проста мова",
                         nutzungsbedingungen: "Умови використання"
+                    },
+                    menu: {
+                        own_bots: "Власні Асистенти",
+                        community_bots: "Громадські Асистенти",
+                        no_bots: "Асистентів не знайдено",
+                        soon: "В розробці..."
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
@@ -800,7 +916,8 @@ i18n
                     simply: {
                         header: "Введіть текст для перекладу або спробуйте приклад",
                         prompt: "Введіть текст для перекладу",
-                        answer_loading: "Переклад простою мовою",
+                        answer_loading_easy: "Переклад на просту мову",
+                        answer_loading_plain: "Переклад на зрозумілу мову",
                         plain: "Проста мова",
                         easy: "Легка мова",
                         outputType: "Вихідна мова",
@@ -943,6 +1060,19 @@ i18n
                             unsave: "Видалити з обраного",
                             error: "Не переходьте на іншу вкладку, доки відповідь не буде згенерована!",
                             saved_in_browser: "Чати, збережені в браузері"
+                        },
+                        add_bot_button: {
+                            add_bot: "Створи свого власного асистента"
+                        },
+                        create_bot_dialog: {
+                            what_function: "Що має вміти ваш асистент?",
+                            generating_prompt: "Генерація запиту...",
+                            dismiss: "Скасувати",
+                            create: "Створити",
+                            prompt_title_desc: "Пропонований системний запит, заголовок та опис:",
+                            back: "Назад",
+                            save: "Зберегти",
+                            describe: "Опишіть функцію..."
                         }
                     }
                 }

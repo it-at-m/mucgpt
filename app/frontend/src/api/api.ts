@@ -5,6 +5,7 @@ import {
     ChatRequest,
     CountTokenRequest,
     CountTokenResponse,
+    CreateBotRequest,
     SimplyRequest,
     SimplyResponse,
     SumRequest,
@@ -157,4 +158,21 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     handleRedirect(response, true);
     const parsedResponse: CountTokenResponse = await handleResponse(response);
     return parsedResponse;
+}
+
+export async function createBotApi(options: CreateBotRequest): Promise<Response> {
+    console.log(options);
+    return await fetch("/api/create_bot", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual",
+        body: JSON.stringify({
+            input: options.input,
+            model: options.model,
+            max_output_tokens: options.max_output_tokens
+        })
+    });
 }

@@ -17,14 +17,12 @@ import { RecommendAnswers } from "../RecommendedAnswers/RecommendedAnswers";
 
 interface Props {
     answer: AskResponse;
-    isSelected?: boolean;
     onRegenerateResponseClicked?: () => void;
     setQuestion: (question: string) => void;
 }
 
 export const Answer = ({
     answer,
-    isSelected,
     onRegenerateResponseClicked,
     setQuestion,
 }: Props) => {
@@ -42,7 +40,7 @@ export const Answer = ({
         }, 1000)
     }
     return (
-        <Stack className={`${styles.answerContainer} ${isSelected && styles.selected}`} verticalAlign="space-between">
+        <Stack className={styles.answerContainer} verticalAlign="space-between">
             <Stack.Item>
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon aria-hidden />
@@ -71,7 +69,7 @@ export const Answer = ({
                 </Stack>
             </Stack.Item>
 
-            <Stack.Item grow>
+            <Stack.Item className={styles.growItem} grow>
                 {formatted &&
                     <Markdown
                         className={styles.answerText}

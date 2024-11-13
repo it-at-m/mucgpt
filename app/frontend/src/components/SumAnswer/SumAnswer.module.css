@@ -1,13 +1,18 @@
 .sumanswerContainer {
-    padding: 20px;
+    padding: 1em;
+    margin: 1em;
     border-radius: 8px;
     background: var(--colorNeutralBackground1Hover);
     box-shadow:
         0px 2px 4px var(--colorBrandForeground2),
         0px 0px 2px var(--colorBrandForeground2);
-    outline: transparent solid 1px;
+    border: transparent solid 1px;
     height: 100%;
-    border-style: groove;
+    max-width: 100%;
+}
+
+.sumanswerContainer:hover {
+    border-left: 1px solid rgb(0, 0, 0);
 }
 
 .answerText {

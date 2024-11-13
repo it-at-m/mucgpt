@@ -51,7 +51,7 @@ export async function saveToDB(
                 // if the chat allready exist in the DB
                 dataID = result.id;
                 let storedAnswers = result.Data.Answers;
-                if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                if (storedAnswers.length > 0 && storedAnswers[storedAnswers.length - 1][1].answer == "") {
                     storedAnswers[storedAnswers.length - 1][1] = a[1];
                 } else {
                     storedAnswers.push(a);
@@ -410,7 +410,7 @@ export async function saveBotChatToDB(a: any[], id: number) {
             if (result) {
                 // if the chat allready exist in the DB
                 let storedAnswers = result.Answers;
-                if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                if (storedAnswers.length > 0 && storedAnswers[storedAnswers.length - 1][1].answer == "") {
                     storedAnswers[storedAnswers.length - 1][1] = a[1];
                 } else {
                     storedAnswers.push(a);

@@ -18,9 +18,10 @@ interface Props {
     storage: indexedDBStorage;
     lastQuestionRef: MutableRefObject<string>;
     current_id: number;
+    is_bot: boolean;
 }
 
-export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswers, storage, lastQuestionRef, current_id }: Props) => {
+export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswers, storage, lastQuestionRef, current_id, is_bot }: Props) => {
 
 
     return (
@@ -36,6 +37,7 @@ export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswe
                         storage={storage}
                         lastQuestionRef={lastQuestionRef}
                         current_id={current_id}
+                        is_bot={is_bot}
                     />
                 </Stack>
                 <Markdown

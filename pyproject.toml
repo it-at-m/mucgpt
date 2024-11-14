@@ -3,45 +3,39 @@ name = "MUCGPT"
 version = "1.2.1"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
+requires-python= ">=3.10"
+authors = [
+    { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
+    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+]
+maintainers = [
+    { name = " ITM KICC", email = "itm.kicc@muenchen.de" },
+    { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
+    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+]
+
 dependencies = [
-    "mistral-common==1.4.4",
-    "fastapi[standard]==0.115.4",
-    "dnspython==2.7.0",
-    "langchain==0.3.7",
-    "langchain-core==0.3.15",
-    "langchain_community==0.3.5",
-    "langchain-openai==0.2.6",
-    "openai==1.54.3",
-    "langsmith==0.1.142",
+    "mistral-common>=1.4.4",
+    "fastapi[standard]>=0.115.4",
+    "langchain>=0.3.7",
+    "langchain-core>=0.3.15",
+    "langchain_community>=0.3.5",
+    "langchain-openai>=0.2.6",
+    "openai>=1.54.3",
+    "langsmith>=0.1.142",
     "joserfc",
     "tiktoken",
-    "pypdf==5.1.0",
-    "gunicorn",
-    "uvicorn==0.32.0",
-    "psycopg2==2.9.10",
-    "werkzeug==3.0.6",
-    "aiohttp==3.10.10",
-    "aiohappyeyeballs==2.4.3",
-    "httpcore==1.0.6",
-    "jsonschema-specifications==2024.10.1",
-    "markupsafe==3.0.2",
-    "yarl==1.15.4",
-    "rich==13.9.4",
-    "starlette==0.41.2",
-    "python-multipart==0.0.17",
-    "jiter==0.7.0",
-    "charset-normalizer==3.4.0",
-    "anyio==4.6.2.post1",
-    "distlib==0.3.9",
-    "httptools==0.6.4",
-    "asgi-correlation-id==4.3.4"
+    "pypdf>=5.1.0",
+    "uvicorn>=0.32.0",
+    "psycopg2>=2.9.10",
+    "asgi-correlation-id==4.3.4",
+    "gunicorn"
 ]
 
 [project.optional-dependencies]
 dev = [
     "uv==0.4.30",
     "ruff==0.7.2",
-    "black==24.10.0",
     "pre-commit==4.0.1"
 ]
 test = [
@@ -50,9 +44,20 @@ test = [
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.6.4",
+    "coverage>=7.6.4",
     "pytest-cov"
 ]
+
+[tool.uv]
+dev-dependencies = [
+    "ipykernel>=6.29.5",
+    "pre-commit>=4.0.1",
+    "ruff>=0.7.0",
+]
+
+[[tool.uv.index]]
+name = "pypy"
+url = "https://pypi.org/simple"
 
 [tool.ruff]
 target-version = "py38"
@@ -61,10 +66,6 @@ src = ["app/backend"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 ignore = ["E501", "E701"] # line too long, multiple statements on one line
-
-
-[tool.black]
-line-length = 300
 
 [tool.pytest.ini_options]
 addopts = "-ra --cov"

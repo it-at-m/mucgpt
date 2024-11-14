@@ -12,18 +12,27 @@ RUN npm install
 COPY app/frontend/ ./
 RUN npm run build
 
-# Stage 2: Final Image
-FROM python:3.12 AS python-builder
+# Stage 2: python build
+FROM python:3.12-slim  AS python-builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 
 WORKDIR /code
 
-# install python dependencies
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
-COPY app/backend/requirements.txt .
-RUN uv pip install --no-cache-dir -r requirements.txt  --system --compile-bytecode
+# copy uv version infos
+COPY uv.lock .
+COPY pyproject.toml .
+
+# Install dependencies
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen --no-install-project
 
 # copy data from builder and backend srcs
 COPY app/backend .
+
+
+# insert frontend build
 COPY --from=builder /build/dist/ /code/static/
 
 # copy configs
@@ -31,9 +40,9 @@ ARG fromconfig="./config/default.json"
 COPY $fromconfig /code/config.json
 COPY "./config/base.json"  /code/base.json
 
-# create non root user
-RUN useradd -m appuser && chown -R appuser /code
-USER appuser
+# sync the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen
 
 EXPOSE 8000
-CMD ["gunicorn", "app:backend"]
+CMD ["uv", "run", "gunicorn", "app:backend"]

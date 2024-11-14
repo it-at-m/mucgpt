@@ -80,6 +80,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 ## Getting started
 
 - Install uv: https://docs.astral.sh/uv/getting-started/installation/
+  - [Using UV during development](/docs/DEVELOPMENT.md)
 - Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
 ### Install deps

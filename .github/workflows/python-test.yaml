@@ -35,6 +35,6 @@ jobs:
           run: |
             uv sync --all-extras
         - name: Lint with ruff
-          run: uv runt ruff check .
+          run: uv run ruff check .
         - name: Run Python tests
           run: uv run pytest

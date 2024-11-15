@@ -77,25 +77,35 @@ The documentation project is built with technologies we use in our projects (see
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
-## Run
+## Getting started
+
+- Install uv: https://docs.astral.sh/uv/getting-started/installation/
+  - [Using UV during development](/docs/DEVELOPMENT.md)
+- Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
+
+### Install deps
+Sync python environment vor development:
+```bash
+uv sync --all-extras # installs dev/test dependencies
+# if you only want to run mucgpt without using development deps
+uv sync
+```
+Install frontend deps
+```bash
+cd app/frontend
+npm install
+```
+### Configure
  Configure your environment in [config/default.json](config/default.json). The schema of the configuration is [cofnig/mucgpt_config.schema.json](config/mucgpt_config.schema.json) described.  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
 
-### Generate python requirements for your python version
-```bash
-pip install uv # in case it isn't installed
-uv pip compile pyproject.toml  -o app/backend/requirements.txt --python-version <python-version>  # generate deps
-uv pip compile pyproject.toml  -o requirements-dev.txt --python-version <python-version> --all-extras # generate dev deps
-```
 ### Run locally
 ```bash
-cd app\backend
-pip install --no-cache-dir --upgrade -r requirements.txt
-cd ..\frontend
-npm run build
+cd app\frontend
+npm run buildlocal
 cd ..\backend
 $env:MUCGPT_CONFIG="path to default.json"
 $env:MUCGPT_BASE_CONFIG="path to base.json"
-uvicorn app:backend --reload
+uv run app.py
 ```
 
 

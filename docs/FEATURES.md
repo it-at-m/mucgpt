@@ -1,15 +1,15 @@
 # Features
-In the following some important Features of MUCGPT are listed. Future Features are listed in the [Roadmap](/README.md/#-Roadmap).  
-  
-MUCGPT has4 main features and it offers the possibilty to create your own assitents with your specific features. The main features ar [Chat](#chat) to chat with the underlying LLM, [Summarize](#summarize) to summarize long texts and files, [Brainstorming](#brainstorming) to get a mind map on a given topic and [Simplified Language](#simplified-language) to translate text to easier langaugae and make it more understandable.
+In the following some important Features of MUCGPT are listed. Future Features are listed in the [Roadmap](/README.md/#roadmap).
+
+MUCGPT has four main features and it offers the possibilty to create your own assitents with your specific features. The main features ar [Chat](#chat) to chat with the underlying LLM, [Summarize](#summarize) to summarize long texts and files, [Brainstorming](#brainstorming) to get a mind map on a given topic and [Simplified Language](#simplified-language) to translate text to easier langaugae and make it more understandable.
 
 ## Chat
-![Chat](/docs/chatscreen.png)  
-The chat feature of MUCGPT is a typical chat room where you can text with the LLM to get information about almost anything.  
-MUCGPT is able to generate responses that closely resemble those of a human because of the large pre-trained language model it uses. It has a number of features and capabilities that enable it to perform natural language processing, multi-turn conversations, personalisation, sentiment analysis, knowledge retrieval and task completion. These capabilities allow MUCGPT to understand and respond to user queries in a way that is tailored to their needs, making it a powerful tool for any use case where human-like interaction is desired.  
-In addition, MUCGPT allows users to configure a system prompt that is added as a prefix to any message sent by the user. The temperature of the generated response can also be adjusted, controlling the randomness or creativity of the model's output.  
-The chat feature includes a chat history that allows users to view their previous conversations and pick up where they left off. Additionally, users can mark important chats as favorites for quicker access. All chat history is saved locally on the user's browser using IndexedDB, ensuring no chat data is stored in the cloud or elsewhere.  
-![History](/app/frontend/src/assets/History.png) 
+![Chat](/docs/chatscreen.png)
+The chat feature of MUCGPT is a typical chat room where you can text with the LLM to get information about almost anything.
+MUCGPT is able to generate responses that closely resemble those of a human because of the large pre-trained language model it uses. It has a number of features and capabilities that enable it to perform natural language processing, multi-turn conversations, personalisation, sentiment analysis, knowledge retrieval and task completion. These capabilities allow MUCGPT to understand and respond to user queries in a way that is tailored to their needs, making it a powerful tool for any use case where human-like interaction is desired.
+In addition, MUCGPT allows users to configure a system prompt that is added as a prefix to any message sent by the user. The temperature of the generated response can also be adjusted, controlling the randomness or creativity of the model's output.
+The chat feature includes a chat history that allows users to view their previous conversations and pick up where they left off. Additionally, users can mark important chats as favorites for quicker access. All chat history is saved locally on the user's browser using IndexedDB, ensuring no chat data is stored in the cloud or elsewhere.
+![History](/app/frontend/src/assets/History.png)
 
 ## Summarize
 ![Sum](/docs/sum.png)

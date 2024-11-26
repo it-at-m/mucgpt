@@ -46,10 +46,12 @@ MUCGPT provides a web interface based for a given large language model (LLM). Th
  The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
 
 In addition custom GPTs can be generated and saved. A own GPT is an assistant for a specific task with an custom system prompt.
+
+See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 ## Table of contents
 * [Built With](#built-with)
+* [Getting Started](#getting-started)
 * [Roadmap](#roadmap)
-* [Run](#Run)
 * [Documentation](#documentation)
 * [Contributing](#contributing)
 * [License](#license)
@@ -76,13 +78,6 @@ In addition custom GPTs can be generated and saved. A own GPT is an assistant fo
   * [uv](https://github.com/astral-sh/uv)
   * Docker
 
-
-## Roadmap
-
-![Roadmap](/docs/roadmap_2024.png)
-
-
-See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
 ## Getting started
 
@@ -120,6 +115,19 @@ uv run app.py
 1. Build an Image
    ``` docker build --tag mucgpt-local . --build-arg   fromconfig="./config/default.json"```
 2. Run the image ```docker run --detach --publish 8080:8000 mucgpt-local```
+
+## Roadmap
+
+```mermaid
+timeline
+    title MUCGPT Roadmap
+    2024-06 : OpenSource : "Available to the public under an open-source license, allowing anyone to access, use, and modify MUCGPT without restrictions or payment."
+    2024-07 : Chat History : "Users can save their chat history in the browser."
+    2024-08 : LiveCycle LLM : "The employed LLM can be configured to meet specific requirements."
+    2024-09 : Simplified Language : "Translate text into simple or easy-to-understand language."
+    2024-10 : Own GPTs : "Create and generate custom assistants for specific tasks, and share these assistants with other users."
+    2025-01 : Chat with Documents : "Assistants will have access to shared knowledge and can answer questions based on provided sources. Consequently, MUCGPT can be utilized for internal knowledge management."
+```
 
 
 ## Documentation

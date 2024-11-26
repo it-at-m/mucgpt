@@ -4,7 +4,7 @@ import git
 
 
 def get_latest_commit() -> str:
-    version = None
+    commit = None
 
     # Try to get the version from the git repository
     try:
@@ -14,18 +14,19 @@ def get_latest_commit() -> str:
         # Check if the current commit is tagged
         for tag in repo.tags:
             if tag.commit.hexsha == current_commit_hash:
-                version = tag.name
+                commit = tag.name
                 break
 
         # If the current commit is not tagged, use the commit hash
-        if version is None:
-            version = f"{current_commit_hash[:8]}"
+        if commit is None:
+            commit = f"{current_commit_hash[:8]}"
 
     # Fallback to the DLF_VERSION environment variable
     except git.exc.InvalidGitRepositoryError:
-        version = getenv("MUCGPT_COMMIT", "null")
-
-    return version
+        commit = getenv("MUCGPT_COMMIT", "null")
+    if commit is None:
+        commit = getenv("MUCGPT_COMMIT", "null")
+    return commit
 
 def get_version() ->str :
     latest_tag = None
@@ -41,5 +42,7 @@ def get_version() ->str :
         if latest_tag:
             latest_tag = latest_tag.name
     except git.exc.InvalidGitRepositoryError:
+        latest_tag = getenv("MUCGPT_VERSION", "null")
+    if latest_tag is None:
         latest_tag = getenv("MUCGPT_VERSION", "null")
     return latest_tag

@@ -13,9 +13,13 @@
 [![Gitmoij][gitmoij-shield]][gitmoij]
 [![GitHub license][license-shield]][license]
 [![GitHub release version][github-release-shield]][releases]
-[![uv][uv-shield]][uv]
 ![Supported python versions][python-versions-shield]
 ![Supported npm versions][npm-versions-shield]
+[![uv][uv-shield]][uv]
+[![FastAPI][fastapi-shield]][fastapi]
+[![React][react-shield]][fastapi]
+[![Postgres][postgres-shield]][postgres]
+[![Langchain][langchain-shield]][langchain]
 
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
@@ -23,26 +27,39 @@
 [python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
 [gitmoij-shield]: https://img.shields.io/badge/gitmoij-😜😍-yellow?style=for-the-badge
 [npm-versions-shield]: https://img.shields.io/badge/node-20+-blue?style=for-the-badge
-[uv-shield]: https://img.shields.io/badge/⚡-uv-blue?style=for-the-badge
+[uv-shield]: https://img.shields.io/badge/⚡-uv-lightblue?style=for-the-badge
+[fastapi-shield]: https://img.shields.io/badge/fastapi-lightblue?style=for-the-badge&logo=fastapi&logoColor=white
+[react-shield]:https://shields.io/badge/react-lightblue?logo=react&style=for-the-badge&logoColor=white
+[postgres-shield]: https://img.shields.io/badge/postgres-lightblue?&style=for-the-badge&logo=postgresql&logoColor=white
+[langchain-shield]: https://img.shields.io/badge/LangChain-lightblue?&style=for-the-badge&logo=langchain&logoColor=white
 
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
 [releases]: https://github.com/it-at-m/mucgpt/releases
 [gitmoij]: https://gitmoji.dev/
 [uv]: https://github.com/astral-sh/uv
+[fastapi]: https://fastapi.tiangolo.com/
+[react]: https://react.dev/
+[postgres]: https://www.postgresql.org/
+[langchain]: https://python.langchain.com/docs/introduction/
 
-MUCGPT provides a web interface based on a large language model (LLM). The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
+MUCGPT provides a web interface based for a given large language model (LLM). The whole package is shipped with a docker container
+
+ The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
 
 In addition custom GPTs can be generated and saved. A own GPT is an assistant for a specific task with an custom system prompt.
-
-Why should you use MUCGPT? See for yourself:
-
-![Essay of MUCGPT to convince the user to use it!](/docs/convince-the-user.png)
+## Table of contents
+* [Built With](#built-with)
+* [Roadmap](#roadmap)
+* [Run](#Run)
+* [Documentation](#documentation)
+* [Contributing](#contributing)
+* [License](#license)
+* [Contact](#contact)
 
 
 ## Built With
 
-The documentation project is built with technologies we use in our projects (see [requirements-dev.txt](/requirements-dev.txt)):
 ### Backend:
 * [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
 * [FastAPI](https://fastapi.tiangolo.com/)
@@ -61,14 +78,6 @@ The documentation project is built with technologies we use in our projects (see
   * [uv](https://github.com/astral-sh/uv)
   * Docker
 
-## Table of contents
-* [Built With](#built-with)
-* [Roadmap](#roadmap)
-* [Run](#Run)
-* [Documentation](#documentation)
-* [Contributing](#contributing)
-* [License](#license)
-* [Contact](#contact)
 
 ## Roadmap
 

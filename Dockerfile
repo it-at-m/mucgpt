@@ -31,14 +31,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # copy data from builder and backend srcs
 COPY app/backend .
 
+# add version information during build time and save it to an .env file
+ARG COMMIT
+ARG VERSION
 
+RUN echo "MUCGPT_VERSION=${VERSION}" >> .env && \
+    echo "MUCGPT_COMMIT=${COMMIT}" >> .env
 # insert frontend build
 COPY --from=builder /build/dist/ /code/static/
-
-# copy configs
-ARG fromconfig="./config/default.json"
-COPY $fromconfig /code/config.json
-COPY "./config/base.json"  /code/base.json
 
 # sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \

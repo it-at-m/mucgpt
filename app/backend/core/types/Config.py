@@ -9,7 +9,7 @@ class ApproachConfig(BaseModel):
 class ModelsConfig(BaseModel):
     type: str
     llm_name: str
-    deployment: str=""
+    deployment: str = ""
     endpoint: str
     api_key: str
     api_version: str = ""
@@ -49,7 +49,7 @@ class LabelsConfig(BaseModel):
     env_name: str = "MUCGPT"
 
 class FrontendConfig(BaseModel):
-    labels: LabelsConfig 
+    labels: LabelsConfig
     alternative_logo: bool = False
     enable_simply: bool = True
 
@@ -57,11 +57,12 @@ class Config(BaseModel):
     """Config for an environment, is loaded from ressources/env.json
     """
     version: str
+    commit: str
     frontend: FrontendConfig
     backend: BackendConfig
 
 class ConfigResponse(BaseModel):
-    frontend: FrontendConfig 
+    frontend: FrontendConfig
     models: List[ModelsDTO] =[]
     version: str
-
+    commit: str

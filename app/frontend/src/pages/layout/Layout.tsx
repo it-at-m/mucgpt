@@ -49,7 +49,8 @@ export const Layout = () => {
             alternative_logo: true,
             enable_simply: true
         },
-        version: "DEV 1.0.0"
+        version: "DEV 1.0.0",
+        commit: "152b175"
     });
     const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || config.models[0].llm_name;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
@@ -184,6 +185,7 @@ export const Layout = () => {
                                 defaultlang={language_pref}
                                 onLanguageSelectionChanged={onLanguageSelectionChanged}
                                 version={config.version}
+                                commit={config.commit}
                                 fontscale={fontscaling}
                                 setFontscale={onFontscaleChange}
                                 isLight={isLight}

@@ -96,23 +96,21 @@ cd app/frontend
 npm install
 ```
 ### Configure
- Configure your environment in [config/default.json](config/default.json). The schema of the configuration is [cofnig/mucgpt_config.schema.json](config/mucgpt_config.schema.json) described.  Insert Model Endpoint and API Key for your connection to an OpenAI completion endpoint or an Azure OpenAI completions endpoint.
+ Configure your environment. For that copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the parent directory [.env](.env). Add at least one model by providing one OpenAi comptabile endpoint.
 
 ### Run locally
 ```bash
 cd app\frontend
 npm run buildlocal
 cd ..\backend
-$env:MUCGPT_CONFIG="path to default.json"
-$env:MUCGPT_BASE_CONFIG="path to base.json"
 uv run app.py
 ```
 
 
 ### Run with docker
 1. Build an Image
-   ``` docker build --tag mucgpt-local . --build-arg   fromconfig="./config/default.json"```
-2. Run the image ```docker run --detach --publish 8080:8000 mucgpt-local```
+   ``` docker build --build-arg COMMIT=$(git log -1 --format=%h) --build-arg VERSION=$(git describe --tags --abbrev=0) --tag mucgpt .```
+2. Run the image ```docker run --detach --publish 8080:8000  --env-file=.env  mucgpt```
 
 
 ## Documentation

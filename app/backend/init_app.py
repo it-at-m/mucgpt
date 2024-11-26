@@ -1,4 +1,3 @@
-import os
 from typing import Tuple
 
 from brainstorm.brainstorm import Brainstorm
@@ -67,10 +66,7 @@ def initApp() -> AppConfig:
         AppConfig: contains the configuration for the webservice
     """
     logger.info("Init app")
-    # read enviornment config
-    env_config = os.environ['MUCGPT_CONFIG'] if "MUCGPT_CONFIG" in os.environ else os.path.dirname(os.path.realpath(__file__))+"/config.json"
-    base_config = os.environ['MUCGPT_BASE_CONFIG'] if "MUCGPT_BASE_CONFIG" in os.environ is not None else os.path.dirname(os.path.realpath(__file__))+"/base.json"
-    config_helper = ConfigHelper(env_config=env_config, base_config=base_config)
+    config_helper = ConfigHelper()
     cfg = config_helper.loadData()
      # Set up authentication helper
     logger.info("Authentification enabled?:  " + str(cfg.backend.enable_auth))

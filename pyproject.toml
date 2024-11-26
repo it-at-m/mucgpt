@@ -31,6 +31,7 @@ dependencies = [
     "asgi-correlation-id==4.3.4",
     "gunicorn",
     "sqlalchemy>=2.0.35",
+    "gitpython>=3.1.43",
 ]
 
 [project.optional-dependencies]

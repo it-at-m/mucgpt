@@ -256,7 +256,9 @@ async def create_bot(request: CreateBotRequest,
 @api_app.get("/config")
 async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
-    response = ConfigResponse(frontend=cfg["configuration_features"].frontend, version=cfg["configuration_features"].version)
+    response = ConfigResponse(frontend=cfg["configuration_features"].frontend,
+                              version=cfg["configuration_features"].version,
+                              commit=cfg["configuration_features"].commit)
 
     models = cast(
         List[ModelsConfig], cfg["configuration_features"].backend.models

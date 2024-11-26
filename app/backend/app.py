@@ -4,7 +4,7 @@ import os  # noqa
 import uvicorn
 from dotenv import find_dotenv, load_dotenv  # noqa
 
-load_dotenv(find_dotenv(raise_error_if_not_found=True))  # noqa
+load_dotenv(find_dotenv(raise_error_if_not_found=False))  # noqa
 from backend import backend   # noqa
 
 if __name__ == "__main__":

@@ -79,9 +79,16 @@ markers = [
     "unit: mark test as a unit test"
 ]
 env = [
-    "MUCGPT_CONFIG=tests/integration/test_config.json",
-    "MUCGPT_BASE_CONFIG=tests/integration/base.json",
     "LOG_CONFIG=app/backend/logconf.yaml",
+    "BACKEND_MODEL_1_TYPE=AZURE",
+    "BACKEND_MODEL_1_LLM_NAME=TEST_MODEL",
+    "BACKEND_MODEL_1_DEPLOYMENT=NOT USED",
+    "BACKEND_MODEL_1_ENDPOINT=NOT USED",
+    "BACKEND_MODEL_1_API_KEY=NOT USED",
+    "BACKEND_MODEL_1_MAX_OUTPUT_TOKENS=128000",
+    "BACKEND_MODEL_1_MAX_INPUT_TOKENS=8192",
+    "BACKEND_MODEL_1_API_VERSION=NOT USED",
+    "BACKEND_MODEL_1_DESCRIPTION=NOT USED"
 ]
 
 [tool.coverage.paths]

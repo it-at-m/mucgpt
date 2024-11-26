@@ -1,5 +1,3 @@
-# MUCGPT
-
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="#">

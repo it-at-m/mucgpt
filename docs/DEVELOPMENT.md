@@ -15,10 +15,10 @@ uv lock -U
 
 ### Add Packages
 
-Packages can also be removed.
+Packages can be added using the following command
 
 ```bash
-# Remove package
+# Add  package
 uv add pydantic
 
 ### Remove Packages

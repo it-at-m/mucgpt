@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl, PositiveInt
 
 
 class ApproachConfig(BaseModel):
@@ -10,17 +10,17 @@ class ModelsConfig(BaseModel):
     type: str
     llm_name: str
     deployment: str = ""
-    endpoint: str
+    endpoint: HttpUrl
     api_key: str
     api_version: str = ""
-    max_output_tokens: int
-    max_input_tokens: int
+    max_output_tokens: PositiveInt
+    max_input_tokens: PositiveInt
     description: str
 
 class ModelsDTO(BaseModel):
     llm_name: str
-    max_output_tokens: int
-    max_input_tokens: int
+    max_output_tokens: PositiveInt
+    max_input_tokens: PositiveInt
     description: str
 
 class SSOConfig(BaseModel):

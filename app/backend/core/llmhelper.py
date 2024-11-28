@@ -12,7 +12,7 @@ class ModelsConfigurationException(Exception):
     pass
 
 
-def getModel(models: List[ModelsConfig], 
+def getModel(models: List[ModelsConfig],
              max_output_tokens: int,
              n: int,
              temperature: float,
@@ -29,7 +29,7 @@ def getModel(models: List[ModelsConfig],
                 llm = AzureChatOpenAI(
                         deployment_name= default_model.deployment,
                         openai_api_key=default_model.api_key,
-                        azure_endpoint=default_model.endpoint,
+                        azure_endpoint=default_model.endpoint.unicode_string(),
                         openai_api_version=default_model.api_version,
                         max_tokens=max_output_tokens,
                         n=n,
@@ -57,7 +57,7 @@ def getModel(models: List[ModelsConfig],
                         alternative = AzureChatOpenAI(
                                 deployment_name= model.deployment,
                                 openai_api_key=model.api_key,
-                                azure_endpoint=model.endpoint,
+                                azure_endpoint=model.endpoint.unicode_string(),
                                 openai_api_version=model.api_version,
                                 openai_api_type="azure",
                                 max_tokens=max_output_tokens,
@@ -83,14 +83,14 @@ def getModel(models: List[ModelsConfig],
                                 id="llm_callbacks",
                                 name="Callbacks",
                                 description="Callbacks for the llm")
-                                
+
                         )
                 elif model.type == "OPENAI":
                         alternative = ChatOpenAI(
                                         default_headers={"extra-parameters": "pass-through"},
                                         model=model.llm_name,
                                         api_key=model.api_key,
-                                        base_url=model.endpoint,
+                                        base_url=model.endpoint.unicode_string(),
                                         max_tokens=max_output_tokens,
                                         n=n,
                                         streaming=streaming,
@@ -114,7 +114,7 @@ def getModel(models: List[ModelsConfig],
                                 id="llm_callbacks",
                                 name="Callbacks",
                                 description="Callbacks for the llm")
-                                
+
                         )
                 alternatives[model.llm_name] = alternative
         llm = llm.configurable_fields(
@@ -136,7 +136,7 @@ def getModel(models: List[ModelsConfig],
                                 id="llm_callbacks",
                                 name="Callbacks",
                                 description="Callbacks for the llm")
-                                
+
                         ).configurable_alternatives(
                                 ConfigurableField(id="llm"),
                                 default_key=models[0].llm_name,

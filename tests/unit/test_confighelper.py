@@ -7,7 +7,6 @@ from core.types.Config import BackendConfig, Config, FrontendConfig
 
 
 class Test_Confighelper(unittest.TestCase):
-    @pytest.mark.asyncio
     @pytest.mark.unit
     def test_confighelper_loadData(self):
         helper = ConfigHelper()

@@ -35,8 +35,8 @@ COPY app/backend .
 ARG COMMIT
 ARG VERSION
 
-RUN echo "MUCGPT_VERSION=${VERSION}" >> .env && \
-    echo "MUCGPT_COMMIT=${COMMIT}" >> .env
+ENV MUCGPT_VERSION=${VERSION}
+ENV MUCGPT_COMMIT=${COMMIT}
 # insert frontend build
 COPY --from=builder /build/dist/ /code/static/
 

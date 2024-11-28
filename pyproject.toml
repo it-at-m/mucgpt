@@ -27,7 +27,7 @@ dependencies = [
     "tiktoken",
     "pypdf>=5.1.0",
     "uvicorn>=0.32.0",
-    "psycopg2>=2.9.10",
+    "psycopg2-binary>=2.9.10",
     "asgi-correlation-id==4.3.4",
     "gunicorn",
     "sqlalchemy>=2.0.35",

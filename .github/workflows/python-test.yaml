@@ -16,14 +16,14 @@ jobs:
         os: ["ubuntu-20.04"]
         python_version: ["3.12"]
     steps:
-        - uses: actions/checkout@v4
+        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
         - name: Install the latest version of uv
-          uses: astral-sh/setup-uv@v3
+          uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3
           with:
             version: "latest"
             architecture: x64
         - name: Setup node
-          uses: actions/setup-node@v4
+          uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4
           with:
             node-version: 20
         - name: Build frontend

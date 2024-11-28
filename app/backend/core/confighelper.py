@@ -59,7 +59,7 @@ class ConfigHelper:
         dbConfig = DatabaseConfig(db_host=getenv("BACKEND_DB_HOST", ""),
                                   db_name=getenv("BACKEND_DB_NAME", ""),
                                   db_user=getenv("BACKEND_DB_USER", ""),
-                                  db_passwort=getenv("BACKEND_DB_PASSWORT", ""))
+                                  db_passwort=getenv("BACKEND_DB_PASSWORD", ""))
         backendConfig = BackendConfig(enable_auth=getenv("BACKEND_ENABLE_AUTH", "false") == "true",
                                       enable_database=getenv("BACKEND_ENABLE_DATABASE", "false") == "true",
                                       unauthorized_user_redirect_url=getenv("BACKEND_UNAUTHORIZED_USER_REDIRECT_URL", ""),

@@ -13,6 +13,14 @@ uv sync --all-extras
 uv lock -U
 ```
 
+### Add Packages
+
+Packages can be added using the following command
+
+```bash
+# Add  package
+uv add pydantic
+
 ### Remove Packages
 
 Packages can also be removed.

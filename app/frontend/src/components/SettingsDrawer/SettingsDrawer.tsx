@@ -13,6 +13,7 @@ import {
 import styles from "./SettingsDrawer.module.css";
 import { useCallback, useState } from "react";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
+import { Tag } from "@fluentui/react-components";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { useTranslation } from 'react-i18next';
@@ -22,6 +23,7 @@ interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
     version: string;
+    commit: string;
     fontscale: number;
     setFontscale: (fontscale: number) => void;
     isLight: boolean;
@@ -32,7 +34,7 @@ interface Props {
     currentLLM: Model;
 }
 
-export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM, llmOptions, currentLLM }: Props) => {
+export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, version, commit, fontscale, setFontscale, isLight, setTheme, onLLMSelectionChanged, defaultLLM, llmOptions, currentLLM }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
 
@@ -162,7 +164,7 @@ export const SettingsDrawer = ({ onLanguageSelectionChanged, defaultlang, versio
                     {t('components.settingsdrawer.about')}
                 </div>
                 <div className={styles.bodyContainer}>
-                    <div className={styles.faq}>Version: {version} </div>
+                    <div className={styles.faq}>Version: <Tag shape="circular">{version}</Tag> <Tag shape="circular">{commit}</Tag></div>
                     <div className={styles.faq}>
                         <Link href="\#version">
                             {t('version.header')}

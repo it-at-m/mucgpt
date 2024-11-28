@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl, PositiveInt
 
 
 class ApproachConfig(BaseModel):
@@ -9,18 +9,18 @@ class ApproachConfig(BaseModel):
 class ModelsConfig(BaseModel):
     type: str
     llm_name: str
-    deployment: str=""
-    endpoint: str
+    deployment: str = ""
+    endpoint: HttpUrl
     api_key: str
     api_version: str = ""
-    max_output_tokens: int
-    max_input_tokens: int
+    max_output_tokens: PositiveInt
+    max_input_tokens: PositiveInt
     description: str
 
 class ModelsDTO(BaseModel):
     llm_name: str
-    max_output_tokens: int
-    max_input_tokens: int
+    max_output_tokens: PositiveInt
+    max_input_tokens: PositiveInt
     description: str
 
 class SSOConfig(BaseModel):
@@ -49,7 +49,7 @@ class LabelsConfig(BaseModel):
     env_name: str = "MUCGPT"
 
 class FrontendConfig(BaseModel):
-    labels: LabelsConfig 
+    labels: LabelsConfig
     alternative_logo: bool = False
     enable_simply: bool = True
 
@@ -57,11 +57,12 @@ class Config(BaseModel):
     """Config for an environment, is loaded from ressources/env.json
     """
     version: str
+    commit: str
     frontend: FrontendConfig
     backend: BackendConfig
 
 class ConfigResponse(BaseModel):
-    frontend: FrontendConfig 
+    frontend: FrontendConfig
     models: List[ModelsDTO] =[]
     version: str
-
+    commit: str

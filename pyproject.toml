@@ -27,10 +27,11 @@ dependencies = [
     "tiktoken",
     "pypdf>=5.1.0",
     "uvicorn>=0.32.0",
-    "psycopg2>=2.9.10",
+    "psycopg2-binary>=2.9.10",
     "asgi-correlation-id==4.3.4",
     "gunicorn",
     "sqlalchemy>=2.0.35",
+    "gitpython>=3.1.43",
 ]
 
 [project.optional-dependencies]
@@ -77,9 +78,34 @@ markers = [
     "unit: mark test as a unit test"
 ]
 env = [
-    "MUCGPT_CONFIG=tests/integration/test_config.json",
-    "MUCGPT_BASE_CONFIG=tests/integration/base.json",
     "LOG_CONFIG=app/backend/logconf.yaml",
+    "FRONTEND_LABELS_ENV_NAME=MUCGPT",
+    "FRONTEND_ALTERNATIVE_LOGO=false",
+    "BACKEND_ENABLE_AUTH=false",
+    "BACKEND_ENABLE_DATABASE=false",
+    "BACKEND_UNAUTHORIZED_USER_REDIRECT_URL=NOT USED",
+    "BACKEND_SSO_ISSUER=NOT USED",
+    "BACKEND_SSO_ROLE=lhm-ab-mucgpt-user",
+    "BACKEND_DB_HOST=NOT USED",
+    "BACKEND_DB_NAME=NOT USED",
+    "BACKEND_DB_USER=NOT USED",
+    "BACKEND_DB_PASSWORD=NOT USED",
+    "BACKEND_CHAT_LOG_TOKENS=false",
+    "BACKEND_BRAINSTORM_LOG_TOKENS=false",
+    "BACKEND_SUM_LOG_TOKENS=false",
+    "BACKEND_SIMPLY_LOG_TOKENS=false",
+    "BACKEND_MODEL_1_TYPE=AZURE",
+    "BACKEND_MODEL_1_LLM_NAME=TEST_MODEL",
+    "BACKEND_MODEL_1_DEPLOYMENT=NOT USED",
+    "BACKEND_MODEL_1_ENDPOINT=https://myfakeendpoint.com",
+    "BACKEND_MODEL_1_API_KEY=NOT USED",
+    "BACKEND_MODEL_1_MAX_OUTPUT_TOKENS=128000",
+    "BACKEND_MODEL_1_MAX_INPUT_TOKENS=8192",
+    "BACKEND_MODEL_1_API_VERSION=NOT USED",
+    "BACKEND_MODEL_1_DESCRIPTION=NOT USED",
+    "MUCGPT_VERSION=0.0",
+    "MUCGPT_COMMIT=12012lf",
+    "GIT_PYTHON_REFRESH=quiet"
 ]
 
 [tool.coverage.paths]

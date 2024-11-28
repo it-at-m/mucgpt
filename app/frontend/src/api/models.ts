@@ -50,6 +50,7 @@ export interface ApplicationConfig {
     models: Model[];
     frontend: Frontend;
     version: string;
+    commit: string;
 }
 
 export interface Frontend {

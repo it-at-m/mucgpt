@@ -1,9 +1,11 @@
-import argparse
-import os
+import argparse # noqa
+import os  # noqa
 
 import uvicorn
+from dotenv import find_dotenv, load_dotenv  # noqa
 
-from backend import backend
+load_dotenv(find_dotenv(raise_error_if_not_found=False))  # noqa
+from backend import backend   # noqa
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

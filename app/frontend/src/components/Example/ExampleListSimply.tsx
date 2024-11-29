@@ -148,7 +148,7 @@ const EXAMPLES: ExampleModel[] = [
     (2) Abweichend von § 9 dürfen Arbeitnehmer an Sonn- und Feiertagen mit den Produktionsarbeiten beschäftigt werden, wenn die infolge der Unterbrechung der Produktion nach Absatz 1 Nr. 14 zulässigen Arbeiten den Einsatz von mehr Arbeitnehmern als bei durchgehender Produktion erfordern.
     (3) Abweichend von § 9 dürfen Arbeitnehmer an Sonn- und Feiertagen in Bäckereien und Konditoreien für bis zu drei Stunden mit der Herstellung und dem Austragen oder Ausfahren von Konditorwaren und an diesem Tag zum Verkauf kommenden Bäckerwaren beschäftigt werden.
     (4) Sofern die Arbeiten nicht an Werktagen vorgenommen werden können, dürfen Arbeitnehmer zur Durchführung des Eil- und Großbetragszahlungsverkehrs und des Geld-, Devisen-, Wertpapier- und Derivatehandels abweichend von § 9 Abs. 1 an den auf einen Werktag fallenden Feiertagen beschäftigt werden, die nicht in allen Mitgliedstaaten der Europäischen Union Feiertage sind.`
-    },
+    }
 ];
 
 interface Props {
@@ -158,10 +158,10 @@ interface Props {
 export const ExampleListSimply = ({ onExampleClicked }: Props) => {
     const { t } = useTranslation();
     return (
-        <ul className={styles.examplesNavList} aria-description={t('common.examples')}>
+        <ul className={styles.examplesNavList} aria-description={t("common.examples")}>
             {EXAMPLES.map((x, i) => (
                 <li key={i} tabIndex={0}>
-                    <Example text={x.text} value={x.value} onClick={onExampleClicked} ariaLabel={t('components.example.label') + " " + (i + 1).toString()} />
+                    <Example text={x.text} value={x.value} onClick={onExampleClicked} ariaLabel={t("components.example.label") + " " + (i + 1).toString()} />
                 </li>
             ))}
         </ul>

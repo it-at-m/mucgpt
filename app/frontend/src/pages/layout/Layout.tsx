@@ -7,44 +7,43 @@ import logo_black from "../../assets/mucgpt_black.png";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
-import { FluentProvider, Theme } from '@fluentui/react-components';
+import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { getBotName } from "../../service/storage";
 
 const formatDate = (date: Date) => {
-    let formatted_date =
-        date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear()
+    let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     return formatted_date;
-}
-
-
+};
 
 export const Layout = () => {
     const { id } = useParams();
     const styles2 = useStyles();
-    const navigate = useNavigate()
+    const navigate = useNavigate();
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
-    const language_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE)) || DEFAULTLANG;
+    const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
     const [config, setConfig] = useState<ApplicationConfig>({
-        models: [{
-            "llm_name": "KICC GPT",
-            "max_input_tokens": 128000,
-            "max_output_tokens": 128000,
-            "description": ""
-        },
-        {
-            "llm_name": "Unknown GPT",
-            "max_input_tokens": 128000,
-            "max_output_tokens": 128000,
-            "description": ""
-        }],
+        models: [
+            {
+                llm_name: "KICC GPT",
+                max_input_tokens: 128000,
+                max_output_tokens: 128000,
+                description: ""
+            },
+            {
+                llm_name: "Unknown GPT",
+                max_input_tokens: 128000,
+                max_output_tokens: 128000,
+                description: ""
+            }
+        ],
         frontend: {
             labels: {
-                "env_name": "MUC tschibidi-C"
+                env_name: "MUC tschibidi-C"
             },
             alternative_logo: true,
             enable_simply: true
@@ -52,9 +51,10 @@ export const Layout = () => {
         version: "DEV 1.0.0",
         commit: "152b175"
     });
-    const llm_pref = (localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM)) || config.models[0].llm_name;
+    const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const ligth_theme_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == 'true';
+    const ligth_theme_pref =
+        localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
     const { language, setLanguage } = useContext(LanguageContext);
     const { LLM, setLLM } = useContext(LLMContext);
     const { t, i18n } = useTranslation();
@@ -66,7 +66,6 @@ export const Layout = () => {
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
     const [title, setTitle] = useState<[number, string]>([0, ""]);
-
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
@@ -86,15 +85,20 @@ export const Layout = () => {
                 setTitle(title);
             });
         }
-        configApi().then(result => {
-            setConfig(result);
-            setModels(result.models);
-            setSimply(result.frontend.enable_simply);
-            if (result.models.length === 0) {
-                console.error("Keine Modelle vorhanden");
+        configApi().then(
+            result => {
+                setConfig(result);
+                setModels(result.models);
+                setSimply(result.frontend.enable_simply);
+                if (result.models.length === 0) {
+                    console.error("Keine Modelle vorhanden");
+                }
+                setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
+            },
+            () => {
+                console.error("Config nicht geladen");
             }
-            setLLM(result.models.find((model) => model.llm_name == llm_pref) || result.models[0])
-        }, () => { console.error("Config nicht geladen"); });
+        );
         i18n.changeLanguage(language_pref);
     }, []);
 
@@ -110,7 +114,7 @@ export const Layout = () => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
         if (localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.version) {
             localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.version);
-            navigate('version');
+            navigate("version");
         }
     };
 
@@ -122,29 +126,28 @@ export const Layout = () => {
     };
     const onLLMSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let llm = selection.optionValue || DEFAULTLLM;
-        let found_llm = models.find((model) => model.llm_name == llm);
+        let found_llm = models.find(model => model.llm_name == llm);
         if (found_llm) {
             setLLM(found_llm);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
         }
-
     };
 
     return (
-
         <FluentProvider theme={theme}>
-
             <div className={styles.layout}>
-                <header className={styles2.header} role={"banner"} >
+                <header className={styles2.header} role={"banner"}>
                     <div className={styles.header}>
                         <Link to="/" className={styles.headerTitleContainer}>
                             <img
-                                src={config.frontend.alternative_logo ? alternative_logo : (isLight ? logo : logo_black)}
+                                src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
                                 alt="MUCGPT logo"
                                 aria-label="MUCGPT Logo"
                                 className={styles.logo}
                             ></img>
-                            <h3 className={styles.headerTitle} aria-description="Umgebung:">{config.frontend.labels.env_name}</h3>
+                            <h3 className={styles.headerTitle} aria-description="Umgebung:">
+                                {config.frontend.labels.env_name}
+                            </h3>
                         </Link>
                         <div className={styles.headerNavList}>
                             <div className={styles.headerNavLeftMargin}>
@@ -154,28 +157,35 @@ export const Layout = () => {
                             </div>
                             <div className={styles.headerNavLeftMargin}>
                                 <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.chat')}
+                                    {t("header.chat")}
                                 </NavLink>
                             </div>
                             <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/sum" state={{ from: "This is my props" }} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.sum')}
+                                <NavLink
+                                    to="/sum"
+                                    state={{ from: "This is my props" }}
+                                    className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
+                                >
+                                    {t("header.sum")}
                                 </NavLink>
                             </div>
                             <div className={styles.headerNavLeftMargin}>
                                 <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t('header.brainstorm')}
+                                    {t("header.brainstorm")}
                                 </NavLink>
                             </div>
-                            {simply &&
+                            {simply && (
                                 <div className={styles.headerNavLeftMargin}>
                                     <NavLink to="/simply" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        {t('header.simply')}
+                                        {t("header.simply")}
                                     </NavLink>
                                 </div>
-                            }
+                            )}
                             <div className={styles.headerNavLeftMargin}>
-                                <NavLink to={"/bot/" + title[0]} className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                <NavLink
+                                    to={"/bot/" + title[0]}
+                                    className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
+                                >
                                     {title[1]}
                                 </NavLink>
                             </div>
@@ -210,7 +220,7 @@ export const Layout = () => {
                     </div>
                 </footer>
             </div>
-        </FluentProvider >
+        </FluentProvider>
     );
 };
 

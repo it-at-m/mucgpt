@@ -1,7 +1,7 @@
 import styles from "./UserChatMessage.module.css";
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw'
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ChatMessageIcon } from "./ChatMessageIcon";
 import { Stack } from "@fluentui/react";
@@ -22,8 +22,6 @@ interface Props {
 }
 
 export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswers, storage, lastQuestionRef, current_id, is_bot }: Props) => {
-
-
     return (
         <div className={styles.message}>
             <Stack horizontal horizontalAlign="space-between">
@@ -45,8 +43,9 @@ export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswe
                 rehypePlugins={[rehypeRaw]}
                 children={message}
                 components={{
-                    "code": CodeBlockRenderer
-                }} />
+                    code: CodeBlockRenderer
+                }}
+            />
         </div>
     );
 };

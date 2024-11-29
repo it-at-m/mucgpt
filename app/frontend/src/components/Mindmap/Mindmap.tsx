@@ -1,11 +1,9 @@
-
-
 import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
 import { useLayoutEffect, useRef, useState } from "react";
 import styles from "./Mindmap.module.css";
 import { Stack } from "@fluentui/react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular } from "@fluentui/react-icons";
 import { AnswerIcon } from "../Answer/AnswerIcon";
@@ -13,7 +11,6 @@ import { IPureNode } from "markmap-common";
 interface Props {
     markdown: string;
 }
-
 
 export const Mindmap = ({ markdown }: Props) => {
     const { t } = useTranslation();
@@ -26,15 +23,14 @@ export const Mindmap = ({ markdown }: Props) => {
         createMM();
     }, []);
 
-
     const toggleSourceView = () => {
         setIsSourceView(!isSourceView);
         setTimeout(() => {
             if (isSourceView) {
                 createMM();
             }
-        }, 50)
-    }
+        }, 50);
+    };
 
     const rescale = () => {
         setTimeout(() => {
@@ -43,14 +39,14 @@ export const Mindmap = ({ markdown }: Props) => {
                 mm.destroy();
                 createMM();
             }
-        }, 50)
-    }
+        }, 50);
+    };
 
     const download = () => {
         if (svgEl && svgEl.current) {
             // fetch SVG-rendered image as a blob object
             const svgBlob = new Blob([freeplaneXML], {
-                type: 'text-plain/mm;charset=utf-8'
+                type: "text-plain/mm;charset=utf-8"
             });
 
             // convert the blob object to a dedicated URL
@@ -58,12 +54,12 @@ export const Mindmap = ({ markdown }: Props) => {
 
             // load the SVG blob to a flesh image object
             const img = new Image();
-            const link = document.createElement('a')
-            link.href = url
-            link.download = 'Idee.mm'
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "Idee.mm";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             img.src = url;
         }
     };
@@ -82,8 +78,8 @@ export const Mindmap = ({ markdown }: Props) => {
         }
         mapElem.appendChild(question);
         doc.appendChild(mapElem);
-        setFreeplaneXML(new XMLSerializer().serializeToString(mapElem))
-    }
+        setFreeplaneXML(new XMLSerializer().serializeToString(mapElem));
+    };
 
     const parseNodes = (to_be_parsed: IPureNode, parent: HTMLElement, doc: XMLDocument) => {
         const result = doc.createElement("node");
@@ -96,7 +92,7 @@ export const Mindmap = ({ markdown }: Props) => {
             parseNodes(child, result, doc);
         }
         parent.appendChild(result);
-    }
+    };
 
     const createMM = () => {
         let mm = Markmap.create(svgEl.current as SVGSVGElement);
@@ -108,9 +104,7 @@ export const Mindmap = ({ markdown }: Props) => {
             mm.fit();
         }
         svgEl.current?.setAttribute("title", "Generierte Mindmap");
-    }
-
-
+    };
 
     return (
         <Stack verticalAlign="space-between" className={`${styles.mindmapContainer}`}>
@@ -118,41 +112,55 @@ export const Mindmap = ({ markdown }: Props) => {
                 <Stack horizontal horizontalAlign="space-between">
                     <AnswerIcon aria-hidden />
                     <div>
-                        <Tooltip content={isSourceView ? t('components.mindmap.mindmap') : t('components.mindmap.source')} relationship="description" positioning="above">
-                            <Button appearance="subtle" aria-label={isSourceView ? t('components.mindmap.source') : t('components.mindmap.mindmap')} icon={<ContentView24Regular className={styles.iconRightMargin} />}
-                                onClick={() => toggleSourceView()} size="large">
-                            </Button>
+                        <Tooltip
+                            content={isSourceView ? t("components.mindmap.mindmap") : t("components.mindmap.source")}
+                            relationship="description"
+                            positioning="above"
+                        >
+                            <Button
+                                appearance="subtle"
+                                aria-label={isSourceView ? t("components.mindmap.source") : t("components.mindmap.mindmap")}
+                                icon={<ContentView24Regular className={styles.iconRightMargin} />}
+                                onClick={() => toggleSourceView()}
+                                size="large"
+                            ></Button>
                         </Tooltip>
-                        {!isSourceView &&
-                            <Tooltip content={t('components.mindmap.reset')} relationship="description" positioning="above">
-                                <Button appearance="subtle" aria-label={t('components.mindmap.reset')} icon={<ScaleFill24Regular className={styles.iconRightMargin} />}
-                                    onClick={() => rescale()} size="large">
-                                </Button>
+                        {!isSourceView && (
+                            <Tooltip content={t("components.mindmap.reset")} relationship="description" positioning="above">
+                                <Button
+                                    appearance="subtle"
+                                    aria-label={t("components.mindmap.reset")}
+                                    icon={<ScaleFill24Regular className={styles.iconRightMargin} />}
+                                    onClick={() => rescale()}
+                                    size="large"
+                                ></Button>
                             </Tooltip>
-                        }
-                        {!isSourceView &&
-                            <Tooltip content={t('components.mindmap.download')} relationship="description" positioning="above">
-                                <Button appearance="subtle" aria-label={t('components.mindmap.download')} icon={<ArrowDownload24Regular className={styles.iconRightMargin} />}
-                                    onClick={() => download()} size="large">
-                                </Button>
+                        )}
+                        {!isSourceView && (
+                            <Tooltip content={t("components.mindmap.download")} relationship="description" positioning="above">
+                                <Button
+                                    appearance="subtle"
+                                    aria-label={t("components.mindmap.download")}
+                                    icon={<ArrowDownload24Regular className={styles.iconRightMargin} />}
+                                    onClick={() => download()}
+                                    size="large"
+                                ></Button>
                             </Tooltip>
-                        }
+                        )}
                     </div>
                 </Stack>
             </Stack.Item>
-            {!isSourceView ?
+            {!isSourceView ? (
                 <Stack.Item grow>
                     <div className={styles.mindmapContainer}>
-                        <svg id="markmap" className={styles.svgMark} ref={svgEl} aria-hidden="true" role="img" ></svg>
+                        <svg id="markmap" className={styles.svgMark} ref={svgEl} aria-hidden="true" role="img"></svg>
                     </div>
                 </Stack.Item>
-                :
+            ) : (
                 <Stack.Item grow>
                     <div className={styles.answerText}>{markdown}</div>
                 </Stack.Item>
-            }
+            )}
         </Stack>
     );
 };
-
-

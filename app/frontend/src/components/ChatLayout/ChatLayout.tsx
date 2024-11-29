@@ -1,8 +1,5 @@
-
 import { ReactNode } from "react";
 import styles from "./ChatLayout.module.css";
-
-
 
 interface Props {
     commands: ReactNode[];
@@ -14,15 +11,7 @@ interface Props {
     messages_description: string;
 }
 
-export const ChatLayout = ({
-    commands,
-    examples,
-    answers,
-    input,
-    showExamples,
-    header,
-    messages_description
-}: Props) => {
+export const ChatLayout = ({ commands, examples, answers, input, showExamples, header, messages_description }: Props) => {
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
@@ -45,11 +34,9 @@ export const ChatLayout = ({
                         </ul>
                     )}
 
-                    <div className={styles.chatInput}>
-                        {input}
-                    </div>
+                    <div className={styles.chatInput}>{input}</div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };

@@ -1,8 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import styles from "./Chat.module.css";
-
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -18,6 +16,7 @@ import useDebounce from "../../hooks/debouncehook";
 import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
@@ -36,8 +35,6 @@ const Chat = () => {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
-
-    const [selectedAnswer, setSelectedAnswer] = useState<number>(0);
 
     const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
     const [question, setQuestion] = useState<string>("");
@@ -246,58 +243,54 @@ const Chat = () => {
         <>
             {
                 answers.map((answer, index) => (
-                    <div className={styles.chatMessageStream}>
-                        <li key={index} className={styles.chatMessageUser} aria-description={t('components.usericon.label') + " " + (index + 1).toString()} >
-                            <UserChatMessage message={answer[0]}
-                                setAnswers={setAnswers}
-                                setQuestion={setQuestion}
-                                answers={answers}
-                                storage={storage}
-                                lastQuestionRef={lastQuestionRef}
-                                current_id={currentId}
-                                is_bot={false}
-                            />
-                        </li>
-                        <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
-                            {index === answers.length - 1 && <Answer
-                                key={index}
-                                answer={answer[1]}
-                                onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                setQuestion={question => setQuestion(question)}
-                            />
-                            }
+                    <ChatTurnComponent key={index} usermsg={
+                        <UserChatMessage message={answer[0]}
+                            setAnswers={setAnswers}
+                            setQuestion={setQuestion}
+                            answers={answers}
+                            storage={storage}
+                            lastQuestionRef={lastQuestionRef}
+                            current_id={currentId}
+                            is_bot={false}
+                        />}
+                        usermsglabel={t('components.usericon.label') + " " + (index + 1).toString()}
+                        botmsglabel={t('components.answericon.label') + " " + (index + 1).toString()}
+                        botmsg={<>{index === answers.length - 1 && <Answer
+                            answer={answer[1]}
+                            onRegenerateResponseClicked={onRegeneratResponseClicked}
+                            setQuestion={question => setQuestion(question)}
+                        />
+                        }
                             {index !== answers.length - 1 && <Answer
-                                key={index}
                                 answer={answer[1]}
                                 setQuestion={question => setQuestion(question)}
                             />
-                            }
-                        </li>
-                    </div>
+                            }</>}>
+                    </ChatTurnComponent >
                 ))
             }
             {
-                (isLoading || error) && (
-                    <div className={styles.chatMessageStream}>
-                        <li className={styles.chatMessageUser} aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                            <UserChatMessage message={lastQuestionRef.current}
-                                setAnswers={setAnswers}
-                                setQuestion={setQuestion}
-                                answers={answers}
-                                storage={storage}
-                                lastQuestionRef={lastQuestionRef}
-                                current_id={currentId}
-                                is_bot={false}
-                            />
-                        </li>
-                        <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                            {(isLoading) && <AnswerLoading text={t('chat.answer_loading')} />}
-                            {(error) ? (<AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />) : null}
-                        </li>
-                    </div>
-                )
-            }
+                (isLoading || error) &&
+                <ChatTurnComponent usermsg={
+                    <UserChatMessage message={lastQuestionRef.current}
+                        setAnswers={setAnswers}
+                        setQuestion={setQuestion}
+                        answers={answers}
+                        storage={storage}
+                        lastQuestionRef={lastQuestionRef}
+                        current_id={currentId}
+                        is_bot={false}
+                    />}
+                    usermsglabel={t('components.usericon.label') + " " + (answers.length + 1).toString()}
+                    botmsglabel={t('components.answericon.label') + " " + (answers.length + 1).toString()}
+                    botmsg={<>{
+                        (isLoading) && <AnswerLoading text={t('chat.answer_loading')} />}
+                        {(error) ? (<AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />) : null}
 
+                    </>}>
+                </ChatTurnComponent >
+
+            }
             <div ref={chatMessageStreamEnd} />
         </>
     );

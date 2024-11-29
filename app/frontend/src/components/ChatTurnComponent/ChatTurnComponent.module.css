@@ -1,0 +1,17 @@
+.chatMessageStream {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+
+.chatMessageUser {
+    max-width: 90%;
+    min-width: 20%;
+    align-self: flex-end;
+}
+
+.chatMessageGpt {
+    max-width: 90%;
+    min-width: 20%;
+    align-self: flex-start;
+}

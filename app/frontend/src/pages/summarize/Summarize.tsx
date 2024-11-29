@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect, useContext } from "react";
 
-import styles from "./Summarize.module.css";
-
 import { sumApi, SumRequest, SumResponse } from "../../api";
 import { AnswerError, AnswerLoading } from "../../components/Answer";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -14,6 +12,8 @@ import { SumInput } from "../../components/SumInput";
 import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL"
 
@@ -97,99 +97,80 @@ const Summarize = () => {
         setDetaillevel(selection.value as ("long" | "medium" | "short"));
         localStorage.setItem(STORAGE_KEY_LEVEL_OF_DETAIL, selection.value);
     };
-    return (
-        <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                <Field label={t('sum.levelofdetail')}>
-                    <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
-                        <Radio value="short" label={t('sum.short')} />
-                        <Radio value="medium" label={t('sum.medium')} />
-                        <Radio value="long" label={t('sum.long')} />
-                    </RadioGroup>
-                </Field>
-            </div>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
-                    {!lastQuestionRef.current ? (
-                        <div className={styles.chatEmptyState}>
-                            <h2 className={styles.chatEmptyStateSubtitle}> {t('sum.header')}</h2>
-                            <ExampleListSum onExampleClicked={onExampleClicked} />
-                        </div>
-                    ) : (
-                        <ul className={styles.chatMessageStream} aria-description={t("common.messages")}>
-                            {answers.map((answer, index) => (
-                                <div key={index}>
-                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()}>
-                                        <UserChatMessage message={answer[0]}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
-                                        <SumAnswer answer={answer[1]} top_n={2}></SumAnswer>
-                                    </li>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + answers.length.toString() + 1}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerLoading text={t('sum.answer_loading')} />
-                                    </li>
-                                </>
-                            )}
-                            {error ? (
-                                <><li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                    <UserChatMessage message={lastQuestionRef.current}
-                                        setAnswers={setAnswers}
-                                        setQuestion={setQuestion}
-                                        answers={answers}
-                                        storage={storage}
-                                        lastQuestionRef={lastQuestionRef}
-                                        current_id={currentId}
-                                        is_bot={false}
-                                    />
-                                </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
-                                    </li>
-                                </>
-                            ) : null}
-                            <div ref={chatMessageStreamEnd} />
-                        </ul>
-                    )}
 
-                    <div className={styles.chatInput}>
-                        <SumInput
-                            clearOnSend
-                            placeholder={t('sum.prompt')}
-                            disabled={isLoading}
-                            onSend={(question, file) => makeApiRequest(question, file)}
-                            tokens_used={0}
-                            token_limit_tracking={false}
-                            question={question}
+    const examplesComponent = <ExampleListSum onExampleClicked={onExampleClicked} />;
+    const commands = [
+        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        <Field label={t('sum.levelofdetail')}>
+            <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
+                <Radio value="short" label={t('sum.short')} />
+                <Radio value="medium" label={t('sum.medium')} />
+                <Radio value="long" label={t('sum.long')} />
+            </RadioGroup>
+        </Field>];
+    const answerList = (
+        <>
+            {
+                answers.map((answer, index) => (
+                    <ChatTurnComponent key={index} usermsg={
+                        <UserChatMessage message={answer[0]}
+                            setAnswers={setAnswers}
                             setQuestion={setQuestion}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div >
+                            answers={answers}
+                            storage={storage}
+                            lastQuestionRef={lastQuestionRef}
+                            current_id={currentId}
+                            is_bot={false}
+                        />}
+                        usermsglabel={t('components.usericon.label') + " " + (index + 1).toString()}
+                        botmsglabel={t('components.answericon.label') + " " + (index + 1).toString()}
+                        botmsg={<SumAnswer answer={answer[1]} top_n={2}></SumAnswer>}>
+                    </ChatTurnComponent >
+                ))
+            }
+            {
+                (isLoading || error) && <ChatTurnComponent usermsg={
+                    <UserChatMessage message={lastQuestionRef.current}
+                        setAnswers={setAnswers}
+                        setQuestion={setQuestion}
+                        answers={answers}
+                        storage={storage}
+                        lastQuestionRef={lastQuestionRef}
+                        current_id={currentId}
+                        is_bot={false}
+                    />}
+                    usermsglabel={t('components.usericon.label') + " " + (answers.length + 1).toString()}
+                    botmsglabel={t('components.answericon.label') + " " + (answers.length + 1).toString()}
+                    botmsg={<>{
+                        (isLoading) && <AnswerLoading text={t('chat.answer_loading')} />}
+                        {(error) ? (<AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />) : null}
+
+                    </>}>
+                </ChatTurnComponent >
+            }
+            <div ref={chatMessageStreamEnd} />
+        </>
+    );
+    const inputComponent = <SumInput
+        clearOnSend
+        placeholder={t('sum.prompt')}
+        disabled={isLoading}
+        onSend={(question, file) => makeApiRequest(question, file)}
+        tokens_used={0}
+        token_limit_tracking={false}
+        question={question}
+        setQuestion={setQuestion}
+    />;
+    return (
+        <ChatLayout commands={commands}
+            examples={examplesComponent}
+            answers={answerList}
+            input={inputComponent}
+            showExamples={!lastQuestionRef.current}
+            header={t('sum.header')}
+            messages_description={t('common.messages')}
+
+        ></ChatLayout>
     );
 };
 

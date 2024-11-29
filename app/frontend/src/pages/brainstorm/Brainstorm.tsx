@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect, useContext } from "react";
 
-import styles from "./Brainstorm.module.css";
-
 import { AskResponse, brainstormApi, BrainstormRequest } from "../../api";
 import { AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -13,6 +11,8 @@ import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from 'react-i18next';
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 
 const Brainstorm = () => {
     const { language } = useContext(LanguageContext)
@@ -86,93 +86,70 @@ const Brainstorm = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-
+    const commands = [<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />];
+    const inputComponent =
+        <QuestionInput
+            clearOnSend
+            placeholder={t('brainstorm.prompt')}
+            disabled={isLoading}
+            onSend={question => makeApiRequest(question)}
+            tokens_used={0}
+            question={question}
+            setQuestion={question => setQuestion(question)}
+        />;
+    const examplesComponent = <ExampleListBrainstorm onExampleClicked={onExampleClicked} />
+    const answerList = (
+        <>
+            {
+                answers.map((answer, index) => (
+                    <ChatTurnComponent key={index} usermsg={
+                        <UserChatMessage message={answer[0]}
+                            setAnswers={setAnswers}
+                            setQuestion={setQuestion}
+                            answers={answers}
+                            storage={storage}
+                            lastQuestionRef={lastQuestionRef}
+                            current_id={currentId}
+                            is_bot={false}
+                        />}
+                        usermsglabel={t('components.usericon.label') + " " + (index + 1).toString()}
+                        botmsglabel={t('components.answericon.label') + " " + (index + 1).toString()}
+                        botmsg={<Mindmap markdown={answer[1].answer}></Mindmap>}>
+                    </ChatTurnComponent >
+                ))
+            }
+            {
+                (isLoading || error) &&
+                <ChatTurnComponent usermsg={
+                    <UserChatMessage message={lastQuestionRef.current}
+                        setAnswers={setAnswers}
+                        setQuestion={setQuestion}
+                        answers={answers}
+                        storage={storage}
+                        lastQuestionRef={lastQuestionRef}
+                        current_id={currentId}
+                        is_bot={false}
+                    />}
+                    usermsglabel={t('components.usericon.label') + " " + (answers.length + 1).toString()}
+                    botmsglabel={t('components.answericon.label') + " " + (answers.length + 1).toString()}
+                    botmsg={<>{
+                        (isLoading) && <AnswerLoading text={t('brainstorm.answer_loading')} />}
+                        {(error) ? (<AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />) : null}
+                    </>}>
+                </ChatTurnComponent >
+            }
+            <div ref={chatMessageStreamEnd} />
+        </>
+    );
     return (
-        <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-            </div>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
-                    {!lastQuestionRef.current ? (
-                        <div className={styles.chatEmptyState}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>{t('brainstorm.header')}</h2>
-                            <ExampleListBrainstorm onExampleClicked={onExampleClicked} />
-                        </div>
-                    ) : (
-                        <ul className={styles.chatMessageStream}>
-                            {answers.map((answer, index) => (
-                                <div key={index}>
-                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()}>
-                                        <UserChatMessage message={answer[0]}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
-                                        <Mindmap markdown={answer[1].answer}></Mindmap>
-                                    </li>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerLoading text={t('brainstorm.answer_loading')} />
-                                    </li>
-                                </>
-                            )}
-                            {error ? (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
-                                    </li>
-                                </>
-                            ) : null}
-                            <div ref={chatMessageStreamEnd} />
-                        </ul>
-                    )}
-
-                    <div className={styles.chatInput}>
-                        <QuestionInput
-                            clearOnSend
-                            placeholder={t('brainstorm.prompt')}
-                            disabled={isLoading}
-                            onSend={question => makeApiRequest(question)}
-                            tokens_used={0}
-                            question={question}
-                            setQuestion={question => setQuestion(question)}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
+        <ChatLayout commands={commands}
+            examples={examplesComponent}
+            answers={answerList}
+            input={inputComponent}
+            showExamples={!lastQuestionRef.current}
+            header={t('brainstorm.header')}
+            messages_description={t('common.messages')}
+        ></ChatLayout>
     );
 };
 

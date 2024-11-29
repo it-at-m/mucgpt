@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect, useContext } from "react";
 
-import styles from "./Simply.module.css";
-
 import { AskResponse, simplyApi, SimplyRequest, SimplyResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -13,6 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
+import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = 'SIMPLY_SYSTEM_PROMPT',
@@ -100,104 +100,87 @@ const Simply = () => {
         localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);
     };
 
-    return (
-        <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
-                    <Tooltip content={t('simply.plain_description')} relationship="description" positioning="below">
-                        <Radio value="plain" label={t('simply.plain')} />
-                    </Tooltip>
-                    <Tooltip content={t('simply.easy_description')} relationship="description" positioning="below">
-                        <Radio value="easy" label={t('simply.easy')} />
-                    </Tooltip>
-                </RadioGroup>
-            </div>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
-                    {!lastQuestionRef.current ? (
-                        <div className={styles.chatEmptyState}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>{t('simply.header')}</h2>
-                            <ExampleListSimply onExampleClicked={onExampleClicked} />
-                        </div>
-                    ) : (
-                        <ul className={styles.chatMessageStream}>
-                            {answers.map((answer, index) => (
-                                <div key={index}>
-                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()}>
-                                        <UserChatMessage message={answer[0]}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()}>
-                                        <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            setQuestion={question => setQuestion(question)}
-                                        />
-                                    </li>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerLoading text={outputType === "plain" ? t('simply.answer_loading_plain') : t('simply.answer_loading_easy')} />
-                                    </li>
-                                </>
-                            )}
-                            {error ? (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()}>
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />
-                                    </li>
-                                </>
-                            ) : null}
-                            <div ref={chatMessageStreamEnd} />
-                        </ul>
-                    )}
-
-                    <div className={styles.chatInput}>
-                        <QuestionInput
-                            clearOnSend
-                            placeholder={t('simply.prompt')}
-                            disabled={isLoading}
-                            onSend={question => makeApiRequest(question)}
-                            tokens_used={0}
-                            question={question}
+    const commands = [
+        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>,
+            <Tooltip content={t('simply.plain_description')} relationship="description" positioning="below">
+                <Radio value="plain" label={t('simply.plain')} />
+            </Tooltip>
+            <Tooltip content={t('simply.easy_description')} relationship="description" positioning="below">
+                <Radio value="easy" label={t('simply.easy')} />
+            </Tooltip>
+        </RadioGroup>]
+    const examplesComponent = <ExampleListSimply onExampleClicked={onExampleClicked} />;
+    const header = t('simply.header');
+    const inputComponent =
+        <QuestionInput
+            clearOnSend
+            placeholder={t('simply.prompt')}
+            disabled={isLoading}
+            onSend={question => makeApiRequest(question)}
+            tokens_used={0}
+            question={question}
+            setQuestion={question => setQuestion(question)}
+        />;
+    const answerList = (
+        <>
+            {
+                answers.map((answer, index) => (
+                    <ChatTurnComponent key={index} usermsg={
+                        <UserChatMessage message={answer[0]}
+                            setAnswers={setAnswers}
+                            setQuestion={setQuestion}
+                            answers={answers}
+                            storage={storage}
+                            lastQuestionRef={lastQuestionRef}
+                            current_id={currentId}
+                            is_bot={false}
+                        />}
+                        usermsglabel={t('components.usericon.label') + " " + (index + 1).toString()}
+                        botmsglabel={t('components.answericon.label') + " " + (index + 1).toString()}
+                        botmsg={<Answer
+                            key={index}
+                            answer={answer[1]}
                             setQuestion={question => setQuestion(question)}
-                        />
-                    </div>
-                </div>
-            </div>
-        </div>
+                        />}>
+                    </ChatTurnComponent >
+                ))
+            }
+            {
+                (isLoading || error) &&
+                <ChatTurnComponent usermsg={
+                    <UserChatMessage message={lastQuestionRef.current}
+                        setAnswers={setAnswers}
+                        setQuestion={setQuestion}
+                        answers={answers}
+                        storage={storage}
+                        lastQuestionRef={lastQuestionRef}
+                        current_id={currentId}
+                        is_bot={false}
+                    />}
+                    usermsglabel={t('components.usericon.label') + " " + (answers.length + 1).toString()}
+                    botmsglabel={t('components.answericon.label') + " " + (answers.length + 1).toString()}
+                    botmsg={<>{
+                        (isLoading) && <AnswerLoading text={outputType === "plain" ? t('simply.answer_loading_plain') : t('simply.answer_loading_easy')} />}
+                        {(error) ? (<AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} />) : null}
+
+                    </>}>
+                </ChatTurnComponent >
+
+            }
+            <div ref={chatMessageStreamEnd} />
+        </>
+    );
+    return (
+        <ChatLayout commands={commands}
+            examples={examplesComponent}
+            answers={answerList}
+            input={inputComponent}
+            showExamples={!lastQuestionRef.current}
+            header={t('chat.header')}
+            messages_description={t('common.messages')}
+
+        ></ChatLayout>
     );
 };
 

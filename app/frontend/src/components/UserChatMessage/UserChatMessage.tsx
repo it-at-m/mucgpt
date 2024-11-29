@@ -25,30 +25,28 @@ export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswe
 
 
     return (
-        <div className={styles.container}>
-            <div className={styles.message}>
-                <Stack horizontal horizontalAlign="space-between">
-                    <ChatMessageIcon aria-hidden></ChatMessageIcon>
-                    <RollBackMessage
-                        message={message}
-                        setQuestion={setQuestion}
-                        answers={answers}
-                        setAnswers={setAnswers}
-                        storage={storage}
-                        lastQuestionRef={lastQuestionRef}
-                        current_id={current_id}
-                        is_bot={is_bot}
-                    />
-                </Stack>
-                <Markdown
-                    className={styles.answerText}
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                    children={message}
-                    components={{
-                        "code": CodeBlockRenderer
-                    }} />
-            </div>
+        <div className={styles.message}>
+            <Stack horizontal horizontalAlign="space-between">
+                <ChatMessageIcon aria-hidden></ChatMessageIcon>
+                <RollBackMessage
+                    message={message}
+                    setQuestion={setQuestion}
+                    answers={answers}
+                    setAnswers={setAnswers}
+                    storage={storage}
+                    lastQuestionRef={lastQuestionRef}
+                    current_id={current_id}
+                    is_bot={is_bot}
+                />
+            </Stack>
+            <Markdown
+                className={styles.answerText}
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeRaw]}
+                children={message}
+                components={{
+                    "code": CodeBlockRenderer
+                }} />
         </div>
     );
 };

@@ -17,6 +17,7 @@ import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = 'CHAT_TEMPERATURE',
@@ -241,127 +242,109 @@ const Chat = () => {
         changeSystempromptInDb(systemPrompt, id, storage);
     };
 
-
-    return (
-        <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-
-                <ChatsettingsDrawer
-                    temperature={temperature}
-                    setTemperature={onTemperatureChanged}
-                    max_output_tokens={max_output_tokens}
-                    setMaxTokens={onMaxTokensChanged}
-                    systemPrompt={systemPrompt}
-                    setSystemPrompt={onSystemPromptChanged}
-                    current_id={currentId}
-                ></ChatsettingsDrawer>
-
-                <History
-                    storage={storage}
-                    setAnswers={setAnswers}
-                    lastQuestionRef={lastQuestionRef}
-                    currentId={currentId}
-                    setCurrentId={setCurrentId}
-                    onTemperatureChanged={onTemperatureChanged}
-                    onMaxTokensChanged={onMaxTokensChanged}
-                    onSystemPromptChanged={onSystemPromptChanged}
-                    setError={setError}
-                ></History>
-            </div>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
-                    {!lastQuestionRef.current ? (
-                        <div className={styles.chatEmptyState} tabIndex={0}>
-                            <h2 className={styles.chatEmptyStateSubtitle}>{t('chat.header')}</h2>
-                            <ExampleList onExampleClicked={onExampleClicked} />
-                        </div>
-                    ) : (
-                        <ul className={styles.chatMessageStream} aria-description={t("common.messages")}>
-                            {answers.map((answer, index) => (
-                                <div key={index}>
-                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()} >
-                                        <UserChatMessage message={answer[0]}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
-                                        {index === answers.length - 1 && <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                            setQuestion={question => setQuestion(question)}
-                                        />
-                                        }
-                                        {index !== answers.length - 1 && <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            setQuestion={question => setQuestion(question)}
-                                        />
-                                        }
-                                    </li>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                                        <AnswerLoading text={t('chat.answer_loading')} />
-                                    </li>
-                                </>
-                            )}
-                            {error ? (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()} >
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={currentId}
-                                            is_bot={false}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />
-                                    </li>
-                                </>
-                            ) : null}
-                            <div ref={chatMessageStreamEnd} />
-                        </ul>
-                    )}
-
-                    <div className={styles.chatInput}>
-                        <QuestionInput
-                            clearOnSend
-                            placeholder={t('chat.prompt')}
-                            disabled={isLoading}
-                            onSend={question => makeApiRequest(question, systemPrompt)}
-                            tokens_used={totalTokens}
-                            question={question}
-                            setQuestion={question => setQuestion(question)}
-                        />
+    const answerList = (
+        <>
+            {
+                answers.map((answer, index) => (
+                    <div className={styles.chatMessageStream}>
+                        <li key={index} className={styles.chatMessageUser} aria-description={t('components.usericon.label') + " " + (index + 1).toString()} >
+                            <UserChatMessage message={answer[0]}
+                                setAnswers={setAnswers}
+                                setQuestion={setQuestion}
+                                answers={answers}
+                                storage={storage}
+                                lastQuestionRef={lastQuestionRef}
+                                current_id={currentId}
+                                is_bot={false}
+                            />
+                        </li>
+                        <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
+                            {index === answers.length - 1 && <Answer
+                                key={index}
+                                answer={answer[1]}
+                                onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                setQuestion={question => setQuestion(question)}
+                            />
+                            }
+                            {index !== answers.length - 1 && <Answer
+                                key={index}
+                                answer={answer[1]}
+                                setQuestion={question => setQuestion(question)}
+                            />
+                            }
+                        </li>
                     </div>
-                </div>
-            </div>
-        </div>
+                ))
+            }
+            {
+                (isLoading || error) && (
+                    <div className={styles.chatMessageStream}>
+                        <li className={styles.chatMessageUser} aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
+                            <UserChatMessage message={lastQuestionRef.current}
+                                setAnswers={setAnswers}
+                                setQuestion={setQuestion}
+                                answers={answers}
+                                storage={storage}
+                                lastQuestionRef={lastQuestionRef}
+                                current_id={currentId}
+                                is_bot={false}
+                            />
+                        </li>
+                        <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
+                            {(isLoading) && <AnswerLoading text={t('chat.answer_loading')} />}
+                            {(error) ? (<AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />) : null}
+                        </li>
+                    </div>
+                )
+            }
+
+            <div ref={chatMessageStreamEnd} />
+        </>
+    );
+    const examplesComponent = <ExampleList onExampleClicked={onExampleClicked} />;
+    const inputComponent = <QuestionInput
+        clearOnSend
+        placeholder={t('chat.prompt')}
+        disabled={isLoading}
+        onSend={question => makeApiRequest(question, systemPrompt)}
+        tokens_used={totalTokens}
+        question={question}
+        setQuestion={question => setQuestion(question)}
+    />
+    const commands = [
+        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+
+        <ChatsettingsDrawer
+            temperature={temperature}
+            setTemperature={onTemperatureChanged}
+            max_output_tokens={max_output_tokens}
+            setMaxTokens={onMaxTokensChanged}
+            systemPrompt={systemPrompt}
+            setSystemPrompt={onSystemPromptChanged}
+            current_id={currentId}
+        ></ChatsettingsDrawer>,
+
+        <History
+            storage={storage}
+            setAnswers={setAnswers}
+            lastQuestionRef={lastQuestionRef}
+            currentId={currentId}
+            setCurrentId={setCurrentId}
+            onTemperatureChanged={onTemperatureChanged}
+            onMaxTokensChanged={onMaxTokensChanged}
+            onSystemPromptChanged={onSystemPromptChanged}
+            setError={setError}
+        ></History>];
+    return (
+        <ChatLayout commands={commands}
+            examples={examplesComponent}
+            answers={answerList}
+            input={inputComponent}
+            showExamples={!lastQuestionRef.current}
+            header={t('chat.header')}
+            messages_description={t('common.messages')}
+
+        ></ChatLayout>
     );
 };
 

@@ -1,0 +1,94 @@
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: row-reverse;
+    margin-top: 1em;
+    margin-right: 1em;
+    margin-left: 1em;
+}
+
+.chatRoot {
+    flex: 1;
+    display: flex;
+    max-width: 90%;
+}
+
+.chatContainer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 95%;
+}
+
+.commandsContainer {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: start;
+}
+
+.chatEmptyState {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.chatEmptyStateTitle {
+    font-size: 4rem;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+.chatEmptyStateSubtitle {
+    font-weight: 600;
+    margin: 1em;
+    text-align: center;
+}
+
+@media (max-height: 780px) {
+    .chatEmptyState {
+        padding-top: 0;
+    }
+
+    .chatEmptyStateTitle {
+        font-size: 3rem;
+        margin-bottom: 0px;
+    }
+}
+
+@media (max-width: 650px) {
+    .chatContainer {
+        max-width: 100%;
+    }
+    .chatRoot {
+        flex-direction: column-reverse;
+        align-items: center;
+        max-width: 100%;
+    }
+}
+
+.chatMessageStream {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+
+.allChatMessages {
+    overflow-y: auto;
+    max-width: 100%;
+    min-width: 80%;
+}
+
+.chatInput {
+    position: sticky;
+    bottom: 0;
+    flex: 0 0 100px;
+    padding-bottom: 24px;
+    max-width: 90%;
+    min-width: 50%;
+}

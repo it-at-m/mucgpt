@@ -11,9 +11,9 @@ interface Props {
 export const RecommendAnswers = ({ setQuestion }: Props) => {
     const { t } = useTranslation();
     return (
-        <Stack style={{ width: 'auto' }}>
+        <Stack >
             <Divider className={styles.divider}><b>{t('components.recommendanswers.name')}</b></Divider>
-            <Stack horizontal horizontalAlign="center">
+            <div className={styles.buttons}>
                 <Tooltip content={t('components.recommendanswers.informal_tooltip')} relationship="description" positioning="above">
                     <Button onClick={() => setQuestion(t('components.recommendanswers.informal_prompt'))} appearance="subtle" aria-label={t('components.recommendanswers.informal_prompt')} icon={<BookContacts24Regular />} className={styles.item}>{t('components.recommendanswers.informal')}</Button>
                 </Tooltip>
@@ -26,10 +26,8 @@ export const RecommendAnswers = ({ setQuestion }: Props) => {
                 <Tooltip content={t('components.recommendanswers.longer_tooltip')} relationship="description" positioning="above">
                     <Button onClick={() => setQuestion(t('components.recommendanswers.longer_prompt'))} appearance="subtle" aria-label={t('components.recommendanswers.longer_prompt')} icon={<Add24Regular />} className={styles.item}>{t('components.recommendanswers.longer')}</Button>
                 </Tooltip>
-            </Stack>
+            </div>
         </Stack>
 
     );
 }
-
-

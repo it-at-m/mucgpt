@@ -19,8 +19,17 @@ class Brainstorm:
     Simple brainstorm implementation. One shot generation of certain markdown files. Translates the result into a target language.
     """
     user_mindmap_prompt = """
-      In a markdown file (MD) plan out a mind map on the topic {topic}. Follow the format in this example. Write it in a code snippet I can copy from directly. Provide only code, no description. Include the exact format I used below.
-    Example markdown format:
+    Plan out a mind map in a markdown file on the topic {topic} using the provided format.
+
+    Follow the following rules:
+    - Be very creative and very detailed
+    - Format the texts in markdown, where it fits.
+      - Display the text for the most important topic in bold.
+      - Use always more sublists, if more than one subtopic is available.
+      - Do just include the topics without structuring information (like topic 1, topic 2, etc.)
+
+
+    Use the following structure to ensure clarity and organization:
 
     # Central topic
 
@@ -28,29 +37,31 @@ class Brainstorm:
 
     ### Subtopic 1
 
-    – Subtopic 1
-
-    – Subtopic 2
-
-    – Subtopic 3
+    - Subsubtopic 1
+     - Subsubsubtopic 1
+     - Subsubsubtopic 2
+      - Subsubsubsubtopic 1
+    - Subsubtopic 2
+    - Subsubtopic 3
 
     ### Subtopic 2
 
-    – Subtopic 1
-
-    – Subtopic 2
-
-    – Subtopic 3
+    - Subsubtopic 1
+    - Subsubtopic 2
+    - Subsubtopic 3
 
     ## Main topic 2
 
     ### Subtopic 1
 
-    – Subtopic 1
+    - Subsubtopic 1
+    - Subsubtopic 2
+    - Subsubtopic 3
 
-    – Subtopic 2
+    # Output Format
 
-    – Subtopic 3"""
+    The output should be formatted as a markdown code snippet for easy copying. Include all elements in the structure specified above, maintaining organized headings and bullet points.
+    """
 
     user_translate_prompt = """
     Übersetze den folgenden Text in {language}. Beinhalte die Markdown Formatierung bei.

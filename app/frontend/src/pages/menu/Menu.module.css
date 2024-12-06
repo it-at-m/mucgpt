@@ -47,6 +47,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    white-space: nowrap; /* Verhindert Zeilenumbruch */
+    overflow: hidden; /* Versteckt den überlaufenden Text */
+}
+
+/* Optional: Ein zusätzlicher Stil für den Text */
+.box span {
+    display: inline-block; /* Ermöglicht die Verwendung von text-overflow */
+    max-width: 100%; /* Stellt sicher, dass der Text nicht über die Box hinausgeht */
+    overflow: hidden; /* Versteckt den überlaufenden Text */
+    text-overflow: ellipsis; /* Fügt die Ellipse hinzu */
+    white-space: nowrap; /* Verhindert Zeilenumbruch */
 }
 
 .box:hover {

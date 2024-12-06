@@ -15,7 +15,7 @@ import {
 
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { ChatSettingsButton } from "../ChatSettingsButton/ChatSettingsButton";
 interface Props {
@@ -31,10 +31,10 @@ interface Props {
 export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt, current_id }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
-    const { LLM } = useContext(LLMContext)
+    const { LLM } = useContext(LLMContext);
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
-    }, [])
+    }, []);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
@@ -48,71 +48,62 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
 
     const isEmptySystemPrompt = systemPrompt.trim() === "";
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) =>
-        setTemperature(data.value, current_id);
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) =>
-        setMaxTokens(data.value, current_id);
+    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value, current_id);
+    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value, current_id);
 
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value)
-            setSystemPrompt(newValue.value, current_id);
-        else
-            setSystemPrompt("", current_id);
-    }
+        if (newValue?.value) setSystemPrompt(newValue.value, current_id);
+        else setSystemPrompt("", current_id);
+    };
 
     const onClearSystemPrompt = () => {
         setSystemPrompt("", current_id);
-    }
+    };
     return (
         <div>
-            <OverlayDrawer
-                size="medium"
-                position="end"
-                open={isOpen}
-                style={{ 'padding': "30px", 'alignItems': 'stretch' }}
-            >
+            <OverlayDrawer size="medium" position="end" open={isOpen} style={{ padding: "30px", alignItems: "stretch" }}>
                 <div className={styles.title} role="heading" aria-level={2}>
-                    {t('components.chattsettingsdrawer.settings_button')}
-                    <Tooltip content={t('components.chattsettingsdrawer.settings_button_close')} relationship="description" positioning="below">
-
+                    {t("components.chattsettingsdrawer.settings_button")}
+                    <Tooltip content={t("components.chattsettingsdrawer.settings_button_close")} relationship="description" positioning="below">
                         <Button
                             appearance="subtle"
-                            aria-label={t('components.chattsettingsdrawer.settings_button_close')}
+                            aria-label={t("components.chattsettingsdrawer.settings_button_close")}
                             icon={<Dismiss24Regular />}
                             onClick={() => setIsOpen(false)}
                         />
                     </Tooltip>
-
                 </div>
-
 
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>
                         <InfoLabel
                             info={
                                 <div>
-                                    <i>{t('components.chattsettingsdrawer.system_prompt')}s </i>{t('components.chattsettingsdrawer.system_prompt_info')}
+                                    <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
+                                    {t("components.chattsettingsdrawer.system_prompt_info")}
                                 </div>
                             }
                         >
-                            {t('components.chattsettingsdrawer.system_prompt')}
+                            {t("components.chattsettingsdrawer.system_prompt")}
                         </InfoLabel>
-                        <Tooltip content={t('components.chattsettingsdrawer.system_prompt_clear')} relationship="description" positioning="below">
-                            <Button aria-label={t('components.chattsettingsdrawer.system_prompt_clear')} icon={<Dismiss24Regular />} appearance="subtle" onClick={onClearSystemPrompt} size="small">
-                            </Button>
+                        <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
+                            <Button
+                                aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
+                                icon={<Dismiss24Regular />}
+                                appearance="subtle"
+                                onClick={onClearSystemPrompt}
+                                size="small"
+                            ></Button>
                         </Tooltip>
                     </div>
-
                 </div>
 
                 <div className={styles.bodyContainer}>
-                    <div >
-                        <Field
-                            size="large"
-                        >
+                    <div>
+                        <Field size="large">
                             <Textarea
                                 textarea={styles.systempromptTextArea}
-                                placeholder={t('components.chattsettingsdrawer.system_prompt')}
+                                placeholder={t("components.chattsettingsdrawer.system_prompt")}
                                 resize="vertical"
                                 value={systemPrompt}
                                 size="large"
@@ -124,29 +115,23 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
                 </div>
 
                 <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
-                    <InfoLabel
-                        info={
-                            <div>
-                                {t('components.chattsettingsdrawer.max_lenght_info')}
-                            </div>
-                        }
-                    >
-                        {t('components.chattsettingsdrawer.max_lenght')}
+                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>
+                        {t("components.chattsettingsdrawer.max_lenght")}
                     </InfoLabel>
-
                 </div>
 
                 <div className={styles.bodyContainer}>
-
                     <div className={styles.verticalContainer}>
-                        <Slider min={min_max_tokens}
+                        <Slider
+                            min={min_max_tokens}
                             max={max_max_tokens}
                             defaultValue={20}
                             onChange={onMaxtokensChange}
-                            aria-valuetext={t('components.chattsettingsdrawer.max_lenght') + ` ist ${max_tokensID}`}
+                            aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
                             value={max_output_tokens}
                             aria-labelledby={max_tokens_headerID}
-                            id={max_tokensID} />
+                            id={max_tokensID}
+                        />
                         <br></br>
                         <Label htmlFor={max_tokensID} aria-hidden>
                             {max_output_tokens} Tokens
@@ -157,36 +142,43 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
                     <InfoLabel
                         info={
                             <div>
-                                {t('components.chattsettingsdrawer.temperature_article')} <i>{t('components.chattsettingsdrawer.temperature')}</i> {t('components.chattsettingsdrawer.temperature_info')}
+                                {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
+                                {t("components.chattsettingsdrawer.temperature_info")}
                             </div>
                         }
-
                     >
-                        {t('components.chattsettingsdrawer.temperature')}
+                        {t("components.chattsettingsdrawer.temperature")}
                     </InfoLabel>
                 </div>
                 <div className={styles.bodyContainer}>
-
                     <div className={styles.verticalContainer}>
-                        <Label htmlFor={temperatureID} aria-hidden size="medium" className={styles.temperatureLabel}> {t('components.chattsettingsdrawer.min_temperature')}</Label>
-                        <Slider min={min_temp}
+                        <Label htmlFor={temperatureID} aria-hidden size="medium" className={styles.temperatureLabel}>
+                            {" "}
+                            {t("components.chattsettingsdrawer.min_temperature")}
+                        </Label>
+                        <Slider
+                            min={min_temp}
                             max={max_temp}
                             defaultValue={2}
                             onChange={onTemperatureChange}
-                            aria-valuetext={t('components.chattsettingsdrawer.temperature') + ` ist ${temperature}`}
+                            aria-valuetext={t("components.chattsettingsdrawer.temperature") + ` ist ${temperature}`}
                             value={temperature}
                             step={0.05}
                             aria-labelledby={temperature_headerID}
-                            id={temperatureID} />
-                        <Label htmlFor={temperatureID} className={styles.temperatureLabel} aria-hidden size="medium"> {t('components.chattsettingsdrawer.max_temperatur')}</Label>
+                            id={temperatureID}
+                        />
+                        <Label htmlFor={temperatureID} className={styles.temperatureLabel} aria-hidden size="medium">
+                            {" "}
+                            {t("components.chattsettingsdrawer.max_temperatur")}
+                        </Label>
                         <Label htmlFor={temperatureID} aria-hidden>
                             {temperature}
                         </Label>
                     </div>
                 </div>
-            </OverlayDrawer >
+            </OverlayDrawer>
 
             <ChatSettingsButton isEmptySystemPrompt={isEmptySystemPrompt} onClick={onClickRightButton} />
-        </div >
+        </div>
     );
 };

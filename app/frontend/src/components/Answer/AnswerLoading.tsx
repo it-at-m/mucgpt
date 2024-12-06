@@ -5,8 +5,8 @@ import styles from "./Answer.module.css";
 import { AnswerIcon } from "./AnswerIcon";
 
 interface Props {
-    text: string
-};
+    text: string;
+}
 
 export const AnswerLoading = ({ text }: Props) => {
     const animatedStyles = useSpring({

@@ -160,7 +160,7 @@ const Menu = () => {
                         bot.id != 0 && ( //Arielle
                             <Tooltip content={bot.title} relationship="description" positioning="below">
                                 <Link to={`/bot/${bot.id}`} className={styles.box}>
-                                    {bot.title}
+                                    <span>{bot.title}</span>
                                 </Link>
                             </Tooltip>
                         )

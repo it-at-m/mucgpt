@@ -1304,7 +1304,7 @@ wheels = [
 
 [[package]]
 name = "mistral-common"
-version = "1.4.4"
+version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jsonschema" },
@@ -1316,9 +1316,9 @@ dependencies = [
     { name = "tiktoken" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b3/7c/5391ddeb4720546314542e7ecf5c909bcb16c2044aafb7ff46b8a48f482b/mistral_common-1.4.4.tar.gz", hash = "sha256:110e1b937aee99fdcf3cefc6b4e924e7e22ff445246090fe9215051245caa59c", size = 5805182 }
+sdist = { url = "https://files.pythonhosted.org/packages/7c/f9/ed2dc1801908c42a64bb02f3ad353eeb2f281f587515c226428a0deba45b/mistral_common-1.5.1.tar.gz", hash = "sha256:6f2cc0209baeadc31f78c2275bddb734f167ad1734c8c8596f5338786c594537", size = 6269592 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d3/3e/510708bfc40ec43f7f94ebf24ceb2a9831a7b3fd740867c8eb4148aab51d/mistral_common-1.4.4-py3-none-any.whl", hash = "sha256:d657fcb5aad8e518617662c57e121919f9f93172c713cbc70cb7461811764f8a", size = 6014375 },
+    { url = "https://files.pythonhosted.org/packages/be/48/b2acdd507d13a3fd926934eaed0a0afcbcd7e85e90639c91242e7423f3c4/mistral_common-1.5.1-py3-none-any.whl", hash = "sha256:3d632902ccb466b5c923d1717ff25960f829f90c515eed344a1b3e8069274a45", size = 6477783 },
 ]
 
 [[package]]
@@ -1380,7 +1380,7 @@ requires-dist = [
     { name = "langchain-core", specifier = "==0.3.18" },
     { name = "langchain-openai", specifier = "==0.2.8" },
     { name = "langsmith", specifier = "==0.1.143" },
-    { name = "mistral-common", specifier = "==1.4.4" },
+    { name = "mistral-common", specifier = "==1.5.1" },
     { name = "openai", specifier = "==1.54.4" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "==4.0.1" },
     { name = "psycopg2-binary", specifier = "==2.9.10" },

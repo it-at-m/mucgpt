@@ -16,8 +16,7 @@ const EXAMPLES: ExampleModel[] = [
     },
     {
         text: "Stell dir vor, es ist schlechtes Wetter.",
-        value:
-            `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
+        value: `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
     },
     {
         text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
@@ -30,13 +29,18 @@ interface Props {
 }
 
 export const ExampleList = ({ onExampleClicked }: Props) => {
-
     const { t } = useTranslation();
     return (
-        <ul className={styles.examplesNavList} aria-description={t('common.examples')}>
+        <ul className={styles.examplesNavList} aria-description={t("common.examples")}>
             {EXAMPLES.map((x, i) => (
                 <li key={i} tabIndex={0}>
-                    <Example text={x.text} system={x.system} value={x.value} onClick={onExampleClicked} ariaLabel={t('components.example.label') + " " + (i + 1).toString()} />
+                    <Example
+                        text={x.text}
+                        system={x.system}
+                        value={x.value}
+                        onClick={onExampleClicked}
+                        ariaLabel={t("components.example.label") + " " + (i + 1).toString()}
+                    />
                 </li>
             ))}
         </ul>

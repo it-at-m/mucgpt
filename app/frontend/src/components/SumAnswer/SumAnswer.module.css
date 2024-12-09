@@ -18,6 +18,8 @@
 .answerText {
     white-space: pre-wrap;
     font-size: var(--fontSizeBase400);
+    max-width: 90%;
+    overflow-x: auto;
 }
 
 .sumanswerHeader {

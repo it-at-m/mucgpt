@@ -7,8 +7,6 @@
         0px 2px 4px var(--colorBrandForeground2),
         0px 0px 2px var(--colorBrandForeground2);
     border: transparent solid 1px;
-    max-width: 100%;
-    min-width: 100%;
 }
 
 .answerContainer:hover {
@@ -27,6 +25,8 @@
     padding-top: 16px;
     padding-bottom: 16px;
     font-size: var(--fontSizeBase400);
+    max-width: 90%;
+    overflow-x: auto;
 }
 
 .answerText table {
@@ -68,4 +68,5 @@
 
 .growItem {
     min-width: 50%;
+    overflow-x: auto;
 }

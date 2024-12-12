@@ -40,7 +40,7 @@ i18n
                         rolelabel: "Zusammenfassen für",
                         lengthlabel: "in",
                         answer_loading: "Fasse zusammen",
-                        levelofdetail: "Detailierungsgrad",
+                        levelofdetail: "Umfang",
                         short: "Kurz",
                         medium: "Mittel",
                         long: "Lang"
@@ -257,7 +257,7 @@ i18n
                         rolelabel: "Summarize for",
                         lengthlabel: "in",
                         answer_loading: "Summarize",
-                        levelofdetail: "Level of Detail",
+                        levelofdetail: "Scope",
                         short: "Short",
                         medium: "Medium",
                         long: "Long"
@@ -473,7 +473,7 @@ i18n
                         rolelabel: "Zammfassn für",
                         lengthlabel: "in",
                         answer_loading: "Am zammfassn",
-                        levelofdetail: "Detai-Grad",
+                        levelofdetail: "Umfang",
                         short: "Kurz",
                         medium: "Mittel",
                         long: "Lang"
@@ -689,7 +689,7 @@ i18n
                         rolelabel: "Résumer pour",
                         lengthlabel: "en",
                         answer_loading: "Résumer",
-                        levelofdetail: "Niveau de détail",
+                        levelofdetail: "Portée",
                         short: "Court",
                         medium: "Moyen",
                         long: "Long"
@@ -897,7 +897,7 @@ i18n
                         rolelabel: "Резюме для",
                         lengthlabel: "в",
                         answer_loading: "Резюме",
-                        levelofdetail: "Рівень деталізації",
+                        levelofdetail: "Обсяг",
                         short: "Короткий",
                         medium: "Середній",
                         long: "Довгий"

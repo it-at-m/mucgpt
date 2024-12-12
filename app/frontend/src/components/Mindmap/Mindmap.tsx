@@ -1,6 +1,6 @@
 import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef, useState } from "react";
 import styles from "./Mindmap.module.css";
 import { Stack } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular } from "@fluentui/react-icons";
 import { AnswerIcon } from "../Answer/AnswerIcon";
 import { IPureNode } from "markmap-common";
+import { LightContext } from "../../pages/layout/LightContext";
 interface Props {
     markdown: string;
 }
@@ -18,6 +19,7 @@ export const Mindmap = ({ markdown }: Props) => {
     const svgEl = useRef<SVGSVGElement>(null);
     const [isSourceView, setIsSourceView] = useState(false);
     const [freeplaneXML, setFreeplaneXML] = useState("");
+    const isLight = useContext(LightContext);
 
     useLayoutEffect(() => {
         createMM();
@@ -153,7 +155,7 @@ export const Mindmap = ({ markdown }: Props) => {
             {!isSourceView ? (
                 <Stack.Item grow>
                     <div className={styles.mindmapContainer}>
-                        <svg id="markmap" className={styles.svgMark} ref={svgEl} aria-hidden="true" role="img"></svg>
+                        <svg id="markmap" className={`${styles.svgMark} ${isLight ? "" : styles.darkmindmap}`} ref={svgEl} aria-hidden="true" role="img"></svg>
                     </div>
                 </Stack.Item>
             ) : (

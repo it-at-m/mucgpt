@@ -14,6 +14,7 @@ import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { getBotName } from "../../service/storage";
+import { LightContext } from "./LightContext";
 
 const formatDate = (date: Date) => {
     let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -135,91 +136,99 @@ export const Layout = () => {
 
     return (
         <FluentProvider theme={theme}>
-            <div className={styles.layout}>
-                <header className={styles2.header} role={"banner"}>
-                    <div className={styles.header}>
-                        <Link to="/" className={styles.headerTitleContainer}>
-                            <img
-                                src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
-                                alt="MUCGPT logo"
-                                aria-label="MUCGPT Logo"
-                                className={styles.logo}
-                            ></img>
-                            <h3 className={styles.headerTitle} aria-description="Umgebung:">
-                                {config.frontend.labels.env_name}
-                            </h3>
-                        </Link>
-                        <div className={styles.headerNavList}>
-                            <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    MUCGPT
-                                </NavLink>
-                            </div>
-                            <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t("header.chat")}
-                                </NavLink>
-                            </div>
-                            <div className={styles.headerNavLeftMargin}>
-                                <NavLink
-                                    to="/sum"
-                                    state={{ from: "This is my props" }}
-                                    className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                >
-                                    {t("header.sum")}
-                                </NavLink>
-                            </div>
-                            <div className={styles.headerNavLeftMargin}>
-                                <NavLink to="/brainstorm" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                    {t("header.brainstorm")}
-                                </NavLink>
-                            </div>
-                            {simply && (
+            <LightContext.Provider value={isLight}>
+                <div className={styles.layout}>
+                    <header className={styles2.header} role={"banner"}>
+                        <div className={styles.header}>
+                            <Link to="/" className={styles.headerTitleContainer}>
+                                <img
+                                    src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
+                                    alt="MUCGPT logo"
+                                    aria-label="MUCGPT Logo"
+                                    className={styles.logo}
+                                ></img>
+                                <h3 className={styles.headerTitle} aria-description="Umgebung:">
+                                    {config.frontend.labels.env_name}
+                                </h3>
+                            </Link>
+                            <div className={styles.headerNavList}>
                                 <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/simply" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        {t("header.simply")}
+                                    <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                        MUCGPT
                                     </NavLink>
                                 </div>
-                            )}
-                            <div className={styles.headerNavLeftMargin}>
-                                <NavLink
-                                    to={"/bot/" + title[0]}
-                                    className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                >
-                                    {title[1]}
-                                </NavLink>
+                                <div className={styles.headerNavLeftMargin}>
+                                    <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
+                                        {t("header.chat")}
+                                    </NavLink>
+                                </div>
+                                <div className={styles.headerNavLeftMargin}>
+                                    <NavLink
+                                        to="/sum"
+                                        state={{ from: "This is my props" }}
+                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
+                                    >
+                                        {t("header.sum")}
+                                    </NavLink>
+                                </div>
+                                <div className={styles.headerNavLeftMargin}>
+                                    <NavLink
+                                        to="/brainstorm"
+                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
+                                    >
+                                        {t("header.brainstorm")}
+                                    </NavLink>
+                                </div>
+                                {simply && (
+                                    <div className={styles.headerNavLeftMargin}>
+                                        <NavLink
+                                            to="/simply"
+                                            className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
+                                        >
+                                            {t("header.simply")}
+                                        </NavLink>
+                                    </div>
+                                )}
+                                <div className={styles.headerNavLeftMargin}>
+                                    <NavLink
+                                        to={"/bot/" + title[0]}
+                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
+                                    >
+                                        {title[1]}
+                                    </NavLink>
+                                </div>
+                            </div>
+                            <div className={styles.SettingsDrawer}>
+                                <SettingsDrawer
+                                    defaultlang={language_pref}
+                                    onLanguageSelectionChanged={onLanguageSelectionChanged}
+                                    version={config.version}
+                                    commit={config.commit}
+                                    fontscale={fontscaling}
+                                    setFontscale={onFontscaleChange}
+                                    isLight={isLight}
+                                    setTheme={onThemeChange}
+                                    defaultLLM={llm_pref}
+                                    onLLMSelectionChanged={onLLMSelectionChanged}
+                                    llmOptions={models}
+                                    currentLLM={LLM}
+                                ></SettingsDrawer>
                             </div>
                         </div>
-                        <div className={styles.SettingsDrawer}>
-                            <SettingsDrawer
-                                defaultlang={language_pref}
-                                onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                version={config.version}
-                                commit={config.commit}
-                                fontscale={fontscaling}
-                                setFontscale={onFontscaleChange}
-                                isLight={isLight}
-                                setTheme={onThemeChange}
-                                defaultLLM={llm_pref}
-                                onLLMSelectionChanged={onLLMSelectionChanged}
-                                llmOptions={models}
-                                currentLLM={LLM}
-                            ></SettingsDrawer>
-                        </div>
-                    </div>
-                </header>
-                <Outlet />
+                    </header>
+                    <Outlet />
 
-                <footer className={styles2.footer} role={"banner"}>
-                    <div>
-                        Landeshauptstadt München <br />
-                        RIT/it@M KICC <br />
-                    </div>
-                    <div className={styles.headerNavRightMargin}>
-                        <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>
-                    </div>
-                </footer>
-            </div>
+                    <footer className={styles2.footer} role={"banner"}>
+                        <div>
+                            Landeshauptstadt München <br />
+                            RIT/it@M KICC <br />
+                        </div>
+                        <div className={styles.headerNavRightMargin}>
+                            <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>
+                        </div>
+                    </footer>
+                </div>
+            </LightContext.Provider>
         </FluentProvider>
     );
 };

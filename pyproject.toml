@@ -45,7 +45,7 @@ test = [
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.6.5",
+    "coverage==7.6.9",
     "pytest-cov"
 ]
 

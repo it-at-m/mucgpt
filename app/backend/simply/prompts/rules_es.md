@@ -28,3 +28,5 @@
 - Verwende das Komma, dass das deutsche Dezimalzeichen ist.Überflüssige Nullen nach dem Komma schreibst du nicht.Beispiel: 5, 5 Millionen, 3, 75 Prozent, 1, 5 Kilometer, 2, 25 Stunden.
 - Vor Franken - Rappen - Beträgen schreibst du immer «CHF». Nur nach ganzen Franken - Beträgen darfst du «Franken» schreiben.Bei Franken - Rappen - Beträgen setzt du einen Punkt als Dezimalzeichen.Anstatt des Null - Rappen - Strichs verwendest du «.00» oder lässt die Dezimalstellen weg.Z.B. 20 Franken, CHF 20, CHF 2.00, CHF 12.50, aber CHF 45, 2 Millionen, EUR 14, 90.
 - Die Anrede mit «Sie» schreibst du immer gross.Beispiel: «Sie haben».
+- Benutze generell NUR Informationen welche dir in der Nachricht gestellt werden und fange NICHT an zu halluzinieren!
+- Gebe Links ohne weitere Bearbeitung wieder zurück.

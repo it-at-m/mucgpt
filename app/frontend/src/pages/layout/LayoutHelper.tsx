@@ -1,10 +1,5 @@
-
-
-
-
-import { BrandVariants, makeStyles } from '@fluentui/react-components';
-import { tokens } from '@fluentui/react-theme';
-import { createLightTheme, createDarkTheme } from '@fluentui/react-components';
+import { BrandVariants, createDarkTheme, createLightTheme, makeStyles } from "@fluentui/react-components";
+import { tokens } from "@fluentui/react-theme";
 
 export const useStyles = makeStyles({
     footer: {
@@ -14,7 +9,7 @@ export const useStyles = makeStyles({
         justifyContent: "space-between",
         marginTop: "auto",
         backgroundColor: tokens.colorBrandBackground2,
-        color: tokens.colorNeutralBackground1,
+        color: tokens.colorNeutralBackground1
     },
     header: {
         backgroundColor: tokens.colorBrandBackground2,
@@ -23,31 +18,31 @@ export const useStyles = makeStyles({
 });
 
 export const enum STORAGE_KEYS {
-    TERMS_OF_USE_READ = 'TERMS_OF_USE_READ',
-    SETTINGS_LANGUAGE = 'SETTINGS_LANGUAGE',
-    SETTINGS_LLM = 'SETTINGS_LLM',
-    SETTINGS_FONT_SCALING = 'SETTINGS_FONT_SCALING',
-    SETTINGS_IS_LIGHT_THEME = 'SETTINGS_IS_LIGHT_THEME',
-    VERSION_UPDATE_SEEN = 'VERSION_UPDATE_SEEN'
+    TERMS_OF_USE_READ = "TERMS_OF_USE_READ",
+    SETTINGS_LANGUAGE = "SETTINGS_LANGUAGE",
+    SETTINGS_LLM = "SETTINGS_LLM",
+    SETTINGS_FONT_SCALING = "SETTINGS_FONT_SCALING",
+    SETTINGS_IS_LIGHT_THEME = "SETTINGS_IS_LIGHT_THEME",
+    VERSION_UPDATE_SEEN = "VERSION_UPDATE_SEEN"
 }
 
 const customBrandRamp: BrandVariants = {
-    10: '#f2f2f2',
-    20: '#e4e4e5',
-    30: '#d6d6d8',
-    40: '#c8c8cb',
-    50: '#bababe',
-    60: '#acacb1',
-    70: '#9e9ea4',
-    80: '#909097',
-    90: '#82828a',
-    100: '#74747d',
-    110: '#666670',
-    120: '#585863',
-    130: '#4a4a56',
-    140: '#3c3c49',
-    150: '#2e2e3c',
-    160: '#212529',
+    10: "#f2f2f2",
+    20: "#e4e4e5",
+    30: "#d6d6d8",
+    40: "#c8c8cb",
+    50: "#bababe",
+    60: "#acacb1",
+    70: "#9e9ea4",
+    80: "#909097",
+    90: "#82828a",
+    100: "#74747d",
+    110: "#666670",
+    120: "#585863",
+    130: "#4a4a56",
+    140: "#3c3c49",
+    150: "#2e2e3c",
+    160: "#212529"
 };
 export const adjustTheme = (isLight: boolean, scaling: number) => {
     let theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);

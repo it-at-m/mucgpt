@@ -11,7 +11,7 @@ interface Props {
 export const Example = ({ text, value, system, onClick, ariaLabel }: Props) => {
     return (
         <div className={styles.example} aria-description={ariaLabel} onClick={() => onClick(value, system)}>
-            <p className={styles.exampleText} >{text}</p>
+            <p className={styles.exampleText}>{text}</p>
         </div>
     );
 };

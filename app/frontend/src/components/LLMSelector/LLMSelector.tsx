@@ -1,18 +1,12 @@
-import {
-    Dropdown,
-    makeStyles,
-    Option,
-} from "@fluentui/react-components";
+import { Dropdown, makeStyles, Option } from "@fluentui/react-components";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { Model } from "../../api";
 
 const useStyles = makeStyles({
     root: {
         // Stack the label above the field with a gap
-
     },
-    option: {
-    }
+    option: {}
 });
 
 interface Props {
@@ -20,7 +14,6 @@ interface Props {
     defaultLLM: string;
     options: Model[];
 }
-
 
 export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const styles = useStyles();
@@ -31,14 +24,15 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                 defaultValue={defaultLLM}
                 onOptionSelect={onSelectionChange}
                 appearance="underline"
-                size="small" positioning="below-start">
+                size="small"
+                positioning="below-start"
+            >
                 {options.map((item, index) => (
                     <Option text={item.llm_name} className={styles.option} key={index}>
                         {item.llm_name}
                     </Option>
-
                 ))}
             </Dropdown>
-        </div >
+        </div>
     );
 };

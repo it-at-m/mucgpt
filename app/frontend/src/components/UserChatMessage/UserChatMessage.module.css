@@ -1,11 +1,3 @@
-.container {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 20px;
-    max-width: 80%;
-    margin-left: auto;
-}
-
 .message {
     padding: 1em;
     margin: 1em;
@@ -21,6 +13,8 @@
 .answerText {
     white-space: pre-wrap;
     font-size: var(--fontSizeBase300);
+    max-width: 95%;
+    overflow-x: auto;
 }
 
 .iconRightMargin {

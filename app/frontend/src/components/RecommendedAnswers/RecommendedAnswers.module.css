@@ -4,3 +4,16 @@
 .item {
     width: auto;
 }
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+    flex-direction: row;
+}
+
+@media (max-width: 650px) {
+    .buttons {
+        flex-direction: column;
+    }
+}

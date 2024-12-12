@@ -24,7 +24,11 @@ export type ChatRequest = {
     model?: string;
 };
 
-export type CreateBotRequest = { input: string; max_output_tokens: number; model?: string };
+export type CreateBotRequest = {
+    input: string;
+    max_output_tokens: number;
+    model?: string;
+};
 
 export type SumRequest = {
     text: string;

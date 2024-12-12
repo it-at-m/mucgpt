@@ -1,11 +1,10 @@
-import { Button, Tooltip } from "@fluentui/react-components"
+import { Button, Tooltip } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { deleteChatFromDB, indexedDBStorage, popLastBotMessageInDB, popLastMessageInDB } from "../../service/storage";
 import { DeleteArrowBackRegular } from "@fluentui/react-icons";
 
-import styles from "./UserChatMessage.module.css"
+import styles from "./UserChatMessage.module.css";
 import { MutableRefObject } from "react";
-
 
 interface Props {
     message: string;
@@ -36,16 +35,23 @@ export const RollBackMessage = ({ message, setQuestion, answers, setAnswers, sto
             }
         }
         if (answers.length == 0) {
-            deleteChatFromDB(storage, current_id, setAnswers, true, lastQuestionRef)
-            deleteChatFromDB(storage, 0, setAnswers, false, lastQuestionRef)
+            deleteChatFromDB(storage, current_id, setAnswers, true, lastQuestionRef);
+            deleteChatFromDB(storage, 0, setAnswers, false, lastQuestionRef);
         } else {
-            lastQuestionRef.current = last[1]
+            lastQuestionRef.current = last[1];
         }
         setQuestion(message);
     };
 
-    return <Tooltip content={t('components.deleteMessage.label')} relationship="description" positioning="above">
-        <Button onClick={deleteMessageAndRollbackChat} appearance="subtle" aria-label={t('components.deleteMessage.label')} icon={<DeleteArrowBackRegular className={styles.iconRightMargin} />} size="large" />
-    </Tooltip>;
-
-}
+    return (
+        <Tooltip content={t("components.deleteMessage.label")} relationship="description" positioning="above">
+            <Button
+                onClick={deleteMessageAndRollbackChat}
+                appearance="subtle"
+                aria-label={t("components.deleteMessage.label")}
+                icon={<DeleteArrowBackRegular className={styles.iconRightMargin} />}
+                size="large"
+            />
+        </Tooltip>
+    );
+};

@@ -1,27 +1,36 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import styles from "../chat/Chat.module.css";
-
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
-import { useTranslation } from 'react-i18next';
-import { bot_history_storage, bot_storage, deleteChatFromDB, getBotWithId, getStartDataFromDB, popLastBotMessageInDB, saveBotChatToDB, storeBot } from "../../service/storage"
+import { useTranslation } from "react-i18next";
+import {
+    bot_history_storage,
+    bot_storage,
+    deleteChatFromDB,
+    getBotWithId,
+    getStartDataFromDB,
+    popLastBotMessageInDB,
+    saveBotChatToDB,
+    storeBot
+} from "../../service/storage";
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
 import { MessageError } from "../chat/MessageError";
+import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 
 const BotChat = () => {
     const { id } = useParams();
-    const bot_id = id || "0"
-    const { language } = useContext(LanguageContext)
+    const bot_id = id || "0";
+    const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const [shouldStream, setShouldStream] = useState<boolean>(true);
@@ -49,15 +58,13 @@ const BotChat = () => {
     const storage_history = bot_history_storage;
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
-            const response = await countTokensAPI({ "text": debouncedSystemPrompt, "model": LLM });
+            const response = await countTokensAPI({ text: debouncedSystemPrompt, model: LLM });
             setSystemPromptTokens(response.count);
-        }
-        else
-            setSystemPromptTokens(0);
+        } else setSystemPromptTokens(0);
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            getBotWithId(+bot_id).then((bot) => {
+            getBotWithId(+bot_id).then(bot => {
                 if (bot) {
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
@@ -66,20 +73,20 @@ const BotChat = () => {
                     setTemperature(bot.temperature);
                     setMaxOutputTokens(bot.max_output_tokens);
                 }
-            }
-            )
+            });
             error && setError(undefined);
             setIsLoading(true);
-            getStartDataFromDB(storage_history, +bot_id).then((stored) => {
+            getStartDataFromDB(storage_history, +bot_id).then(stored => {
                 if (stored) {
                     let storedAnswers = stored.Answers;
                     lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
-                    if (storedAnswers[storedAnswers.length - 1][1].answer == "") {// if the answer of the LLM has not (yet) returned
+                    if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                        // if the answer of the LLM has not (yet) returned
                         if (storedAnswers.length > 1) {
                             storedAnswers.pop();
                             setAnswers([...answers.concat(storedAnswers)]);
                         }
-                        setError(new MessageError(t('components.history.error')))
+                        setError(new MessageError(t("components.history.error")));
                     } else {
                         setAnswers([...answers.concat(storedAnswers)]);
                     }
@@ -92,7 +99,7 @@ const BotChat = () => {
     useEffect(() => {
         makeTokenCountRequest();
         if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens)
+            onMaxTokensChanged(LLM.max_output_tokens);
         }
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
@@ -121,10 +128,9 @@ const BotChat = () => {
             }
             let user_tokens = 0;
             if (shouldStream) {
-
-                let answer: string = '';
+                let answer: string = "";
                 let streamed_tokens = 0;
-                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens }
+                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
 
                 for await (const chunk of readNDJSONStream(response.body)) {
                     if (chunk as Chunk) {
@@ -138,7 +144,7 @@ const BotChat = () => {
                                 user_tokens = info.requesttokens;
                                 break;
                             case "E":
-                                throw Error(chunk.message as (string) || "Unknown error");
+                                throw Error((chunk.message as string) || "Unknown error");
                         }
 
                         latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
@@ -147,7 +153,7 @@ const BotChat = () => {
                     }
                 }
                 if (bot_id) {
-                    saveBotChatToDB([question, latestResponse, user_tokens], +bot_id)
+                    saveBotChatToDB([question, latestResponse, user_tokens], +bot_id);
                 }
             } else {
                 const parsedResponse: AskResponse = await response.json();
@@ -156,7 +162,7 @@ const BotChat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (bot_id) {
-                    saveBotChatToDB([question, parsedResponse, 0], +bot_id)
+                    saveBotChatToDB([question, parsedResponse, 0], +bot_id);
                 }
             }
         } catch (e) {
@@ -174,8 +180,7 @@ const BotChat = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = systemPromptTokens + answers.map((answ) => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
-
+    const totalTokens = systemPromptTokens + answers.map(answ => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
@@ -186,16 +191,15 @@ const BotChat = () => {
             publish: publish,
             id: +bot_id,
             temperature: temp,
-            max_output_tokens: max_output_tokens,
-        }
-        storeBot(newBot)
+            max_output_tokens: max_output_tokens
+        };
+        storeBot(newBot);
     };
 
     const onMaxTokensChanged = (maxTokens: number) => {
         if (maxTokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens)
-        }
-        else {
+            onMaxTokensChanged(LLM.max_output_tokens);
+        } else {
             setMaxOutputTokens(maxTokens);
             let newBot: Bot = {
                 title: title,
@@ -204,11 +208,10 @@ const BotChat = () => {
                 publish: publish,
                 id: +bot_id,
                 temperature: temperature,
-                max_output_tokens: maxTokens,
-            }
-            storeBot(newBot)
+                max_output_tokens: maxTokens
+            };
+            storeBot(newBot);
         }
-
     };
 
     const onSystemPromptChanged = (systemPrompt: string) => {
@@ -220,9 +223,9 @@ const BotChat = () => {
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens,
-        }
-        storeBot(newBot)
+            max_output_tokens: max_output_tokens
+        };
+        storeBot(newBot);
     };
 
     const onPublishChanged = (publish: boolean) => {
@@ -234,13 +237,13 @@ const BotChat = () => {
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens,
-        }
+            max_output_tokens: max_output_tokens
+        };
         storeBot(newBot);
     };
 
     const onTitleChanged = (title: string) => {
-        setTitle(title)
+        setTitle(title);
         let newBot: Bot = {
             title: title,
             description: description,
@@ -248,13 +251,13 @@ const BotChat = () => {
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens,
-        }
-        storeBot(newBot)
+            max_output_tokens: max_output_tokens
+        };
+        storeBot(newBot);
     };
 
     const onDescriptionChanged = (description: string) => {
-        setDescription(description)
+        setDescription(description);
         let newBot: Bot = {
             title: title,
             description: description,
@@ -262,9 +265,9 @@ const BotChat = () => {
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens,
-        }
-        storeBot(newBot)
+            max_output_tokens: max_output_tokens
+        };
+        storeBot(newBot);
     };
 
     const onRegeneratResponseClicked = async () => {
@@ -273,122 +276,112 @@ const BotChat = () => {
             setAnswers(answers);
             popLastBotMessageInDB(+bot_id);
             if (last) {
-                makeApiRequest(last[0], systemPrompt)
+                makeApiRequest(last[0], systemPrompt);
             }
-        };
-    }
+        }
+    };
 
-
-    return (
-        <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-                <BotsettingsDrawer
-                    temperature={temperature}
-                    setTemperature={onTemperatureChanged}
-                    max_output_tokens={max_output_tokens}
-                    setMaxTokens={onMaxTokensChanged}
-                    systemPrompt={systemPrompt}
-                    setSystemPrompt={onSystemPromptChanged}
-                    title={title}
-                    setTitle={onTitleChanged}
-                    description={description}
-                    setDescription={onDescriptionChanged}
-                    bot_id={bot_id}
-                    setPublish={onPublishChanged}
-                ></BotsettingsDrawer>
-            </div>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
-                    {!lastQuestionRef.current ? (
-                        <div className={styles.chatEmptyState} tabIndex={0}>
-                            <h3 className={styles.chatEmptyStateSubtitle}>{description}</h3>
-                        </div>
-                    ) : (
-                        <ul className={styles.chatMessageStream} aria-description={t("common.messages")}>
-                            {answers.map((answer, index) => (
-                                <div key={index}>
-                                    <li aria-description={t('components.usericon.label') + " " + (index + 1).toString()} >
-                                        <UserChatMessage message={answer[0]}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage_history}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={+bot_id}
-                                            is_bot={true}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGpt} aria-description={t('components.answericon.label') + " " + (index + 1).toString()} >
-                                        {index === answers.length - 1 && <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                            setQuestion={question => setQuestion(question)}
-                                        />
-                                        }
-                                        {index !== answers.length - 1 && <Answer
-                                            key={index}
-                                            answer={answer[1]}
-                                            setQuestion={question => setQuestion(question)}
-                                        />
-                                        }
-                                    </li>
-                                </div>
-                            ))}
-                            {isLoading && (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()}>
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={+bot_id}
-                                            is_bot={true}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                                        <AnswerLoading text={t('chat.answer_loading')} />
-                                    </li>
-                                </>
-                            )}
-                            {error ? (
-                                <>
-                                    <li aria-description={t('components.usericon.label') + " " + (answers.length + 1).toString()} >
-                                        <UserChatMessage message={lastQuestionRef.current}
-                                            setAnswers={setAnswers}
-                                            setQuestion={setQuestion}
-                                            answers={answers}
-                                            storage={storage}
-                                            lastQuestionRef={lastQuestionRef}
-                                            current_id={+bot_id}
-                                            is_bot={true}
-                                        />
-                                    </li>
-                                    <li className={styles.chatMessageGptMinWidth} aria-description={t('components.answericon.label') + " " + (answers.length + 1).toString()} >
-                                        <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} />
-                                    </li>
-                                </>
-                            ) : null}
-                            <div ref={chatMessageStreamEnd} />
-                        </ul>
-                    )}
-                    <div className={styles.chatInput}>
-                        <QuestionInput
-                            clearOnSend
-                            placeholder={t('chat.prompt')}
-                            disabled={isLoading}
-                            onSend={question => makeApiRequest(question, systemPrompt)}
-                            tokens_used={totalTokens}
-                            question={question}
-                            setQuestion={question => setQuestion(question)}
+    const commands = [
+        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        <BotsettingsDrawer
+            temperature={temperature}
+            setTemperature={onTemperatureChanged}
+            max_output_tokens={max_output_tokens}
+            setMaxTokens={onMaxTokensChanged}
+            systemPrompt={systemPrompt}
+            setSystemPrompt={onSystemPromptChanged}
+            title={title}
+            setTitle={onTitleChanged}
+            description={description}
+            setDescription={onDescriptionChanged}
+            bot_id={bot_id}
+            setPublish={onPublishChanged}
+        ></BotsettingsDrawer>
+    ];
+    const examplesComponent = <></>;
+    const inputComponent = (
+        <QuestionInput
+            clearOnSend
+            placeholder={t("chat.prompt")}
+            disabled={isLoading}
+            onSend={question => makeApiRequest(question, systemPrompt)}
+            tokens_used={totalTokens}
+            question={question}
+            setQuestion={question => setQuestion(question)}
+        />
+    );
+    const answerList = (
+        <>
+            {answers.map((answer, index) => (
+                <ChatTurnComponent
+                    key={index}
+                    usermsg={
+                        <UserChatMessage
+                            message={answer[0]}
+                            setAnswers={setAnswers}
+                            setQuestion={setQuestion}
+                            answers={answers}
+                            storage={storage_history}
+                            lastQuestionRef={lastQuestionRef}
+                            current_id={+bot_id}
+                            is_bot={true}
                         />
-                    </div>
-                </div>
-            </div>
-        </div >
+                    }
+                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
+                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
+                    botmsg={
+                        <>
+                            {" "}
+                            {index === answers.length - 1 && (
+                                <Answer
+                                    key={index}
+                                    answer={answer[1]}
+                                    onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                    setQuestion={question => setQuestion(question)}
+                                />
+                            )}
+                            {index !== answers.length - 1 && <Answer key={index} answer={answer[1]} setQuestion={question => setQuestion(question)} />}
+                        </>
+                    }
+                ></ChatTurnComponent>
+            ))}
+            {(isLoading || error) && (
+                <ChatTurnComponent
+                    usermsg={
+                        <UserChatMessage
+                            message={lastQuestionRef.current}
+                            setAnswers={setAnswers}
+                            setQuestion={setQuestion}
+                            answers={answers}
+                            storage={storage}
+                            lastQuestionRef={lastQuestionRef}
+                            current_id={+bot_id}
+                            is_bot={true}
+                        />
+                    }
+                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
+                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
+                    botmsg={
+                        <>
+                            {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
+                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} /> : null}
+                        </>
+                    }
+                ></ChatTurnComponent>
+            )}
+            <div ref={chatMessageStreamEnd} />
+        </>
+    );
+    return (
+        <ChatLayout
+            commands={commands}
+            examples={examplesComponent}
+            answers={answerList}
+            input={inputComponent}
+            showExamples={!lastQuestionRef.current}
+            header={description}
+            messages_description={t("common.messages")}
+        ></ChatLayout>
     );
 };
 

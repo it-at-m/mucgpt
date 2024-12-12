@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./SumAnswer.module.css";
 import { Stack } from "@fluentui/react";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import { SumResponse } from "../../api";
 import DOMPurify from "dompurify";
 import { Button } from "@fluentui/react-button";
@@ -19,11 +19,10 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
     const [copied, setCopied] = useState<boolean>(false);
     const [ref, setRef] = React.useState<HTMLElement | null>();
 
-    const answers = answer.answer.length > 2 ? answer.answer.slice(-2) : answer.answer
-
+    const answers = answer.answer.length > 2 ? answer.answer.slice(-2) : answer.answer;
 
     const sanitizedAnswerHtmlWithoutColors = answers.map(answ => {
-        return DOMPurify.sanitize(answ)
+        return DOMPurify.sanitize(answ);
     });
 
     const oncopy = (text: string) => {
@@ -31,8 +30,8 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
         navigator.clipboard.writeText(text);
         setTimeout(() => {
             setCopied(false);
-        }, 1000)
-    }
+        }, 1000);
+    };
     return (
         <Stack verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>
             <Stack.Item>
@@ -42,20 +41,37 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                         {answers.map((x, i) => (
                             <div>
                                 <Button
-                                    style={{ border: "0.5px solid black", padding: "10px", backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground1Hover)", height: "100%" }}
+                                    style={{
+                                        border: "0.5px solid black",
+                                        padding: "10px",
+                                        backgroundColor: getSelected === i ? "var(--colorBrandBackgroundSelected)" : "var(--colorNeutralBackground1Hover)",
+                                        height: "100%"
+                                    }}
                                     appearance="outline"
                                     size="small"
                                     shape="rounded"
                                     onClick={() => setSelected(i)}
                                     key={i}
-                                >{t("components.sumanswer.alternative")} {i + 1}</Button>
+                                >
+                                    {t("components.sumanswer.alternative")} {i + 1}
+                                </Button>
                             </div>
                         ))}
-                        <Tooltip content={t('components.sumanswer.copy')} relationship="description" positioning={{ target: ref }}>
-                            <Button ref={setRef} appearance="subtle" aria-label={t('components.answer.copy')}
+                        <Tooltip content={t("components.sumanswer.copy")} relationship="description" positioning={{ target: ref }}>
+                            <Button
+                                ref={setRef}
+                                appearance="subtle"
+                                aria-label={t("components.answer.copy")}
                                 onClick={() => oncopy(sanitizedAnswerHtmlWithoutColors[getSelected])}
-                                icon={(!copied ? <Copy24Regular className={styles.iconRightMargin} /> : <CheckmarkSquare24Regular className={styles.iconRightMargin} />)} size="large">
-                            </Button>
+                                icon={
+                                    !copied ? (
+                                        <Copy24Regular className={styles.iconRightMargin} />
+                                    ) : (
+                                        <CheckmarkSquare24Regular className={styles.iconRightMargin} />
+                                    )
+                                }
+                                size="large"
+                            ></Button>
                         </Tooltip>
                     </div>
                 </Stack>
@@ -68,5 +84,3 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
         </Stack>
     );
 };
-
-

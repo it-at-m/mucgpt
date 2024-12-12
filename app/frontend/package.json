@@ -11,7 +11,9 @@
     "build": "tsc && vite build --outDir dist ",
     "buildlocal": "tsc && vite build",
     "watch": "tsc && vite build --watch",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "fix": "prettier . --write",
+    "lint": "prettier . --check "
   },
   "dependencies": {
     "@fluentui/react": "8.121.13",

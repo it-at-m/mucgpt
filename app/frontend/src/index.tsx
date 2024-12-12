@@ -2,8 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { initializeIcons } from "@fluentui/react";
-import './i18n';
-
+import "./i18n";
 
 import "./index.css";
 
@@ -29,42 +28,42 @@ const router = createHashRouter([
             {
                 index: true,
                 element: <Menu />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "chat",
                 element: <Chat />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "sum",
                 element: <Summarize />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "brainstorm",
                 element: <Brainstorm />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "faq",
                 element: <Faq />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "version",
                 element: <Version />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "simply",
                 element: <Simply />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             {
                 path: "bot/:id",
                 element: <Bot />,
-                errorElement: <div>Fehler</div>,
+                errorElement: <div>Fehler</div>
             },
             /** {
                  path: "qa",
@@ -77,7 +76,6 @@ const router = createHashRouter([
         ]
     }
 ]);
-
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>

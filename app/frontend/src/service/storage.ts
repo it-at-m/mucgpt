@@ -1,4 +1,5 @@
 import { MutableRefObject } from "react";
+
 import { chatApi, handleRedirect } from "../api/api";
 import { Bot, ChatRequest, ChatTurn } from "../api/models";
 
@@ -78,7 +79,12 @@ export async function saveToDB(
                     data = {
                         Data: { Answers: [a], Name: name, LastEdited: Date.now() },
                         id: new_idcounter,
-                        Options: { favorite: false, system: system_message, maxTokens: max_output_tokens, temperature: temperature }
+                        Options: {
+                            favorite: false,
+                            system: system_message,
+                            maxTokens: max_output_tokens,
+                            temperature: temperature
+                        }
                     };
                 } else {
                     data = {
@@ -321,8 +327,16 @@ export function checkStructurOfDB(storage: indexedDBStorage) {
 
 // Bot - Storage
 
-export const bot_storage: indexedDBStorage = { db_name: "MUCGPT-BOTS", objectStore_name: "bots", db_version: 3 };
-export const bot_history_storage: indexedDBStorage = { db_name: "MUCGPT-BOTS-HISTORY", objectStore_name: "bots-history", db_version: 2 };
+export const bot_storage: indexedDBStorage = {
+    db_name: "MUCGPT-BOTS",
+    objectStore_name: "bots",
+    db_version: 3
+};
+export const bot_history_storage: indexedDBStorage = {
+    db_name: "MUCGPT-BOTS-HISTORY",
+    objectStore_name: "bots-history",
+    db_version: 2
+};
 
 export async function storeBot(bot: Bot) {
     let openRequest = indexedDB.open(bot_storage.db_name, bot_storage.db_version);

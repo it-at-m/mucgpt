@@ -3,7 +3,7 @@ import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react
 import { Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 import { useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
@@ -12,7 +12,7 @@ interface Props {
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
-    tokens_used: number
+    tokens_used: number;
     token_limit_tracking?: boolean;
     question: string;
     setQuestion: (question: string) => void;
@@ -20,21 +20,18 @@ interface Props {
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
-    const { LLM } = useContext(LLMContext)
+    const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;
         if (token_limit_tracking) {
-            text = `${actual}/ ${LLM.max_input_tokens} ${t('components.questioninput.tokensused')}`;
-            if (actual > LLM.max_input_tokens)
-                text += `${t('components.questioninput.limit')}`
-        }
-        else
-            text = `${actual} ${t('components.questioninput.tokensused')}`;
+            text = `${actual}/ ${LLM.max_input_tokens} ${t("components.questioninput.tokensused")}`;
+            if (actual > LLM.max_input_tokens) text += `${t("components.questioninput.limit")}`;
+        } else text = `${actual} ${t("components.questioninput.tokensused")}`;
         return text;
-    }
-    useEffect(() => setDescription(getDescription()), [tokens_used])
+    };
+    useEffect(() => setDescription(getDescription()), [tokens_used]);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -81,12 +78,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 onKeyDown={onEnterPress}
             />
             <div className={styles.questionInputContainerFooter}>
-                <div>
-                    {description}
-                </div>
-                <div className={styles.errorhint}>
-                    {t('components.questioninput.errorhint')}
-                </div>
+                <div>{description}</div>
+                <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 <div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">
                         <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={sendQuestionDisabled} onClick={sendQuestion} />

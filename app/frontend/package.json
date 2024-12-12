@@ -31,12 +31,12 @@
         "react": "18.3.1",
         "react-dom": "18.3.1",
         "react-i18next": "15.1.0",
-        "react-markdown": "^9.0.1",
+        "react-markdown": "9.0.1",
         "react-router-dom": "6.27.0",
         "react-syntax-highlighter": "15.6.1",
         "rehype-raw": "7.0.0",
-        "remark": "^15.0.1",
-        "remark-gfm": "^4.0.0"
+        "remark": "15.0.1",
+        "remark-gfm": "4.0.0"
     },
     "devDependencies": {
         "@types/dompurify": "3.0.5",

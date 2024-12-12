@@ -16,9 +16,7 @@ export const ChatLayout = ({ commands, examples, answers, input, showExamples, h
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
                 {commands.map((command, index) => (
-                    <div key={index} className={styles.command}>
-                        {command}
-                    </div>
+                    <div key={index}>{command}</div>
                 ))}
             </div>
             <div className={styles.chatRoot}>
@@ -33,7 +31,6 @@ export const ChatLayout = ({ commands, examples, answers, input, showExamples, h
                             {answers}
                         </ul>
                     )}
-
                     <div className={styles.chatInput}>{input}</div>
                 </div>
             </div>

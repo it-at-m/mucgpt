@@ -15,22 +15,22 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.4.4",
-    "fastapi[standard]==0.115.5",
-    "langchain==0.3.7",
-    "langchain-core==0.3.18",
-    "langchain_community==0.3.7",
-    "langchain-openai==0.2.8",
-    "openai==1.54.4",
-    "langsmith==0.1.143",
+    "mistral-common==1.5.1",
+    "fastapi[standard]==0.115.6",
+    "langchain==0.3.11",
+    "langchain-core==0.3.24",
+    "langchain_community==0.3.11",
+    "langchain-openai==0.2.12",
+    "openai==1.57.2",
+    "langsmith==0.2.3",
     "joserfc",
     "tiktoken",
     "pypdf==5.1.0",
-    "uvicorn==0.32.0",
+    "uvicorn==0.32.1",
     "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",
     "gunicorn",
-    "sqlalchemy==2.0.35",
+    "sqlalchemy==2.0.36",
     "gitpython==3.1.43",
 ]
 

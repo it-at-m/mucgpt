@@ -23,6 +23,13 @@
     margin-right: 5 px;
 }
 
+.darkmindmap {
+    --markmap-code-bg: #000 !important;
+    --markmap-code-color: #fff !important;
+    --markmap-circle-open-bg: #222 !important;
+    --markmap-text-color: #ccc !important;
+}
+
 .answerText {
     white-space: pre-wrap;
     font-size: var(--fontSizeBase400);

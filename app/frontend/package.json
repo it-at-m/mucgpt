@@ -21,7 +21,7 @@
     "@fluentui/react-icons": "2.0.263",
     "@react-spring/web": "9.7.5",
     "dompurify": "3.2.2",
-    "i18next": "23.16.4",
+    "i18next": "23.16.8",
     "markmap-common": "0.17.1",
     "markmap-lib": "0.17.2",
     "markmap-toolbar": "0.17.2",

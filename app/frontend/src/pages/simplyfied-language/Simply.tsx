@@ -124,7 +124,7 @@ const Simply = () => {
     );
     const answerList: ReactNode = (
         <>
-            {answers.map((answer, index) => (
+            {answers.map((answer, index): ReactNode => (
                 <ChatTurnComponent
                     key={index}
                     usermsg={

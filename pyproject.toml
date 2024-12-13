@@ -36,7 +36,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.8.0",
+    "ruff==0.8.3",
     "pre-commit==4.0.1"
 ]
 test = [
@@ -45,7 +45,7 @@ test = [
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.6.5",
+    "coverage==7.6.9",
     "pytest-cov"
 ]
 
@@ -53,7 +53,7 @@ test = [
 dev-dependencies = [
     "ipykernel==6.29.5",
     "pre-commit==4.0.1",
-    "ruff==0.8.0",
+    "ruff==0.8.3",
 ]
 
 [[tool.uv.index]]

@@ -17,11 +17,11 @@
   },
   "dependencies": {
     "@fluentui/react": "8.121.13",
-    "@fluentui/react-components": "9.55.1",
-    "@fluentui/react-icons": "2.0.263",
+    "@fluentui/react-icons": "2.0.266",
+    "@fluentui/react-components": "9.56.5",
     "@react-spring/web": "9.7.5",
-    "dompurify": "3.2.2",
-    "i18next": "23.16.4",
+    "dompurify": "3.2.3",
+    "i18next": "23.16.8",
     "markmap-common": "0.17.1",
     "markmap-lib": "0.17.2",
     "markmap-toolbar": "0.17.2",
@@ -30,9 +30,9 @@
     "ndjson-readablestream": "1.2.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-i18next": "15.1.0",
+    "react-i18next": "15.1.4",
     "react-markdown": "9.0.1",
-    "react-router-dom": "6.27.0",
+    "react-router-dom": "6.28.0",
     "react-syntax-highlighter": "15.6.1",
     "rehype-raw": "7.0.0",
     "remark": "15.0.1",
@@ -41,12 +41,12 @@
   "devDependencies": {
     "@types/dompurify": "3.2.0",
     "@types/node": "22.10.1",
-    "@types/react": "18.3.12",
-    "@types/react-dom": "18.3.1",
+    "@types/react": "18.3.14",
+    "@types/react-dom": "18.3.3",
     "@types/react-syntax-highlighter": "15.5.13",
-    "@vitejs/plugin-react": "4.3.3",
-    "prettier": "3.3.3",
+    "@vitejs/plugin-react": "4.3.4",
+    "prettier": "3.4.2",
     "typescript": "5.6.3",
-    "vite": "5.4.10"
+    "vite": "5.4.11"
   }
 }

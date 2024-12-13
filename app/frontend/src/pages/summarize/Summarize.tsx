@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, ReactNode } from "react";
 
 import { sumApi, SumRequest, SumResponse } from "../../api";
 import { AnswerError, AnswerLoading } from "../../components/Answer";
@@ -107,7 +107,7 @@ const Summarize = () => {
             </RadioGroup>
         </Field>
     ];
-    const answerList = (
+    const answerList: ReactNode = (
         <>
             {answers.map((answer, index) => (
                 <ChatTurnComponent

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, ReactNode } from "react";
 
 import { AskResponse, brainstormApi, BrainstormRequest } from "../../api";
 import { AnswerError, AnswerLoading } from "../../components/Answer";
@@ -97,7 +97,7 @@ const Brainstorm = () => {
         />
     );
     const examplesComponent = <ExampleListBrainstorm onExampleClicked={onExampleClicked} />;
-    const answerList = (
+    const answerList: ReactNode = (
         <>
             {answers.map((answer, index) => (
                 <ChatTurnComponent

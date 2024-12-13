@@ -13,7 +13,7 @@ COPY app/frontend/ ./
 RUN npm run build
 
 # Stage 2: python build
-FROM python:3.12-slim@sha256:2b0079146a74e23bf4ae8f6a28e1b484c6292f6fb904cbb51825b4a19812fcd8 AS python-builder
+FROM python:3.13-slim@sha256:f41a75c9cee9391c09e0139f7b49d4b1fbb119944ec740ecce4040626dc07bed AS python-builder
 COPY --from=ghcr.io/astral-sh/uv:latest@sha256:0bc959d4cc56e42cbd9aa9b63374d84481ee96c32803eea30bd7f16fd99d8d56 /uv /bin/uv
 
 WORKDIR /code

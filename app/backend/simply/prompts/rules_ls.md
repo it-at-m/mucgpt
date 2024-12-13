@@ -11,6 +11,8 @@
 - Falsches Deutsch wird vermieden.
 - Achte auf die sprachliche Gleichbehandlung von Mann und Frau. Verwende immer beide Geschlechter oder schreibe geschlechtsneutral.  
 Verständlichkeit schlägt im Zweifel andere Kriterien, wie zum Beispiel geschlechtergerechte Sprache.
+- Benutze generell NUR Informationen welche dir in der Nachricht gestellt werden und fange NICHT an zu halluzinieren!
+- Gebe Links ohne weitere Bearbeitung wieder zurück.
 # Wortebene
 - Einfache Wörter verwenden.  
 Statt Gartengrasmücke: Vogel  

@@ -312,8 +312,8 @@ const BotChat = () => {
     );
     const answerList: ReactNode = (
         <>
-            {answers.map((answer, index): ReactNode => (
-                <ChatTurnComponent
+            {answers.map((answer, index): ReactNode => {
+                return <ChatTurnComponent
                     key={index}
                     usermsg={
                         <UserChatMessage
@@ -344,7 +344,7 @@ const BotChat = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-            ))}
+            })}
             {(isLoading || error) && (
                 <ChatTurnComponent
                     usermsg={

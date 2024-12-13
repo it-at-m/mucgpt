@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext, useCallback } from "react";
+import { useRef, useState, useEffect, useContext, useCallback, ReactNode } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
@@ -285,9 +285,9 @@ const Chat = () => {
         changeSystempromptInDb(systemPrompt, id, storage);
     };
 
-    const answerList = (
+    const answerList: ReactNode = (
         <>
-            {answers.map((answer, index) => (
+            {answers.map((answer, index): ReactNode => (
                 <ChatTurnComponent
                     key={index}
                     usermsg={

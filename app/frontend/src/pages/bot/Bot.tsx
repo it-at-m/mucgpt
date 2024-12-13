@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext, useCallback } from "react";
+import { useRef, useState, useEffect, useContext, useCallback, ReactNode } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
@@ -310,10 +310,10 @@ const BotChat = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const answerList = (
+    const answerList: ReactNode = (
         <>
-            {answers.map((answer, index) => (
-                <ChatTurnComponent
+            {answers.map((answer, index): ReactNode => {
+                return <ChatTurnComponent
                     key={index}
                     usermsg={
                         <UserChatMessage
@@ -344,7 +344,7 @@ const BotChat = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-            ))}
+            })}
             {(isLoading || error) && (
                 <ChatTurnComponent
                     usermsg={

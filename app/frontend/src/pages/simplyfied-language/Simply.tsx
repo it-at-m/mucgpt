@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, ReactNode } from "react";
 
 import { AskResponse, simplyApi, SimplyRequest, SimplyResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
@@ -122,9 +122,9 @@ const Simply = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const answerList = (
+    const answerList: ReactNode = (
         <>
-            {answers.map((answer, index) => (
+            {answers.map((answer, index): ReactNode => (
                 <ChatTurnComponent
                     key={index}
                     usermsg={

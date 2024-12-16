@@ -7,6 +7,8 @@ import { getAllBots, storeBot } from "../../service/storage";
 import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
+import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
+import { CommunityBotsDialog } from "../../components/CommunityBotsDialog/CommuintyBotsDialog";
 
 const arielle_system = `
 
@@ -97,7 +99,8 @@ const Menu = () => {
     const [bots, setBots] = useState<Bot[]>([]);
     const [communityBots, setCommunityBots] = useState<Bot[]>([]);
 
-    const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
+    const [showAddBot, setShowAddBot] = useState<boolean>(false);
+    const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
 
     useEffect(() => {
         const arielle: Bot = {
@@ -122,12 +125,15 @@ const Menu = () => {
     }, []);
 
     const onAddBot = () => {
-        setShowDialogInput(true);
+        setShowAddBot(true);
+    };
+
+    const onSearchBot = () => {
+        setShowSearachBot(true);
     };
 
     return (
         <div className={styles.container}>
-            <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
             <div className={styles.row}>
                 <Tooltip content={t("header.chat")} relationship="description" positioning="below">
                     <Link to="/chat" className={styles.box}>
@@ -154,6 +160,8 @@ const Menu = () => {
                 {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
             </div>
 
+            <CreateBotDialog showDialogInput={showAddBot} setShowDialogInput={setShowAddBot} />
+
             <div className={styles.row}>
                 {bots.map(
                     (bot: Bot, _) =>
@@ -167,7 +175,11 @@ const Menu = () => {
                 )}
                 {bots.length === 1 && <div>{t("menu.no_bots")}</div>}
             </div>
-            <div className={styles.rowheader}>{t("menu.community_bots")}</div>
+            <div className={styles.rowheader}>
+                {t("menu.community_bots")} <SearchBotButton onClick={onSearchBot}></SearchBotButton>
+            </div>
+            <CommunityBotsDialog showDialogInput={showSearachBot} setShowDialogInput={setShowSearachBot} />
+
             <div className={styles.row}>
                 {communityBots.map((bot: Bot, _) => (
                     <Tooltip content={bot.title} relationship="description" positioning="below">

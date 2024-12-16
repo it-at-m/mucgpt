@@ -175,3 +175,17 @@ export async function createBotApi(options: CreateBotRequest): Promise<Response>
         })
     });
 }
+
+export async function getCommunityBots(): Promise<any[]> {
+    return await fetch("/api/community_bots", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual"
+    }).then(async response => {
+        const parsedResponse = await handleResponse(response);
+        return parsedResponse.bots;
+    });
+}

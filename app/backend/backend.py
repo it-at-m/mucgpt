@@ -22,6 +22,7 @@ from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.ChatResult import ChatResult
+from core.types.CommunityBotsResponse import CommunityBotsResponse
 from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
@@ -43,47 +44,54 @@ api_app.add_middleware(CorrelationIdMiddleware)
 
 backend.state.app_config = initApp()
 current_dir = os.path.dirname(os.path.abspath(__file__))
-static_dir = os.path.join(current_dir, 'static')
+static_dir = os.path.join(current_dir, "static")
 backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 
 @api_app.exception_handler(AuthError)
 async def handleAuthError(request, exc: AuthError):
     cfg = get_config()
-    #return error.error, error.status_code
-    return RedirectResponse(url=cfg["backend_config"].unauthorized_user_redirect_url,
-                            status_code=302)
+    # return error.error, error.status_code
+    return RedirectResponse(
+        url=cfg["backend_config"].unauthorized_user_redirect_url, status_code=302
+    )
+
 
 @api_app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     # add trace information
-    if("x-request-id" in response.headers):
+    if "x-request-id" in response.headers:
         correlation_id.set(response.headers["x-request-id"])
-    logger.info("Request %s took %.3f seconds", request.url.path, time.time() - start_time)
+    logger.info(
+        "Request %s took %.3f seconds", request.url.path, time.time() - start_time
+    )
     # remove trace information
     correlation_id.set(None)
     return response
+
 
 @api_app.post("/sum")
 async def sum(
     body: str = Form(...),
     file: UploadFile = None,
-    id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
 ) -> SummarizeResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     sumRequest = SumRequest.model_validate(from_json(body))
-    text =sumRequest.text if file is None else None
-    if(file is not None):
+    text = sumRequest.text if file is None else None
+    if file is not None:
         file_content = io.BytesIO(await file.read())
     else:
         file_content = None
     try:
         impl = cfg["sum_approaches"]
-        splits = impl.split(detaillevel=sumRequest.detaillevel, file=file_content, text=text)
+        splits = impl.split(
+            detaillevel=sumRequest.detaillevel, file=file_content, text=text
+        )
         r = await impl.summarize(
             splits=splits,
             department=department,
@@ -94,12 +102,17 @@ async def sum(
     except Exception as e:
         logger.exception("Exception in /sum")
         logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in summarize: something bad happened")
+        raise HTTPException(
+            status_code=500, detail="Exception in summarize: something bad happened"
+        )
+
 
 @api_app.post("/brainstorm")
-async def brainstorm(request: BrainstormRequest,
-                    id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
-                    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> BrainstormResult:
+async def brainstorm(
+    request: BrainstormRequest,
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> BrainstormResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     try:
@@ -108,7 +121,7 @@ async def brainstorm(request: BrainstormRequest,
             topic=request.topic,
             language=request.language,
             department=department,
-            llm_name=request.model
+            llm_name=request.model,
         )
         return r
     except Exception as e:
@@ -119,12 +132,15 @@ async def brainstorm(request: BrainstormRequest,
             if "Rate limit" in str(e)
             else "Exception in brainstorm: something bad happened"
         )
-        raise HTTPException(status_code=500,detail=msg)
+        raise HTTPException(status_code=500, detail=msg)
+
 
 @api_app.post("/simply")
-async def simply(request: SimplyRequest,
-                    id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token"),
-                    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ChatResult:
+async def simply(
+    request: SimplyRequest,
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     try:
@@ -134,7 +150,7 @@ async def simply(request: SimplyRequest,
             department=department,
             llm_name=request.model,
             temperature=request.temperature,
-            output_type=request.output_type
+            output_type=request.output_type,
         )
         return r
     except Exception as e:
@@ -144,13 +160,15 @@ async def simply(request: SimplyRequest,
             if "Rate limit" in str(e)
             else str(e)
         )
-        raise HTTPException(status_code=500,detail=msg)
+        raise HTTPException(status_code=500, detail=msg)
 
 
 @api_app.post("/chat_stream")
-async def chat_stream(request: ChatRequest,
-                      access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-                      id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> StreamingResponse:
+async def chat_stream(
+    request: ChatRequest,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+) -> StreamingResponse:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
 
@@ -164,19 +182,25 @@ async def chat_stream(request: ChatRequest,
             model=request.model,
             department=department,
         )
-        response = StreamingResponse(format_as_ndjson(r=response_generator, logger=logger))
+        response = StreamingResponse(
+            format_as_ndjson(r=response_generator, logger=logger)
+        )
         response.timeout = None  # type: ignore
         return response
     except Exception as e:
         logger.exception("Exception in /chat stream")
         logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+        raise HTTPException(
+            status_code=500, detail="Exception in chat: something bad happened"
+        )
 
 
 @api_app.post("/chat")
-async def chat(request: ChatRequest,
-               access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-               id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> ChatResult:
+async def chat(
+    request: ChatRequest,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     try:
@@ -193,12 +217,17 @@ async def chat(request: ChatRequest,
     except Exception as e:
         logger.exception("Exception in /chat")
         logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+        raise HTTPException(
+            status_code=500, detail="Exception in chat: something bad happened"
+        )
+
 
 @api_app.post("/create_bot")
-async def create_bot(request: CreateBotRequest,
-               access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-               id_token: str = Header(None, alias= "X-Ms-Token-Lhmsso-Id-Token")) -> CreateBotResult:
+async def create_bot(
+    request: CreateBotRequest,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+) -> CreateBotResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(id_token=id_token)
     try:
@@ -207,7 +236,7 @@ async def create_bot(request: CreateBotRequest,
         logger.info("createBot: reading system prompt generator")
         with open("create_bot/prompt_for_systemprompt.md", encoding="utf-8") as f:
             system_message = f.read()
-        history= [ChatTurn(user="Funktion: " + request.input)]
+        history = [ChatTurn(user="Funktion: " + request.input)]
         logger.info("createBot: creating system prompt")
         system_prompt = impl.run_without_streaming(
             history=history,
@@ -215,13 +244,13 @@ async def create_bot(request: CreateBotRequest,
             system_message=system_message,
             department=department,
             llm_name=request.model,
-            max_output_tokens=request.max_output_tokens
+            max_output_tokens=request.max_output_tokens,
         )
 
         logger.info("createBot: creating description prompt")
         with open("create_bot/prompt_for_description.md", encoding="utf-8") as f:
             system_message = f.read()
-        history= [ChatTurn(user="Systempromt: ```" + system_prompt.content + "```" )]
+        history = [ChatTurn(user="Systempromt: ```" + system_prompt.content + "```")]
         logger.info("createBot: creating description")
         description = impl.run_without_streaming(
             history=history,
@@ -229,40 +258,56 @@ async def create_bot(request: CreateBotRequest,
             system_message=system_message,
             department=department,
             llm_name=request.model,
-            max_output_tokens=request.max_output_tokens
+            max_output_tokens=request.max_output_tokens,
         )
 
         logger.info("createBot: creating title prompt")
         with open("create_bot/prompt_for_title.md", encoding="utf-8") as f:
             system_message = f.read()
         logger.info("createBot: creating title")
-        history= [ChatTurn(user="Systempromt: ```" + system_prompt.content + "```\nBeschreibung: ```" + description.content + "```")]
+        history = [
+            ChatTurn(
+                user="Systempromt: ```"
+                + system_prompt.content
+                + "```\nBeschreibung: ```"
+                + description.content
+                + "```"
+            )
+        ]
         title = impl.run_without_streaming(
             history=history,
             temperature=1.0,
             system_message=system_message,
             department=department,
             llm_name=request.model,
-            max_output_tokens=request.max_output_tokens
+            max_output_tokens=request.max_output_tokens,
         )
         logger.info("createBot: returning finished")
-        return {"title": title.content, "description": description.content, "system_prompt":system_prompt.content}
+        return {
+            "title": title.content,
+            "description": description.content,
+            "system_prompt": system_prompt.content,
+        }
     except Exception as e:
         logger.exception("Exception in /create_bot")
         logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+        raise HTTPException(
+            status_code=500, detail="Exception in chat: something bad happened"
+        )
 
 
 @api_app.get("/config")
-async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> ConfigResponse:
+async def getConfig(
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
-    response = ConfigResponse(frontend=cfg["configuration_features"].frontend,
-                              version=cfg["configuration_features"].version,
-                              commit=cfg["configuration_features"].commit)
-
-    models = cast(
-        List[ModelsConfig], cfg["configuration_features"].backend.models
+    response = ConfigResponse(
+        frontend=cfg["configuration_features"].frontend,
+        version=cfg["configuration_features"].version,
+        commit=cfg["configuration_features"].commit,
     )
+
+    models = cast(List[ModelsConfig], cfg["configuration_features"].backend.models)
     for model in models:
         dto = ModelsDTO(
             llm_name=model.llm_name,
@@ -274,27 +319,61 @@ async def getConfig(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Ac
     return response
 
 
+@api_app.get("/community_bots")
+async def getCmmunityBots(
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> CommunityBotsResponse:
+    bot1: CommunityBotsResponse.Bot = {
+        "title": "Bot1",
+        "description": "Bot 1",
+        "system_message": "Schreibe Hallo 1",
+        "publish": True,
+        "id": 1,
+        "temperature": 1.0,
+        "max_output_tokens": 100,
+    }
+    bot2: CommunityBotsResponse.Bot = {
+        "title": "Bot2",
+        "description": "Bot 2",
+        "system_message": "Schreibe Hallo 2",
+        "publish": True,
+        "id": 1,
+        "temperature": 0.8,
+        "max_output_tokens": 100,
+    }
+    return CommunityBotsResponse(bots=[bot1,bot2])
+
+
 @api_app.get("/statistics")
-async def getStatistics(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+async def getStatistics(
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
-    if(repo is None):
-        raise HTTPException(status_code=501, detail="No database for logging statistics configured")
+    if repo is None:
+        raise HTTPException(
+            status_code=501, detail="No database for logging statistics configured"
+        )
     else:
         try:
-            sum= repo.sumByDepartment()
+            sum = repo.sumByDepartment()
             avg = repo.avgByDepartment()
-            return  {"sum": sum, "avg": avg}
+            return {"sum": sum, "avg": avg}
         except Exception as e:
             logger.exception(str(e))
             raise HTTPException(status_code=500, detail="Get Statistics failed!")
 
 
 @api_app.post("/counttokens")
-async def counttokens(request: CountTokenRequest, access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")) -> CountResult:
+async def counttokens(
+    request: CountTokenRequest,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> CountResult:
     get_config_and_authentificate(access_token)
     try:
-        counted_tokens = num_tokens_from_messages([HumanMessage(request.text)], request.model)
+        counted_tokens = num_tokens_from_messages(
+            [HumanMessage(request.text)], request.model
+        )
         return CountResult(count=counted_tokens)
     except NotImplementedError as e:
         raise HTTPException(status_code=422, detail=str(e))
@@ -303,14 +382,16 @@ async def counttokens(request: CountTokenRequest, access_token: str = Header(Non
         raise HTTPException(status_code=500, detail="Counttokens failed!")
 
 
-
-
 @api_app.get("/statistics/export")
-async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token")):
+async def getStatisticsCSV(
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
-    if(repo is None):
-        raise HTTPException(status_code=501, detail="No database for logging statistics configured")
+    if repo is None:
+        raise HTTPException(
+            status_code=501, detail="No database for logging statistics configured"
+        )
     try:
         export = repo.export()
         response = StreamingResponse(export, media_type="text/csv")

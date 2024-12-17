@@ -21,7 +21,7 @@ dependencies = [
     "langchain-core==0.3.24",
     "langchain_community==0.3.11",
     "langchain-openai==0.2.12",
-    "openai==1.57.2",
+    "openai==1.58.1",
     "langsmith==0.2.3",
     "joserfc",
     "tiktoken",

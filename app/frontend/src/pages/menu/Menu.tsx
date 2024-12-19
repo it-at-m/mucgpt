@@ -3,96 +3,13 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { getAllBots, storeBot } from "../../service/storage";
-import { Bot } from "../../api/models";
+import { bot_storage, getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage";
+import { Bot, CommunityBot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotsDialog/CommuintyBotsDialog";
-
-const arielle_system = `
-
-Erstelle syntaktisch korrekte Mermaid-Diagramme in Markdown für verschiedene Diagrammtypen: Flussdiagramme, Sequenzdiagramme, Klassendiagramme, User Journeys, Kuchendiagramme, Mindmaps und Gantt-Diagramme.
-
-Bitte informiere mich zunächst über den gewünschten Diagrammtyp und die dazugehörigen Daten.
-
-# Schritte
-1. Bestimme den Diagrammtyp und die benötigten Daten.
-2. Erstelle den entsprechenden Mermaid-Code.
-3. Antworte ausschließlich in Markdown-Codeblöcken in der Programmiersprache mermaid.
-4. Beschrifte die Knoten der Diagramme passend und verwende nur die gesammelten Daten.
-
-# Output Format
-Antworten sollten in Markdown-Codeblöcken erfolgen, formatierte Diagrammcodes in der Programmiersprache mermaid.
-
-# Beispiele
-Eine Beispielausgabe aus Schritt 3 für ein Kuchendiagramm sieht so aus :
-               \`\`\`mermaid
-               pie title Pets adopted by volunteers
-                   "Dogs" : 386
-                   "Cats" : 85
-                   "Rats" : 15
-               \`\`\`
-
-               Eine Beispielausgabe aus Schritt 3 für eine Mindmap sieht so aus:
-               \`\`\`mermaid
-               mindmap
-                   root((mindmap))
-                       Origins
-                           Long history
-                           ::icon(fa fa-book)
-                           Popularisation
-                           British popular psychology author Tony Buzan
-                       Research
-                           On effectivness<br/>and features
-                           On Automatic creation
-                           Uses
-                               Creative techniques
-                               Strategic planning
-                               Argument mapping
-                       Tools
-                           Pen and paper
-                           Mermaid
-               \`\`\`
-
-               Eine Beispielausgabe aus Schritt 3 für ein Sequenzdiagramm sieht so aus:
-               \`\`\`mermaid
-               sequenceDiagram
-                   Alice->>+John: Hello John, how are you?
-                   Alice->>+John: John, can you hear me?
-                   John-->>-Alice: Hi Alice, I can hear you!
-                   John-->>-Alice: I feel great!
-                \`\`\`
-
-               Eine Beispielausgabe aus Schritt 3 für eine Userjourney sieht so aus:
-               \`\`\`mermaid
-               journey
-                   title My working day
-                       section Go to work
-                           Make tea: 5: Me
-                           Go upstairs: 3: Me
-                           Do work: 1: Me, Cat
-                   section Go home
-                       Go downstairs: 5: Me
-                       Sit down: 3: Me
-               \`\`\`
-
-               Eine Beispielausgabe aus Schritt 3 für ein Gantt-diagramm sieht so aus:
-
-               \`\`\`mermaid
-               gantt
-                   title A Gantt Diagram
-                   dateFormat YYYY-MM-DD
-                   section Section
-                       A task              :a1, 2014-01-01, 30d
-                       Another task    :after a1, 20d
-                   section Another
-                       Task in Another :2014-01-12, 12d
-                       another task    :24d
-               \`\`\`
-    ** Hinweis **: Bitte stelle sicher, dass die eingereichten Daten alle benötigten Informationen beinhalten, um ein korrektes Diagramm zu erstellen.
-
-`;
+import { arielle_system, sherlock_system } from "./Prompts";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -103,7 +20,7 @@ const Menu = () => {
     const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
 
     useEffect(() => {
-        const arielle: Bot = {
+        const arielle: CommunityBot = {
             title: "🧜‍♀️ Arielle",
             description:
                 "Dieser Assistent erstellt syntaktisch korrekte Mermaid-Diagramme in Markdown für verschiedene Diagrammtypen basierend auf den bereitgestellten Daten und dem gewünschten Diagrammtyp.",
@@ -113,8 +30,20 @@ const Menu = () => {
             temperature: 1.0,
             max_output_tokens: 4096
         };
-        storeBot(arielle);
-        setCommunityBots([arielle]);
+
+        const sherlock: CommunityBot = {
+            title: "🕵️‍♂️ Sherlock Testfall-Designer",
+            description:
+                "🕵️‍♂️ Sherlock unterstützt Sie bei der Erstellung von Testfällen mit MUCGPT gemäß dem LHM-Testhandbuch, den ISTQB-Standards und der ISO-Norm 29119. Bei Fragen wenden Sie sich bitte an itm.km73-crowd@muenchen.de",
+            system_message: sherlock_system,
+            publish: true,
+            id: 1,
+            temperature: 1.0,
+            max_output_tokens: 4096
+        };
+
+        storeCommunityBot(arielle);
+        storeCommunityBot(sherlock);
         getAllBots().then(bots => {
             if (bots) {
                 setBots(bots);
@@ -122,7 +51,24 @@ const Menu = () => {
                 setBots([]);
             }
         });
+        getAllCommunityBots().then(bots => {
+            if (bots) {
+                setCommunityBots(bots);
+            } else {
+                setCommunityBots([]);
+            }
+        });
     }, []);
+
+    useEffect(() => {
+        getAllCommunityBots().then(bots => {
+            if (bots) {
+                setCommunityBots(bots);
+            } else {
+                setCommunityBots([]);
+            }
+        });
+    }, [showSearachBot]);
 
     const onAddBot = () => {
         setShowAddBot(true);
@@ -165,25 +111,23 @@ const Menu = () => {
             <div className={styles.row}>
                 {bots.map(
                     (bot: Bot, _) =>
-                        bot.id != 0 && ( //Arielle
-                            <Tooltip content={bot.title} relationship="description" positioning="below">
-                                <Link to={`/bot/${bot.id}`} className={styles.box}>
-                                    <span>{bot.title}</span>
-                                </Link>
-                            </Tooltip>
-                        )
+                        <Tooltip content={bot.title} relationship="description" positioning="below">
+                            <Link to={`/bot/${bot.id}`} className={styles.box}>
+                                <span>{bot.title}</span>
+                            </Link>
+                        </Tooltip>
                 )}
-                {bots.length === 1 && <div>{t("menu.no_bots")}</div>}
+                {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}>
                 {t("menu.community_bots")} <SearchBotButton onClick={onSearchBot}></SearchBotButton>
             </div>
-            <CommunityBotsDialog showDialogInput={showSearachBot} setShowDialogInput={setShowSearachBot} />
+            <CommunityBotsDialog showSearchDialogInput={showSearachBot} setShowSearchDialogInput={setShowSearachBot} />
 
             <div className={styles.row}>
-                {communityBots.map((bot: Bot, _) => (
+                {communityBots.map((bot: CommunityBot, _) => (
                     <Tooltip content={bot.title} relationship="description" positioning="below">
-                        <Link to={`/bot/${bot.id}`} className={styles.box}>
+                        <Link to={`/community-bot/${bot.id}`} className={styles.box}>
                             {bot.title}
                         </Link>
                     </Tooltip>

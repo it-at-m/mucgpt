@@ -70,3 +70,7 @@
     align-self: center;
     overflow-wrap: break-word;
 }
+
+.close_button {
+    top: 10px;
+}

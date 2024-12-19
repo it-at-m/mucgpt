@@ -17,6 +17,7 @@ import Menu from "./pages/menu/Menu";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import Simply from "./pages/simplyfied-language/Simply";
 import Bot from "./pages/bot/Bot";
+import CommunityBot from "./pages/bot/CommunityBot";
 initializeIcons();
 
 const router = createHashRouter([
@@ -63,6 +64,11 @@ const router = createHashRouter([
             {
                 path: "bot/:id",
                 element: <Bot />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "community-bot/:id",
+                element: <CommunityBot />,
                 errorElement: <div>Fehler</div>
             },
             /** {

@@ -320,7 +320,7 @@ async def getConfig(
 
 
 @api_app.get("/community_bots")
-async def getCmmunityBots(
+async def getCommunityBots(
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
 ) -> CommunityBotsResponse:
     bot1: CommunityBotsResponse.Bot = {
@@ -337,11 +337,103 @@ async def getCmmunityBots(
         "description": "Bot 2",
         "system_message": "Schreibe Hallo 2",
         "publish": True,
-        "id": 1,
+        "id": 2,
         "temperature": 0.8,
         "max_output_tokens": 100,
     }
-    return CommunityBotsResponse(bots=[bot1,bot2])
+    bot3: CommunityBotsResponse.Bot = {
+        "title": "WeatherBot",
+        "description": "Gibt aktuelle Wetterberichte",
+        "system_message": "Gib mir den aktuellen Wetterbericht für eine Stadt",
+        "publish": True,
+        "id": 3,
+        "temperature": 0.7,
+        "max_output_tokens": 150,
+    }
+    bot4: CommunityBotsResponse.Bot = {
+        "title": "JokeBot",
+        "description": "Erzählt lustige Witze",
+        "system_message": "Erzähle einen lustigen Witz",
+        "publish": True,
+        "id": 4,
+        "temperature": 0.9,
+        "max_output_tokens": 100,
+    }
+    bot5: CommunityBotsResponse.Bot = {
+        "title": "RecipeBot",
+        "description": "Gibt Rezepte für verschiedene Gerichte",
+        "system_message": "Gib mir ein Rezept für ein beliebtes Gericht",
+        "publish": True,
+        "id": 5,
+        "temperature": 0.6,
+        "max_output_tokens": 200,
+    }
+    bot6: CommunityBotsResponse.Bot = {
+        "title": "MotivationBot",
+        "description": "Gibt motivierende Zitate",
+        "system_message": "Gib mir ein motivierendes Zitat",
+        "publish": True,
+        "id": 6,
+        "temperature": 0.5,
+        "max_output_tokens": 100,
+    }
+    bot7: CommunityBotsResponse.Bot = {
+        "title": "TriviaBot",
+        "description": "Stellt Trivia-Fragen",
+        "system_message": "Stelle eine Trivia-Frage",
+        "publish": True,
+        "id": 7,
+        "temperature": 0.8,
+        "max_output_tokens": 100,
+    }
+    bot8: CommunityBotsResponse.Bot = {
+        "title": "AdviceBot",
+        "description": "Gibt Ratschläge zu verschiedenen Themen",
+        "system_message": "Gib mir einen Rat zu einem Thema",
+        "publish": True,
+        "id": 8,
+        "temperature": 0.7,
+        "max_output_tokens": 150,
+    }
+    bot9: CommunityBotsResponse.Bot = {
+        "title": "HistoryBot",
+        "description": "Gibt historische Fakten",
+        "system_message": "Gib mir einen historischen Fakt",
+        "publish": True,
+        "id": 9,
+        "temperature": 0.6,
+        "max_output_tokens": 150,
+    }
+    bot10: CommunityBotsResponse.Bot = {
+        "title": "TranslateBot",
+        "description": "Übersetzt Sätze in verschiedene Sprachen",
+        "system_message": "Übersetze diesen Satz ins Spanische",
+        "publish": True,
+        "id": 10,
+        "temperature": 0.9,
+        "max_output_tokens": 100,
+    }
+    bot11: CommunityBotsResponse.Bot = {
+        "title": "FitnessBot",
+        "description": "Gibt Fitness-Tipps und Übungen",
+        "system_message": "Gib mir einen Fitness-Tipp",
+        "publish": True,
+        "id": 11,
+        "temperature": 0.6,
+        "max_output_tokens": 150,
+    }
+    bot12: CommunityBotsResponse.Bot = {
+        "title": "NewsBot",
+        "description": "Gibt aktuelle Nachrichten",
+        "system_message": "Gib mir die aktuellen Nachrichten",
+        "publish": True,
+        "id": 12,
+        "temperature": 0.8,
+        "max_output_tokens": 200,
+    }
+    return CommunityBotsResponse(
+        bots=[bot1, bot2, bot3, bot4, bot5, bot6, bot7, bot8, bot9, bot10, bot11, bot12]
+    )
 
 
 @api_app.get("/statistics")

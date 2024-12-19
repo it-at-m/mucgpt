@@ -1,7 +1,7 @@
 import { MutableRefObject } from "react";
 
 import { chatApi, handleRedirect } from "../api/api";
-import { Bot, ChatRequest, ChatTurn } from "../api/models";
+import { Bot, ChatRequest, ChatTurn, CommunityBot } from "../api/models";
 
 export interface indexedDBStorage {
     db_name: string;
@@ -219,7 +219,7 @@ export function getHighestKeyInDB(storage: indexedDBStorage): Promise<number> {
         openRequest.onsuccess = function () {
             let keys = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).getAllKeys();
             keys.onsuccess = function () {
-                let highestKey = Math.max(...keys.result.map(Number), 0);
+                let highestKey = Math.max(...keys.result.map(Number), 1);
                 resolve(highestKey);
             };
             keys.onerror = () => reject(keys.error);
@@ -338,6 +338,17 @@ export const bot_history_storage: indexedDBStorage = {
     db_version: 2
 };
 
+export const community_bot_storage: indexedDBStorage = {
+    db_name: "MUCGPT-COMMUNITY-BOTS",
+    objectStore_name: "bots",
+    db_version: 1
+};
+export const community_bot_history_storage: indexedDBStorage = {
+    db_name: "MUCGPT-COMMUNITY-BOTS-HISTORY",
+    objectStore_name: "bots-history",
+    db_version: 1
+};
+
 export async function storeBot(bot: Bot) {
     let openRequest = indexedDB.open(bot_storage.db_name, bot_storage.db_version);
     let storeName = bot_storage.objectStore_name;
@@ -349,6 +360,20 @@ export async function storeBot(bot: Bot) {
             db.createObjectStore(storeName, { keyPath: "id" });
         }
         openRequest.result.transaction(bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).put(bot);
+    };
+}
+
+export async function storeCommunityBot(bot: CommunityBot) {
+    let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
+    let storeName = community_bot_storage.objectStore_name;
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = async function () {
+        let db = openRequest.result;
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: "id" });
+        }
+        openRequest.result.transaction(community_bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).put(bot);
     };
 }
 
@@ -364,6 +389,29 @@ export async function getAllBots() {
                 db.createObjectStore(storeName, { keyPath: "id" });
             }
             let getRequest = openRequest.result.transaction(bot_storage.objectStore_name, "readonly").objectStore(bot_storage.objectStore_name).getAll();
+            getRequest.onsuccess = function () {
+                resolve(getRequest.result);
+            };
+            getRequest.onerror = () => reject(getRequest.error);
+        };
+    });
+}
+
+export async function getAllCommunityBots() {
+    return new Promise<Bot[]>((resolve, reject) => {
+        let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
+        let storeName = community_bot_storage.objectStore_name;
+        openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
+        openRequest.onerror = () => onError(openRequest);
+        openRequest.onsuccess = async function () {
+            let db = openRequest.result;
+            if (!db.objectStoreNames.contains(storeName)) {
+                db.createObjectStore(storeName, { keyPath: "id" });
+            }
+            let getRequest = openRequest.result
+                .transaction(community_bot_storage.objectStore_name, "readonly")
+                .objectStore(community_bot_storage.objectStore_name)
+                .getAll();
             getRequest.onsuccess = function () {
                 resolve(getRequest.result);
             };
@@ -392,6 +440,29 @@ export async function getBotWithId(id: number) {
     return await promise;
 }
 
+export async function getCommunityBotWithId(id: number) {
+    let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
+    openRequest.onerror = () => onError(openRequest);
+    let promise = new Promise<Bot>(resolve => {
+        openRequest.onsuccess = function () {
+            let getRequest = openRequest.result
+                .transaction(community_bot_storage.objectStore_name, "readonly")
+                .objectStore(community_bot_storage.objectStore_name)
+                .get(id);
+            getRequest.onsuccess = function () {
+                let res = undefined;
+                if (getRequest.result) {
+                    res = getRequest.result;
+                }
+                resolve(res);
+            };
+            getRequest.onerror = () => onError(getRequest);
+        };
+    });
+    return await promise;
+}
+
 export async function deleteBotWithId(id: number) {
     let openRequest = indexedDB.open(bot_storage.db_name, bot_storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_storage);
@@ -407,8 +478,31 @@ export async function deleteBotWithId(id: number) {
     };
 }
 
+export async function deleteCommunityBotWithId(id: number) {
+    let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        openRequest.result.transaction(community_bot_storage.objectStore_name, "readwrite").objectStore(community_bot_storage.objectStore_name).delete(id);
+    };
+    let openRequest2 = indexedDB.open(community_bot_history_storage.db_name, community_bot_history_storage.db_version);
+    openRequest2.onupgradeneeded = () => onUpgrade(openRequest2, community_bot_history_storage);
+    openRequest2.onerror = () => onError(openRequest2);
+    openRequest2.onsuccess = function () {
+        openRequest2.result
+            .transaction(community_bot_history_storage.objectStore_name, "readwrite")
+            .objectStore(community_bot_history_storage.objectStore_name)
+            .delete(id);
+    };
+}
+
 export async function getBotName(id: number): Promise<[number, string]> {
     const bot = await getBotWithId(id);
+    return bot ? [bot.id, bot.title] : [0, ""];
+}
+
+export async function getCommunityBotName(id: number): Promise<[number, string]> {
+    const bot = await getCommunityBotWithId(id);
     return bot ? [bot.id, bot.title] : [0, ""];
 }
 
@@ -445,6 +539,44 @@ export async function saveBotChatToDB(a: any[], id: number) {
     };
 }
 
+export async function saveCommunityBotChatToDB(a: any[], id: number) {
+    let openRequest = indexedDB.open(community_bot_history_storage.db_name, community_bot_history_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_history_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        let stored = openRequest.result
+            .transaction(community_bot_history_storage.objectStore_name, "readonly")
+            .objectStore(community_bot_history_storage.objectStore_name)
+            .get(id);
+        stored.onsuccess = async () => {
+            let data;
+            let result = stored.result;
+            if (result) {
+                // if the chat allready exist in the DB
+                let storedAnswers = result.Answers;
+                if (storedAnswers.length > 0 && storedAnswers[storedAnswers.length - 1][1].answer == "") {
+                    storedAnswers[storedAnswers.length - 1][1] = a[1];
+                } else {
+                    storedAnswers.push(a);
+                }
+                data = result;
+            } else {
+                // if the chat does not exist in the DB
+                let name: string = "";
+                data = {
+                    Answers: [a],
+                    id: id
+                };
+            }
+            let chat = openRequest.result
+                .transaction(community_bot_history_storage.objectStore_name, "readwrite")
+                .objectStore(community_bot_history_storage.objectStore_name);
+            let request = chat.put(data);
+            request.onerror = () => onError(request);
+        };
+    };
+}
+
 export function popLastBotMessageInDB(id: number) {
     let openRequest = indexedDB.open(bot_history_storage.db_name, bot_history_storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_history_storage);
@@ -464,5 +596,51 @@ export function popLastBotMessageInDB(id: number) {
             deleted.onerror = () => onError(deleted);
         };
         stored.onerror = () => onError(stored);
+    };
+}
+
+export function popLastCommunityBotMessageInDB(id: number) {
+    let openRequest = indexedDB.open(community_bot_history_storage.db_name, community_bot_history_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_history_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        let chat = openRequest.result
+            .transaction(community_bot_history_storage.objectStore_name, "readwrite")
+            .objectStore(community_bot_history_storage.objectStore_name);
+        let stored = chat.get(id);
+        stored.onsuccess = function () {
+            let deleted = chat.delete(id);
+            deleted.onsuccess = function () {
+                if (stored.result) {
+                    stored.result.Answers.pop();
+                    let put = chat.put(stored.result);
+                    put.onerror = () => onError(put);
+                }
+            };
+            deleted.onerror = () => onError(deleted);
+        };
+        stored.onerror = () => onError(stored);
+    };
+}
+
+export function copyHistory(oldID: number, newID: number, oldStorage: indexedDBStorage, newStorage: indexedDBStorage) {
+    let openRequest = indexedDB.open(oldStorage.db_name, oldStorage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, oldStorage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        let getRequest = openRequest.result.transaction(oldStorage.objectStore_name, "readonly").objectStore(oldStorage.objectStore_name).get(oldID);
+        getRequest.onsuccess = function () {
+            if (getRequest.result) {
+                let res = getRequest.result;
+                res.id = newID;
+                let putRequest = indexedDB.open(newStorage.db_name, newStorage.db_version);
+                putRequest.onupgradeneeded = () => onUpgrade(putRequest, newStorage);
+                putRequest.onerror = () => onError(putRequest);
+                putRequest.onsuccess = function () {
+                    putRequest.result.transaction(newStorage.objectStore_name, "readwrite").objectStore(newStorage.objectStore_name).put(res);
+                };
+            }
+            getRequest.onerror = () => onError(getRequest);
+        };
     };
 }

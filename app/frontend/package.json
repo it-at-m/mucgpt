@@ -22,7 +22,7 @@
     "@react-spring/web": "9.7.5",
     "dompurify": "3.2.3",
     "i18next": "23.16.8",
-    "markmap-common": "0.18.4",
+    "markmap-common": "0.18.5",
     "markmap-lib": "0.18.4",
     "markmap-toolbar": "0.18.4",
     "markmap-view": "0.18.4",

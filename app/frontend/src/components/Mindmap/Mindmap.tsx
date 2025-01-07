@@ -97,13 +97,13 @@ export const Mindmap = ({ markdown }: Props) => {
     };
 
     const createMM = () => {
-        let mm = Markmap.create(svgEl.current as SVGSVGElement);
+        let mm = Markmap.create(svgEl.current as SVGSVGElement, { "autoFit": true });
         if (mm) {
             const { root } = transformer.transform(markdown || "");
             parseXML(root);
 
             mm.setData(root);
-            mm.fit();
+            mm.fit(10);
         }
         svgEl.current?.setAttribute("title", "Generierte Mindmap");
     };

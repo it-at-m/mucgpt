@@ -318,7 +318,8 @@ const Chat = () => {
                     }
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) && (
+
+            {(isLoading || error) ?
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -340,8 +341,8 @@ const Chat = () => {
                             {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} /> : null}
                         </>
                     }
-                ></ChatTurnComponent>
-            )}
+                ></ChatTurnComponent> : <div></div>
+            }
             <div ref={chatMessageStreamEnd} />
         </>
     );

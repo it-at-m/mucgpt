@@ -129,7 +129,7 @@ const Summarize = () => {
                     botmsg={<SumAnswer answer={answer[1]} top_n={2}></SumAnswer>}
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) && (
+            {(isLoading || error) ?
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -152,7 +152,7 @@ const Summarize = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-            )}
+                : <div></div>}
             <div ref={chatMessageStreamEnd} />
         </>
     );

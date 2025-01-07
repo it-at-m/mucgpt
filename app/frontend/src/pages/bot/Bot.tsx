@@ -345,7 +345,7 @@ const BotChat = () => {
                     }
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) && (
+            {(isLoading || error) ?
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -368,7 +368,7 @@ const BotChat = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-            )}
+                : <div></div>}
             <div ref={chatMessageStreamEnd} />
         </>
     );

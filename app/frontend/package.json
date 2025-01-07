@@ -24,7 +24,7 @@
     "i18next": "23.16.8",
     "markmap-common": "0.18.4",
     "markmap-lib": "0.18.4",
-    "markmap-toolbar": "0.18.4",
+    "markmap-toolbar": "0.18.5",
     "markmap-view": "0.18.4",
     "mermaid": "11.4.1",
     "ndjson-readablestream": "1.2.0",

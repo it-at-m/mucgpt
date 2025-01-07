@@ -18,7 +18,7 @@ dependencies = [
     "mistral-common==1.5.1",
     "fastapi[standard]==0.115.6",
     "langchain==0.3.11",
-    "langchain-core==0.3.24",
+    "langchain-core==0.3.29",
     "langchain_community==0.3.11",
     "langchain-openai==0.2.12",
     "openai==1.57.2",

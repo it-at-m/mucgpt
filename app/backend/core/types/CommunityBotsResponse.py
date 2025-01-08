@@ -11,6 +11,9 @@ class Bot(BaseModel):
     id: int
     temperature: float
     max_output_tokens: int
+    version: str
+    owner: str
+    tags: List[str]
 
 class CommunityBotsResponse(BaseModel):
     bots: List[Bot]

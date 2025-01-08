@@ -48,6 +48,27 @@
     overflow: hidden; /* Versteckt den überlaufenden Text */
 }
 
+.tags {
+    flex: 1 1 50px;
+    text-align: center;
+    margin-top: 0px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 20px;
+    border-radius: 20px;
+    margin-right: 10px;
+    margin-left: 10px;
+    color: var(--colorNeutralBackround1Hover);
+    text-decoration: none;
+    font-size: var(--fontSizeBase400);
+    background: var(--colorNeutralBackground4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap; /* Verhindert Zeilenumbruch */
+    overflow: hidden; /* Versteckt den überlaufenden Text */
+}
+
 /* Optional: Ein zusätzlicher Stil für den Text */
 .box span {
     display: inline-block; /* Ermöglicht die Verwendung von text-overflow */

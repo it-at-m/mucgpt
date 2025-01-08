@@ -1,7 +1,7 @@
 import { MutableRefObject } from "react";
 
 import { chatApi, handleRedirect } from "../api/api";
-import { Bot, ChatRequest, ChatTurn, CommunityBot } from "../api/models";
+import { Bot, ChatRequest, ChatTurn } from "../api/models";
 
 export interface indexedDBStorage {
     db_name: string;
@@ -363,7 +363,7 @@ export async function storeBot(bot: Bot) {
     };
 }
 
-export async function storeCommunityBot(bot: CommunityBot) {
+export async function storeCommunityBot(bot: Bot) {
     let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
     let storeName = community_bot_storage.objectStore_name;
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);

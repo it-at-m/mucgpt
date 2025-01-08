@@ -7,7 +7,10 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
-    Link,
+    Dropdown,
+    Option,
+    OptionOnSelectData,
+    SelectionEvents,
     Tooltip,
 } from "@fluentui/react-components";
 
@@ -15,7 +18,7 @@ import styles from "./CommunityBotsDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
-import { CommunityBot, getCommunityBots } from "../../api";
+import { Bot, getCommunityBots } from "../../api";
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { storeCommunityBot } from "../../service/storage"
 interface Props {
@@ -24,15 +27,17 @@ interface Props {
 }
 
 export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput }: Props) => {
-    const mockBot: CommunityBot = { title: "", description: "", system_message: "", publish: false, id: 0, temperature: 0.0, max_output_tokens: 0 }
+    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: 0, temperature: 0.0, max_output_tokens: 0, tags: [], version: "", owner: "owner" }
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
     const [bots, setBot] = useState<any[]>([]);
     const [filteredBots, setFilteredBots] = useState<any[]>([]);
-    const [choosenBot, setChoosenBot] = useState<CommunityBot>(mockBot);
+    const [choosenBot, setChoosenBot] = useState<Bot>(mockBot);
     const [showBotDialog, setShowBotDialog] = useState<boolean>(false);
+    const [allTags, setAllTags] = useState<string[]>([]);
+    const [choosenTag, setChoosenTag] = useState<string>("");
 
-    function compareBotsByTitle(a: CommunityBot, b: CommunityBot) {
+    function compareBotsByTitle(a: Bot, b: Bot) {
         const titleA = a.title.toLowerCase();
         const titleB = b.title.toLowerCase();
 
@@ -50,6 +55,12 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             getCommunityBots().then((bots: any[]) => {
                 setBot(bots.sort(compareBotsByTitle))
                 setFilteredBots(bots.sort(compareBotsByTitle))
+                let tags: string[] = []
+                for (let bot of bots) {
+                    let newTags = bot.tags.filter((tag: string) => !tags.includes(tag))
+                    tags = tags.concat(newTags)
+                }
+                setAllTags(tags)
             })
         }
     }), [];
@@ -77,6 +88,14 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         }
     };
 
+    const onPublishSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        let tag = selection.optionValue;
+        if (tag == undefined) {
+            return
+        }
+        setChoosenTag(tag)
+    };
+
     return (
         <div>
             <Dialog modalType="modal" defaultOpen={false} open={showSearchDialogInput} >
@@ -102,9 +121,27 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                     onChange={inputHandler}
                                 />
                             </div>
+                            <br />
+                            Filtern nach Tag:
+                            <Dropdown
+                                id="publish"
+                                aria-label="Veröffentlichen"
+                                defaultValue=""
+                                appearance="underline"
+                                size="small"
+                                positioning="below-start"
+                                onOptionSelect={onPublishSelected}
+                            >
+                                <Option text="" className={styles.option}></Option>
+                                {allTags.sort().map(
+                                    (tag: string, _) =>
+                                        <Option text={tag.toLocaleLowerCase()} className={styles.option}>{tag}</Option>
+                                )}
+                            </Dropdown>
+                            <br />
                             <div className={styles.container}>
-                                {filteredBots.map(
-                                    (bot: CommunityBot, _) =>
+                                {filteredBots.filter(bot => choosenTag == "" ? true : bot.tags.includes(choosenTag)).map(
+                                    (bot: Bot, _) =>
                                         <Tooltip content={bot.title} relationship="description" positioning="below" >
                                             <Button className={styles.box} onClick={() => { setChoosenBot(bot); setShowBotDialog(true); setShowSearchDialogInput(false) }}>
                                                 <span>{bot.title}</span>

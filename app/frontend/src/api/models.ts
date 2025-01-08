@@ -105,14 +105,7 @@ export type Bot = {
     id: number;
     temperature: number;
     max_output_tokens: number;
-};
-
-export type CommunityBot = {
-    title: string;
-    description: string;
-    system_message: string;
-    publish: boolean;
-    id: number;
-    temperature: number;
-    max_output_tokens: number;
+    tags?: string[];
+    version?: string;
+    owner?: string;
 };

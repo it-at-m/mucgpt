@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
 import { bot_storage, getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage";
-import { Bot, CommunityBot } from "../../api/models";
+import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
@@ -20,7 +20,7 @@ const Menu = () => {
     const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
 
     useEffect(() => {
-        const arielle: CommunityBot = {
+        const arielle: Bot = {
             title: "🧜‍♀️ Arielle",
             description:
                 "Dieser Assistent erstellt syntaktisch korrekte Mermaid-Diagramme in Markdown für verschiedene Diagrammtypen basierend auf den bereitgestellten Daten und dem gewünschten Diagrammtyp.",
@@ -31,7 +31,7 @@ const Menu = () => {
             max_output_tokens: 4096
         };
 
-        const sherlock: CommunityBot = {
+        const sherlock: Bot = {
             title: "🕵️‍♂️ Sherlock Testfall-Designer",
             description:
                 "🕵️‍♂️ Sherlock unterstützt Sie bei der Erstellung von Testfällen mit MUCGPT gemäß dem LHM-Testhandbuch, den ISTQB-Standards und der ISO-Norm 29119. Bei Fragen wenden Sie sich bitte an itm.km73-crowd@muenchen.de",
@@ -125,7 +125,7 @@ const Menu = () => {
             <CommunityBotsDialog showSearchDialogInput={showSearachBot} setShowSearchDialogInput={setShowSearachBot} />
 
             <div className={styles.row}>
-                {communityBots.map((bot: CommunityBot, _) => (
+                {communityBots.map((bot: Bot, _) => (
                     <Tooltip content={bot.title} relationship="description" positioning="below">
                         <Link to={`/community-bot/${bot.id}`} className={styles.box}>
                             {bot.title}

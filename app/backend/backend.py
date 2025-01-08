@@ -331,7 +331,11 @@ async def getCommunityBots(
         "id": 1,
         "temperature": 1.0,
         "max_output_tokens": 100,
+        "tags": ["general", "greeting"],
+        "version": "1.0.1",
+        "owner": "Alice",
     }
+
     bot2: CommunityBotsResponse.Bot = {
         "title": "Bot2",
         "description": "Bot 2",
@@ -340,7 +344,11 @@ async def getCommunityBots(
         "id": 2,
         "temperature": 0.8,
         "max_output_tokens": 100,
+        "tags": ["general", "greeting"],
+        "version": "1.1.0",
+        "owner": "Bob",
     }
+
     bot3: CommunityBotsResponse.Bot = {
         "title": "WeatherBot",
         "description": "Gibt aktuelle Wetterberichte",
@@ -349,7 +357,11 @@ async def getCommunityBots(
         "id": 3,
         "temperature": 0.7,
         "max_output_tokens": 150,
+        "tags": ["weather", "information"],
+        "version": "2.0.0",
+        "owner": "Charlie",
     }
+
     bot4: CommunityBotsResponse.Bot = {
         "title": "JokeBot",
         "description": "Erzählt lustige Witze",
@@ -358,7 +370,11 @@ async def getCommunityBots(
         "id": 4,
         "temperature": 0.9,
         "max_output_tokens": 100,
+        "tags": ["humor", "entertainment"],
+        "version": "1.2.3",
+        "owner": "David",
     }
+
     bot5: CommunityBotsResponse.Bot = {
         "title": "RecipeBot",
         "description": "Gibt Rezepte für verschiedene Gerichte",
@@ -367,7 +383,11 @@ async def getCommunityBots(
         "id": 5,
         "temperature": 0.6,
         "max_output_tokens": 200,
+        "tags": ["cooking", "food"],
+        "version": "1.5.0",
+        "owner": "Eva",
     }
+
     bot6: CommunityBotsResponse.Bot = {
         "title": "MotivationBot",
         "description": "Gibt motivierende Zitate",
@@ -376,7 +396,11 @@ async def getCommunityBots(
         "id": 6,
         "temperature": 0.5,
         "max_output_tokens": 100,
+        "tags": ["motivation", "inspiration"],
+        "version": "1.0.2",
+        "owner": "Frank",
     }
+
     bot7: CommunityBotsResponse.Bot = {
         "title": "TriviaBot",
         "description": "Stellt Trivia-Fragen",
@@ -385,7 +409,11 @@ async def getCommunityBots(
         "id": 7,
         "temperature": 0.8,
         "max_output_tokens": 100,
+        "tags": ["trivia", "education"],
+        "version": "2.1.0",
+        "owner": "Grace",
     }
+
     bot8: CommunityBotsResponse.Bot = {
         "title": "AdviceBot",
         "description": "Gibt Ratschläge zu verschiedenen Themen",
@@ -394,7 +422,11 @@ async def getCommunityBots(
         "id": 8,
         "temperature": 0.7,
         "max_output_tokens": 150,
+        "tags": ["advice", "guidance"],
+        "version": "1.3.0",
+        "owner": "Heidi",
     }
+
     bot9: CommunityBotsResponse.Bot = {
         "title": "HistoryBot",
         "description": "Gibt historische Fakten",
@@ -403,7 +435,11 @@ async def getCommunityBots(
         "id": 9,
         "temperature": 0.6,
         "max_output_tokens": 150,
+        "tags": ["history", "education"],
+        "version": "1.4.0",
+        "owner": "Ivan",
     }
+
     bot10: CommunityBotsResponse.Bot = {
         "title": "TranslateBot",
         "description": "Übersetzt Sätze in verschiedene Sprachen",
@@ -412,7 +448,11 @@ async def getCommunityBots(
         "id": 10,
         "temperature": 0.9,
         "max_output_tokens": 100,
+        "tags": ["translation", "language"],
+        "version": "1.6.0",
+        "owner": "John",
     }
+
     bot11: CommunityBotsResponse.Bot = {
         "title": "FitnessBot",
         "description": "Gibt Fitness-Tipps und Übungen",
@@ -421,7 +461,11 @@ async def getCommunityBots(
         "id": 11,
         "temperature": 0.6,
         "max_output_tokens": 150,
+        "tags": ["fitness", "health"],
+        "version": "1.7.0",
+        "owner": "Karen",
     }
+
     bot12: CommunityBotsResponse.Bot = {
         "title": "NewsBot",
         "description": "Gibt aktuelle Nachrichten",
@@ -430,7 +474,12 @@ async def getCommunityBots(
         "id": 12,
         "temperature": 0.8,
         "max_output_tokens": 200,
+        "tags": ["news", "information"],
+        "version": "1.8.0",
+        "owner": "Linda",
     }
+
+
     return CommunityBotsResponse(
         bots=[bot1, bot2, bot3, bot4, bot5, bot6, bot7, bot8, bot9, bot10, bot11, bot12]
     )

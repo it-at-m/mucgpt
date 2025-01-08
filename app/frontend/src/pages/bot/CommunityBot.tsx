@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, CommunityBot } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -57,6 +57,9 @@ const BotChat = () => {
 
     const [title, setTitle] = useState<string>("Titel");
     const [description, setDescription] = useState<string>("Beschreibung");
+    const [tags, setTags] = useState<string[]>([]);
+    const [owner, setOwner] = useState<string>("No Owner");
+    const [version, setVersion] = useState<string>("0.0.0");
     const [publish, setPublish] = useState<boolean>(false);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
@@ -79,6 +82,15 @@ const BotChat = () => {
                     setPublish(bot.publish);
                     setTemperature(bot.temperature);
                     setMaxOutputTokens(bot.max_output_tokens);
+                    if (bot.tags) {
+                        setTags(bot.tags);
+                    }
+                    if (bot.owner) {
+                        setOwner(bot.owner);
+                    }
+                    if (bot.version) {
+                        setVersion(bot.version);
+                    }
                 }
             });
             error && setError(undefined);
@@ -191,14 +203,17 @@ const BotChat = () => {
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
-        let newBot: CommunityBot = {
+        let newBot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: publish,
             id: +bot_id,
             temperature: temp,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            tags: tags,
+            version: version,
+            owner: owner
         };
         storeCommunityBot(newBot);
     };
@@ -208,14 +223,17 @@ const BotChat = () => {
             onMaxTokensChanged(LLM.max_output_tokens);
         } else {
             setMaxOutputTokens(maxTokens);
-            let newBot: CommunityBot = {
+            let newBot: Bot = {
                 title: title,
                 description: description,
                 system_message: systemPrompt,
                 publish: publish,
                 id: +bot_id,
                 temperature: temperature,
-                max_output_tokens: maxTokens
+                max_output_tokens: maxTokens,
+                tags: tags,
+                version: version,
+                owner: owner
             };
             storeCommunityBot(newBot);
         }
@@ -223,56 +241,68 @@ const BotChat = () => {
 
     const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
-        let newBot: CommunityBot = {
+        let newBot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            tags: tags,
+            version: version,
+            owner: owner
         };
         storeCommunityBot(newBot);
     };
 
     const onPublishChanged = (publish: boolean) => {
         setPublish(publish);
-        let newBot: CommunityBot = {
+        let newBot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            tags: tags,
+            version: version,
+            owner: owner
         };
         storeCommunityBot(newBot);
     };
 
     const onTitleChanged = (title: string) => {
         setTitle(title);
-        let newBot: CommunityBot = {
+        let newBot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            tags: tags,
+            version: version,
+            owner: owner
         };
         storeCommunityBot(newBot);
     };
 
     const onDescriptionChanged = (description: string) => {
         setDescription(description);
-        let newBot: CommunityBot = {
+        let newBot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: publish,
             id: +bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            tags: tags,
+            version: version,
+            owner: owner
         };
         storeCommunityBot(newBot);
     };
@@ -291,7 +321,7 @@ const BotChat = () => {
         getHighestKeyInDB(bot_storage).then(highest => {
             let newId = highest + 1;
             copyHistory(+bot_id, newId, community_bot_history_storage, bot_history_storage);
-            let bot = {
+            let bot: Bot = {
                 title: title + " Kopie",
                 description: description,
                 system_message: systemPrompt,

@@ -19,7 +19,7 @@ import styles from "./BotsettingsDrawer.module.css";
 import { useCallback, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { deleteCommunityBotWithId, storeBot } from "../../service/storage";
+import { deleteCommunityBotWithId, storeBot } from "../../service/storage_bot";
 import { ChatSettingsButton } from "../ChatSettingsButton/ChatSettingsButton";
 interface Props {
     temperature: number;
@@ -95,9 +95,6 @@ export const CommunityBotSettingsDrawer = ({
 
     const onClearSystemPrompt = () => {
         setSystemPrompt("");
-    };
-    const onPublishSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        setPublish(selection.optionValue == "Ja" ? true : false);
     };
     return (
         <div>

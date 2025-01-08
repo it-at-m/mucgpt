@@ -21,7 +21,7 @@ import styles from "./BotsettingsDrawer.module.css";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { deleteBotWithId } from "../../service/storage";
+import { deleteBotWithId } from "../../service/storage_bot";
 import { ChatSettingsButton } from "../ChatSettingsButton/ChatSettingsButton";
 interface Props {
     temperature: number;

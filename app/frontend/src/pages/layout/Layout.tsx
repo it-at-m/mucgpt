@@ -13,7 +13,7 @@ import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { getBotName, getCommunityBotName } from "../../service/storage";
+import { getBotName, getCommunityBotName } from "../../service/storage_bot";
 import { LightContext } from "./LightContext";
 
 const formatDate = (date: Date) => {
@@ -66,8 +66,8 @@ export const Layout = () => {
     const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
-    const [botTitle, setBotTitle] = useState<[number, string]>([0, ""]);
-    const [communityBotTitle, setCommunityBotTitle] = useState<[number, string]>([0, ""]);
+    const [botTitle, setBotTitle] = useState<[string, string]>(["0", ""]);
+    const [communityBotTitle, setCommunityBotTitle] = useState<[string, string]>(["0", ""]);
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
@@ -83,10 +83,10 @@ export const Layout = () => {
 
     useEffect(() => {
         if (id) {
-            getBotName(+id).then(title => {
+            getBotName(id).then(title => {
                 setBotTitle(title);
             });
-            getCommunityBotName(+id).then(title => {
+            getCommunityBotName(id).then(title => {
                 setCommunityBotTitle(title);
             });
         }
@@ -109,10 +109,10 @@ export const Layout = () => {
 
     useEffect(() => {
         if (id) {
-            getBotName(+id).then(title => {
+            getBotName(id).then(title => {
                 setBotTitle(title);
             });
-            getCommunityBotName(+id).then(title => {
+            getCommunityBotName(id).then(title => {
                 setCommunityBotTitle(title);
             });
         }

@@ -3,13 +3,14 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { bot_storage, getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage";
+import { bot_storage, getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage_bot";
 import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotsDialog/CommuintyBotsDialog";
 import { arielle_system, sherlock_system } from "./Prompts";
+import { v4 as uuid } from 'uuid';
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -26,7 +27,7 @@ const Menu = () => {
                 "Dieser Assistent erstellt syntaktisch korrekte Mermaid-Diagramme in Markdown für verschiedene Diagrammtypen basierend auf den bereitgestellten Daten und dem gewünschten Diagrammtyp.",
             system_message: arielle_system,
             publish: true,
-            id: 0,
+            id: "0",
             temperature: 1.0,
             max_output_tokens: 4096
         };
@@ -37,7 +38,7 @@ const Menu = () => {
                 "🕵️‍♂️ Sherlock unterstützt Sie bei der Erstellung von Testfällen mit MUCGPT gemäß dem LHM-Testhandbuch, den ISTQB-Standards und der ISO-Norm 29119. Bei Fragen wenden Sie sich bitte an itm.km73-crowd@muenchen.de",
             system_message: sherlock_system,
             publish: true,
-            id: 1,
+            id: "1",
             temperature: 1.0,
             max_output_tokens: 4096
         };

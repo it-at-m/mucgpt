@@ -1,10 +1,11 @@
 import { Button, Tooltip } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { deleteChatFromDB, indexedDBStorage, popLastBotMessageInDB, popLastMessageInDB } from "../../service/storage";
+import { deleteChatFromDB, indexedDBStorage, popLastMessageInDB } from "../../service/storage";
 import { DeleteArrowBackRegular } from "@fluentui/react-icons";
 
 import styles from "./UserChatMessage.module.css";
 import { MutableRefObject } from "react";
+import { popLastBotMessageInDB } from "../../service/storage_bot";
 
 interface Props {
     message: string;
@@ -13,7 +14,7 @@ interface Props {
     setAnswers: (answers: any[]) => void;
     storage: indexedDBStorage;
     lastQuestionRef: MutableRefObject<string>;
-    current_id: number;
+    current_id: any;
     is_bot: boolean;
 }
 

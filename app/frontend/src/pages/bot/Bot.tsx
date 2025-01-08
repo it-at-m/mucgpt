@@ -11,13 +11,13 @@ import { useTranslation } from "react-i18next";
 import {
     bot_history_storage,
     bot_storage,
-    deleteChatFromDB,
+    deleteBotChatFromDB,
+    getBotStartDataFromDB,
     getBotWithId,
-    getStartDataFromDB,
     popLastBotMessageInDB,
     saveBotChatToDB,
     storeBot
-} from "../../service/storage";
+} from "../../service/storage_bot";
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -29,7 +29,7 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 
 const BotChat = () => {
     const { id } = useParams();
-    const bot_id = id || "0";
+    const bot_id: string = id || "0";
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
@@ -64,7 +64,7 @@ const BotChat = () => {
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            getBotWithId(+bot_id).then(bot => {
+            getBotWithId(bot_id).then(bot => {
                 if (bot) {
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
@@ -76,7 +76,7 @@ const BotChat = () => {
             });
             error && setError(undefined);
             setIsLoading(true);
-            getStartDataFromDB(storage_history, +bot_id).then(stored => {
+            getBotStartDataFromDB(storage_history, bot_id).then(stored => {
                 if (stored) {
                     let storedAnswers = stored.Answers;
                     lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
@@ -153,7 +153,7 @@ const BotChat = () => {
                     }
                 }
                 if (bot_id) {
-                    saveBotChatToDB([question, latestResponse, user_tokens], +bot_id);
+                    saveBotChatToDB([question, latestResponse, user_tokens], bot_id);
                 }
             } else {
                 const parsedResponse: AskResponse = await response.json();
@@ -162,7 +162,7 @@ const BotChat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (bot_id) {
-                    saveBotChatToDB([question, parsedResponse, 0], +bot_id);
+                    saveBotChatToDB([question, parsedResponse, 0], bot_id);
                 }
             }
         } catch (e) {
@@ -175,7 +175,7 @@ const BotChat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        deleteChatFromDB(storage_history, +bot_id, setAnswers, true, lastQuestionRef);
+        deleteBotChatFromDB(storage_history, bot_id, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -189,7 +189,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temp,
             max_output_tokens: max_output_tokens
         };
@@ -206,7 +206,7 @@ const BotChat = () => {
                 description: description,
                 system_message: systemPrompt,
                 publish: publish,
-                id: +bot_id,
+                id: bot_id,
                 temperature: temperature,
                 max_output_tokens: maxTokens
             };
@@ -221,7 +221,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
@@ -235,7 +235,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
@@ -249,7 +249,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
@@ -263,7 +263,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
@@ -274,7 +274,7 @@ const BotChat = () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            popLastBotMessageInDB(+bot_id);
+            popLastBotMessageInDB(bot_id);
             if (last) {
                 makeApiRequest(last[0], systemPrompt);
             }
@@ -323,7 +323,7 @@ const BotChat = () => {
                             answers={answers}
                             storage={storage_history}
                             lastQuestionRef={lastQuestionRef}
-                            current_id={+bot_id}
+                            current_id={bot_id}
                             is_bot={true}
                         />
                     }
@@ -355,7 +355,7 @@ const BotChat = () => {
                             answers={answers}
                             storage={storage}
                             lastQuestionRef={lastQuestionRef}
-                            current_id={+bot_id}
+                            current_id={bot_id}
                             is_bot={true}
                         />
                     }

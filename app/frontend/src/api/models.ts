@@ -102,7 +102,7 @@ export type Bot = {
     description: string;
     system_message: string;
     publish: boolean;
-    id: number;
+    id: string;
     temperature: number;
     max_output_tokens: number;
     tags?: string[];

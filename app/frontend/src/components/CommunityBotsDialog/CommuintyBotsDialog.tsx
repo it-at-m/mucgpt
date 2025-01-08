@@ -20,14 +20,14 @@ import { TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
 import { Bot, getCommunityBots } from "../../api";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { storeCommunityBot } from "../../service/storage"
+import { storeCommunityBot } from "../../service/storage_bot"
 interface Props {
     showSearchDialogInput: boolean;
     setShowSearchDialogInput: (showDialogInput: boolean) => void;
 }
 
 export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput }: Props) => {
-    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: 0, temperature: 0.0, max_output_tokens: 0, tags: [], version: "", owner: "owner" }
+    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: "0", temperature: 0.0, max_output_tokens: 0, tags: [], version: "", owner: "owner" }
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
     const [bots, setBot] = useState<any[]>([]);

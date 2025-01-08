@@ -17,7 +17,7 @@ interface Props {
     setAnswers: (answers: any[]) => void;
     storage: indexedDBStorage;
     lastQuestionRef: MutableRefObject<string>;
-    current_id: number;
+    current_id: any;
     is_bot: boolean;
 }
 

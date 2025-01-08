@@ -14,10 +14,11 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./CreateBotDialog.module.css";
+import { v4 as uuid } from 'uuid';
 import { useTranslation } from "react-i18next";
 import { useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { bot_storage, getHighestKeyInDB, storeBot } from "../../service/storage";
+import { storeBot } from "../../service/storage_bot";
 import { Bot, createBotApi } from "../../api";
 
 const example1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
@@ -72,7 +73,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     };
 
     const onPromptButtonClicked = async () => {
-        const id = (await getHighestKeyInDB(bot_storage)) + 1;
+        let id = uuid();
         const bot: Bot = {
             title: title,
             description: description,

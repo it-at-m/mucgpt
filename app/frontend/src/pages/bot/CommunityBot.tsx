@@ -8,21 +8,20 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
+import { v4 as uuid } from 'uuid';
 import {
     bot_history_storage,
-    bot_storage,
     community_bot_history_storage,
     community_bot_storage,
     copyHistory,
-    deleteChatFromDB,
+    deleteBotChatFromDB,
+    getBotStartDataFromDB,
     getCommunityBotWithId,
-    getHighestKeyInDB,
-    getStartDataFromDB,
     popLastCommunityBotMessageInDB,
     saveCommunityBotChatToDB,
     storeBot,
     storeCommunityBot
-} from "../../service/storage";
+} from "../../service/storage_bot";
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -33,6 +32,7 @@ import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnCo
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CommunityBotSettingsDrawer } from "../../components/BotsettingsDrawer/CommunityBotSettingsDrawer";
 import { to } from "@react-spring/web";
+import { deleteChatFromDB } from "../../service/storage";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -74,7 +74,7 @@ const BotChat = () => {
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            getCommunityBotWithId(+bot_id).then(bot => {
+            getCommunityBotWithId(bot_id).then(bot => {
                 if (bot) {
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
@@ -95,7 +95,7 @@ const BotChat = () => {
             });
             error && setError(undefined);
             setIsLoading(true);
-            getStartDataFromDB(storage_history, +bot_id).then(stored => {
+            getBotStartDataFromDB(storage_history, bot_id).then(stored => {
                 if (stored) {
                     let storedAnswers = stored.Answers;
                     lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
@@ -172,7 +172,7 @@ const BotChat = () => {
                     }
                 }
                 if (bot_id) {
-                    saveCommunityBotChatToDB([question, latestResponse, user_tokens], +bot_id);
+                    saveCommunityBotChatToDB([question, latestResponse, user_tokens], bot_id);
                 }
             } else {
                 const parsedResponse: AskResponse = await response.json();
@@ -181,7 +181,7 @@ const BotChat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (bot_id) {
-                    saveCommunityBotChatToDB([question, parsedResponse, 0], +bot_id);
+                    saveCommunityBotChatToDB([question, parsedResponse, 0], bot_id);
                 }
             }
         } catch (e) {
@@ -194,7 +194,7 @@ const BotChat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        deleteChatFromDB(storage_history, +bot_id, setAnswers, true, lastQuestionRef);
+        deleteBotChatFromDB(storage_history, bot_id, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -208,7 +208,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temp,
             max_output_tokens: max_output_tokens,
             tags: tags,
@@ -228,7 +228,7 @@ const BotChat = () => {
                 description: description,
                 system_message: systemPrompt,
                 publish: publish,
-                id: +bot_id,
+                id: bot_id,
                 temperature: temperature,
                 max_output_tokens: maxTokens,
                 tags: tags,
@@ -246,7 +246,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
             tags: tags,
@@ -263,7 +263,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
             tags: tags,
@@ -280,7 +280,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
             tags: tags,
@@ -297,7 +297,7 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens,
             tags: tags,
@@ -311,29 +311,28 @@ const BotChat = () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            popLastCommunityBotMessageInDB(+bot_id);
+            popLastCommunityBotMessageInDB(bot_id);
             if (last) {
                 makeApiRequest(last[0], systemPrompt);
             }
         }
     };
     let toOwnBots = () => {
-        getHighestKeyInDB(bot_storage).then(highest => {
-            let newId = highest + 1;
-            copyHistory(+bot_id, newId, community_bot_history_storage, bot_history_storage);
-            let bot: Bot = {
-                title: title + " Kopie",
-                description: description,
-                system_message: systemPrompt,
-                publish: publish,
-                id: newId,
-                temperature: temperature,
-                max_output_tokens: max_output_tokens
-            }
-            storeBot(bot);
-            window.location.href = "/"
-        })
+        let newId = uuid();
+        copyHistory(bot_id, newId, community_bot_history_storage, bot_history_storage);
+        let bot: Bot = {
+            title: title + " Kopie",
+            description: description,
+            system_message: systemPrompt,
+            publish: publish,
+            id: newId,
+            temperature: temperature,
+            max_output_tokens: max_output_tokens
+        }
+        storeBot(bot);
+        window.location.href = "/"
     }
+
 
     const commands = [
         <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
@@ -379,7 +378,7 @@ const BotChat = () => {
                             answers={answers}
                             storage={storage_history}
                             lastQuestionRef={lastQuestionRef}
-                            current_id={+bot_id}
+                            current_id={bot_id}
                             is_bot={true}
                         />
                     }
@@ -411,7 +410,7 @@ const BotChat = () => {
                             answers={answers}
                             storage={storage}
                             lastQuestionRef={lastQuestionRef}
-                            current_id={+bot_id}
+                            current_id={bot_id}
                             is_bot={true}
                         />
                     }

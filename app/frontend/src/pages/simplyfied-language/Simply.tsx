@@ -144,7 +144,7 @@ const Simply = () => {
                     botmsg={<Answer key={index} answer={answer[1]} setQuestion={question => setQuestion(question)} />}
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -167,7 +167,9 @@ const Simply = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
@@ -179,6 +181,7 @@ const Simply = () => {
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={t("chat.header")}
+            header_as_markdown={false}
             messages_description={t("common.messages")}
         ></ChatLayout>
     );

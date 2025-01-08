@@ -129,7 +129,7 @@ const Summarize = () => {
                     botmsg={<SumAnswer answer={answer[1]} top_n={2}></SumAnswer>}
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -152,7 +152,9 @@ const Summarize = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
@@ -176,6 +178,7 @@ const Summarize = () => {
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={t("sum.header")}
+            header_as_markdown={false}
             messages_description={t("common.messages")}
         ></ChatLayout>
     );

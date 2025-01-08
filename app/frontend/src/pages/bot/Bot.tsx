@@ -345,7 +345,7 @@ const BotChat = () => {
                     }
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -368,7 +368,9 @@ const BotChat = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
@@ -380,6 +382,7 @@ const BotChat = () => {
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={description}
+            header_as_markdown={true}
             messages_description={t("common.messages")}
         ></ChatLayout>
     );

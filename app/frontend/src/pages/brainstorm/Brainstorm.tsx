@@ -119,7 +119,7 @@ const Brainstorm = () => {
                     botmsg={<Mindmap markdown={answer[1].answer}></Mindmap>}
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -142,7 +142,9 @@ const Brainstorm = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
@@ -154,6 +156,7 @@ const Brainstorm = () => {
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={t("brainstorm.header")}
+            header_as_markdown={false}
             messages_description={t("common.messages")}
         ></ChatLayout>
     );

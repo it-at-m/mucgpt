@@ -50,6 +50,12 @@
     text-align: center;
 }
 
+.chatEmptyStateSubtitleMarkdown {
+    font-weight: 600;
+    margin: 1em;
+    text-align: start;
+}
+
 @media (max-height: 780px) {
     .chatEmptyState {
         padding-top: 0;

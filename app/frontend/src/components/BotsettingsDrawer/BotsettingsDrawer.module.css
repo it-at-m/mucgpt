@@ -12,17 +12,6 @@
     padding-left: var(--spacingVerticalM);
 }
 
-.drawer {
-    width: 440px;
-}
-
-.drawerContent {
-    overflow-y: auto;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    max-height: calc(100vh - 170px);
-}
-
 .iconRightMargin {
     margin-right: 5px;
 }

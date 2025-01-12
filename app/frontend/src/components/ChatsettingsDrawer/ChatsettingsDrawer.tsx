@@ -26,9 +26,10 @@ interface Props {
     setSystemPrompt: (systemPrompt: string, id: number) => void;
     current_id: number;
     actions: ReactNode;
+    content: ReactNode;
 }
 
-export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt, current_id, actions }: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt, current_id, actions, content, }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
 
@@ -54,30 +55,32 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
     const onClearSystemPrompt = () => {
         setSystemPrompt("", current_id);
     };
-    const action_component = <>{actions}</>
-    const content = <>           <div className={styles.header} role="heading" aria-level={3}>
-        <div className={styles.systemPromptHeadingContainer}>
-            <InfoLabel
-                info={
-                    <div>
-                        <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
-                        {t("components.chattsettingsdrawer.system_prompt_info")}
-                    </div>
-                }
-            >
-                {t("components.chattsettingsdrawer.system_prompt")}
-            </InfoLabel>
-            <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
-                <Button
-                    aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
-                    icon={<Dismiss24Regular />}
-                    appearance="subtle"
-                    onClick={onClearSystemPrompt}
-                    size="small"
-                ></Button>
-            </Tooltip>
+    const sidebar_action = <>{actions}</>
+    const sidebar_content = <>
+        <>{content}</>
+        <div className={styles.header} role="heading" aria-level={3}>
+            <div className={styles.systemPromptHeadingContainer}>
+                <InfoLabel
+                    info={
+                        <div>
+                            <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
+                            {t("components.chattsettingsdrawer.system_prompt_info")}
+                        </div>
+                    }
+                >
+                    {t("components.chattsettingsdrawer.system_prompt")}
+                </InfoLabel>
+                <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
+                    <Button
+                        aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
+                        icon={<Dismiss24Regular />}
+                        appearance="subtle"
+                        onClick={onClearSystemPrompt}
+                        size="small"
+                    ></Button>
+                </Tooltip>
+            </div>
         </div>
-    </div>
 
         <div className={styles.bodyContainer}>
             <div>
@@ -159,7 +162,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
         </div></>
     return (
         <div>
-            <Sidebar actions={action_component} content={content} >
+            <Sidebar actions={sidebar_action} content={sidebar_content} >
             </Sidebar>
         </div>
     );

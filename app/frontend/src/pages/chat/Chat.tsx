@@ -1,6 +1,10 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
+import {
+    Button,
+    Tooltip
+} from "@fluentui/react-components";
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -30,6 +34,7 @@ import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { History24Regular } from "@fluentui/react-icons";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
@@ -360,8 +365,10 @@ const Chat = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const actions = <>
+    const sidebar_actions = <>
         <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+    </>
+    const sidebar_content = <>
         <History
             storage={storage}
             setAnswers={setAnswers}
@@ -372,7 +379,8 @@ const Chat = () => {
             onMaxTokensChanged={onMaxTokensChanged}
             onSystemPromptChanged={onSystemPromptChanged}
             setError={setError}
-        ></History></>
+        ></History>
+    </>
     const sidebar =
         <ChatsettingsDrawer
             temperature={temperature}
@@ -382,7 +390,8 @@ const Chat = () => {
             systemPrompt={systemPrompt}
             setSystemPrompt={onSystemPromptChanged}
             current_id={currentId}
-            actions={actions}
+            actions={sidebar_actions}
+            content={sidebar_content}
         ></ChatsettingsDrawer>
     return (
         <ChatLayout

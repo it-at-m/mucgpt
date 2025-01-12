@@ -42,7 +42,6 @@ export const History = ({
     setError
 }: Props) => {
     const { t } = useTranslation();
-    const [isOpen, setIsOpen] = useState(false);
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
 
     const loadChat = (stored: any) => {
@@ -55,7 +54,6 @@ export const History = ({
         }
         setAnswers(storedAnswers);
         let id = stored.id;
-        setIsOpen(false);
         setCurrentId(id);
         onTemperatureChanged(stored.Options.temperature, id);
         onMaxTokensChanged(stored.Options.maxTokens, id);
@@ -176,41 +174,16 @@ export const History = ({
     };
     const open = () => {
         getAllChats();
-        setIsOpen(true);
+        console.log("open historie")
     };
+    open();
 
     return (
         <div>
-            <Drawer type={"overlay"} separator open={isOpen} position="end" onOpenChange={(_, { open }) => setIsOpen(open)}>
-                <DrawerHeader>
-                    <DrawerHeaderTitle
-                        action={
-                            <Button
-                                appearance="secondary"
-                                aria-label={t("components.history.close")}
-                                icon={<Dismiss24Regular />}
-                                onClick={() => setIsOpen(false)}
-                            ></Button>
-                        }
-                    >
-                        <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                            <p>{t("components.history.history")}:</p>
-                        </Tooltip>
-                    </DrawerHeaderTitle>
-                </DrawerHeader>
-
-                <DrawerBody>{chatButtons}</DrawerBody>
-            </Drawer>
-            <div className={styles.button}>
-                <Tooltip content={t("components.history.button")} relationship="description" positioning="below">
-                    <Button
-                        aria-label={t("components.history.button")}
-                        icon={<History24Regular />}
-                        appearance="secondary"
-                        onClick={() => open()}
-                    >{t("components.history.button")}</Button>
-                </Tooltip>
-            </div>
+            <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
+                <p>{t("components.history.history")}:</p>
+            </Tooltip>
+            <DrawerBody>{chatButtons}</DrawerBody>
         </div>
     );
 };

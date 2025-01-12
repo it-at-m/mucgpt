@@ -7,7 +7,7 @@
     justify-content: start;
 }
 .drawer {
-    width: 440px;
+    width: var(--sidebarWidth);
 }
 
 .drawerContent {

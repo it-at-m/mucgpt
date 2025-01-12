@@ -403,6 +403,7 @@ const Chat = () => {
             header={t("chat.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
+            size="large"
         ></ChatLayout>
     );
 };

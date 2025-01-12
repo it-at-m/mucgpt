@@ -102,7 +102,7 @@ const Simply = () => {
     const sidebar_actions = <>
         <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
     </>;
-    const sidebar_content = <> <RadioGroup layout="horizontal" onChange={onOutputTypeChanged} value={outputType}>
+    const sidebar_content = <> <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
         <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
             <Radio value="plain" label={t("simply.plain")} />
         </Tooltip>
@@ -186,6 +186,7 @@ const Simply = () => {
             header={t("chat.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
+            size="small"
         ></ChatLayout>
     );
 };

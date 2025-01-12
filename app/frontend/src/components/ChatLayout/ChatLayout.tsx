@@ -13,11 +13,13 @@ interface Props {
     header: string;
     header_as_markdown: boolean;
     messages_description: string;
+    size: "small" | "medium" | "large";
 }
 
-export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExamples, header, header_as_markdown, messages_description }: Props) => {
+export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExamples, header, header_as_markdown, messages_description, size }: Props) => {
+    const sidebarWidth = { "small": "200px", "medium": "300px", "large": "460px" }[size];
     return (
-        <div className={styles.container}>
+        <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
             <aside className={styles.sidebar}>
                 {sidebar}
             </aside>

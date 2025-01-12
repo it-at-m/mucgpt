@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
 interface Props {
-    commands: ReactNode[];
+    sidebar: ReactNode;
     examples: ReactNode;
     answers: ReactNode;
     input: ReactNode;
@@ -15,11 +15,11 @@ interface Props {
     messages_description: string;
 }
 
-export const ChatLayout = ({ commands, examples, answers, input, showExamples, header, header_as_markdown, messages_description }: Props) => {
+export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExamples, header, header_as_markdown, messages_description }: Props) => {
     return (
         <div className={styles.container}>
             <aside className={styles.sidebar}>
-                {commands}
+                {sidebar}
             </aside>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>

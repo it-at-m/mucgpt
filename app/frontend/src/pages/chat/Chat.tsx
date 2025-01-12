@@ -360,19 +360,8 @@ const Chat = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const commands = [
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-
-        <ChatsettingsDrawer
-            temperature={temperature}
-            setTemperature={onTemperatureChanged}
-            max_output_tokens={max_output_tokens}
-            setMaxTokens={onMaxTokensChanged}
-            systemPrompt={systemPrompt}
-            setSystemPrompt={onSystemPromptChanged}
-            current_id={currentId}
-        ></ChatsettingsDrawer>,
-
+    const actions = <>
+        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
         <History
             storage={storage}
             setAnswers={setAnswers}
@@ -383,11 +372,21 @@ const Chat = () => {
             onMaxTokensChanged={onMaxTokensChanged}
             onSystemPromptChanged={onSystemPromptChanged}
             setError={setError}
-        ></History>
-    ];
+        ></History></>
+    const sidebar =
+        <ChatsettingsDrawer
+            temperature={temperature}
+            setTemperature={onTemperatureChanged}
+            max_output_tokens={max_output_tokens}
+            setMaxTokens={onMaxTokensChanged}
+            systemPrompt={systemPrompt}
+            setSystemPrompt={onSystemPromptChanged}
+            current_id={currentId}
+            actions={actions}
+        ></ChatsettingsDrawer>
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}

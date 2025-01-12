@@ -25,6 +25,7 @@ import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/Botsetting
 import { MessageError } from "../chat/MessageError";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ClearChatButton } from "../../components/ClearChatButton";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -280,7 +281,11 @@ const BotChat = () => {
         }
     };
 
-    const commands = [
+    const actions = <>
+        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading}
+        /></>
+
+    const sidebar = [
         <BotsettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -294,8 +299,7 @@ const BotChat = () => {
             setDescription={onDescriptionChanged}
             bot_id={bot_id}
             setPublish={onPublishChanged}
-            clearChatDisabled={!lastQuestionRef.current || isLoading}
-            onClearChat={clearChat}
+            actions={actions}
         ></BotsettingsDrawer>
     ];
     const examplesComponent = <></>;
@@ -376,7 +380,7 @@ const BotChat = () => {
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}

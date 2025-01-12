@@ -13,6 +13,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
@@ -98,19 +99,21 @@ const Simply = () => {
         localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);
     };
 
-    const commands = [
+    const sidebar_actions = <>
         <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-        <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
-            <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
-                <Radio value="plain" label={t("simply.plain")} />
-            </Tooltip>
-            <Tooltip content={t("simply.easy_description")} relationship="description" positioning="below">
-                <Radio value="easy" label={t("simply.easy")} />
-            </Tooltip>
-        </RadioGroup>
-    ];
+    </>;
+    const sidebar_content = <> <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
+        <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
+            <Radio value="plain" label={t("simply.plain")} />
+        </Tooltip>
+        <Tooltip content={t("simply.easy_description")} relationship="description" positioning="below">
+            <Radio value="easy" label={t("simply.easy")} />
+        </Tooltip>
+    </RadioGroup>
+    </>
+    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content} ></Sidebar>
+
     const examplesComponent = <ExampleListSimply onExampleClicked={onExampleClicked} />;
-    const header = t("simply.header");
     const inputComponent = (
         <QuestionInput
             clearOnSend
@@ -175,7 +178,7 @@ const Simply = () => {
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}

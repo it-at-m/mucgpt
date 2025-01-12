@@ -1,0 +1,18 @@
+.header {
+    margin-bottom: 5px;
+    font-size: var(--fontSizeBase400);
+    margin-top: var(--spacingVerticalS);
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+.drawer {
+    width: 440px;
+}
+
+.drawerContent {
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    max-height: calc(100vh - 170px);
+}

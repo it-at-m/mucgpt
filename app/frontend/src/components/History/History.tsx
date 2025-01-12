@@ -186,11 +186,11 @@ export const History = ({
                     <DrawerHeaderTitle
                         action={
                             <Button
-                                appearance="subtle"
+                                appearance="secondary"
                                 aria-label={t("components.history.close")}
                                 icon={<Dismiss24Regular />}
                                 onClick={() => setIsOpen(false)}
-                            />
+                            ></Button>
                         }
                     >
                         <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
@@ -208,8 +208,7 @@ export const History = ({
                         icon={<History24Regular />}
                         appearance="secondary"
                         onClick={() => open()}
-                        size="large"
-                    ></Button>
+                    >{t("components.history.button")}</Button>
                 </Tooltip>
             </div>
         </div>

@@ -13,6 +13,7 @@ import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFro
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 
 const Brainstorm = () => {
     const { language } = useContext(LanguageContext);
@@ -84,7 +85,9 @@ const Brainstorm = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const commands = [<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />];
+    const sidebar_content = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
+    const sidebar_actions = <></>
+    const sidebar = <Sidebar actions={sidebar_content} content={sidebar_actions} ></Sidebar>
     const inputComponent = (
         <QuestionInput
             clearOnSend
@@ -150,7 +153,7 @@ const Brainstorm = () => {
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}

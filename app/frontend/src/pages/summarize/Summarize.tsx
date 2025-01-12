@@ -14,6 +14,7 @@ import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFro
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
 
@@ -97,16 +98,19 @@ const Summarize = () => {
     };
 
     const examplesComponent = <ExampleListSum onExampleClicked={onExampleClicked} />;
-    const commands = [
+    const sidebar_actions = <>
         <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-        <Field label={t("sum.levelofdetail")}>
-            <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
-                <Radio value="short" label={t("sum.short")} />
-                <Radio value="medium" label={t("sum.medium")} />
-                <Radio value="long" label={t("sum.long")} />
-            </RadioGroup>
-        </Field>
-    ];
+    </>;
+    const sidebar_content = <><Field label={t("sum.levelofdetail")}>
+        <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
+            <Radio value="short" label={t("sum.short")} />
+            <Radio value="medium" label={t("sum.medium")} />
+            <Radio value="long" label={t("sum.long")} />
+        </RadioGroup>
+    </Field>
+    </>
+    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content} >
+    </Sidebar>
     const answerList = (
         <>
             {answers.map((answer, index) => (
@@ -172,7 +176,7 @@ const Summarize = () => {
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}

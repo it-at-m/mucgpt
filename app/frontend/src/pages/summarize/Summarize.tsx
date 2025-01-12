@@ -102,7 +102,7 @@ const Summarize = () => {
         <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
     </>;
     const sidebar_content = <><Field label={t("sum.levelofdetail")}>
-        <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
+        <RadioGroup layout="horizontal" onChange={onDetaillevelChanged} value={detaillevel_pref}>
             <Radio value="short" label={t("sum.short")} />
             <Radio value="medium" label={t("sum.medium")} />
             <Radio value="long" label={t("sum.long")} />

@@ -18,11 +18,9 @@ interface Props {
 export const ChatLayout = ({ commands, examples, answers, input, showExamples, header, header_as_markdown, messages_description }: Props) => {
     return (
         <div className={styles.container}>
-            <div className={styles.commandsContainer}>
-                {commands.map((command, index) => (
-                    <div key={index}>{command}</div>
-                ))}
-            </div>
+            <aside className={styles.sidebar}>
+                {commands}
+            </aside>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {showExamples ? (

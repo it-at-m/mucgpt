@@ -10,11 +10,25 @@
     margin-bottom: 5px;
     font-size: var(--fontSizeBase400);
     margin-top: var(--spacingVerticalS);
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
 }
 
 .bodyContainer {
     padding-bottom: var(--spacingVerticalS);
     padding-left: var(--spacingVerticalM);
+}
+
+.drawer {
+    width: 440px;
+}
+
+.drawerContent {
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    max-height: calc(100vh - 170px);
 }
 
 .iconRightMargin {
@@ -23,6 +37,13 @@
 
 .temperatureLabel {
     margin-right: 10px;
+}
+.markdownDescription {
+    max-width: 97%;
+}
+
+.markdownDescription code {
+    white-space: wrap;
 }
 
 .faq {
@@ -48,4 +69,8 @@
 .systempromptTextArea {
     line-height: var(--lineHeightBase400);
     font-size: var(--fontSizeBase400);
+}
+
+.iconRightMargin {
+    margin-right: 5 px;
 }

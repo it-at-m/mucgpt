@@ -5,7 +5,6 @@ import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, Chu
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
-import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import {
@@ -282,7 +281,6 @@ const BotChat = () => {
     };
 
     const commands = [
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
         <BotsettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -296,6 +294,8 @@ const BotChat = () => {
             setDescription={onDescriptionChanged}
             bot_id={bot_id}
             setPublish={onPublishChanged}
+            clearChatDisabled={!lastQuestionRef.current || isLoading}
+            onClearChat={clearChat}
         ></BotsettingsDrawer>
     ];
     const examplesComponent = <></>;
@@ -381,8 +381,8 @@ const BotChat = () => {
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
-            header={description}
-            header_as_markdown={true}
+            header=""
+            header_as_markdown={false}
             messages_description={t("common.messages")}
         ></ChatLayout>
     );

@@ -82,7 +82,7 @@
 }
 
 .logo {
-    height: 50px;
+    height: 40px;
     padding: 2px;
     margin-left: 1em;
 }
@@ -99,4 +99,9 @@
 
 .header {
     display: flex;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: var(--colorBrandBackground2);
+    height: 50px;
 }

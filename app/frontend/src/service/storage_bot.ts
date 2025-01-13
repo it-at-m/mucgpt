@@ -174,7 +174,7 @@ export async function getCommunityBotWithId(id: string) {
     return await promise;
 }
 
-export async function deleteBotWithId(id: number) {
+export async function deleteBotWithId(id: string) {
     let openRequest = indexedDB.open(bot_storage.db_name, bot_storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_storage);
     openRequest.onerror = () => onError(openRequest);
@@ -246,6 +246,29 @@ export async function saveBotChatToDB(a: any[], id: string) {
             let chat = openRequest.result.transaction(bot_history_storage.objectStore_name, "readwrite").objectStore(bot_history_storage.objectStore_name);
             let request = chat.put(data);
             request.onerror = () => onError(request);
+        };
+    };
+}
+
+export function changeBotChatIdInDB(oldId: string, newId: string) {
+    let openRequest = indexedDB.open(bot_history_storage.db_name, bot_history_storage.db_version);
+    openRequest.onupgradeneeded = () => onUpgrade(openRequest, bot_history_storage);
+    openRequest.onerror = () => onError(openRequest);
+    openRequest.onsuccess = function () {
+        let chat = openRequest.result.transaction(bot_history_storage.objectStore_name, "readwrite").objectStore(bot_history_storage.objectStore_name);
+        let stored = chat.get(oldId);
+        stored.onsuccess = () => {
+            let result = stored.result;
+            let data;
+            if (result) {
+                data = result;
+                data.id = newId;
+                let request = chat.put(data);
+                request.onerror = () => onError(request);
+                request.onsuccess = () => {
+                    chat.delete(oldId);
+                };
+            }
         };
     };
 }

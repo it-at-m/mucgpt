@@ -52,13 +52,15 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
 
     useEffect(() => {
         if (bots.length == 0) {
-            getCommunityBots().then((bots: any[]) => {
+            getCommunityBots().then((bots: Bot[]) => {
                 setBot(bots.sort(compareBotsByTitle))
                 setFilteredBots(bots.sort(compareBotsByTitle))
                 let tags: string[] = []
                 for (let bot of bots) {
-                    let newTags = bot.tags.filter((tag: string) => !tags.includes(tag))
-                    tags = tags.concat(newTags)
+                    if (bot.tags) {
+                        let newTags = bot.tags.filter((tag: string) => !tags.includes(tag))
+                        tags = tags.concat(newTags)
+                    }
                 }
                 setAllTags(tags)
             })
@@ -88,12 +90,16 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         }
     };
 
-    const onPublishSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
+    const onTagSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
         let tag = selection.optionValue;
         if (tag == undefined) {
             return
         }
-        setChoosenTag(tag)
+        if (tag == choosenTag) {
+            setChoosenTag("")
+        } else {
+            setChoosenTag(tag)
+        }
     };
 
     return (
@@ -127,10 +133,12 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 id="publish"
                                 aria-label="Veröffentlichen"
                                 defaultValue=""
+                                value={choosenTag}
+                                selectedOptions={[choosenTag]}
                                 appearance="underline"
                                 size="small"
                                 positioning="below-start"
-                                onOptionSelect={onPublishSelected}
+                                onOptionSelect={onTagSelected}
                             >
                                 <Option text="" className={styles.option}></Option>
                                 {allTags.sort().map(

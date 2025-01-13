@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, addCommunityBot, generateTags, GenerateTagsRequest } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -11,7 +11,9 @@ import { useTranslation } from "react-i18next";
 import {
     bot_history_storage,
     bot_storage,
+    changeBotChatIdInDB,
     deleteBotChatFromDB,
+    deleteBotWithId,
     getBotStartDataFromDB,
     getBotWithId,
     popLastBotMessageInDB,
@@ -228,20 +230,44 @@ const BotChat = () => {
         storeBot(newBot);
     };
 
-    const onPublishChanged = (publish: boolean) => {
-        setPublish(publish);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens
-        };
-        storeBot(newBot);
+    const onPublish = () => {
+        if (!publish) {
+            let newCommunityBot: Bot = {
+                title: title,
+                description: description,
+                system_message: systemPrompt,
+                publish: true,
+                id: bot_id,
+                temperature: temperature,
+                max_output_tokens: max_output_tokens,
+                version: "1",
+                owner: "Me",
+                tags: []
+            };
+            let options: GenerateTagsRequest = {
+                bot: newCommunityBot,
+                model: LLM.llm_name,
+                max_output_tokens: max_output_tokens
+            }
+            generateTags(options).then(tags => {
+                console.log(tags);
+                if (tags) {
+                    newCommunityBot.tags = tags;
+                    addCommunityBot(newCommunityBot).then((newId: string) => {
+                        getBotWithId(bot_id).then(bot => {
+                            if (bot) {
+                                newCommunityBot.id = newId;
+                                storeBot(newCommunityBot);
+                                changeBotChatIdInDB(bot_id, newId);
+                                deleteBotWithId(bot_id);
+                                location.href = "/#/bot/" + newId;
+                            }
+                        });
+                    });
+                }
+            });
+        }
     };
-
     const onTitleChanged = (title: string) => {
         setTitle(title);
         let newBot: Bot = {
@@ -295,7 +321,7 @@ const BotChat = () => {
             description={description}
             setDescription={onDescriptionChanged}
             bot_id={bot_id}
-            setPublish={onPublishChanged}
+            onPublishClick={onPublish}
         ></BotsettingsDrawer>
     ];
     const examplesComponent = <></>;

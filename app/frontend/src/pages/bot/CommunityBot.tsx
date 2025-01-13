@@ -26,13 +26,10 @@ import {
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
-import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
 import { MessageError } from "../chat/MessageError";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CommunityBotSettingsDrawer } from "../../components/BotsettingsDrawer/CommunityBotSettingsDrawer";
-import { to } from "@react-spring/web";
-import { deleteChatFromDB } from "../../service/storage";
 
 const BotChat = () => {
     const { id } = useParams();

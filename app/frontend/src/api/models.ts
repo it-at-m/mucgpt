@@ -109,3 +109,9 @@ export type Bot = {
     version?: string;
     owner?: string;
 };
+
+export type GenerateTagsRequest = {
+    bot: Bot;
+    model: string;
+    max_output_tokens: number;
+};

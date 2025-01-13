@@ -11,8 +11,6 @@ import {
     Tooltip,
     Textarea,
     TextareaOnChangeData,
-    Dropdown,
-    Option,
     SelectionEvents,
     OptionOnSelectData
 } from "@fluentui/react-components";
@@ -35,7 +33,7 @@ interface Props {
     bot_id: string;
     description: string;
     setDescription: (description: string) => void;
-    setPublish: (publish: boolean) => void;
+    onPublishClick: () => void;
 }
 
 export const BotsettingsDrawer = ({
@@ -50,7 +48,7 @@ export const BotsettingsDrawer = ({
     bot_id,
     description,
     setDescription,
-    setPublish
+    onPublishClick
 }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
@@ -76,7 +74,7 @@ export const BotsettingsDrawer = ({
 
     const onDelteClick = () => {
         window.location.href = "/";
-        deleteBotWithId(+bot_id);
+        deleteBotWithId(bot_id);
     };
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
@@ -94,9 +92,7 @@ export const BotsettingsDrawer = ({
     const onClearSystemPrompt = () => {
         setSystemPrompt("");
     };
-    const onPublishSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        setPublish(selection.optionValue == "Ja" ? true : false);
-    };
+
     return (
         <div>
             <OverlayDrawer size="medium" position="end" open={isOpen} style={{ padding: "30px", alignItems: "stretch" }}>
@@ -251,25 +247,11 @@ export const BotsettingsDrawer = ({
                     </div>
                 </div>
                 <br />
-                Veröffentlichen:
-                <br />
-                <Dropdown
-                    id="publish"
-                    aria-label="Veröffentlichen"
-                    defaultValue="Nein"
-                    appearance="underline"
-                    size="small"
-                    positioning="below-start"
-                    onOptionSelect={onPublishSelected}
-                    disabled
-                >
-                    <Option text="Ja" className={styles.option} key={1}>
-                        Ja
-                    </Option>
-                    <Option text="Nein" className={styles.option} key={2}>
-                        Nein
-                    </Option>
-                </Dropdown>
+                <div className={styles.deleteButton}>
+                    <Tooltip content={"Teile dein Bot mit der gesamten MUCGPT-Community"} relationship="description" positioning="below">
+                        <Button onClick={onPublishClick}>Bot veröffentlichen</Button>
+                    </Tooltip>
+                </div>
             </OverlayDrawer>
 
             <ChatSettingsButton isEmptySystemPrompt={isEmptySystemPrompt} onClick={onClickRightButton} />

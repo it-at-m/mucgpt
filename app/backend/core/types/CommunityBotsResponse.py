@@ -8,7 +8,7 @@ class Bot(BaseModel):
     description: str
     system_message: str
     publish: bool
-    id: int
+    id: str
     temperature: float
     max_output_tokens: int
     version: str

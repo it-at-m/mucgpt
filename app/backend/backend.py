@@ -17,20 +17,24 @@ from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson
 from core.logtools import getLogger
 from core.modelhelper import num_tokens_from_messages
+from core.types.AddCommunityBotResponse import AddCommunityBotResponse
 from core.types.AppConfig import AppConfig
 from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.ChatResult import ChatResult
-from core.types.CommunityBotsResponse import CommunityBotsResponse
+from core.types.CommunityBotsResponse import Bot, CommunityBotsResponse
 from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
 from core.types.CreateBotRequest import CreateBotRequest
 from core.types.CreateBotResult import CreateBotResult
+from core.types.GenerateTagsRequest import GenerateTagsRequest
+from core.types.GenerateTagsResponse import GenerateTagsResponse
 from core.types.SimplyRequest import SimplyRequest
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
+from db_bots.storage import DB
 from init_app import initApp
 
 logger = getLogger()
@@ -46,6 +50,7 @@ backend.state.app_config = initApp()
 current_dir = os.path.dirname(os.path.abspath(__file__))
 static_dir = os.path.join(current_dir, "static")
 backend.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+bot_database = DB()
 
 
 @api_app.exception_handler(AuthError)
@@ -323,167 +328,54 @@ async def getConfig(
 async def getCommunityBots(
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
 ) -> CommunityBotsResponse:
-    bot1: CommunityBotsResponse.Bot = {
-        "title": "Bot1",
-        "description": "Bot 1",
-        "system_message": "Schreibe Hallo 1",
-        "publish": True,
-        "id": 1,
-        "temperature": 1.0,
-        "max_output_tokens": 100,
-        "tags": ["general", "greeting"],
-        "version": "1.0.1",
-        "owner": "Alice",
-    }
-
-    bot2: CommunityBotsResponse.Bot = {
-        "title": "Bot2",
-        "description": "Bot 2",
-        "system_message": "Schreibe Hallo 2",
-        "publish": True,
-        "id": 2,
-        "temperature": 0.8,
-        "max_output_tokens": 100,
-        "tags": ["general", "greeting"],
-        "version": "1.1.0",
-        "owner": "Bob",
-    }
-
-    bot3: CommunityBotsResponse.Bot = {
-        "title": "WeatherBot",
-        "description": "Gibt aktuelle Wetterberichte",
-        "system_message": "Gib mir den aktuellen Wetterbericht für eine Stadt",
-        "publish": True,
-        "id": 3,
-        "temperature": 0.7,
-        "max_output_tokens": 150,
-        "tags": ["weather", "information"],
-        "version": "2.0.0",
-        "owner": "Charlie",
-    }
-
-    bot4: CommunityBotsResponse.Bot = {
-        "title": "JokeBot",
-        "description": "Erzählt lustige Witze",
-        "system_message": "Erzähle einen lustigen Witz",
-        "publish": True,
-        "id": 4,
-        "temperature": 0.9,
-        "max_output_tokens": 100,
-        "tags": ["humor", "entertainment"],
-        "version": "1.2.3",
-        "owner": "David",
-    }
-
-    bot5: CommunityBotsResponse.Bot = {
-        "title": "RecipeBot",
-        "description": "Gibt Rezepte für verschiedene Gerichte",
-        "system_message": "Gib mir ein Rezept für ein beliebtes Gericht",
-        "publish": True,
-        "id": 5,
-        "temperature": 0.6,
-        "max_output_tokens": 200,
-        "tags": ["cooking", "food"],
-        "version": "1.5.0",
-        "owner": "Eva",
-    }
-
-    bot6: CommunityBotsResponse.Bot = {
-        "title": "MotivationBot",
-        "description": "Gibt motivierende Zitate",
-        "system_message": "Gib mir ein motivierendes Zitat",
-        "publish": True,
-        "id": 6,
-        "temperature": 0.5,
-        "max_output_tokens": 100,
-        "tags": ["motivation", "inspiration"],
-        "version": "1.0.2",
-        "owner": "Frank",
-    }
-
-    bot7: CommunityBotsResponse.Bot = {
-        "title": "TriviaBot",
-        "description": "Stellt Trivia-Fragen",
-        "system_message": "Stelle eine Trivia-Frage",
-        "publish": True,
-        "id": 7,
-        "temperature": 0.8,
-        "max_output_tokens": 100,
-        "tags": ["trivia", "education"],
-        "version": "2.1.0",
-        "owner": "Grace",
-    }
-
-    bot8: CommunityBotsResponse.Bot = {
-        "title": "AdviceBot",
-        "description": "Gibt Ratschläge zu verschiedenen Themen",
-        "system_message": "Gib mir einen Rat zu einem Thema",
-        "publish": True,
-        "id": 8,
-        "temperature": 0.7,
-        "max_output_tokens": 150,
-        "tags": ["advice", "guidance"],
-        "version": "1.3.0",
-        "owner": "Heidi",
-    }
-
-    bot9: CommunityBotsResponse.Bot = {
-        "title": "HistoryBot",
-        "description": "Gibt historische Fakten",
-        "system_message": "Gib mir einen historischen Fakt",
-        "publish": True,
-        "id": 9,
-        "temperature": 0.6,
-        "max_output_tokens": 150,
-        "tags": ["history", "education"],
-        "version": "1.4.0",
-        "owner": "Ivan",
-    }
-
-    bot10: CommunityBotsResponse.Bot = {
-        "title": "TranslateBot",
-        "description": "Übersetzt Sätze in verschiedene Sprachen",
-        "system_message": "Übersetze diesen Satz ins Spanische",
-        "publish": True,
-        "id": 10,
-        "temperature": 0.9,
-        "max_output_tokens": 100,
-        "tags": ["translation", "language"],
-        "version": "1.6.0",
-        "owner": "John",
-    }
-
-    bot11: CommunityBotsResponse.Bot = {
-        "title": "FitnessBot",
-        "description": "Gibt Fitness-Tipps und Übungen",
-        "system_message": "Gib mir einen Fitness-Tipp",
-        "publish": True,
-        "id": 11,
-        "temperature": 0.6,
-        "max_output_tokens": 150,
-        "tags": ["fitness", "health"],
-        "version": "1.7.0",
-        "owner": "Karen",
-    }
-
-    bot12: CommunityBotsResponse.Bot = {
-        "title": "NewsBot",
-        "description": "Gibt aktuelle Nachrichten",
-        "system_message": "Gib mir die aktuellen Nachrichten",
-        "publish": True,
-        "id": 12,
-        "temperature": 0.8,
-        "max_output_tokens": 200,
-        "tags": ["news", "information"],
-        "version": "1.8.0",
-        "owner": "Linda",
-    }
-
-
+    get_config_and_authentificate(access_token)
     return CommunityBotsResponse(
-        bots=[bot1, bot2, bot3, bot4, bot5, bot6, bot7, bot8, bot9, bot10, bot11, bot12]
+        bots=bot_database.getAllBots()
     )
 
+@api_app.post("/add_community_bot")
+async def addCommunityBot(
+    request: Bot,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> AddCommunityBotResponse:
+    get_config_and_authentificate(access_token)
+    id = bot_database.storeBot(request)
+    return AddCommunityBotResponse(id=id)
+
+@api_app.post("/generate_tags")
+async def generate_tags(
+    request: GenerateTagsRequest,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+) -> GenerateTagsResponse:
+    cfg = get_config_and_authentificate(access_token=access_token)
+    department = get_department(id_token=id_token)
+    tags = []
+    try:
+        impl = cfg["chat_approaches"]
+        bot:Bot = request.bot
+        logger.info("generate_tags: reading tag generator")
+        with open("generate_tags/prompt_for_generating_tags.md", encoding="utf-8") as f:
+            system_message = f.read()
+        existing_tags = bot_database.getAllTags()
+        history = [ChatTurn(user=f"Titel:'{bot.title}', Beschreibung: '{bot.description}' , Systemprompt: ```{bot.system_message}```, Tag-Liste: {existing_tags}")]
+        logger.info("generate_tags: creating tags")
+        tags = impl.run_without_streaming(
+            history=history,
+            temperature=1.0,
+            system_message=system_message,
+            department=department,
+            llm_name=request.model,
+            max_output_tokens=request.max_output_tokens,
+        )
+        tags = tags.content.replace('"', "").replace('[', "").replace(' ', "").replace(']', "").replace('\n', "").replace('`', "").replace('json', "").split(',')
+    except Exception as e:
+        logger.exception("Exception in /generate_tags")
+        logger.exception(str(e))
+        raise HTTPException(
+            status_code=500, detail="Exception in chat: something bad happened"
+        )
+    return GenerateTagsResponse(tags=tags)
 
 @api_app.get("/statistics")
 async def getStatistics(

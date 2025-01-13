@@ -9,8 +9,6 @@ import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotsDialog/CommuintyBotsDialog";
-import { arielle_system, sherlock_system } from "./Prompts";
-import { v4 as uuid } from 'uuid';
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -21,30 +19,6 @@ const Menu = () => {
     const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
 
     useEffect(() => {
-        const arielle: Bot = {
-            title: "🧜‍♀️ Arielle",
-            description:
-                "Dieser Assistent erstellt syntaktisch korrekte Mermaid-Diagramme in Markdown für verschiedene Diagrammtypen basierend auf den bereitgestellten Daten und dem gewünschten Diagrammtyp.",
-            system_message: arielle_system,
-            publish: true,
-            id: "0",
-            temperature: 1.0,
-            max_output_tokens: 4096
-        };
-
-        const sherlock: Bot = {
-            title: "🕵️‍♂️ Sherlock Testfall-Designer",
-            description:
-                "🕵️‍♂️ Sherlock unterstützt Sie bei der Erstellung von Testfällen mit MUCGPT gemäß dem LHM-Testhandbuch, den ISTQB-Standards und der ISO-Norm 29119. Bei Fragen wenden Sie sich bitte an itm.km73-crowd@muenchen.de",
-            system_message: sherlock_system,
-            publish: true,
-            id: "1",
-            temperature: 1.0,
-            max_output_tokens: 4096
-        };
-
-        storeCommunityBot(arielle);
-        storeCommunityBot(sherlock);
         getAllBots().then(bots => {
             if (bots) {
                 setBots(bots);
@@ -133,6 +107,7 @@ const Menu = () => {
                         </Link>
                     </Tooltip>
                 ))}
+                {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}> </div>
         </div>

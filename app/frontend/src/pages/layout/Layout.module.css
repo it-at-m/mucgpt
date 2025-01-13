@@ -104,4 +104,5 @@
     width: 100%;
     background-color: var(--colorBrandBackground2);
     height: 50px;
+    z-index: 2;
 }

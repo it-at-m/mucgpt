@@ -10,6 +10,12 @@
     width: var(--sidebarWidth);
 }
 
+@media (max-width: 650px) {
+    .drawer {
+        width: 100%;
+    }
+}
+
 .drawerContent {
     overflow-y: auto;
     overflow-x: auto;

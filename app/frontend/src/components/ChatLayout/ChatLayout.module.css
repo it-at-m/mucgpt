@@ -80,6 +80,20 @@
         margin-right: 0em;
         margin-left: 0em;
     }
+
+    .sidebar {
+        position: relative;
+        height: unset;
+        padding-bottom: var(--spacingHorizontalM);
+        width: 100%;
+        padding: 10px;
+        z-index: 1;
+    }
+
+    .chatRoot {
+        width: 100%;
+        margin-left: 0px;
+    }
 }
 
 .chatMessageStream {

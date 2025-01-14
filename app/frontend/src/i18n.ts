@@ -146,9 +146,6 @@ i18n
                             removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Chat-Einstellungen",
-                            settings_button_system_prompt: "Chat-Einstellungen, System Prompt ist aktiv!",
-                            settings_button_close: "Chat-Einstellungen schließen",
                             temperature: "Temperatur",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
@@ -362,9 +359,6 @@ i18n
                             removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Chat settings",
-                            settings_button_system_prompt: "Chat settings, system prompt is active!",
-                            settings_button_close: "Close chat settings",
                             temperature: "Temperature",
                             min_temperature: "conservative",
                             max_temperatur: "creative",
@@ -579,9 +573,6 @@ i18n
                             removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Chat-Einstellungen",
-                            settings_button_system_prompt: "Chat-Einstellungen, System Prompt ist aktiv!",
-                            settings_button_close: "Chat-Einstellungen zua macha",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
                             temperature: "Temperatur",
@@ -790,9 +781,6 @@ i18n
                             removedocument: "Supprimer le document"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Paramètres de chat",
-                            settings_button_system_prompt: "Paramètres de chat, Prompt système est actif !",
-                            settings_button_close: "Fermer les paramètres de chat",
                             temperature: "Température",
                             min_temperature: "conservatrice",
                             max_temperatur: "créative",
@@ -996,9 +984,6 @@ i18n
                             removedocument: "Видалити документ"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Налаштування чату",
-                            settings_button_system_prompt: "Налаштування чату, системний запит активний!",
-                            settings_button_close: "Закрити налаштування чату",
                             temperature: "Температура",
                             min_temperature: "консервативна",
                             max_temperatur: "креативна",

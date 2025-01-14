@@ -13,7 +13,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
-import { SimplySidebar } from "./SimplySidebar";
+import { SimplySidebar } from "../../components/SimplySidebar/SimplySidebar";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
@@ -104,16 +104,18 @@ const Simply = () => {
     const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
 
     const examplesComponent = <ExampleListSimply onExampleClicked={onExampleClicked} />;
-    const inputComponent = <QuestionInput
-        clearOnSend
-        placeholder={t("simply.prompt")}
-        disabled={isLoading}
-        onSend={question => makeApiRequest(question)}
-        tokens_used={0}
-        question={question}
-        setQuestion={question => setQuestion(question)}
-    />;
-    const answerList =
+    const inputComponent = (
+        <QuestionInput
+            clearOnSend
+            placeholder={t("simply.prompt")}
+            disabled={isLoading}
+            onSend={question => makeApiRequest(question)}
+            tokens_used={0}
+            question={question}
+            setQuestion={question => setQuestion(question)}
+        />
+    );
+    const answerList = (
         <>
             {answers.map((answer, index) => (
                 <ChatTurnComponent
@@ -162,7 +164,8 @@ const Simply = () => {
                 <div></div>
             )}
             <div ref={chatMessageStreamEnd} />
-        </>;
+        </>
+    );
     return (
         <ChatLayout
             sidebar={sidebar}

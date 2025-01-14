@@ -10,10 +10,10 @@ import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from "react-i18next";
 import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { Radio, RadioGroup, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { SimplySidebar } from "./SimplySidebar";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
@@ -94,44 +94,26 @@ const Simply = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const onOutputTypeChanged = (e: any, selection: RadioGroupOnChangeData) => {
-        setOutputType(selection.value as "plain" | "easy");
-        localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);
+    const onOutputTypeChanged = (newValue: string) => {
+        setOutputType(newValue);
+        localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, newValue);
     };
 
-    const sidebar_actions = (
-        <>
-            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-        </>
-    );
-    const sidebar_content = (
-        <>
-            {" "}
-            <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
-                <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
-                    <Radio value="plain" label={t("simply.plain")} />
-                </Tooltip>
-                <Tooltip content={t("simply.easy_description")} relationship="description" positioning="below">
-                    <Radio value="easy" label={t("simply.easy")} />
-                </Tooltip>
-            </RadioGroup>
-        </>
-    );
+    const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
+    const sidebar_content = <SimplySidebar onOutputTypeChanged={onOutputTypeChanged} outputType={outputType} />;
     const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
 
     const examplesComponent = <ExampleListSimply onExampleClicked={onExampleClicked} />;
-    const inputComponent = (
-        <QuestionInput
-            clearOnSend
-            placeholder={t("simply.prompt")}
-            disabled={isLoading}
-            onSend={question => makeApiRequest(question)}
-            tokens_used={0}
-            question={question}
-            setQuestion={question => setQuestion(question)}
-        />
-    );
-    const answerList = (
+    const inputComponent = <QuestionInput
+        clearOnSend
+        placeholder={t("simply.prompt")}
+        disabled={isLoading}
+        onSend={question => makeApiRequest(question)}
+        tokens_used={0}
+        question={question}
+        setQuestion={question => setQuestion(question)}
+    />;
+    const answerList =
         <>
             {answers.map((answer, index) => (
                 <ChatTurnComponent
@@ -180,8 +162,7 @@ const Simply = () => {
                 <div></div>
             )}
             <div ref={chatMessageStreamEnd} />
-        </>
-    );
+        </>;
     return (
         <ChatLayout
             sidebar={sidebar}

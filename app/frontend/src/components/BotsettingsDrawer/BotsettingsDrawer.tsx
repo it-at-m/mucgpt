@@ -109,7 +109,7 @@ export const BotsettingsDrawer = ({
                 icon={isEditable ? <Save24Regular className={styles.iconRightMargin} /> : <Edit24Regular className={styles.iconRightMargin} />}
                 onClick={toggleReadOnly}
             >
-                {isEditable ? "Bearbeiten abschließen" : "Assistent bearbeiten"}
+                {isEditable ? t("components.botsettingsdrawer.finish_edit") : t("components.botsettingsdrawer.edit")}
             </Button>
             <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                 <Button appearance="secondary" onClick={onDelteClick} icon={<Delete24Regular className={styles.iconRightMargin} />}>

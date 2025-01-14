@@ -174,7 +174,7 @@ export const History = ({
     };
     const open = () => {
         getAllChats();
-        console.log("open historie")
+        console.log("open historie");
     };
     open();
 

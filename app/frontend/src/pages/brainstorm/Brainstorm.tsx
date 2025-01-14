@@ -86,8 +86,8 @@ const Brainstorm = () => {
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const sidebar_content = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
-    const sidebar_actions = <></>
-    const sidebar = <Sidebar actions={sidebar_content} content={sidebar_actions} ></Sidebar>
+    const sidebar_actions = <></>;
+    const sidebar = <Sidebar actions={sidebar_content} content={sidebar_actions}></Sidebar>;
     const inputComponent = (
         <QuestionInput
             clearOnSend

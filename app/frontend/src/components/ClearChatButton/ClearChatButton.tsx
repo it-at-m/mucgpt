@@ -19,7 +19,9 @@ export const ClearChatButton = ({ disabled, onClick }: Props) => {
                     icon={<ChatAdd24Regular className={styles.iconRightMargin} />}
                     disabled={disabled}
                     onClick={onClick}
-                >{t("common.clear_chat")}</Button>
+                >
+                    {t("common.clear_chat")}
+                </Button>
             </Tooltip>
         </div>
     );

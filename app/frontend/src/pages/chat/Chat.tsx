@@ -1,10 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import {
-    Button,
-    Tooltip
-} from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -365,23 +362,27 @@ const Chat = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const sidebar_actions = <>
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-    </>
-    const sidebar_content = <>
-        <History
-            storage={storage}
-            setAnswers={setAnswers}
-            lastQuestionRef={lastQuestionRef}
-            currentId={currentId}
-            setCurrentId={setCurrentId}
-            onTemperatureChanged={onTemperatureChanged}
-            onMaxTokensChanged={onMaxTokensChanged}
-            onSystemPromptChanged={onSystemPromptChanged}
-            setError={setError}
-        ></History>
-    </>
-    const sidebar =
+    const sidebar_actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+        </>
+    );
+    const sidebar_content = (
+        <>
+            <History
+                storage={storage}
+                setAnswers={setAnswers}
+                lastQuestionRef={lastQuestionRef}
+                currentId={currentId}
+                setCurrentId={setCurrentId}
+                onTemperatureChanged={onTemperatureChanged}
+                onMaxTokensChanged={onMaxTokensChanged}
+                onSystemPromptChanged={onSystemPromptChanged}
+                setError={setError}
+            ></History>
+        </>
+    );
+    const sidebar = (
         <ChatsettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -393,6 +394,7 @@ const Chat = () => {
             actions={sidebar_actions}
             content={sidebar_content}
         ></ChatsettingsDrawer>
+    );
     return (
         <ChatLayout
             sidebar={sidebar}

@@ -98,19 +98,23 @@ const Summarize = () => {
     };
 
     const examplesComponent = <ExampleListSum onExampleClicked={onExampleClicked} />;
-    const sidebar_actions = <>
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-    </>;
-    const sidebar_content = <><Field label={t("sum.levelofdetail")}>
-        <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
-            <Radio value="short" label={t("sum.short")} />
-            <Radio value="medium" label={t("sum.medium")} />
-            <Radio value="long" label={t("sum.long")} />
-        </RadioGroup>
-    </Field>
-    </>
-    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content} >
-    </Sidebar>
+    const sidebar_actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        </>
+    );
+    const sidebar_content = (
+        <>
+            <Field label={t("sum.levelofdetail")}>
+                <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
+                    <Radio value="short" label={t("sum.short")} />
+                    <Radio value="medium" label={t("sum.medium")} />
+                    <Radio value="long" label={t("sum.long")} />
+                </RadioGroup>
+            </Field>
+        </>
+    );
+    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
     const answerList = (
         <>
             {answers.map((answer, index) => (

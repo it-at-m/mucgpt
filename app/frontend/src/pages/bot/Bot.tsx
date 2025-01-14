@@ -281,9 +281,11 @@ const BotChat = () => {
         }
     };
 
-    const actions = <>
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading}
-        /></>
+    const actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+        </>
+    );
 
     const sidebar = [
         <BotsettingsDrawer

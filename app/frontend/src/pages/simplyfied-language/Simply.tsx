@@ -99,19 +99,25 @@ const Simply = () => {
         localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, selection.value);
     };
 
-    const sidebar_actions = <>
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-    </>;
-    const sidebar_content = <> <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
-        <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
-            <Radio value="plain" label={t("simply.plain")} />
-        </Tooltip>
-        <Tooltip content={t("simply.easy_description")} relationship="description" positioning="below">
-            <Radio value="easy" label={t("simply.easy")} />
-        </Tooltip>
-    </RadioGroup>
-    </>
-    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content} ></Sidebar>
+    const sidebar_actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        </>
+    );
+    const sidebar_content = (
+        <>
+            {" "}
+            <RadioGroup layout="vertical" onChange={onOutputTypeChanged} value={outputType}>
+                <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
+                    <Radio value="plain" label={t("simply.plain")} />
+                </Tooltip>
+                <Tooltip content={t("simply.easy_description")} relationship="description" positioning="below">
+                    <Radio value="easy" label={t("simply.easy")} />
+                </Tooltip>
+            </RadioGroup>
+        </>
+    );
+    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
 
     const examplesComponent = <ExampleListSimply onExampleClicked={onExampleClicked} />;
     const inputComponent = (

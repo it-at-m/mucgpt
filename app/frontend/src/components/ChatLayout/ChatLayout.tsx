@@ -17,12 +17,10 @@ interface Props {
 }
 
 export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExamples, header, header_as_markdown, messages_description, size }: Props) => {
-    const sidebarWidth = { "small": "200px", "medium": "300px", "large": "460px" }[size];
+    const sidebarWidth = { small: "200px", medium: "300px", large: "460px" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside className={styles.sidebar}>
-                {sidebar}
-            </aside>
+            <aside className={styles.sidebar}>{sidebar}</aside>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
                     {showExamples ? (

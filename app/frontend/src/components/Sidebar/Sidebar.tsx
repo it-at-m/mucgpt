@@ -11,9 +11,7 @@ export const Sidebar = ({ actions, content }: Props) => {
             <div className={styles.header} role="heading" aria-level={3}>
                 {actions}
             </div>
-            <div className={styles.drawerContent}>
-                {content}
-            </div>
+            <div className={styles.drawerContent}>{content}</div>
         </div>
     );
 };

@@ -163,12 +163,9 @@ export const BotsettingsDrawer = ({
                                 onChange={onDescriptionChange}
                             />
                         ) : (
-                            <Markdown
-                                className={styles.markdownDescription}
-                                remarkPlugins={[remarkGfm]}
-                                rehypePlugins={[rehypeRaw]}
-                                children={description}
-                            ></Markdown>
+                            <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                {description}
+                            </Markdown>
                         )}
                     </Field>
                 </div>
@@ -212,12 +209,9 @@ export const BotsettingsDrawer = ({
                         </Field>
                     )}
                     {!isEditable && (
-                        <Markdown
-                            className={styles.markdownDescription}
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeRaw]}
-                            children={systemPrompt}
-                        ></Markdown>
+                        <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                            {systemPrompt}
+                        </Markdown>
                     )}
                 </div>
             </div>

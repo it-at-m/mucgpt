@@ -84,7 +84,6 @@
     .sidebar {
         position: relative;
         height: unset;
-        padding-bottom: var(--spacingHorizontalM);
         width: 100%;
         padding: 10px;
         z-index: 1;

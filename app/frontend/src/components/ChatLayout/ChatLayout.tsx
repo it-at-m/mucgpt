@@ -27,12 +27,9 @@ export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExa
                         <div className={styles.chatEmptyState} tabIndex={0}>
                             {header_as_markdown ? (
                                 <div className={styles.chatEmptyStateSubtitleMarkdown}>
-                                    <Markdown
-                                        className={styles.answerText}
-                                        remarkPlugins={[remarkGfm]}
-                                        rehypePlugins={[rehypeRaw]}
-                                        children={header}
-                                    ></Markdown>
+                                    <Markdown className={styles.answerText} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                        {header}
+                                    </Markdown>
                                 </div>
                             ) : (
                                 <h2 className={styles.chatEmptyStateSubtitle}> {header}</h2>

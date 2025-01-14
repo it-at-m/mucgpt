@@ -1,18 +1,6 @@
-import {
-    Button,
-    Drawer,
-    DrawerBody,
-    DrawerHeader,
-    DrawerHeaderTitle,
-    Menu,
-    MenuItem,
-    MenuList,
-    MenuPopover,
-    MenuTrigger,
-    Tooltip
-} from "@fluentui/react-components";
-import { Options24Regular, Dismiss24Regular, History24Regular } from "@fluentui/react-icons";
-import { MutableRefObject, useState } from "react";
+import { Button, DrawerBody, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
+import { Options24Regular } from "@fluentui/react-icons";
+import { MutableRefObject, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB } from "../../service/storage";
 import { AskResponse } from "../../api/models";
@@ -174,16 +162,20 @@ export const History = ({
     };
     const open = () => {
         getAllChats();
-        console.log("open historie");
     };
-    open();
+
+    useEffect(() => {
+        open();
+    }, []);
 
     return (
         <div>
-            <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                <p>{t("components.history.history")}:</p>
-            </Tooltip>
-            <DrawerBody>{chatButtons}</DrawerBody>
+            <div className={styles.historyHeader}>
+                <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
+                    <h3>{t("components.history.history")}</h3>
+                </Tooltip>
+            </div>
+            <div className={styles.historyContent}>{chatButtons}</div>
         </div>
     );
 };

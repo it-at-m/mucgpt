@@ -1,6 +1,7 @@
 import { RadioGroup, Radio, RadioGroupOnChangeData, Tooltip } from "@fluentui/react-components";
 import styles from "./SimplySidebar.module.css";
 import { useTranslation } from "react-i18next";
+import { FormEvent } from "react";
 interface Props {
     onOutputTypeChanged: (newval: string) => void;
     outputType: string;
@@ -8,7 +9,7 @@ interface Props {
 export const SimplySidebar = ({ onOutputTypeChanged, outputType }: Props) => {
     const { t } = useTranslation();
 
-    const onOutputTypeChangedInternal = (e: any, selection: RadioGroupOnChangeData) => {
+    const onOutputTypeChangedInternal = (e: FormEvent<HTMLDivElement>, selection: RadioGroupOnChangeData) => {
         onOutputTypeChanged(selection.value);
     };
 

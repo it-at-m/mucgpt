@@ -14,7 +14,7 @@ import {
 import { Options24Regular, Dismiss24Regular, History24Regular } from "@fluentui/react-icons";
 import { MutableRefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB } from "../../service/storage";
+import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB, connectToDB } from "../../service/storage";
 import { AskResponse } from "../../api/models";
 import styles from "./History.module.css";
 import { MessageError } from "../../pages/chat/MessageError";
@@ -45,7 +45,7 @@ export const History = ({
     const [isOpen, setIsOpen] = useState(false);
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
 
-    const loadChat = (stored: any) => {
+    const loadChat = async (stored: any) => {
         setError(undefined);
         let storedAnswers = stored.Data.Answers;
         lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
@@ -60,15 +60,14 @@ export const History = ({
         onTemperatureChanged(stored.Options.temperature, id);
         onMaxTokensChanged(stored.Options.maxTokens, id);
         onSystemPromptChanged(stored.Options.system, id);
-        let openRequest = indexedDB.open(storage.db_name, storage.db_version);
-        openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
-        openRequest.onerror = () => onError(openRequest);
-        openRequest.onsuccess = async function () {
-            stored["refID"] = id;
-            stored["id"] = CURRENT_CHAT_IN_DB;
-            let putRequest = openRequest.result.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(stored);
-            putRequest.onerror = () => onError(putRequest);
-        };
+        stored["refID"] = id;
+        stored["id"] = CURRENT_CHAT_IN_DB;
+        try {
+            const db = await connectToDB(storage);
+            let putRequest = await db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(stored);
+        } catch (error) {
+            onError(error);
+        }
     };
     const getCategory = (lastEdited: string, fav: boolean) => {
         if (fav) return t("components.history.favourites");
@@ -108,71 +107,69 @@ export const History = ({
     };
 
     const getAllChats = async () => {
-        let openRequest = indexedDB.open(storage.db_name, storage.db_version);
-        openRequest.onupgradeneeded = () => onUpgrade(openRequest, storage);
-        openRequest.onerror = () => onError(openRequest);
-        openRequest.onsuccess = async function () {
-            let stored = openRequest.result.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).getAll();
-            stored.onsuccess = function () {
-                const categorizedChats = stored.result
-                    .filter((chat: any) => chat.id !== 0)
-                    .sort((a: any, b: any) => {
-                        return new Date(b.Data.LastEdited).getTime() - new Date(a.Data.LastEdited).getTime();
-                    })
-                    .reduce((acc: any, chat: any) => {
-                        const category = getCategory(chat.Data.LastEdited, chat.Options.favourites);
-                        if (!acc[category]) acc[category] = [];
-                        acc[category].push(chat);
-                        return acc;
-                    }, {});
-                const sortedChats = Object.entries(categorizedChats).sort(([categoryA], [categoryB]) => {
-                    if (categoryA === t("components.history.favourites")) return -1;
-                    if (categoryB === t("components.history.favourites")) return 1;
-                    return 0;
-                });
-                const newChatButtons = sortedChats.map(([category, chats]: [string, any]) => (
-                    <div key={category}>
-                        <h2>{category}</h2>
-                        {chats.map((chat: any, index: number) => (
-                            <div key={index}>
-                                <Tooltip
-                                    content={t("components.history.lastEdited") + new Date(chat.Data.LastEdited).toString()}
-                                    relationship="description"
-                                    positioning="below"
-                                >
-                                    <Button className={styles.savedChatButton} onClick={() => loadChat(chat)} size="large">
-                                        {chat.Data.Name}
-                                    </Button>
-                                </Tooltip>
-                                <Menu>
-                                    <MenuTrigger disableButtonEnhancement>
-                                        <Tooltip content={t("components.history.options")} relationship="description" positioning="below">
-                                            <Button icon={<Options24Regular />} appearance="secondary" size="large" />
-                                        </Tooltip>
-                                    </MenuTrigger>
-                                    <MenuPopover>
-                                        <MenuList>
-                                            <MenuItem onClick={() => deleteChat(storage, chat.id, setAnswers, chat.id === currentId, lastQuestionRef)}>
-                                                {t("components.history.delete")}
-                                            </MenuItem>
-                                            <MenuItem onClick={() => changeChatName(chat)}>{t("components.history.rename")}</MenuItem>
-                                            {chat.Options.favourites ? (
-                                                <MenuItem onClick={() => changeFavourites(false, chat.id)}>{t("components.history.unsave")}</MenuItem>
-                                            ) : (
-                                                <MenuItem onClick={() => changeFavourites(true, chat.id)}>{t("components.history.save")}</MenuItem>
-                                            )}
-                                        </MenuList>
-                                    </MenuPopover>
-                                </Menu>
-                                {index != chats.length - 1 && <hr />}
-                            </div>
-                        ))}
-                    </div>
-                ));
-                setChatButtons(newChatButtons);
-            };
-            stored.onerror = () => onError(stored);
-        };
+        try {
+            const db = await connectToDB(storage);
+            let stored = await db.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).getAll();
+            const categorizedChats = stored
+                .filter((chat: any) => chat.id !== 0)
+                .sort((a: any, b: any) => {
+                    return new Date(b.Data.LastEdited).getTime() - new Date(a.Data.LastEdited).getTime();
+                })
+                .reduce((acc: any, chat: any) => {
+                    const category = getCategory(chat.Data.LastEdited, chat.Options.favourites);
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(chat);
+                    return acc;
+                }, {});
+            const sortedChats = Object.entries(categorizedChats).sort(([categoryA], [categoryB]) => {
+                if (categoryA === t("components.history.favourites")) return -1;
+                if (categoryB === t("components.history.favourites")) return 1;
+                return 0;
+            });
+            const newChatButtons = sortedChats.map(([category, chats]: [string, any]) => (
+                <div key={category}>
+                    <h2>{category}</h2>
+                    {chats.map((chat: any, index: number) => (
+                        <div key={index}>
+                            <Tooltip
+                                content={t("components.history.lastEdited") + new Date(chat.Data.LastEdited).toString()}
+                                relationship="description"
+                                positioning="below"
+                            >
+                                <Button className={styles.savedChatButton} onClick={() => loadChat(chat)} size="large">
+                                    {chat.Data.Name}
+                                </Button>
+                            </Tooltip>
+                            <Menu>
+                                <MenuTrigger disableButtonEnhancement>
+                                    <Tooltip content={t("components.history.options")} relationship="description" positioning="below">
+                                        <Button icon={<Options24Regular />} appearance="secondary" size="large" />
+                                    </Tooltip>
+                                </MenuTrigger>
+                                <MenuPopover>
+                                    <MenuList>
+                                        <MenuItem onClick={() => deleteChat(storage, chat.id, setAnswers, chat.id === currentId, lastQuestionRef)}>
+                                            {t("components.history.delete")}
+                                        </MenuItem>
+                                        <MenuItem onClick={() => changeChatName(chat)}>{t("components.history.rename")}</MenuItem>
+                                        {chat.Options.favourites ? (
+                                            <MenuItem onClick={() => changeFavourites(false, chat.id)}>{t("components.history.unsave")}</MenuItem>
+                                        ) : (
+                                            <MenuItem onClick={() => changeFavourites(true, chat.id)}>{t("components.history.save")}</MenuItem>
+                                        )}
+                                    </MenuList>
+                                </MenuPopover>
+                            </Menu>
+                            {index != chats.length - 1 && <hr />}
+                        </div>
+                    ))}
+                </div>
+            ));
+            setChatButtons(newChatButtons);
+        }
+        catch (error) {
+            onError(error);
+        }
     };
     const open = () => {
         getAllChats();

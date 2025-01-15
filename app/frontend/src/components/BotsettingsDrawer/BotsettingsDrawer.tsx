@@ -25,6 +25,7 @@ import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
+import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -163,7 +164,9 @@ export const BotsettingsDrawer = ({
                                 onChange={onDescriptionChange}
                             />
                         ) : (
-                            <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                            <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{
+                                code: CodeBlockRenderer
+                            }}>
                                 {description}
                             </Markdown>
                         )}
@@ -182,15 +185,17 @@ export const BotsettingsDrawer = ({
                     >
                         {t("components.chattsettingsdrawer.system_prompt")}
                     </InfoLabel>
-                    <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
-                        <Button
-                            aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
-                            icon={<Dismiss24Regular />}
-                            appearance="subtle"
-                            onClick={onClearSystemPrompt}
-                            size="small"
-                        ></Button>
-                    </Tooltip>
+                    {isEditable && (
+                        <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
+                            <Button
+                                aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
+                                icon={<Dismiss24Regular />}
+                                appearance="subtle"
+                                onClick={onClearSystemPrompt}
+                                size="small"
+                            ></Button>
+                        </Tooltip>)
+                    }
                 </div>
             </div>
             <div className={styles.bodyContainer}>
@@ -209,7 +214,9 @@ export const BotsettingsDrawer = ({
                         </Field>
                     )}
                     {!isEditable && (
-                        <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                        <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{
+                            code: CodeBlockRenderer
+                        }}>
                             {systemPrompt}
                         </Markdown>
                     )}

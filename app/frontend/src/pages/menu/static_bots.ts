@@ -17,70 +17,72 @@ Antworten sollten in Markdown-Codeblöcken erfolgen, formatierte Diagrammcodes i
 
 # Beispiele
 Eine Beispielausgabe aus Schritt 3 für ein Kuchendiagramm sieht so aus :
-               \`\`\`mermaid
-               pie title Pets adopted by volunteers
-                   "Dogs" : 386
-                   "Cats" : 85
-                   "Rats" : 15
-               \`\`\`
 
-               Eine Beispielausgabe aus Schritt 3 für eine Mindmap sieht so aus:
-               \`\`\`mermaid
-               mindmap
-                   root((mindmap))
-                       Origins
-                           Long history
-                           ::icon(fa fa-book)
-                           Popularisation
-                           British popular psychology author Tony Buzan
-                       Research
-                           On effectivness<br/>and features
-                           On Automatic creation
-                           Uses
-                               Creative techniques
-                               Strategic planning
-                               Argument mapping
-                       Tools
-                           Pen and paper
-                           Mermaid
-               \`\`\`
+\`\`\`mermaid
+pie title Pets adopted by volunteers
+    "Dogs" : 386
+    "Cats" : 85
+    "Rats" : 15
+\`\`\`
 
-               Eine Beispielausgabe aus Schritt 3 für ein Sequenzdiagramm sieht so aus:
-               \`\`\`mermaid
-               sequenceDiagram
-                   Alice->>+John: Hello John, how are you?
-                   Alice->>+John: John, can you hear me?
-                   John-->>-Alice: Hi Alice, I can hear you!
-                   John-->>-Alice: I feel great!
-                \`\`\`
+Eine Beispielausgabe aus Schritt 3 für eine Mindmap sieht so aus:
+\`\`\`mermaid
+mindmap
+    root((mindmap))
+        Origins
+            Long history
+            ::icon(fa fa-book)
+            Popularisation
+            British popular psychology author Tony Buzan
+        Research
+            On effectivness<br/>and features
+            On Automatic creation
+            Uses
+                Creative techniques
+                Strategic planning
+                Argument mapping
+        Tools
+            Pen and paper
+            Mermaid
+\`\`\`
 
-               Eine Beispielausgabe aus Schritt 3 für eine Userjourney sieht so aus:
-               \`\`\`mermaid
-               journey
-                   title My working day
-                       section Go to work
-                           Make tea: 5: Me
-                           Go upstairs: 3: Me
-                           Do work: 1: Me, Cat
-                   section Go home
-                       Go downstairs: 5: Me
-                       Sit down: 3: Me
-               \`\`\`
+Eine Beispielausgabe aus Schritt 3 für ein Sequenzdiagramm sieht so aus:
+\`\`\`mermaid
+sequenceDiagram
+    Alice->>+John: Hello John, how are you?
+    Alice->>+John: John, can you hear me?
+    John-->>-Alice: Hi Alice, I can hear you!
+    John-->>-Alice: I feel great!
+\`\`\`
 
-               Eine Beispielausgabe aus Schritt 3 für ein Gantt-diagramm sieht so aus:
+Eine Beispielausgabe aus Schritt 3 für eine Userjourney sieht so aus:
+\`\`\`mermaid
+journey
+    title My working day
+        section Go to work
+            Make tea: 5: Me
+            Go upstairs: 3: Me
+            Do work: 1: Me, Cat
+    section Go home
+        Go downstairs: 5: Me
+        Sit down: 3: Me
+\`\`\`
 
-               \`\`\`mermaid
-               gantt
-                   title A Gantt Diagram
-                   dateFormat YYYY-MM-DD
-                   section Section
-                       A task              :a1, 2014-01-01, 30d
-                       Another task    :after a1, 20d
-                   section Another
-                       Task in Another :2014-01-12, 12d
-                       another task    :24d
-               \`\`\`
-    ** Hinweis **: Bitte stelle sicher, dass die eingereichten Daten alle benötigten Informationen beinhalten, um ein korrektes Diagramm zu erstellen.
+Eine Beispielausgabe aus Schritt 3 für ein Gantt-diagramm sieht so aus:
+
+\`\`\`mermaid
+gantt
+    title A Gantt Diagram
+    dateFormat YYYY-MM-DD
+    section Section
+        A task              :a1, 2014-01-01, 30d
+        Another task    :after a1, 20d
+    section Another
+        Task in Another :2014-01-12, 12d
+        another task    :24d
+\`\`\`
+
+**Hinweis**: Bitte stelle sicher, dass die eingereichten Daten alle benötigten Informationen beinhalten, um ein korrektes Diagramm zu erstellen.
 
 `;
 
@@ -126,7 +128,7 @@ Sollergebnis: Die Login-Maske wird im Browser angezeigt
 Testschritt 2
 Gib die Kennung und das Passwort ein und drücke die
 Enter-Taste
-Sollergebnis: Das Login ist erfolgreic
+Sollergebnis: Das Login ist erfolgreich
 `;
 
 const sherlock_description = `
@@ -152,7 +154,7 @@ Wenn Anwendung bei MUCGPT bekannt ist:
 
 **Prompt**:
 
-\`\`\`
+\`\`\`prompt
 Erstelle einen Testfall für die Anwendung <Name Anwendung>
 \`\`\`
 
@@ -160,7 +162,7 @@ Erstelle einen Testfall für die Anwendung <Name Anwendung>
 
 Geben Sie folgenden Prompt ein:
 
-\`\`\`
+\`\`\`prompt
 Verbessere den folgenden Testfall und beschreibe die
 Änderungen
 \`\`\`
@@ -183,27 +185,27 @@ Hier muss zunächst die Anforderung bzw.
 UserStory in den prompt kopiert werden. Dann
 folgenden Prompt ausführen:
 
-\`\`\`
+\`\`\`prompt
 Erstelle einen Testfall für die UserStory
 \`\`\`
 
 ### Funktionale Tests erstellen
 
-\`\`\`
+\`\`\`prompt
 Erstelle einen funktionalen Testfall für die <Anwendung>
 mit Fokus auf <Funktion>
 \`\`\`
 
 ### Nicht-funktionale Testszenarien erstellen
 
-\`\`\`
+\`\`\`prompt
 Nenne 3 Lasttestszenarien für die <Anwendung> während
 einer <Anmeldephase>
 \`\`\`
 
 ### Grenzwerttests / Randbedingungen
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 Testfälle für einen <Antragsprozess>, der ein
 Zahlenfeld (0-100) zulässt. Berücksichtige Grenzwerte am
 unteren, oberen und mittleren Rand
@@ -211,7 +213,7 @@ unteren, oberen und mittleren Rand
 
 ### Tests von API Endpunkten
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 Testfälle für eine REST-API, die einen GET-
 Endpunkt /user liefert. Berücksichtige ungültige IDs,
 fehlende Parameter und Zeitüberschreitungen
@@ -219,7 +221,7 @@ fehlende Parameter und Zeitüberschreitungen
 
 ### Geräte/Browsertests
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 Testfälle, um das Verhalten einer Webanwendung
 auf verschiedenen Browsern (Chrome, Firefox, Safari) und
 Bildschirmgrößen zu prüfen.
@@ -227,7 +229,7 @@ Bildschirmgrößen zu prüfen.
 
 ### Negative Tests für Formulareingaben
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 Testfälle für ein Registrierungsformular, die
 sicherstellen, dass ungültige Eingaben (z.B. leere Felder,
 falsches Datumsformat, zu kurze Passwörter) korrekt
@@ -236,7 +238,7 @@ abgefangen werden.
 
 ### Fehlerbasierte Tests (Error Guessing)
 
-\`\`\`
+\`\`\`prompt
 Nenne 5 potenzielle Fehler oder Schwachstellen, die in
 <Anwendung> auftreten könnten und erstelle dazu
 entsprechende Testfälle
@@ -244,7 +246,7 @@ entsprechende Testfälle
 
 ### Testfälle für Netzwerktests
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 Testfälle, um die Robustheit einer Client-Server-
 Kommunikation über TCP/HTTPS zu prüfen. Berücksichtige
 dabei Timeouts, Paketverluste, Protokollfehler und
@@ -253,7 +255,7 @@ unterbrochene Verbindungen
 
 ### Testfälle zur Beantragung von Dokumenten
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Online-Beantragung
 eines neuen Personalausweises oder Reisepasses über das
 Serviceportal der Landeshauptstadt München.
@@ -265,7 +267,7 @@ und die Nutzung von M-Login für Authentifizierung
 
 ### Testfälle für Melderegisteraktualisierung
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Änderung von
 Meldedaten (z. B. Umzug, Namensänderung) in einem
 Einwohnermeldeamts-System. Beachte dabei Fachregeln
@@ -275,7 +277,7 @@ Prüfung auf Doppelanmeldungen
 \`\`\`
 
 ### Testfälle Sozialleistungen
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Bearbeitung von
 Wohngeld- oder Sozialhilfeanträgen. Achte dabei auf
 Einkommensgrenzen, Nachweise von Mietkosten,
@@ -285,7 +287,7 @@ Haushaltsgröße, Bearbeitungsfristen, Nachberechnung bei
 
 ### Testfälle KFZ Zulassung
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle, um die Zulassung eines
 Fahrzeugs in einem System des Straßenverkehrsamts zu
 prüfen. Berücksichtige TÜV-Prüfungen,
@@ -296,7 +298,7 @@ wiederholten Prüfungsversuchen
 
 ### Testfälle Vergabe Kitaplätze
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Zuweisung von
 Kitaplätzen in München über das Kita-Finder+ Portal.
 Berücksichtige dabei Prioritäten (Wohnortnähe,
@@ -308,7 +310,7 @@ Eltern
 
 ### Testfälle kommunale Abgaben
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle, um die Berechnung von
 Grundsteuer, Hundesteuer oder Müllgebühren in einem
 kommunalen Finanzsystem zu validieren. Berücksichtige
@@ -319,7 +321,7 @@ mit dem Melderegister
 
 ### Testfälle Beschwerdemanagement
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle, um die Bearbeitung von
 Bürgerbeschwerden in einem Ombudsstellen-Portal zu
 prüfen. Berücksichtige Kategorien von Beschwerden
@@ -330,7 +332,7 @@ Fachbereiche und Generierung von Statusberichten.
 
 ### Testfälle Gewerbeanmeldung
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle, um den Prozess der
 Gewerbeanmeldung bei der Landeshauptstadt München zu
 prüfen. Teste verschiedene Gewerbearten (Einzelhandel,
@@ -343,7 +345,7 @@ automatische Erinnerungen bei fehlenden Dokumenten
 
 ### Testfälle Führerschein
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Verlängerung eines
 Führerscheins in einem System des Straßenverkehrsamts zu
 prüfen. Berücksichtige TÜV-Prüfungen,
@@ -352,7 +354,7 @@ Versicherungsnachweise, Gebührenberechnungen
 
 #### Testfälle Ratsinformationssystem
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Prüfung der Such- und
 Anzeigefunktionen im Ratsinformationssystem der
 Landeshauptstadt München. Teste die Suche nach
@@ -364,7 +366,7 @@ interne/nicht-öffentliche Dokumente
 
 ### Testfälle Umwelt- und Abfallmanagement
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle, um die Online-Dienste des
 AWM zu prüfen. Teste dabei die Beantragung von
 Sperrmüllabholungen, die Anmeldung oder Änderung von
@@ -376,7 +378,7 @@ Stadtgebiet
 
 ### Testfälle Wohnsitzänderungen
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 Testfälle zur Aktualisierung von Meldedaten für
 Personen, die innerhalb Münchens umziehen, erstmals
 nach München ziehen oder ihre Wohnung im Stadtgebiet
@@ -388,7 +390,7 @@ Fachbereiche
 
 ### Testfälle Baugenehmigungsverfahren
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle für die Bearbeitung eines
 Baugenehmigungsantrags beim Baureferat München.
 Teste dabei unterschiedliche Gebäudetypen (Wohnhaus,
@@ -400,7 +402,7 @@ Denkmalschutz) und Gebührenberechnung
 
 ### Testfälle Anmeldung Bildungsangebote
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle, um die Anmeldung für Kurse
 der Münchner Volkshochschule oder städtische
 Kulturveranstaltungen online zu validieren. Berücksichtige
@@ -413,7 +415,7 @@ Buchungsoberflächen.
 
 ### Testfälle Wohnberechtigungsschein
 
-\`\`\`
+\`\`\`prompt
 Erstelle 5 fachliche Testfälle zur Prüfung des Prozesses für
 einen Wohnberechtigungsschein in München.
 Berücksichtige dabei Einkommensgrenzen,

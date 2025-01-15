@@ -106,3 +106,16 @@
     height: 50px;
     z-index: 2;
 }
+
+.footer {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: auto;
+    justify-content: space-between;
+    background-color: var(--colorBrandBackground2);
+    color: var(--colorNeutralBackground1);
+}

@@ -164,9 +164,14 @@ export const BotsettingsDrawer = ({
                                 onChange={onDescriptionChange}
                             />
                         ) : (
-                            <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{
-                                code: CodeBlockRenderer
-                            }}>
+                            <Markdown
+                                className={styles.markdownDescription}
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeRaw]}
+                                components={{
+                                    code: CodeBlockRenderer
+                                }}
+                            >
                                 {description}
                             </Markdown>
                         )}
@@ -194,8 +199,8 @@ export const BotsettingsDrawer = ({
                                 onClick={onClearSystemPrompt}
                                 size="small"
                             ></Button>
-                        </Tooltip>)
-                    }
+                        </Tooltip>
+                    )}
                 </div>
             </div>
             <div className={styles.bodyContainer}>
@@ -214,9 +219,14 @@ export const BotsettingsDrawer = ({
                         </Field>
                     )}
                     {!isEditable && (
-                        <Markdown className={styles.markdownDescription} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{
-                            code: CodeBlockRenderer
-                        }}>
+                        <Markdown
+                            className={styles.markdownDescription}
+                            remarkPlugins={[remarkGfm]}
+                            rehypePlugins={[rehypeRaw]}
+                            components={{
+                                code: CodeBlockRenderer
+                            }}
+                        >
                             {systemPrompt}
                         </Markdown>
                     )}

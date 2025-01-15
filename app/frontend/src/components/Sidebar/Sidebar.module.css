@@ -20,5 +20,5 @@
     overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
-    max-height: calc(100vh - 170px);
+    max-height: calc(100vh - 140px);
 }

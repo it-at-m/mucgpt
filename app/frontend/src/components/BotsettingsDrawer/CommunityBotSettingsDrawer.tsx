@@ -192,11 +192,6 @@ export const CommunityBotSettingsDrawer = ({
                         <Button onClick={onDelteClick}>{"Assistent entfernen"}</Button>
                     </Tooltip>
                 </div>
-                <div className={styles.deleteButton}>
-                    <Tooltip content={"Assistent bearbeiten und untereigenen Assisstenten speichern"} relationship="description" positioning="below">
-                        <Button onClick={toOwnBots}>{"Assistent bearbeiten"}</Button>
-                    </Tooltip>
-                </div>
                 <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
                     <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>
                         {t("components.chattsettingsdrawer.max_lenght")}

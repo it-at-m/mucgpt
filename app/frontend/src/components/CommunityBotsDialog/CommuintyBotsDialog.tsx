@@ -12,6 +12,7 @@ import {
     OptionOnSelectData,
     SelectionEvents,
     Tooltip,
+    Tag
 } from "@fluentui/react-components";
 
 import styles from "./CommunityBotsDialog.module.css";
@@ -19,8 +20,11 @@ import { useTranslation } from "react-i18next";
 import { TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
 import { Bot, getCommunityBots } from "../../api";
-import { Dismiss24Regular } from "@fluentui/react-icons";
+import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import { storeCommunityBot } from "../../service/storage_bot"
+import Markdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 interface Props {
     showSearchDialogInput: boolean;
     setShowSearchDialogInput: (showDialogInput: boolean) => void;
@@ -117,21 +121,21 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 />
                             </DialogTrigger>
                         }
-                        >Assistenten der Community</DialogTitle>
+                        >{t('components.community_bots.title')}</DialogTitle>
                         <DialogContent>
                             <div className="search">
                                 <TextField
                                     id="outlined-basic"
-                                    label="Search"
+                                    label={t('components.community_bots.search')}
                                     value={inputText}
                                     onChange={inputHandler}
                                 />
                             </div>
                             <br />
-                            Filtern nach Tag:
+                            {t('components.community_bots.filter_by_tag')}:
                             <Dropdown
-                                id="publish"
-                                aria-label="Veröffentlichen"
+                                id="filter"
+                                aria-label={t('components.community_bots.filter_by_tag')}
                                 defaultValue=""
                                 value={choosenTag}
                                 selectedOptions={[choosenTag]}
@@ -174,24 +178,27 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 />
                             </DialogTrigger>
                         }
-                        >{choosenBot.title}</DialogTitle>
+                        >{choosenBot.title} {choosenBot.version}</DialogTitle>
                         <DialogContent>
-                            {
-                                Object.entries(choosenBot).map(([key, value]) => (
-                                    <div key={key}>
-                                        <strong>{key}:</strong> {String(value)}
-                                    </div>
-                                ))
-                            }
+                            <div className={styles.tags}>
+                                {
+                                    choosenBot.tags ? choosenBot.tags.map((tag: string) => <Tag shape="circular">{tag}</Tag>) : ""
+                                }
+                            </div>
+                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{choosenBot.description}</Markdown>
+                            <strong>{t('components.community_bots.system_message')}: </strong>
+                            <hr />
+                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{choosenBot.system_message}</Markdown>
+                            <hr />
                         </DialogContent>
+                        <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary" size="small" onClick={onSaveBot}>
+                                    <Save24Filled /> {t('components.community_bots.save')}
+                                </Button>
+                            </DialogTrigger>
+                        </DialogActions>
                     </DialogBody>
-                    <DialogActions>
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="secondary" size="small" onClick={onSaveBot} style={{ "left": 0 }}>
-                                Speichern
-                            </Button>
-                        </DialogTrigger>
-                    </DialogActions>
                 </DialogSurface>
             </Dialog>
         </div >

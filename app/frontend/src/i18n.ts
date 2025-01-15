@@ -226,6 +226,16 @@ i18n
                             back: "Zurück",
                             save: "Speichern",
                             describe: "Beschreibe die Funktion..."
+                        },
+                        community_bots: {
+                            title: "Community Assistenten",
+                            search: "Suche",
+                            filter_by_tag: "Filtern nach Tag",
+                            system_message: "Systemnachricht",
+                            save: "Speichern"
+                        },
+                        search_bot_button: {
+                            search_bots: "Bots suchen"
                         }
                     }
                 }
@@ -442,6 +452,16 @@ i18n
                             back: "Back",
                             save: "Save",
                             describe: "Describe the function..."
+                        },
+                        community_bots: {
+                            title: "Community Assistants",
+                            search: "Search",
+                            filter_by_tag: "Filter by Tag",
+                            system_message: "System Message",
+                            save: "Save"
+                        },
+                        search_bot_button: {
+                            search_bots: "Search bots"
                         }
                     }
                 }
@@ -659,6 +679,16 @@ i18n
                             back: "Zruck",
                             save: "Speichern",
                             describe: "Beschreib die Funktion..."
+                        },
+                        community_bots: {
+                            title: "Community Assistentn",
+                            search: "Suach",
+                            filter_by_tag: "Nach Tag filteren",
+                            system_message: "Systemnachricht",
+                            save: "Speichern"
+                        },
+                        search_bot_button: {
+                            search_bots: "Bots suachen"
                         }
                     }
                 }
@@ -867,6 +897,16 @@ i18n
                             back: "Retour",
                             save: "Enregistrer",
                             describe: "Décrivez la fonction..."
+                        },
+                        community_bots: {
+                            title: "Assistants Communautaires",
+                            search: "Recherche",
+                            filter_by_tag: "Filtrer par tag",
+                            system_message: "Message système",
+                            save: "Enregistrer"
+                        },
+                        search_bot_button: {
+                            search_bots: "Rechercher des bots"
                         }
                     }
                 }
@@ -1073,6 +1113,16 @@ i18n
                             back: "Назад",
                             save: "Зберегти",
                             describe: "Опишіть функцію..."
+                        },
+                        community_bots: {
+                            title: "Громадські Асистенти",
+                            search: "Пошук",
+                            filter_by_tag: "Фільтрувати за тегом",
+                            system_message: "Системне повідомлення",
+                            save: "Зберегти"
+                        },
+                        search_bot_button: {
+                            search_bots: "Шукати ботів"
                         }
                     }
                 }

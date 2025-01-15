@@ -146,9 +146,6 @@ i18n
                             removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Chat-Einstellungen",
-                            settings_button_system_prompt: "Chat-Einstellungen, System Prompt ist aktiv!",
-                            settings_button_close: "Chat-Einstellungen schließen",
                             temperature: "Temperatur",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
@@ -162,7 +159,9 @@ i18n
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
                         },
                         botsettingsdrawer: {
-                            delete: "Assistent löschen"
+                            delete: "Assistent löschen",
+                            edit: "Assistent bearbeiten",
+                            finish_edit: "Bearbeitung abschließen"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -362,9 +361,6 @@ i18n
                             removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Chat settings",
-                            settings_button_system_prompt: "Chat settings, system prompt is active!",
-                            settings_button_close: "Close chat settings",
                             temperature: "Temperature",
                             min_temperature: "conservative",
                             max_temperatur: "creative",
@@ -378,7 +374,9 @@ i18n
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
                         botsettingsdrawer: {
-                            delete: "Delete assistent"
+                            delete: "Delete assistent",
+                            edit: "Edit Assistant",
+                            finish_edit: "Finish Edit"
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -579,9 +577,6 @@ i18n
                             removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Chat-Einstellungen",
-                            settings_button_system_prompt: "Chat-Einstellungen, System Prompt ist aktiv!",
-                            settings_button_close: "Chat-Einstellungen zua macha",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
                             temperature: "Temperatur",
@@ -595,7 +590,9 @@ i18n
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
                         },
                         botsettingsdrawer: {
-                            delete: "Assistent löschn"
+                            delete: "Assistent löschn",
+                            edit: "Assistent bearbeit'n",
+                            finish_edit: "Bearbeitung abschließ'n"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -790,9 +787,6 @@ i18n
                             removedocument: "Supprimer le document"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Paramètres de chat",
-                            settings_button_system_prompt: "Paramètres de chat, Prompt système est actif !",
-                            settings_button_close: "Fermer les paramètres de chat",
                             temperature: "Température",
                             min_temperature: "conservatrice",
                             max_temperatur: "créative",
@@ -804,6 +798,11 @@ i18n
                             system_prompt: "Prompt système",
                             system_prompt_info:
                                 "sont des requêtes ou des instructions prédéfinies destinées à rendre les réponses de MUCGPT plus ciblées et contrôlées. L'IA prend souvent un rôle spécifique, répond dans un format particulier ou respecte d'autres contraintes."
+                        },
+                        botsettingsdrawer: {
+                            delete: "Supprimer l'assistant",
+                            edit: "Modifier l'assistant",
+                            finish_edit: "Terminer la modification"
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -996,9 +995,6 @@ i18n
                             removedocument: "Видалити документ"
                         },
                         chattsettingsdrawer: {
-                            settings_button: "Налаштування чату",
-                            settings_button_system_prompt: "Налаштування чату, системний запит активний!",
-                            settings_button_close: "Закрити налаштування чату",
                             temperature: "Температура",
                             min_temperature: "консервативна",
                             max_temperatur: "креативна",
@@ -1010,6 +1006,11 @@ i18n
                             system_prompt: "Системний запит",
                             system_prompt_info:
                                 "це передвизначені запити або вказівки, які спрямовані на точне та контрольоване створення відповідей від MUCGPT. ШІ часто бере на себе певну роль, відповідає в певному форматі або дотримується інших обмежень."
+                        },
+                        botsettingsdrawer: {
+                            delete: "Видалити асистента",
+                            edit: "Редагувати асистента",
+                            finish_edit: "Завершити редагування"
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"

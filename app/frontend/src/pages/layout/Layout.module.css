@@ -82,7 +82,7 @@
 }
 
 .logo {
-    height: 50px;
+    height: 40px;
     padding: 2px;
     margin-left: 1em;
 }
@@ -99,4 +99,23 @@
 
 .header {
     display: flex;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: var(--colorBrandBackground2);
+    height: 50px;
+    z-index: 2;
+}
+
+.footer {
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: auto;
+    justify-content: space-between;
+    background-color: var(--colorBrandBackground2);
+    color: var(--colorNeutralBackground1);
 }

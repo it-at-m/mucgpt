@@ -10,3 +10,11 @@
     width: 80%;
     align-items: center;
 }
+
+.historyHeader {
+    margin-left: var(--spacingVerticalS);
+}
+
+.historyContent {
+    margin-left: var(--spacingVerticalM);
+}

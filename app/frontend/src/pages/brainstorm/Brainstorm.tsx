@@ -13,6 +13,7 @@ import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFro
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 
 const Brainstorm = () => {
     const { language } = useContext(LanguageContext);
@@ -84,7 +85,9 @@ const Brainstorm = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const commands = [<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />];
+    const sidebar_content = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
+    const sidebar_actions = <></>;
+    const sidebar = <Sidebar actions={sidebar_content} content={sidebar_actions}></Sidebar>;
     const inputComponent = (
         <QuestionInput
             clearOnSend
@@ -119,7 +122,7 @@ const Brainstorm = () => {
                     botmsg={<Mindmap markdown={answer[1].answer}></Mindmap>}
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -142,19 +145,23 @@ const Brainstorm = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={t("brainstorm.header")}
+            header_as_markdown={false}
             messages_description={t("common.messages")}
+            size="small"
         ></ChatLayout>
     );
 };

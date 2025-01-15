@@ -41,11 +41,12 @@ export const UserChatMessage = ({ message, token, setQuestion, answers, setAnswe
                 className={styles.answerText}
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeRaw]}
-                children={message}
                 components={{
                     code: CodeBlockRenderer
                 }}
-            />
+            >
+                {message}
+            </Markdown>
         </div>
     );
 };

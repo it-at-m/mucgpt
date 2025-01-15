@@ -84,7 +84,7 @@ export async function saveToDB(
             let name: string = "";
             let new_idcounter = id_counter;
             if (language != undefined && temperature != undefined && system_message != undefined && max_output_tokens != undefined && model != undefined) {
-                name = await (await getChatName(a, language, temperature, system_message, max_output_tokens, model)).content;
+                name = await (await _getChatName(a, language, temperature, system_message, max_output_tokens, model)).content;
                 name = name.replaceAll('"', "").replaceAll(".", "");
             }
             if (storage.objectStore_name === "chat") {
@@ -120,7 +120,7 @@ export async function saveToDB(
     }
 }
 
-export async function getChatName(answers: any, language: string, temperature: number, system_message: string, max_output_tokens: number, model: string) {
+async function _getChatName(answers: any, language: string, temperature: number, system_message: string, max_output_tokens: number, model: string) {
     const history: ChatTurn[] = [{ user: answers[0], bot: answers[1].answer }];
     const request: ChatRequest = {
         history: [
@@ -148,16 +148,6 @@ export async function getChatName(answers: any, language: string, temperature: n
         throw Error(parsedResponse.error || "Unknown error");
     }
     return parsedResponse;
-}
-
-export async function renameChat(storage: indexedDBStorage, newName: string, chat: any) {
-    try {
-        const db = await connectToDB(storage);
-        chat.Data.Name = newName;
-        await db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(chat);
-    } catch (error) {
-        onError(error);
-    }
 }
 
 export async function getStartDataFromDB(storage: indexedDBStorage, id: number): Promise<any> {
@@ -192,15 +182,12 @@ export async function deleteChatFromDB(
     }
 }
 
-export async function popLastMessageInDB(storage: indexedDBStorage, id: number) {
+export async function checkStructurOfDB(storage: indexedDBStorage) {
     try {
         const db = await connectToDB(storage);
-        const chat = db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
-        const stored = await chat.get(id);
-        if (stored) {
-            await chat.delete(id);
-            stored.Data.Answers.pop();
-            await chat.put(stored);
+        const storeName = storage.objectStore_name;
+        if (!db.objectStoreNames.contains(storeName)) {
+            db.createObjectStore(storeName, { keyPath: "id" });
         }
     } catch (error) {
         onError(error);
@@ -216,6 +203,23 @@ export async function getHighestKeyInDB(storage: indexedDBStorage): Promise<numb
     } catch (error) {
         onError(error);
         return 0;
+    }
+}
+
+// Chat functions
+
+export async function popLastMessageInDB(storage: indexedDBStorage, id: number) {
+    try {
+        const db = await connectToDB(storage);
+        const chat = db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name);
+        const stored = await chat.get(id);
+        if (stored) {
+            await chat.delete(id);
+            stored.Data.Answers.pop();
+            await chat.put(stored);
+        }
+    } catch (error) {
+        onError(error);
     }
 }
 
@@ -269,6 +273,17 @@ export const changeMaxTokensInDb = async (tokens: number, id: number, storage: i
     }
 };
 
+// History functions
+export async function renameChat(storage: indexedDBStorage, newName: string, chat: any) {
+    try {
+        const db = await connectToDB(storage);
+        chat.Data.Name = newName;
+        await db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(chat);
+    } catch (error) {
+        onError(error);
+    }
+}
+
 export const changeFavouritesInDb = async (fav: boolean, id: number, storage: indexedDBStorage) => {
     try {
         const db = await connectToDB(storage);
@@ -282,17 +297,7 @@ export const changeFavouritesInDb = async (fav: boolean, id: number, storage: in
     }
 };
 
-export async function checkStructurOfDB(storage: indexedDBStorage) {
-    try {
-        const db = await connectToDB(storage);
-        const storeName = storage.objectStore_name;
-        if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName, { keyPath: "id" });
-        }
-    } catch (error) {
-        onError(error);
-    }
-}
+// Bot functions
 
 export async function storeBot(bot: Bot) {
     try {

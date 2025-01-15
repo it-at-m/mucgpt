@@ -315,14 +315,13 @@ const BotChat = () => {
         }
     };
     let toOwnBots = () => {
-        let newId = uuid();
-        copyHistory(bot_id, newId, community_bot_history_storage, bot_history_storage);
+        copyHistory(bot_id, bot_id, community_bot_history_storage, bot_history_storage);
         let bot: Bot = {
             title: title + " Kopie",
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: newId,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         }

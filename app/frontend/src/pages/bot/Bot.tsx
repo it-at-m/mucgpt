@@ -5,7 +5,6 @@ import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, Chu
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
-import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import {
@@ -26,6 +25,7 @@ import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/Botsetting
 import { MessageError } from "../chat/MessageError";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ClearChatButton } from "../../components/ClearChatButton";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -281,8 +281,13 @@ const BotChat = () => {
         }
     };
 
-    const commands = [
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+    const actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+        </>
+    );
+
+    const sidebar = [
         <BotsettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -296,6 +301,7 @@ const BotChat = () => {
             setDescription={onDescriptionChanged}
             bot_id={bot_id}
             setPublish={onPublishChanged}
+            actions={actions}
         ></BotsettingsDrawer>
     ];
     const examplesComponent = <></>;
@@ -345,7 +351,7 @@ const BotChat = () => {
                     }
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -368,19 +374,23 @@ const BotChat = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
-            header={description}
+            header=""
+            header_as_markdown={false}
             messages_description={t("common.messages")}
+            size="large"
         ></ChatLayout>
     );
 };

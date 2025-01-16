@@ -14,6 +14,8 @@ import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFro
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { SummarizeSidebar } from "../../components/SummarizeSidebar/SummarizeSidebar";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
 
@@ -91,22 +93,15 @@ const Summarize = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const onDetaillevelChanged = (e: any, selection: RadioGroupOnChangeData) => {
-        setDetaillevel(selection.value as "long" | "medium" | "short");
-        localStorage.setItem(STORAGE_KEY_LEVEL_OF_DETAIL, selection.value);
+    const onDetaillevelChanged = (newValue: string) => {
+        setDetaillevel(newValue as "long" | "medium" | "short");
+        localStorage.setItem(STORAGE_KEY_LEVEL_OF_DETAIL, newValue);
     };
 
     const examplesComponent = <ExampleListSum onExampleClicked={onExampleClicked} />;
-    const commands = [
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-        <Field label={t("sum.levelofdetail")}>
-            <RadioGroup layout="vertical" onChange={onDetaillevelChanged} value={detaillevel_pref}>
-                <Radio value="short" label={t("sum.short")} />
-                <Radio value="medium" label={t("sum.medium")} />
-                <Radio value="long" label={t("sum.long")} />
-            </RadioGroup>
-        </Field>
-    ];
+    const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
+    const sidebar_content = <SummarizeSidebar onDetaillevelChanged={onDetaillevelChanged} detaillevel_pref={detaillevel_pref} />;
+    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
     const answerList = (
         <>
             {answers.map((answer, index) => (
@@ -129,7 +124,7 @@ const Summarize = () => {
                     botmsg={<SumAnswer answer={answer[1]} top_n={2}></SumAnswer>}
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -152,7 +147,9 @@ const Summarize = () => {
                         </>
                     }
                 ></ChatTurnComponent>
-                : <div></div>}
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
@@ -170,13 +167,15 @@ const Summarize = () => {
     );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={t("sum.header")}
+            header_as_markdown={false}
             messages_description={t("common.messages")}
+            size="small"
         ></ChatLayout>
     );
 };

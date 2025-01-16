@@ -1,18 +1,6 @@
-import {
-    Button,
-    Drawer,
-    DrawerBody,
-    DrawerHeader,
-    DrawerHeaderTitle,
-    Menu,
-    MenuItem,
-    MenuList,
-    MenuPopover,
-    MenuTrigger,
-    Tooltip
-} from "@fluentui/react-components";
-import { Options24Regular, Dismiss24Regular, History24Regular } from "@fluentui/react-icons";
-import { MutableRefObject, useState } from "react";
+import { Button, DrawerBody, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
+import { Options24Regular } from "@fluentui/react-icons";
+import { MutableRefObject, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB, connectToDB } from "../../service/storage";
 import { AskResponse } from "../../api/models";
@@ -42,7 +30,6 @@ export const History = ({
     setError
 }: Props) => {
     const { t } = useTranslation();
-    const [isOpen, setIsOpen] = useState(false);
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
 
     const loadChat = async (stored: any) => {
@@ -55,7 +42,6 @@ export const History = ({
         }
         setAnswers(storedAnswers);
         let id = stored.id;
-        setIsOpen(false);
         setCurrentId(id);
         onTemperatureChanged(stored.Options.temperature, id);
         onMaxTokensChanged(stored.Options.maxTokens, id);
@@ -173,42 +159,20 @@ export const History = ({
     };
     const open = () => {
         getAllChats();
-        setIsOpen(true);
     };
+
+    useEffect(() => {
+        open();
+    }, []);
 
     return (
         <div>
-            <Drawer type={"overlay"} separator open={isOpen} position="end" onOpenChange={(_, { open }) => setIsOpen(open)}>
-                <DrawerHeader>
-                    <DrawerHeaderTitle
-                        action={
-                            <Button
-                                appearance="subtle"
-                                aria-label={t("components.history.close")}
-                                icon={<Dismiss24Regular />}
-                                onClick={() => setIsOpen(false)}
-                            />
-                        }
-                    >
-                        <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                            <p>{t("components.history.history")}:</p>
-                        </Tooltip>
-                    </DrawerHeaderTitle>
-                </DrawerHeader>
-
-                <DrawerBody>{chatButtons}</DrawerBody>
-            </Drawer>
-            <div className={styles.button}>
-                <Tooltip content={t("components.history.button")} relationship="description" positioning="below">
-                    <Button
-                        aria-label={t("components.history.button")}
-                        icon={<History24Regular />}
-                        appearance="secondary"
-                        onClick={() => open()}
-                        size="large"
-                    ></Button>
+            <div className={styles.historyHeader}>
+                <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
+                    <h3>{t("components.history.history")}</h3>
                 </Tooltip>
             </div>
+            <div className={styles.historyContent}>{chatButtons}</div>
         </div>
     );
 };

@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
+import { Button, Tooltip } from "@fluentui/react-components";
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -30,6 +31,7 @@ import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
+import { History24Regular } from "@fluentui/react-icons";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
@@ -319,7 +321,7 @@ const Chat = () => {
                 ></ChatTurnComponent>
             ))}
 
-            {(isLoading || error) ?
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -341,8 +343,10 @@ const Chat = () => {
                             {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} /> : null}
                         </>
                     }
-                ></ChatTurnComponent> : <div></div>
-            }
+                ></ChatTurnComponent>
+            ) : (
+                <div></div>
+            )}
             <div ref={chatMessageStreamEnd} />
         </>
     );
@@ -358,9 +362,27 @@ const Chat = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const commands = [
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-
+    const sidebar_actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+        </>
+    );
+    const sidebar_content = (
+        <>
+            <History
+                storage={storage}
+                setAnswers={setAnswers}
+                lastQuestionRef={lastQuestionRef}
+                currentId={currentId}
+                setCurrentId={setCurrentId}
+                onTemperatureChanged={onTemperatureChanged}
+                onMaxTokensChanged={onMaxTokensChanged}
+                onSystemPromptChanged={onSystemPromptChanged}
+                setError={setError}
+            ></History>
+        </>
+    );
+    const sidebar = (
         <ChatsettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -369,29 +391,21 @@ const Chat = () => {
             systemPrompt={systemPrompt}
             setSystemPrompt={onSystemPromptChanged}
             current_id={currentId}
-        ></ChatsettingsDrawer>,
-
-        <History
-            storage={storage}
-            setAnswers={setAnswers}
-            lastQuestionRef={lastQuestionRef}
-            currentId={currentId}
-            setCurrentId={setCurrentId}
-            onTemperatureChanged={onTemperatureChanged}
-            onMaxTokensChanged={onMaxTokensChanged}
-            onSystemPromptChanged={onSystemPromptChanged}
-            setError={setError}
-        ></History>
-    ];
+            actions={sidebar_actions}
+            content={sidebar_content}
+        ></ChatsettingsDrawer>
+    );
     return (
         <ChatLayout
-            commands={commands}
+            sidebar={sidebar}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={t("chat.header")}
+            header_as_markdown={false}
             messages_description={t("common.messages")}
+            size="large"
         ></ChatLayout>
     );
 };

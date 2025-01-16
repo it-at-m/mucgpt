@@ -251,7 +251,9 @@ const BotChat = () => {
             }
             generateTags(options).then(tags => {
                 console.log(tags);
+
                 if (tags) {
+
                     newCommunityBot.tags = tags;
                     addCommunityBot(newCommunityBot).then((newId: string) => {
                         getBotWithId(bot_id).then(bot => {

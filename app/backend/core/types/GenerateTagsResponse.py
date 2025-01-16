@@ -1,7 +1,8 @@
-from typing import List
 
 from pydantic import BaseModel
 
 
 class GenerateTagsResponse(BaseModel):
-    tags: List[str]
+    tag1: str
+    tag2: str
+    tag3: str

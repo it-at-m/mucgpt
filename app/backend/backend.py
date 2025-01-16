@@ -10,6 +10,7 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from fastapi.staticfiles import StaticFiles
+from langchain.prompts import PromptTemplate
 from langchain_core.messages.human import HumanMessage
 from pydantic_core import from_json
 
@@ -31,6 +32,7 @@ from core.types.CreateBotRequest import CreateBotRequest
 from core.types.CreateBotResult import CreateBotResult
 from core.types.GenerateTagsRequest import GenerateTagsRequest
 from core.types.GenerateTagsResponse import GenerateTagsResponse
+from core.types.LlmConfigs import LlmConfigs
 from core.types.SimplyRequest import SimplyRequest
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
@@ -349,33 +351,29 @@ async def generate_tags(
     id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
 ) -> GenerateTagsResponse:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
-    tags = []
+    tags = GenerateTagsResponse(tag1="", tag2="", tag3="")
     try:
         impl = cfg["chat_approaches"]
+        config: LlmConfigs = {
+            "llm": "gpt-4o"
+        }
+        llm = impl.llm.with_config(configurable=config)
         bot:Bot = request.bot
         logger.info("generate_tags: reading tag generator")
         with open("generate_tags/prompt_for_generating_tags.md", encoding="utf-8") as f:
             system_message = f.read()
         existing_tags = bot_database.getAllTags()
-        history = [ChatTurn(user=f"Titel:'{bot.title}', Beschreibung: '{bot.description}' , Systemprompt: ```{bot.system_message}```, Tag-Liste: {existing_tags}")]
         logger.info("generate_tags: creating tags")
-        tags = impl.run_without_streaming(
-            history=history,
-            temperature=1.0,
-            system_message=system_message,
-            department=department,
-            llm_name=request.model,
-            max_output_tokens=request.max_output_tokens,
-        )
-        tags = tags.content.replace('"', "").replace('[', "").replace(' ', "").replace(']', "").replace('\n', "").replace('`', "").replace('json', "").split(',')
+        chain = PromptTemplate(input_variables=["title", "description", "system_message", "existing_tags"], template=system_message) | llm.with_structured_output(schema=GenerateTagsResponse,  method="json_mode")
+        tags = chain.invoke({"title":bot.title, "description": bot.description , "system_message":bot.system_message, "existing_tags": existing_tags})
+        logger.info(f"generate_tags: returning finished {tags}")
     except Exception as e:
         logger.exception("Exception in /generate_tags")
         logger.exception(str(e))
         raise HTTPException(
             status_code=500, detail="Exception in chat: something bad happened"
         )
-    return GenerateTagsResponse(tags=tags)
+    return tags
 
 @api_app.get("/statistics")
 async def getStatistics(

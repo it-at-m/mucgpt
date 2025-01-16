@@ -233,6 +233,6 @@ export async function generateTags(options: GenerateTagsRequest): Promise<string
         })
     }).then(async response => {
         const parsedResponse = await handleResponse(response);
-        return parsedResponse.tags;
+        return [parsedResponse.tag1, parsedResponse.tag2, parsedResponse.tag3].filter(tag => tag !== "");
     });
 }

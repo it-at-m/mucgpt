@@ -90,11 +90,12 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                         className={styles.answerText}
                         remarkPlugins={[remarkGfm]}
                         rehypePlugins={[rehypeRaw]}
-                        children={answer.answer}
                         components={{
                             code: CodeBlockRenderer
                         }}
-                    />
+                    >
+                        {answer.answer}
+                    </Markdown>
                 )}
                 {!formatted && (
                     <div className={styles.unformattedAnswer} tabIndex={0}>

@@ -330,8 +330,13 @@ const BotChat = () => {
     }
 
 
-    const commands = [
-        <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+    const actions = (
+        <>
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+        </>
+    );
+
+    const sidebar = [
         <CommunityBotSettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -347,7 +352,7 @@ const BotChat = () => {
             setPublish={onPublishChanged}
             isOwner={false}
             toOwnBots={toOwnBots}
-        ></CommunityBotSettingsDrawer>
+            actions={actions}></CommunityBotSettingsDrawer>
     ];
     const examplesComponent = <></>;
     const inputComponent = (
@@ -425,14 +430,12 @@ const BotChat = () => {
     );
     return (
         <ChatLayout
-            commands={commands}
             examples={examplesComponent}
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
             header={description}
-            messages_description={t("common.messages")}
-        ></ChatLayout>
+            messages_description={t("common.messages")} sidebar={sidebar} header_as_markdown={false} size={"large"}        ></ChatLayout>
     );
 };
 

@@ -233,7 +233,7 @@ export const Layout = () => {
                     </header>
                     <Outlet />
 
-                    <footer className={styles2.footer} role={"banner"}>
+                    <footer className={styles.footer} role={"banner"}>
                         <div>
                             Landeshauptstadt München <br />
                             RIT/it@M KICC <br />

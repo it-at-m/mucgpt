@@ -47,7 +47,7 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
                     style={ligth_theme_pref ? duotoneLight : dark}
                     language={language}
                     PreTag="div"
-                    showLineNumbers={true}
+                    showLineNumbers={false}
                     wrapLongLines={true}
                 />
                 <div className={styles.copyContainer}>

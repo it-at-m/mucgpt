@@ -10,7 +10,7 @@ export type ExampleModel = {
 
 const EXAMPLES: ExampleModel[] = [
     {
-        text: "Arbeitsschutzgesetz",
+        text: "Arbeitszeitgesetz",
         value: `Erster Abschnitt
     Allgemeine Vorschriften
     Nichtamtliches Inhaltsverzeichnis

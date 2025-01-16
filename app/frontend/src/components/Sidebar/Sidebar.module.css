@@ -1,0 +1,24 @@
+.header {
+    margin-bottom: 5px;
+    font-size: var(--fontSizeBase400);
+    margin-top: var(--spacingVerticalS);
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+}
+.drawer {
+    width: var(--sidebarWidth);
+}
+
+@media (max-width: 650px) {
+    .drawer {
+        width: 100%;
+    }
+}
+
+.drawerContent {
+    overflow-y: auto;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    max-height: calc(100vh - 140px);
+}

@@ -25,7 +25,6 @@
     padding-top: 16px;
     padding-bottom: 16px;
     font-size: var(--fontSizeBase400);
-    max-width: 90%;
     overflow-x: auto;
 }
 
@@ -41,19 +40,24 @@
 
 @keyframes loading {
     0% {
-        content: "";
+        content: ".";
+        transform: translateY(0);
     }
     25% {
-        content: ".";
+        content: ".💡";
+        transform: translateY(-10px);
     }
     50% {
-        content: "..";
+        content: "..💡";
+        transform: translateY(-20px);
     }
     75% {
-        content: "...";
+        content: "...💡";
+        transform: translateY(-30px);
     }
     100% {
-        content: "";
+        content: "....💡";
+        transform: translateY(0);
     }
 }
 

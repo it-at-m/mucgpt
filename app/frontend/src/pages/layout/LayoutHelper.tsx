@@ -2,15 +2,6 @@ import { BrandVariants, createDarkTheme, createLightTheme, makeStyles } from "@f
 import { tokens } from "@fluentui/react-theme";
 
 export const useStyles = makeStyles({
-    footer: {
-        display: "flex",
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "space-between",
-        marginTop: "auto",
-        backgroundColor: tokens.colorBrandBackground2,
-        color: tokens.colorNeutralBackground1
-    },
     header: {
         backgroundColor: tokens.colorBrandBackground2,
         color: tokens.colorBrandForeground2

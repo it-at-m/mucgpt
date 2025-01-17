@@ -23,6 +23,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
 interface Props {
     actions: JSX.Element;
     temperature: number;
@@ -58,12 +59,9 @@ export const CommunityBotSettingsDrawer = ({
     isOwner,
     toOwnBots
 }: Props) => {
-    const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
-    const onClickRightButton = useCallback(() => {
-        setIsOpen(true);
-    }, []);
+    const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
@@ -75,30 +73,16 @@ export const CommunityBotSettingsDrawer = ({
     const min_temp = 0;
     const max_temp = 1;
 
-    const isEmptySystemPrompt = systemPrompt.trim() === "";
-
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
-    const onDelteClick = () => {
+    const deleteBot = () => {
         window.location.href = "/";
-        deleteCommunityBotWithId(+bot_id);
-    };
-    const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) setSystemPrompt(newValue.value);
-        else setSystemPrompt("");
-    };
-    const onTitleChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) setTitle(newValue.value);
-        else setTitle("Assistent " + bot_id);
-    };
-    const onDescriptionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) setDescription(newValue.value);
-        else setDescription("");
+        deleteCommunityBotWithId(bot_id);
     };
 
-    const onClearSystemPrompt = () => {
-        setSystemPrompt("");
+    const onDelteClick = () => {
+        setShowDeleteDialog(true);
     };
     const content = (
         <>
@@ -206,6 +190,7 @@ export const CommunityBotSettingsDrawer = ({
                     </Label>
                 </div>
             </div>
+            <DeletBotDialog showDialog={showDeleteDialog} setShowDialog={setShowDeleteDialog} bot_name={title} deleteBot={deleteBot} />
         </>)
     const actions_component = (
         <>

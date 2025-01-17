@@ -25,6 +25,8 @@ import { storeCommunityBot } from "../../service/storage_bot"
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
+import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
 interface Props {
     showSearchDialogInput: boolean;
     setShowSearchDialogInput: (showDialogInput: boolean) => void;
@@ -185,7 +187,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                     choosenBot.tags ? choosenBot.tags.map((tag: string) => <Tag shape="circular">{tag}</Tag>) : ""
                                 }
                             </div>
-                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{choosenBot.description}</Markdown>
+                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlockRenderer }}>{choosenBot.description}</Markdown>
                             <strong>{t('components.community_bots.system_message')}: </strong>
                             <hr />
                             <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{choosenBot.system_message}</Markdown>
@@ -201,6 +203,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
+
         </div >
     );
 };

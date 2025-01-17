@@ -238,6 +238,11 @@ i18n
                         },
                         search_bot_button: {
                             search_bots: "Bots suchen"
+                        },
+                        deletebotdialog: {
+                            confirm: "Willst du den Bot wirklich löschen?",
+                            back: "Zurück",
+                            delete: "Löschen"
                         }
                     }
                 }
@@ -466,6 +471,11 @@ i18n
                         },
                         search_bot_button: {
                             search_bots: "Search bots"
+                        },
+                        deletebotdialog: {
+                            confirm: "Do you really want to delete the bot?",
+                            back: "Back",
+                            delete: "Delete"
                         }
                     }
                 }
@@ -695,6 +705,11 @@ i18n
                         },
                         search_bot_button: {
                             search_bots: "Bots suachen"
+                        },
+                        deletebotdialog: {
+                            confirm: "Wuisd du den Bot wirklich löschn?",
+                            back: "Zruck",
+                            delete: "Löschn"
                         }
                     }
                 }
@@ -918,6 +933,11 @@ i18n
                         },
                         search_bot_button: {
                             search_bots: "Rechercher des bots"
+                        },
+                        deletebotdialog: {
+                            confirm: "Voulez-vous vraiment supprimer le bot?",
+                            back: "Retour",
+                            delete: "Supprimer"
                         }
                     }
                 }
@@ -1139,6 +1159,11 @@ i18n
                         },
                         search_bot_button: {
                             search_bots: "Шукати ботів"
+                        },
+                        deletebotdialog: {
+                            confirm: "Ви дійсно хочете видалити бота?",
+                            back: "Назад",
+                            delete: "Видалити"
                         }
                     }
                 }

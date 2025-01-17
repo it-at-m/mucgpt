@@ -189,7 +189,7 @@ export async function deleteBotWithId(id: string) {
     };
 }
 
-export async function deleteCommunityBotWithId(id: number) {
+export async function deleteCommunityBotWithId(id: string) {
     let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
     openRequest.onerror = () => onError(openRequest);

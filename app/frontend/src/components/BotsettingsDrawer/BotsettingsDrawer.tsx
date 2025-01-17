@@ -22,6 +22,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -56,6 +57,7 @@ export const BotsettingsDrawer = ({
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
@@ -71,6 +73,9 @@ export const BotsettingsDrawer = ({
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
     const onDelteClick = () => {
+        setShowDeleteDialog(true);
+    };
+    const deleteBot = () => {
         window.location.href = "/";
         deleteBotWithId(bot_id);
     };
@@ -284,6 +289,7 @@ export const BotsettingsDrawer = ({
                     </Label>
                 </div>
             </div>
+            <DeletBotDialog showDialog={showDeleteDialog} setShowDialog={setShowDeleteDialog} bot_name={title} deleteBot={deleteBot} />
         </>
     );
     return <Sidebar actions={actions_component} content={content}></Sidebar>;

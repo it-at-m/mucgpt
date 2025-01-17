@@ -231,6 +231,27 @@ const Chat = () => {
         storageService.deleteChatFromDB(CURRENT_CHAT_IN_DB, setAnswers, true, lastQuestionRef);
     };
 
+    const onDeleteMessage = (message: string) => {
+        return async () => {
+            let last;
+            while (answers.length) {
+                await storageService.popLastMessageInDB(currentId);
+                last = answers.pop();
+                setAnswers(answers);
+                if (last && last[0] == message) {
+                    break;
+                }
+            }
+            if (answers.length == 0) {
+                storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
+                storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
+            }
+            if (last)
+                lastQuestionRef.current = last[0];
+            setQuestion(message);
+        }
+    };
+
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0) {
             let last = answers.pop();
@@ -281,13 +302,7 @@ const Chat = () => {
                     usermsg={
                         <UserChatMessage
                             message={answer[0]}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storageService.config}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
+                            onDeleteMessage={onDeleteMessage(answer[0])}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
@@ -312,13 +327,7 @@ const Chat = () => {
                     usermsg={
                         <UserChatMessage
                             message={lastQuestionRef.current}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storageService.config}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
+                            onDeleteMessage={onDeleteMessage(lastQuestionRef.current)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}

@@ -9,7 +9,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
-import { StorageService } from "../../service/storage";
+import { ChatStorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
@@ -36,7 +36,7 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storageService: StorageService = new StorageService({ db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 });
+    const storageService: ChatStorageService = new ChatStorageService({ db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 });
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);
     useEffect(() => {
@@ -90,6 +90,28 @@ const Summarize = () => {
         storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
     };
 
+    const onDeleteMessage = (message: string) => {
+        return async () => {
+            let last;
+            while (answers.length) {
+                await storageService.popLastMessageInDB(currentId);
+                last = answers.pop();
+                setAnswers(answers);
+                if (last && last[0] == message) {
+                    break;
+                }
+            }
+            if (answers.length == 0) {
+                storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
+                storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
+            }
+            if (last)
+                lastQuestionRef.current = last[0];
+            setQuestion(message);
+        }
+    };
+
+
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const onDetaillevelChanged = (newValue: string) => {
@@ -109,13 +131,7 @@ const Summarize = () => {
                     usermsg={
                         <UserChatMessage
                             message={answer[0]}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storageService.config}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
+                            onDeleteMessage={onDeleteMessage(answer[0])}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
@@ -128,13 +144,7 @@ const Summarize = () => {
                     usermsg={
                         <UserChatMessage
                             message={lastQuestionRef.current}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storageService.config}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
+                            onDeleteMessage={onDeleteMessage(lastQuestionRef.current)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}

@@ -1,6 +1,6 @@
 import { Button, Tooltip } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { deleteChatFromDB, indexedDBStorage, popLastBotMessageInDB, popLastMessageInDB } from "../../service/storage";
+import { BotStorageService, ChatStorageService, StorageService, bot_history_storage, bot_storage, indexedDBStorage } from "../../service/storage";
 import { DeleteArrowBackRegular } from "@fluentui/react-icons";
 
 import styles from "./UserChatMessage.module.css";
@@ -19,13 +19,17 @@ interface Props {
 
 export const RollBackMessage = ({ message, setQuestion, answers, setAnswers, storage, lastQuestionRef, current_id, is_bot }: Props) => {
     const { t } = useTranslation();
+
+    const botStorageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+    const storageService: ChatStorageService = new ChatStorageService(storage);
+
     const deleteMessageAndRollbackChat = () => {
         let last;
         while (answers.length) {
             if (is_bot) {
-                popLastBotMessageInDB(current_id);
+                botStorageService.popLastBotMessageInDB(current_id);
             } else {
-                popLastMessageInDB(storage, current_id);
+                storageService.popLastMessageInDB(current_id); //TODO
             }
 
             last = answers.pop();
@@ -35,8 +39,8 @@ export const RollBackMessage = ({ message, setQuestion, answers, setAnswers, sto
             }
         }
         if (answers.length == 0) {
-            deleteChatFromDB(storage, current_id, setAnswers, true, lastQuestionRef);
-            deleteChatFromDB(storage, 0, setAnswers, false, lastQuestionRef);
+            storageService.deleteChatFromDB(current_id, setAnswers, true, lastQuestionRef);
+            storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
         } else {
             lastQuestionRef.current = last[1];
         }

@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { Button, Tooltip } from "@fluentui/react-components";
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
@@ -12,18 +11,8 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import {
-    indexedDBStorage,
-    saveToDB,
-    getStartDataFromDB,
-    popLastMessageInDB,
-    getHighestKeyInDB,
-    deleteChatFromDB,
-    getCurrentChatID,
-    changeTemperatureInDb,
-    changeMaxTokensInDb,
-    changeSystempromptInDb,
     CURRENT_CHAT_IN_DB,
-    checkStructurOfDB
+    ChatStorageService
 } from "../../service/storage";
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
@@ -31,7 +20,6 @@ import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
-import { History24Regular } from "@fluentui/react-icons";
 
 const enum STORAGE_KEYS {
     CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
@@ -62,11 +50,12 @@ const Chat = () => {
     const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    const storage: indexedDBStorage = {
+    const storageService: ChatStorageService = new ChatStorageService({
         db_name: "MUCGPT-CHAT",
         objectStore_name: "chat",
         db_version: 2
-    };
+    });
+
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);
 
@@ -88,11 +77,11 @@ const Chat = () => {
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
     useEffect(() => {
-        checkStructurOfDB(storage);
+        storageService.checkStructurOfDB();
         setAnswers([]);
         lastQuestionRef.current = "";
-        getHighestKeyInDB(storage).then(highestKey => {
-            getCurrentChatID(storage).then(refID => {
+        storageService.getHighestKeyInDB().then(highestKey => {
+            storageService.getCurrentChatID().then(refID => {
                 error && setError(undefined);
                 setIsLoading(true);
                 let key;
@@ -103,7 +92,7 @@ const Chat = () => {
                 }
                 setIdCounter(key);
                 setCurrentId(key);
-                getStartDataFromDB(storage, key).then(stored => {
+                storageService.getStartDataFromDB(key).then(stored => {
                     if (stored) {
                         // if the chat exists
                         let storedAnswers = stored.Data.Answers;
@@ -137,9 +126,8 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
         let askResponse: AskResponse = {} as AskResponse;
-        saveToDB(
+        storageService.saveToDB(
             [question, { ...askResponse, answer: "", tokens: 0 }, 0],
-            storage,
             startId,
             idCounter,
             setCurrentId,
@@ -195,9 +183,8 @@ const Chat = () => {
                     }
                 }
                 if (startId == currentId) {
-                    saveToDB(
+                    storageService.saveToDB(
                         [question, latestResponse, user_tokens],
-                        storage,
                         startId,
                         idCounter,
                         setCurrentId,
@@ -216,9 +203,8 @@ const Chat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (startId == currentId) {
-                    saveToDB(
+                    storageService.saveToDB(
                         [question, parsedResponse, 0],
-                        storage,
                         currentId,
                         idCounter,
                         setCurrentId,
@@ -242,14 +228,14 @@ const Chat = () => {
         setCurrentId(idCounter + 1);
         lastQuestionRef.current = "";
         error && setError(undefined);
-        deleteChatFromDB(storage, CURRENT_CHAT_IN_DB, setAnswers, true, lastQuestionRef);
+        storageService.deleteChatFromDB(CURRENT_CHAT_IN_DB, setAnswers, true, lastQuestionRef);
     };
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            popLastMessageInDB(storage, currentId);
+            storageService.popLastMessageInDB(currentId);
             if (last) {
                 makeApiRequest(last[0], systemPrompt);
             }
@@ -268,7 +254,7 @@ const Chat = () => {
     const onTemperatureChanged = (temp: number, id: number) => {
         setTemperature(temp);
         localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString());
-        changeTemperatureInDb(temp, id, storage);
+        storageService.changeTemperatureInDb(temp, id);
     };
 
     const onMaxTokensChanged = (maxTokens: number, id: number) => {
@@ -277,14 +263,14 @@ const Chat = () => {
         } else {
             setMaxOutputTokens(maxTokens);
             localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString());
-            changeMaxTokensInDb(maxTokens, id, storage);
+            storageService.changeMaxTokensInDb(maxTokens, id);
         }
     };
 
     const onSystemPromptChanged = (systemPrompt: string, id: number) => {
         setSystemPrompt(systemPrompt);
         localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt);
-        changeSystempromptInDb(systemPrompt, id, storage);
+        storageService.changeSystempromptInDb(systemPrompt, id);
     };
 
     const answerList = (
@@ -298,7 +284,7 @@ const Chat = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={currentId}
                             is_bot={false}
@@ -329,7 +315,7 @@ const Chat = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={currentId}
                             is_bot={false}
@@ -370,7 +356,7 @@ const Chat = () => {
     const sidebar_content = (
         <>
             <History
-                storage={storage}
+                storage={storageService.config}
                 setAnswers={setAnswers}
                 lastQuestionRef={lastQuestionRef}
                 currentId={currentId}

@@ -8,14 +8,9 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import {
+    BotStorageService,
     bot_history_storage,
-    bot_storage,
-    deleteChatFromDB,
-    getBotWithId,
-    getStartDataFromDB,
-    popLastBotMessageInDB,
-    saveBotChatToDB,
-    storeBot
+    bot_storage
 } from "../../service/storage";
 
 import useDebounce from "../../hooks/debouncehook";
@@ -54,8 +49,7 @@ const BotChat = () => {
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const storage = bot_storage;
-    const storage_history = bot_history_storage;
+    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
             const response = await countTokensAPI({ text: debouncedSystemPrompt, model: LLM });
@@ -64,7 +58,7 @@ const BotChat = () => {
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            getBotWithId(+bot_id).then(bot => {
+            storageService.getBotWithId(+bot_id).then(bot => {
                 if (bot) {
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
@@ -76,7 +70,7 @@ const BotChat = () => {
             });
             error && setError(undefined);
             setIsLoading(true);
-            getStartDataFromDB(storage_history, +bot_id).then(stored => {
+            storageService.getStartDataFromDB(+bot_id).then(stored => {
                 if (stored) {
                     let storedAnswers = stored.Answers;
                     lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
@@ -153,7 +147,7 @@ const BotChat = () => {
                     }
                 }
                 if (bot_id) {
-                    saveBotChatToDB([question, latestResponse, user_tokens], +bot_id);
+                    storageService.saveBotChatToDB([question, latestResponse, user_tokens], +bot_id);
                 }
             } else {
                 const parsedResponse: AskResponse = await response.json();
@@ -162,7 +156,7 @@ const BotChat = () => {
                 }
                 setAnswers([...answers, [question, parsedResponse, 0]]);
                 if (bot_id) {
-                    saveBotChatToDB([question, parsedResponse, 0], +bot_id);
+                    storageService.saveBotChatToDB([question, parsedResponse, 0], +bot_id);
                 }
             }
         } catch (e) {
@@ -175,7 +169,7 @@ const BotChat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        deleteChatFromDB(storage_history, +bot_id, setAnswers, true, lastQuestionRef);
+        storageService.deleteChatFromDB(+bot_id, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -193,7 +187,7 @@ const BotChat = () => {
             temperature: temp,
             max_output_tokens: max_output_tokens
         };
-        storeBot(newBot);
+        storageService.storeBot(newBot);
     };
 
     const onMaxTokensChanged = (maxTokens: number) => {
@@ -210,7 +204,7 @@ const BotChat = () => {
                 temperature: temperature,
                 max_output_tokens: maxTokens
             };
-            storeBot(newBot);
+            storageService.storeBot(newBot);
         }
     };
 
@@ -225,7 +219,7 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storeBot(newBot);
+        storageService.storeBot(newBot);
     };
 
     const onPublishChanged = (publish: boolean) => {
@@ -239,7 +233,7 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storeBot(newBot);
+        storageService.storeBot(newBot);
     };
 
     const onTitleChanged = (title: string) => {
@@ -253,7 +247,7 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storeBot(newBot);
+        storageService.storeBot(newBot);
     };
 
     const onDescriptionChanged = (description: string) => {
@@ -267,14 +261,14 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storeBot(newBot);
+        storageService.storeBot(newBot);
     };
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0) {
             let last = answers.pop();
             setAnswers(answers);
-            popLastBotMessageInDB(+bot_id);
+            storageService.popLastBotMessageInDB(+bot_id);
             if (last) {
                 makeApiRequest(last[0], systemPrompt);
             }
@@ -327,7 +321,7 @@ const BotChat = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage_history}
+                            storage={storageService.bot_config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={+bot_id}
                             is_bot={true}
@@ -359,7 +353,7 @@ const BotChat = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={+bot_id}
                             is_bot={true}

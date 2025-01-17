@@ -9,8 +9,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
-import { Field, Radio, RadioGroup, RadioGroupOnChangeData } from "@fluentui/react-components";
-import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
@@ -37,18 +36,18 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 };
+    const storageService: StorageService = new StorageService({ db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 });
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);
     useEffect(() => {
-        checkStructurOfDB(storage);
-        getHighestKeyInDB(storage).then(highestKey => {
+        storageService.checkStructurOfDB();
+        storageService.getHighestKeyInDB().then(highestKey => {
             setIdCounter(highestKey + 1);
             setCurrentId(highestKey);
         });
         error && setError(undefined);
         setIsLoading(true);
-        getStartDataFromDB(storage, currentId).then(stored => {
+        storageService.getStartDataFromDB(currentId).then(stored => {
             if (stored) {
                 setAnswers([...answers.concat(stored.Data.Answers)]);
                 lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
@@ -76,7 +75,7 @@ const Summarize = () => {
             };
             const result = await sumApi(request, file);
             setAnswers([...answers, [questionText, result]]);
-            saveToDB([questionText, result], storage, currentId, idCounter, setCurrentId, setIdCounter);
+            storageService.saveToDB([questionText, result], currentId, idCounter, setCurrentId, setIdCounter);
         } catch (e) {
             setError(e);
         } finally {
@@ -88,7 +87,7 @@ const Summarize = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
-        deleteChatFromDB(storage, currentId, setAnswers, true, lastQuestionRef);
+        storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -113,7 +112,7 @@ const Summarize = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={currentId}
                             is_bot={false}
@@ -132,7 +131,7 @@ const Summarize = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={currentId}
                             is_bot={false}

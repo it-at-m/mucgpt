@@ -9,7 +9,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from "react-i18next";
-import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
+import { StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
@@ -29,7 +29,7 @@ const Brainstorm = () => {
     const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 };
+    const storageService: StorageService = new StorageService({ db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 });
 
     const [currentId, setCurrentId] = useState<number>(0);
     const [idCounter, setIdCounter] = useState<number>(0);
@@ -37,12 +37,12 @@ const Brainstorm = () => {
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
-        checkStructurOfDB(storage);
-        getHighestKeyInDB(storage).then(highestKey => {
+        storageService.checkStructurOfDB();
+        storageService.getHighestKeyInDB().then(highestKey => {
             setIdCounter(highestKey + 1);
             setCurrentId(highestKey);
         });
-        getStartDataFromDB(storage, currentId).then(stored => {
+        storageService.getStartDataFromDB(currentId).then(stored => {
             if (stored) {
                 setAnswers([...answers.concat(stored.Data.Answers)]);
                 lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
@@ -68,7 +68,7 @@ const Brainstorm = () => {
             };
             const result = await brainstormApi(request);
             setAnswers([...answers, [question, result]]);
-            saveToDB([question, result], storage, currentId, idCounter, setCurrentId, setIdCounter);
+            storageService.saveToDB([question, result], currentId, idCounter, setCurrentId, setIdCounter);
         } catch (e) {
             setError(e);
         } finally {
@@ -80,7 +80,7 @@ const Brainstorm = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
         setAnswers([]);
-        deleteChatFromDB(storage, currentId, setAnswers, true, lastQuestionRef);
+        storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -111,7 +111,7 @@ const Brainstorm = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={currentId}
                             is_bot={false}
@@ -130,7 +130,7 @@ const Brainstorm = () => {
                             setAnswers={setAnswers}
                             setQuestion={setQuestion}
                             answers={answers}
-                            storage={storage}
+                            storage={storageService.config}
                             lastQuestionRef={lastQuestionRef}
                             current_id={currentId}
                             is_bot={false}

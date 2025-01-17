@@ -3,7 +3,7 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { getAllBots, storeBot } from "../../service/storage";
+import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
 import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
@@ -16,13 +16,15 @@ const Menu = () => {
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
 
+    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+
     useEffect(() => {
         const arielle: Bot = arielle_bot;
         const sherlock: Bot = sherlock_bot;
-        storeBot(arielle);
-        storeBot(sherlock);
+        storageService.storeBot(arielle);
+        storageService.storeBot(sherlock);
         setCommunityBots([arielle, sherlock]);
-        getAllBots().then(bots => {
+        storageService.getAllBots().then(bots => {
             if (bots) {
                 setBots(bots);
             } else {

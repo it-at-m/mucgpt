@@ -13,7 +13,7 @@ import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { getBotName } from "../../service/storage";
+import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
 import { LightContext } from "./LightContext";
 
 const formatDate = (date: Date) => {
@@ -65,7 +65,6 @@ export const Layout = () => {
 
     const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
-
     const [title, setTitle] = useState<[number, string]>([0, ""]);
 
     const onFontscaleChange = (fontscale: number) => {
@@ -80,9 +79,12 @@ export const Layout = () => {
         setTheme(adjustTheme(light, fontscaling));
     };
 
+
+    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+
     useEffect(() => {
         if (id) {
-            getBotName(+id).then(title => {
+            storageService.getBotName(+id).then(title => {
                 setTitle(title);
             });
         }
@@ -105,7 +107,7 @@ export const Layout = () => {
 
     useEffect(() => {
         if (id) {
-            getBotName(+id).then(title => {
+            storageService.getBotName(+id).then(title => {
                 setTitle(title);
             });
         }

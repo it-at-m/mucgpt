@@ -2,7 +2,7 @@ import { Button, DrawerBody, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger,
 import { Options24Regular } from "@fluentui/react-icons";
 import { MutableRefObject, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { deleteChatFromDB, indexedDBStorage, onError, onUpgrade, renameChat, changeFavouritesInDb, CURRENT_CHAT_IN_DB, connectToDB } from "../../service/storage";
+import { CURRENT_CHAT_IN_DB, HistoryStorageService, indexedDBStorage } from "../../service/storage";
 import { AskResponse } from "../../api/models";
 import styles from "./History.module.css";
 import { MessageError } from "../../pages/chat/MessageError";
@@ -31,6 +31,7 @@ export const History = ({
 }: Props) => {
     const { t } = useTranslation();
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
+    const storageService: HistoryStorageService = new HistoryStorageService(storage);
 
     const loadChat = async (stored: any) => {
         setError(undefined);
@@ -49,10 +50,10 @@ export const History = ({
         stored["refID"] = id;
         stored["id"] = CURRENT_CHAT_IN_DB;
         try {
-            const db = await connectToDB(storage);
+            const db = await storageService.connectToDB();
             let putRequest = await db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(stored);
         } catch (error) {
-            onError(error);
+            storageService.onError(error);
         }
     };
     const getCategory = (lastEdited: string, fav: boolean) => {
@@ -71,30 +72,29 @@ export const History = ({
     const changeChatName = (chat: any) => {
         const newName = prompt(t("components.history.newchat"), chat.Data.Name);
         if (newName && newName.trim() !== "") {
-            renameChat(storage, newName.trim(), chat);
+            storageService.renameChat(newName.trim(), chat);
             getAllChats();
         }
     };
 
     const deleteChat = (
-        storage: indexedDBStorage,
         id: number,
         setAnswers: (answers: []) => void,
         isCurrent: boolean,
         lastQuestionRef: MutableRefObject<string>
     ) => {
-        deleteChatFromDB(storage, id, setAnswers, id === currentId, lastQuestionRef);
+        storageService.deleteChatFromDB(id, setAnswers, id === currentId, lastQuestionRef);
         getAllChats();
     };
 
     const changeFavourites = (fav: boolean, id: number) => {
-        changeFavouritesInDb(fav, id, storage);
+        storageService.changeFavouritesInDb(fav, id);
         getAllChats();
     };
 
     const getAllChats = async () => {
         try {
-            const db = await connectToDB(storage);
+            const db = await storageService.connectToDB(storage);
             let stored = await db.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).getAll();
             const categorizedChats = stored
                 .filter((chat: any) => chat.id !== 0)
@@ -134,7 +134,7 @@ export const History = ({
                                 </MenuTrigger>
                                 <MenuPopover>
                                     <MenuList>
-                                        <MenuItem onClick={() => deleteChat(storage, chat.id, setAnswers, chat.id === currentId, lastQuestionRef)}>
+                                        <MenuItem onClick={() => deleteChat(chat.id, setAnswers, chat.id === currentId, lastQuestionRef)}>
                                             {t("components.history.delete")}
                                         </MenuItem>
                                         <MenuItem onClick={() => changeChatName(chat)}>{t("components.history.rename")}</MenuItem>
@@ -154,7 +154,7 @@ export const History = ({
             setChatButtons(newChatButtons);
         }
         catch (error) {
-            onError(error);
+            storageService.onError(error);
         }
     };
     const open = () => {

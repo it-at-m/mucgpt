@@ -20,7 +20,7 @@ import styles from "./BotsettingsDrawer.module.css";
 import { ReactNode, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { deleteBotWithId } from "../../service/storage";
+import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -74,9 +74,11 @@ export const BotsettingsDrawer = ({
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
+    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+
     const onDelteClick = () => {
         window.location.href = "/";
-        deleteBotWithId(+bot_id);
+        storageService.deleteBotWithId(+bot_id);
     };
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);

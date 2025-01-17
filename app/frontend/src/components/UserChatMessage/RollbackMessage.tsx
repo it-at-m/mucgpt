@@ -5,10 +5,10 @@ import { DeleteArrowBackRegular } from "@fluentui/react-icons";
 import styles from "./UserChatMessage.module.css";
 
 interface Props {
-    onDeleteMessage: () => void;
+    onRollback: () => void;
 }
 
-export const RollBackMessage = ({ onDeleteMessage: deleteMessageCallBack }: Props) => {
+export const RollBackMessage = ({ onRollback: deleteMessageCallBack }: Props) => {
     const { t } = useTranslation();
     return (
         <Tooltip content={t("components.deleteMessage.label")} relationship="description" positioning="above">

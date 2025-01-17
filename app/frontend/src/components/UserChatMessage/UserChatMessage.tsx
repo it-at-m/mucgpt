@@ -9,16 +9,16 @@ import { RollBackMessage } from "./RollbackMessage";
 
 interface Props {
     message: string;
-    onDeleteMessage: () => void;
+    onRollbackMessage: () => void;
 }
 
-export const UserChatMessage = ({ message, onDeleteMessage }: Props) => {
+export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage }: Props) => {
     return (
         <div className={styles.message}>
             <Stack horizontal horizontalAlign="space-between">
                 <ChatMessageIcon aria-hidden></ChatMessageIcon>
                 <RollBackMessage
-                    onDeleteMessage={onDeleteMessage}
+                    onRollback={onRollbackMessage}
                 />
             </Stack>
             <Markdown

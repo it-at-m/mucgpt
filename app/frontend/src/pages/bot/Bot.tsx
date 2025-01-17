@@ -275,8 +275,7 @@ const BotChat = () => {
         }
     };
 
-
-    const onDeleteMessage = (message: string) => {
+    const onRollbackMessage = (message: string) => {
         return async () => {
             let last;
             let current_id = +bot_id;
@@ -341,7 +340,7 @@ const BotChat = () => {
                     usermsg={
                         <UserChatMessage
                             message={answer[0]}
-                            onDeleteMessage={onDeleteMessage(answer[0])}
+                            onRollbackMessage={onRollbackMessage(answer[0])}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
@@ -367,7 +366,7 @@ const BotChat = () => {
                     usermsg={
                         <UserChatMessage
                             message={lastQuestionRef.current}
-                            onDeleteMessage={onDeleteMessage(lastQuestionRef.current)}
+                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}

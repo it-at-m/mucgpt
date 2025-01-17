@@ -131,7 +131,7 @@ const Summarize = () => {
                     usermsg={
                         <UserChatMessage
                             message={answer[0]}
-                            onDeleteMessage={onDeleteMessage(answer[0])}
+                            onRollbackMessage={onDeleteMessage(answer[0])}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
@@ -144,7 +144,7 @@ const Summarize = () => {
                     usermsg={
                         <UserChatMessage
                             message={lastQuestionRef.current}
-                            onDeleteMessage={onDeleteMessage(lastQuestionRef.current)}
+                            onRollbackMessage={onDeleteMessage(lastQuestionRef.current)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}

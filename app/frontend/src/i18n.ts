@@ -57,6 +57,7 @@ i18n
                         answer_loading: "Denke nach"
                     },
                     simply: {
+                        info: "Informationen: ",
                         header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
                         prompt: "Text zum übersetzen eingeben",
                         answer_loading_easy: "Übersetze in leichte Sprache",
@@ -273,6 +274,7 @@ i18n
                         answer_loading: "Thinking"
                     },
                     simply: {
+                        info: "Information:",
                         header: "Enter the text to be translated or try an example",
                         prompt: "Enter text to translate",
                         answer_loading_easy: "Translating to easy language",
@@ -482,6 +484,7 @@ i18n
                         answer_loading: "Denk na"
                     },
                     simply: {
+                        info: "Informationen:",
                         header: "Gib den zu übasetzenden Text ei oda probier a Beispiel",
                         prompt: "Text zum übasetzen eigeben",
                         answer_loading_plain: "Übersetze in oafache Sproch",
@@ -703,6 +706,7 @@ i18n
                         answer_loading: "Réfléchir"
                     },
                     simply: {
+                        info: "Informations:",
                         header: "Entrez le texte à traduire ou essayez un exemple",
                         prompt: "Entrez le texte à traduire",
                         answer_loading_easy: "Traduction en langage facile",
@@ -913,6 +917,7 @@ i18n
                         answer_loading: "Думаю"
                     },
                     simply: {
+                        info: "Інформація:",
                         header: "Введіть текст для перекладу або спробуйте приклад",
                         prompt: "Введіть текст для перекладу",
                         answer_loading_easy: "Переклад на просту мову",

@@ -1,3 +1,11 @@
 .sidebar {
     padding: var(--spacingVerticalS);
 }
+.description {
+    font-weight: normal;
+    margin-bottom: var(--spacingVerticalS);
+    margin-top: 8px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}

@@ -3,8 +3,8 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { bot_storage, getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage_bot";
-import { Bot } from "../../api/models";
+import { getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage_bot";
+import { Bot, StoredCommunityBot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
@@ -13,7 +13,7 @@ import { CommunityBotsDialog } from "../../components/CommunityBotsDialog/Commui
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
-    const [communityBots, setCommunityBots] = useState<Bot[]>([]);
+    const [communityBots, setCommunityBots] = useState<StoredCommunityBot[]>([]);
 
     const [showAddBot, setShowAddBot] = useState<boolean>(false);
     const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
@@ -100,7 +100,7 @@ const Menu = () => {
             <CommunityBotsDialog showSearchDialogInput={showSearachBot} setShowSearchDialogInput={setShowSearachBot} />
 
             <div className={styles.row}>
-                {communityBots.map((bot: Bot, _) => (
+                {communityBots.map((bot: StoredCommunityBot, _) => (
                     <Tooltip content={bot.title} relationship="description" positioning="below">
                         <Link to={`/community-bot/${bot.id}`} className={styles.box}>
                             {bot.title}

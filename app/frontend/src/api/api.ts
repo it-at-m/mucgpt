@@ -4,6 +4,7 @@ import {
     Bot,
     BrainstormRequest,
     ChatRequest,
+    StoredCommunityBot,
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
@@ -238,6 +239,20 @@ export async function updateCommunityBot(bot: Bot): Promise<void> {
             version: bot.version,
             owner: bot.owner
         })
+    });
+}
+
+export async function getCommunityBot(id: string): Promise<Bot> {
+    return await fetch("/api/community_bot/" + id, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual"
+    }).then(async response => {
+        const parsedResponse = await handleResponse(response);
+        return parsedResponse;
     });
 }
 

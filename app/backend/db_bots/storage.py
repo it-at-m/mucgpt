@@ -193,20 +193,21 @@ class DB:
 
     def __init__(self):
         self.bots = {}
-        self.storeBot(self.bot1)
-        self.storeBot(self.bot2)
-        self.storeBot(self.bot3)
-        self.storeBot(self.bot4)
-        self.storeBot(self.bot5)
-        self.storeBot(self.bot6)
-        self.storeBot(self.bot7)
-        self.storeBot(self.bot8)
-        self.storeBot(self.bot9)
-        self.storeBot(self.bot10)
-        self.storeBot(self.bot11)
-        self.storeBot(self.bot12)
-        self.storeBot(self.arielle)
-        self.storeBot(self.sherlock)
+        self.bots[self.bot1.id] = self.bot1
+        self.bots[self.bot2.id] = self.bot2
+        self.bots[self.bot3.id] = self.bot3
+        self.bots[self.bot4.id] = self.bot4
+        self.bots[self.bot5.id] = self.bot5
+        self.bots[self.bot6.id] = self.bot6
+        self.bots[self.bot7.id] = self.bot7
+        self.bots[self.bot8.id] = self.bot8
+        self.bots[self.bot9.id] = self.bot9
+        self.bots[self.bot10.id] = self.bot10
+        self.bots[self.bot11.id] = self.bot11
+        self.bots[self.bot12.id] = self.bot12
+        self.bots[self.arielle.id] = self.arielle
+        self.bots[self.sherlock.id] = self.sherlock
+        
 
     def storeBot(self, bot: Bot) -> str:
         if isinstance(bot, dict):

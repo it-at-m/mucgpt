@@ -289,7 +289,7 @@ const BotChat = () => {
             setVersion(v);
             setOwner("Me");
         } else {
-            let v: string = String(+version + 0.1)
+            let v: string = String((+version) + 0.1)
             setVersion(v)
             let updatedCommunityBot: Bot = {
                 title: title,

@@ -110,6 +110,11 @@ export type Bot = {
     owner?: string;
 };
 
+export type StoredCommunityBot = {
+    title: string;
+    id: string;
+};
+
 export type GenerateTagsRequest = {
     bot: Bot;
     model: string;

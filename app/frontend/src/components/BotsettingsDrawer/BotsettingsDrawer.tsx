@@ -13,7 +13,7 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { ReactNode, useContext, useState } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { deleteBotWithId } from "../../service/storage_bot";
@@ -93,6 +93,9 @@ export const BotsettingsDrawer = ({
     };
 
     const toggleReadOnly = () => {
+        if (isEditable) {
+            window.location.reload();
+        }
         setEditable(!isEditable);
     };
 

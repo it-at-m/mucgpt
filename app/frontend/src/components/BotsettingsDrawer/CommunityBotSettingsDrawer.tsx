@@ -27,17 +27,11 @@ import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
 interface Props {
     actions: JSX.Element;
     temperature: number;
-    setTemperature: (temp: number) => void;
     max_output_tokens: number;
-    setMaxTokens: (maxTokens: number) => void;
     systemPrompt: string;
-    setSystemPrompt: (systemPrompt: string) => void;
     title: string;
-    setTitle: (title: string) => void;
     bot_id: string;
     description: string;
-    setDescription: (description: string) => void;
-    setPublish: (publish: boolean) => void;
     isOwner: boolean;
     toOwnBots: () => void;
 }
@@ -45,17 +39,11 @@ interface Props {
 export const CommunityBotSettingsDrawer = ({
     actions,
     temperature,
-    setTemperature,
     max_output_tokens,
-    setMaxTokens,
     systemPrompt,
-    setSystemPrompt,
     title,
-    setTitle,
     bot_id,
     description,
-    setDescription,
-    setPublish,
     isOwner,
     toOwnBots
 }: Props) => {
@@ -73,8 +61,8 @@ export const CommunityBotSettingsDrawer = ({
     const min_temp = 0;
     const max_temp = 1;
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
+    const onTemperatureChange: SliderProps["onChange"] = (_, data) => { };
+    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => { };
 
     const deleteBot = () => {
         window.location.href = "/";

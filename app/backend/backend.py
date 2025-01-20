@@ -347,6 +347,15 @@ async def updateCommunityBot(
     get_config_and_authentificate(access_token)
     bot_database.updateBot(request)
 
+@api_app.get("/community_bot/{id}")
+async def getCommunityBot(
+    id: str,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> Bot:
+    get_config_and_authentificate(access_token)
+    bot = bot_database.getBot(id)
+    return bot
+
 @api_app.post("/generate_tags")
 async def generate_tags(
     request: GenerateTagsRequest,

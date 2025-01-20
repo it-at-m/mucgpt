@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, getCommunityBot } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -70,7 +70,7 @@ const BotChat = () => {
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            getCommunityBotWithId(bot_id).then(bot => {
+            getCommunityBot(bot_id).then(bot => {
                 if (bot) {
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
@@ -87,8 +87,10 @@ const BotChat = () => {
                     if (bot.version) {
                         setVersion(bot.version);
                     }
+                    storeCommunityBot(bot_id, bot.title);
                 }
-            });
+            }
+            );
             error && setError(undefined);
             setIsLoading(true);
             getBotStartDataFromDB(storage_history, bot_id).then(stored => {
@@ -197,110 +199,12 @@ const BotChat = () => {
 
     const totalTokens = systemPromptTokens + answers.map(answ => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
-    const onTemperatureChanged = (temp: number) => {
-        setTemperature(temp);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temp,
-            max_output_tokens: max_output_tokens,
-            tags: tags,
-            version: version,
-            owner: owner
-        };
-        storeCommunityBot(newBot);
-    };
-
     const onMaxTokensChanged = (maxTokens: number) => {
         if (maxTokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
             onMaxTokensChanged(LLM.max_output_tokens);
         } else {
             setMaxOutputTokens(maxTokens);
-            let newBot: Bot = {
-                title: title,
-                description: description,
-                system_message: systemPrompt,
-                publish: publish,
-                id: bot_id,
-                temperature: temperature,
-                max_output_tokens: maxTokens,
-                tags: tags,
-                version: version,
-                owner: owner
-            };
-            storeCommunityBot(newBot);
         }
-    };
-
-    const onSystemPromptChanged = (systemPrompt: string) => {
-        setSystemPrompt(systemPrompt);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens,
-            tags: tags,
-            version: version,
-            owner: owner
-        };
-        storeCommunityBot(newBot);
-    };
-
-    const onPublishChanged = (publish: boolean) => {
-        setPublish(publish);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens,
-            tags: tags,
-            version: version,
-            owner: owner
-        };
-        storeCommunityBot(newBot);
-    };
-
-    const onTitleChanged = (title: string) => {
-        setTitle(title);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens,
-            tags: tags,
-            version: version,
-            owner: owner
-        };
-        storeCommunityBot(newBot);
-    };
-
-    const onDescriptionChanged = (description: string) => {
-        setDescription(description);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens,
-            tags: tags,
-            version: version,
-            owner: owner
-        };
-        storeCommunityBot(newBot);
     };
 
     const onRegeneratResponseClicked = async () => {
@@ -338,17 +242,11 @@ const BotChat = () => {
     const sidebar = [
         <CommunityBotSettingsDrawer
             temperature={temperature}
-            setTemperature={onTemperatureChanged}
             max_output_tokens={max_output_tokens}
-            setMaxTokens={onMaxTokensChanged}
             systemPrompt={systemPrompt}
-            setSystemPrompt={onSystemPromptChanged}
             title={title}
-            setTitle={onTitleChanged}
             description={description}
-            setDescription={onDescriptionChanged}
             bot_id={bot_id}
-            setPublish={onPublishChanged}
             isOwner={false}
             toOwnBots={toOwnBots}
             actions={actions}></CommunityBotSettingsDrawer>

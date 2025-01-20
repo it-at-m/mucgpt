@@ -26,7 +26,6 @@ import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
 interface Props {
     showSearchDialogInput: boolean;
     setShowSearchDialogInput: (showDialogInput: boolean) => void;
@@ -73,7 +72,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         }
     }), [];
     let onSaveBot = () => {
-        storeCommunityBot(choosenBot)
+        storeCommunityBot(choosenBot.id, choosenBot.title)
         setShowBotDialog(false);
         setShowSearchDialogInput(true);
     }

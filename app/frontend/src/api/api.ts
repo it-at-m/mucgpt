@@ -218,6 +218,29 @@ export async function addCommunityBot(bot: Bot): Promise<string> {
     });
 }
 
+export async function updateCommunityBot(bot: Bot): Promise<void> {
+    await fetch("/api/update_community_bot", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual",
+        body: JSON.stringify({
+            title: bot.title,
+            description: bot.description,
+            system_message: bot.system_message,
+            publish: bot.publish,
+            id: bot.id,
+            temperature: bot.temperature,
+            max_output_tokens: bot.max_output_tokens,
+            tags: bot.tags,
+            version: bot.version,
+            owner: bot.owner
+        })
+    });
+}
+
 export async function generateTags(options: GenerateTagsRequest): Promise<string[]> {
     return await fetch("/api/generate_tags", {
         method: "POST",

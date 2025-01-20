@@ -8,7 +8,6 @@ import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
-import { v4 as uuid } from 'uuid';
 import {
     bot_history_storage,
     community_bot_history_storage,
@@ -434,7 +433,7 @@ const BotChat = () => {
             answers={answerList}
             input={inputComponent}
             showExamples={!lastQuestionRef.current}
-            header={description}
+            header=""
             messages_description={t("common.messages")} sidebar={sidebar} header_as_markdown={false} size={"large"}        ></ChatLayout>
     );
 };

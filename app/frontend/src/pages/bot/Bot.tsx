@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, addCommunityBot, generateTags, GenerateTagsRequest } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, addCommunityBot, generateTags, GenerateTagsRequest, updateCommunityBot } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -28,6 +28,7 @@ import { MessageError } from "../chat/MessageError";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
+import { PublishBotDialog } from "../../components/PublishBotDialog/PublishBotDialog";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -53,6 +54,12 @@ const BotChat = () => {
     const [title, setTitle] = useState<string>("Titel");
     const [description, setDescription] = useState<string>("Beschreibung");
     const [publish, setPublish] = useState<boolean>(false);
+    const [version, setVersion] = useState<string>("0.0");
+    const [owner, setOwner] = useState<string>("Me");
+    const [tags, setTags] = useState<string[]>([]);
+
+    const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
+    const [isFirstTimePublishing, setIsFirstTimePublishing] = useState<boolean>(true);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
@@ -74,6 +81,15 @@ const BotChat = () => {
                     setPublish(bot.publish);
                     setTemperature(bot.temperature);
                     setMaxOutputTokens(bot.max_output_tokens);
+                    if (bot.version) {
+                        setVersion(bot.version);
+                    }
+                    if (bot.owner) {
+                        setOwner(bot.owner);
+                    }
+                    if (bot.tags) {
+                        setTags(bot.tags);
+                    }
                 }
             });
             error && setError(undefined);
@@ -229,46 +245,68 @@ const BotChat = () => {
         };
         storeBot(newBot);
     };
+    const publishBot = () => {
+        let newCommunityBot: Bot = {
+            title: title,
+            description: description,
+            system_message: systemPrompt,
+            publish: true,
+            id: bot_id,
+            temperature: temperature,
+            max_output_tokens: max_output_tokens,
+            version: version,
+            owner: owner,
+            tags: tags
+        };
+        setPublish(true);
+        let options: GenerateTagsRequest = {
+            bot: newCommunityBot,
+            model: LLM.llm_name,
+            max_output_tokens: max_output_tokens
+        }
+        generateTags(options).then(tags => {
+            if (tags) {
+                newCommunityBot.tags = tags;
+                addCommunityBot(newCommunityBot).then((newId: string) => {
+                    getBotWithId(bot_id).then(bot => {
+                        if (bot) {
+                            newCommunityBot.id = newId;
+                            storeBot(newCommunityBot);
+                            changeBotChatIdInDB(bot_id, newId);
+                            deleteBotWithId(bot_id);
+                            location.href = "/#/bot/" + newId;
+                        }
+                    });
+                });
+            }
+        });
+    }
 
     const onPublish = () => {
+        setIsFirstTimePublishing(!publish);
         if (!publish) {
-            let newCommunityBot: Bot = {
+            let v = "1.0";
+            setVersion(v);
+            setOwner("Me");
+        } else {
+            let v: string = String(+version + 0.1)
+            setVersion(v)
+            let updatedCommunityBot: Bot = {
                 title: title,
                 description: description,
                 system_message: systemPrompt,
-                publish: true,
+                publish: publish,
                 id: bot_id,
                 temperature: temperature,
                 max_output_tokens: max_output_tokens,
-                version: "1",
-                owner: "Me",
-                tags: []
+                version: v,
+                owner: owner,
+                tags: tags
             };
-            let options: GenerateTagsRequest = {
-                bot: newCommunityBot,
-                model: LLM.llm_name,
-                max_output_tokens: max_output_tokens
-            }
-            generateTags(options).then(tags => {
-                console.log(tags);
-
-                if (tags) {
-
-                    newCommunityBot.tags = tags;
-                    addCommunityBot(newCommunityBot).then((newId: string) => {
-                        getBotWithId(bot_id).then(bot => {
-                            if (bot) {
-                                newCommunityBot.id = newId;
-                                storeBot(newCommunityBot);
-                                changeBotChatIdInDB(bot_id, newId);
-                                deleteBotWithId(bot_id);
-                                location.href = "/#/bot/" + newId;
-                            }
-                        });
-                    });
-                }
-            });
+            storeBot(updatedCommunityBot);
+            updateCommunityBot(updatedCommunityBot);
         }
+        setShowPublishDialog(true);
     };
     const onTitleChanged = (title: string) => {
         setTitle(title);
@@ -409,17 +447,20 @@ const BotChat = () => {
         </>
     );
     return (
-        <ChatLayout
-            sidebar={sidebar}
-            examples={examplesComponent}
-            answers={answerList}
-            input={inputComponent}
-            showExamples={!lastQuestionRef.current}
-            header=""
-            header_as_markdown={false}
-            messages_description={t("common.messages")}
-            size="large"
-        ></ChatLayout>
+        <>
+            <ChatLayout
+                sidebar={sidebar}
+                examples={examplesComponent}
+                answers={answerList}
+                input={inputComponent}
+                showExamples={!lastQuestionRef.current}
+                header=""
+                header_as_markdown={false}
+                messages_description={t("common.messages")}
+                size="large"
+            ></ChatLayout>
+            <PublishBotDialog showDialog={showPublishDialog} setShowDialog={setShowPublishDialog} isFirstTime={isFirstTimePublishing} publishBot={publishBot} />
+        </>
     );
 };
 

@@ -230,6 +230,11 @@ export const BotsettingsDrawer = ({
                     )}
                 </div>
             </div>
+            <div className={styles.deleteButton}>
+                <Tooltip content={t("components.botsettingsdrawer.publish")} relationship="description" positioning="below">
+                    <Button onClick={onPublishClick}>{t("components.botsettingsdrawer.publish")}</Button>
+                </Tooltip>
+            </div>
             <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
                 <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
             </div>

@@ -226,6 +226,9 @@ class DB:
         )
         self.bots[id] = bot
         return id
+    
+    def updateBot(self, bot: Bot): 
+        self.bots[bot.id] = bot
 
     def getBot(self, id: str) -> Bot:
         return self.bots[id]

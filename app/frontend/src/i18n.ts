@@ -164,7 +164,8 @@ i18n
                         botsettingsdrawer: {
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
-                            finish_edit: "Bearbeitung abschließen"
+                            finish_edit: "Bearbeitung abschließen",
+                            publish: "Bot veröffentlichen"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -243,6 +244,23 @@ i18n
                             confirm: "Willst du den Bot wirklich löschen?",
                             back: "Zurück",
                             delete: "Löschen"
+                        },
+                        publishDialog: {
+                            title: "Hinweis Bot veröffentlichen",
+                            content: `Hinweise zur Veröffentlichung eines Bots:<br />
+                                      - Der Bot wird in der Community-Bot-Liste angezeigt.<br />
+                                      - Der Bot kann von anderen Benutzern verwendet werden.<br />
+                                      - Achte darauf, dass der Bot keine sensiblen Daten enthält.<br />
+                                      - Achte darauf, dass der Bot keine beleidigenden oder diskriminierenden Inhalte enthält.<br />
+                                      - Lade den Bot nur hoch, wenn du die Rechte an den Inhalten hast.<br />
+                                      - Lade den Bot nur hoch, wenn er einen Mehrwert für die Community bietet.<br />
+                                      - Überprüfe den Bot vor der Veröffentlichung auf Fehler.<br />
+                                      - Überprüfe vor der Veröffentlichung, ob bereits ein ähnlicher Bot existiert.`,
+                            confirm: "Bitte bestätige, dass du die Hinweise gelesen hast und den Bot veröffentlichen möchtest.",
+                            cancel: "Abbrechen",
+                            publish: "Veröffentlichen",
+                            updated: "Bot wurde geupdated und ist nun in der Community-Bot-Liste verfügbar.",
+                            understood: "Verstanden"
                         }
                     }
                 }
@@ -397,7 +415,8 @@ i18n
                         botsettingsdrawer: {
                             delete: "Delete assistent",
                             edit: "Edit Assistant",
-                            finish_edit: "Finish Edit"
+                            finish_edit: "Finish Edit",
+                            publish: "Publish Bot"
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -476,6 +495,23 @@ i18n
                             confirm: "Do you really want to delete the bot?",
                             back: "Back",
                             delete: "Delete"
+                        },
+                        publishDialog: {
+                            title: "Notice Publish Bot",
+                            content: `Notes on publishing a bot:<br />
+                                      - The bot will be displayed in the community bot list.<br />
+                                      - The bot can be used by other users.<br />
+                                      - Make sure the bot does not contain sensitive data.<br />
+                                      - Make sure the bot does not contain offensive or discriminatory content.<br />
+                                      - Only upload the bot if you have the rights to the content.<br />
+                                      - Only upload the bot if it provides added value to the community.<br />
+                                      - Check the bot for errors before publishing.<br />
+                                      - Check if a similar bot already exists before publishing.`,
+                            confirm: "Please confirm that you have read the notes and want to publish the bot.",
+                            cancel: "Cancel",
+                            publish: "Publish",
+                            updated: "Bot has been updated and is now available in the community bot list.",
+                            understood: "Understood"
                         }
                     }
                 }
@@ -631,7 +667,8 @@ i18n
                         botsettingsdrawer: {
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
-                            finish_edit: "Bearbeitung abschließ'n"
+                            finish_edit: "Bearbeitung abschließ'n",
+                            publish: "Bot veröffentlichen"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -710,6 +747,23 @@ i18n
                             confirm: "Wuisd du den Bot wirklich löschn?",
                             back: "Zruck",
                             delete: "Löschn"
+                        },
+                        publishDialog: {
+                            title: "Hinweis Bot veröffentlichen",
+                            content: `Hinweise zur Veröffentlichung eines Bots:<br />
+                                      - Der Bot wird in der Community-Bot-Liste angezeigt.<br />
+                                      - Der Bot kann von anderen Benutzern verwendet werden.<br />
+                                      - Achte darauf, dass der Bot keine sensiblen Daten enthält.<br />
+                                      - Achte darauf, dass der Bot keine beleidigenden oder diskriminierenden Inhalte enthält.<br />
+                                      - Lade den Bot nur hoch, wenn du die Rechte an den Inhalten hast.<br />
+                                      - Lade den Bot nur hoch, wenn er einen Mehrwert für die Community bietet.<br />
+                                      - Überprüfe den Bot vor der Veröffentlichung auf Fehler.<br />
+                                      - Überprüfe vor der Veröffentlichung, ob bereits ein ähnlicher Bot existiert.`,
+                            confirm: "Bitte bestätige, dass du die Hinweise gelesen hast und den Bot veröffentlichen möchtest.",
+                            cancel: "Abbrechen",
+                            publish: "Veröffentlichen",
+                            updated: "Bot wurde geupdated und ist nun in der Community-Bot-Liste verfügbar.",
+                            understood: "Verstanden"
                         }
                     }
                 }
@@ -859,7 +913,8 @@ i18n
                         botsettingsdrawer: {
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
-                            finish_edit: "Terminer la modification"
+                            finish_edit: "Terminer la modification",
+                            publish: "Publier le bot"
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -938,6 +993,23 @@ i18n
                             confirm: "Voulez-vous vraiment supprimer le bot?",
                             back: "Retour",
                             delete: "Supprimer"
+                        },
+                        publishDialog: {
+                            title: "Avis de publication du bot",
+                            content: `Notes sur la publication d'un bot:<br />
+                                      - Le bot sera affiché dans la liste des bots communautaires.<br />
+                                      - Le bot peut être utilisé par d'autres utilisateurs.<br />
+                                      - Assurez-vous que le bot ne contient pas de données sensibles.<br />
+                                      - Assurez-vous que le bot ne contient pas de contenu offensant ou discriminatoire.<br />
+                                      - Téléchargez le bot uniquement si vous avez les droits sur le contenu.<br />
+                                      - Téléchargez le bot uniquement s'il apporte une valeur ajoutée à la communauté.<br />
+                                      - Vérifiez le bot pour les erreurs avant de le publier.<br />
+                                      - Vérifiez si un bot similaire existe déjà avant de le publier.`,
+                            confirm: "Veuillez confirmer que vous avez lu les notes et que vous souhaitez publier le bot.",
+                            cancel: "Annuler",
+                            publish: "Publier",
+                            updated: "Le bot a été mis à jour et est maintenant disponible dans la liste des bots communautaires.",
+                            understood: "Compris"
                         }
                     }
                 }
@@ -1085,7 +1157,8 @@ i18n
                         botsettingsdrawer: {
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
-                            finish_edit: "Завершити редагування"
+                            finish_edit: "Завершити редагування",
+                            publish: "Опублікувати бота"
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"
@@ -1164,6 +1237,23 @@ i18n
                             confirm: "Ви дійсно хочете видалити бота?",
                             back: "Назад",
                             delete: "Видалити"
+                        },
+                        publishDialog: {
+                            title: "Повідомлення про публікацію бота",
+                            content: `Примітки щодо публікації бота:<br />
+                                      - Бот буде відображатися у списку ботів спільноти.<br />
+                                      - Бота можуть використовувати інші користувачі.<br />
+                                      - Переконайтеся, що бот не містить конфіденційних даних.<br />
+                                      - Переконайтеся, що бот не містить образливого або дискримінаційного контенту.<br />
+                                      - Завантажуйте бота лише якщо у вас є права на контент.<br />
+                                      - Завантажуйте бота лише якщо він приносить користь спільноті.<br />
+                                      - Перевірте бота на помилки перед публікацією.<br />
+                                      - Перевірте, чи вже існує подібний бот перед публікацією.`,
+                            confirm: "Будь ласка, підтвердіть, що ви прочитали примітки і хочете опублікувати бота.",
+                            cancel: "Скасувати",
+                            publish: "Опублікувати",
+                            updated: "Бот було оновлено і тепер він доступний у списку ботів спільноти.",
+                            understood: "Зрозуміло"
                         }
                     }
                 }

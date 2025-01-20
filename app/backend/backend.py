@@ -274,12 +274,7 @@ async def create_bot(
         logger.info("createBot: creating title")
         history = [
             ChatTurn(
-                user="Systempromt: ```"
-                + system_prompt.content
-                + "```\nBeschreibung: ```"
-                + description.content
-                + "```"
-            )
+                user=f"Systempromt: ```{system_prompt.content}```\nBeschreibung: ```{description.content}```")
         ]
         title = impl.run_without_streaming(
             history=history,
@@ -344,11 +339,18 @@ async def addCommunityBot(
     id = bot_database.storeBot(request)
     return AddCommunityBotResponse(id=id)
 
+@api_app.post("/update_community_bot")
+async def updateCommunityBot(
+    request: Bot,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> None:
+    get_config_and_authentificate(access_token)
+    bot_database.updateBot(request)
+
 @api_app.post("/generate_tags")
 async def generate_tags(
     request: GenerateTagsRequest,
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
 ) -> GenerateTagsResponse:
     cfg = get_config_and_authentificate(access_token=access_token)
     tags = GenerateTagsResponse(tag1="", tag2="", tag3="")

@@ -16,14 +16,16 @@ export const SimplySidebar = ({ onOutputTypeChanged, outputType }: Props) => {
     return (
         <div className={styles.sidebar}>
             <RadioGroup layout="vertical" onChange={onOutputTypeChangedInternal} value={outputType}>
-                <Tooltip content={t("simply.plain_description")} relationship="description" positioning="below">
-                    <Radio value="plain" label={t("simply.plain")} />
-                </Tooltip>
-                <Tooltip content={t("simply.easy_description")} relationship="description" positioning="below">
-                    <Radio value="easy" label={t("simply.easy")} />
-                </Tooltip>
+                <Radio value="plain" label={t("simply.plain")} />
+                <Radio value="easy" label={t("simply.easy")} />
             </RadioGroup>
-            ;
+            {outputType === "easy" ? (
+                <div className={styles.description}>{t("simply.easy_description")}</div>
+            ) :
+                (
+                    <div className={styles.description}>{t("simply.plain_description")}</div>
+                )}
+
         </div>
     );
 };

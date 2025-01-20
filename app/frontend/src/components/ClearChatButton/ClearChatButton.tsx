@@ -11,18 +11,16 @@ interface Props {
 export const ClearChatButton = ({ disabled, onClick }: Props) => {
     const { t } = useTranslation();
     return (
-        <div className={styles.container}>
-            <Tooltip content={t("common.clear_chat")} relationship="description" positioning="below">
-                <Button
-                    appearance="primary"
-                    aria-label={t("common.clear_chat")}
-                    icon={<ChatAdd24Regular className={styles.iconRightMargin} />}
-                    disabled={disabled}
-                    onClick={onClick}
-                >
-                    {t("common.clear_chat")}
-                </Button>
-            </Tooltip>
-        </div>
+        <Tooltip content={t("common.clear_chat")} relationship="description" positioning="below">
+            <Button
+                appearance="primary"
+                aria-label={t("common.clear_chat")}
+                icon={<ChatAdd24Regular className={styles.iconRightMargin} />}
+                disabled={disabled}
+                onClick={onClick}
+            >
+                {t("common.clear_chat")}
+            </Button>
+        </Tooltip>
     );
 };

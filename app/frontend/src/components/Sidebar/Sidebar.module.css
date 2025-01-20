@@ -5,6 +5,7 @@
     display: flex;
     flex-direction: row;
     justify-content: start;
+    height: 50px;
 }
 .drawer {
     width: var(--sidebarWidth);
@@ -20,5 +21,6 @@
     overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
-    max-height: calc(100vh - 140px);
+    max-height: calc(100vh - 170px);
+    margin-bottom: 30px;
 }

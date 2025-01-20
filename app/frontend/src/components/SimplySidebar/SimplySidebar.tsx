@@ -19,7 +19,6 @@ export const SimplySidebar = ({ onOutputTypeChanged, outputType }: Props) => {
                 <Radio value="plain" label={t("simply.plain")} />
                 <Radio value="easy" label={t("simply.easy")} />
             </RadioGroup>
-            ;
             {outputType === "easy" ? (
                 <div className={styles.description}>{t("simply.easy_description")}</div>
             ) :

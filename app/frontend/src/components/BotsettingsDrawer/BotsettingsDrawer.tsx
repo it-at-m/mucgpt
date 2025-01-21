@@ -20,12 +20,13 @@ import styles from "./BotsettingsDrawer.module.css";
 import { ReactNode, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
+import { StorageService, bot_storage } from "../../service/storage";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import { ChatResponse, Bot } from "../../api";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -74,11 +75,11 @@ export const BotsettingsDrawer = ({
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
-    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
 
-    const onDelteClick = () => {
+    const onDelete = () => {
         window.location.href = "/";
-        storageService.deleteBotWithId(+bot_id);
+        storageService.delete(bot_id);
     };
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
@@ -115,7 +116,7 @@ export const BotsettingsDrawer = ({
                 {isEditable ? t("components.botsettingsdrawer.finish_edit") : t("components.botsettingsdrawer.edit")}
             </Button>
             <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                <Button appearance="secondary" onClick={onDelteClick} icon={<Delete24Regular className={styles.iconRightMargin} />}>
+                <Button appearance="secondary" onClick={onDelete} icon={<Delete24Regular className={styles.iconRightMargin} />}>
                     {t("components.botsettingsdrawer.delete")}
                 </Button>
             </Tooltip>

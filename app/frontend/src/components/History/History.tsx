@@ -2,60 +2,19 @@ import { Button, DrawerBody, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger,
 import { Options24Regular } from "@fluentui/react-icons";
 import { MutableRefObject, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { CURRENT_CHAT_IN_DB, HistoryStorageService, indexedDBStorage } from "../../service/storage";
 import { AskResponse } from "../../api/models";
 import styles from "./History.module.css";
 import { MessageError } from "../../pages/chat/MessageError";
 
 interface Props {
-    storage: indexedDBStorage;
-    setAnswers: (answers: [user: string, response: AskResponse, user_tokens: number][]) => void;
-    lastQuestionRef: MutableRefObject<string>;
-    currentId: number;
-    setCurrentId: (id: number) => void;
-    onTemperatureChanged: (temp: number, id: number) => void;
-    onMaxTokensChanged: (tokens: number, id: number) => void;
-    onSystemPromptChanged: (prompt: string, id: number) => void;
-    setError: (error: Error | undefined) => void;
+    allChats: any[];
+    onDeleteChat: (id: number) => void;
+    onChatOptionsChange: (config: any) => void;
 }
-export const History = ({
-    storage,
-    setAnswers,
-    lastQuestionRef,
-    currentId,
-    setCurrentId,
-    onTemperatureChanged,
-    onMaxTokensChanged,
-    onSystemPromptChanged,
-    setError
-}: Props) => {
+export const History = ({ allChats, onDeleteChat, onChatOptionsChange }: Props) => {
     const { t } = useTranslation();
     const [chatButtons, setChatButtons] = useState<JSX.Element[]>([]);
-    const storageService: HistoryStorageService = new HistoryStorageService(storage);
 
-    const loadChat = async (stored: any) => {
-        setError(undefined);
-        let storedAnswers = stored.Data.Answers;
-        lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
-        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
-            storedAnswers.pop();
-            setError(new MessageError(t("components.history.error")));
-        }
-        setAnswers(storedAnswers);
-        let id = stored.id;
-        setCurrentId(id);
-        onTemperatureChanged(stored.Options.temperature, id);
-        onMaxTokensChanged(stored.Options.maxTokens, id);
-        onSystemPromptChanged(stored.Options.system, id);
-        stored["refID"] = id;
-        stored["id"] = CURRENT_CHAT_IN_DB;
-        try {
-            const db = await storageService.connectToDB();
-            let putRequest = await db.transaction(storage.objectStore_name, "readwrite").objectStore(storage.objectStore_name).put(stored);
-        } catch (error) {
-            storageService.onError(error);
-        }
-    };
     const getCategory = (lastEdited: string, fav: boolean) => {
         if (fav) return t("components.history.favourites");
         const today = new Date();
@@ -72,31 +31,17 @@ export const History = ({
     const changeChatName = (chat: any) => {
         const newName = prompt(t("components.history.newchat"), chat.Data.Name);
         if (newName && newName.trim() !== "") {
-            storageService.renameChat(newName.trim(), chat);
-            getAllChats();
+            //storageService.renameChat(newName.trim(), chat);
         }
     };
 
-    const deleteChat = (
-        id: number,
-        setAnswers: (answers: []) => void,
-        isCurrent: boolean,
-        lastQuestionRef: MutableRefObject<string>
-    ) => {
-        storageService.deleteChatFromDB(id, setAnswers, id === currentId, lastQuestionRef);
-        getAllChats();
-    };
-
     const changeFavourites = (fav: boolean, id: number) => {
-        storageService.changeFavouritesInDb(fav, id);
-        getAllChats();
+        // storageService.changeFavouritesInDb(fav, id);
     };
 
     const getAllChats = async () => {
         try {
-            const db = await storageService.connectToDB(storage);
-            let stored = await db.transaction(storage.objectStore_name, "readonly").objectStore(storage.objectStore_name).getAll();
-            const categorizedChats = stored
+            const categorizedChats = allChats
                 .filter((chat: any) => chat.id !== 0)
                 .sort((a: any, b: any) => {
                     return new Date(b.Data.LastEdited).getTime() - new Date(a.Data.LastEdited).getTime();
@@ -122,7 +67,7 @@ export const History = ({
                                 relationship="description"
                                 positioning="below"
                             >
-                                <Button className={styles.savedChatButton} onClick={() => loadChat(chat)} size="large">
+                                <Button className={styles.savedChatButton} onClick={() => { }} size="large">
                                     {chat.Data.Name}
                                 </Button>
                             </Tooltip>
@@ -134,7 +79,7 @@ export const History = ({
                                 </MenuTrigger>
                                 <MenuPopover>
                                     <MenuList>
-                                        <MenuItem onClick={() => deleteChat(chat.id, setAnswers, chat.id === currentId, lastQuestionRef)}>
+                                        <MenuItem onClick={() => onDeleteChat(chat.id)}>
                                             {t("components.history.delete")}
                                         </MenuItem>
                                         <MenuItem onClick={() => changeChatName(chat)}>{t("components.history.rename")}</MenuItem>
@@ -154,7 +99,6 @@ export const History = ({
             setChatButtons(newChatButtons);
         }
         catch (error) {
-            storageService.onError(error);
         }
     };
     const open = () => {

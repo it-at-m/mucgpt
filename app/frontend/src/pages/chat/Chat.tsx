@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -11,8 +11,8 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import {
-    CURRENT_CHAT_IN_DB,
-    ChatStorageService
+    DBMessage,
+    StorageService
 } from "../../service/storage";
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
@@ -27,11 +27,19 @@ const enum STORAGE_KEYS {
     CHAT_MAX_TOKENS = "CHAT_MAX_TOKENS"
 }
 
+export type ChatMessage = DBMessage<ChatResponse>;
+
+export interface ChatOptions {
+    favorite: boolean,
+    system: string,
+    maxTokens: number,
+    temperature: number
+}
+
 const Chat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
-    const [shouldStream, setShouldStream] = useState<boolean>(true);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -39,8 +47,10 @@ const Chat = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
+    const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
+
+    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
 
     const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE) || 0.7);
     const max_output_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
@@ -50,14 +60,11 @@ const Chat = () => {
     const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    const storageService: ChatStorageService = new ChatStorageService({
+    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>({
         db_name: "MUCGPT-CHAT",
         objectStore_name: "chat",
         db_version: 2
     });
-
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
@@ -72,77 +79,71 @@ const Chat = () => {
     useEffect(() => {
         makeTokenCountRequest();
         if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens, currentId);
+            onMaxTokensChanged(LLM.max_output_tokens);
         }
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
     useEffect(() => {
-        storageService.checkStructurOfDB();
         setAnswers([]);
         lastQuestionRef.current = "";
-        storageService.getHighestKeyInDB().then(highestKey => {
-            storageService.getCurrentChatID().then(refID => {
-                error && setError(undefined);
-                setIsLoading(true);
-                let key;
-                if (refID) {
-                    key = refID;
-                } else {
-                    key = highestKey + 1;
-                }
-                setIdCounter(key);
-                setCurrentId(key);
-                storageService.getStartDataFromDB(key).then(stored => {
-                    if (stored) {
-                        // if the chat exists
-                        let storedAnswers = stored.Data.Answers;
-                        lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
-                        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
-                            // if the answer of the LLM has not (yet) returned
-                            if (storedAnswers.length > 1) {
-                                storedAnswers.pop();
-                                setAnswers([...answers.concat(storedAnswers)]);
-                            }
-                            setError(new MessageError(t("components.history.error")));
-                        } else {
-                            let options = stored.Options;
-                            setAnswers([...answers.concat(storedAnswers)]);
-                            if (options) {
-                                onMaxTokensChanged(options.maxTokens, key);
-                                onTemperatureChanged(options.temperature, key);
-                                onSystemPromptChanged(options.system, key);
-                            }
-                        }
+        error && setError(undefined);
+        setIsLoading(true);
+
+        //TODO get current chat from localstorage, maybe just get the newest
+        storageService.getNewestChat().then(existingData => {
+            if (existingData) {
+                // if the chat exists
+                const messages = existingData.messages;
+                setCurrentId(existingData.id);
+                if (messages[messages.length - 1].response.answer == "") {
+                    // if the answer of the LLM has not (yet) returned
+                    if (messages.length > 1) {
+                        messages.pop();
+                        setAnswers([...answers.concat(messages)]);
                     }
-                });
-                setIsLoading(false);
-            });
+                    setError(new MessageError(t("components.history.error")));
+                } else {
+                    let options = existingData.config;
+                    setAnswers([...answers.concat(messages)]);
+                    if (options) {
+                        onMaxTokensChanged(options.maxTokens);
+                        onTemperatureChanged(options.temperature);
+                        onSystemPromptChanged(options.system);
+                    }
+                }
+                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+            }
+        }).finally(() => {
+            setIsLoading(false);
         });
     }, []);
 
     const makeApiRequest = async (question: string, system?: string) => {
-        const startId = currentId;
         lastQuestionRef.current = question;
         error && setError(undefined);
         setIsLoading(true);
-        let askResponse: AskResponse = {} as AskResponse;
-        storageService.saveToDB(
-            [question, { ...askResponse, answer: "", tokens: 0 }, 0],
-            startId,
-            idCounter,
-            setCurrentId,
-            setIdCounter,
-            language,
-            temperature,
-            system ? system : "",
-            max_output_tokens,
-            LLM.llm_name
-        );
+        const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
+        const completeAnswer: ChatMessage = { user: question, response: askResponse };
+        const options: ChatOptions = {
+            favorite: false,
+            system: system ? system : "",
+            maxTokens: max_output_tokens,
+            temperature: temperature //TODO model LLM.llm_name übergeben?
+        };
+        if (currentId)
+            await storageService.appendMessage(currentId, completeAnswer, options);
+        else {
+            const id = await storageService.create([completeAnswer], undefined);
+            if (id)
+                setCurrentId(id);
+            else
+                throw new Error("Could not create new ID in DB");
+        }
         try {
-            const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
+            const history: ChatTurn[] = answers.map(a => ({ user: a.user, bot: a.response.answer }));
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
-                shouldStream: shouldStream,
+                shouldStream: true,
                 language: language,
                 temperature: temperature,
                 system_message: system ? system : "",
@@ -157,65 +158,33 @@ const Chat = () => {
                 throw Error("No response body");
             }
             let user_tokens = 0;
-            if (shouldStream) {
-                let answer: string = "";
-                let streamed_tokens = 0;
-                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
+            let answer: string = "";
+            let streamed_tokens = 0;
+            let latestResponse: ChatResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
 
-                for await (const chunk of readNDJSONStream(response.body)) {
-                    if (chunk as Chunk) {
-                        switch (chunk.type) {
-                            case "C":
-                                answer += chunk.message as string;
-                                break;
-                            case "I":
-                                const info = chunk.message as ChunkInfo;
-                                streamed_tokens = info.streamedtokens;
-                                user_tokens = info.requesttokens;
-                                break;
-                            case "E":
-                                throw Error((chunk.message as string) || "Unknown error");
-                        }
-
-                        latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
-                        setIsLoading(false);
-                        setAnswers([...answers, [question, latestResponse, user_tokens]]);
+            for await (const chunk of readNDJSONStream(response.body)) {
+                if (chunk as Chunk) {
+                    switch (chunk.type) {
+                        case "C":
+                            answer += chunk.message as string;
+                            break;
+                        case "I":
+                            const info = chunk.message as ChunkInfo;
+                            streamed_tokens = info.streamedtokens;
+                            user_tokens = info.requesttokens;
+                            break;
+                        case "E":
+                            throw Error((chunk.message as string) || "Unknown error");
                     }
+
+                    latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
+                    setIsLoading(false);
+                    setAnswers([...answers, { user: question, response: latestResponse }]);
                 }
-                if (startId == currentId) {
-                    storageService.saveToDB(
-                        [question, latestResponse, user_tokens],
-                        startId,
-                        idCounter,
-                        setCurrentId,
-                        setIdCounter,
-                        language,
-                        temperature,
-                        system ? system : "",
-                        max_output_tokens,
-                        LLM.llm_name
-                    );
-                }
-            } else {
-                const parsedResponse: AskResponse = await response.json();
-                if (response.status > 299 || !response.ok) {
-                    throw Error(parsedResponse.error || "Unknown error");
-                }
-                setAnswers([...answers, [question, parsedResponse, 0]]);
-                if (startId == currentId) {
-                    storageService.saveToDB(
-                        [question, parsedResponse, 0],
-                        currentId,
-                        idCounter,
-                        setCurrentId,
-                        setIdCounter,
-                        language,
-                        temperature,
-                        system ? system : "",
-                        max_output_tokens,
-                        LLM.llm_name
-                    );
-                }
+            }
+            if (currentId) { //pop previous dummy result and replace with a new one
+                await storageService.popMessage(currentId);
+                await storageService.appendMessage(currentId, { user: question, response: latestResponse });
             }
         } catch (e) {
             setError(e);
@@ -225,73 +194,86 @@ const Chat = () => {
     };
 
     const clearChat = () => {
-        setCurrentId(idCounter + 1);
         lastQuestionRef.current = "";
         error && setError(undefined);
-        storageService.deleteChatFromDB(CURRENT_CHAT_IN_DB, setAnswers, true, lastQuestionRef);
+        if (currentId)
+            storageService.delete(currentId);
+        setAnswers([]);
     };
 
-    const onDeleteMessage = (message: string) => {
+    const onRollbackMessage = (message: string) => {
         return async () => {
-            let last;
-            while (answers.length) {
-                await storageService.popLastMessageInDB(currentId);
-                last = answers.pop();
-                setAnswers(answers);
-                if (last && last[0] == message) {
-                    break;
+            if (currentId) {
+                let result = await storageService.rollbackMessage(currentId, message);
+                if (result) {
+                    setAnswers(result.messages);
+                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
                 }
+                setQuestion(message);
             }
-            if (answers.length == 0) {
-                storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
-                storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
-            }
-            if (last)
-                lastQuestionRef.current = last[0];
-            setQuestion(message);
         }
     };
 
     const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0) {
+        if (answers.length > 0 && currentId) {
             let last = answers.pop();
             setAnswers(answers);
-            storageService.popLastMessageInDB(currentId);
+            storageService.popMessage(currentId);
             if (last) {
-                makeApiRequest(last[0], systemPrompt);
+                makeApiRequest(last.user, systemPrompt);
             }
         }
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = systemPromptTokens + answers.map(answ => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
+    const totalTokens = systemPromptTokens + answers
+        .map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
+        .reduceRight((prev, curr) => prev + curr, 0);
 
     const onExampleClicked = async (example: string, system?: string) => {
-        if (system) onSystemPromptChanged(system, currentId);
+        if (system) onSystemPromptChanged(system);
         makeApiRequest(example, system);
     };
 
-    const onTemperatureChanged = (temp: number, id: number) => {
+    const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
         localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString());
-        storageService.changeTemperatureInDb(temp, id);
+        if (currentId)
+            storageService.update(currentId, undefined, {
+                favorite: false,
+                system: systemPrompt ? systemPrompt : "",
+                maxTokens: max_output_tokens,
+                temperature: temp
+            });
     };
 
-    const onMaxTokensChanged = (maxTokens: number, id: number) => {
+    const onMaxTokensChanged = (maxTokens: number) => {
         if (maxTokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens, id);
+            onMaxTokensChanged(LLM.max_output_tokens);
         } else {
             setMaxOutputTokens(maxTokens);
             localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString());
-            storageService.changeMaxTokensInDb(maxTokens, id);
+            if (currentId)
+                storageService.update(currentId, undefined, {
+                    favorite: false,
+                    system: systemPrompt ? systemPrompt : "",
+                    maxTokens: maxTokens,
+                    temperature: temperature
+                });
         }
     };
 
-    const onSystemPromptChanged = (systemPrompt: string, id: number) => {
+    const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
         localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt);
-        storageService.changeSystempromptInDb(systemPrompt, id);
+        if (currentId)
+            storageService.update(currentId, undefined, {
+                favorite: false,
+                system: systemPrompt ? systemPrompt : "",
+                maxTokens: max_output_tokens,
+                temperature: temperature
+            });
     };
 
     const answerList = (
@@ -301,8 +283,8 @@ const Chat = () => {
                     key={index}
                     usermsg={
                         <UserChatMessage
-                            message={answer[0]}
-                            onRollbackMessage={onDeleteMessage(answer[0])}
+                            message={answer.user}
+                            onRollbackMessage={onRollbackMessage(answer.user)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
@@ -311,12 +293,12 @@ const Chat = () => {
                         <>
                             {index === answers.length - 1 && (
                                 <Answer
-                                    answer={answer[1]}
+                                    answer={answer.response}
                                     onRegenerateResponseClicked={onRegeneratResponseClicked}
                                     setQuestion={question => setQuestion(question)}
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer answer={answer[1]} setQuestion={question => setQuestion(question)} />}
+                            {index !== answers.length - 1 && <Answer answer={answer.response} setQuestion={question => setQuestion(question)} />}
                         </>
                     }
                 ></ChatTurnComponent>
@@ -327,7 +309,7 @@ const Chat = () => {
                     usermsg={
                         <UserChatMessage
                             message={lastQuestionRef.current}
-                            onRollbackMessage={onDeleteMessage(lastQuestionRef.current)}
+                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
@@ -365,15 +347,9 @@ const Chat = () => {
     const sidebar_content = (
         <>
             <History
-                storage={storageService.config}
-                setAnswers={setAnswers}
-                lastQuestionRef={lastQuestionRef}
-                currentId={currentId}
-                setCurrentId={setCurrentId}
-                onTemperatureChanged={onTemperatureChanged}
-                onMaxTokensChanged={onMaxTokensChanged}
-                onSystemPromptChanged={onSystemPromptChanged}
-                setError={setError}
+                allChats={[]}
+                onDeleteChat={(id) => { }}
+                onChatOptionsChange={(config: any) => { }}
             ></History>
         </>
     );
@@ -385,7 +361,6 @@ const Chat = () => {
             setMaxTokens={onMaxTokensChanged}
             systemPrompt={systemPrompt}
             setSystemPrompt={onSystemPromptChanged}
-            current_id={currentId}
             actions={sidebar_actions}
             content={sidebar_content}
         ></ChatsettingsDrawer>

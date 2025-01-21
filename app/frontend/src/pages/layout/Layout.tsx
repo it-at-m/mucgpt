@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
@@ -8,12 +8,12 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi } from "../../api";
+import { ApplicationConfig, Bot, ChatResponse, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
+import { StorageService, bot_storage } from "../../service/storage";
 import { LightContext } from "./LightContext";
 
 const formatDate = (date: Date) => {
@@ -65,7 +65,7 @@ export const Layout = () => {
 
     const [models, setModels] = useState(config.models);
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
-    const [title, setTitle] = useState<[number, string]>([0, ""]);
+    const [title, setTitle] = useState<[string, string]>(["0", ""]);
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
@@ -80,12 +80,13 @@ export const Layout = () => {
     };
 
 
-    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
 
     useEffect(() => {
         if (id) {
-            storageService.getBotName(+id).then(title => {
-                setTitle(title);
+            storageService.get(id).then(bot => {
+                if (bot)
+                    setTitle([bot.config.id as string, bot.config.title]);
             });
         }
         configApi().then(
@@ -103,14 +104,6 @@ export const Layout = () => {
             }
         );
         i18n.changeLanguage(language_pref);
-    }, []);
-
-    useEffect(() => {
-        if (id) {
-            storageService.getBotName(+id).then(title => {
-                setTitle(title);
-            });
-        }
     }, [id]);
 
     const onAcceptTermsOfUse = () => {

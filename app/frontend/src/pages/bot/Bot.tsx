@@ -1,15 +1,14 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, ChatResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import {
-    BotStorageService,
-    bot_history_storage,
+    StorageService,
     bot_storage
 } from "../../service/storage";
 
@@ -21,6 +20,7 @@ import { MessageError } from "../chat/MessageError";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
+import { ChatMessage } from "../chat/Chat";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -28,7 +28,6 @@ const BotChat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
-    const [shouldStream, setShouldStream] = useState<boolean>(true);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -36,7 +35,7 @@ const BotChat = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
+    const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
     const [temperature, setTemperature] = useState(0.7);
@@ -49,44 +48,44 @@ const BotChat = () => {
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
+
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
             const response = await countTokensAPI({ text: debouncedSystemPrompt, model: LLM });
             setSystemPromptTokens(response.count);
         } else setSystemPromptTokens(0);
     }, [debouncedSystemPrompt, LLM]);
+
     useEffect(() => {
         if (bot_id) {
-            storageService.getBotWithId(+bot_id).then(bot => {
-                if (bot) {
-                    setSystemPrompt(bot.system_message);
-                    setTitle(bot.title);
-                    setDescription(bot.description);
-                    setPublish(bot.publish);
-                    setTemperature(bot.temperature);
-                    setMaxOutputTokens(bot.max_output_tokens);
-                }
-            });
             error && setError(undefined);
             setIsLoading(true);
-            storageService.getStartDataFromDB(+bot_id).then(stored => {
-                if (stored) {
-                    let storedAnswers = stored.Answers;
-                    lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
-                    if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
+            storageService.get(bot_id).then(bot => {
+                if (bot) {
+                    setSystemPrompt(bot.config.system_message);
+                    setTitle(bot.config.title);
+                    setDescription(bot.config.description);
+                    setPublish(bot.config.publish);
+                    setTemperature(bot.config.temperature);
+                    setMaxOutputTokens(bot.config.max_output_tokens);
+
+                    const messages = bot.messages;
+                    lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                    if (messages[messages.length - 1].response.answer == "") {
                         // if the answer of the LLM has not (yet) returned
-                        if (storedAnswers.length > 1) {
-                            storedAnswers.pop();
-                            setAnswers([...answers.concat(storedAnswers)]);
+                        if (messages.length > 1) {
+                            messages.pop();
+                            setAnswers([...answers.concat(messages)]);
                         }
                         setError(new MessageError(t("components.history.error")));
                     } else {
-                        setAnswers([...answers.concat(storedAnswers)]);
+                        setAnswers([...answers.concat(messages)]);
                     }
                 }
+            }).finally(() => {
+                setIsLoading(false);
             });
-            setIsLoading(false);
         }
     }, []);
 
@@ -103,10 +102,10 @@ const BotChat = () => {
         setIsLoading(true);
         let askResponse: AskResponse = {} as AskResponse;
         try {
-            const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
+            const history: ChatTurn[] = answers.map(a => ({ user: a.user, bot: a.response.answer }));
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
-                shouldStream: shouldStream,
+                shouldStream: true,
                 language: language,
                 temperature: temperature,
                 system_message: system ? system : "",
@@ -121,42 +120,34 @@ const BotChat = () => {
                 throw Error("No response body");
             }
             let user_tokens = 0;
-            if (shouldStream) {
-                let answer: string = "";
-                let streamed_tokens = 0;
-                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
+            let answer: string = "";
+            let streamed_tokens = 0;
+            let latestResponse: ChatResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
 
-                for await (const chunk of readNDJSONStream(response.body)) {
-                    if (chunk as Chunk) {
-                        switch (chunk.type) {
-                            case "C":
-                                answer += chunk.message as string;
-                                break;
-                            case "I":
-                                const info = chunk.message as ChunkInfo;
-                                streamed_tokens = info.streamedtokens;
-                                user_tokens = info.requesttokens;
-                                break;
-                            case "E":
-                                throw Error((chunk.message as string) || "Unknown error");
-                        }
-
-                        latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
-                        setIsLoading(false);
-                        setAnswers([...answers, [question, latestResponse, user_tokens]]);
+            for await (const chunk of readNDJSONStream(response.body)) {
+                if (chunk as Chunk) {
+                    switch (chunk.type) {
+                        case "C":
+                            answer += chunk.message as string;
+                            break;
+                        case "I":
+                            const info = chunk.message as ChunkInfo;
+                            streamed_tokens = info.streamedtokens;
+                            user_tokens = info.requesttokens;
+                            break;
+                        case "E":
+                            throw Error((chunk.message as string) || "Unknown error");
                     }
+
+                    latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
+                    setIsLoading(false);
+                    setAnswers([...answers, { user: question, response: latestResponse }]);
                 }
-                if (bot_id) {
-                    storageService.saveBotChatToDB([question, latestResponse, user_tokens], +bot_id);
-                }
-            } else {
-                const parsedResponse: AskResponse = await response.json();
-                if (response.status > 299 || !response.ok) {
-                    throw Error(parsedResponse.error || "Unknown error");
-                }
-                setAnswers([...answers, [question, parsedResponse, 0]]);
-                if (bot_id) {
-                    storageService.saveBotChatToDB([question, parsedResponse, 0], +bot_id);
+            }
+            if (bot_id) {
+                { //pop previous dummy result and replace with a new one
+                    await storageService.popMessage(bot_id);
+                    await storageService.appendMessage(bot_id, { user: question, response: latestResponse });
                 }
             }
         } catch (e) {
@@ -169,12 +160,17 @@ const BotChat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        storageService.deleteChatFromDB(+bot_id, setAnswers, true, lastQuestionRef);
+        if (bot_id)
+            storageService.delete(bot_id);
+        setAnswers([]);
     };
+
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = systemPromptTokens + answers.map(answ => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
+    const totalTokens = systemPromptTokens + answers
+        .map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
+        .reduceRight((prev, curr) => prev + curr, 0);
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
@@ -183,11 +179,11 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temp,
             max_output_tokens: max_output_tokens
         };
-        storageService.storeBot(newBot);
+        storageService.update(bot_id, undefined, newBot);
     };
 
     const onMaxTokensChanged = (maxTokens: number) => {
@@ -200,11 +196,11 @@ const BotChat = () => {
                 description: description,
                 system_message: systemPrompt,
                 publish: publish,
-                id: +bot_id,
+                id: bot_id,
                 temperature: temperature,
                 max_output_tokens: maxTokens
             };
-            storageService.storeBot(newBot);
+            storageService.update(bot_id, undefined, newBot);
         }
     };
 
@@ -215,11 +211,11 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.storeBot(newBot);
+        storageService.update(bot_id, undefined, newBot);
     };
 
     const onPublishChanged = (publish: boolean) => {
@@ -229,11 +225,11 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.storeBot(newBot);
+        storageService.update(bot_id, undefined, newBot);
     };
 
     const onTitleChanged = (title: string) => {
@@ -243,11 +239,11 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.storeBot(newBot);
+        storageService.update(bot_id, undefined, newBot);
     };
 
     const onDescriptionChanged = (description: string) => {
@@ -257,43 +253,34 @@ const BotChat = () => {
             description: description,
             system_message: systemPrompt,
             publish: publish,
-            id: +bot_id,
+            id: bot_id,
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.storeBot(newBot);
+        storageService.update(bot_id, undefined, newBot);
     };
 
     const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0) {
+        if (answers.length > 0 && bot_id) {
             let last = answers.pop();
             setAnswers(answers);
-            storageService.popLastBotMessageInDB(+bot_id);
+            storageService.popMessage(bot_id);
             if (last) {
-                makeApiRequest(last[0], systemPrompt);
+                makeApiRequest(last.user, systemPrompt);
             }
         }
     };
 
     const onRollbackMessage = (message: string) => {
         return async () => {
-            let last;
-            let current_id = +bot_id;
-            while (answers.length) {
-                await storageService.popLastBotMessageInDB(current_id);
-                last = answers.pop();
-                setAnswers(answers);
-                if (last && last[0] == message) {
-                    break;
+            if (bot_id) {
+                let result = await storageService.rollbackMessage(bot_id, message);
+                if (result) {
+                    setAnswers(result.messages);
+                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
                 }
+                setQuestion(message);
             }
-            if (answers.length == 0) {
-                storageService.deleteChatFromDB(current_id, setAnswers, true, lastQuestionRef);
-                storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
-            }
-            if (last)
-                lastQuestionRef.current = last[0];
-            setQuestion(message);
         }
     };
 
@@ -339,8 +326,8 @@ const BotChat = () => {
                     key={index}
                     usermsg={
                         <UserChatMessage
-                            message={answer[0]}
-                            onRollbackMessage={onRollbackMessage(answer[0])}
+                            message={answer.user}
+                            onRollbackMessage={onRollbackMessage(answer.user)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
@@ -351,12 +338,12 @@ const BotChat = () => {
                             {index === answers.length - 1 && (
                                 <Answer
                                     key={index}
-                                    answer={answer[1]}
+                                    answer={answer.response}
                                     onRegenerateResponseClicked={onRegeneratResponseClicked}
                                     setQuestion={question => setQuestion(question)}
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer key={index} answer={answer[1]} setQuestion={question => setQuestion(question)} />}
+                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
                         </>
                     }
                 ></ChatTurnComponent>

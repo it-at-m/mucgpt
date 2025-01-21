@@ -9,7 +9,7 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
-import { ChatStorageService } from "../../service/storage";
+import { DBMessage, StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
@@ -17,6 +17,8 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SummarizeSidebar } from "../../components/SummarizeSidebar/SummarizeSidebar";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
+
+type SumarizeMessage = DBMessage<SumResponse>;
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext);
@@ -33,27 +35,27 @@ const Summarize = () => {
 
     const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">(detaillevel_pref);
 
-    const [answers, setAnswers] = useState<[user: string, response: SumResponse][]>([]);
+    const [answers, setAnswers] = useState<SumarizeMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storageService: ChatStorageService = new ChatStorageService({ db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 });
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
+    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
+
+    const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>({ db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 });
+
     useEffect(() => {
-        storageService.checkStructurOfDB();
-        storageService.getHighestKeyInDB().then(highestKey => {
-            setIdCounter(highestKey + 1);
-            setCurrentId(highestKey);
-        });
         error && setError(undefined);
         setIsLoading(true);
-        storageService.getStartDataFromDB(currentId).then(stored => {
-            if (stored) {
-                setAnswers([...answers.concat(stored.Data.Answers)]);
-                lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
+        storageService.setup();
+        storageService.getNewestChat().then(existingData => {
+            if (existingData) {
+                const messages = existingData.messages;
+                setAnswers([...answers.concat(messages)]);
+                lastQuestionRef.current = messages[messages.length - 1].user
+                setCurrentId(existingData.id);
             }
+        }).finally(() => {
+            setIsLoading(false);
         });
-        setIsLoading(false);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -74,8 +76,18 @@ const Summarize = () => {
                 model: LLM.llm_name
             };
             const result = await sumApi(request, file);
-            setAnswers([...answers, [questionText, result]]);
-            storageService.saveToDB([questionText, result], currentId, idCounter, setCurrentId, setIdCounter);
+            const completeAnswer: SumarizeMessage = { user: questionText, response: result };
+
+            setAnswers([...answers, completeAnswer]);
+            if (currentId)
+                await storageService.appendMessage(currentId, completeAnswer);
+            else {
+                const id = await storageService.create([completeAnswer], undefined);
+                if (id)
+                    setCurrentId(id);
+                else
+                    throw new Error("Could not create new ID in DB");
+            }
         } catch (e) {
             setError(e);
         } finally {
@@ -86,28 +98,22 @@ const Summarize = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
+        if (currentId)
+            storageService.delete(currentId);
         setAnswers([]);
-        storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
+        currentId && setCurrentId(undefined);
     };
 
-    const onDeleteMessage = (message: string) => {
+    const onRollbackMessage = (message: string) => {
         return async () => {
-            let last;
-            while (answers.length) {
-                await storageService.popLastMessageInDB(currentId);
-                last = answers.pop();
-                setAnswers(answers);
-                if (last && last[0] == message) {
-                    break;
+            if (currentId) {
+                let result = await storageService.rollbackMessage(currentId, message);
+                if (result) {
+                    setAnswers(result.messages);
+                    lastQuestionRef.current = result.messages[result.messages.length - 1].user
                 }
+                setQuestion(message);
             }
-            if (answers.length == 0) {
-                storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
-                storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
-            }
-            if (last)
-                lastQuestionRef.current = last[0];
-            setQuestion(message);
         }
     };
 
@@ -130,13 +136,13 @@ const Summarize = () => {
                     key={index}
                     usermsg={
                         <UserChatMessage
-                            message={answer[0]}
-                            onRollbackMessage={onDeleteMessage(answer[0])}
+                            message={answer.user}
+                            onRollbackMessage={onRollbackMessage(answer.user)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<SumAnswer answer={answer[1]} top_n={2}></SumAnswer>}
+                    botmsg={<SumAnswer answer={answer.response} top_n={2}></SumAnswer>}
                 ></ChatTurnComponent>
             ))}
             {isLoading || error ? (
@@ -144,7 +150,7 @@ const Summarize = () => {
                     usermsg={
                         <UserChatMessage
                             message={lastQuestionRef.current}
-                            onRollbackMessage={onDeleteMessage(lastQuestionRef.current)}
+                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}

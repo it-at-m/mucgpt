@@ -9,11 +9,14 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from "react-i18next";
-import { ChatStorageService } from "../../service/storage";
+import { DBMessage, StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+
+
+type BrainstormMessage = DBMessage<AskResponse>;
 
 const Brainstorm = () => {
     const { language } = useContext(LanguageContext);
@@ -26,29 +29,29 @@ const Brainstorm = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+    const [answers, setAnswers] = useState<BrainstormMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storageService: ChatStorageService = new ChatStorageService({ db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 });
+    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
 
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>({ db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 });
+
+
 
     useEffect(() => {
         error && setError(undefined);
         setIsLoading(true);
-        storageService.checkStructurOfDB();
-        storageService.getHighestKeyInDB().then(highestKey => {
-            setIdCounter(highestKey + 1);
-            setCurrentId(highestKey);
-        });
-        storageService.getStartDataFromDB(currentId).then(stored => {
-            if (stored) {
-                setAnswers([...answers.concat(stored.Data.Answers)]);
-                lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
+        storageService.setup();
+        storageService.getNewestChat().then(existingData => {
+            if (existingData) {
+                const messages = existingData.messages;
+                setAnswers([...answers.concat(messages)]);
+                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                setCurrentId(existingData.id);
             }
+        }).finally(() => {
+            setIsLoading(false);
         });
-        setIsLoading(false);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -67,8 +70,18 @@ const Brainstorm = () => {
                 model: LLM.llm_name
             };
             const result = await brainstormApi(request);
-            setAnswers([...answers, [question, result]]);
-            storageService.saveToDB([question, result], currentId, idCounter, setCurrentId, setIdCounter);
+            const completeAnswer: BrainstormMessage = { user: question, response: result };
+
+            setAnswers([...answers, completeAnswer]);
+            if (currentId)
+                await storageService.appendMessage(currentId, completeAnswer);
+            else {
+                const id = await storageService.create([completeAnswer], undefined);
+                if (id)
+                    setCurrentId(id);
+                else
+                    throw new Error("Could not create new ID in DB");
+            }
         } catch (e) {
             setError(e);
         } finally {
@@ -79,28 +92,22 @@ const Brainstorm = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
+        if (currentId)
+            storageService.delete(currentId);
         setAnswers([]);
-        storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
+        currentId && setCurrentId(undefined);
     };
 
     const onRollbackMessage = (message: string) => {
         return async () => {
-            let last;
-            while (answers.length) {
-                await storageService.popLastMessageInDB(currentId);
-                last = answers.pop();
-                setAnswers(answers);
-                if (last && last[0] == message) {
-                    break;
+            if (currentId) {
+                let result = await storageService.rollbackMessage(currentId, message);
+                if (result) {
+                    setAnswers(result.messages);
+                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
                 }
+                setQuestion(message);
             }
-            if (answers.length == 0) {
-                storageService.deleteChatFromDB(currentId, setAnswers, true, lastQuestionRef);
-                storageService.deleteChatFromDB(0, setAnswers, false, lastQuestionRef);
-            }
-            if (last)
-                lastQuestionRef.current = last[0];
-            setQuestion(message);
         }
     };
 
@@ -130,13 +137,13 @@ const Brainstorm = () => {
                     key={index}
                     usermsg={
                         <UserChatMessage
-                            message={answer[0]}
-                            onRollbackMessage={onRollbackMessage(answer[0])}
+                            message={answer.user}
+                            onRollbackMessage={onRollbackMessage(answer.user)}
                         />
                     }
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<Mindmap markdown={answer[1].answer}></Mindmap>}
+                    botmsg={<Mindmap markdown={answer.response.answer}></Mindmap>}
                 ></ChatTurnComponent>
             ))}
             {isLoading || error ? (

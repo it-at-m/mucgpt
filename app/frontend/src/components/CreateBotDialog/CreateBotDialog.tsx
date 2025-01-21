@@ -17,8 +17,8 @@ import styles from "./CreateBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
-import { Bot, createBotApi } from "../../api";
+import { StorageService, bot_storage } from "../../service/storage";
+import { Bot, ChatResponse, createBotApi } from "../../api";
 
 const example1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
 const example2 = "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
@@ -39,7 +39,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     const [showDialogOutput, setShowDialogOutput] = useState<boolean>(false);
 
     const { t } = useTranslation();
-    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
 
     const onInputChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
@@ -74,18 +74,19 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     };
 
     const onPromptButtonClicked = async () => {
-        const id = (await storageService.getHighestBotKey()) + 1;
         const bot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: false,
-            id: id,
             temperature: 0.6,
             max_output_tokens: LLM.max_output_tokens
         };
-        storageService.storeBot(bot);
-        window.location.href = "/#/bot/" + id;
+        const created_id = await storageService.create(undefined, bot);
+        if (created_id)
+            window.location.href = "/#/bot/" + created_id;
+        else
+            console.error("Bot could not be created");
     };
 
     const onBackButtonClicked = () => {

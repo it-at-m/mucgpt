@@ -3,8 +3,8 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { BotStorageService, bot_history_storage, bot_storage } from "../../service/storage";
-import { Bot } from "../../api/models";
+import { StorageService, bot_storage } from "../../service/storage";
+import { Bot, ChatResponse } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { arielle_bot, sherlock_bot } from "./static_bots";
@@ -16,21 +16,30 @@ const Menu = () => {
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
 
-    const storageService: BotStorageService = new BotStorageService(bot_history_storage, bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
 
     useEffect(() => {
         const arielle: Bot = arielle_bot;
         const sherlock: Bot = sherlock_bot;
-        storageService.storeBot(arielle);
-        storageService.storeBot(sherlock);
-        setCommunityBots([arielle, sherlock]);
-        storageService.getAllBots().then(bots => {
-            if (bots) {
-                setBots(bots);
-            } else {
-                setBots([]);
-            }
-        });
+        storageService.get(arielle.id as string).then(bot => {
+            if (!bot)
+                storageService.create(undefined, arielle, arielle.id);
+        })
+            .then(async () => {
+                const bot = await storageService.get(sherlock.id as string);
+                if (!bot)
+                    storageService.create(undefined, sherlock, sherlock.id);
+            }).finally(() => {
+                setCommunityBots([arielle, sherlock]);
+                storageService.getAll().then(bots => {
+                    if (bots) {
+                        setBots(bots.map(bot => { return { ...bot.config, ... { id: bot.id } }; }));
+                    } else {
+                        setBots([]);
+                    }
+                });
+
+            });
     }, []);
 
     const onAddBot = () => {
@@ -69,8 +78,8 @@ const Menu = () => {
             <div className={styles.row}>
                 {bots.map(
                     (bot: Bot, _) =>
-                        bot.id != 0 &&
-                        bot.id != 1 && ( //Arielle
+                        bot.id != arielle_bot.id &&
+                        bot.id != sherlock_bot.id && (
                             <Tooltip content={bot.title} relationship="description" positioning="below">
                                 <Link to={`/bot/${bot.id}`} className={styles.box}>
                                     <span>{bot.title}</span>

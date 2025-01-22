@@ -121,9 +121,8 @@ export class StorageService<M, C> {
 
     async getNewestChat() {
         try {
-            //TODO get the newest
-            const result = await this.getAll();
-            if (result && result.length > 0) return result[0];
+            const results = await this.getAll();
+            if (results && results.length > 0) return results.toSorted((a, b) => (b._last_edited as number) - (a._last_edited as number))[0];
             else return undefined;
         } catch (error) {
             this.onError(error);

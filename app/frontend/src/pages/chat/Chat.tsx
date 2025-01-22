@@ -10,22 +10,14 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
-import {
-    DBMessage,
-    StorageService
-} from "../../service/storage";
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
-
-const enum STORAGE_KEYS {
-    CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
-    CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT",
-    CHAT_MAX_TOKENS = "CHAT_MAX_TOKENS"
-}
+import { CHAT_STORE, STORAGE_KEYS } from "../../constants";
+import { DBMessage, StorageService } from "../../service/storage";
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -60,11 +52,7 @@ const Chat = () => {
     const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>({
-        db_name: "MUCGPT-CHAT",
-        objectStore_name: "chat",
-        db_version: 2
-    });
+    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);

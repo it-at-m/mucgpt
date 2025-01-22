@@ -3,11 +3,12 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { StorageService, bot_storage } from "../../service/storage";
 import { Bot, ChatResponse } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { arielle_bot, sherlock_bot } from "./static_bots";
+import { BOT_STORE } from "../../constants";
+import { StorageService } from "../../service/storage";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -16,7 +17,7 @@ const Menu = () => {
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
 
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
 
     useEffect(() => {
         const arielle: Bot = arielle_bot;

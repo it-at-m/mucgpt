@@ -9,11 +9,12 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from "react-i18next";
-import { DBMessage, StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { BRAINSTORM_STORE } from "../../constants";
+import { DBMessage, StorageService } from "../../service/storage";
 
 
 type BrainstormMessage = DBMessage<AskResponse>;
@@ -34,7 +35,7 @@ const Brainstorm = () => {
 
     const [currentId, setCurrentId] = useState<string | undefined>(undefined);
 
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>({ db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 });
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE);
 
 
 

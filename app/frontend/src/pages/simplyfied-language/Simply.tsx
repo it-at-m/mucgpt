@@ -8,12 +8,13 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from "react-i18next";
-import { DBMessage, StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SimplySidebar } from "../../components/SimplySidebar/SimplySidebar";
+import { SIMPLY_STORE } from "../../constants";
+import { DBMessage, StorageService } from "../../service/storage";
 
 const enum STORAGE_KEYS {
     SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
@@ -41,7 +42,7 @@ const Simply = () => {
 
     const [currentId, setCurrentId] = useState<string | undefined>(undefined);
 
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>({ db_name: "MUCGPT-SIMPLY", objectStore_name: "simply", db_version: 2 });
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(SIMPLY_STORE);
 
 
 

@@ -1,24 +1,7 @@
 import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 
 import { v4 as uuid } from "uuid";
-
-export interface indexedDBStorage {
-    db_name: string;
-    db_version: number;
-    objectStore_name: string;
-}
-// Bot - Storage
-
-export const bot_storage: indexedDBStorage = {
-    db_name: "MUCGPT-BOTS",
-    objectStore_name: "bots",
-    db_version: 3
-};
-export const bot_history_storage: indexedDBStorage = {
-    db_name: "MUCGPT-BOTS-HISTORY",
-    objectStore_name: "bots-history",
-    db_version: 2
-};
+import { IndexedDBStorage } from "./indexedDBStorage";
 
 export interface DBObject<M, C> {
     _last_edited?: number;
@@ -38,8 +21,8 @@ export interface DBMessage<R> {
 }
 
 export class StorageService<M, C> {
-    config: indexedDBStorage;
-    constructor(config: indexedDBStorage) {
+    config: IndexedDBStorage;
+    constructor(config: IndexedDBStorage) {
         this.config = config;
     }
 

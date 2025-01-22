@@ -20,13 +20,14 @@ import styles from "./BotsettingsDrawer.module.css";
 import { ReactNode, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { StorageService, bot_storage } from "../../service/storage";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ChatResponse, Bot } from "../../api";
+import { BOT_STORE } from "../../constants";
+import { StorageService } from "../../service/storage";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -75,7 +76,7 @@ export const BotsettingsDrawer = ({
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
 
     const onDelete = () => {
         window.location.href = "/";

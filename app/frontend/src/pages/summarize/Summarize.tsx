@@ -9,12 +9,13 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { SumAnswer } from "../../components/SumAnswer";
 import { SumInput } from "../../components/SumInput";
-import { DBMessage, StorageService } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SummarizeSidebar } from "../../components/SummarizeSidebar/SummarizeSidebar";
+import { SUMMARIZE_STORE } from "../../constants";
+import { DBMessage, StorageService } from "../../service/storage";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
 
@@ -40,7 +41,7 @@ const Summarize = () => {
 
     const [currentId, setCurrentId] = useState<string | undefined>(undefined);
 
-    const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>({ db_name: "MUCGPT-SUMMARIZE", objectStore_name: "summarize", db_version: 2 });
+    const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>(SUMMARIZE_STORE);
 
     useEffect(() => {
         error && setError(undefined);

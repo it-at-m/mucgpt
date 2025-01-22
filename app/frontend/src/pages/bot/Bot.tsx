@@ -7,10 +7,6 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
-import {
-    StorageService,
-    bot_storage
-} from "../../service/storage";
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -21,6 +17,8 @@ import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnCo
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ChatMessage } from "../chat/Chat";
+import { BOT_STORE } from "../../constants";
+import { StorageService } from "../../service/storage";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -48,7 +46,7 @@ const BotChat = () => {
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
 
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {

@@ -17,12 +17,10 @@ import styles from "./CreateBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { StorageService, bot_storage } from "../../service/storage";
 import { Bot, ChatResponse, createBotApi } from "../../api";
+import { BOT_STORE, CREATE_BOT_EXAMPLE_1, CREATE_BOT_EXAMPLE_2, CREATE_BOT_EXAMPLE_3 } from "../../constants";
+import { StorageService } from "../../service/storage";
 
-const example1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
-const example2 = "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
-const example3 = "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.";
 
 interface Props {
     showDialogInput: boolean;
@@ -39,7 +37,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     const [showDialogOutput, setShowDialogOutput] = useState<boolean>(false);
 
     const { t } = useTranslation();
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(bot_storage);
+    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
 
     const onInputChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
@@ -123,13 +121,13 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                         <DialogTitle>{t("components.create_bot_dialog.what_function")}</DialogTitle>
                         <DialogContent>
                             <div className={styles.exampleList}>
-                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(example1)}>
+                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_BOT_EXAMPLE_1)}>
                                     Beispiel 1: Übersetzer
                                 </Button>
-                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(example2)}>
+                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_BOT_EXAMPLE_2)}>
                                     Beispiel 2: Email
                                 </Button>
-                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(example3)}>
+                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_BOT_EXAMPLE_3)}>
                                     Beispiel 3: Synonyme
                                 </Button>
                             </div>

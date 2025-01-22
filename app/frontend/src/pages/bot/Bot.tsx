@@ -260,9 +260,9 @@ const BotChat = () => {
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0 && bot_id) {
+            await storageService.popMessage(bot_id);
             let last = answers.pop();
             setAnswers(answers);
-            storageService.popMessage(bot_id);
             if (last) {
                 makeApiRequest(last.user, systemPrompt);
             }

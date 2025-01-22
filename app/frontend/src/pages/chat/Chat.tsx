@@ -204,9 +204,9 @@ const Chat = () => {
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0 && currentId) {
+            await storageService.popMessage(currentId);
             let last = answers.pop();
             setAnswers(answers);
-            storageService.popMessage(currentId);
             if (last) {
                 makeApiRequest(last.user, systemPrompt);
             }

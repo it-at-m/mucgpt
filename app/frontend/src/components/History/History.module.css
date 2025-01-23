@@ -11,10 +11,16 @@
     align-items: center;
 }
 
+.singlechatcontainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+}
+
 .historyHeader {
     margin-left: var(--spacingVerticalS);
 }
 
 .historyContent {
-    margin-left: var(--spacingVerticalM);
+    margin-left: var(--spacingVerticalL);
 }

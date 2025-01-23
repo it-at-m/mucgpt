@@ -177,8 +177,16 @@ export async function createBotApi(options: CreateBotRequest): Promise<Response>
     });
 }
 
-export async function getChatName(answers: any, language: string, temperature: number, system_message: string, max_output_tokens: number, model: string) {
-    const history: ChatTurn[] = [{ user: answers[0], bot: answers[1].answer }];
+export async function createChatName(
+    query: string,
+    answer: string,
+    language: string,
+    temperature: number,
+    system_message: string,
+    max_output_tokens: number,
+    model: string
+) {
+    const history: ChatTurn[] = [{ user: query, bot: answer }];
     const request: ChatRequest = {
         history: [
             ...history,
@@ -200,9 +208,9 @@ export async function getChatName(answers: any, language: string, temperature: n
     if (!response.body) {
         throw Error("No response body");
     }
-    const parsedResponse = await response.json();
+    const parsedResponse = (await response.json()) as SimplyResponse;
     if (response.status > 299 || !response.ok) {
         throw Error(parsedResponse.error || "Unknown error");
     }
-    return parsedResponse;
+    return parsedResponse.content;
 }

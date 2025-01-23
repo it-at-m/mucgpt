@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -17,7 +17,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { CHAT_STORE, STORAGE_KEYS_CHAT } from "../../constants";
-import { DBMessage, StorageService } from "../../service/storage";
+import { DBMessage, DBObject, StorageService } from "../../service/storage";
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -56,6 +56,8 @@ const Chat = () => {
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
 
+    const [allChats, setAllChats] = useState<DBObject<ChatResponse, ChatOptions>[]>([]);
+
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
             const response = await countTokensAPI({ text: debouncedSystemPrompt, model: LLM });
@@ -69,6 +71,13 @@ const Chat = () => {
             onMaxTokensChanged(LLM.max_output_tokens);
         }
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
+
+    const fetchHistory = () => {
+        return storageService.getAll().then(chats => {
+            if (chats)
+                setAllChats(chats);
+        })
+    };
 
     useEffect(() => {
         setAnswers([]);
@@ -101,6 +110,7 @@ const Chat = () => {
                         lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
                         setActiveChat(existingData.id);
                     }
+                    return fetchHistory();
                 })
             }).finally(() => {
                 setIsLoading(false);
@@ -167,8 +177,15 @@ const Chat = () => {
                 await storageService.appendMessage({ user: question, response: latestResponse }, options);
             }
             else {
-                const id = await storageService.create([{ user: question, response: latestResponse }], options);
+                // generate chat name for first chat
+                const chatname = await createChatName(question, latestResponse.answer, language, temperature, system ? system : "", max_output_tokens, LLM.llm_name);
+
+                // create and save current id
+                const id = await storageService.create([{ user: question, response: latestResponse }], options, undefined, chatname, false);
                 setActiveChat(id);
+
+                // fetch all chats
+                await fetchHistory();
             }
         } catch (e) {
             setError(e);
@@ -329,9 +346,29 @@ const Chat = () => {
     const sidebar_content = (
         <>
             <History
-                allChats={[]}
-                onDeleteChat={(id) => { }}
-                onChatOptionsChange={(config: any) => { }}
+                allChats={allChats}
+                currentActiveChatId={active_chat}
+                onDeleteChat={async (id) => {
+                    await storageService.delete(id);
+                    await fetchHistory();
+                }}
+                onChatNameChange={async (id, name: string) => {
+                    const newName = prompt(t("components.history.newchat"), name);
+                    await storageService.renameChat(id, newName ? newName.trim() : name);
+                    await fetchHistory();
+                }}
+                onFavChange={async (id: string, fav: boolean) => {
+                    await storageService.changeFavouritesInDb(id, fav);
+                    await fetchHistory();
+                }}
+                onSelect={async (id: string) => {
+                    const chat = await storageService.get(id);
+                    if (chat) {
+                        setAnswers(chat.messages);
+                        lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                        setActiveChat(id);
+                    }
+                }}
             ></History>
         </>
     );

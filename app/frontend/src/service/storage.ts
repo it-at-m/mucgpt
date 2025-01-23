@@ -6,6 +6,8 @@ import { IndexedDBStorage } from "./indexedDBStorage";
 export interface DBObject<M, C> {
     _last_edited?: number;
     id?: string;
+    name?: string;
+    favorite?: boolean;
     messages: DBMessage<M>[];
     config: C;
 }
@@ -60,16 +62,20 @@ export class StorageService<M, C> {
      * @param messages - An optional array of messages to be stored in the database.
      * @param configuration - An optional configuration object to be stored in the database.
      * @param id - An optional ID for the new entry. If not provided, a new UUID will be generated.
+     * @param name - An optional name for the new entry.
+     * @param favorite - An optional boolean indicating whether the new entry should be marked as a favorite.
      * @returns A Promise that resolves to the ID of the newly created entry, or undefined if an error occurs.
      *
      */
-    async create(messages?: DBMessage<M>[], configuration?: C, id = uuid()): Promise<string | undefined> {
+    async create(messages?: DBMessage<M>[], configuration?: C, id = uuid(), name?: string, favorite: boolean = false): Promise<string | undefined> {
         try {
             const db_object: DBObject<M, C> = {
                 messages: messages ? messages : [],
                 config: configuration ? configuration : ({} as C),
                 _last_edited: Date.now(),
-                id: id
+                id: id,
+                favorite: favorite,
+                name: name
             };
             const db = await this.connectToDB();
             await db.add(this.config.objectStore_name, db_object);
@@ -99,16 +105,18 @@ export class StorageService<M, C> {
         }
     }
 
-    async update(messages?: DBMessage<M>[], configuration?: C) {
+    async update(messages?: DBMessage<M>[], configuration?: C, alternative_id?: string, favorite?: boolean, name?: string) {
         try {
-            const id = this.getActiveChatId();
-            if (!id) throw new Error("No active id found");
+            const id = alternative_id ? alternative_id : this.getActiveChatId();
+            if (!id) throw new Error("No active id found and alternative id not provided");
             const db = await this.connectToDB();
             const stored = await this.get(id);
             if (stored) {
                 stored.messages = messages ? messages : stored.messages;
                 stored.config = configuration ? configuration : stored.config;
                 stored._last_edited = Date.now();
+                if (favorite !== undefined) stored.favorite = favorite;
+                if (name) stored.name = name;
                 const result = await db.put(this.config.objectStore_name, stored);
                 return stored;
             } else throw new Error("No object with id " + id + " found");
@@ -118,13 +126,15 @@ export class StorageService<M, C> {
     }
 
     /**
-     * Deletes the active chat from the database.
-     * If there is an active chat, it connects to the database, deletes the chat with the active ID,
-     * If there is no active chat, no action is taken.
+     * Deletes a record from the database.
+     * If `alternative_id` is provided, it deletes the record with the specified ID.
+     * Otherwise, it deletes the record with the active chat ID.
+     *
+     * @param alternative_id - The ID of the record to delete (optional).
      */
-    async delete() {
+    async delete(alternative_id?: string) {
         try {
-            const id = this.getActiveChatId();
+            const id = alternative_id ? alternative_id : this.getActiveChatId();
             if (id) {
                 const db = await this.connectToDB();
                 await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).delete(id);
@@ -210,35 +220,20 @@ export class StorageService<M, C> {
             this.onError(error);
         }
     }
-}
 
-/**
-export class HistoryStorageService extends StorageService {
-    constructor(config: indexedDBStorage) {
-        super(config);
-    }
-
-    async renameChat(newName: string, chat: any) {
+    async renameChat(id: string, newName: string) {
         try {
-            const db = await this.connectToDB();
-            chat.Data.Name = newName;
-            await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).put(chat);
+            return await this.update(undefined, undefined, id, undefined, newName);
         } catch (error) {
             this.onError(error);
         }
     }
 
-    async changeFavouritesInDb(fav: boolean, id: number) {
+    async changeFavouritesInDb(id: string, fav: boolean) {
         try {
-            const db = await this.connectToDB();
-            const stored = await db.transaction(this.config.objectStore_name).objectStore(this.config.objectStore_name).get(id);
-            if (stored) {
-                stored.Options.favourites = fav;
-                await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).put(stored);
-            }
+            return await this.update(undefined, undefined, id, fav, undefined);
         } catch (error) {
             this.onError(error);
         }
     }
 }
-*/

@@ -15,6 +15,7 @@ import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnCo
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { BRAINSTORM_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
+import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 
 
 type BrainstormMessage = DBMessage<AskResponse>;
@@ -33,26 +34,15 @@ const Brainstorm = () => {
     const [answers, setAnswers] = useState<BrainstormMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE, active_chat);
 
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE);
-
+    const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
+    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
 
 
     useEffect(() => {
-        error && setError(undefined);
-        setIsLoading(true);
-        storageService.setup();
-        storageService.getNewestChat().then(existingData => {
-            if (existingData) {
-                const messages = existingData.messages;
-                setAnswers([...answers.concat(messages)]);
-                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                setCurrentId(existingData.id);
-            }
-        }).finally(() => {
-            setIsLoading(false);
-        });
+        setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -74,41 +64,16 @@ const Brainstorm = () => {
             const completeAnswer: BrainstormMessage = { user: question, response: result };
 
             setAnswers([...answers, completeAnswer]);
-            if (currentId)
-                await storageService.appendMessage(currentId, completeAnswer);
+            if (storageService.getActiveChatId())
+                await storageService.appendMessage(completeAnswer);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
-                if (id)
-                    setCurrentId(id);
-                else
-                    throw new Error("Could not create new ID in DB");
+                setActiveChat(id);
             }
         } catch (e) {
             setError(e);
         } finally {
             setIsLoading(false);
-        }
-    };
-
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        if (currentId)
-            storageService.delete(currentId);
-        setAnswers([]);
-        currentId && setCurrentId(undefined);
-    };
-
-    const onRollbackMessage = (message: string) => {
-        return async () => {
-            if (currentId) {
-                let result = await storageService.rollbackMessage(currentId, message);
-                if (result) {
-                    setAnswers(result.messages);
-                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
-                }
-                setQuestion(message);
-            }
         }
     };
 

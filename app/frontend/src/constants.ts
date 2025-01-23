@@ -1,6 +1,7 @@
 import { ApplicationConfig } from "./api";
 import { IndexedDBStorage } from "./service/indexedDBStorage";
 
+//APP Config
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
         {
@@ -27,6 +28,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     commit: "152b175"
 };
 
+//IDB storage configs
 export const BOT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-BOTS",
     objectStore_name: "bots",
@@ -62,12 +64,19 @@ export const CHAT_STORE: IndexedDBStorage = {
     db_version: 2
 };
 
-export const enum STORAGE_KEYS {
+// Local storage
+export const enum STORAGE_KEYS_CHAT {
     CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
     CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT",
     CHAT_MAX_TOKENS = "CHAT_MAX_TOKENS"
 }
 
+export const enum STORAGE_KEYS_SIMPLY {
+    SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
+    SIMPLY_OUTPUT_TYPE = "SIMPLY_OUTPUT_TYPE"
+}
+
+// Create Bot examples
 export const CREATE_BOT_EXAMPLE_1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
 export const CREATE_BOT_EXAMPLE_2 = "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
 export const CREATE_BOT_EXAMPLE_3 =

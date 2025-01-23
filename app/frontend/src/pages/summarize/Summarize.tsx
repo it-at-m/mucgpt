@@ -16,6 +16,7 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SummarizeSidebar } from "../../components/SummarizeSidebar/SummarizeSidebar";
 import { SUMMARIZE_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
+import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
 
@@ -39,24 +40,14 @@ const Summarize = () => {
     const [answers, setAnswers] = useState<SumarizeMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>(SUMMARIZE_STORE, active_chat);
 
-    const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>(SUMMARIZE_STORE);
+    const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
+    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
 
     useEffect(() => {
-        error && setError(undefined);
-        setIsLoading(true);
-        storageService.setup();
-        storageService.getNewestChat().then(existingData => {
-            if (existingData) {
-                const messages = existingData.messages;
-                setAnswers([...answers.concat(messages)]);
-                lastQuestionRef.current = messages[messages.length - 1].user
-                setCurrentId(existingData.id);
-            }
-        }).finally(() => {
-            setIsLoading(false);
-        });
+        setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -80,14 +71,11 @@ const Summarize = () => {
             const completeAnswer: SumarizeMessage = { user: questionText, response: result };
 
             setAnswers([...answers, completeAnswer]);
-            if (currentId)
-                await storageService.appendMessage(currentId, completeAnswer);
+            if (storageService.getActiveChatId())
+                await storageService.appendMessage(completeAnswer);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
-                if (id)
-                    setCurrentId(id);
-                else
-                    throw new Error("Could not create new ID in DB");
+                setActiveChat(id);
             }
         } catch (e) {
             setError(e);
@@ -95,29 +83,6 @@ const Summarize = () => {
             setIsLoading(false);
         }
     };
-
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        if (currentId)
-            storageService.delete(currentId);
-        setAnswers([]);
-        currentId && setCurrentId(undefined);
-    };
-
-    const onRollbackMessage = (message: string) => {
-        return async () => {
-            if (currentId) {
-                let result = await storageService.rollbackMessage(currentId, message);
-                if (result) {
-                    setAnswers(result.messages);
-                    lastQuestionRef.current = result.messages[result.messages.length - 1].user
-                }
-                setQuestion(message);
-            }
-        }
-    };
-
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 

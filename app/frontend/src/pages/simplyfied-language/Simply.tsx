@@ -13,13 +13,9 @@ import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnCo
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SimplySidebar } from "../../components/SimplySidebar/SimplySidebar";
-import { SIMPLY_STORE } from "../../constants";
+import { SIMPLY_STORE, STORAGE_KEYS_SIMPLY } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
-
-const enum STORAGE_KEYS {
-    SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
-    SIMPLY_OUTPUT_TYPE = "SIMPLY_OUTPUT_TYPE"
-}
+import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 
 type SimplyMessage = DBMessage<AskResponse>;
 
@@ -31,7 +27,7 @@ const Simply = () => {
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
 
-    const outputType_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE) || "plain";
+    const outputType_pref = localStorage.getItem(STORAGE_KEYS_SIMPLY.SIMPLY_OUTPUT_TYPE) || "plain";
     const [outputType, setOutputType] = useState<string>(outputType_pref);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -40,26 +36,14 @@ const Simply = () => {
     const [answers, setAnswers] = useState<SimplyMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(SIMPLY_STORE, active_chat);
 
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(SIMPLY_STORE);
-
-
+    const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
+    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
 
     useEffect(() => {
-        error && setError(undefined);
-        setIsLoading(true);
-        storageService.setup();
-        storageService.getNewestChat().then(existingData => {
-            if (existingData) {
-                const messages = existingData.messages;
-                setAnswers([...answers.concat(messages)]);
-                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                setCurrentId(existingData.id);
-            }
-        }).finally(() => {
-            setIsLoading(false);
-        });
+        setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -82,14 +66,11 @@ const Simply = () => {
             const completeAnswer: SimplyMessage = { user: question, response: askResponse };
 
             setAnswers([...answers, completeAnswer]);
-            if (currentId)
-                await storageService.appendMessage(currentId, completeAnswer);
+            if (storageService.getActiveChatId())
+                await storageService.appendMessage(completeAnswer);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
-                if (id)
-                    setCurrentId(id);
-                else
-                    throw new Error("Could not create new ID in DB");
+                setActiveChat(id);
             }
         } catch (e) {
             setError(e);
@@ -98,34 +79,11 @@ const Simply = () => {
         }
     };
 
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        if (currentId)
-            storageService.delete(currentId);
-        setAnswers([]);
-        currentId && setCurrentId(undefined);
-    };
-
-
-    const onRollbackMessage = (message: string) => {
-        return async () => {
-            if (currentId) {
-                let result = await storageService.rollbackMessage(currentId, message);
-                if (result) {
-                    setAnswers(result.messages);
-                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
-                }
-                setQuestion(message);
-            }
-        }
-    };
-
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const onOutputTypeChanged = (newValue: string) => {
         setOutputType(newValue);
-        localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, newValue);
+        localStorage.setItem(STORAGE_KEYS_SIMPLY.SIMPLY_OUTPUT_TYPE, newValue);
     };
 
     const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;

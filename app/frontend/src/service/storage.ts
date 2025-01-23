@@ -22,8 +22,14 @@ export interface DBMessage<R> {
 
 export class StorageService<M, C> {
     config: IndexedDBStorage;
-    constructor(config: IndexedDBStorage) {
+    private active_chat_id?: string;
+    constructor(config: IndexedDBStorage, active_chat_id?: string) {
         this.config = config;
+        this.active_chat_id = active_chat_id;
+    }
+
+    getActiveChatId() {
+        return this.active_chat_id;
     }
 
     async connectToDB(): Promise<IDBPDatabase<DBObject<M, C>>> {
@@ -46,6 +52,17 @@ export class StorageService<M, C> {
         console.error("Error", request.error);
     }
 
+    /**
+     * Creates a new entry in the database with the specified messages, configuration, and ID.
+     * If messages or configuration are not provided, empty arrays and an empty object will be used, respectively.
+     * If ID is not provided, a new UUID will be generated.
+     *
+     * @param messages - An optional array of messages to be stored in the database.
+     * @param configuration - An optional configuration object to be stored in the database.
+     * @param id - An optional ID for the new entry. If not provided, a new UUID will be generated.
+     * @returns A Promise that resolves to the ID of the newly created entry, or undefined if an error occurs.
+     *
+     */
     async create(messages?: DBMessage<M>[], configuration?: C, id = uuid()): Promise<string | undefined> {
         try {
             const db_object: DBObject<M, C> = {
@@ -82,8 +99,10 @@ export class StorageService<M, C> {
         }
     }
 
-    async update(id: string, messages?: DBMessage<M>[], configuration?: C) {
+    async update(messages?: DBMessage<M>[], configuration?: C) {
         try {
+            const id = this.getActiveChatId();
+            if (!id) throw new Error("No active id found");
             const db = await this.connectToDB();
             const stored = await this.get(id);
             if (stored) {
@@ -98,10 +117,18 @@ export class StorageService<M, C> {
         }
     }
 
-    async delete(id: string) {
+    /**
+     * Deletes the active chat from the database.
+     * If there is an active chat, it connects to the database, deletes the chat with the active ID,
+     * If there is no active chat, no action is taken.
+     */
+    async delete() {
         try {
-            const db = await this.connectToDB();
-            await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).delete(id);
+            const id = this.getActiveChatId();
+            if (id) {
+                const db = await this.connectToDB();
+                await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).delete(id);
+            }
         } catch (error) {
             this.onError(error);
         }
@@ -119,22 +146,29 @@ export class StorageService<M, C> {
         }
     }
 
+    /**
+     * Retrieves the newest chat from the storage.
+     * @returns The newest chat object, or undefined if no chats are available.
+     */
     async getNewestChat() {
         try {
             const results = await this.getAll();
-            if (results && results.length > 0) return results.toSorted((a, b) => (b._last_edited as number) - (a._last_edited as number))[0];
-            else return undefined;
+            if (results && results.length > 0) {
+                const newest_chat = results.toSorted((a, b) => (b._last_edited as number) - (a._last_edited as number))[0];
+                return newest_chat;
+            } else return undefined;
         } catch (error) {
             this.onError(error);
         }
     }
 
-    async appendMessage(id: string, data: DBMessage<M>, configuration?: C) {
+    async appendMessage(data: DBMessage<M>, configuration?: C) {
         try {
+            const id = this.getActiveChatId() as string;
             const stored = await this.get(id);
             if (stored) {
                 stored.messages.push(data);
-                const updated = await this.update(id, stored.messages, configuration ? configuration : stored.config);
+                const updated = await this.update(stored.messages, configuration ? configuration : stored.config);
                 return updated;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {
@@ -142,12 +176,14 @@ export class StorageService<M, C> {
         }
     }
 
-    async popMessage(id: string) {
+    async popMessage() {
         try {
+            const id = this.getActiveChatId();
+            if (!id) throw new Error("No active id found");
             const stored = await this.get(id);
             if (stored) {
                 const popedMessage = stored.messages.pop();
-                const updated = await this.update(id, stored.messages, stored.config);
+                const updated = await this.update(stored.messages, stored.config);
                 return popedMessage;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {
@@ -155,8 +191,10 @@ export class StorageService<M, C> {
         }
     }
 
-    async rollbackMessage(id: string, message: string) {
+    async rollbackMessage(message: string) {
         try {
+            const id = this.getActiveChatId();
+            if (!id) throw new Error("No active id found");
             const stored = await this.get(id);
             if (stored) {
                 while (stored.messages.length) {
@@ -165,7 +203,7 @@ export class StorageService<M, C> {
                         break;
                     }
                 }
-                const updated = await this.update(id, stored.messages, stored.config);
+                const updated = await this.update(stored.messages, stored.config);
                 return updated;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {

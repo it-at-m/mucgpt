@@ -16,7 +16,7 @@ import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
-import { CHAT_STORE, STORAGE_KEYS } from "../../constants";
+import { CHAT_STORE, STORAGE_KEYS_CHAT } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 
 export type ChatMessage = DBMessage<ChatResponse>;
@@ -42,17 +42,16 @@ const Chat = () => {
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const [currentId, setCurrentId] = useState<string | undefined>(undefined);
-
-    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE) || 0.7);
-    const max_output_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
-    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT) || "";
+    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS_CHAT.CHAT_TEMPERATURE) || 0.7);
+    const max_output_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS_CHAT.CHAT_MAX_TOKENS)) || 4000;
+    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS_CHAT.CHAT_SYSTEM_PROMPT) || "";
 
     const [temperature, setTemperature] = useState(temperature_pref);
     const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
     const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
 
-    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE);
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE, active_chat);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
@@ -77,33 +76,35 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
 
-        //TODO get current chat from localstorage, maybe just get the newest
-        storageService.getNewestChat().then(existingData => {
-            if (existingData) {
-                // if the chat exists
-                const messages = existingData.messages;
-                setCurrentId(existingData.id);
-                if (messages[messages.length - 1].response.answer == "") {
-                    // if the answer of the LLM has not (yet) returned
-                    if (messages.length > 1) {
-                        messages.pop();
-                        setAnswers([...answers.concat(messages)]);
+        storageService.setup()
+            .then(() => {
+                return storageService.getNewestChat().then(existingData => {
+                    if (existingData) {
+                        // if the chat exists
+                        const messages = existingData.messages;
+                        if (messages[messages.length - 1].response.answer == "") {
+                            // if the answer of the LLM has not (yet) returned
+                            if (messages.length > 1) {
+                                messages.pop();
+                                setAnswers([...answers.concat(messages)]);
+                            }
+                            setError(new MessageError(t("components.history.error")));
+                        } else {
+                            let options = existingData.config;
+                            setAnswers([...answers.concat(messages)]);
+                            if (options) {
+                                onMaxTokensChanged(options.maxTokens);
+                                onTemperatureChanged(options.temperature);
+                                onSystemPromptChanged(options.system);
+                            }
+                        }
+                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                        setActiveChat(existingData.id);
                     }
-                    setError(new MessageError(t("components.history.error")));
-                } else {
-                    let options = existingData.config;
-                    setAnswers([...answers.concat(messages)]);
-                    if (options) {
-                        onMaxTokensChanged(options.maxTokens);
-                        onTemperatureChanged(options.temperature);
-                        onSystemPromptChanged(options.system);
-                    }
-                }
-                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-            }
-        }).finally(() => {
-            setIsLoading(false);
-        });
+                })
+            }).finally(() => {
+                setIsLoading(false);
+            });
     }, []);
 
     const makeApiRequest = async (question: string, system?: string) => {
@@ -111,22 +112,13 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
         const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
-        const completeAnswer: ChatMessage = { user: question, response: askResponse };
         const options: ChatOptions = {
             favorite: false,
             system: system ? system : "",
             maxTokens: max_output_tokens,
             temperature: temperature //TODO model LLM.llm_name übergeben?
         };
-        if (currentId)
-            await storageService.appendMessage(currentId, completeAnswer, options);
-        else {
-            const id = await storageService.create([completeAnswer], undefined);
-            if (id)
-                setCurrentId(id);
-            else
-                throw new Error("Could not create new ID in DB");
-        }
+
         try {
             const history: ChatTurn[] = answers.map(a => ({ user: a.user, bot: a.response.answer }));
             const request: ChatRequest = {
@@ -170,9 +162,13 @@ const Chat = () => {
                     setAnswers([...answers, { user: question, response: latestResponse }]);
                 }
             }
-            if (currentId) { //pop previous dummy result and replace with a new one
-                await storageService.popMessage(currentId);
-                await storageService.appendMessage(currentId, { user: question, response: latestResponse });
+            //chat present, if not create.
+            if (active_chat) {
+                await storageService.appendMessage({ user: question, response: latestResponse }, options);
+            }
+            else {
+                const id = await storageService.create([{ user: question, response: latestResponse }], options);
+                setActiveChat(id);
             }
         } catch (e) {
             setError(e);
@@ -180,19 +176,20 @@ const Chat = () => {
             setIsLoading(false);
         }
     };
-
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        if (currentId)
-            storageService.delete(currentId);
+        //unset active chat
+        if (active_chat) {
+            setActiveChat(undefined);
+        }
         setAnswers([]);
     };
 
     const onRollbackMessage = (message: string) => {
         return async () => {
-            if (currentId) {
-                let result = await storageService.rollbackMessage(currentId, message);
+            if (active_chat) {
+                let result = await storageService.rollbackMessage(message);
                 if (result) {
                     setAnswers(result.messages);
                     lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
@@ -203,8 +200,8 @@ const Chat = () => {
     };
 
     const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0 && currentId) {
-            await storageService.popMessage(currentId);
+        if (answers.length > 0 && storageService.getActiveChatId()) {
+            await storageService.popMessage();
             let last = answers.pop();
             setAnswers(answers);
             if (last) {
@@ -226,14 +223,13 @@ const Chat = () => {
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
-        localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString());
-        if (currentId)
-            storageService.update(currentId, undefined, {
-                favorite: false,
-                system: systemPrompt ? systemPrompt : "",
-                maxTokens: max_output_tokens,
-                temperature: temp
-            });
+        localStorage.setItem(STORAGE_KEYS_CHAT.CHAT_TEMPERATURE, temp.toString());
+        storageService.update(undefined, {
+            favorite: false,
+            system: systemPrompt ? systemPrompt : "",
+            maxTokens: max_output_tokens,
+            temperature: temp
+        });
     };
 
     const onMaxTokensChanged = (maxTokens: number) => {
@@ -241,27 +237,25 @@ const Chat = () => {
             onMaxTokensChanged(LLM.max_output_tokens);
         } else {
             setMaxOutputTokens(maxTokens);
-            localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString());
-            if (currentId)
-                storageService.update(currentId, undefined, {
-                    favorite: false,
-                    system: systemPrompt ? systemPrompt : "",
-                    maxTokens: maxTokens,
-                    temperature: temperature
-                });
+            localStorage.setItem(STORAGE_KEYS_CHAT.CHAT_MAX_TOKENS, maxTokens.toString());
+            storageService.update(undefined, {
+                favorite: false,
+                system: systemPrompt ? systemPrompt : "",
+                maxTokens: maxTokens,
+                temperature: temperature
+            });
         }
     };
 
     const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
-        localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt);
-        if (currentId)
-            storageService.update(currentId, undefined, {
-                favorite: false,
-                system: systemPrompt ? systemPrompt : "",
-                maxTokens: max_output_tokens,
-                temperature: temperature
-            });
+        localStorage.setItem(STORAGE_KEYS_CHAT.CHAT_SYSTEM_PROMPT, systemPrompt);
+        storageService.update(undefined, {
+            favorite: false,
+            system: systemPrompt ? systemPrompt : "",
+            maxTokens: max_output_tokens,
+            temperature: temperature
+        });
     };
 
     const answerList = (

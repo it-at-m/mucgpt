@@ -17,9 +17,9 @@ import styles from "./CreateBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { Bot, ChatResponse, createBotApi } from "../../api";
+import { Bot, createBotApi } from "../../api";
 import { BOT_STORE, CREATE_BOT_EXAMPLE_1, CREATE_BOT_EXAMPLE_2, CREATE_BOT_EXAMPLE_3 } from "../../constants";
-import { StorageService } from "../../service/storage";
+import { BotStorageService } from "../../service/botstorage";
 
 
 interface Props {
@@ -37,7 +37,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     const [showDialogOutput, setShowDialogOutput] = useState<boolean>(false);
 
     const { t } = useTranslation();
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
+    const storageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     const onInputChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
@@ -80,7 +80,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             temperature: 0.6,
             max_output_tokens: LLM.max_output_tokens
         };
-        const created_id = await storageService.create(undefined, bot);
+        const created_id = await storageService.createBot(bot);
         if (created_id)
             window.location.href = "/#/bot/" + created_id;
         else

@@ -1,12 +1,13 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, ChatResponse } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, ChatResponse, createChatName } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
+import { History } from "../../components/History/History";
 
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -18,8 +19,8 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ChatMessage } from "../chat/Chat";
 import { BOT_STORE } from "../../constants";
-import { StorageService } from "../../service/storage";
-import { handleRollback } from "../page_helpers";
+import { BotStorageService } from "../../service/botstorage";
+import { DBObject, StorageService } from "../../service/storage";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -47,9 +48,12 @@ const BotChat = () => {
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE, bot_id);
 
-    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+    const botChatStorage: StorageService<ChatResponse, Bot> = botStorageService.getChatStorageService(bot_id, active_chat);
+
+    const [allChats, setAllChats] = useState<DBObject<ChatResponse, {}>[]>([]);
 
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
@@ -62,18 +66,18 @@ const BotChat = () => {
         if (bot_id) {
             error && setError(undefined);
             setIsLoading(true);
-            storageService.setup().then(() => {
-                return storageService.get(bot_id).then(bot => {
-                    if (bot) {
-                        setSystemPrompt(bot.config.system_message);
-                        setTitle(bot.config.title);
-                        setDescription(bot.config.description);
-                        setPublish(bot.config.publish);
-                        setTemperature(bot.config.temperature);
-                        setMaxOutputTokens(bot.config.max_output_tokens);
-
-                        const messages = bot.messages;
-                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+            botStorageService.getBotConfig(bot_id).then(bot => {
+                if (bot) {
+                    setSystemPrompt(bot.system_message);
+                    setTitle(bot.title);
+                    setDescription(bot.description);
+                    setPublish(bot.publish);
+                    setTemperature(bot.temperature);
+                    setMaxOutputTokens(bot.max_output_tokens);
+                }
+                return botStorageService.getNewestChatForBot(bot_id).then((existingChat) => {
+                    if (existingChat) {
+                        const messages = existingChat.messages;
                         if (messages[messages.length - 1].response.answer == "") {
                             // if the answer of the LLM has not (yet) returned
                             if (messages.length > 1) {
@@ -84,7 +88,11 @@ const BotChat = () => {
                         } else {
                             setAnswers([...answers.concat(messages)]);
                         }
+                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                        setActiveChat(existingChat.id);
                     }
+                }).then(() => {
+                    return fetchHistory();
                 })
             }).finally(() => {
                 setIsLoading(false);
@@ -98,6 +106,14 @@ const BotChat = () => {
             onMaxTokensChanged(LLM.max_output_tokens);
         }
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
+
+    const fetchHistory = () => {
+        return botStorageService.getAllChatForBot(bot_id).then(chats => {
+            if (chats)
+                setAllChats(chats);
+        })
+    };
+
 
     const makeApiRequest = async (question: string, system?: string) => {
         lastQuestionRef.current = question;
@@ -148,7 +164,21 @@ const BotChat = () => {
                     setAnswers([...answers, { user: question, response: latestResponse }]);
                 }
             }
-            await storageService.appendMessage({ user: question, response: latestResponse });
+            //chat present, if not create.
+            if (active_chat) {
+                await botStorageService.appendMessage(bot_id, active_chat, { user: question, response: latestResponse });
+            }
+            else {
+                // generate chat name for first chat
+                const chatname = await createChatName(question, latestResponse.answer, language, temperature, system ? system : "", max_output_tokens, LLM.llm_name);
+
+                // create and save current id
+                const id = await botStorageService.createChat(bot_id, [{ user: question, response: latestResponse }], chatname);
+                setActiveChat(id);
+
+                // fetch all chats
+                await fetchHistory();
+            }
         } catch (e) {
             setError(e);
         } finally {
@@ -174,7 +204,7 @@ const BotChat = () => {
             temperature: temp,
             max_output_tokens: max_output_tokens
         };
-        storageService.update(undefined, newBot);
+        botChatStorage.update(undefined, newBot);
     };
 
     const onMaxTokensChanged = (maxTokens: number) => {
@@ -191,7 +221,7 @@ const BotChat = () => {
                 temperature: temperature,
                 max_output_tokens: maxTokens
             };
-            storageService.update(undefined, newBot);
+            botChatStorage.update(undefined, newBot);
         }
     };
 
@@ -206,7 +236,7 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.update(undefined, newBot);
+        botChatStorage.update(undefined, newBot);
     };
 
     const onPublishChanged = (publish: boolean) => {
@@ -220,7 +250,7 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.update(undefined, newBot);
+        botChatStorage.update(undefined, newBot);
     };
 
     const onTitleChanged = (title: string) => {
@@ -234,7 +264,7 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.update(undefined, newBot);
+        botChatStorage.update(undefined, newBot);
     };
 
     const onDescriptionChanged = (description: string) => {
@@ -248,12 +278,12 @@ const BotChat = () => {
             temperature: temperature,
             max_output_tokens: max_output_tokens
         };
-        storageService.update(undefined, newBot);
+        botChatStorage.update(undefined, newBot);
     };
 
     const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0 && storageService.getActiveChatId()) {
-            await storageService.popMessage();
+        if (answers.length > 0 && botChatStorage.getActiveChatId()) {
+            await botChatStorage.popMessage();
             let last = answers.pop();
             setAnswers(answers);
             if (last) {
@@ -264,8 +294,24 @@ const BotChat = () => {
     const clearChat = () => {
         lastQuestionRef.current = "";
         error && setError(undefined);
-        storageService.update([]);
+        //unset active chat
+        if (active_chat) {
+            setActiveChat(undefined);
+        }
         setAnswers([]);
+    };
+
+    const onRollbackMessage = (message: string) => {
+        return async () => {
+            if (active_chat) {
+                let result = await botChatStorage.rollbackMessage(message);
+                if (result) {
+                    setAnswers(result.messages);
+                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
+                }
+                setQuestion(message);
+            }
+        }
     };
 
 
@@ -274,8 +320,32 @@ const BotChat = () => {
             <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
         </>
     );
-
-    const sidebar = [
+    const history = <History
+        allChats={allChats}
+        currentActiveChatId={active_chat}
+        onDeleteChat={async (id) => {
+            await botChatStorage.delete(id);
+            await fetchHistory();
+        }}
+        onChatNameChange={async (id, name: string) => {
+            const newName = prompt(t("components.history.newchat"), name);
+            await botChatStorage.renameChat(id, newName ? newName.trim() : name);
+            await fetchHistory();
+        }}
+        onFavChange={async (id: string, fav: boolean) => {
+            await botChatStorage.changeFavouritesInDb(id, fav);
+            await fetchHistory();
+        }}
+        onSelect={async (id: string) => {
+            const chat = await botChatStorage.get(id);
+            if (chat) {
+                setAnswers(chat.messages);
+                lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                setActiveChat(id);
+            }
+        }}
+    ></History>;
+    const sidebar = (<>
         <BotsettingsDrawer
             temperature={temperature}
             setTemperature={onTemperatureChanged}
@@ -290,8 +360,9 @@ const BotChat = () => {
             bot_id={bot_id}
             setPublish={onPublishChanged}
             actions={actions}
+            before_content={history}
         ></BotsettingsDrawer>
-    ];
+    </>);
     const examplesComponent = <></>;
     const inputComponent = (
         <QuestionInput

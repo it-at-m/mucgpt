@@ -85,36 +85,33 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
 
-        storageService.setup()
-            .then(() => {
-                return storageService.getNewestChat().then(existingData => {
-                    if (existingData) {
-                        // if the chat exists
-                        const messages = existingData.messages;
-                        if (messages[messages.length - 1].response.answer == "") {
-                            // if the answer of the LLM has not (yet) returned
-                            if (messages.length > 1) {
-                                messages.pop();
-                                setAnswers([...answers.concat(messages)]);
-                            }
-                            setError(new MessageError(t("components.history.error")));
-                        } else {
-                            let options = existingData.config;
-                            setAnswers([...answers.concat(messages)]);
-                            if (options) {
-                                onMaxTokensChanged(options.maxTokens);
-                                onTemperatureChanged(options.temperature);
-                                onSystemPromptChanged(options.system);
-                            }
-                        }
-                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                        setActiveChat(existingData.id);
+        storageService.getNewestChat().then(existingData => {
+            if (existingData) {
+                // if the chat exists
+                const messages = existingData.messages;
+                if (messages[messages.length - 1].response.answer == "") {
+                    // if the answer of the LLM has not (yet) returned
+                    if (messages.length > 1) {
+                        messages.pop();
+                        setAnswers([...answers.concat(messages)]);
                     }
-                    return fetchHistory();
-                })
-            }).finally(() => {
-                setIsLoading(false);
-            });
+                    setError(new MessageError(t("components.history.error")));
+                } else {
+                    let options = existingData.config;
+                    setAnswers([...answers.concat(messages)]);
+                    if (options) {
+                        onMaxTokensChanged(options.maxTokens);
+                        onTemperatureChanged(options.temperature);
+                        onSystemPromptChanged(options.system);
+                    }
+                }
+                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                setActiveChat(existingData.id);
+            }
+            return fetchHistory();
+        }).finally(() => {
+            setIsLoading(false);
+        });
     }, []);
 
     const makeApiRequest = async (question: string, system?: string) => {

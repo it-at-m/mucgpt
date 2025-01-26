@@ -8,14 +8,14 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, Bot, ChatResponse, configApi } from "../../api";
+import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { BOT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
-import { StorageService } from "../../service/storage";
+import { BotStorageService } from "../../service/botstorage";
 
 const formatDate = (date: Date) => {
     let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -57,13 +57,13 @@ export const Layout = () => {
     };
 
 
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
         if (id) {
-            storageService.get(id).then(bot => {
+            botStorageService.getBotConfig(id).then(bot => {
                 if (bot)
-                    setTitle([bot.config.id as string, bot.config.title]);
+                    setTitle([bot.id as string, bot.title]);
             });
         }
         configApi().then(

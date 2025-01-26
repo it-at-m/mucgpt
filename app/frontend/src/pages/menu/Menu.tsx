@@ -3,12 +3,12 @@ import styles from "./Menu.module.css";
 import { useTranslation } from "react-i18next";
 import { AddBotButton } from "../../components/AddBotButton";
 import { useEffect, useState } from "react";
-import { Bot, ChatResponse } from "../../api/models";
+import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { arielle_bot, sherlock_bot } from "./static_bots";
 import { BOT_STORE } from "../../constants";
-import { StorageService } from "../../service/storage";
+import { BotStorageService } from "../../service/botstorage";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -17,27 +17,23 @@ const Menu = () => {
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
 
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE);
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
         const arielle: Bot = arielle_bot;
         const sherlock: Bot = sherlock_bot;
-        storageService.get(arielle.id as string).then(bot => {
+        botStorageService.getBotConfig(arielle.id as string).then(bot => {
             if (!bot)
-                storageService.create(undefined, arielle, arielle.id);
+                botStorageService.createBot(arielle, arielle.id as string,);
         })
             .then(async () => {
-                const bot = await storageService.get(sherlock.id as string);
+                const bot = await botStorageService.getBotConfig(sherlock.id as string);
                 if (!bot)
-                    storageService.create(undefined, sherlock, sherlock.id);
+                    botStorageService.createBot(sherlock, sherlock.id as string,);
             }).finally(() => {
                 setCommunityBots([arielle, sherlock]);
-                storageService.getAll().then(bots => {
-                    if (bots) {
-                        setBots(bots.map(bot => { return { ...bot.config, ... { id: bot.id } }; }));
-                    } else {
-                        setBots([]);
-                    }
+                botStorageService.getAllBotConfigs().then(bots => {
+                    setBots(bots);
                 });
 
             });

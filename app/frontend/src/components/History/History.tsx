@@ -50,13 +50,13 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
         <div>
             <div className={styles.historyHeader}>
                 <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                    <h2>{t("components.history.history")}</h2>
+                    <h3>{t("components.history.history")}</h3>
                 </Tooltip>
             </div>
             <div className={styles.historyContent}>{
                 sortedChats.map(([category, chats]) => (
                     <div key={category}>
-                        <h3>{category}</h3>
+                        <h4>{category}</h4>
                         {chats.map((chat: DBObject<any, any>, index: number) => (
                             <div key={index} >
                                 <div className={styles.singlechatcontainer}>
@@ -90,7 +90,6 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                             </MenuList>
                                         </MenuPopover>
                                     </Menu>
-                                    {index != chats.length - 1 && <hr />}
                                 </div>
                             </div>
                         ))}

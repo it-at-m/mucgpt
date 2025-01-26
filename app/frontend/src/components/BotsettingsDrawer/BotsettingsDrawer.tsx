@@ -25,9 +25,8 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { ChatResponse, Bot } from "../../api";
 import { BOT_STORE } from "../../constants";
-import { StorageService } from "../../service/storage";
+import { BotStorageService } from "../../service/botstorage";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -42,6 +41,7 @@ interface Props {
     setDescription: (description: string) => void;
     setPublish: (publish: boolean) => void;
     actions: ReactNode;
+    before_content: ReactNode;
 }
 
 export const BotsettingsDrawer = ({
@@ -57,7 +57,8 @@ export const BotsettingsDrawer = ({
     description,
     setDescription,
     setPublish,
-    actions
+    actions,
+    before_content
 }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
@@ -76,11 +77,11 @@ export const BotsettingsDrawer = ({
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
-    const storageService: StorageService<ChatResponse, Bot> = new StorageService<ChatResponse, Bot>(BOT_STORE, bot_id);
+    const storageService: BotStorageService = new BotStorageService(BOT_STORE);
 
-    const onDelete = () => {
+    const onDelete = async () => {
+        await storageService.deleteConfigAndChatsForBot(bot_id);
         window.location.href = "/";
-        storageService.delete();
     };
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
@@ -125,6 +126,7 @@ export const BotsettingsDrawer = ({
     );
     const content = (
         <>
+            <>{before_content}</>
             {" "}
             {isEditable && (
                 <div className={styles.header} role="heading" aria-level={3}>
@@ -150,11 +152,17 @@ export const BotsettingsDrawer = ({
                     </div>
                 </div>
             )}
-            {isEditable && (
+            {isEditable ? (
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>{t("create_bot.description")}</div>
                 </div>
-            )}
+            ) :
+                (
+                    <div className={styles.header} role="heading" aria-level={3}>
+                        <h3>{t("create_bot.description")}</h3>
+                    </div>
+                )
+            }
             <div className={styles.bodyContainer}>
                 <div>
                     <Field size="large">

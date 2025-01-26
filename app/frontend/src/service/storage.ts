@@ -144,18 +144,6 @@ export class StorageService<M, C> {
         }
     }
 
-    async setup() {
-        try {
-            const db = await this.connectToDB();
-            const storeName = this.config.objectStore_name;
-            if (!db.objectStoreNames.contains(storeName)) {
-                db.createObjectStore(storeName, { keyPath: "id" });
-            }
-        } catch (error) {
-            this.onError(error);
-        }
-    }
-
     /**
      * Retrieves the newest chat from the storage.
      * @returns The newest chat object, or undefined if no chats are available.

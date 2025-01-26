@@ -1,7 +1,7 @@
 import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { StorageService } from "../service/storage";
 
-export function setupStore(
+export async function setupStore(
     error: unknown,
     setError: Dispatch<unknown>,
     setIsLoading: Dispatch<boolean>,
@@ -13,20 +13,14 @@ export function setupStore(
 ) {
     error && setError(undefined);
     setIsLoading(true);
-    storageService
-        .setup()
-        .then(async () => {
-            const existingData = await storageService.getNewestChat();
-            if (existingData) {
-                const messages = existingData.messages;
-                setAnswers([...answers.concat(messages)]);
-                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                setActiveChat(existingData.id);
-            }
-        })
-        .finally(() => {
-            setIsLoading(false);
-        });
+    const existingData = await storageService.getNewestChat();
+    if (existingData) {
+        const messages = existingData.messages;
+        setAnswers([...answers.concat(messages)]);
+        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+        setActiveChat(existingData.id);
+    }
+    setIsLoading(false);
 }
 
 export function handleDeleteChat(

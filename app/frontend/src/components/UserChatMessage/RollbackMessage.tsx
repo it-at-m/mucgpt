@@ -8,12 +8,12 @@ interface Props {
     onRollback: () => void;
 }
 
-export const RollBackMessage = ({ onRollback: deleteMessageCallBack }: Props) => {
+export const RollBackMessage = ({ onRollback }: Props) => {
     const { t } = useTranslation();
     return (
         <Tooltip content={t("components.deleteMessage.label")} relationship="description" positioning="above">
             <Button
-                onClick={deleteMessageCallBack}
+                onClick={onRollback}
                 appearance="subtle"
                 aria-label={t("components.deleteMessage.label")}
                 icon={<DeleteArrowBackRegular className={styles.iconRightMargin} />}

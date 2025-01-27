@@ -1,14 +1,16 @@
-import { Link } from "react-router-dom";
 import styles from "./Menu.module.css";
+
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AddBotButton } from "../../components/AddBotButton";
-import { useEffect, useState } from "react";
-import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
+import { useEffect, useState } from "react";
+
+import { AddBotButton } from "../../components/AddBotButton";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
+import { BotStorageService } from "../../service/botstorage";
+import { Bot } from "../../api/models";
 import { arielle_bot, sherlock_bot } from "./static_bots";
 import { BOT_STORE } from "../../constants";
-import { BotStorageService } from "../../service/botstorage";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -25,11 +27,11 @@ const Menu = () => {
         botStorageService
             .getBotConfig(arielle.id as string)
             .then(bot => {
-                if (!bot) botStorageService.createBot(arielle, arielle.id as string);
+                if (!bot) botStorageService.createBotConfig(arielle, arielle.id as string);
             })
             .then(async () => {
                 const bot = await botStorageService.getBotConfig(sherlock.id as string);
-                if (!bot) botStorageService.createBot(sherlock, sherlock.id as string);
+                if (!bot) botStorageService.createBotConfig(sherlock, sherlock.id as string);
             })
             .finally(() => {
                 setCommunityBots([arielle, sherlock]);
@@ -75,8 +77,8 @@ const Menu = () => {
             <div className={styles.row}>
                 {bots.map(
                     (bot: Bot, _) =>
-                        bot.id != arielle_bot.id &&
-                        bot.id != sherlock_bot.id && (
+                        bot.id !== arielle_bot.id &&
+                        bot.id !== sherlock_bot.id && (
                             <Tooltip content={bot.title} relationship="description" positioning="below">
                                 <Link to={`/bot/${bot.id}`} className={styles.box}>
                                     <span>{bot.title}</span>
@@ -84,7 +86,7 @@ const Menu = () => {
                             </Tooltip>
                         )
                 )}
-                {bots.length === 1 && <div>{t("menu.no_bots")}</div>}
+                {bots.length === 2 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}>{t("menu.community_bots")}</div>
             <div className={styles.row}>

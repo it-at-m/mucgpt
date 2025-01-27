@@ -13,6 +13,9 @@ import {
     SumResponse
 } from "./models";
 
+const CHAT_NAME_PROMPT =
+    "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
+
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/api/chat_stream" : "/api/chat";
     return await fetch(url, {
@@ -191,7 +194,7 @@ export async function createChatName(
         history: [
             ...history,
             {
-                user: "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats",
+                user: CHAT_NAME_PROMPT,
                 bot: undefined
             }
         ],

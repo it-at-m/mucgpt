@@ -3,6 +3,9 @@ import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
 
+/**
+ * Represents a database object that stores messages and configuration data.
+ */
 export interface DBObject<M, C> {
     _last_edited?: number;
     id?: string;
@@ -16,12 +19,22 @@ export interface LegacDbObject {
     id?: string;
     Data: { Answers: [string, string]; LastEdited: number };
 }
-
+/**
+ * Represents a message stored in the database.
+ */
 export interface DBMessage<R> {
-    user: string;
-    response: R;
+    user: string; //the user message/query
+    response: R; //the response from the ai
 }
 
+/**
+ * Represents a storage service for managing data in an IndexedDB.
+ *
+ * The service provides methods for creating, reading, updating, and deleting records in the database.
+ * Each record is saved in a object store and is from type DBObject.
+ * @template M - The type of messages stored in the database.
+ * @template C - The type of configuration stored in the database.
+ */
 export class StorageService<M, C> {
     config: IndexedDBStorage;
     private active_chat_id?: string;

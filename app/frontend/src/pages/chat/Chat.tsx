@@ -22,10 +22,10 @@ import { DBMessage, DBObject, StorageService } from "../../service/storage";
 export type ChatMessage = DBMessage<ChatResponse>;
 
 export interface ChatOptions {
-    favorite: boolean,
-    system: string,
-    maxTokens: number,
-    temperature: number
+    favorite: boolean;
+    system: string;
+    maxTokens: number;
+    temperature: number;
 }
 
 const Chat = () => {
@@ -74,9 +74,8 @@ const Chat = () => {
 
     const fetchHistory = () => {
         return storageService.getAll().then(chats => {
-            if (chats)
-                setAllChats(chats);
-        })
+            if (chats) setAllChats(chats);
+        });
     };
 
     useEffect(() => {
@@ -85,33 +84,36 @@ const Chat = () => {
         error && setError(undefined);
         setIsLoading(true);
 
-        storageService.getNewestChat().then(existingData => {
-            if (existingData) {
-                // if the chat exists
-                const messages = existingData.messages;
-                if (messages[messages.length - 1].response.answer == "") {
-                    // if the answer of the LLM has not (yet) returned
-                    if (messages.length > 1) {
-                        messages.pop();
+        storageService
+            .getNewestChat()
+            .then(existingData => {
+                if (existingData) {
+                    // if the chat exists
+                    const messages = existingData.messages;
+                    if (messages[messages.length - 1].response.answer == "") {
+                        // if the answer of the LLM has not (yet) returned
+                        if (messages.length > 1) {
+                            messages.pop();
+                            setAnswers([...answers.concat(messages)]);
+                        }
+                        setError(new MessageError(t("components.history.error")));
+                    } else {
+                        let options = existingData.config;
                         setAnswers([...answers.concat(messages)]);
+                        if (options) {
+                            onMaxTokensChanged(options.maxTokens);
+                            onTemperatureChanged(options.temperature);
+                            onSystemPromptChanged(options.system);
+                        }
                     }
-                    setError(new MessageError(t("components.history.error")));
-                } else {
-                    let options = existingData.config;
-                    setAnswers([...answers.concat(messages)]);
-                    if (options) {
-                        onMaxTokensChanged(options.maxTokens);
-                        onTemperatureChanged(options.temperature);
-                        onSystemPromptChanged(options.system);
-                    }
+                    lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                    setActiveChat(existingData.id);
                 }
-                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                setActiveChat(existingData.id);
-            }
-            return fetchHistory();
-        }).finally(() => {
-            setIsLoading(false);
-        });
+                return fetchHistory();
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
     }, []);
 
     const makeApiRequest = async (question: string, system?: string) => {
@@ -172,10 +174,17 @@ const Chat = () => {
             //chat present, if not create.
             if (active_chat) {
                 await storageService.appendMessage({ user: question, response: latestResponse }, options);
-            }
-            else {
+            } else {
                 // generate chat name for first chat
-                const chatname = await createChatName(question, latestResponse.answer, language, temperature, system ? system : "", max_output_tokens, LLM.llm_name);
+                const chatname = await createChatName(
+                    question,
+                    latestResponse.answer,
+                    language,
+                    temperature,
+                    system ? system : "",
+                    max_output_tokens,
+                    LLM.llm_name
+                );
 
                 // create and save current id
                 const id = await storageService.create([{ user: question, response: latestResponse }], options, undefined, chatname, false);
@@ -210,7 +219,7 @@ const Chat = () => {
                 }
                 setQuestion(message);
             }
-        }
+        };
     };
 
     const onRegeneratResponseClicked = async () => {
@@ -226,9 +235,8 @@ const Chat = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = systemPromptTokens + answers
-        .map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
-        .reduceRight((prev, curr) => prev + curr, 0);
+    const totalTokens =
+        systemPromptTokens + answers.map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
     const onExampleClicked = async (example: string, system?: string) => {
         if (system) onSystemPromptChanged(system);
@@ -277,12 +285,7 @@ const Chat = () => {
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer.user}
-                            onRollbackMessage={onRollbackMessage(answer.user)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={
@@ -302,12 +305,7 @@ const Chat = () => {
 
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={
@@ -345,7 +343,7 @@ const Chat = () => {
             <History
                 allChats={allChats}
                 currentActiveChatId={active_chat}
-                onDeleteChat={async (id) => {
+                onDeleteChat={async id => {
                     await storageService.delete(id);
                     await fetchHistory();
                 }}

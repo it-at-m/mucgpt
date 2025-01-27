@@ -17,9 +17,7 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
         <div className={styles.message}>
             <Stack horizontal horizontalAlign="space-between">
                 <ChatMessageIcon aria-hidden></ChatMessageIcon>
-                <RollBackMessage
-                    onRollback={onRollbackMessage}
-                />
+                <RollBackMessage onRollback={onRollbackMessage} />
             </Stack>
             <Markdown
                 className={styles.answerText}

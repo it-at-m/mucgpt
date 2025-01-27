@@ -59,46 +59,49 @@ const BotChat = () => {
         if (bot_id) {
             error && setError(undefined);
             setIsLoading(true);
-            botStorageService.getBotConfig(bot_id).then(bot => {
-                if (bot)
-                    setBotConfig(bot);
-                return botStorageService.getNewestChatForBot(bot_id).then((existingChat) => {
-                    if (existingChat) {
-                        const messages = existingChat.messages;
-                        if (messages[messages.length - 1].response.answer == "") {
-                            // if the answer of the LLM has not (yet) returned
-                            if (messages.length > 1) {
-                                messages.pop();
-                                setAnswers([...answers.concat(messages)]);
+            botStorageService
+                .getBotConfig(bot_id)
+                .then(bot => {
+                    if (bot) setBotConfig(bot);
+                    return botStorageService
+                        .getNewestChatForBot(bot_id)
+                        .then(existingChat => {
+                            if (existingChat) {
+                                const messages = existingChat.messages;
+                                if (messages[messages.length - 1].response.answer == "") {
+                                    // if the answer of the LLM has not (yet) returned
+                                    if (messages.length > 1) {
+                                        messages.pop();
+                                        setAnswers([...answers.concat(messages)]);
+                                    }
+                                    setError(new MessageError(t("components.history.error")));
+                                } else {
+                                    setAnswers([...answers.concat(messages)]);
+                                }
+                                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                                setActiveChat(existingChat.id);
                             }
-                            setError(new MessageError(t("components.history.error")));
-                        } else {
-                            setAnswers([...answers.concat(messages)]);
-                        }
-                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                        setActiveChat(existingChat.id);
-                    }
-                }).then(() => {
-                    return fetchHistory();
+                        })
+                        .then(() => {
+                            return fetchHistory();
+                        });
                 })
-            }).finally(() => {
-                setIsLoading(false);
-            });
+                .finally(() => {
+                    setIsLoading(false);
+                });
         }
     }, []);
 
     const fetchHistory = () => {
         return botStorageService.getAllChatForBot(bot_id).then(chats => {
-            if (chats)
-                setAllChats(chats);
-        })
+            if (chats) setAllChats(chats);
+        });
     };
 
     const onDeleteBot = async () => {
         await botStorageService.deleteConfigAndChatsForBot(bot_id);
         window.location.href = "/";
     };
-
 
     const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
@@ -152,12 +155,17 @@ const BotChat = () => {
             //chat present, if not create.
             if (active_chat) {
                 await botStorageService.appendMessage(bot_id, active_chat, { user: question, response: latestResponse });
-            }
-            else {
+            } else {
                 // generate chat name for first chat
-                const chatname = await createChatName(question, latestResponse.answer,
+                const chatname = await createChatName(
+                    question,
+                    latestResponse.answer,
                     language,
-                    botConfig.temperature, botConfig.system_message ? botConfig.system_message : "", botConfig.max_output_tokens, LLM.llm_name);
+                    botConfig.temperature,
+                    botConfig.system_message ? botConfig.system_message : "",
+                    botConfig.max_output_tokens,
+                    LLM.llm_name
+                );
 
                 // create and save current id
                 const id = await botStorageService.createChat(bot_id, [{ user: question, response: latestResponse }], chatname);
@@ -173,15 +181,12 @@ const BotChat = () => {
         }
     };
 
-
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = systemPromptTokens + answers
-        .map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
-        .reduceRight((prev, curr) => prev + curr, 0);
+    const totalTokens =
+        systemPromptTokens + answers.map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
     const onBotChanged = async (newBot: Bot) => {
-
         await botStorageService.setBotConfig(bot_id, newBot);
         setBotConfig(newBot);
         // count tokens in case of new system message
@@ -189,7 +194,7 @@ const BotChat = () => {
             const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
             setSystemPromptTokens(response.count);
         }
-    }
+    };
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0 && botChatStorage.getActiveChatId()) {
@@ -221,49 +226,52 @@ const BotChat = () => {
                 }
                 setQuestion(message);
             }
-        }
+        };
     };
-
 
     const actions = (
         <>
             <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
         </>
     );
-    const history = <History
-        allChats={allChats}
-        currentActiveChatId={active_chat}
-        onDeleteChat={async (id) => {
-            await botChatStorage.delete(id);
-            await fetchHistory();
-        }}
-        onChatNameChange={async (id, name: string) => {
-            const newName = prompt(t("components.history.newchat"), name);
-            await botChatStorage.renameChat(id, newName ? newName.trim() : name);
-            await fetchHistory();
-        }}
-        onFavChange={async (id: string, fav: boolean) => {
-            await botChatStorage.changeFavouritesInDb(id, fav);
-            await fetchHistory();
-        }}
-        onSelect={async (id: string) => {
-            const chat = await botChatStorage.get(id);
-            if (chat) {
-                setAnswers(chat.messages);
-                lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
-                setActiveChat(id);
-            }
-        }}
-    ></History>;
-    const sidebar = (<>
-        <BotsettingsDrawer
-            bot={botConfig}
-            onBotChange={onBotChanged}
-            onDeleteBot={onDeleteBot}
-            actions={actions}
-            before_content={history}
-        ></BotsettingsDrawer>
-    </>);
+    const history = (
+        <History
+            allChats={allChats}
+            currentActiveChatId={active_chat}
+            onDeleteChat={async id => {
+                await botChatStorage.delete(id);
+                await fetchHistory();
+            }}
+            onChatNameChange={async (id, name: string) => {
+                const newName = prompt(t("components.history.newchat"), name);
+                await botChatStorage.renameChat(id, newName ? newName.trim() : name);
+                await fetchHistory();
+            }}
+            onFavChange={async (id: string, fav: boolean) => {
+                await botChatStorage.changeFavouritesInDb(id, fav);
+                await fetchHistory();
+            }}
+            onSelect={async (id: string) => {
+                const chat = await botChatStorage.get(id);
+                if (chat) {
+                    setAnswers(chat.messages);
+                    lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                    setActiveChat(id);
+                }
+            }}
+        ></History>
+    );
+    const sidebar = (
+        <>
+            <BotsettingsDrawer
+                bot={botConfig}
+                onBotChange={onBotChanged}
+                onDeleteBot={onDeleteBot}
+                actions={actions}
+                before_content={history}
+            ></BotsettingsDrawer>
+        </>
+    );
     const examplesComponent = <></>;
     const inputComponent = (
         <QuestionInput
@@ -281,12 +289,7 @@ const BotChat = () => {
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer.user}
-                            onRollbackMessage={onRollbackMessage(answer.user)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={
@@ -307,12 +310,7 @@ const BotChat = () => {
             ))}
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

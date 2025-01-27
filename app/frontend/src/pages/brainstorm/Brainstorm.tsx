@@ -17,7 +17,6 @@ import { BRAINSTORM_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 
-
 type BrainstormMessage = DBMessage<AskResponse>;
 
 const Brainstorm = () => {
@@ -39,7 +38,6 @@ const Brainstorm = () => {
 
     const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
     const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
-
 
     useEffect(() => {
         setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
@@ -64,8 +62,7 @@ const Brainstorm = () => {
             const completeAnswer: BrainstormMessage = { user: question, response: result };
 
             setAnswers([...answers, completeAnswer]);
-            if (storageService.getActiveChatId())
-                await storageService.appendMessage(completeAnswer);
+            if (storageService.getActiveChatId()) await storageService.appendMessage(completeAnswer);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
                 setActiveChat(id);
@@ -76,7 +73,6 @@ const Brainstorm = () => {
             setIsLoading(false);
         }
     };
-
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
@@ -101,12 +97,7 @@ const Brainstorm = () => {
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer.user}
-                            onRollbackMessage={onRollbackMessage(answer.user)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={<Mindmap markdown={answer.response.answer}></Mindmap>}
@@ -114,12 +105,7 @@ const Brainstorm = () => {
             ))}
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

@@ -56,14 +56,12 @@ export const Layout = () => {
         setTheme(adjustTheme(light, fontscaling));
     };
 
-
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
         if (id) {
             botStorageService.getBotConfig(id).then(bot => {
-                if (bot)
-                    setTitle([bot.id as string, bot.title]);
+                if (bot) setTitle([bot.id as string, bot.title]);
             });
         }
         configApi().then(

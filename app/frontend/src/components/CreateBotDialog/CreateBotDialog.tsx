@@ -21,7 +21,6 @@ import { Bot, createBotApi } from "../../api";
 import { BOT_STORE, CREATE_BOT_EXAMPLE_1, CREATE_BOT_EXAMPLE_2, CREATE_BOT_EXAMPLE_3 } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 
-
 interface Props {
     showDialogInput: boolean;
     setShowDialogInput: (showDialogInput: boolean) => void;
@@ -81,10 +80,8 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             max_output_tokens: LLM.max_output_tokens
         };
         const created_id = await storageService.createBot(bot);
-        if (created_id)
-            window.location.href = "/#/bot/" + created_id;
-        else
-            console.error("Bot could not be created");
+        if (created_id) window.location.href = "/#/bot/" + created_id;
+        else console.error("Bot could not be created");
     };
 
     const onBackButtonClicked = () => {

@@ -22,20 +22,20 @@ const Menu = () => {
     useEffect(() => {
         const arielle: Bot = arielle_bot;
         const sherlock: Bot = sherlock_bot;
-        botStorageService.getBotConfig(arielle.id as string).then(bot => {
-            if (!bot)
-                botStorageService.createBot(arielle, arielle.id as string,);
-        })
+        botStorageService
+            .getBotConfig(arielle.id as string)
+            .then(bot => {
+                if (!bot) botStorageService.createBot(arielle, arielle.id as string);
+            })
             .then(async () => {
                 const bot = await botStorageService.getBotConfig(sherlock.id as string);
-                if (!bot)
-                    botStorageService.createBot(sherlock, sherlock.id as string,);
-            }).finally(() => {
+                if (!bot) botStorageService.createBot(sherlock, sherlock.id as string);
+            })
+            .finally(() => {
                 setCommunityBots([arielle, sherlock]);
                 botStorageService.getAllBotConfigs().then(bots => {
                     setBots(bots);
                 });
-
             });
     }, []);
 

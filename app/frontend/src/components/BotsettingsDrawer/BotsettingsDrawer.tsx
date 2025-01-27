@@ -27,20 +27,14 @@ import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Bot } from "../../api";
 interface Props {
-    bot: Bot
-    onBotChange: (bot: Bot) => void,
+    bot: Bot;
+    onBotChange: (bot: Bot) => void;
     onDeleteBot: () => void;
     actions: ReactNode;
     before_content: ReactNode;
 }
 
-export const BotsettingsDrawer = ({
-    bot,
-    onBotChange,
-    onDeleteBot,
-    actions,
-    before_content
-}: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
@@ -77,7 +71,7 @@ export const BotsettingsDrawer = ({
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => {
         const maxTokens = data.value > LLM.max_output_tokens && LLM.max_output_tokens != 0 ? LLM.max_output_tokens : data.value;
         setMaxOutputTokens(maxTokens);
-    }
+    };
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
         else setSystemPrompt("");
@@ -133,8 +127,7 @@ export const BotsettingsDrawer = ({
     );
     const content = (
         <>
-            <>{before_content}</>
-            {" "}
+            <>{before_content}</>{" "}
             {isEditable && (
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>{t("create_bot.title")}</div>
@@ -163,13 +156,11 @@ export const BotsettingsDrawer = ({
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>{t("create_bot.description")}</div>
                 </div>
-            ) :
-                (
-                    <div className={styles.header} role="heading" aria-level={3}>
-                        {t("create_bot.description")}
-                    </div>
-                )
-            }
+            ) : (
+                <div className={styles.header} role="heading" aria-level={3}>
+                    {t("create_bot.description")}
+                </div>
+            )}
             <div className={styles.bodyContainer}>
                 <div>
                     <Field size="large">

@@ -66,8 +66,7 @@ const Simply = () => {
             const completeAnswer: SimplyMessage = { user: question, response: askResponse };
 
             setAnswers([...answers, completeAnswer]);
-            if (storageService.getActiveChatId())
-                await storageService.appendMessage(completeAnswer);
+            if (storageService.getActiveChatId()) await storageService.appendMessage(completeAnswer);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
                 setActiveChat(id);
@@ -107,12 +106,7 @@ const Simply = () => {
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer.user}
-                            onRollbackMessage={onRollbackMessage(answer.user)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={<Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
@@ -120,12 +114,7 @@ const Simply = () => {
             ))}
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            onRollbackMessage={onRollbackMessage(lastQuestionRef.current)}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

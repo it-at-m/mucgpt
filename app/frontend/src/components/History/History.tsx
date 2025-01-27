@@ -50,23 +50,30 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
         <div>
             <div className={styles.header} role="heading" aria-level={3}>
                 <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                    <div >{t("components.history.history")}</div>
+                    <div>{t("components.history.history")}</div>
                 </Tooltip>
             </div>
 
-            <div className={styles.historyContent}>{
-                sortedChats.map(([category, chats]) => (
+            <div className={styles.historyContent}>
+                {sortedChats.map(([category, chats]) => (
                     <div key={category}>
-                        <div className={styles.header} role="heading" aria-level={4}>{category}</div>
+                        <div className={styles.header} role="heading" aria-level={4}>
+                            {category}
+                        </div>
                         {chats.map((chat: DBObject<any, any>, index: number) => (
-                            <div key={index} >
+                            <div key={index}>
                                 <div className={styles.singlechatcontainer}>
                                     <Tooltip
                                         content={t("components.history.lastEdited") + new Date(chat._last_edited as number).toString()}
                                         relationship="description"
                                         positioning="below"
                                     >
-                                        <Button className={styles.savedChatButton} disabled={currentActiveChatId == chat.id} onClick={() => onSelect(chat.id as string)} size="large">
+                                        <Button
+                                            className={styles.savedChatButton}
+                                            disabled={currentActiveChatId == chat.id}
+                                            onClick={() => onSelect(chat.id as string)}
+                                            size="large"
+                                        >
                                             {currentActiveChatId === chat.id ? "🟢 " : ""}
                                             {chat.name}
                                         </Button>
@@ -82,7 +89,9 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                                 <MenuItem onClick={() => onDeleteChat(chat.id as string)} disabled={currentActiveChatId == chat.id}>
                                                     {t("components.history.delete")}
                                                 </MenuItem>
-                                                <MenuItem onClick={() => onChatNameChange(chat.id as string, chat.name as string)}>{t("components.history.rename")}</MenuItem>
+                                                <MenuItem onClick={() => onChatNameChange(chat.id as string, chat.name as string)}>
+                                                    {t("components.history.rename")}
+                                                </MenuItem>
                                                 {chat.favorite ? (
                                                     <MenuItem onClick={() => onFavChange(chat.id as string, false)}>{t("components.history.unsave")}</MenuItem>
                                                 ) : (
@@ -95,8 +104,8 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                             </div>
                         ))}
                     </div>
-                ))
-            }</div>
-        </div >
+                ))}
+            </div>
+        </div>
     );
 };

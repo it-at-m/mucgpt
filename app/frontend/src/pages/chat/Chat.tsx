@@ -12,11 +12,10 @@ import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
-import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
-import { CHAT_STORE, STORAGE_KEYS_CHAT } from "../../constants";
+import { CHAT_STORE } from "../../constants";
 import { DBMessage, DBObject, StorageService } from "../../service/storage";
 
 export type ChatMessage = DBMessage<ChatResponse>;
@@ -42,13 +41,9 @@ const Chat = () => {
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS_CHAT.CHAT_TEMPERATURE) || 0.7);
-    const max_output_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS_CHAT.CHAT_MAX_TOKENS)) || 4000;
-    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS_CHAT.CHAT_SYSTEM_PROMPT) || "";
-
-    const [temperature, setTemperature] = useState(temperature_pref);
-    const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
-    const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
+    const [temperature, setTemperature] = useState(0.7);
+    const [max_output_tokens, setMaxOutputTokens] = useState(4000);
+    const [systemPrompt, setSystemPrompt] = useState<string>("");
 
     const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
     const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE, active_chat);
@@ -90,21 +85,12 @@ const Chat = () => {
                 if (existingData) {
                     // if the chat exists
                     const messages = existingData.messages;
-                    if (messages[messages.length - 1].response.answer == "") {
-                        // if the answer of the LLM has not (yet) returned
-                        if (messages.length > 1) {
-                            messages.pop();
-                            setAnswers([...answers.concat(messages)]);
-                        }
-                        setError(new MessageError(t("components.history.error")));
-                    } else {
-                        let options = existingData.config;
-                        setAnswers([...answers.concat(messages)]);
-                        if (options) {
-                            onMaxTokensChanged(options.maxTokens);
-                            onTemperatureChanged(options.temperature);
-                            onSystemPromptChanged(options.system);
-                        }
+                    let options = existingData.config;
+                    setAnswers([...answers.concat(messages)]);
+                    if (options) {
+                        setMaxOutputTokens(options.maxTokens);
+                        setTemperature(options.temperature);
+                        setSystemPrompt(options.system);
                     }
                     lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
                     setActiveChat(existingData.id);
@@ -245,7 +231,6 @@ const Chat = () => {
 
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
-        localStorage.setItem(STORAGE_KEYS_CHAT.CHAT_TEMPERATURE, temp.toString());
         storageService.update(undefined, {
             favorite: false,
             system: systemPrompt ? systemPrompt : "",
@@ -259,7 +244,6 @@ const Chat = () => {
             onMaxTokensChanged(LLM.max_output_tokens);
         } else {
             setMaxOutputTokens(maxTokens);
-            localStorage.setItem(STORAGE_KEYS_CHAT.CHAT_MAX_TOKENS, maxTokens.toString());
             storageService.update(undefined, {
                 favorite: false,
                 system: systemPrompt ? systemPrompt : "",
@@ -271,7 +255,6 @@ const Chat = () => {
 
     const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
-        localStorage.setItem(STORAGE_KEYS_CHAT.CHAT_SYSTEM_PROMPT, systemPrompt);
         storageService.update(undefined, {
             favorite: false,
             system: systemPrompt ? systemPrompt : "",
@@ -362,6 +345,9 @@ const Chat = () => {
                         setAnswers(chat.messages);
                         lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
                         setActiveChat(id);
+                        setMaxOutputTokens(chat.config.maxTokens);
+                        setTemperature(chat.config.temperature);
+                        setSystemPrompt(chat.config.system);
                     }
                 }}
             ></History>

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext, useCallback } from "react";
+import { useRef, useState, useEffect, useContext } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, ChatResponse, createChatName } from "../../api";
@@ -9,11 +9,9 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 
-import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
-import { MessageError } from "../chat/MessageError";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
@@ -68,16 +66,7 @@ const BotChat = () => {
                         .then(existingChat => {
                             if (existingChat) {
                                 const messages = existingChat.messages;
-                                if (messages[messages.length - 1].response.answer == "") {
-                                    // if the answer of the LLM has not (yet) returned
-                                    if (messages.length > 1) {
-                                        messages.pop();
-                                        setAnswers([...answers.concat(messages)]);
-                                    }
-                                    setError(new MessageError(t("components.history.error")));
-                                } else {
-                                    setAnswers([...answers.concat(messages)]);
-                                }
+                                setAnswers([...answers.concat(messages)]);
                                 lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
                                 setActiveChat(existingChat.id);
                             }

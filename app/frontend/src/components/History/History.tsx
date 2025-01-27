@@ -48,15 +48,16 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
 
     return (
         <div>
-            <div className={styles.historyHeader}>
+            <div className={styles.header} role="heading" aria-level={3}>
                 <Tooltip content={t("components.history.saved_in_browser")} relationship="description" positioning="below">
-                    <h3>{t("components.history.history")}</h3>
+                    <div >{t("components.history.history")}</div>
                 </Tooltip>
             </div>
+
             <div className={styles.historyContent}>{
                 sortedChats.map(([category, chats]) => (
                     <div key={category}>
-                        <h4>{category}</h4>
+                        <div className={styles.header} role="heading" aria-level={4}>{category}</div>
                         {chats.map((chat: DBObject<any, any>, index: number) => (
                             <div key={index} >
                                 <div className={styles.singlechatcontainer}>

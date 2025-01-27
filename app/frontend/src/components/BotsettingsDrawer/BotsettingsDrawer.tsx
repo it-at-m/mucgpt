@@ -166,7 +166,7 @@ export const BotsettingsDrawer = ({
             ) :
                 (
                     <div className={styles.header} role="heading" aria-level={3}>
-                        <h3>{t("create_bot.description")}</h3>
+                        {t("create_bot.description")}
                     </div>
                 )
             }

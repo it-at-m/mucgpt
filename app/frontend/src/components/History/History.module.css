@@ -15,10 +15,15 @@
     display: flex;
     flex-direction: row;
     justify-content: end;
+    margin-right: var(--spacingVerticalL);
 }
-
-.historyHeader {
-    margin-left: var(--spacingVerticalS);
+.header {
+    margin-bottom: 5px;
+    font-size: var(--fontSizeBase400);
+    margin-top: var(--spacingVerticalS);
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
 }
 
 .historyContent {

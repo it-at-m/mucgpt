@@ -95,28 +95,7 @@ export const ChatsettingsDrawer = ({
                 </div>
             </div>
 
-            <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
-                <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
-            </div>
 
-            <div className={styles.bodyContainer}>
-                <div className={styles.verticalContainer}>
-                    <Slider
-                        min={min_max_tokens}
-                        max={max_max_tokens}
-                        defaultValue={20}
-                        onChange={onMaxtokensChange}
-                        aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
-                        value={max_output_tokens}
-                        aria-labelledby={max_tokens_headerID}
-                        id={max_tokensID}
-                    />
-                    <br></br>
-                    <Label htmlFor={max_tokensID} aria-hidden>
-                        {max_output_tokens} Tokens
-                    </Label>
-                </div>
-            </div>
             <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
                 <InfoLabel
                     info={
@@ -152,6 +131,29 @@ export const ChatsettingsDrawer = ({
                     </Label>
                     <Label htmlFor={temperatureID} aria-hidden>
                         {temperature}
+                    </Label>
+                </div>
+            </div>
+
+            <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
+                <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
+            </div>
+
+            <div className={styles.bodyContainer}>
+                <div className={styles.verticalContainer}>
+                    <Slider
+                        min={min_max_tokens}
+                        max={max_max_tokens}
+                        defaultValue={20}
+                        onChange={onMaxtokensChange}
+                        aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
+                        value={max_output_tokens}
+                        aria-labelledby={max_tokens_headerID}
+                        id={max_tokensID}
+                    />
+                    <br></br>
+                    <Label htmlFor={max_tokensID} aria-hidden>
+                        {max_output_tokens} Tokens
                     </Label>
                 </div>
             </div>

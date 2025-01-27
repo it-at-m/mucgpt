@@ -38,43 +38,30 @@ const BotChat = () => {
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const [temperature, setTemperature] = useState(0.7);
-    const [max_output_tokens, setMaxOutputTokens] = useState(LLM.max_output_tokens);
-    const [systemPrompt, setSystemPrompt] = useState<string>("");
-
-    const [title, setTitle] = useState<string>("Titel");
-    const [description, setDescription] = useState<string>("Beschreibung");
-    const [publish, setPublish] = useState<boolean>(false);
-
-    const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
 
     const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const botChatStorage: StorageService<ChatResponse, Bot> = botStorageService.getChatStorageService(bot_id, active_chat);
-
+    //history
     const [allChats, setAllChats] = useState<DBObject<ChatResponse, {}>[]>([]);
-
-    const makeTokenCountRequest = useCallback(async () => {
-        if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
-            const response = await countTokensAPI({ text: debouncedSystemPrompt, model: LLM });
-            setSystemPromptTokens(response.count);
-        } else setSystemPromptTokens(0);
-    }, [debouncedSystemPrompt, LLM]);
+    //config
+    const [botConfig, setBotConfig] = useState<Bot>({
+        title: "Titel",
+        description: "Beschreibung",
+        publish: false,
+        max_output_tokens: LLM.max_output_tokens,
+        system_message: "",
+        temperature: 0.7
+    });
 
     useEffect(() => {
         if (bot_id) {
             error && setError(undefined);
             setIsLoading(true);
             botStorageService.getBotConfig(bot_id).then(bot => {
-                if (bot) {
-                    setSystemPrompt(bot.system_message);
-                    setTitle(bot.title);
-                    setDescription(bot.description);
-                    setPublish(bot.publish);
-                    setTemperature(bot.temperature);
-                    setMaxOutputTokens(bot.max_output_tokens);
-                }
+                if (bot)
+                    setBotConfig(bot);
                 return botStorageService.getNewestChatForBot(bot_id).then((existingChat) => {
                     if (existingChat) {
                         const messages = existingChat.messages;
@@ -100,13 +87,6 @@ const BotChat = () => {
         }
     }, []);
 
-    useEffect(() => {
-        makeTokenCountRequest();
-        if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens);
-        }
-    }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
-
     const fetchHistory = () => {
         return botStorageService.getAllChatForBot(bot_id).then(chats => {
             if (chats)
@@ -114,8 +94,13 @@ const BotChat = () => {
         })
     };
 
+    const onDeleteBot = async () => {
+        await botStorageService.deleteConfigAndChatsForBot(bot_id);
+        window.location.href = "/";
+    };
 
-    const makeApiRequest = async (question: string, system?: string) => {
+
+    const makeApiRequest = async (question: string) => {
         lastQuestionRef.current = question;
         error && setError(undefined);
         setIsLoading(true);
@@ -127,9 +112,9 @@ const BotChat = () => {
                 history: [...history, { user: question, bot: undefined }],
                 shouldStream: true,
                 language: language,
-                temperature: temperature,
-                system_message: system ? system : "",
-                max_output_tokens: max_output_tokens,
+                temperature: botConfig.temperature,
+                system_message: botConfig.system_message ? botConfig.system_message : "",
+                max_output_tokens: botConfig.max_output_tokens,
                 model: LLM.llm_name
             };
 
@@ -170,7 +155,9 @@ const BotChat = () => {
             }
             else {
                 // generate chat name for first chat
-                const chatname = await createChatName(question, latestResponse.answer, language, temperature, system ? system : "", max_output_tokens, LLM.llm_name);
+                const chatname = await createChatName(question, latestResponse.answer,
+                    language,
+                    botConfig.temperature, botConfig.system_message ? botConfig.system_message : "", botConfig.max_output_tokens, LLM.llm_name);
 
                 // create and save current id
                 const id = await botStorageService.createChat(bot_id, [{ user: question, response: latestResponse }], chatname);
@@ -193,93 +180,16 @@ const BotChat = () => {
         .map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
         .reduceRight((prev, curr) => prev + curr, 0);
 
-    const onTemperatureChanged = (temp: number) => {
-        setTemperature(temp);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temp,
-            max_output_tokens: max_output_tokens
-        };
-        botChatStorage.update(undefined, newBot);
-    };
+    const onBotChanged = async (newBot: Bot) => {
 
-    const onMaxTokensChanged = (maxTokens: number) => {
-        if (maxTokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens);
-        } else {
-            setMaxOutputTokens(maxTokens);
-            let newBot: Bot = {
-                title: title,
-                description: description,
-                system_message: systemPrompt,
-                publish: publish,
-                id: bot_id,
-                temperature: temperature,
-                max_output_tokens: maxTokens
-            };
-            botChatStorage.update(undefined, newBot);
+        await botStorageService.setBotConfig(bot_id, newBot);
+        setBotConfig(newBot);
+        // count tokens in case of new system message
+        if (newBot.system_message !== botConfig.system_message) {
+            const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
+            setSystemPromptTokens(response.count);
         }
-    };
-
-    const onSystemPromptChanged = (systemPrompt: string) => {
-        setSystemPrompt(systemPrompt);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens
-        };
-        botChatStorage.update(undefined, newBot);
-    };
-
-    const onPublishChanged = (publish: boolean) => {
-        setPublish(publish);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens
-        };
-        botChatStorage.update(undefined, newBot);
-    };
-
-    const onTitleChanged = (title: string) => {
-        setTitle(title);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens
-        };
-        botChatStorage.update(undefined, newBot);
-    };
-
-    const onDescriptionChanged = (description: string) => {
-        setDescription(description);
-        let newBot: Bot = {
-            title: title,
-            description: description,
-            system_message: systemPrompt,
-            publish: publish,
-            id: bot_id,
-            temperature: temperature,
-            max_output_tokens: max_output_tokens
-        };
-        botChatStorage.update(undefined, newBot);
-    };
+    }
 
     const onRegeneratResponseClicked = async () => {
         if (answers.length > 0 && botChatStorage.getActiveChatId()) {
@@ -287,7 +197,7 @@ const BotChat = () => {
             let last = answers.pop();
             setAnswers(answers);
             if (last) {
-                makeApiRequest(last.user, systemPrompt);
+                makeApiRequest(last.user);
             }
         }
     };
@@ -347,18 +257,9 @@ const BotChat = () => {
     ></History>;
     const sidebar = (<>
         <BotsettingsDrawer
-            temperature={temperature}
-            setTemperature={onTemperatureChanged}
-            max_output_tokens={max_output_tokens}
-            setMaxTokens={onMaxTokensChanged}
-            systemPrompt={systemPrompt}
-            setSystemPrompt={onSystemPromptChanged}
-            title={title}
-            setTitle={onTitleChanged}
-            description={description}
-            setDescription={onDescriptionChanged}
-            bot_id={bot_id}
-            setPublish={onPublishChanged}
+            bot={botConfig}
+            onBotChange={onBotChanged}
+            onDeleteBot={onDeleteBot}
             actions={actions}
             before_content={history}
         ></BotsettingsDrawer>
@@ -369,7 +270,7 @@ const BotChat = () => {
             clearOnSend
             placeholder={t("chat.prompt")}
             disabled={isLoading}
-            onSend={question => makeApiRequest(question, systemPrompt)}
+            onSend={question => makeApiRequest(question)}
             tokens_used={totalTokens}
             question={question}
             setQuestion={question => setQuestion(question)}
@@ -417,7 +318,7 @@ const BotChat = () => {
                     botmsg={
                         <>
                             {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} /> : null}
+                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} /> : null}
                         </>
                     }
                 ></ChatTurnComponent>

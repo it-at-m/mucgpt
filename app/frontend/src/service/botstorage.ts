@@ -39,6 +39,10 @@ export class BotStorageService {
         });
     }
 
+    async setBotConfig(bot_id: string, bot_config: Bot) {
+        await this.storageService.update(undefined, bot_config, BotStorageService.constructConfigID(bot_id));
+    }
+
     getChatStorageService(bot_id: string, active_chat?: string) {
         return new StorageService<ChatResponse, Bot>(this.config, BotStorageService.constructChatID(bot_id, active_chat));
     }

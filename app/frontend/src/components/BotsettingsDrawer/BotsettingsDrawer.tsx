@@ -17,7 +17,7 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { ReactNode, useContext, useState } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import Markdown from "react-markdown";
@@ -25,38 +25,19 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { BOT_STORE } from "../../constants";
-import { BotStorageService } from "../../service/botstorage";
+import { Bot } from "../../api";
 interface Props {
-    temperature: number;
-    setTemperature: (temp: number) => void;
-    max_output_tokens: number;
-    setMaxTokens: (maxTokens: number) => void;
-    systemPrompt: string;
-    setSystemPrompt: (systemPrompt: string) => void;
-    title: string;
-    setTitle: (title: string) => void;
-    bot_id: string;
-    description: string;
-    setDescription: (description: string) => void;
-    setPublish: (publish: boolean) => void;
+    bot: Bot
+    onBotChange: (bot: Bot) => void,
+    onDeleteBot: () => void;
     actions: ReactNode;
     before_content: ReactNode;
 }
 
 export const BotsettingsDrawer = ({
-    temperature,
-    setTemperature,
-    max_output_tokens,
-    setMaxTokens,
-    systemPrompt,
-    setSystemPrompt,
-    title,
-    setTitle,
-    bot_id,
-    description,
-    setDescription,
-    setPublish,
+    bot,
+    onBotChange,
+    onDeleteBot,
     actions,
     before_content
 }: Props) => {
@@ -74,22 +55,36 @@ export const BotsettingsDrawer = ({
     const min_temp = 0;
     const max_temp = 1;
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
+    const [temperature, setTemperature] = useState(bot.temperature);
+    const [max_output_tokens, setMaxOutputTokens] = useState(bot.max_output_tokens);
+    const [systemPrompt, setSystemPrompt] = useState<string>(bot.system_message);
+    const [title, setTitle] = useState<string>(bot.title);
+    const [description, setDescription] = useState<string>(bot.description);
+    const [publish, setPublish] = useState<boolean>(bot.publish);
 
-    const storageService: BotStorageService = new BotStorageService(BOT_STORE);
+    useEffect(() => {
+        setMaxOutputTokens(bot.max_output_tokens);
+        setSystemPrompt(bot.system_message);
+        setTitle(bot.title);
+        setDescription(bot.description);
+        setPublish(bot.publish);
+        setTemperature(bot.temperature);
+    }, [bot]);
 
-    const onDelete = async () => {
-        await storageService.deleteConfigAndChatsForBot(bot_id);
-        window.location.href = "/";
+    const onTemperatureChange: SliderProps["onChange"] = (_, data) => {
+        setTemperature(data.value);
     };
+    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => {
+        const maxTokens = data.value > LLM.max_output_tokens && LLM.max_output_tokens != 0 ? LLM.max_output_tokens : data.value;
+        setMaxOutputTokens(maxTokens);
+    }
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
         else setSystemPrompt("");
     };
     const onTitleChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setTitle(newValue.value);
-        else setTitle("Assistent " + bot_id);
+        else setTitle("Assistent " + bot.id);
     };
     const onDescriptionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setDescription(newValue.value);
@@ -98,6 +93,18 @@ export const BotsettingsDrawer = ({
 
     const toggleReadOnly = () => {
         setEditable(!isEditable);
+        if (isEditable) {
+            const newBot = {
+                ...bot,
+                temperature: temperature,
+                max_output_tokens: max_output_tokens,
+                system_message: systemPrompt,
+                title: title,
+                description: description,
+                publish: publish
+            };
+            onBotChange(newBot);
+        }
     };
 
     const onClearSystemPrompt = () => {
@@ -118,7 +125,7 @@ export const BotsettingsDrawer = ({
                 {isEditable ? t("components.botsettingsdrawer.finish_edit") : t("components.botsettingsdrawer.edit")}
             </Button>
             <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                <Button appearance="secondary" onClick={onDelete} icon={<Delete24Regular className={styles.iconRightMargin} />}>
+                <Button appearance="secondary" onClick={onDeleteBot} icon={<Delete24Regular className={styles.iconRightMargin} />}>
                     {t("components.botsettingsdrawer.delete")}
                 </Button>
             </Tooltip>

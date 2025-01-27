@@ -87,9 +87,6 @@ export const CommunityBotSettingsDrawer = ({
 
     useEffect(() => {
         for (let i = 0; i < allVersions.length; i++) {
-            console.log(parseFloat(allVersions[i]));
-            console.log(parseFloat(version));
-            console.log(parseFloat(allVersions[i]) > parseFloat(version));
             if (parseFloat(allVersions[i]) > parseFloat(version)) {
                 setIsLatestVersion(false);
                 return;

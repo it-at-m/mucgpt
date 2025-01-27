@@ -91,7 +91,6 @@ export const Layout = () => {
             });;
             getCommunityBotWithId(id).then(bot => {
                 setCommunityBot(bot);
-                console.log(bot);
             }).catch(() => {
                 setCommunityBot({ id: "", title: "", version: 0 });
             });
@@ -121,7 +120,6 @@ export const Layout = () => {
                 setBotTitle(["0", ""]);
             });;
             getCommunityBotWithId(id).then(bot => {
-                console.log(bot);
                 setCommunityBot(bot);
             }).catch(() => {
                 setCommunityBot({ id: "", title: "", version: 0 });

@@ -71,8 +71,6 @@ const BotChat = () => {
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            console.log("Bot ID: " + bot_id);
-            console.log("Version: " + String(botVersion).replace(".", "-"));
             getCommunityBotAllVersions(bot_id).then(bots => {
                 let versions: string[] = []
                 for (let i = 0; i < bots.length; i++) {
@@ -81,7 +79,6 @@ const BotChat = () => {
                 setBotAllVersions(versions);
                 const bot = bots.find(b => b.version == botVersion);
                 if (bot) {
-                    console.log("Bot: " + bot);
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
                     setDescription(bot.description);

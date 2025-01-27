@@ -94,7 +94,10 @@ export const arielle_bot: Bot = {
     publish: true,
     id: "0",
     temperature: 1.0,
-    max_output_tokens: 4096
+    max_output_tokens: 4096,
+    tags: ["Mermaid", "Diagramme", "Markdown"],
+    version: 1.0,
+    owner: "München"
 };
 
 const sherlock_system = `Du bist Sherlock
@@ -432,5 +435,8 @@ export const sherlock_bot: Bot = {
     publish: true,
     id: "1",
     temperature: 0.1,
-    max_output_tokens: 4096
+    max_output_tokens: 4096,
+    tags: ["ISTQB", "ISO 29119"],
+    version: 1.0,
+    owner: "München"
 };

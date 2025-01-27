@@ -67,7 +67,7 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "community-bot/:id",
+                path: "community-bot/:id/:version",
                 element: <CommunityBot />,
                 errorElement: <div>Fehler</div>
             },

@@ -75,7 +75,7 @@ export async function storeBot(bot: Bot) {
     };
 }
 
-export async function storeCommunityBot(id: string, title: string) {
+export async function storeCommunityBot(bot: StoredCommunityBot) {
     let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
     let storeName = community_bot_storage.objectStore_name;
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
@@ -85,10 +85,7 @@ export async function storeCommunityBot(id: string, title: string) {
         if (!db.objectStoreNames.contains(storeName)) {
             db.createObjectStore(storeName, { keyPath: "id" });
         }
-        openRequest.result
-            .transaction(community_bot_storage.objectStore_name, "readwrite")
-            .objectStore(bot_storage.objectStore_name)
-            .put({ id: id, title: title });
+        openRequest.result.transaction(community_bot_storage.objectStore_name, "readwrite").objectStore(bot_storage.objectStore_name).put(bot);
     };
 }
 
@@ -159,7 +156,7 @@ export async function getCommunityBotWithId(id: string) {
     let openRequest = indexedDB.open(community_bot_storage.db_name, community_bot_storage.db_version);
     openRequest.onupgradeneeded = () => onUpgrade(openRequest, community_bot_storage);
     openRequest.onerror = () => onError(openRequest);
-    let promise = new Promise<Bot>(resolve => {
+    let promise = new Promise<StoredCommunityBot>(resolve => {
         openRequest.onsuccess = function () {
             let getRequest = openRequest.result
                 .transaction(community_bot_storage.objectStore_name, "readonly")
@@ -213,11 +210,6 @@ export async function deleteCommunityBotWithId(id: string) {
 
 export async function getBotName(id: string): Promise<[string, string]> {
     const bot = await getBotWithId(id);
-    return bot ? [bot.id, bot.title] : ["", ""];
-}
-
-export async function getCommunityBotName(id: string): Promise<[string, string]> {
-    const bot = await getCommunityBot(id);
     return bot ? [bot.id, bot.title] : ["", ""];
 }
 

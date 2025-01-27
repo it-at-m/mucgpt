@@ -1,4 +1,4 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular } from "@fluentui/react-icons";
+import { CloudArrowUp24Filled, Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Slider,
@@ -37,6 +37,7 @@ interface Props {
     setDescription: (description: string) => void;
     onPublishClick: () => void;
     actions: ReactNode;
+    publish: boolean;
 }
 
 export const BotsettingsDrawer = ({
@@ -52,7 +53,8 @@ export const BotsettingsDrawer = ({
     description,
     setDescription,
     onPublishClick,
-    actions
+    actions,
+    publish
 }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
@@ -233,11 +235,11 @@ export const BotsettingsDrawer = ({
                     )}
                 </div>
             </div>
-            <div className={styles.deleteButton}>
+            {!isEditable && <div className={styles.deleteButton}>
                 <Tooltip content={t("components.botsettingsdrawer.publish")} relationship="description" positioning="below">
-                    <Button onClick={onPublishClick}>{t("components.botsettingsdrawer.publish")}</Button>
+                    <Button icon={<CloudArrowUp24Filled />} onClick={onPublishClick}>{publish ? t("components.botsettingsdrawer.publish_new_version") : t("components.botsettingsdrawer.publish")}</Button>
                 </Tooltip>
-            </div>
+            </div>}
             <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
                 <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
             </div>

@@ -49,3 +49,7 @@
 .iconRightMargin {
     margin-right: 5 px;
 }
+
+.dropdown {
+    width: 33%;
+}

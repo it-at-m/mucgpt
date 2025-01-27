@@ -8,13 +8,14 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi } from "../../api";
+import { ApplicationConfig, configApi, StoredCommunityBot } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { getBotName, getCommunityBotName } from "../../service/storage_bot";
+import { getBotName, getCommunityBotWithId } from "../../service/storage_bot";
 import { LightContext } from "./LightContext";
+import { version } from "os";
 
 const formatDate = (date: Date) => {
     let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -22,7 +23,7 @@ const formatDate = (date: Date) => {
 };
 
 export const Layout = () => {
-    const { id } = useParams();
+    const { id, version } = useParams();
     const styles2 = useStyles();
     const navigate = useNavigate();
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
@@ -67,7 +68,7 @@ export const Layout = () => {
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
     const [botTitle, setBotTitle] = useState<[string, string]>(["0", ""]);
-    const [communityBotTitle, setCommunityBotTitle] = useState<[string, string]>(["0", ""]);
+    const [communityBot, setCommunityBot] = useState<StoredCommunityBot>({ id: "", title: "", version: 0 });
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
@@ -85,9 +86,14 @@ export const Layout = () => {
         if (id) {
             getBotName(id).then(title => {
                 setBotTitle(title);
-            });
-            getCommunityBotName(id).then(title => {
-                setCommunityBotTitle(title);
+            }).catch(() => {
+                setBotTitle(["0", ""]);
+            });;
+            getCommunityBotWithId(id).then(bot => {
+                setCommunityBot(bot);
+                console.log(bot);
+            }).catch(() => {
+                setCommunityBot({ id: "", title: "", version: 0 });
             });
         }
         configApi().then(
@@ -111,12 +117,17 @@ export const Layout = () => {
         if (id) {
             getBotName(id).then(title => {
                 setBotTitle(title);
-            });
-            getCommunityBotName(id).then(title => {
-                setCommunityBotTitle(title);
+            }).catch(() => {
+                setBotTitle(["0", ""]);
+            });;
+            getCommunityBotWithId(id).then(bot => {
+                console.log(bot);
+                setCommunityBot(bot);
+            }).catch(() => {
+                setCommunityBot({ id: "", title: "", version: 0 });
             });
         }
-    }, [id]);
+    }, [id, version]);
 
     const onAcceptTermsOfUse = () => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
@@ -205,12 +216,12 @@ export const Layout = () => {
                                     </NavLink>
                                 </div>
                                 <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to={"/community-bot/" + communityBotTitle[0]}
+                                    {communityBot && <NavLink
+                                        to={"/community-bot/" + communityBot.id + "/" + String(communityBot.version).replace(".", "-")}
                                         className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
                                     >
-                                        {communityBotTitle[1]}
-                                    </NavLink>
+                                        {communityBot.title}
+                                    </NavLink>}
                                 </div>
                             </div>
                             <div className={styles.SettingsDrawer}>

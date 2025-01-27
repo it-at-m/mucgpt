@@ -242,8 +242,8 @@ export async function updateCommunityBot(bot: Bot): Promise<void> {
     });
 }
 
-export async function getCommunityBot(id: string): Promise<Bot> {
-    return await fetch("/api/community_bot/" + id, {
+export async function getCommunityBot(id: string, version: string): Promise<Bot> {
+    return await fetch("/api/community_bot/" + id + "/" + version, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
@@ -253,6 +253,20 @@ export async function getCommunityBot(id: string): Promise<Bot> {
     }).then(async response => {
         const parsedResponse = await handleResponse(response);
         return parsedResponse;
+    });
+}
+
+export async function getCommunityBotAllVersions(id: string): Promise<Bot[]> {
+    return await fetch("/api/community_bot/" + id, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        mode: "cors",
+        redirect: "manual"
+    }).then(async response => {
+        const parsedResponse = await handleResponse(response);
+        return parsedResponse.bots;
     });
 }
 

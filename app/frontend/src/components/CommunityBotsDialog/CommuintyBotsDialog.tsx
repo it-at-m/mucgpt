@@ -17,9 +17,9 @@ import {
 
 import styles from "./CommunityBotsDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { TextField } from "@fluentui/react";
+import { find, TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
-import { Bot, getCommunityBots } from "../../api";
+import { Bot, getCommunityBot, getCommunityBotAllVersions, getCommunityBots } from "../../api";
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import { storeCommunityBot } from "../../service/storage_bot"
 import Markdown from "react-markdown";
@@ -29,18 +29,32 @@ import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 interface Props {
     showSearchDialogInput: boolean;
     setShowSearchDialogInput: (showDialogInput: boolean) => void;
+    takeCommunityBots: boolean;
+    setTakeCommunityBots: (takeCommunityBots: boolean) => void;
 }
 
-export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput }: Props) => {
-    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: "0", temperature: 0.0, max_output_tokens: 0, tags: [], version: "", owner: "owner" }
+export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput, takeCommunityBots, setTakeCommunityBots }: Props) => {
+    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: "0", temperature: 0.0, max_output_tokens: 0, tags: [], version: 0, owner: "owner" }
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
     const [bots, setBot] = useState<any[]>([]);
     const [filteredBots, setFilteredBots] = useState<any[]>([]);
     const [choosenBot, setChoosenBot] = useState<Bot>(mockBot);
+    const [choosenBotAll, setChoosenBotAll] = useState<Bot[]>([mockBot]);
     const [showBotDialog, setShowBotDialog] = useState<boolean>(false);
     const [allTags, setAllTags] = useState<string[]>([]);
     const [choosenTag, setChoosenTag] = useState<string>("");
+
+
+    function findLatestVersion(bots: Bot[]): Bot {
+        let latestVersion = bots[0];
+        for (let bot of bots) {
+            if (bot.version && latestVersion.version && bot.version > latestVersion.version) {
+                latestVersion = bot;
+            }
+        }
+        return latestVersion;
+    }
 
     function compareBotsByTitle(a: Bot, b: Bot) {
         const titleA = a.title.toLowerCase();
@@ -56,12 +70,16 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     }
 
     useEffect(() => {
-        if (bots.length == 0) {
-            getCommunityBots().then((bots: Bot[]) => {
-                setBot(bots.sort(compareBotsByTitle))
-                setFilteredBots(bots.sort(compareBotsByTitle))
-                let tags: string[] = []
+        if (takeCommunityBots) {
+            getCommunityBots().then((bots: Bot[][]) => {
+                let latestBots: Bot[] = []
                 for (let bot of bots) {
+                    latestBots.push(findLatestVersion(bot))
+                }
+                setBot(latestBots.sort(compareBotsByTitle))
+                setFilteredBots(latestBots.sort(compareBotsByTitle))
+                let tags: string[] = []
+                for (let bot of latestBots) {
                     if (bot.tags) {
                         let newTags = bot.tags.filter((tag: string) => !tags.includes(tag))
                         tags = tags.concat(newTags)
@@ -69,10 +87,12 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                 }
                 setAllTags(tags)
             })
+            setTakeCommunityBots(false);
         }
-    }), [];
+    }), [takeCommunityBots, showSearchDialogInput];
+
     let onSaveBot = () => {
-        storeCommunityBot(choosenBot.id, choosenBot.title)
+        storeCommunityBot({ title: choosenBot.title, id: choosenBot.id, version: choosenBot.version || 0 });
         setShowBotDialog(false);
         setShowSearchDialogInput(true);
     }
@@ -106,6 +126,43 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             setChoosenTag(tag)
         }
     };
+
+    const onVersionSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        let version = selection.optionValue;
+        if (version == undefined || version == String(choosenBot.version)) {
+            return
+        }
+        getCommunityBot(choosenBot.id, version).then((bot: Bot) => {
+            setChoosenBot(bot);
+        });
+    };
+    const versionPicker = (
+        <Dropdown
+            id="version"
+            aria-label={"version"}
+            defaultValue={choosenBot.version.toString()}
+            value={choosenBot.version.toString()}
+            selectedOptions={[choosenBot.version.toString()]}
+            appearance="underline"
+            size="small"
+            positioning="below-start"
+            onOptionSelect={onVersionSelected}
+        >
+            {choosenBotAll.map(
+                (bot: Bot, _) => <Option value={String(bot.version)} text={"v" + bot.version.toString()} className={styles.option}>v{bot.version.toString()}</Option>
+            )}
+        </Dropdown>
+    )
+
+
+    const onChooseBot = (bot: Bot) => {
+        setChoosenBot(bot);
+        setShowBotDialog(true);
+        setShowSearchDialogInput(false);
+        getCommunityBotAllVersions(bot.id).then((bots) => {
+            setChoosenBotAll(bots);
+        });
+    }
 
     return (
         <div>
@@ -156,7 +213,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 {filteredBots.filter(bot => choosenTag == "" ? true : bot.tags.includes(choosenTag)).map(
                                     (bot: Bot, _) =>
                                         <Tooltip content={bot.title} relationship="description" positioning="below" >
-                                            <Button className={styles.box} onClick={() => { setChoosenBot(bot); setShowBotDialog(true); setShowSearchDialogInput(false) }}>
+                                            <Button className={styles.box} onClick={() => { onChooseBot(bot) }}>
                                                 <span>{bot.title}</span>
                                             </Button>
                                         </Tooltip>
@@ -179,7 +236,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 />
                             </DialogTrigger>
                         }
-                        >{choosenBot.title} {choosenBot.version}</DialogTitle>
+                        >{choosenBot.title} Version: {versionPicker}</DialogTitle>
                         <DialogContent>
                             <div className={styles.tags}>
                                 {

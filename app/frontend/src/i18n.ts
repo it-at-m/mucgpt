@@ -165,7 +165,8 @@ i18n
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
                             finish_edit: "Bearbeitung abschließen",
-                            publish: "Bot veröffentlichen"
+                            publish: "Bot veröffentlichen",
+                            publish_new_version: "Neue Version veröffentlichen"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -416,7 +417,8 @@ i18n
                             delete: "Delete assistent",
                             edit: "Edit Assistant",
                             finish_edit: "Finish Edit",
-                            publish: "Publish Bot"
+                            publish: "Publish Bot",
+                            publish_new_version: "Publish new version"
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -668,7 +670,8 @@ i18n
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
                             finish_edit: "Bearbeitung abschließ'n",
-                            publish: "Bot veröffentlichen"
+                            publish: "Bot veröffentlichen",
+                            publish_new_version: "Neie Version veröffentlichen"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -914,7 +917,8 @@ i18n
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
                             finish_edit: "Terminer la modification",
-                            publish: "Publier le bot"
+                            publish: "Publier le bot",
+                            publish_new_version: "Publier une nouvelle version"
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -1158,7 +1162,8 @@ i18n
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
                             finish_edit: "Завершити редагування",
-                            publish: "Опублікувати бота"
+                            publish: "Опублікувати бота",
+                            publish_new_version: "Опублікувати нову версію"
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"

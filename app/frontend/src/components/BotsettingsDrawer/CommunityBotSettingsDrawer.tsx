@@ -11,19 +11,26 @@ import {
     Tooltip,
     Textarea,
     TextareaOnChangeData,
+    Dropdown,
+    Option,
+    OptionOnSelectData,
+    SelectionEvents,
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { deleteCommunityBotWithId, storeBot } from "../../service/storage_bot";
+import { deleteCommunityBotWithId, storeBot, storeCommunityBot } from "../../service/storage_bot";
 import { Sidebar } from "../Sidebar/Sidebar";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
+import { getCommunityBot, Bot } from "../../api";
+import { get } from "http";
+import { use } from "i18next";
 interface Props {
     actions: JSX.Element;
     temperature: number;
@@ -31,9 +38,11 @@ interface Props {
     systemPrompt: string;
     title: string;
     bot_id: string;
+    version: string;
     description: string;
     isOwner: boolean;
     toOwnBots: () => void;
+    allVersions: string[];
 }
 
 export const CommunityBotSettingsDrawer = ({
@@ -43,13 +52,16 @@ export const CommunityBotSettingsDrawer = ({
     systemPrompt,
     title,
     bot_id,
+    version,
     description,
     isOwner,
-    toOwnBots
+    toOwnBots,
+    allVersions
 }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+    const [isLatestVersion, setIsLatestVersion] = useState<boolean>(true);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
@@ -72,6 +84,34 @@ export const CommunityBotSettingsDrawer = ({
     const onDelteClick = () => {
         setShowDeleteDialog(true);
     };
+
+    useEffect(() => {
+        for (let i = 0; i < allVersions.length; i++) {
+            console.log(parseFloat(allVersions[i]));
+            console.log(parseFloat(version));
+            console.log(parseFloat(allVersions[i]) > parseFloat(version));
+            if (parseFloat(allVersions[i]) > parseFloat(version)) {
+                setIsLatestVersion(false);
+                return;
+            }
+        }
+        setIsLatestVersion(true);
+
+    }, [allVersions, version]);
+
+    const onVersionSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
+        let v = selection.optionValue;
+        if (v == undefined || version == v) {
+            return
+        }
+        version = v;
+        getCommunityBot(bot_id, v).then((bot: Bot) => {
+            storeCommunityBot({ id: bot.id, title: bot.title, version: bot.version });
+            window.location.href = "/#/community-bot/" + bot.id + "/" + v.replace(".", "-");
+            window.location.reload();
+        });
+    };
+
     const content = (
         <>
             {" "}
@@ -91,6 +131,30 @@ export const CommunityBotSettingsDrawer = ({
                     </Field>
                 </div>
             </div>
+            <InfoLabel
+                info={
+                    <div>
+                        {isLatestVersion ? "Neuste Version ausgewählt" : "Neue Version verfügbar!"}
+                    </div>
+                }
+                style={isLatestVersion ? {} : { color: "red", fontWeight: "bold" }}
+            >Versionen</InfoLabel> {" "}
+            <Dropdown
+                id="version"
+                aria-label={"version"}
+                defaultValue={version}
+                value={version}
+                selectedOptions={[version]}
+                appearance="underline"
+                size="small"
+                positioning="below-start"
+                onOptionSelect={onVersionSelected}
+                className={styles.dropdown}
+            >
+                {allVersions.map(
+                    (v: string, _) => <Option value={v} text={"v" + v} className={styles.option}>v{v}</Option>
+                )}
+            </Dropdown>
             <div className={styles.header} role="heading" aria-level={3}>
                 <div className={styles.systemPromptHeadingContainer}>
                     <InfoLabel

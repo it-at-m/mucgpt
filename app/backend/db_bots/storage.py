@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import List
 from uuid import uuid4 as uuid
 
@@ -14,7 +15,7 @@ class DB:
         temperature=1.0,
         max_output_tokens=100,
         tags=["general", "greeting"],
-        version="1.0.1",
+        version=1.0,
         owner="Alice",
     )
 
@@ -27,7 +28,7 @@ class DB:
         temperature=0.8,
         max_output_tokens=100,
         tags=["general", "greeting"],
-        version="1.1.0",
+        version=1.1,
         owner="Bob",
     )
 
@@ -40,7 +41,7 @@ class DB:
         temperature=0.7,
         max_output_tokens=150,
         tags=["weather", "information"],
-        version="2.0.0",
+        version=2.0,
         owner="Charlie",
     )
 
@@ -53,7 +54,7 @@ class DB:
         temperature=0.9,
         max_output_tokens=100,
         tags=["humor", "entertainment"],
-        version="1.2.3",
+        version=1.2,
         owner="David",
     )
 
@@ -66,7 +67,7 @@ class DB:
         temperature=0.6,
         max_output_tokens=200,
         tags=["cooking", "food"],
-        version="1.5.0",
+        version=1.5,
         owner="Eva",
     )
 
@@ -79,7 +80,7 @@ class DB:
         temperature=0.5,
         max_output_tokens=100,
         tags=["motivation", "inspiration"],
-        version="1.0.2",
+        version=1.0,
         owner="Frank",
     )
 
@@ -92,7 +93,7 @@ class DB:
         temperature=0.8,
         max_output_tokens=100,
         tags=["trivia", "education"],
-        version="2.1.0",
+        version=2.1,
         owner="Grace",
     )
 
@@ -105,7 +106,7 @@ class DB:
         temperature=0.7,
         max_output_tokens=150,
         tags=["advice", "guidance"],
-        version="1.3.0",
+        version=1.3,
         owner="Heidi",
     )
 
@@ -118,7 +119,7 @@ class DB:
         temperature=0.6,
         max_output_tokens=150,
         tags=["history", "education"],
-        version="1.4.0",
+        version=1.4,
         owner="Ivan",
     )
 
@@ -131,7 +132,7 @@ class DB:
         temperature=0.9,
         max_output_tokens=100,
         tags=["translation", "language"],
-        version="1.6.0",
+        version=1.6,
         owner="John",
     )
 
@@ -144,7 +145,7 @@ class DB:
         temperature=0.6,
         max_output_tokens=150,
         tags=["fitness", "health"],
-        version="1.7.0",
+        version=1.7,
         owner="Karen",
     )
 
@@ -157,7 +158,7 @@ class DB:
         temperature=0.8,
         max_output_tokens=200,
         tags=["news", "information"],
-        version="1.8.0",
+        version=1.8,
         owner="Linda",
     )
     with open("./db_bots/prompts/arielle.md", encoding="utf-8") as f:
@@ -171,7 +172,7 @@ class DB:
         temperature=1.0,
         max_output_tokens=4096,
         tags=["diagram"],
-        version="1.8.0",
+        version=1.8,
         owner="Linda",
     )
     with open("./db_bots/prompts/sherlock.md", encoding="utf-8") as f:
@@ -185,7 +186,7 @@ class DB:
         temperature=1.0,
         max_output_tokens=4096,
         tags=["testing"],
-        version="1.8.0",
+        version=1.8,
         owner="Linda",
     )
 
@@ -193,20 +194,20 @@ class DB:
 
     def __init__(self):
         self.bots = {}
-        self.bots[self.bot1.id] = self.bot1
-        self.bots[self.bot2.id] = self.bot2
-        self.bots[self.bot3.id] = self.bot3
-        self.bots[self.bot4.id] = self.bot4
-        self.bots[self.bot5.id] = self.bot5
-        self.bots[self.bot6.id] = self.bot6
-        self.bots[self.bot7.id] = self.bot7
-        self.bots[self.bot8.id] = self.bot8
-        self.bots[self.bot9.id] = self.bot9
-        self.bots[self.bot10.id] = self.bot10
-        self.bots[self.bot11.id] = self.bot11
-        self.bots[self.bot12.id] = self.bot12
-        self.bots[self.arielle.id] = self.arielle
-        self.bots[self.sherlock.id] = self.sherlock
+        self.bots[self.bot1.id] = {self.bot1.version: self.bot1}
+        self.bots[self.bot2.id] = {self.bot2.version: self.bot2}
+        self.bots[self.bot3.id] = {self.bot3.version: self.bot3}
+        self.bots[self.bot4.id] = {self.bot4.version: self.bot4}
+        self.bots[self.bot5.id] = {self.bot5.version: self.bot5}
+        self.bots[self.bot6.id] = {self.bot6.version: self.bot6}
+        self.bots[self.bot7.id] = {self.bot7.version: self.bot7}
+        self.bots[self.bot8.id] = {self.bot8.version: self.bot8}
+        self.bots[self.bot9.id] = {self.bot9.version: self.bot9}
+        self.bots[self.bot10.id] = {self.bot10.version: self.bot10}
+        self.bots[self.bot11.id] = {self.bot11.version: self.bot11}
+        self.bots[self.bot12.id] = {self.bot12.version: self.bot12}
+        self.bots[self.arielle.id] = {self.arielle.version: self.arielle}
+        self.bots[self.sherlock.id] = {self.sherlock.version: self.sherlock}
         
 
     def storeBot(self, bot: Bot) -> str:
@@ -225,25 +226,42 @@ class DB:
             version=bot.version,
             owner=bot.owner,
         )
-        self.bots[id] = bot
+        if id in self.bots:
+            self.bots[id][bot.version] = bot
+        else:
+            self.bots[id] = {bot.version: bot}
         return id
     
     def updateBot(self, bot: Bot): 
-        self.bots[bot.id] = bot
+        self.bots[bot.id][bot.version] = bot
 
-    def getBot(self, id: str) -> Bot:
-        return self.bots[id]
+    def getBotAllVersions(self, id: str):
+        bots = []
+        for version in self.bots[id]:
+            bots.append(self.bots[id][version])
+        logger = getLogger()
+        logger.info(f"getBotAllVersions: {bots}")
+        return bots
+    
+    def getBot(self, id: str, version:str) -> Bot:
+
+        return self.bots[id][version]
 
     def getAllBots(self) -> List[Bot]:
         bots = []
         for bot in self.bots:
-            bots.append(self.bots[bot])
+            versions = []
+            for version in self.bots[bot]:
+                versions.append(self.bots[bot][version])
+            bots.append(versions)
+                
         return bots
 
     def getAllTags(self) -> List[str]:
         tags = []
         for bot in self.bots:
-            for tag in self.bots[bot].tags:
-                if tag not in tags:
-                    tags.append(tag)
+            for version in self.bots[bot]:
+                for tag in self.bots[bot][version].tags:
+                    if tag not in tags:
+                        tags.append(tag)
         return tags

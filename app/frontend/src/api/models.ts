@@ -105,14 +105,15 @@ export type Bot = {
     id: string;
     temperature: number;
     max_output_tokens: number;
-    tags?: string[];
-    version?: string;
-    owner?: string;
+    tags: string[];
+    version: number;
+    owner: string;
 };
 
 export type StoredCommunityBot = {
     title: string;
     id: string;
+    version: number;
 };
 
 export type GenerateTagsRequest = {

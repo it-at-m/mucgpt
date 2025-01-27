@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, getCommunityBot } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, getCommunityBot, getCommunityBotAllVersions } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
@@ -31,7 +31,7 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CommunityBotSettingsDrawer } from "../../components/BotsettingsDrawer/CommunityBotSettingsDrawer";
 
 const BotChat = () => {
-    const { id } = useParams();
+    const { id, version } = useParams();
     const bot_id = id || "0";
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
@@ -55,7 +55,8 @@ const BotChat = () => {
     const [description, setDescription] = useState<string>("Beschreibung");
     const [tags, setTags] = useState<string[]>([]);
     const [owner, setOwner] = useState<string>("No Owner");
-    const [version, setVersion] = useState<string>("0.0.0");
+    const [botVersion, setBotVersion] = useState<number>(version ? parseFloat(version.replace("-", ".")) : 0);
+    const [botAllVersions, setBotAllVersions] = useState<string[]>([String(botVersion)]);
     const [publish, setPublish] = useState<boolean>(false);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
@@ -70,8 +71,17 @@ const BotChat = () => {
     }, [debouncedSystemPrompt, LLM]);
     useEffect(() => {
         if (bot_id) {
-            getCommunityBot(bot_id).then(bot => {
+            console.log("Bot ID: " + bot_id);
+            console.log("Version: " + String(botVersion).replace(".", "-"));
+            getCommunityBotAllVersions(bot_id).then(bots => {
+                let versions: string[] = []
+                for (let i = 0; i < bots.length; i++) {
+                    versions.push(String(bots[i].version));
+                }
+                setBotAllVersions(versions);
+                const bot = bots.find(b => b.version == botVersion);
                 if (bot) {
+                    console.log("Bot: " + bot);
                     setSystemPrompt(bot.system_message);
                     setTitle(bot.title);
                     setDescription(bot.description);
@@ -85,9 +95,9 @@ const BotChat = () => {
                         setOwner(bot.owner);
                     }
                     if (bot.version) {
-                        setVersion(bot.version);
+                        setBotVersion(bot.version);
                     }
-                    storeCommunityBot(bot_id, bot.title);
+                    storeCommunityBot({ id: bot_id, version: bot.version || 0, title: bot.title });
                 }
             }
             );
@@ -226,12 +236,14 @@ const BotChat = () => {
             publish: publish,
             id: bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            version: botVersion,
+            owner: owner,
+            tags: tags
         }
         storeBot(bot);
         window.location.href = "/"
-    }
-
+    };
 
     const actions = (
         <>
@@ -249,7 +261,9 @@ const BotChat = () => {
             bot_id={bot_id}
             isOwner={false}
             toOwnBots={toOwnBots}
-            actions={actions}></CommunityBotSettingsDrawer>
+            actions={actions}
+            version={String(botVersion)}
+            allVersions={botAllVersions} />
     ];
     const examplesComponent = <></>;
     const inputComponent = (
@@ -298,7 +312,7 @@ const BotChat = () => {
                     }
                 ></ChatTurnComponent>
             ))}
-            {(isLoading || error) && (
+            {isLoading || error ? (
                 <ChatTurnComponent
                     usermsg={
                         <UserChatMessage
@@ -321,6 +335,8 @@ const BotChat = () => {
                         </>
                     }
                 ></ChatTurnComponent>
+            ) : (
+                <div></div>
             )}
             <div ref={chatMessageStreamEnd} />
         </>

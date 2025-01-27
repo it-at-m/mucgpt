@@ -24,6 +24,7 @@ from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.ChatResult import ChatResult
+from core.types.CommunityBotAllVersionsResponse import CommunityBotAllVersionsResponse
 from core.types.CommunityBotsResponse import Bot, CommunityBotsResponse
 from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
@@ -347,14 +348,24 @@ async def updateCommunityBot(
     get_config_and_authentificate(access_token)
     bot_database.updateBot(request)
 
-@api_app.get("/community_bot/{id}")
+@api_app.get("/community_bot/{id}/{version}")
 async def getCommunityBot(
     id: str,
+    version: str,
     access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
 ) -> Bot:
     get_config_and_authentificate(access_token)
-    bot = bot_database.getBot(id)
+    bot = bot_database.getBot(id, float(version.replace("-",".")))
     return bot
+
+@api_app.get("/community_bot/{id}")
+async def getCommunityBotAllVersions(
+    id: str,
+    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+) -> CommunityBotAllVersionsResponse:
+    get_config_and_authentificate(access_token)
+    bots = bot_database.getBotAllVersions(id)
+    return CommunityBotAllVersionsResponse(bots=bots)
 
 @api_app.post("/generate_tags")
 async def generate_tags(

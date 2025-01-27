@@ -17,6 +17,7 @@ const Menu = () => {
 
     const [showAddBot, setShowAddBot] = useState<boolean>(false);
     const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
+    const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
 
     useEffect(() => {
         getAllBots().then(bots => {
@@ -51,6 +52,7 @@ const Menu = () => {
 
     const onSearchBot = () => {
         setShowSearachBot(true);
+        setGetCommunityBots(true);
     };
 
     return (
@@ -97,12 +99,16 @@ const Menu = () => {
             <div className={styles.rowheader}>
                 {t("menu.community_bots")} <SearchBotButton onClick={onSearchBot}></SearchBotButton>
             </div>
-            <CommunityBotsDialog showSearchDialogInput={showSearachBot} setShowSearchDialogInput={setShowSearachBot} />
-
+            <CommunityBotsDialog
+                showSearchDialogInput={showSearachBot}
+                setShowSearchDialogInput={setShowSearachBot}
+                takeCommunityBots={getCommunityBots}
+                setTakeCommunityBots={setGetCommunityBots}
+            />
             <div className={styles.row}>
                 {communityBots.map((bot: StoredCommunityBot, _) => (
                     <Tooltip content={bot.title} relationship="description" positioning="below">
-                        <Link to={`/community-bot/${bot.id}`} className={styles.box}>
+                        <Link to={`/community-bot/${bot.id}/${String(bot.version).replace(".", "-")}`} className={styles.box}>
                             {bot.title}
                         </Link>
                     </Tooltip>

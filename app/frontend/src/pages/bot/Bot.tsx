@@ -54,7 +54,7 @@ const BotChat = () => {
     const [title, setTitle] = useState<string>("Titel");
     const [description, setDescription] = useState<string>("Beschreibung");
     const [publish, setPublish] = useState<boolean>(false);
-    const [version, setVersion] = useState<string>("0.0");
+    const [version, setVersion] = useState<number>(0.0);
     const [owner, setOwner] = useState<string>("Me");
     const [tags, setTags] = useState<string[]>([]);
 
@@ -209,7 +209,10 @@ const BotChat = () => {
             publish: publish,
             id: bot_id,
             temperature: temp,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            version: version,
+            owner: owner,
+            tags: tags
         };
         storeBot(newBot);
     };
@@ -226,7 +229,10 @@ const BotChat = () => {
                 publish: publish,
                 id: bot_id,
                 temperature: temperature,
-                max_output_tokens: maxTokens
+                max_output_tokens: maxTokens,
+                version: version,
+                owner: owner,
+                tags: tags
             };
             storeBot(newBot);
         }
@@ -241,7 +247,10 @@ const BotChat = () => {
             publish: publish,
             id: bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            version: version,
+            owner: owner,
+            tags: tags
         };
         storeBot(newBot);
     };
@@ -266,6 +275,7 @@ const BotChat = () => {
         }
         generateTags(options).then(tags => {
             if (tags) {
+                setTags(tags);
                 newCommunityBot.tags = tags;
                 addCommunityBot(newCommunityBot).then((newId: string) => {
                     getBotWithId(bot_id).then(bot => {
@@ -285,12 +295,11 @@ const BotChat = () => {
     const onPublish = () => {
         setIsFirstTimePublishing(!publish);
         if (!publish) {
-            let v = "1.0";
-            setVersion(v);
+            setVersion(1.0);
             setOwner("Me");
         } else {
-            let v: string = String((+version) + 0.1)
-            setVersion(v)
+            const newV = Number((version + 0.1).toFixed(1));
+            setVersion(newV);
             let updatedCommunityBot: Bot = {
                 title: title,
                 description: description,
@@ -299,7 +308,7 @@ const BotChat = () => {
                 id: bot_id,
                 temperature: temperature,
                 max_output_tokens: max_output_tokens,
-                version: v,
+                version: newV,
                 owner: owner,
                 tags: tags
             };
@@ -317,7 +326,10 @@ const BotChat = () => {
             publish: publish,
             id: bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            version: version,
+            owner: owner,
+            tags: tags
         };
         storeBot(newBot);
     };
@@ -331,7 +343,10 @@ const BotChat = () => {
             publish: publish,
             id: bot_id,
             temperature: temperature,
-            max_output_tokens: max_output_tokens
+            max_output_tokens: max_output_tokens,
+            version: version,
+            owner: owner,
+            tags: tags
         };
         storeBot(newBot);
     };
@@ -368,6 +383,7 @@ const BotChat = () => {
             bot_id={bot_id}
             onPublishClick={onPublish}
             actions={actions}
+            publish={publish}
         ></BotsettingsDrawer>
     ];
     const examplesComponent = <></>;

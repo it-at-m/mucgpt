@@ -81,7 +81,10 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             publish: false,
             id: id,
             temperature: 0.6,
-            max_output_tokens: LLM.max_output_tokens
+            max_output_tokens: LLM.max_output_tokens,
+            tags: [],
+            version: 1.0,
+            owner: "user"
         };
         storeBot(bot);
         window.location.href = "/#/bot/" + id;

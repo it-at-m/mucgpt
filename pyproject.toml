@@ -15,7 +15,7 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.5.1",
+    "mistral-common==1.5.2",
     "fastapi[standard]==0.115.6",
     "langchain==0.3.14",
     "langchain-core==0.3.29",

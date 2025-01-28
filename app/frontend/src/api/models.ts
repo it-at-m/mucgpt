@@ -4,6 +4,13 @@ export type AskResponse = {
     tokens?: number;
 };
 
+export type ChatResponse = {
+    answer: string;
+    error?: string;
+    tokens?: number;
+    user_tokens?: number;
+};
+
 export type SumResponse = {
     answer: string[];
     error?: string;
@@ -102,7 +109,7 @@ export type Bot = {
     description: string;
     system_message: string;
     publish: boolean;
-    id: number;
+    id?: string;
     temperature: number;
     max_output_tokens: number;
 };

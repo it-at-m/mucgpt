@@ -17,12 +17,9 @@ import styles from "./CreateBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { bot_storage, getHighestKeyInDB, storeBot } from "../../service/storage";
 import { Bot, createBotApi } from "../../api";
-
-const example1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
-const example2 = "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
-const example3 = "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.";
+import { BOT_STORE, CREATE_BOT_EXAMPLE_1, CREATE_BOT_EXAMPLE_2, CREATE_BOT_EXAMPLE_3 } from "../../constants";
+import { BotStorageService } from "../../service/botstorage";
 
 interface Props {
     showDialogInput: boolean;
@@ -39,6 +36,8 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     const [showDialogOutput, setShowDialogOutput] = useState<boolean>(false);
 
     const { t } = useTranslation();
+    const storageService: BotStorageService = new BotStorageService(BOT_STORE);
+
     const onInputChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setInput(newValue.value);
@@ -72,18 +71,17 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     };
 
     const onPromptButtonClicked = async () => {
-        const id = (await getHighestKeyInDB(bot_storage)) + 1;
         const bot: Bot = {
             title: title,
             description: description,
             system_message: systemPrompt,
             publish: false,
-            id: id,
             temperature: 0.6,
             max_output_tokens: LLM.max_output_tokens
         };
-        storeBot(bot);
-        window.location.href = "/#/bot/" + id;
+        const created_id = await storageService.createBotConfig(bot);
+        if (created_id) window.location.href = "/#/bot/" + created_id;
+        else console.error("Bot could not be created");
     };
 
     const onBackButtonClicked = () => {
@@ -120,13 +118,13 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                         <DialogTitle>{t("components.create_bot_dialog.what_function")}</DialogTitle>
                         <DialogContent>
                             <div className={styles.exampleList}>
-                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(example1)}>
+                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_BOT_EXAMPLE_1)}>
                                     Beispiel 1: Übersetzer
                                 </Button>
-                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(example2)}>
+                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_BOT_EXAMPLE_2)}>
                                     Beispiel 2: Email
                                 </Button>
-                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(example3)}>
+                                <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_BOT_EXAMPLE_3)}>
                                     Beispiel 3: Synonyme
                                 </Button>
                             </div>

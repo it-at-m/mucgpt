@@ -1,8 +1,7 @@
 import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
-import { Button, Tooltip } from "@fluentui/react-components";
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI } from "../../api";
+import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
@@ -11,39 +10,26 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
-import {
-    indexedDBStorage,
-    saveToDB,
-    getStartDataFromDB,
-    popLastMessageInDB,
-    getHighestKeyInDB,
-    deleteChatFromDB,
-    getCurrentChatID,
-    changeTemperatureInDb,
-    changeMaxTokensInDb,
-    changeSystempromptInDb,
-    CURRENT_CHAT_IN_DB,
-    checkStructurOfDB
-} from "../../service/storage";
 import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
-import { MessageError } from "./MessageError";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
-import { History24Regular } from "@fluentui/react-icons";
+import { CHAT_STORE } from "../../constants";
+import { DBMessage, DBObject, StorageService } from "../../service/storage";
 
-const enum STORAGE_KEYS {
-    CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
-    CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT",
-    CHAT_MAX_TOKENS = "CHAT_MAX_TOKENS"
+export type ChatMessage = DBMessage<ChatResponse>;
+
+export interface ChatOptions {
+    system: string;
+    maxTokens: number;
+    temperature: number;
 }
 
 const Chat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
-    const [shouldStream, setShouldStream] = useState<boolean>(true);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -51,27 +37,20 @@ const Chat = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse, user_tokens: number][]>([]);
+    const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const temperature_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_TEMPERATURE) || 0.7);
-    const max_output_tokens_pref = Number(localStorage.getItem(STORAGE_KEYS.CHAT_MAX_TOKENS)) || 4000;
-    const systemPrompt_pref = localStorage.getItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT) || "";
+    const [temperature, setTemperature] = useState(0.7);
+    const [max_output_tokens, setMaxOutputTokens] = useState(4000);
+    const [systemPrompt, setSystemPrompt] = useState<string>("");
 
-    const [temperature, setTemperature] = useState(temperature_pref);
-    const [max_output_tokens, setMaxOutputTokens] = useState(max_output_tokens_pref);
-    const [systemPrompt, setSystemPrompt] = useState<string>(systemPrompt_pref);
-
-    const storage: indexedDBStorage = {
-        db_name: "MUCGPT-CHAT",
-        objectStore_name: "chat",
-        db_version: 2
-    };
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE, active_chat);
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+
+    const [allChats, setAllChats] = useState<DBObject<ChatResponse, ChatOptions>[]>([]);
 
     const makeTokenCountRequest = useCallback(async () => {
         if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
@@ -83,78 +62,61 @@ const Chat = () => {
     useEffect(() => {
         makeTokenCountRequest();
         if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens, currentId);
+            onMaxTokensChanged(LLM.max_output_tokens);
         }
     }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
 
+    const fetchHistory = () => {
+        return storageService.getAll().then(chats => {
+            if (chats) setAllChats(chats);
+        });
+    };
+
     useEffect(() => {
-        checkStructurOfDB(storage);
         setAnswers([]);
         lastQuestionRef.current = "";
-        getHighestKeyInDB(storage).then(highestKey => {
-            getCurrentChatID(storage).then(refID => {
-                error && setError(undefined);
-                setIsLoading(true);
-                let key;
-                if (refID) {
-                    key = refID;
-                } else {
-                    key = highestKey + 1;
-                }
-                setIdCounter(key);
-                setCurrentId(key);
-                getStartDataFromDB(storage, key).then(stored => {
-                    if (stored) {
-                        // if the chat exists
-                        let storedAnswers = stored.Data.Answers;
-                        lastQuestionRef.current = storedAnswers[storedAnswers.length - 1][0];
-                        if (storedAnswers[storedAnswers.length - 1][1].answer == "") {
-                            // if the answer of the LLM has not (yet) returned
-                            if (storedAnswers.length > 1) {
-                                storedAnswers.pop();
-                                setAnswers([...answers.concat(storedAnswers)]);
-                            }
-                            setError(new MessageError(t("components.history.error")));
-                        } else {
-                            let options = stored.Options;
-                            setAnswers([...answers.concat(storedAnswers)]);
-                            if (options) {
-                                onMaxTokensChanged(options.maxTokens, key);
-                                onTemperatureChanged(options.temperature, key);
-                                onSystemPromptChanged(options.system, key);
-                            }
-                        }
+        error && setError(undefined);
+        setIsLoading(true);
+
+        storageService
+            .getNewestChat()
+            .then(existingData => {
+                if (existingData) {
+                    // if the chat exists
+                    const messages = existingData.messages;
+                    let options = existingData.config;
+                    setAnswers([...answers.concat(messages)]);
+                    if (options) {
+                        setMaxOutputTokens(options.maxTokens);
+                        setTemperature(options.temperature);
+                        setSystemPrompt(options.system);
                     }
-                });
+                    lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                    setActiveChat(existingData.id);
+                }
+                return fetchHistory();
+            })
+            .finally(() => {
                 setIsLoading(false);
             });
-        });
     }, []);
 
     const makeApiRequest = async (question: string, system?: string) => {
-        const startId = currentId;
         lastQuestionRef.current = question;
         error && setError(undefined);
         setIsLoading(true);
-        let askResponse: AskResponse = {} as AskResponse;
-        saveToDB(
-            [question, { ...askResponse, answer: "", tokens: 0 }, 0],
-            storage,
-            startId,
-            idCounter,
-            setCurrentId,
-            setIdCounter,
-            language,
-            temperature,
-            system ? system : "",
-            max_output_tokens,
-            LLM.llm_name
-        );
+        const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
+        const options: ChatOptions = {
+            system: system ? system : "",
+            maxTokens: max_output_tokens,
+            temperature: temperature //TODO model LLM.llm_name übergeben?
+        };
+
         try {
-            const history: ChatTurn[] = answers.map(a => ({ user: a[0], bot: a[1].answer }));
+            const history: ChatTurn[] = answers.map(a => ({ user: a.user, bot: a.response.answer }));
             const request: ChatRequest = {
                 history: [...history, { user: question, bot: undefined }],
-                shouldStream: shouldStream,
+                shouldStream: true,
                 language: language,
                 temperature: temperature,
                 system_message: system ? system : "",
@@ -169,67 +131,51 @@ const Chat = () => {
                 throw Error("No response body");
             }
             let user_tokens = 0;
-            if (shouldStream) {
-                let answer: string = "";
-                let streamed_tokens = 0;
-                let latestResponse: AskResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
+            let answer: string = "";
+            let streamed_tokens = 0;
+            let latestResponse: ChatResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
 
-                for await (const chunk of readNDJSONStream(response.body)) {
-                    if (chunk as Chunk) {
-                        switch (chunk.type) {
-                            case "C":
-                                answer += chunk.message as string;
-                                break;
-                            case "I":
-                                const info = chunk.message as ChunkInfo;
-                                streamed_tokens = info.streamedtokens;
-                                user_tokens = info.requesttokens;
-                                break;
-                            case "E":
-                                throw Error((chunk.message as string) || "Unknown error");
-                        }
-
-                        latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens };
-                        setIsLoading(false);
-                        setAnswers([...answers, [question, latestResponse, user_tokens]]);
+            for await (const chunk of readNDJSONStream(response.body)) {
+                if (chunk as Chunk) {
+                    switch (chunk.type) {
+                        case "C":
+                            answer += chunk.message as string;
+                            break;
+                        case "I":
+                            const info = chunk.message as ChunkInfo;
+                            streamed_tokens = info.streamedtokens;
+                            user_tokens = info.requesttokens;
+                            break;
+                        case "E":
+                            throw Error((chunk.message as string) || "Unknown error");
                     }
+
+                    latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
+                    setIsLoading(false);
+                    setAnswers([...answers, { user: question, response: latestResponse }]);
                 }
-                if (startId == currentId) {
-                    saveToDB(
-                        [question, latestResponse, user_tokens],
-                        storage,
-                        startId,
-                        idCounter,
-                        setCurrentId,
-                        setIdCounter,
-                        language,
-                        temperature,
-                        system ? system : "",
-                        max_output_tokens,
-                        LLM.llm_name
-                    );
-                }
+            }
+            //chat present, if not create.
+            if (active_chat) {
+                await storageService.appendMessage({ user: question, response: latestResponse }, options);
             } else {
-                const parsedResponse: AskResponse = await response.json();
-                if (response.status > 299 || !response.ok) {
-                    throw Error(parsedResponse.error || "Unknown error");
-                }
-                setAnswers([...answers, [question, parsedResponse, 0]]);
-                if (startId == currentId) {
-                    saveToDB(
-                        [question, parsedResponse, 0],
-                        storage,
-                        currentId,
-                        idCounter,
-                        setCurrentId,
-                        setIdCounter,
-                        language,
-                        temperature,
-                        system ? system : "",
-                        max_output_tokens,
-                        LLM.llm_name
-                    );
-                }
+                // generate chat name for first chat
+                const chatname = await createChatName(
+                    question,
+                    latestResponse.answer,
+                    language,
+                    temperature,
+                    system ? system : "",
+                    max_output_tokens,
+                    LLM.llm_name
+                );
+
+                // create and save current id
+                const id = await storageService.create([{ user: question, response: latestResponse }], options, undefined, chatname, false);
+                setActiveChat(id);
+
+                // fetch all chats
+                await fetchHistory();
             }
         } catch (e) {
             setError(e);
@@ -237,54 +183,79 @@ const Chat = () => {
             setIsLoading(false);
         }
     };
-
     const clearChat = () => {
-        setCurrentId(idCounter + 1);
         lastQuestionRef.current = "";
         error && setError(undefined);
-        deleteChatFromDB(storage, CURRENT_CHAT_IN_DB, setAnswers, true, lastQuestionRef);
+        //unset active chat
+        if (active_chat) {
+            setActiveChat(undefined);
+        }
+        setAnswers([]);
+    };
+
+    const onRollbackMessage = (message: string) => {
+        return async () => {
+            if (active_chat) {
+                let result = await storageService.rollbackMessage(message);
+                if (result) {
+                    setAnswers(result.messages);
+                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
+                }
+                setQuestion(message);
+            }
+        };
     };
 
     const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0) {
+        if (answers.length > 0 && storageService.getActiveChatId()) {
+            await storageService.popMessage();
             let last = answers.pop();
             setAnswers(answers);
-            popLastMessageInDB(storage, currentId);
             if (last) {
-                makeApiRequest(last[0], systemPrompt);
+                makeApiRequest(last.user, systemPrompt);
             }
         }
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens = systemPromptTokens + answers.map(answ => answ[2] + (answ[1].tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
+    const totalTokens =
+        systemPromptTokens + answers.map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
 
     const onExampleClicked = async (example: string, system?: string) => {
-        if (system) onSystemPromptChanged(system, currentId);
+        if (system) onSystemPromptChanged(system);
         makeApiRequest(example, system);
     };
 
-    const onTemperatureChanged = (temp: number, id: number) => {
+    const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
-        localStorage.setItem(STORAGE_KEYS.CHAT_TEMPERATURE, temp.toString());
-        changeTemperatureInDb(temp, id, storage);
+        storageService.update(undefined, {
+            system: systemPrompt ? systemPrompt : "",
+            maxTokens: max_output_tokens,
+            temperature: temp
+        });
     };
 
-    const onMaxTokensChanged = (maxTokens: number, id: number) => {
+    const onMaxTokensChanged = (maxTokens: number) => {
         if (maxTokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens, id);
+            onMaxTokensChanged(LLM.max_output_tokens);
         } else {
             setMaxOutputTokens(maxTokens);
-            localStorage.setItem(STORAGE_KEYS.CHAT_MAX_TOKENS, maxTokens.toString());
-            changeMaxTokensInDb(maxTokens, id, storage);
+            storageService.update(undefined, {
+                system: systemPrompt ? systemPrompt : "",
+                maxTokens: maxTokens,
+                temperature: temperature
+            });
         }
     };
 
-    const onSystemPromptChanged = (systemPrompt: string, id: number) => {
+    const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
-        localStorage.setItem(STORAGE_KEYS.CHAT_SYSTEM_PROMPT, systemPrompt);
-        changeSystempromptInDb(systemPrompt, id, storage);
+        storageService.update(undefined, {
+            system: systemPrompt ? systemPrompt : "",
+            maxTokens: max_output_tokens,
+            temperature: temperature
+        });
     };
 
     const answerList = (
@@ -292,30 +263,19 @@ const Chat = () => {
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer[0]}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storage}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={
                         <>
                             {index === answers.length - 1 && (
                                 <Answer
-                                    answer={answer[1]}
+                                    answer={answer.response}
                                     onRegenerateResponseClicked={onRegeneratResponseClicked}
                                     setQuestion={question => setQuestion(question)}
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer answer={answer[1]} setQuestion={question => setQuestion(question)} />}
+                            {index !== answers.length - 1 && <Answer answer={answer.response} setQuestion={question => setQuestion(question)} />}
                         </>
                     }
                 ></ChatTurnComponent>
@@ -323,18 +283,7 @@ const Chat = () => {
 
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storage}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={
@@ -370,15 +319,32 @@ const Chat = () => {
     const sidebar_content = (
         <>
             <History
-                storage={storage}
-                setAnswers={setAnswers}
-                lastQuestionRef={lastQuestionRef}
-                currentId={currentId}
-                setCurrentId={setCurrentId}
-                onTemperatureChanged={onTemperatureChanged}
-                onMaxTokensChanged={onMaxTokensChanged}
-                onSystemPromptChanged={onSystemPromptChanged}
-                setError={setError}
+                allChats={allChats}
+                currentActiveChatId={active_chat}
+                onDeleteChat={async id => {
+                    await storageService.delete(id);
+                    await fetchHistory();
+                }}
+                onChatNameChange={async (id, name: string) => {
+                    const newName = prompt(t("components.history.newchat"), name);
+                    await storageService.renameChat(id, newName ? newName.trim() : name);
+                    await fetchHistory();
+                }}
+                onFavChange={async (id: string, fav: boolean) => {
+                    await storageService.changeFavouritesInDb(id, fav);
+                    await fetchHistory();
+                }}
+                onSelect={async (id: string) => {
+                    const chat = await storageService.get(id);
+                    if (chat) {
+                        setAnswers(chat.messages);
+                        lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                        setActiveChat(id);
+                        setMaxOutputTokens(chat.config.maxTokens);
+                        setTemperature(chat.config.temperature);
+                        setSystemPrompt(chat.config.system);
+                    }
+                }}
             ></History>
         </>
     );
@@ -390,7 +356,6 @@ const Chat = () => {
             setMaxTokens={onMaxTokensChanged}
             systemPrompt={systemPrompt}
             setSystemPrompt={onSystemPromptChanged}
-            current_id={currentId}
             actions={sidebar_actions}
             content={sidebar_content}
         ></ChatsettingsDrawer>

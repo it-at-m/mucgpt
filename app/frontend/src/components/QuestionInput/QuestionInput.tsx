@@ -1,6 +1,7 @@
 import { Stack } from "@fluentui/react";
 import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
 import { Send28Filled } from "@fluentui/react-icons";
+import { useRef } from "react";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
@@ -22,6 +23,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;
@@ -32,6 +35,17 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         return text;
     };
     useEffect(() => setDescription(getDescription()), [tokens_used]);
+
+    const adjustTextareaHeight = () => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+        }
+    };
+
+    useEffect(() => {
+        adjustTextareaHeight();
+    }, [question]);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -62,20 +76,21 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         } else {
             setQuestion(newValue.value);
         }
+        adjustTextareaHeight();
     };
 
     const sendQuestionDisabled = disabled || !question.trim();
 
     return (
-        <Stack horizontal className={styles.questionInputContainer}>
+        <Stack horizontal className={styles.questionInputContainer} >
             <Textarea
                 textarea={styles.questionInputTextArea}
                 placeholder={placeholder}
-                resize="vertical"
                 value={question}
                 size="large"
                 onChange={onQuestionChange}
                 onKeyDown={onEnterPress}
+                ref={textareaRef}
             />
             <div className={styles.questionInputContainerFooter}>
                 <div>{description}</div>

@@ -22,11 +22,10 @@ dependencies = [
     "langchain_community==0.3.15",
     "openai==1.60.2",
     "langchain-openai==0.3.2",
-    "openai==1.59.4",
     "langsmith==0.2.10",
     "joserfc",
     "tiktoken",
-    "pypdf==5.1.0",
+    "pypdf==5.2.0",
     "uvicorn==0.34.0",
     "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",
@@ -49,7 +48,7 @@ test = [
 [tool.uv]
 dev-dependencies = [
     "ipykernel==6.29.5",
-    "pre-commit==4.0.1",
+    "pre-commit==4.1.0",
     "ruff==0.9.3",
 ]
 

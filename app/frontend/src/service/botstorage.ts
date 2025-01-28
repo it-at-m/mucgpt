@@ -1,4 +1,4 @@
-import { StorageService, DBObject, DBMessage } from "./storage";
+import { StorageService, DBMessage } from "./storage";
 import { Bot, ChatResponse } from "../api";
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";

@@ -11,6 +11,7 @@ import { BotStorageService } from "../../service/botstorage";
 import { Bot } from "../../api/models";
 import { arielle_bot, sherlock_bot } from "./static_bots";
 import { BOT_STORE } from "../../constants";
+import { migrate_old_bots } from "../../service/migration";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -24,21 +25,24 @@ const Menu = () => {
     useEffect(() => {
         const arielle: Bot = arielle_bot;
         const sherlock: Bot = sherlock_bot;
-        botStorageService
-            .getBotConfig(arielle.id as string)
-            .then(bot => {
-                if (!bot) botStorageService.createBotConfig(arielle, arielle.id as string);
-            })
-            .then(async () => {
-                const bot = await botStorageService.getBotConfig(sherlock.id as string);
-                if (!bot) botStorageService.createBotConfig(sherlock, sherlock.id as string);
-            })
-            .finally(() => {
-                setCommunityBots([arielle, sherlock]);
-                botStorageService.getAllBotConfigs().then(bots => {
-                    setBots(bots);
+
+        migrate_old_bots().then(() => {
+            return botStorageService
+                .getBotConfig(arielle.id as string)
+                .then(bot => {
+                    if (!bot) botStorageService.createBotConfig(arielle, arielle.id as string);
+                })
+                .then(async () => {
+                    const bot = await botStorageService.getBotConfig(sherlock.id as string);
+                    if (!bot) botStorageService.createBotConfig(sherlock, sherlock.id as string);
+                })
+                .finally(() => {
+                    setCommunityBots([arielle, sherlock]);
+                    botStorageService.getAllBotConfigs().then(bots => {
+                        setBots(bots);
+                    });
                 });
-            });
+        })
     }, []);
 
     const onAddBot = () => {

@@ -30,46 +30,40 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
 
 //IDB storage configs
 export const BOT_STORE: IndexedDBStorage = {
+    db_name: "MUCGPT-ASSISTANTS",
+    objectStore_name: "bots",
+    db_version: 1
+};
+//Old storage, used to migrate existing bots
+export const LEGACY_BOT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-BOTS",
     objectStore_name: "bots",
     db_version: 3
-};
-export const BOT_HISTORY_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-BOTS-HISTORY",
-    objectStore_name: "bots-history",
-    db_version: 2
 };
 
 export const SUMMARIZE_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-SUMMARIZE",
     objectStore_name: "summarize",
-    db_version: 2
+    db_version: 3
 };
 
 export const SIMPLY_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-SIMPLY",
     objectStore_name: "simply",
-    db_version: 2
+    db_version: 3
 };
 
 export const BRAINSTORM_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-BRAINSTORMING",
     objectStore_name: "brainstorming",
-    db_version: 2
+    db_version: 3
 };
 
 export const CHAT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-CHAT",
     objectStore_name: "chat",
-    db_version: 2
+    db_version: 3
 };
-
-// Local storage
-export const enum STORAGE_KEYS_CHAT {
-    CHAT_TEMPERATURE = "CHAT_TEMPERATURE",
-    CHAT_SYSTEM_PROMPT = "CHAT_SYSTEM_PROMPT",
-    CHAT_MAX_TOKENS = "CHAT_MAX_TOKENS"
-}
 
 export const enum STORAGE_KEYS_SIMPLY {
     SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",

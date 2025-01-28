@@ -21,7 +21,6 @@ import { DBMessage, DBObject, StorageService } from "../../service/storage";
 export type ChatMessage = DBMessage<ChatResponse>;
 
 export interface ChatOptions {
-    favorite: boolean;
     system: string;
     maxTokens: number;
     temperature: number;
@@ -108,7 +107,6 @@ const Chat = () => {
         setIsLoading(true);
         const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
         const options: ChatOptions = {
-            favorite: false,
             system: system ? system : "",
             maxTokens: max_output_tokens,
             temperature: temperature //TODO model LLM.llm_name übergeben?
@@ -232,7 +230,6 @@ const Chat = () => {
     const onTemperatureChanged = (temp: number) => {
         setTemperature(temp);
         storageService.update(undefined, {
-            favorite: false,
             system: systemPrompt ? systemPrompt : "",
             maxTokens: max_output_tokens,
             temperature: temp
@@ -245,7 +242,6 @@ const Chat = () => {
         } else {
             setMaxOutputTokens(maxTokens);
             storageService.update(undefined, {
-                favorite: false,
                 system: systemPrompt ? systemPrompt : "",
                 maxTokens: maxTokens,
                 temperature: temperature
@@ -256,7 +252,6 @@ const Chat = () => {
     const onSystemPromptChanged = (systemPrompt: string) => {
         setSystemPrompt(systemPrompt);
         storageService.update(undefined, {
-            favorite: false,
             system: systemPrompt ? systemPrompt : "",
             maxTokens: max_output_tokens,
             temperature: temperature

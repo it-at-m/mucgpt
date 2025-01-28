@@ -14,8 +14,9 @@ import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
-import { BOT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
+import { BOT_STORE, CHAT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
+import { StorageService } from "../../service/storage";
 
 const formatDate = (date: Date) => {
     let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -59,6 +60,8 @@ export const Layout = () => {
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
+        //do migrations for chat
+        new StorageService<any, any>(CHAT_STORE, undefined).connectToDB();
         if (id) {
             botStorageService.getBotConfig(id).then(bot => {
                 if (bot) setTitle([bot.id as string, bot.title]);

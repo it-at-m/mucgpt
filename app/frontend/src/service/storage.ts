@@ -1,7 +1,8 @@
-import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
+import { openDB, IDBPDatabase } from "idb";
 
 import { v4 as uuid } from "uuid";
 import { IndexedDBStorage } from "./indexedDBStorage";
+import { migrateChats } from "./migration";
 
 /**
  * Represents a database object that stores messages and configuration data.
@@ -15,10 +16,6 @@ export interface DBObject<M, C> {
     config: C;
 }
 
-export interface LegacDbObject {
-    id?: string;
-    Data: { Answers: [string, string]; LastEdited: number };
-}
 /**
  * Represents a message stored in the database.
  */
@@ -49,22 +46,14 @@ export class StorageService<M, C> {
 
     async connectToDB(): Promise<IDBPDatabase<DBObject<M, C>>> {
         return openDB<DBObject<M, C>>(this.config.db_name, this.config.db_version, {
-            upgrade: (db, _oldVersion, _newVersion, transaction) => {
-                this.onUpgrade(db, transaction);
+            upgrade: (db, oldVersion, newVersion, transaction, _event) => {
+                return migrateChats(db, oldVersion, newVersion, transaction, _event, this.config.objectStore_name);
             }
         });
     }
-    async onUpgrade(db: IDBPDatabase<DBObject<M, C>>, transaction: IDBPTransaction<DBObject<M, C>, string, "versionchange">) {
-        let storeName = this.config.objectStore_name;
-        if (!db.objectStoreNames.contains(storeName)) {
-            db.createObjectStore(storeName, { keyPath: "id" });
-        } else if (transaction) {
-            transaction.objectStore(storeName).clear();
-        }
-    }
 
     onError(request: any) {
-        console.error("Error", request.error);
+        console.error("Error", JSON.stringify(request));
     }
 
     /**

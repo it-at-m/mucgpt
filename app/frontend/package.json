@@ -23,7 +23,7 @@
     "dompurify": "3.2.3",
     "i18next": "23.16.8",
     "markmap-common": "0.18.9",
-    "markmap-lib": "0.18.5",
+    "markmap-lib": "0.18.9",
     "markmap-toolbar": "0.18.5",
     "markmap-view": "0.18.5",
     "mermaid": "11.4.1",

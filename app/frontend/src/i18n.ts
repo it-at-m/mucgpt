@@ -26,7 +26,7 @@ i18n
                     menu: {
                         own_bots: "Eigene Assistenten",
                         community_bots: "Community Assistenten",
-                        no_bots: "Keine Assisteneten gefunden",
+                        no_bots: "Keine Assistenten gefunden",
                         soon: "In Entwicklung..."
                     },
                     chat: {

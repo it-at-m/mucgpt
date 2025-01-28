@@ -3,6 +3,7 @@ import {
     AskResponse,
     BrainstormRequest,
     ChatRequest,
+    ChatTurn,
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
@@ -11,6 +12,9 @@ import {
     SumRequest,
     SumResponse
 } from "./models";
+
+const CHAT_NAME_PROMPT =
+    "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
     const url = options.shouldStream ? "/api/chat_stream" : "/api/chat";
@@ -174,4 +178,42 @@ export async function createBotApi(options: CreateBotRequest): Promise<Response>
             max_output_tokens: options.max_output_tokens
         })
     });
+}
+
+export async function createChatName(
+    query: string,
+    answer: string,
+    language: string,
+    temperature: number,
+    system_message: string,
+    max_output_tokens: number,
+    model: string
+) {
+    const history: ChatTurn[] = [{ user: query, bot: answer }];
+    const request: ChatRequest = {
+        history: [
+            ...history,
+            {
+                user: CHAT_NAME_PROMPT,
+                bot: undefined
+            }
+        ],
+        shouldStream: false,
+        language: language,
+        temperature: temperature,
+        system_message: system_message,
+        max_output_tokens: max_output_tokens,
+        model: model
+    };
+    const response = await chatApi(request);
+    handleRedirect(response);
+
+    if (!response.body) {
+        throw Error("No response body");
+    }
+    const parsedResponse = (await response.json()) as SimplyResponse;
+    if (response.status > 299 || !response.ok) {
+        throw Error(parsedResponse.error || "Unknown error");
+    }
+    return parsedResponse.content;
 }

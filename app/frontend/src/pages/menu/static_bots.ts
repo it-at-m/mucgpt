@@ -92,7 +92,7 @@ export const arielle_bot: Bot = {
         "Dieser Assistent erstellt syntaktisch korrekte Mermaid-Diagramme in Markdown für verschiedene Diagrammtypen basierend auf den bereitgestellten Daten und dem gewünschten Diagrammtyp.",
     system_message: arielle_system,
     publish: true,
-    id: 0,
+    id: "0",
     temperature: 1.0,
     max_output_tokens: 4096
 };
@@ -430,7 +430,7 @@ export const sherlock_bot: Bot = {
     description: sherlock_description,
     system_message: sherlock_system,
     publish: true,
-    id: 1,
+    id: "1",
     temperature: 0.1,
     max_output_tokens: 4096
 };

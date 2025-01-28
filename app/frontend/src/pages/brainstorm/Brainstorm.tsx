@@ -9,11 +9,15 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from "react-i18next";
-import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { BRAINSTORM_STORE } from "../../constants";
+import { DBMessage, StorageService } from "../../service/storage";
+import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
+
+type BrainstormMessage = DBMessage<AskResponse>;
 
 const Brainstorm = () => {
     const { language } = useContext(LanguageContext);
@@ -26,29 +30,17 @@ const Brainstorm = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+    const [answers, setAnswers] = useState<BrainstormMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-BRAINSTORMING", objectStore_name: "brainstorming", db_version: 2 };
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE, active_chat);
 
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
+    const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
+    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
 
     useEffect(() => {
-        error && setError(undefined);
-        setIsLoading(true);
-        checkStructurOfDB(storage);
-        getHighestKeyInDB(storage).then(highestKey => {
-            setIdCounter(highestKey + 1);
-            setCurrentId(highestKey);
-        });
-        getStartDataFromDB(storage, currentId).then(stored => {
-            if (stored) {
-                setAnswers([...answers.concat(stored.Data.Answers)]);
-                lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
-            }
-        });
-        setIsLoading(false);
+        setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -67,20 +59,19 @@ const Brainstorm = () => {
                 model: LLM.llm_name
             };
             const result = await brainstormApi(request);
-            setAnswers([...answers, [question, result]]);
-            saveToDB([question, result], storage, currentId, idCounter, setCurrentId, setIdCounter);
+            const completeAnswer: BrainstormMessage = { user: question, response: result };
+
+            setAnswers([...answers, completeAnswer]);
+            if (storageService.getActiveChatId()) await storageService.appendMessage(completeAnswer);
+            else {
+                const id = await storageService.create([completeAnswer], undefined);
+                setActiveChat(id);
+            }
         } catch (e) {
             setError(e);
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        setAnswers([]);
-        deleteChatFromDB(storage, currentId, setAnswers, true, lastQuestionRef);
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -100,42 +91,21 @@ const Brainstorm = () => {
         />
     );
     const examplesComponent = <ExampleListBrainstorm onExampleClicked={onExampleClicked} />;
+
     const answerList = (
         <>
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer[0]}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storage}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<Mindmap markdown={answer[1].answer}></Mindmap>}
+                    botmsg={<Mindmap markdown={answer.response.answer}></Mindmap>}
                 ></ChatTurnComponent>
             ))}
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storage}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

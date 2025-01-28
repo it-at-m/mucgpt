@@ -1,13 +1,17 @@
-import { Link } from "react-router-dom";
 import styles from "./Menu.module.css";
+
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AddBotButton } from "../../components/AddBotButton";
-import { useEffect, useState } from "react";
-import { getAllBots, storeBot } from "../../service/storage";
-import { Bot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
+import { useEffect, useState } from "react";
+
+import { AddBotButton } from "../../components/AddBotButton";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
+import { BotStorageService } from "../../service/botstorage";
+import { Bot } from "../../api/models";
 import { arielle_bot, sherlock_bot } from "./static_bots";
+import { BOT_STORE } from "../../constants";
+import { migrate_old_bots } from "../../service/migration";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -16,18 +20,28 @@ const Menu = () => {
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
 
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+
     useEffect(() => {
         const arielle: Bot = arielle_bot;
         const sherlock: Bot = sherlock_bot;
-        storeBot(arielle);
-        storeBot(sherlock);
-        setCommunityBots([arielle, sherlock]);
-        getAllBots().then(bots => {
-            if (bots) {
-                setBots(bots);
-            } else {
-                setBots([]);
-            }
+
+        migrate_old_bots().then(() => {
+            return botStorageService
+                .getBotConfig(arielle.id as string)
+                .then(bot => {
+                    if (!bot) botStorageService.createBotConfig(arielle, arielle.id as string);
+                })
+                .then(async () => {
+                    const bot = await botStorageService.getBotConfig(sherlock.id as string);
+                    if (!bot) botStorageService.createBotConfig(sherlock, sherlock.id as string);
+                })
+                .finally(() => {
+                    setCommunityBots([arielle, sherlock]);
+                    botStorageService.getAllBotConfigs().then(bots => {
+                        setBots(bots);
+                    });
+                });
         });
     }, []);
 
@@ -67,8 +81,8 @@ const Menu = () => {
             <div className={styles.row}>
                 {bots.map(
                     (bot: Bot, _) =>
-                        bot.id != 0 &&
-                        bot.id != 1 && ( //Arielle
+                        bot.id !== arielle_bot.id &&
+                        bot.id !== sherlock_bot.id && (
                             <Tooltip content={bot.title} relationship="description" positioning="below">
                                 <Link to={`/bot/${bot.id}`} className={styles.box}>
                                     <span>{bot.title}</span>
@@ -76,7 +90,7 @@ const Menu = () => {
                             </Tooltip>
                         )
                 )}
-                {bots.length === 1 && <div>{t("menu.no_bots")}</div>}
+                {bots.length === 2 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}>{t("menu.community_bots")}</div>
             <div className={styles.row}>

@@ -17,11 +17,12 @@
   },
   "dependencies": {
     "@fluentui/react": "8.122.4",
-    "@fluentui/react-icons": "2.0.270",
     "@fluentui/react-components": "9.56.8",
+    "@fluentui/react-icons": "2.0.270",
     "@react-spring/web": "9.7.5",
     "dompurify": "3.2.3",
     "i18next": "23.16.8",
+    "idb": "^8.0.1",
     "markmap-common": "0.18.5",
     "markmap-lib": "0.18.5",
     "markmap-toolbar": "0.18.5",
@@ -36,7 +37,8 @@
     "react-syntax-highlighter": "15.6.1",
     "rehype-raw": "7.0.0",
     "remark": "15.0.1",
-    "remark-gfm": "4.0.0"
+    "remark-gfm": "4.0.0",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@types/dompurify": "3.2.0",

@@ -15,11 +15,11 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.5.1",
-    "fastapi[standard]==0.115.6",
-    "langchain==0.3.14",
+    "mistral-common==1.5.2",
+    "fastapi[standard]==0.115.7",
     "langchain-core==0.3.31",
-    "langchain_community==0.3.14",
+    "langchain==0.3.15",
+    "langchain_community==0.3.15",
     "openai==1.60.2",
     "langchain-openai==0.3.2",
     "openai==1.59.4",

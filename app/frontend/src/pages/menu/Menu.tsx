@@ -42,7 +42,7 @@ const Menu = () => {
                         setBots(bots);
                     });
                 });
-        })
+        });
     }, []);
 
     const onAddBot = () => {

@@ -37,7 +37,6 @@ export async function migrate_old_bots() {
         const oldbots: LegacyBot[] = (await db.getAll(LEGACY_BOT_STORE.objectStore_name)) as LegacyBot[];
         await db.clear(LEGACY_BOT_STORE.objectStore_name);
         for (let oldbot of oldbots) {
-            debugger;
             if (oldbot.id == 0 || oldbot.id == 1) continue; //skip the default bots
             let newBot = {
                 title: oldbot.title,

@@ -95,7 +95,6 @@ export const ChatsettingsDrawer = ({
                 </div>
             </div>
 
-
             <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
                 <InfoLabel
                     info={

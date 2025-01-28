@@ -78,7 +78,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     };
     const onTitleChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setTitle(newValue.value);
-        else setTitle("Assistent " + bot.id);
+        else setTitle("");
     };
     const onDescriptionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setDescription(newValue.value);
@@ -88,16 +88,19 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const toggleReadOnly = () => {
         setEditable(!isEditable);
         if (isEditable) {
-            const newBot = {
+            const updatedTitle = title.trim() !== "" ? title : `Assistent ${bot.id}`;
+            setTitle(updatedTitle);
+            const updatedBot = {
                 ...bot,
-                temperature: temperature,
-                max_output_tokens: max_output_tokens,
+                temperature,
+                max_output_tokens,
                 system_message: systemPrompt,
-                title: title,
-                description: description,
-                publish: publish
+                title: updatedTitle,
+                description,
+                publish
             };
-            onBotChange(newBot);
+            onBotChange(updatedBot);
+            window.location.reload();
         }
     };
 

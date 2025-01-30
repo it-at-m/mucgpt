@@ -30,7 +30,72 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible navigation="linear" defaultOpenItems="11">
+                <Accordion multiple collapsible defaultOpenItems="12">
+
+                    <AccordionItem value="12">
+                        <AccordionHeader>[1.2.3] 30.01.2025</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t("version.added")}</h3>
+                                <ul>
+                                    <li>
+                                        Neuer Community-Assistent Sherlock 🕵️‍♂️. Unterstützt beim Review und der Erstellung von Testfällen. Entwickelt von von itm.km73.
+                                    </li>
+                                </ul>
+                                <h3>{t("version.fixed")}</h3>
+                                <ul>
+                                    <li>
+                                        Brainstorming:
+                                        <ul>
+                                            <li>Mindmaps werden nun bei dunklen Design richtig dargestellt.</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Einfache Sprache:
+                                        <ul>
+                                            <li>Links werden nun beim Übersetzen in einfache Sprache ignoriert. Dies hatte zu Halluzinationen geführt. </li>
+                                        </ul>
+                                    </li>
+                                    <li> Es ist nun möglich, partielle Codeblöcke in Chrome zu kopieren. Dies hatte zuvor zu Zeilenumbrüchen nach jedem Wort geführt.</li>
+                                    <li>Ein Fehler bei der Kommunikation mit Mistral Modellen über die API wurde behoben.</li>
+
+                                </ul>
+                                <h3>{t("version.changed")}</h3>
+                                <ul>
+                                    <li>
+                                        Brainstorming:
+                                        <ul>
+                                            <li>Mindmap Erstellung wurde verbessert. Mehr Kindknoten werden generiert. Dies führt zu größeren, detaillierteren Mindmaps.</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Assistenten:
+                                        <ul>
+                                            <li>
+                                                Assistenten können nun mehrere Chatverläufe haben. Ähnlich wie bei der Chatfunktion kann ein Chatverlauf umbenannt und favorisiert werden.
+                                                Die Daten werden ausschließlich lokal im Browser gespeichert.
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Einfache Sprache:
+                                        <ul>
+                                            Titel des <i>leichte Sprache</i> Beispiels wurde umbenannt. Es handelt sich hierbei richtigerweise um einen Artikel zum Arbeitsschutzgesetz.
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Generelle Oberflächenverbesserungen:
+                                        <ul>
+                                            <li>Jede Funktion (z.B. Chat, Zusammenfassen) hat nun die Aktionselemente in einer immer geöffneten Sidebar auf der Linken Seite.</li>
+                                            <li>Das lokale Speichermanagement in der Browserdatenbank wurde verbessert und vereinheitlicht.
+                                                Bestehende Daten (alte Chats und Assistenten) werden migriert.
+                                                ⚠ Konversationen in <i>Zusammenfassen</i>, <i>Brainstorming</i> und <i>Einfache Sprache</i> bleiben nicht erhalten.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="11">
                         <AccordionHeader>[1.2.2] 07.11.2024</AccordionHeader>
                         <AccordionPanel>

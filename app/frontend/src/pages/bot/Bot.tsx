@@ -40,7 +40,7 @@ const BotChat = () => {
 
     const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
-    const botChatStorage: StorageService<ChatResponse, Bot> = botStorageService.getChatStorageService(bot_id, active_chat);
+    const botChatStorage: StorageService<ChatResponse, Bot> = botStorageService.getChatStorageService(active_chat);
     //history
     const [allChats, setAllChats] = useState<DBObject<ChatResponse, {}>[]>([]);
     //config
@@ -143,7 +143,7 @@ const BotChat = () => {
             }
             //chat present, if not create.
             if (active_chat) {
-                await botStorageService.appendMessage(bot_id, active_chat, { user: question, response: latestResponse });
+                await botChatStorage.appendMessage({ user: question, response: latestResponse }, undefined);
             } else {
                 // generate chat name for first chat
                 const chatname = await createChatName(

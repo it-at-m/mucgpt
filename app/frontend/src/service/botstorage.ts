@@ -28,13 +28,12 @@ export class BotStorageService {
      ***************************/
 
     /**
-     * Returns a chat storage service for the specified bot and chat.
-     * @param bot_id The ID of the bot.
-     * @param chat_id (Optional) The ID of the chat.
-     * @returns A new instance of the StorageService class for managing chat storage.
+     * Returns a new instance of the StorageService class for chat storage.
+     * @param chat_id - Optional chat ID.
+     * @returns A new instance of the StorageService class.
      */
-    getChatStorageService(bot_id: string, chat_id?: string) {
-        return new StorageService<ChatResponse, Bot>(this.config, BotStorageService.GENERATE_BOT_CHAT_ID(bot_id, chat_id));
+    getChatStorageService(chat_id?: string) {
+        return new StorageService<ChatResponse, Bot>(this.config, chat_id);
     }
 
     /**
@@ -104,15 +103,10 @@ export class BotStorageService {
      ***************************/
 
     async createChat(bot_id: string, messages: DBMessage<ChatResponse>[], chatname: string) {
-        const storageService = this.getChatStorageService(bot_id, undefined);
+        const storageService = new StorageService<ChatResponse, Bot>(this.config, BotStorageService.GENERATE_BOT_CHAT_ID(bot_id, undefined));
         const id = BotStorageService.GENERATE_BOT_CHAT_ID(bot_id, uuid());
         await storageService.create(messages, undefined, id, chatname, false);
         return id;
-    }
-
-    async appendMessage(bot_id: string, chat_id: string, message: DBMessage<ChatResponse>) {
-        const storageService = this.getChatStorageService(bot_id, chat_id);
-        await storageService.appendMessage(message);
     }
 
     async getNewestChatForBot(bot_id: string) {

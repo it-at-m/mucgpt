@@ -44,19 +44,19 @@
         transform: translateY(0);
     }
     25% {
-        content: ".💡";
+        content: ".🐦";
         transform: translateY(-10px);
     }
     50% {
-        content: "..💡";
+        content: "..🐦";
         transform: translateY(-20px);
     }
     75% {
-        content: "...💡";
+        content: "...🐦";
         transform: translateY(-30px);
     }
     100% {
-        content: "....💡";
+        content: "....🐦";
         transform: translateY(0);
     }
 }

@@ -27,7 +27,7 @@ def num_tokens_from_mistral_model(messages: list[BaseMessage], model: str):
     if(model == "mistral-large-2407" ):
         tokenizer = MistralTokenizer.v3()
     else:
-        tokenizer = MistralTokenizer.from_model(model) 
+        tokenizer = MistralTokenizer.from_model(model)
     # convert langchain msgs to mistral format
     mistral_messages = []
     for message in messages:
@@ -66,6 +66,7 @@ def num_tokens_from_openai_model(messages: list[BaseMessage], model: str):
         "gpt-4o",
         "gpt-4o-mini",
         "gpt-4o-2024-05-13",
+        "gpt-4o-mini-2024-07-18",
         }:
         tokens_per_message = 3
     elif model == "gpt-3.5-turbo-0301":

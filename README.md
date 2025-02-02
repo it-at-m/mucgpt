@@ -98,7 +98,8 @@ cd app/frontend
 npm install
 ```
 ### Configure
- Configure your environment. For that copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the parent directory [.env](.env). Add at least one model by providing one OpenAi comptabile endpoint.
+1.  Configure your environment. For that copy the content of the empty config from [/config/.env.NewHorizons](/config/.env.NewHorizons) to the parent directory [.env](.env).
+2. Insert the API Key you received from us into the `.env` file
 
 ### Run locally
 ```bash

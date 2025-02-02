@@ -123,10 +123,10 @@ timeline
     2024-07 : Chat History : "Users can save their chat history in the browser."
     2024-08 : LiveCycle LLM : "The employed LLM can be configured to meet specific requirements."
     2024-09 : Simplified Language : "Translate text into simple or easy-to-understand language."
-    2024-10 : Own GPTs : "Create and generate custom assistants for specific tasks."
-    2024-12 : Own GPTs : "Share Assistants with the others."
-    2025-01 : Own GPTs : "Use Websearch to provide additional knowledge."
-    2025-03: Chat with Documents : "Own GPTs will have access to shared knowledge and can answer questions based on provided sources. Consequently, MUCGPT can be utilized for internal knowledge management."
+    2025-01 : Own GPTs : "Create and generate custom assistants for specific tasks."
+    2025-02 : Own GPTs : "Share Assistants with the others."
+    2025-04 : Own GPTs : "Use Websearch to provide additional knowledge."
+    2025-06: Chat with Documents : "Own GPTs will have access to shared knowledge and can answer questions based on provided sources. Consequently, MUCGPT can be utilized for internal knowledge management."
 ```
 
 

@@ -16,7 +16,7 @@
     "lint": "prettier . --check "
   },
   "dependencies": {
-    "@fluentui/react": "8.122.8",
+    "@fluentui/react": "8.122.9",
     "@fluentui/react-icons": "2.0.271",
     "@fluentui/react-components": "9.58.0",
     "@react-spring/web": "9.7.5",

@@ -33,11 +33,14 @@ class ConfigHelper:
             llm_name= getenv(f"{prefix}LLM_NAME"),
             deployment= getenv(f"{prefix}DEPLOYMENT", ""),
             endpoint= getenv(f"{prefix}ENDPOINT"),
-            api_key= getenv(f"{prefix}API_KEY"),
+            api_key= getenv(f"{prefix}API_KEY", ""),
             max_output_tokens= getenv(f"{prefix}MAX_OUTPUT_TOKENS"),
             max_input_tokens= getenv(f"{prefix}MAX_INPUT_TOKENS"),
             api_version=  getenv(f"{prefix}API_VERSION", ""),
             description = getenv(f"{prefix}DESCRIPTION"),
+            aws_access_key_id = getenv(f"{prefix}AWS_ACCESS_KEY_ID", ""),
+            aws_secret_access_key = getenv(f"{prefix}AWS_SECRET_ACCESS_KEY", ""),
+            aws_region = getenv(f"{prefix}AWS_REGION", "")
         )
         return config
 

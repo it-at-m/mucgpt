@@ -17,9 +17,11 @@ def num_tokens_from_messages(messages: list[BaseMessage], model: str):
         return num_tokens_from_openai_model(messages=messages, model=model)
     elif("mistral" in model):
         return num_tokens_from_mistral_model(messages=messages, model=model)
+    elif("anthropic" in model):
+        return 100 # TODO workaround for the hackaton,  implement correct tokenizer counting
     else:
         raise NotImplementedError(
-            """No tokenizer for model found. currently only openai and mistral are supported."""
+            f'No tokenizer for model found. currently only openai and mistral are supported. {model}'
         )
 def num_tokens_from_mistral_model(messages: list[BaseMessage], model: str):
     """Return the number of tokens used by a list of messages for a given mistral model."""

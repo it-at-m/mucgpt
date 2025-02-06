@@ -32,6 +32,7 @@ dependencies = [
     "gunicorn",
     "sqlalchemy==2.0.37",
     "gitpython==3.1.44",
+    "langchain-aws>=0.2.12",
 ]
 
 [project.optional-dependencies]

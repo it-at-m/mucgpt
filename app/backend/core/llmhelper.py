@@ -1,5 +1,6 @@
 from typing import List
 
+from langchain_aws import ChatBedrock
 from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
 from langchain_core.runnables.base import RunnableSerializable
@@ -48,6 +49,16 @@ def getModel(models: List[ModelsConfig],
                         streaming=streaming,
                         temperature=temperature,
             )
+        elif default_model.type == "BEDROCK":
+               llm = ChatBedrock(
+                        model=default_model.llm_name,
+                        region_name=default_model.aws_region,
+                        max_tokens=max_output_tokens,
+                        streaming=streaming,
+                        temperature=temperature,
+                        aws_access_key_id=default_model.aws_access_key_id,
+                        aws_secret_access_key=default_model.aws_secret_access_key
+                )
         else:
                 raise ModelsConfigurationException(f"Unknown model type: {default_model.type}. Currently only `AZURE` and `OPENAI` are supported.")
 
@@ -95,6 +106,36 @@ def getModel(models: List[ModelsConfig],
                                         n=n,
                                         streaming=streaming,
                                         temperature=temperature,
+                        ).configurable_fields(
+                        temperature=ConfigurableField(
+                                id="llm_temperature",
+                                name="LLM Temperature",
+                                description="The temperature of the LLM",
+                        ),
+                        max_tokens= ConfigurableField(
+                                id="llm_max_tokens",
+                                name="LLM max Tokens",
+                                description="The token Limit of the LLM",
+                        ),
+                        streaming = ConfigurableField(
+                                id="llm_streaming",
+                                name="Streaming",
+                                description="Should the LLM Stream"),
+                        callbacks = ConfigurableField(
+                                id="llm_callbacks",
+                                name="Callbacks",
+                                description="Callbacks for the llm")
+
+                        )
+                elif model.type == "BEDROCK":
+                        alternative = ChatBedrock(
+                                        model=model.llm_name,
+                                        region_name=default_model.aws_region,
+                                        max_tokens=max_output_tokens,
+                                        streaming=streaming,
+                                        temperature=temperature,
+                                        aws_access_key_id=model.aws_access_key_id,
+                                        aws_secret_access_key=model.aws_secret_access_key
                         ).configurable_fields(
                         temperature=ConfigurableField(
                                 id="llm_temperature",

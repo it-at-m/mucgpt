@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, HttpUrl, PositiveInt
 
@@ -10,12 +10,15 @@ class ModelsConfig(BaseModel):
     type: str
     llm_name: str
     deployment: str = ""
-    endpoint: HttpUrl
-    api_key: str
+    endpoint: Optional[HttpUrl]
+    api_key: str = ""
     api_version: str = ""
     max_output_tokens: PositiveInt
     max_input_tokens: PositiveInt
     description: str
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_region: str = ""
 
 class ModelsDTO(BaseModel):
     llm_name: str

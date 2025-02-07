@@ -19,7 +19,7 @@ dependencies = [
     "fastapi[standard]==0.115.7",
     "langchain==0.3.15",
     "langchain-core==0.3.31",
-    "langchain_community==0.3.15",
+    "langchain_community==0.3.17",
     "langchain-openai==0.3.2",
     "openai==1.60.2",
     "langsmith==0.3.2",

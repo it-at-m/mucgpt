@@ -1,4 +1,4 @@
-from logging import getLogger
+import json
 from typing import List
 from uuid import uuid4 as uuid
 
@@ -193,21 +193,7 @@ class DB:
     bots = {}
 
     def __init__(self):
-        self.bots = {}
-        self.bots[self.bot1.id] = {self.bot1.version: self.bot1}
-        self.bots[self.bot2.id] = {self.bot2.version: self.bot2}
-        self.bots[self.bot3.id] = {self.bot3.version: self.bot3}
-        self.bots[self.bot4.id] = {self.bot4.version: self.bot4}
-        self.bots[self.bot5.id] = {self.bot5.version: self.bot5}
-        self.bots[self.bot6.id] = {self.bot6.version: self.bot6}
-        self.bots[self.bot7.id] = {self.bot7.version: self.bot7}
-        self.bots[self.bot8.id] = {self.bot8.version: self.bot8}
-        self.bots[self.bot9.id] = {self.bot9.version: self.bot9}
-        self.bots[self.bot10.id] = {self.bot10.version: self.bot10}
-        self.bots[self.bot11.id] = {self.bot11.version: self.bot11}
-        self.bots[self.bot12.id] = {self.bot12.version: self.bot12}
-        self.bots[self.arielle.id] = {self.arielle.version: self.arielle}
-        self.bots[self.sherlock.id] = {self.sherlock.version: self.sherlock}
+        self.load_from_file('./bots.json')
         
 
     def storeBot(self, bot: Bot) -> str:
@@ -230,21 +216,20 @@ class DB:
             self.bots[id][bot.version] = bot
         else:
             self.bots[id] = {bot.version: bot}
+        self.save_to_file('./bots.json')
         return id
     
     def updateBot(self, bot: Bot): 
         self.bots[bot.id][bot.version] = bot
+        self.save_to_file('./bots.json')
 
     def getBotAllVersions(self, id: str):
         bots = []
         for version in self.bots[id]:
             bots.append(self.bots[id][version])
-        logger = getLogger()
-        logger.info(f"getBotAllVersions: {bots}")
         return bots
     
     def getBot(self, id: str, version:str) -> Bot:
-
         return self.bots[id][version]
 
     def getAllBots(self) -> List[Bot]:
@@ -265,3 +250,12 @@ class DB:
                     if tag not in tags:
                         tags.append(tag)
         return tags
+
+    def save_to_file(self, filename: str):
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(self.bots, f, default=lambda o: o.__dict__, ensure_ascii=False, indent=4)
+
+    def load_from_file(self, filename: str):
+        with open(filename, encoding='utf-8') as f:
+            data = json.load(f)
+            self.bots = {k: {float(vv['version']): Bot(**vv) for vv in v.values()} for k, v in data.items()}

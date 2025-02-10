@@ -11,10 +11,22 @@
     align-items: center;
 }
 
-.historyHeader {
-    margin-left: var(--spacingVerticalS);
+.singlechatcontainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: end;
+    margin-right: var(--spacingVerticalL);
+}
+.header {
+    margin-bottom: 5px;
+    font-size: var(--fontSizeBase400);
+    margin-top: var(--spacingVerticalS);
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
 }
 
 .historyContent {
-    margin-left: var(--spacingVerticalM);
+    margin-left: var(--spacingVerticalL);
+    padding-bottom: var(--spacingVerticalL);
 }

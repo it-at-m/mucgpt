@@ -1,6 +1,5 @@
 import { Delete24Regular, Dismiss24Regular } from "@fluentui/react-icons";
 import {
-    OverlayDrawer,
     Button,
     Slider,
     Label,
@@ -9,8 +8,6 @@ import {
     Field,
     InfoLabel,
     Tooltip,
-    Textarea,
-    TextareaOnChangeData,
     Dropdown,
     Option,
     OptionOnSelectData,
@@ -18,10 +15,9 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { deleteCommunityBotWithId, storeBot, storeCommunityBot } from "../../service/storage_bot";
 import { Sidebar } from "../Sidebar/Sidebar";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -29,39 +25,40 @@ import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
 import { getCommunityBot, Bot } from "../../api";
-import { get } from "http";
+import { CommunityBotStorageService } from "../../service/communitybotstorage";
+import { COMMUNITY_BOT_STORE } from "../../constants";
 import { use } from "i18next";
 interface Props {
+    bot: Bot;
     actions: JSX.Element;
-    temperature: number;
-    max_output_tokens: number;
-    systemPrompt: string;
-    title: string;
-    bot_id: string;
-    version: string;
-    description: string;
+    before_content: JSX.Element;
     isOwner: boolean;
     toOwnBots: () => void;
     allVersions: string[];
+    deleteBot: () => void;
 }
 
 export const CommunityBotSettingsDrawer = ({
+    bot,
     actions,
-    temperature,
-    max_output_tokens,
-    systemPrompt,
-    title,
-    bot_id,
-    version,
-    description,
+    before_content,
     isOwner,
     toOwnBots,
-    allVersions
+    allVersions,
+    deleteBot
 }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const [isLatestVersion, setIsLatestVersion] = useState<boolean>(true);
+    const [temperature, setTemperature] = useState<number>(bot.temperature);
+    const [max_output_tokens, setMaxOutputTokens] = useState<number>(bot.max_output_tokens);
+    const [systemPrompt, setSystemPrompt] = useState<string>(bot.system_message);
+    const [title, setTitle] = useState<string>(bot.title);
+    const [description, setDescription] = useState<string>(bot.description);
+    const [version, setVersion] = useState<string>(bot.version.toString().replace("-", "."));
+    const [id, setID] = useState<string>(bot.id);
+    const communityBotStorageService: CommunityBotStorageService = new CommunityBotStorageService(COMMUNITY_BOT_STORE);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
@@ -76,14 +73,19 @@ export const CommunityBotSettingsDrawer = ({
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => { };
     const onMaxtokensChange: SliderProps["onChange"] = (_, data) => { };
 
-    const deleteBot = () => {
-        window.location.href = "/";
-        deleteCommunityBotWithId(bot_id);
-    };
-
     const onDelteClick = () => {
         setShowDeleteDialog(true);
     };
+
+    useEffect(() => {
+        setTemperature(bot.temperature);
+        setMaxOutputTokens(bot.max_output_tokens);
+        setSystemPrompt(bot.system_message);
+        setTitle(bot.title);
+        setDescription(bot.description);
+        setID(bot.id);
+        setVersion(bot.version.toString().replace("-", "."));
+    }, [bot]);
 
     useEffect(() => {
         for (let i = 0; i < allVersions.length; i++) {
@@ -101,9 +103,9 @@ export const CommunityBotSettingsDrawer = ({
         if (v == undefined || version == v) {
             return
         }
-        version = v;
-        getCommunityBot(bot_id, v).then((bot: Bot) => {
-            storeCommunityBot({ id: bot.id, title: bot.title, version: bot.version });
+        setVersion(v);
+        getCommunityBot(id, v).then((bot: Bot) => {
+            communityBotStorageService.createBotConfig(bot);
             window.location.href = "/#/community-bot/" + bot.id + "/" + v.replace(".", "-");
             window.location.reload();
         });
@@ -111,7 +113,7 @@ export const CommunityBotSettingsDrawer = ({
 
     const content = (
         <>
-            {" "}
+            <>{before_content}</>{" "}
             <div className={styles.bodyContainer}>
                 <div>
                     <Field size="large">

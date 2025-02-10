@@ -8,17 +8,16 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from "react-i18next";
-import { checkStructurOfDB, deleteChatFromDB, getHighestKeyInDB, getStartDataFromDB, indexedDBStorage, saveToDB } from "../../service/storage";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SimplySidebar } from "../../components/SimplySidebar/SimplySidebar";
+import { SIMPLY_STORE, STORAGE_KEYS_SIMPLY } from "../../constants";
+import { DBMessage, StorageService } from "../../service/storage";
+import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 
-const enum STORAGE_KEYS {
-    SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
-    SIMPLY_OUTPUT_TYPE = "SIMPLY_OUTPUT_TYPE"
-}
+type SimplyMessage = DBMessage<AskResponse>;
 
 const Simply = () => {
     const { language } = useContext(LanguageContext);
@@ -28,35 +27,23 @@ const Simply = () => {
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
 
-    const outputType_pref = localStorage.getItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE) || "plain";
+    const outputType_pref = localStorage.getItem(STORAGE_KEYS_SIMPLY.SIMPLY_OUTPUT_TYPE) || "plain";
     const [outputType, setOutputType] = useState<string>(outputType_pref);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
 
-    const [answers, setAnswers] = useState<[user: string, response: AskResponse][]>([]);
+    const [answers, setAnswers] = useState<SimplyMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const storage: indexedDBStorage = { db_name: "MUCGPT-SIMPLY", objectStore_name: "simply", db_version: 2 };
+    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(SIMPLY_STORE, active_chat);
 
-    const [currentId, setCurrentId] = useState<number>(0);
-    const [idCounter, setIdCounter] = useState<number>(0);
+    const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
+    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
 
     useEffect(() => {
-        error && setError(undefined);
-        setIsLoading(true);
-        checkStructurOfDB(storage);
-        getHighestKeyInDB(storage).then(highestKey => {
-            setIdCounter(highestKey + 1);
-            setCurrentId(highestKey);
-        });
-        getStartDataFromDB(storage, currentId).then(stored => {
-            if (stored) {
-                setAnswers([...answers.concat(stored.Data.Answers)]);
-                lastQuestionRef.current = stored.Data.Answers[stored.Data.Answers.length - 1][0];
-            }
-        });
-        setIsLoading(false);
+        setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
     }, []);
 
     const onExampleClicked = (example: string) => {
@@ -76,8 +63,14 @@ const Simply = () => {
             };
             const parsedResponse: SimplyResponse = await simplyApi(request);
             const askResponse: AskResponse = { answer: parsedResponse.content, error: parsedResponse.error };
-            setAnswers([...answers, [question, askResponse]]);
-            saveToDB([question, askResponse], storage, currentId, idCounter, setCurrentId, setIdCounter, language);
+            const completeAnswer: SimplyMessage = { user: question, response: askResponse };
+
+            setAnswers([...answers, completeAnswer]);
+            if (storageService.getActiveChatId()) await storageService.appendMessage(completeAnswer);
+            else {
+                const id = await storageService.create([completeAnswer], undefined);
+                setActiveChat(id);
+            }
         } catch (e) {
             setError(e);
         } finally {
@@ -85,18 +78,11 @@ const Simply = () => {
         }
     };
 
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        setAnswers([]);
-        deleteChatFromDB(storage, currentId, setAnswers, true, lastQuestionRef);
-    };
-
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     const onOutputTypeChanged = (newValue: string) => {
         setOutputType(newValue);
-        localStorage.setItem(STORAGE_KEYS.SIMPLY_OUTPUT_TYPE, newValue);
+        localStorage.setItem(STORAGE_KEYS_SIMPLY.SIMPLY_OUTPUT_TYPE, newValue);
     };
 
     const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
@@ -120,37 +106,15 @@ const Simply = () => {
             {answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={
-                        <UserChatMessage
-                            message={answer[0]}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storage}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<Answer key={index} answer={answer[1]} setQuestion={question => setQuestion(question)} />}
+                    botmsg={<Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
                 ></ChatTurnComponent>
             ))}
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={
-                        <UserChatMessage
-                            message={lastQuestionRef.current}
-                            setAnswers={setAnswers}
-                            setQuestion={setQuestion}
-                            answers={answers}
-                            storage={storage}
-                            lastQuestionRef={lastQuestionRef}
-                            current_id={currentId}
-                            is_bot={false}
-                        />
-                    }
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

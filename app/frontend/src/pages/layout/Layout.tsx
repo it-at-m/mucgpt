@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useContext, useEffect, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
@@ -8,14 +8,16 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi, StoredCommunityBot } from "../../api";
+import { ApplicationConfig, Bot, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { getBotName, getCommunityBotWithId } from "../../service/storage_bot";
 import { LightContext } from "./LightContext";
-import { version } from "os";
+import { BOT_STORE, CHAT_STORE, COMMUNITY_BOT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
+import { BotStorageService } from "../../service/botstorage";
+import { StorageService } from "../../service/storage";
+import { CommunityBotStorageService } from "../../service/communitybotstorage";
 
 const formatDate = (date: Date) => {
     let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -28,31 +30,7 @@ export const Layout = () => {
     const navigate = useNavigate();
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
-    const [config, setConfig] = useState<ApplicationConfig>({
-        models: [
-            {
-                llm_name: "KICC GPT",
-                max_input_tokens: 128000,
-                max_output_tokens: 128000,
-                description: ""
-            },
-            {
-                llm_name: "Unknown GPT",
-                max_input_tokens: 128000,
-                max_output_tokens: 128000,
-                description: ""
-            }
-        ],
-        frontend: {
-            labels: {
-                env_name: "MUC tschibidi-C"
-            },
-            alternative_logo: true,
-            enable_simply: true
-        },
-        version: "DEV 1.0.0",
-        commit: "152b175"
-    });
+    const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
     const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
     const ligth_theme_pref =
@@ -68,7 +46,19 @@ export const Layout = () => {
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
     const [botTitle, setBotTitle] = useState<[string, string]>(["0", ""]);
-    const [communityBot, setCommunityBot] = useState<StoredCommunityBot>({ id: "", title: "", version: 0 });
+    const mockBot: Bot = {
+        id: "",
+        title: "",
+        version: 0,
+        description: "",
+        system_message: "",
+        publish: false,
+        temperature: 0,
+        max_output_tokens: 0,
+        tags: [],
+        owner: "",
+    }
+    const [communityBot, setCommunityBot] = useState<Bot>(mockBot);
 
     const onFontscaleChange = (fontscale: number) => {
         setFontscaling(fontscale);
@@ -82,17 +72,24 @@ export const Layout = () => {
         setTheme(adjustTheme(light, fontscaling));
     };
 
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+    const communityBotStorageService: CommunityBotStorageService = new CommunityBotStorageService(COMMUNITY_BOT_STORE);
+
     useEffect(() => {
+        //do migrations for chat
+        new StorageService<any, any>(CHAT_STORE, undefined).connectToDB();
         if (id) {
-            getBotName(id).then(title => {
-                setBotTitle(title);
+            botStorageService.getBotConfig(id).then(bot => {
+                if (bot) setBotTitle([bot.id as string, bot.title]);
+            });
+            communityBotStorageService.getBotConfig(id).then(bot => {
+                if (bot) {
+                    setCommunityBot(bot);
+                } else {
+                    setCommunityBot(mockBot);
+                }
             }).catch(() => {
-                setBotTitle(["0", ""]);
-            });;
-            getCommunityBotWithId(id).then(bot => {
-                setCommunityBot(bot);
-            }).catch(() => {
-                setCommunityBot({ id: "", title: "", version: 0 });
+                setCommunityBot(mockBot);
             });
         }
         configApi().then(
@@ -114,15 +111,17 @@ export const Layout = () => {
 
     useEffect(() => {
         if (id) {
-            getBotName(id).then(title => {
-                setBotTitle(title);
+            botStorageService.getBotConfig(id).then(bot => {
+                if (bot) setBotTitle([bot.id as string, bot.title]);
+            });
+            communityBotStorageService.getBotConfig(id).then(bot => {
+                if (bot) {
+                    setCommunityBot(bot);
+                } else {
+                    setCommunityBot(mockBot);
+                }
             }).catch(() => {
-                setBotTitle(["0", ""]);
-            });;
-            getCommunityBotWithId(id).then(bot => {
-                setCommunityBot(bot);
-            }).catch(() => {
-                setCommunityBot({ id: "", title: "", version: 0 });
+                setCommunityBot(mockBot);
             });
         }
     }, [id, version]);

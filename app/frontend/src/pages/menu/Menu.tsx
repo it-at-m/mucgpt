@@ -1,46 +1,55 @@
-import { Link } from "react-router-dom";
 import styles from "./Menu.module.css";
+
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AddBotButton } from "../../components/AddBotButton";
-import { useEffect, useState } from "react";
-import { getAllBots, getAllCommunityBots, storeBot, storeCommunityBot } from "../../service/storage_bot";
-import { Bot, StoredCommunityBot } from "../../api/models";
 import { Tooltip } from "@fluentui/react-components";
+import { useEffect, useState } from "react";
+
+import { AddBotButton } from "../../components/AddBotButton";
+import { BotStorageService } from "../../service/botstorage";
+import { Bot } from "../../api/models";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { SearchBotButton } from "../../components/SearchBotButton/SearchBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotsDialog/CommuintyBotsDialog";
+import { BOT_STORE, COMMUNITY_BOT_STORE } from "../../constants";
+import { migrate_old_bots } from "../../service/migration";
+import { CommunityBotStorageService } from "../../service/communitybotstorage";
 
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
-    const [communityBots, setCommunityBots] = useState<StoredCommunityBot[]>([]);
+    const [communityBots, setCommunityBots] = useState<Bot[]>([]);
 
     const [showAddBot, setShowAddBot] = useState<boolean>(false);
     const [showSearachBot, setShowSearachBot] = useState<boolean>(false);
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
 
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+    const communityBotStorageService: CommunityBotStorageService = new CommunityBotStorageService(COMMUNITY_BOT_STORE);
+
     useEffect(() => {
-        getAllBots().then(bots => {
-            if (bots) {
+
+        migrate_old_bots().then(() => {
+            return botStorageService.getAllBotConfigs().then(bots => {
                 setBots(bots);
-            } else {
-                setBots([]);
-            }
+            });
         });
-        getAllCommunityBots().then(bots => {
+        communityBotStorageService.getAllBotConfigs().then(bots => {
             if (bots) {
                 setCommunityBots(bots);
-            } else {
+            }
+            else {
                 setCommunityBots([]);
             }
         });
     }, []);
 
     useEffect(() => {
-        getAllCommunityBots().then(bots => {
+        communityBotStorageService.getAllBotConfigs().then(bots => {
             if (bots) {
                 setCommunityBots(bots);
-            } else {
+            }
+            else {
                 setCommunityBots([]);
             }
         });
@@ -106,7 +115,7 @@ const Menu = () => {
                 setTakeCommunityBots={setGetCommunityBots}
             />
             <div className={styles.row}>
-                {communityBots.map((bot: StoredCommunityBot, _) => (
+                {communityBots.map((bot: Bot, _) => (
                     <Tooltip content={bot.title} relationship="description" positioning="below">
                         <Link to={`/community-bot/${bot.id}/${String(bot.version).replace(".", "-")}`} className={styles.box}>
                             {bot.title}

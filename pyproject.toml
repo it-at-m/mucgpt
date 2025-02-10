@@ -15,22 +15,22 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.5.1",
-    "fastapi[standard]==0.115.6",
-    "langchain==0.3.14",
-    "langchain-core==0.3.29",
-    "langchain_community==0.3.14",
-    "langchain-openai==0.2.14",
-    "openai==1.59.4",
-    "langsmith==0.2.10",
+    "mistral-common==1.5.2",
+    "fastapi[standard]==0.115.7",
+    "langchain==0.3.15",
+    "langchain-core==0.3.31",
+    "langchain_community==0.3.15",
+    "langchain-openai==0.3.2",
+    "openai==1.60.2",
+    "langsmith==0.3.2",
     "joserfc",
     "tiktoken",
-    "pypdf==5.1.0",
+    "pypdf==5.2.0",
     "uvicorn==0.34.0",
     "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",
     "gunicorn",
-    "sqlalchemy==2.0.36",
+    "sqlalchemy==2.0.37",
     "gitpython==3.1.44",
 ]
 
@@ -48,8 +48,8 @@ test = [
 [tool.uv]
 dev-dependencies = [
     "ipykernel==6.29.5",
-    "pre-commit==4.0.1",
-    "ruff==0.8.6",
+    "pre-commit==4.1.0",
+    "ruff==0.9.3",
 ]
 
 [[tool.uv.index]]

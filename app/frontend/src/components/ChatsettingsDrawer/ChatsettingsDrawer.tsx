@@ -8,12 +8,11 @@ import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { Sidebar } from "../Sidebar/Sidebar";
 interface Props {
     temperature: number;
-    setTemperature: (temp: number, id: number) => void;
+    setTemperature: (temp: number) => void;
     max_output_tokens: number;
-    setMaxTokens: (maxTokens: number, id: number) => void;
+    setMaxTokens: (maxTokens: number) => void;
     systemPrompt: string;
-    setSystemPrompt: (systemPrompt: string, id: number) => void;
-    current_id: number;
+    setSystemPrompt: (systemPrompt: string) => void;
     actions: ReactNode;
     content: ReactNode;
 }
@@ -25,7 +24,6 @@ export const ChatsettingsDrawer = ({
     setMaxTokens,
     systemPrompt,
     setSystemPrompt,
-    current_id,
     actions,
     content
 }: Props) => {
@@ -42,16 +40,16 @@ export const ChatsettingsDrawer = ({
     const min_temp = 0;
     const max_temp = 1;
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value, current_id);
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value, current_id);
+    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
+    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
 
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) setSystemPrompt(newValue.value, current_id);
-        else setSystemPrompt("", current_id);
+        if (newValue?.value) setSystemPrompt(newValue.value);
+        else setSystemPrompt("");
     };
 
     const onClearSystemPrompt = () => {
-        setSystemPrompt("", current_id);
+        setSystemPrompt("");
     };
     const sidebar_action = <>{actions}</>;
     const sidebar_content = (
@@ -97,28 +95,6 @@ export const ChatsettingsDrawer = ({
                 </div>
             </div>
 
-            <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
-                <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
-            </div>
-
-            <div className={styles.bodyContainer}>
-                <div className={styles.verticalContainer}>
-                    <Slider
-                        min={min_max_tokens}
-                        max={max_max_tokens}
-                        defaultValue={20}
-                        onChange={onMaxtokensChange}
-                        aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
-                        value={max_output_tokens}
-                        aria-labelledby={max_tokens_headerID}
-                        id={max_tokensID}
-                    />
-                    <br></br>
-                    <Label htmlFor={max_tokensID} aria-hidden>
-                        {max_output_tokens} Tokens
-                    </Label>
-                </div>
-            </div>
             <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
                 <InfoLabel
                     info={
@@ -154,6 +130,29 @@ export const ChatsettingsDrawer = ({
                     </Label>
                     <Label htmlFor={temperatureID} aria-hidden>
                         {temperature}
+                    </Label>
+                </div>
+            </div>
+
+            <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
+                <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
+            </div>
+
+            <div className={styles.bodyContainer}>
+                <div className={styles.verticalContainer}>
+                    <Slider
+                        min={min_max_tokens}
+                        max={max_max_tokens}
+                        defaultValue={20}
+                        onChange={onMaxtokensChange}
+                        aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
+                        value={max_output_tokens}
+                        aria-labelledby={max_tokens_headerID}
+                        id={max_tokensID}
+                    />
+                    <br></br>
+                    <Label htmlFor={max_tokensID} aria-hidden>
+                        {max_output_tokens} Tokens
                     </Label>
                 </div>
             </div>

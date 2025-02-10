@@ -4,6 +4,13 @@ export type AskResponse = {
     tokens?: number;
 };
 
+export type ChatResponse = {
+    answer: string;
+    error?: string;
+    tokens?: number;
+    user_tokens?: number;
+};
+
 export type SumResponse = {
     answer: string[];
     error?: string;
@@ -108,12 +115,6 @@ export type Bot = {
     tags: string[];
     version: number;
     owner: string;
-};
-
-export type StoredCommunityBot = {
-    title: string;
-    id: string;
-    version: number;
 };
 
 export type GenerateTagsRequest = {

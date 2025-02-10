@@ -16,46 +16,23 @@ import styles from "./BotsettingsDrawer.module.css";
 import { ReactNode, useContext, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { deleteBotWithId } from "../../service/storage_bot";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { DeletBotDialog } from "../DeleteBotDialog/DeleteBotDialog";
+import { Bot } from "../../api";
 interface Props {
-    temperature: number;
-    setTemperature: (temp: number) => void;
-    max_output_tokens: number;
-    setMaxTokens: (maxTokens: number) => void;
-    systemPrompt: string;
-    setSystemPrompt: (systemPrompt: string) => void;
-    title: string;
-    setTitle: (title: string) => void;
-    bot_id: string;
-    description: string;
-    setDescription: (description: string) => void;
-    onPublishClick: () => void;
+    bot: Bot;
+    onBotChange: (bot: Bot) => void;
+    deleteBot: () => void;
     actions: ReactNode;
-    publish: boolean;
+    before_content: ReactNode;
+    onPublishClick: () => void;
 }
 
-export const BotsettingsDrawer = ({
-    temperature,
-    setTemperature,
-    max_output_tokens,
-    setMaxTokens,
-    systemPrompt,
-    setSystemPrompt,
-    title,
-    setTitle,
-    bot_id,
-    description,
-    setDescription,
-    onPublishClick,
-    actions,
-    publish
-}: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, deleteBot, actions, before_content, onPublishClick }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
@@ -71,15 +48,32 @@ export const BotsettingsDrawer = ({
     const min_temp = 0;
     const max_temp = 1;
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
+    const [temperature, setTemperature] = useState(bot.temperature);
+    const [max_output_tokens, setMaxOutputTokens] = useState(bot.max_output_tokens);
+    const [systemPrompt, setSystemPrompt] = useState<string>(bot.system_message);
+    const [title, setTitle] = useState<string>(bot.title);
+    const [description, setDescription] = useState<string>(bot.description);
+    const [publish, setPublish] = useState<boolean>(bot.publish);
 
     const onDelteClick = () => {
         setShowDeleteDialog(true);
     };
-    const deleteBot = () => {
-        window.location.href = "/";
-        deleteBotWithId(bot_id);
+
+    useEffect(() => {
+        setMaxOutputTokens(bot.max_output_tokens);
+        setSystemPrompt(bot.system_message);
+        setTitle(bot.title);
+        setDescription(bot.description);
+        setPublish(bot.publish);
+        setTemperature(bot.temperature);
+    }, [bot]);
+
+    const onTemperatureChange: SliderProps["onChange"] = (_, data) => {
+        setTemperature(data.value);
+    };
+    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => {
+        const maxTokens = data.value > LLM.max_output_tokens && LLM.max_output_tokens != 0 ? LLM.max_output_tokens : data.value;
+        setMaxOutputTokens(maxTokens);
     };
     const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
@@ -87,7 +81,7 @@ export const BotsettingsDrawer = ({
     };
     const onTitleChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setTitle(newValue.value);
-        else setTitle("Assistent " + bot_id);
+        else setTitle("");
     };
     const onDescriptionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setDescription(newValue.value);
@@ -99,6 +93,21 @@ export const BotsettingsDrawer = ({
             window.location.reload();
         }
         setEditable(!isEditable);
+        if (isEditable) {
+            const updatedTitle = title.trim() !== "" ? title : `Assistent ${bot.id}`;
+            setTitle(updatedTitle);
+            const updatedBot = {
+                ...bot,
+                temperature,
+                max_output_tokens,
+                system_message: systemPrompt,
+                title: updatedTitle,
+                description,
+                publish
+            };
+            onBotChange(updatedBot);
+            window.location.reload();
+        }
     };
 
     const onClearSystemPrompt = () => {
@@ -124,7 +133,7 @@ export const BotsettingsDrawer = ({
     );
     const content = (
         <>
-            {" "}
+            <>{before_content}</>{" "}
             {isEditable && (
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>{t("create_bot.title")}</div>
@@ -149,9 +158,13 @@ export const BotsettingsDrawer = ({
                     </div>
                 </div>
             )}
-            {isEditable && (
+            {isEditable ? (
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>{t("create_bot.description")}</div>
+                </div>
+            ) : (
+                <div className={styles.header} role="heading" aria-level={3}>
+                    {t("create_bot.description")}
                 </div>
             )}
             <div className={styles.bodyContainer}>

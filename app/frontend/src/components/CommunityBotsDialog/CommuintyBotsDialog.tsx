@@ -21,11 +21,13 @@ import { find, TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
 import { Bot, getCommunityBot, getCommunityBotAllVersions, getCommunityBots } from "../../api";
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
-import { storeCommunityBot } from "../../service/storage_bot"
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
+import { COMMUNITY_BOT_STORE } from "../../constants";
+import { CommunityBotStorageService } from "../../service/communitybotstorage";
+
 interface Props {
     showSearchDialogInput: boolean;
     setShowSearchDialogInput: (showDialogInput: boolean) => void;
@@ -44,6 +46,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const [showBotDialog, setShowBotDialog] = useState<boolean>(false);
     const [allTags, setAllTags] = useState<string[]>([]);
     const [choosenTag, setChoosenTag] = useState<string>("");
+    const communitybotStorageService: CommunityBotStorageService = new CommunityBotStorageService(COMMUNITY_BOT_STORE);
+    const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
 
 
     function findLatestVersion(bots: Bot[]): Bot {
@@ -92,7 +96,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     }), [takeCommunityBots, showSearchDialogInput];
 
     let onSaveBot = () => {
-        storeCommunityBot({ title: choosenBot.title, id: choosenBot.id, version: choosenBot.version || 0 });
+        communitybotStorageService.createBotConfig(choosenBot);
         setShowBotDialog(false);
         setShowSearchDialogInput(true);
     }
@@ -161,6 +165,9 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         setShowSearchDialogInput(false);
         getCommunityBotAllVersions(bot.id).then((bots) => {
             setChoosenBotAll(bots);
+        });
+        communitybotStorageService.getBotConfig(bot.id).then((bot: Bot | undefined) => {
+            setBotAlreadySaved(bot !== undefined);
         });
     }
 
@@ -251,9 +258,11 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="small" onClick={onSaveBot}>
-                                    <Save24Filled /> {t('components.community_bots.save')}
-                                </Button>
+                                <Tooltip content={botAlreadySaved ? "Assisstent ist bereits gespeichert!" : t('components.community_bots.save')} relationship="description" positioning="above">
+                                    <Button appearance="secondary" size="small" onClick={onSaveBot} disabled={botAlreadySaved}>
+                                        <Save24Filled /> {t('components.community_bots.save')}
+                                    </Button>
+                                </Tooltip>
                             </DialogTrigger>
                         </DialogActions>
                     </DialogBody>

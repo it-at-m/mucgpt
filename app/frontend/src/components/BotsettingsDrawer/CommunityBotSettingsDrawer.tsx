@@ -105,7 +105,7 @@ export const CommunityBotSettingsDrawer = ({
         }
         setVersion(v);
         getCommunityBot(id, v).then((bot: Bot) => {
-            communityBotStorageService.createBotConfig(bot);
+            communityBotStorageService.updateBotConfig(bot);
             window.location.href = "/#/community-bot/" + bot.id + "/" + v.replace(".", "-");
             window.location.reload();
         });

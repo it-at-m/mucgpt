@@ -80,7 +80,7 @@ export class CommunityBotStorageService {
 
     async updateBotConfig(bot_config: Bot) {
         this.getBotConfig(bot_config.id).then(async config => {
-            if (config) {
+            if (config !== undefined) {
                 await this.storageService.update(undefined, bot_config, CommunityBotStorageService.GENERATE_BOT_CONFIG_ID(bot_config.id));
             } else {
                 await this.createBotConfig(bot_config);

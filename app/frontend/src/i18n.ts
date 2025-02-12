@@ -165,7 +165,7 @@ i18n
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
                             finish_edit: "Bearbeitung abschließen",
-                            publish: "Bot veröffentlichen",
+                            publish: "Assistent veröffentlichen",
                             publish_new_version: "Neue Version veröffentlichen"
                         },
                         answericon: {
@@ -239,28 +239,28 @@ i18n
                             save: "Speichern"
                         },
                         search_bot_button: {
-                            search_bots: "Bots suchen"
+                            search_bots: "Assistenten suchen"
                         },
                         deletebotdialog: {
-                            confirm: "Willst du den Bot wirklich löschen?",
+                            confirm: "Willst du den Assistenten wirklich löschen?",
                             back: "Zurück",
                             delete: "Löschen"
                         },
                         publishDialog: {
-                            title: "Hinweis Bot veröffentlichen",
-                            content: `Hinweise zur Veröffentlichung eines Bots:<br />
-                                      - Der Bot wird in der Community-Bot-Liste angezeigt.<br />
-                                      - Der Bot kann von anderen Benutzern verwendet werden.<br />
-                                      - Achte darauf, dass der Bot keine sensiblen Daten enthält.<br />
-                                      - Achte darauf, dass der Bot keine beleidigenden oder diskriminierenden Inhalte enthält.<br />
-                                      - Lade den Bot nur hoch, wenn du die Rechte an den Inhalten hast.<br />
-                                      - Lade den Bot nur hoch, wenn er einen Mehrwert für die Community bietet.<br />
-                                      - Überprüfe den Bot vor der Veröffentlichung auf Fehler.<br />
-                                      - Überprüfe vor der Veröffentlichung, ob bereits ein ähnlicher Bot existiert.`,
-                            confirm: "Bitte bestätige, dass du die Hinweise gelesen hast und den Bot veröffentlichen möchtest.",
+                            title: "Hinweis Assistent veröffentlichen",
+                            content: `Hinweise zur Veröffentlichung eines Assistenten:<br />
+                                      - Der Assistent wird in der Community-Assistenten-Liste angezeigt.<br />
+                                      - Der Assistent kann von anderen Benutzern verwendet werden.<br />
+                                      - Achte darauf, dass der Assistent keine sensiblen Daten enthält.<br />
+                                      - Achte darauf, dass der Assistent keine beleidigenden oder diskriminierenden Inhalte enthält.<br />
+                                      - Lade den Assistenten nur hoch, wenn du die Rechte an den Inhalten hast.<br />
+                                      - Lade den Assistenten nur hoch, wenn er einen Mehrwert für die Community bietet.<br />
+                                      - Überprüfe den Assistenten vor der Veröffentlichung auf Fehler.<br />
+                                      - Überprüfe vor der Veröffentlichung, ob bereits ein ähnlicher Assistent existiert.`,
+                            confirm: "Bitte bestätige, dass du die Hinweise gelesen hast und den Assistenten veröffentlichen möchtest.",
                             cancel: "Abbrechen",
                             publish: "Veröffentlichen",
-                            updated: "Bot wurde geupdated und ist nun in der Community-Bot-Liste verfügbar.",
+                            updated: "Assistent wurde geupdated und ist nun in der Community-Assistenten-Liste verfügbar.",
                             understood: "Verstanden"
                         }
                     }
@@ -414,10 +414,10 @@ i18n
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
                         botsettingsdrawer: {
-                            delete: "Delete assistent",
+                            delete: "Delete assistant",
                             edit: "Edit Assistant",
                             finish_edit: "Finish Edit",
-                            publish: "Publish Bot",
+                            publish: "Publish Assistant",
                             publish_new_version: "Publish new version"
                         },
                         answericon: {
@@ -491,28 +491,28 @@ i18n
                             save: "Save"
                         },
                         search_bot_button: {
-                            search_bots: "Search bots"
+                            search_bots: "Search assistants"
                         },
                         deletebotdialog: {
-                            confirm: "Do you really want to delete the bot?",
+                            confirm: "Do you really want to delete the assistant?",
                             back: "Back",
                             delete: "Delete"
                         },
                         publishDialog: {
-                            title: "Notice Publish Bot",
-                            content: `Notes on publishing a bot:<br />
-                                      - The bot will be displayed in the community bot list.<br />
-                                      - The bot can be used by other users.<br />
-                                      - Make sure the bot does not contain sensitive data.<br />
-                                      - Make sure the bot does not contain offensive or discriminatory content.<br />
-                                      - Only upload the bot if you have the rights to the content.<br />
-                                      - Only upload the bot if it provides added value to the community.<br />
-                                      - Check the bot for errors before publishing.<br />
-                                      - Check if a similar bot already exists before publishing.`,
-                            confirm: "Please confirm that you have read the notes and want to publish the bot.",
+                            title: "Notice Publish Assistant",
+                            content: `Notes on publishing an assistant:<br />
+                                      - The assistant will be displayed in the community assistant list.<br />
+                                      - The assistant can be used by other users.<br />
+                                      - Make sure the assistant does not contain sensitive data.<br />
+                                      - Make sure the assistant does not contain offensive or discriminatory content.<br />
+                                      - Only upload the assistant if you have the rights to the content.<br />
+                                      - Only upload the assistant if it provides added value to the community.<br />
+                                      - Check the assistant for errors before publishing.<br />
+                                      - Check if a similar assistant already exists before publishing.`,
+                            confirm: "Please confirm that you have read the notes and want to publish the assistant.",
                             cancel: "Cancel",
                             publish: "Publish",
-                            updated: "Bot has been updated and is now available in the community bot list.",
+                            updated: "Assistant has been updated and is now available in the community assistant list.",
                             understood: "Understood"
                         }
                     }
@@ -670,7 +670,7 @@ i18n
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
                             finish_edit: "Bearbeitung abschließ'n",
-                            publish: "Bot veröffentlichen",
+                            publish: "Assistent veröffentlichen",
                             publish_new_version: "Neie Version veröffentlichen"
                         },
                         answericon: {
@@ -744,28 +744,28 @@ i18n
                             save: "Speichern"
                         },
                         search_bot_button: {
-                            search_bots: "Bots suachen"
+                            search_bots: "Assistenten suachen"
                         },
                         deletebotdialog: {
-                            confirm: "Wuisd du den Bot wirklich löschn?",
+                            confirm: "Wuisd du den Assistenten wirklich löschn?",
                             back: "Zruck",
                             delete: "Löschn"
                         },
                         publishDialog: {
-                            title: "Hinweis Bot veröffentlichen",
-                            content: `Hinweise zur Veröffentlichung eines Bots:<br />
-                                      - Der Bot wird in der Community-Bot-Liste angezeigt.<br />
-                                      - Der Bot kann von anderen Benutzern verwendet werden.<br />
-                                      - Achte darauf, dass der Bot keine sensiblen Daten enthält.<br />
-                                      - Achte darauf, dass der Bot keine beleidigenden oder diskriminierenden Inhalte enthält.<br />
-                                      - Lade den Bot nur hoch, wenn du die Rechte an den Inhalten hast.<br />
-                                      - Lade den Bot nur hoch, wenn er einen Mehrwert für die Community bietet.<br />
-                                      - Überprüfe den Bot vor der Veröffentlichung auf Fehler.<br />
-                                      - Überprüfe vor der Veröffentlichung, ob bereits ein ähnlicher Bot existiert.`,
-                            confirm: "Bitte bestätige, dass du die Hinweise gelesen hast und den Bot veröffentlichen möchtest.",
+                            title: "Hinweis Assistent veröffentlichen",
+                            content: `Hinweise zur Veröffentlichung eines Assistenten:<br />
+                                      - Der Assistent wird in der Community-Assistenten-Liste angezeigt.<br />
+                                      - Der Assistent kann von anderen Benutzern verwendet werden.<br />
+                                      - Achte darauf, dass der Assistent keine sensiblen Daten enthält.<br />
+                                      - Achte darauf, dass der Assistent keine beleidigenden oder diskriminierenden Inhalte enthält.<br />
+                                      - Lade den Assistenten nur hoch, wenn du die Rechte an den Inhalten hast.<br />
+                                      - Lade den Assistenten nur hoch, wenn er einen Mehrwert für die Community bietet.<br />
+                                      - Überprüfe den Assistenten vor der Veröffentlichung auf Fehler.<br />
+                                      - Überprüfe vor der Veröffentlichung, ob bereits ein ähnlicher Assistent existiert.`,
+                            confirm: "Bitte bestätige, dass du die Hinweise gelesen hast und den Assistenten veröffentlichen möchtest.",
                             cancel: "Abbrechen",
                             publish: "Veröffentlichen",
-                            updated: "Bot wurde geupdated und ist nun in der Community-Bot-Liste verfügbar.",
+                            updated: "Assistent wurde geupdated und ist nun in der Community-Assistenten-Liste verfügbar.",
                             understood: "Verstanden"
                         }
                     }
@@ -832,6 +832,12 @@ i18n
                         close: "Fermer",
                         messages: "Messages",
                         examples: "Exemples"
+                    },
+                    create_bot: {
+                        title: "Titre",
+                        description: "Description",
+                        prompt: "Prompt système",
+                        create: "Créer"
                     },
                     components: {
                         roles: {
@@ -917,7 +923,7 @@ i18n
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
                             finish_edit: "Terminer la modification",
-                            publish: "Publier le bot",
+                            publish: "Publier l'assistant",
                             publish_new_version: "Publier une nouvelle version"
                         },
                         answericon: {
@@ -991,28 +997,28 @@ i18n
                             save: "Enregistrer"
                         },
                         search_bot_button: {
-                            search_bots: "Rechercher des bots"
+                            search_bots: "Rechercher des assistants"
                         },
                         deletebotdialog: {
-                            confirm: "Voulez-vous vraiment supprimer le bot?",
+                            confirm: "Voulez-vous vraiment supprimer l'assistant?",
                             back: "Retour",
                             delete: "Supprimer"
                         },
                         publishDialog: {
-                            title: "Avis de publication du bot",
-                            content: `Notes sur la publication d'un bot:<br />
-                                      - Le bot sera affiché dans la liste des bots communautaires.<br />
-                                      - Le bot peut être utilisé par d'autres utilisateurs.<br />
-                                      - Assurez-vous que le bot ne contient pas de données sensibles.<br />
-                                      - Assurez-vous que le bot ne contient pas de contenu offensant ou discriminatoire.<br />
-                                      - Téléchargez le bot uniquement si vous avez les droits sur le contenu.<br />
-                                      - Téléchargez le bot uniquement s'il apporte une valeur ajoutée à la communauté.<br />
-                                      - Vérifiez le bot pour les erreurs avant de le publier.<br />
-                                      - Vérifiez si un bot similaire existe déjà avant de le publier.`,
-                            confirm: "Veuillez confirmer que vous avez lu les notes et que vous souhaitez publier le bot.",
+                            title: "Avis de publication de l'assistant",
+                            content: `Notes sur la publication d'un assistant:<br />
+                                      - L'assistant sera affiché dans la liste des assistants communautaires.<br />
+                                      - L'assistant peut être utilisé par d'autres utilisateurs.<br />
+                                      - Assurez-vous que l'assistant ne contient pas de données sensibles.<br />
+                                      - Assurez-vous que l'assistant ne contient pas de contenu offensant ou discriminatoire.<br />
+                                      - Téléchargez l'assistant uniquement si vous avez les droits sur le contenu.<br />
+                                      - Téléchargez l'assistant uniquement s'il apporte une valeur ajoutée à la communauté.<br />
+                                      - Vérifiez l'assistant pour les erreurs avant de le publier.<br />
+                                      - Vérifiez si un assistant similaire existe déjà avant de le publier.`,
+                            confirm: "Veuillez confirmer que vous avez lu les notes et que vous souhaitez publier l'assistant.",
                             cancel: "Annuler",
                             publish: "Publier",
-                            updated: "Le bot a été mis à jour et est maintenant disponible dans la liste des bots communautaires.",
+                            updated: "L'assistant a été mis à jour et est maintenant disponible dans la liste des assistants communautaires.",
                             understood: "Compris"
                         }
                     }
@@ -1077,6 +1083,12 @@ i18n
                         close: "Закрити",
                         messages: "Повідомлення",
                         examples: "Приклади"
+                    },
+                    create_bot: {
+                        title: "Назва",
+                        description: "Опис",
+                        prompt: "Системний запит",
+                        create: "Створити"
                     },
                     components: {
                         roles: {
@@ -1162,7 +1174,7 @@ i18n
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
                             finish_edit: "Завершити редагування",
-                            publish: "Опублікувати бота",
+                            publish: "Опублікувати асистента",
                             publish_new_version: "Опублікувати нову версію"
                         },
                         answericon: {
@@ -1236,28 +1248,28 @@ i18n
                             save: "Зберегти"
                         },
                         search_bot_button: {
-                            search_bots: "Шукати ботів"
+                            search_bots: "Шукати асистентів"
                         },
                         deletebotdialog: {
-                            confirm: "Ви дійсно хочете видалити бота?",
+                            confirm: "Ви дійсно хочете видалити асистента?",
                             back: "Назад",
                             delete: "Видалити"
                         },
                         publishDialog: {
-                            title: "Повідомлення про публікацію бота",
-                            content: `Примітки щодо публікації бота:<br />
-                                      - Бот буде відображатися у списку ботів спільноти.<br />
-                                      - Бота можуть використовувати інші користувачі.<br />
-                                      - Переконайтеся, що бот не містить конфіденційних даних.<br />
-                                      - Переконайтеся, що бот не містить образливого або дискримінаційного контенту.<br />
-                                      - Завантажуйте бота лише якщо у вас є права на контент.<br />
-                                      - Завантажуйте бота лише якщо він приносить користь спільноті.<br />
-                                      - Перевірте бота на помилки перед публікацією.<br />
-                                      - Перевірте, чи вже існує подібний бот перед публікацією.`,
-                            confirm: "Будь ласка, підтвердіть, що ви прочитали примітки і хочете опублікувати бота.",
+                            title: "Повідомлення про публікацію асистента",
+                            content: `Примітки щодо публікації асистента:<br />
+                                      - Асистент буде відображатися у списку асистентів спільноти.<br />
+                                      - Асистента можуть використовувати інші користувачі.<br />
+                                      - Переконайтеся, що асистент не містить конфіденційних даних.<br />
+                                      - Переконайтеся, що асистент не містить образливого або дискримінаційного контенту.<br />
+                                      - Завантажуйте асистента лише якщо у вас є права на контент.<br />
+                                      - Завантажуйте асистента лише якщо він приносить користь спільноті.<br />
+                                      - Перевірте асистента на помилки перед публікацією.<br />
+                                      - Перевірте, чи вже існує подібний асистент перед публікацією.`,
+                            confirm: "Будь ласка, підтвердіть, що ви прочитали примітки і хочете опублікувати асистента.",
                             cancel: "Скасувати",
                             publish: "Опублікувати",
-                            updated: "Бот було оновлено і тепер він доступний у списку ботів спільноти.",
+                            updated: "Асистента було оновлено і тепер він доступний у списку асистентів спільноти.",
                             understood: "Зрозуміло"
                         }
                     }

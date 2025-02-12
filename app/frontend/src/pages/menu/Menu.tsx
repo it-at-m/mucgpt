@@ -28,7 +28,6 @@ const Menu = () => {
     const communityBotStorageService: CommunityBotStorageService = new CommunityBotStorageService(COMMUNITY_BOT_STORE);
 
     useEffect(() => {
-
         migrate_old_bots().then(() => {
             return botStorageService.getAllBotConfigs().then(bots => {
                 setBots(bots);

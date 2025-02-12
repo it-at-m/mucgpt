@@ -75,11 +75,6 @@ const CommunityBotChat = () => {
                     versions.push(String(bots[i].version));
                 }
                 setBotAllVersions(versions);
-                const bot = bots.find(b => b.version == botVersion);
-                if (bot) {
-                    setBotConfig(bot);
-                    communitybotStorageService.updateBotConfig(bot);
-                }
             }
             );
             error && setError(undefined);

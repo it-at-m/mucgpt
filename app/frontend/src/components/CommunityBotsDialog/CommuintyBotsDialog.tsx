@@ -98,7 +98,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     let onSaveBot = () => {
         communitybotStorageService.createBotConfig(choosenBot);
         setShowBotDialog(false);
-        setShowSearchDialogInput(true);
+        setShowSearchDialogInput(false);
+        window.location.href = "/#/community-bot/" + choosenBot.id + "/" + choosenBot.version.toString().replace(".", "-");
     }
 
     let inputHandler = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string | undefined) => {

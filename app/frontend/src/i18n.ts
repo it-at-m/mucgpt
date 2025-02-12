@@ -46,7 +46,7 @@ i18n
                         long: "Lang"
                     },
                     version: {
-                        header: "Was gibts neues?",
+                        header: "Was gibt's Neues?",
                         added: "Neu",
                         fixed: "Fehler behoben",
                         changed: "Änderungen"
@@ -58,12 +58,12 @@ i18n
                     },
                     simply: {
                         header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
-                        prompt: "Text zum übersetzen eingeben",
+                        prompt: "Text zum Übersetzen eingeben",
                         answer_loading_easy: "Übersetze in leichte Sprache",
                         answer_loading_plain: "Übersetze in einfache Sprache",
                         plain: "Einfach",
                         easy: "Leicht",
-                        outputType: "Output Sprache",
+                        outputType: "Ausgabesprache",
                         plain_description:
                             "Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine breitere Zielgruppe zu erreichen.",
                         easy_description: "Leichte Sprache verwendet einfache Wörter und kurze Sätze, um Informationen klar und verständlich zu vermitteln."
@@ -78,18 +78,18 @@ i18n
                     create_bot: {
                         title: "Titel",
                         description: "Beschreibung",
-                        prompt: "System Prompt",
+                        prompt: "System-Prompt",
                         create: "Erstellen"
                     },
                     components: {
                         roles: {
-                            student: "Student*innnen",
+                            student: "Student*innen",
                             secondgrader: "Grundschüler*innen",
                             retired: "Rentner*innen"
                         },
                         sumlength: {
-                            sentences: "Zwei Sätzen",
-                            bullets: "Fünf Stichpunkten",
+                            sentences: "Zwei Sätze",
+                            bullets: "Fünf Stichpunkte",
                             quarter: "1/4 der Länge"
                         },
                         answererror: {
@@ -109,11 +109,11 @@ i18n
                             download: "Herunterladen",
                             reset: "Ansicht zurücksetzen",
                             source: "Datenansicht",
-                            mindmap: "Mindmapansicht"
+                            mindmap: "Mindmap-Ansicht"
                         },
                         sumanswer: {
                             header: "Einzigartige Aspekte/Entitäten:",
-                            alternative: "Zusammenfassung ",
+                            alternative: "Zusammenfassung",
                             copy: "Zusammenfassung kopieren"
                         },
                         settingsdrawer: {
@@ -150,13 +150,13 @@ i18n
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
                             temperature_article: "Die",
-                            temperature_info: `beinflusst die "Kreativität" des Sprachmodells. Ein höherer Wert führt zu unvorhersehbareren Antworten (Wörter, die unwahrscheinlich gegenüber dem aktuellem Kontext sind, werden generiert), während ein niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
+                            temperature_info: `beeinflusst die "Kreativität" des Sprachmodells. Ein höherer Wert führt zu unvorhersehbareren Antworten (Wörter, die unwahrscheinlich gegenüber dem aktuellen Kontext sind, werden generiert), während ein niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
                             max_lenght: "Maximale Antwortlänge",
-                            max_lenght_info: " Wieviele Token dürfen maximal bei einer Antwort generiert werden.",
-                            system_prompt_clear: "System Prompt löschen",
-                            system_prompt: "System Prompt",
+                            max_lenght_info: "Wie viele Token dürfen maximal bei einer Antwort generiert werden.",
+                            system_prompt_clear: "System-Prompt löschen",
+                            system_prompt: "System-Prompt",
                             system_prompt_info:
-                                "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmtes Format oder beachtet andere Einschränkungen."
+                                "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmten Format oder beachtet andere Einschränkungen."
                         },
                         botsettingsdrawer: {
                             delete: "Assistent löschen",
@@ -176,7 +176,7 @@ i18n
                             label: "Nachricht zurückziehen"
                         },
                         recommendanswers: {
-                            name: "Vogeschlagene Antworten",
+                            name: "Vorgeschlagene Antworten",
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
                             longer_tooltip: "Schreibe eine längere Antwort",
                             formal_tooltip: "Schreibe eine förmlichere Antwort",
@@ -190,7 +190,7 @@ i18n
                             longer_prompt:
                                 "Formuliere deine letzte Nachricht zu einem neuen längeren Text, der den ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen ist. Dieser Text sollte das Verständnis des Lesers vertiefen und eine umfassendere Perspektive auf das Thema bieten.",
                             formal_prompt:
-                                "Formuliere deine letzte Nachricht zu einem neuen formellen Text, der den ursprünglichen Inhalt in einer akademischen Schreibweise präsentiert. Dieser Text sollte eine klare Struktur aufweisen, präzise und sachliche Ausdrucksweise verwenden und dem Leser ein professionelles Leseerlebnis bieten",
+                                "Formuliere deine letzte Nachricht zu einem neuen formellen Text, der den ursprünglichen Inhalt in einer akademischen Schreibweise präsentiert. Dieser Text sollte eine klare Struktur aufweisen, präzise und sachliche Ausdrucksweise verwenden und dem Leser ein professionelles Leseerlebnis bieten.",
                             informal_prompt:
                                 "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
                         },
@@ -204,9 +204,9 @@ i18n
                             newchat: "Gib dem Chat einen neuen Namen:",
                             options: "Chat-Optionen",
                             close: "Schließen",
-                            lastEdited: "Zuletzt geändert: ",
-                            rename: "Chat Umbenennen",
-                            delete: "Chat Löschen",
+                            lastEdited: "Zuletzt geändert:",
+                            rename: "Chat umbenennen",
+                            delete: "Chat löschen",
                             favourites: "Favoriten",
                             save: "Zu Favoriten hinzufügen",
                             unsave: "Aus Favoriten entfernen",
@@ -221,7 +221,7 @@ i18n
                             generating_prompt: "Generiere Prompt...",
                             dismiss: "Abbrechen",
                             create: "Erstellen",
-                            prompt_title_desc: "Vorgeschlagener System Prompt, Titel und Beschreibung:",
+                            prompt_title_desc: "Vorgeschlagener System-Prompt, Titel und Beschreibung:",
                             back: "Zurück",
                             save: "Speichern",
                             describe: "Beschreibe die Funktion..."

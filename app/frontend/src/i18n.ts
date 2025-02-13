@@ -166,7 +166,10 @@ i18n
                             edit: "Assistent bearbeiten",
                             finish_edit: "Bearbeitung abschließen",
                             publish: "Assistent veröffentlichen",
-                            publish_new_version: "Neue Version veröffentlichen"
+                            publish_new_version: "Neue Version veröffentlichen",
+                            version: "Version",
+                            latest_version_selected: "Neuste Version ausgewählt",
+                            new_version_available: "Neue Version verfügbar!"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -418,7 +421,10 @@ i18n
                             edit: "Edit Assistant",
                             finish_edit: "Finish Edit",
                             publish: "Publish Assistant",
-                            publish_new_version: "Publish new version"
+                            publish_new_version: "Publish new version",
+                            version: "Version",
+                            latest_version_selected: "Latest version selected",
+                            new_version_available: "New version available!"
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -671,7 +677,10 @@ i18n
                             edit: "Assistent bearbeit'n",
                             finish_edit: "Bearbeitung abschließ'n",
                             publish: "Assistent veröffentlichen",
-                            publish_new_version: "Neie Version veröffentlichen"
+                            publish_new_version: "Neie Version veröffentlichen",
+                            version: "Version",
+                            latest_version_selected: "Neiste Version ausgewählt",
+                            new_version_available: "Neie Version verfügbar!"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -924,7 +933,10 @@ i18n
                             edit: "Modifier l'assistant",
                             finish_edit: "Terminer la modification",
                             publish: "Publier l'assistant",
-                            publish_new_version: "Publier une nouvelle version"
+                            publish_new_version: "Publier une nouvelle version",
+                            version: "Version",
+                            latest_version_selected: "Dernière version sélectionnée",
+                            new_version_available: "Nouvelle version disponible!"
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -1175,7 +1187,10 @@ i18n
                             edit: "Редагувати асистента",
                             finish_edit: "Завершити редагування",
                             publish: "Опублікувати асистента",
-                            publish_new_version: "Опублікувати нову версію"
+                            publish_new_version: "Опублікувати нову версію",
+                            version: "Версія",
+                            latest_version_selected: "Остання версія вибрана",
+                            new_version_available: "Нова версія доступна!"
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"

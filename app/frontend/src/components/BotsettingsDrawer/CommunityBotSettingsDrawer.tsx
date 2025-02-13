@@ -133,11 +133,11 @@ export const CommunityBotSettingsDrawer = ({
             <InfoLabel
                 info={
                     <div>
-                        {isLatestVersion ? "Neuste Version ausgewählt" : "Neue Version verfügbar!"}
+                        {isLatestVersion ? t("botsettingsdrawer.latest_version_selected") : t("botsettingsdrawer.new_version_available")}
                     </div>
                 }
                 style={isLatestVersion ? {} : { color: "red", fontWeight: "bold" }}
-            >Versionen</InfoLabel> {" "}
+            >{t("botsettingsdrawer.version")}</InfoLabel> {" "}
             <Dropdown
                 id="version"
                 aria-label={"version"}

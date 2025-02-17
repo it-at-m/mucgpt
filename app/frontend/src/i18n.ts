@@ -19,7 +19,7 @@ i18n
                         sum: "Zusammenfassen",
                         chat: "Chat",
                         brainstorm: "Brainstorming",
-                        simply: "Leichte Sprache",
+                        simply: "Einfache Sprache",
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_bot: "Assistent erstellen"
                     },
@@ -59,14 +59,11 @@ i18n
                     simply: {
                         header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
                         prompt: "Text zum Übersetzen eingeben",
-                        answer_loading_easy: "Übersetze in leichte Sprache",
                         answer_loading_plain: "Übersetze in einfache Sprache",
                         plain: "Einfach",
-                        easy: "Leicht",
                         outputType: "Ausgabesprache",
                         plain_description:
-                            "Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine breitere Zielgruppe zu erreichen.",
-                        easy_description: "Leichte Sprache verwendet einfache Wörter und kurze Sätze, um Informationen klar und verständlich zu vermitteln."
+                            "Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine breitere Zielgruppe zu erreichen."
                     },
                     common: {
                         clear_chat: "Neuer Chat",
@@ -275,13 +272,10 @@ i18n
                     simply: {
                         header: "Enter the text to be translated or try an example",
                         prompt: "Enter text to translate",
-                        answer_loading_easy: "Translating to easy language",
                         answer_loading_plain: "Translating to plain language",
                         plain: "Plain",
-                        easy: "Easy",
                         outputType: "Output Language",
-                        plain_description: "Plain language is a simplified form of standard language that avoids complexity to reach a broader audience.",
-                        easy_description: "Easy language uses simple words and short sentences to convey information clearly and understandably."
+                        plain_description: "Plain language is a simplified form of standard language that avoids complexity to reach a broader audience."
                     },
                     common: {
                         clear_chat: "New chat",
@@ -485,13 +479,10 @@ i18n
                         header: "Gib den zu übasetzenden Text ei oda probier a Beispiel",
                         prompt: "Text zum übasetzen eigeben",
                         answer_loading_plain: "Übersetze in oafache Sproch",
-                        answer_loading_easy: "Übersetze in leichte Sproch",
                         plain: "Oafach",
-                        easy: "Leicht",
                         outputType: "Output Sproch",
                         plain_description:
-                            "Oafache Sproch is a veroafachte Form der Standardsprache, die auf Komplexität verzichtet, um a breitare Zielgruppn zu erreichen.",
-                        easy_description: "Leichte Sproch benutzt oafache Wörter und kuaze Sätze, um Informationen klar und verständlich zu vermitteln."
+                            "Oafache Sproch is a veroafachte Form der Standardsprache, die auf Komplexität verzichtet, um a breitare Zielgruppn zu erreichen."
                     },
                     common: {
                         clear_chat: "Neia Chat",
@@ -705,15 +696,11 @@ i18n
                     simply: {
                         header: "Entrez le texte à traduire ou essayez un exemple",
                         prompt: "Entrez le texte à traduire",
-                        answer_loading_easy: "Traduction en langage facile",
                         answer_loading_plain: "Traduction en langage simple",
                         plain: "Simple",
-                        easy: "Facile",
                         outputType: "Langue de sortie",
                         plain_description:
-                            "Le langage simple est une forme simplifiée de la langue standard, qui évite la complexité pour atteindre un public plus large.",
-                        easy_description:
-                            "Le langage facile utilise des mots simples et des phrases courtes pour transmettre des informations de manière claire et compréhensible."
+                            "Le langage simple est une forme simplifiée de la langue standard, qui évite la complexité pour atteindre un public plus large."
                     },
                     common: {
                         clear_chat: "Nouveau chat",
@@ -915,13 +902,10 @@ i18n
                     simply: {
                         header: "Введіть текст для перекладу або спробуйте приклад",
                         prompt: "Введіть текст для перекладу",
-                        answer_loading_easy: "Переклад на просту мову",
                         answer_loading_plain: "Переклад на зрозумілу мову",
                         plain: "Проста",
-                        easy: "Легка",
                         outputType: "Вихідна мова",
-                        plain_description: "Проста мова - це спрощена форма стандартної мови, яка уникає складності для охоплення ширшої аудиторії.",
-                        easy_description: "Легка мова використовує прості слова та короткі речення для чіткої та зрозумілої передачі інформації."
+                        plain_description: "Проста мова - це спрощена форма стандартної мови, яка уникає складності для охоплення ширшої аудиторії."
                     },
                     common: {
                         clear_chat: "Новий чат",

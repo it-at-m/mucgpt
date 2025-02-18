@@ -129,8 +129,6 @@ const Summarize = () => {
             placeholder={t("sum.prompt")}
             disabled={isLoading}
             onSend={(question, file) => makeApiRequest(question, file)}
-            tokens_used={0}
-            token_limit_tracking={false}
             question={question}
             setQuestion={setQuestion}
         />

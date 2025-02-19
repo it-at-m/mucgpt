@@ -12,27 +12,14 @@ interface Props {
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
-    tokens_used: number;
-    token_limit_tracking?: boolean;
     question: string;
     setQuestion: (question: string) => void;
 }
 
-export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
+export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | undefined>(undefined);
-    const { LLM } = useContext(LLMContext);
-    const wordCount = LLM.max_input_tokens;
-    const getDescription = () => {
-        let actual = countWords(question) + tokens_used;
-        let text;
-        if (token_limit_tracking) {
-            text = `${actual}/ ${wordCount} ${t("components.suminput.tokensused")}`;
-            if (actual > wordCount) text += `${t("components.suminput.limit")}`;
-        } else text = `${actual} ${t("components.suminput.tokensused")}`;
-        return text;
-    };
 
     const sendQuestion = () => {
         if (disabled || (!question.trim() && !file)) {
@@ -52,10 +39,6 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
             sendQuestion();
         }
     };
-
-    function countWords(str: string) {
-        return str.trim().split(/\s+/).length;
-    }
 
     const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (!newValue?.value) {
@@ -112,7 +95,7 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_us
                 />
             )}
             <div className={styles.questionInputContainerFooter}>
-                {file ? <div></div> : <div>{getDescription()}</div>}
+                <div></div>
                 <div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">
                         <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={sendQuestionDisabled} onClick={sendQuestion} />

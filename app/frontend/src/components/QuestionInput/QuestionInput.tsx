@@ -21,7 +21,7 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
-    const [description, setDescription] = useState<string>("0");
+    const [description, setDescription] = useState<string>("");
     const getDescription = () => {
         let actual = countWords(question) + tokens_used;
         let text;
@@ -31,7 +31,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         } else text = `${actual} ${t("components.questioninput.tokensused")}`;
         return text;
     };
-    useEffect(() => setDescription(getDescription()), [tokens_used]);
+    useEffect(() => setDescription(getDescription()), [tokens_used, LLM.max_input_tokens]);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -78,7 +78,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 onKeyDown={onEnterPress}
             />
             <div className={styles.questionInputContainerFooter}>
-                <div>{description}</div>
+                {tokens_used == 0 ? <div>{" "}</div> : <div>{description}</div>}
                 <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 <div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">

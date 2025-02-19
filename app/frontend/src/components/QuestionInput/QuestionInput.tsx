@@ -6,7 +6,6 @@ import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
 import { useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import useDebounce from "../../hooks/debouncehook";
 
 interface Props {
     onSend: (question: string) => void;
@@ -32,7 +31,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
             if (actual > LLM.max_input_tokens) text += `${t("components.questioninput.limit")}`;
         } else text = `${actual} ${t("components.questioninput.tokensused")}`;
         setDescription(text);
-    }, [tokens_used]);
+    }, [tokens_used, LLM.max_input_tokens]);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {

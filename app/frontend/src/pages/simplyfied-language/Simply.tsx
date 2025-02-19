@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, ReactNode } from "react";
 
 import { AskResponse, simplyApi, SimplyRequest, SimplyResponse } from "../../api";
 import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
@@ -16,6 +16,8 @@ import { SimplySidebar } from "../../components/SimplySidebar/SimplySidebar";
 import { SIMPLY_STORE, STORAGE_KEYS_SIMPLY } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
+import { AnswerList } from "../../components/AnswerList/AnswerList";
+import { ChatMessage } from "../chat/Chat";
 
 type SimplyMessage = DBMessage<AskResponse>;
 
@@ -102,33 +104,18 @@ const Simply = () => {
         />
     );
     const answerList = (
-        <>
-            {answers.map((answer, index) => (
-                <ChatTurnComponent
-                    key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
-                ></ChatTurnComponent>
-            ))}
-            {isLoading || error ? (
-                <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                    botmsg={
-                        <>
-                            {isLoading && <AnswerLoading text={outputType === "plain" ? t("simply.answer_loading_plain") : t("simply.answer_loading_easy")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} /> : null}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ) : (
-                <div></div>
-            )}
-            <div ref={chatMessageStreamEnd} />
-        </>
+        <AnswerList
+            answers={answers}
+            regularBotMsg={(answer: ChatMessage, index: number) => {
+                return <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />;
+            }}
+            onRollbackMessage={onRollbackMessage}
+            isLoading={isLoading}
+            error={error}
+            makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
+            chatMessageStreamEnd={chatMessageStreamEnd}
+            lastQuestionRef={lastQuestionRef}
+        />
     );
     return (
         <ChatLayout

@@ -31,7 +31,6 @@ const Version = () => {
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
                 <Accordion multiple collapsible defaultOpenItems="12">
-
                     <AccordionItem value="12">
                         <AccordionHeader>[1.2.3] 30.01.2025</AccordionHeader>
                         <AccordionPanel>
@@ -71,8 +70,8 @@ const Version = () => {
                                         Assistenten:
                                         <ul>
                                             <li>
-                                                Assistenten können nun mehrere Chatverläufe haben. Ähnlich wie bei der Chatfunktion kann ein Chatverlauf umbenannt und favorisiert werden.
-                                                Die Daten werden ausschließlich lokal im Browser gespeichert.
+                                                Assistenten können nun mehrere Chatverläufe haben. Ähnlich wie bei der Chatfunktion kann ein Chatverlauf
+                                                umbenannt und favorisiert werden. Die Daten werden ausschließlich lokal im Browser gespeichert.
                                             </li>
                                         </ul>
                                     </li>

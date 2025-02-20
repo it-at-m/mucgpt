@@ -2,10 +2,9 @@ import { useRef, useState, useEffect, useContext, useCallback } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
-import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
+import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList } from "../../components/Example";
-import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
@@ -14,9 +13,9 @@ import { History } from "../../components/History/History";
 import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
-import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { CHAT_STORE } from "../../constants";
 import { DBMessage, DBObject, StorageService } from "../../service/storage";
+import { AnswerList } from "../../components/AnswerList/AnswerList";
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -49,6 +48,7 @@ const Chat = () => {
 
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+    const [totalTokens, setTotalTokens] = useState<number>(0);
 
     const [allChats, setAllChats] = useState<DBObject<ChatResponse, ChatOptions>[]>([]);
 
@@ -134,7 +134,7 @@ const Chat = () => {
             let answer: string = "";
             let streamed_tokens = 0;
             let latestResponse: ChatResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
-
+            setAnswers([...answers, { user: question, response: latestResponse }]);
             for await (const chunk of readNDJSONStream(response.body)) {
                 if (chunk as Chunk) {
                     switch (chunk.type) {
@@ -151,10 +151,11 @@ const Chat = () => {
                     }
 
                     latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
-                    setIsLoading(false);
                     setAnswers([...answers, { user: question, response: latestResponse }]);
+                    setIsLoading(false);
                 }
             }
+            chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
             //chat present, if not create.
             if (active_chat) {
                 await storageService.appendMessage({ user: question, response: latestResponse }, options);
@@ -219,8 +220,11 @@ const Chat = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const totalTokens =
-        systemPromptTokens + answers.map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0)).reduceRight((prev, curr) => prev + curr, 0);
+    useEffect(() => {
+        setTotalTokens(
+            systemPromptTokens + answers.map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0)).reduceRight((prev, curr) => prev + curr, 0)
+        );
+    }, [answers, systemPromptTokens]);
 
     const onExampleClicked = async (example: string, system?: string) => {
         if (system) onSystemPromptChanged(system);
@@ -259,45 +263,29 @@ const Chat = () => {
     };
 
     const answerList = (
-        <>
-            {answers.map((answer, index) => (
-                <ChatTurnComponent
-                    key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={
-                        <>
-                            {index === answers.length - 1 && (
-                                <Answer
-                                    answer={answer.response}
-                                    onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                    setQuestion={question => setQuestion(question)}
-                                />
-                            )}
-                            {index !== answers.length - 1 && <Answer answer={answer.response} setQuestion={question => setQuestion(question)} />}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ))}
-
-            {isLoading || error ? (
-                <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                    botmsg={
-                        <>
-                            {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current, systemPrompt)} /> : null}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ) : (
-                <div></div>
-            )}
-            <div ref={chatMessageStreamEnd} />
-        </>
+        <AnswerList
+            answers={answers}
+            regularBotMsg={(answer, index) => {
+                return (
+                    <>
+                        {index === answers.length - 1 && (
+                            <Answer
+                                answer={answer.response}
+                                onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                setQuestion={question => setQuestion(question)}
+                            />
+                        )}
+                        {index !== answers.length - 1 && <Answer answer={answer.response} setQuestion={question => setQuestion(question)} />}
+                    </>
+                );
+            }}
+            onRollbackMessage={onRollbackMessage}
+            isLoading={isLoading}
+            error={error}
+            makeApiRequest={() => makeApiRequest(lastQuestionRef.current, systemPrompt)}
+            chatMessageStreamEnd={chatMessageStreamEnd}
+            lastQuestionRef={lastQuestionRef}
+        />
     );
     const examplesComponent = <ExampleList onExampleClicked={onExampleClicked} />;
     const inputComponent = (
@@ -358,7 +346,7 @@ const Chat = () => {
             setSystemPrompt={onSystemPromptChanged}
             actions={sidebar_actions}
             content={sidebar_content}
-        ></ChatsettingsDrawer>
+        />
     );
     return (
         <ChatLayout

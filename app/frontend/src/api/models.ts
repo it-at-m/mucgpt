@@ -1,3 +1,5 @@
+import { DBMessage } from "../service/storage";
+
 export type AskResponse = {
     answer: string;
     error?: string;
@@ -43,6 +45,9 @@ export type SumRequest = {
     language?: string;
     model: string;
 };
+
+export type SumarizeMessage = DBMessage<SumResponse>;
+
 export type BrainstormRequest = {
     topic: string;
     model: string;

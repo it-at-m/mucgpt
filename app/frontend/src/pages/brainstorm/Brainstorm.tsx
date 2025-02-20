@@ -16,6 +16,7 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { BRAINSTORM_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
+import { AnswerList } from "../../components/AnswerList/AnswerList";
 
 type BrainstormMessage = DBMessage<AskResponse>;
 
@@ -93,33 +94,18 @@ const Brainstorm = () => {
     const examplesComponent = <ExampleListBrainstorm onExampleClicked={onExampleClicked} />;
 
     const answerList = (
-        <>
-            {answers.map((answer, index) => (
-                <ChatTurnComponent
-                    key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<Mindmap markdown={answer.response.answer}></Mindmap>}
-                ></ChatTurnComponent>
-            ))}
-            {isLoading || error ? (
-                <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                    botmsg={
-                        <>
-                            {isLoading && <AnswerLoading text={t("brainstorm.answer_loading")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} /> : null}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ) : (
-                <div></div>
-            )}
-            <div ref={chatMessageStreamEnd} />
-        </>
+        <AnswerList
+            answers={answers}
+            regularBotMsg={(answer, index) => {
+                return <Mindmap markdown={answer.response.answer} />;
+            }}
+            onRollbackMessage={onRollbackMessage}
+            isLoading={isLoading}
+            error={error}
+            makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
+            chatMessageStreamEnd={chatMessageStreamEnd}
+            lastQuestionRef={lastQuestionRef}
+        />
     );
     return (
         <ChatLayout

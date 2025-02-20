@@ -59,7 +59,6 @@ export type SimplyRequest = {
     topic: string;
     temperature?: number;
     model?: string;
-    output_type: string;
 };
 
 export interface ApplicationConfig {

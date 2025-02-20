@@ -2,10 +2,10 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-top: 20px;
+    margin-top: 60px;
     margin-bottom: 10px;
-    max-width: 90em;
-    padding-left: 10em;
+    padding-left: 10%;
+    padding-right: 10%;
 }
 .panel {
     margin-left: 2em;
@@ -30,4 +30,5 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    margin-left: 3em;
 }

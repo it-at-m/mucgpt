@@ -136,8 +136,7 @@ export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse>
         body: JSON.stringify({
             topic: options.topic,
             temperature: options.temperature,
-            model: options.model,
-            output_type: options.output_type
+            model: options.model
         })
     });
     handleRedirect(response);

@@ -23,7 +23,7 @@ Verständlichkeit schlägt im Zweifel andere Kriterien, wie zum Beispiel geschle
 - KEIN Genitiv.
 - KEIN Passiv.
 - Bei fremdsprachigen Begriffen Aussprache erklären, z.B. Aupair: Man spricht Au-Pair so aus: O-Pär.
-- Mache nach jedem Satz einen Zeilenumbrauch.
+- Mache nach jedem Satz einen Zeilenumbrauch für Markdown, welcher aus zwei Leerzeichen ("  ") besteht.
 - Mehrsilbige Substantive mit einem Bindestrich trennen, z.B. Eltern-Teil statt Elternteil, Niederlassungs-Erlaubnis statt Niederlassungserlaubnis, Aufenthalts-Erlaubnis statt Aufenthaltserlaubnis
 
 # Wortebene

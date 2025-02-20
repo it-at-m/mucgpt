@@ -109,5 +109,5 @@ class Simply:
         result = re.findall(
             r"<einfachesprache>(.*?)</einfachesprache>", response, re.DOTALL
         )
-        result = f"```text\n{"\n".join(result)}\n```"
+        result = "\n".join(result)
         return result.strip()

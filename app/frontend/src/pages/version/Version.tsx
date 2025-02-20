@@ -6,7 +6,7 @@ import history from "../../assets/History.png";
 import simply from "../../assets/simply.png";
 import { useTranslation } from "react-i18next";
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Version = () => {
     const { t } = useTranslation();
@@ -39,7 +39,7 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Neuer Community-Assistent Sherlock 🕵️‍♂️. Unterstützt beim Review und der Erstellung von Testfällen. Entwickelt von von itm.km73.
+                                        Neuer Community-Assistent Sherlock 🕵️‍♂️. Unterstützt beim Review und der Erstellung von Testfällen. Entwickelt von itm.km73.
                                     </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
@@ -47,25 +47,24 @@ const Version = () => {
                                     <li>
                                         Brainstorming:
                                         <ul>
-                                            <li>Mindmaps werden nun bei dunklen Design richtig dargestellt.</li>
+                                            <li>Mindmaps werden nun im dunklen Design richtig dargestellt.</li>
                                         </ul>
                                     </li>
                                     <li>
                                         Einfache Sprache:
                                         <ul>
-                                            <li>Links werden nun beim Übersetzen in einfache Sprache ignoriert. Dies hatte zu Halluzinationen geführt. </li>
+                                            <li>Links werden nun beim Übersetzen in einfache Sprache ignoriert. Dies hatte zuvor zu Halluzinationen geführt.</li>
                                         </ul>
                                     </li>
-                                    <li> Es ist nun möglich, partielle Codeblöcke in Chrome zu kopieren. Dies hatte zuvor zu Zeilenumbrüchen nach jedem Wort geführt.</li>
-                                    <li>Ein Fehler bei der Kommunikation mit Mistral Modellen über die API wurde behoben.</li>
-
+                                    <li>Es ist nun möglich, partielle Codeblöcke in Chrome zu kopieren. Dies hatte zuvor zu Zeilenumbrüchen nach jedem Wort geführt.</li>
+                                    <li>Ein Fehler bei der Kommunikation mit Mistral-Modellen über die API wurde behoben.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>
                                         Brainstorming:
                                         <ul>
-                                            <li>Mindmap Erstellung wurde verbessert. Mehr Kindknoten werden generiert. Dies führt zu größeren, detaillierteren Mindmaps.</li>
+                                            <li>Mindmap-Erstellung wurde verbessert. Mehr Kindknoten werden generiert, was zu größeren, detaillierteren Mindmaps führt.</li>
                                         </ul>
                                     </li>
                                     <li>
@@ -80,13 +79,13 @@ const Version = () => {
                                     <li>
                                         Einfache Sprache:
                                         <ul>
-                                            Titel des <i>leichte Sprache</i> Beispiels wurde umbenannt. Es handelt sich hierbei richtigerweise um einen Artikel zum Arbeitsschutzgesetz.
+                                            <li>Der Titel des <i>leichte Sprache</i> Beispiels wurde umbenannt. Es handelt sich hierbei richtigerweise um einen Artikel zum Arbeitsschutzgesetz.</li>
                                         </ul>
                                     </li>
                                     <li>
                                         Generelle Oberflächenverbesserungen:
                                         <ul>
-                                            <li>Jede Funktion (z.B. Chat, Zusammenfassen) hat nun die Aktionselemente in einer immer geöffneten Sidebar auf der Linken Seite.</li>
+                                            <li>Jede Funktion (z.B. Chat, Zusammenfassen) hat nun die Aktionselemente in einer immer geöffneten Sidebar auf der linken Seite.</li>
                                             <li>Das lokale Speichermanagement in der Browserdatenbank wurde verbessert und vereinheitlicht.
                                                 Bestehende Daten (alte Chats und Assistenten) werden migriert.
                                                 ⚠ Konversationen in <i>Zusammenfassen</i>, <i>Brainstorming</i> und <i>Einfache Sprache</i> bleiben nicht erhalten.</li>
@@ -125,7 +124,7 @@ const Version = () => {
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>Das Design der Benutzeroberfläche von MUCGPT wurde aktualisiert.</li>
-                                    <li>🧜‍♀️ Arielle die Diagramm Assistentin ist jetzt unter "Community Assistenten" zu finden und nicht mehr im Chat.</li>
+                                    <li>🧜‍♀️ Arielle, die Diagramm-Assistentin, ist jetzt unter "Community Assistenten" zu finden und nicht mehr im Chat.</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
@@ -137,7 +136,7 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorm bieten wir nun als viertes Feature "Leichte Sprache" an.
+                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorming bieten wir nun als viertes Feature "Leichte Sprache" an.
                                         <p>
                                             <img width="70%" src={simply} alt="Bild zur Leichten Sprache"></img>
                                         </p>
@@ -181,7 +180,7 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Generierter Code wurde manchmal nicht korrekt dargestellt (Klammern entfernt)</li>
+                                    <li>Generierter Code wurde manchmal nicht korrekt dargestellt (Klammern entfernt).</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>
@@ -197,7 +196,7 @@ const Version = () => {
                                     <li>Versionsnummer wird wieder richtig gespeichert und in den Einstellungen angezeigt.</li>
                                     <li>
                                         Maximale Tokens aus der Config aufgeteilt in Input- und Output-Tokens. Dadurch laufen Modelle mit kleineren
-                                        Contextfenster (wie z.B. Mistral) nicht mehr in einen Fehler.
+                                        Kontextfenstern (wie z.B. Mistral) nicht mehr in einen Fehler.
                                     </li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
@@ -211,7 +210,7 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Benutzer haben nun die Möglichkeit zwischen 3 verschiedenen Sprachmodellen zu wählen, welches für ihren Anwendungsfall
+                                        Benutzer haben nun die Möglichkeit, zwischen 3 verschiedenen Sprachmodellen zu wählen, welches für ihren Anwendungsfall
                                         am besten passt.
                                         <ul>
                                             <li>GPT-4o-mini</li>
@@ -223,12 +222,12 @@ const Version = () => {
                                 <h3>{t("version.fixed")}</h3>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Das standardmäßig benutze Sprachmodell wurde von GPT-3.5 auf die neuere Version GPT-4o-mini geändert.</li>
+                                    <li>Das standardmäßig benutzte Sprachmodell wurde von GPT-3.5 auf die neuere Version GPT-4o-mini geändert.</li>
                                     <li>
-                                        Verbesserung der "Zusammenfassen"-Funktion
+                                        Verbesserung der "Zusammenfassen"-Funktion:
                                         <ul>
-                                            <li>weniger Fehler</li>
-                                            <li>zuverlässigere Zusammenfassungen in der gewünschten Struktur</li>
+                                            <li>Weniger Fehler</li>
+                                            <li>Zuverlässigere Zusammenfassungen in der gewünschten Struktur</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -242,17 +241,17 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Für die Chat-Funktion gibt es nun eine Historie aller durchgeführten Konversationen
+                                        Für die Chat-Funktion gibt es nun eine Historie aller durchgeführten Konversationen.
                                         <p>
                                             <img width="70%" src={history}></img>
                                         </p>
                                         <ul>
-                                            <li>Alle Chat-Verläufe in dem Tab "Chat" werden automatisch gespeichert</li>
-                                            <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favorisiert werden</li>
-                                            <li>Favorisiert Chats werden immer ganz oben angezeigt</li>
+                                            <li>Alle Chat-Verläufe im Tab "Chat" werden automatisch gespeichert.</li>
+                                            <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favorisiert werden.</li>
+                                            <li>Favorisierte Chats werden immer ganz oben angezeigt.</li>
                                             <li>
-                                                Die Chats werden nach dem letzte Bearbeitungszeitpunkt sortiert und werden gruppiert in "Heute", "Gestern",
-                                                "Letzte 7 Tage" und "Älter"
+                                                Die Chats werden nach dem letzten Bearbeitungszeitpunkt sortiert und gruppiert in "Heute", "Gestern",
+                                                "Letzte 7 Tage" und "Älter".
                                             </li>
                                         </ul>
                                     </li>
@@ -268,15 +267,15 @@ const Version = () => {
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>Neuer Hinweis im Antwortfeld vom Chat: MUCGPT macht Fehler</li>
+                                    <li>Neuer Hinweis im Antwortfeld vom Chat: MUCGPT macht Fehler.</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Der Hilfstext für den Systemprompt ist nicht mehr transparent</li>
+                                    <li>Der Hilfstext für den Systemprompt ist nicht mehr transparent.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Die Beschreibung des Arielle-Chat-Beispiels wurde verbessert</li>
+                                    <li>Die Beschreibung des Arielle-Chat-Beispiels wurde verbessert.</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
@@ -288,8 +287,7 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        {" "}
-                                        Chat/Zusammenfassen/Brainstorming
+                                        Chat/Zusammenfassen/Brainstorming:
                                         <ul>
                                             <li>
                                                 Eigene Nachrichten können zurückgenommen werden. Beim Klicken des entsprechenden Buttons werden alle darunter
@@ -300,38 +298,38 @@ const Version = () => {
                                                 </p>
                                             </li>
                                             <li>
-                                                Aktueller Chatverlauf wird im Browser zwischengespeichert und bleibt somit beim Verlassen der Seite bestehen
+                                                Der aktuelle Chatverlauf wird im Browser zwischengespeichert und bleibt somit beim Verlassen der Seite bestehen.
                                             </li>
                                         </ul>
                                     </li>
-                                    <li>Was gibts neues?: Updatehistorie kann angezeigt werden</li>
+                                    <li>Was gibt's Neues?: Updatehistorie kann angezeigt werden.</li>
                                     <li>
                                         Chat:
                                         <ul>
                                             <li>
                                                 <div>
                                                     Auf eine Antwort von MUCGPT werden nun <b>Antwortmöglichkeiten</b> vorgeschlagen. Beim Auswählen einer
-                                                    Antwortmöglichkeit wird ein entsprechender Prompt in das Eingabefeld geladen:{" "}
+                                                    Antwortmöglichkeit wird ein entsprechender Prompt in das Eingabefeld geladen:
                                                 </div>
                                                 <p>
                                                     <img width="80%" src={vorgeschlageneAntworten}></img>
                                                 </p>
                                             </li>
                                             <li>
-                                                <b>Mermaid Diagramme</b> können im Chat angezeigt und heruntergeladen werden
+                                                <b>Mermaid-Diagramme</b> können im Chat angezeigt und heruntergeladen werden.
                                             </li>
                                             <li>
                                                 Es gibt Arielle, die Diagramm-Assistentin. Diese begleitet den Nutzer beim Erstellen von Mermaid-Diagrammen.
                                             </li>
-                                            <li>Mehr Platz für die Eingabe des Systemprompts</li>
-                                            <li>Warnmeldung wird angezeigt, falls Systemprompt gesetzt ist</li>
-                                            <li>Bessere Beschreibungen für die Temperatur Einstellung</li>
+                                            <li>Mehr Platz für die Eingabe des Systemprompts.</li>
+                                            <li>Warnmeldung wird angezeigt, falls ein Systemprompt gesetzt ist.</li>
+                                            <li>Bessere Beschreibungen für die Temperatureinstellung.</li>
                                         </ul>
                                     </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Der System Prompt wird nun ins Tokenlimit miteinbezogen</li>
+                                    <li>Der Systemprompt wird nun ins Tokenlimit miteinbezogen.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>
@@ -343,22 +341,22 @@ const Version = () => {
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>Produktivumgebung aufgebaut</li>
-                                    <li>FAQ wurde ergänzt</li>
+                                    <li>Produktivumgebung aufgebaut.</li>
+                                    <li>FAQ wurde ergänzt.</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Fehlermeldungen anzeigen, falls das Sprachmodell während dem Streaming überlastet ist</li>
-                                    <li>Rechtsschreibfehler in Hilfetexten verbessert</li>
+                                    <li>Fehlermeldungen anzeigen, falls das Sprachmodell während des Streamings überlastet ist.</li>
+                                    <li>Rechtschreibfehler in Hilfetexten verbessert.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Nutzungsbedingungen müssen nun einmal am Tag bestätigt werden</li>
-                                    <li>Nutzungsbedingungen wurden ergänzt</li>
-                                    <li>Hinweis auf Servicedesk</li>
-                                    <li>Link zum Wilma Arbeitsraum</li>
+                                    <li>Nutzungsbedingungen müssen nun einmal am Tag bestätigt werden.</li>
+                                    <li>Nutzungsbedingungen wurden ergänzt.</li>
+                                    <li>Hinweis auf Servicedesk.</li>
+                                    <li>Link zum Wilma-Arbeitsraum.</li>
                                 </ul>
-                                <li>Chat-Beispiele von der Community wurden eingepflegt </li>
+                                <li>Chat-Beispiele von der Community wurden eingepflegt.</li>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
@@ -368,13 +366,13 @@ const Version = () => {
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>Bereits getätigte Einstellungen werden gespeichert (z.B. Sprache, System Prompt, Nutzungsbedingungen gelesen)</li>
+                                    <li>Bereits getätigte Einstellungen werden gespeichert (z.B. Sprache, Systemprompt, Nutzungsbedingungen gelesen).</li>
                                     <li>
                                         Barrierefreiheit:
                                         <ul>
-                                            <li>Optimierte Darstellung für Screenreader</li>
-                                            <li>Bessere Unterscheidbarkeit für Farbenblinde</li>
-                                            <li>Unterstützung von Windows High Contrast Mode</li>
+                                            <li>Optimierte Darstellung für Screenreader.</li>
+                                            <li>Bessere Unterscheidbarkeit für Farbenblinde.</li>
+                                            <li>Unterstützung von Windows High Contrast Mode.</li>
                                             <li>Und noch viele weitere Optimierungen ...</li>
                                         </ul>
                                     </li>
@@ -392,7 +390,7 @@ const Version = () => {
                                         Brainstorm:
                                         <ul>
                                             <li>
-                                                Mindmaps sind nun im .mm Format herunterladbar - können mit dem Mindmap-Tool Freeplane weiterverarbeitet werden
+                                                Mindmaps sind nun im .mm-Format herunterladbar und können mit dem Mindmap-Tool Freeplane weiterverarbeitet werden.
                                             </li>
                                         </ul>
                                     </li>
@@ -401,15 +399,14 @@ const Version = () => {
                                         <ul>
                                             <li>
                                                 Die Länge der Zusammenfassung hängt nun von der Gesamtlänge des Eingabetexts ab - längere Eingabetexte führen zu
-                                                längeren Zusammenfassungen
+                                                längeren Zusammenfassungen.
                                             </li>
                                             <li>Der Detaillierungsgrad (kurz, mittel, lang) lässt sich über eine eigene Einstellung setzen.</li>
                                         </ul>
                                     </li>
-
-                                    <li>Design vereinheitlicht</li>
-                                    <li>Dark Mode hinzugefügt</li>
-                                    <li>Nutzungsbedingungen aktualisiert</li>
+                                    <li>Design vereinheitlicht.</li>
+                                    <li>Dark Mode hinzugefügt.</li>
+                                    <li>Nutzungsbedingungen aktualisiert.</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
@@ -424,16 +421,16 @@ const Version = () => {
                                     <li>
                                         Bessere Darstellung von Antworten, die Markdown enthalten:
                                         <ul>
-                                            <li>Bei Codeblöcken wird die Programmierprache mit angezeigt</li>
-                                            <li>Bei Codeblöcken werden die Zeilennummern mitangegeben</li>
+                                            <li>Bei Codeblöcken wird die Programmiersprache mit angezeigt.</li>
+                                            <li>Bei Codeblöcken werden die Zeilennummern mit angegeben.</li>
                                         </ul>
                                     </li>
                                     <li>
                                         Zusammenfassen:
                                         <ul>
-                                            <li>Zusammenfassungen können kopiert werden</li>
-                                            <li>Tokenlimit (Wörterlimit) wurde entfernt</li>
-                                            <li>Es können PDFs hochgeladen werden, die anschließend zusammengefasst werden</li>
+                                            <li>Zusammenfassungen können kopiert werden.</li>
+                                            <li>Tokenlimit (Wörterlimit) wurde entfernt.</li>
+                                            <li>Es können PDFs hochgeladen werden, die anschließend zusammengefasst werden.</li>
                                         </ul>
                                     </li>
                                     <li>
@@ -441,14 +438,14 @@ const Version = () => {
                                         <ul>
                                             <li>
                                                 Antworten können nun optional unformatiert angezeigt werden (Alternative zur automatischen Darstellung als
-                                                HTML/Markdown)
+                                                HTML/Markdown).
                                             </li>
                                             <li>
                                                 Mehr Einstellungen für den Chat:
                                                 <ul>
-                                                    <li>Temperatur: Kreativtät der Antworten festlegen</li>
-                                                    <li>Maximale Antwortlänge</li>
-                                                    <li>System prompt: Verhalten des Sprachmodells festlegen, indem man z.B. eine bestimmte Rolle vergibt.</li>
+                                                    <li>Temperatur: Kreativität der Antworten festlegen.</li>
+                                                    <li>Maximale Antwortlänge.</li>
+                                                    <li>Systemprompt: Verhalten des Sprachmodells festlegen, indem man z.B. eine bestimmte Rolle vergibt.</li>
                                                 </ul>
                                             </li>
                                         </ul>
@@ -456,14 +453,14 @@ const Version = () => {
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Bei längeren Eingaben ist das Eingabetextfeld nicht mitgewachsen</li>
+                                    <li>Bei längeren Eingaben ist das Eingabetextfeld nicht mitgewachsen.</li>
                                     <li>
-                                        Falls Antworten HTML enthalten wie &lt; enthalten, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash
-                                        Skripte sollten nun wieder korrekt generiert werden
+                                        Falls Antworten HTML enthalten wie &lt;, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash
+                                        Skripte sollten nun wieder korrekt generiert werden.
                                     </li>
                                     <li>
                                         Generierte Antworten mit Codeblöcken in Markdown: Falls keine Sprache im zurückgegebenen Codeblock definiert war und
-                                        dieser sehr lange Zeilen enthalten hat, gab es keinen Zeilenumbruch
+                                        dieser sehr lange Zeilen enthalten hat, gab es keinen Zeilenumbruch.
                                     </li>
                                     <li>
                                         Falls die Authentifizierungsinformationen ausgelaufen sind (Fenster zu lange offen ohne Interaktion), wird die Seite neu

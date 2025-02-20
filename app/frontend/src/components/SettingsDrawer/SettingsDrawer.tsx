@@ -165,7 +165,7 @@ export const SettingsDrawer = ({
                         Version: <Tag shape="circular">{version}</Tag> <Tag shape="circular">{commit}</Tag>
                     </div>
                     <div className={styles.faq}>
-                        <Link href="\#version">{t("version.header")}</Link>
+                        <Link href="\#version" onClick={closeDrawer}>{t("version.header")}</Link>
                     </div>
                 </div>
             </OverlayDrawer>

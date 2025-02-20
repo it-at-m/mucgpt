@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext } from "react";
 
-import { sumApi, SumRequest, SumResponse } from "../../api";
+import { sumApi, SumarizeMessage, SumRequest, SumResponse } from "../../api";
 import { AnswerError, AnswerLoading } from "../../components/Answer";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
@@ -17,10 +17,9 @@ import { SummarizeSidebar } from "../../components/SummarizeSidebar/SummarizeSid
 import { SUMMARIZE_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
+import { SumAnswerList } from "../../components/AnswerList/SumAnswerList";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
-
-type SumarizeMessage = DBMessage<SumResponse>;
 
 const Summarize = () => {
     const { language } = useContext(LanguageContext);
@@ -94,34 +93,17 @@ const Summarize = () => {
     const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
     const sidebar_content = <SummarizeSidebar onDetaillevelChanged={onDetaillevelChanged} detaillevel_pref={detaillevel_pref} />;
     const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
+
     const answerList = (
-        <>
-            {answers.map((answer, index) => (
-                <ChatTurnComponent
-                    key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={<SumAnswer answer={answer.response} top_n={2}></SumAnswer>}
-                ></ChatTurnComponent>
-            ))}
-            {isLoading || error ? (
-                <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                    botmsg={
-                        <>
-                            {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} /> : null}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ) : (
-                <div></div>
-            )}
-            <div ref={chatMessageStreamEnd} />
-        </>
+        <SumAnswerList
+            answers={answers}
+            onRollbackMessage={onRollbackMessage}
+            isLoading={isLoading}
+            error={error}
+            makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
+            chatMessageStreamEnd={chatMessageStreamEnd}
+            lastQuestionRef={lastQuestionRef}
+        />
     );
     const inputComponent = (
         <SumInput

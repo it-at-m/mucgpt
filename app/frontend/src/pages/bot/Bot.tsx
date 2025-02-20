@@ -19,6 +19,7 @@ import { ChatMessage } from "../chat/Chat";
 import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { DBObject, StorageService } from "../../service/storage";
+import { AnswerList } from "../../components/AnswerList/AnswerList";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -274,46 +275,31 @@ const BotChat = () => {
         />
     );
     const answerList = (
-        <>
-            {answers.map((answer, index) => (
-                <ChatTurnComponent
-                    key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={
-                        <>
-                            {" "}
-                            {index === answers.length - 1 && (
-                                <Answer
-                                    key={index}
-                                    answer={answer.response}
-                                    onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                    setQuestion={question => setQuestion(question)}
-                                />
-                            )}
-                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ))}
-            {isLoading || error ? (
-                <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                    botmsg={
-                        <>
-                            {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} /> : null}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ) : (
-                <div></div>
-            )}
-            <div ref={chatMessageStreamEnd} />
-        </>
+        <AnswerList
+            answers={answers}
+            regularBotMsg={(answer, index) => {
+                return (
+                    <>
+                        {" "}
+                        {index === answers.length - 1 && (
+                            <Answer
+                                key={index}
+                                answer={answer.response}
+                                onRegenerateResponseClicked={onRegeneratResponseClicked}
+                                setQuestion={question => setQuestion(question)}
+                            />
+                        )}
+                        {index !== answers.length - 1 && <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
+                    </>
+                );
+            }}
+            onRollbackMessage={onRollbackMessage}
+            isLoading={isLoading}
+            error={error}
+            makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
+            chatMessageStreamEnd={chatMessageStreamEnd}
+            lastQuestionRef={lastQuestionRef}
+        />
     );
     return (
         <ChatLayout

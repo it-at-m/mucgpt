@@ -21,17 +21,17 @@ interface Props {
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
     const { t, i18n } = useTranslation();
     const { LLM } = useContext(LLMContext);
-    const [description, setDescription] = useState<string>("");
-    const getDescription = () => {
+    const [description, setDescription] = useState<string>("0");
+
+    useEffect(() => {
         let actual = countWords(question) + tokens_used;
         let text;
         if (token_limit_tracking) {
             text = `${actual}/ ${LLM.max_input_tokens} ${t("components.questioninput.tokensused")}`;
             if (actual > LLM.max_input_tokens) text += `${t("components.questioninput.limit")}`;
         } else text = `${actual} ${t("components.questioninput.tokensused")}`;
-        return text;
-    };
-    useEffect(() => setDescription(getDescription()), [tokens_used, LLM.max_input_tokens]);
+        setDescription(text);
+    }, [tokens_used, LLM.max_input_tokens]);
 
     const sendQuestion = () => {
         if (disabled || !question.trim()) {
@@ -64,8 +64,6 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         }
     };
 
-    const sendQuestionDisabled = disabled || !question.trim();
-
     return (
         <Stack horizontal className={styles.questionInputContainer}>
             <Textarea
@@ -82,7 +80,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 <div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">
-                        <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={sendQuestionDisabled} onClick={sendQuestion} />
+                        <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={disabled || !question.trim()} onClick={sendQuestion} />
                     </Tooltip>
                 </div>
             </div>

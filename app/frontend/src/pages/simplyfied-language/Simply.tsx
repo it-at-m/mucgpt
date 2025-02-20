@@ -5,30 +5,25 @@ import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
-import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { ExampleListSimply } from "../../components/Example/ExampleListSimply";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
-import { SimplySidebar } from "../../components/SimplySidebar/SimplySidebar";
-import { SIMPLY_STORE, STORAGE_KEYS_SIMPLY } from "../../constants";
+import { SIMPLY_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
+import styles from "./Simply.module.css";
 
 type SimplyMessage = DBMessage<AskResponse>;
 
 const Simply = () => {
-    const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
-
-    const outputType_pref = localStorage.getItem(STORAGE_KEYS_SIMPLY.SIMPLY_OUTPUT_TYPE) || "plain";
-    const [outputType, setOutputType] = useState<string>(outputType_pref);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
@@ -59,7 +54,6 @@ const Simply = () => {
                 topic: question,
                 model: LLM.llm_name,
                 temperature: 0,
-                output_type: outputType
             };
             const parsedResponse: SimplyResponse = await simplyApi(request);
             const askResponse: AskResponse = { answer: parsedResponse.content, error: parsedResponse.error };
@@ -80,14 +74,9 @@ const Simply = () => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const onOutputTypeChanged = (newValue: string) => {
-        setOutputType(newValue);
-        localStorage.setItem(STORAGE_KEYS_SIMPLY.SIMPLY_OUTPUT_TYPE, newValue);
-    };
 
     const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
-    const sidebar_content = <SimplySidebar onOutputTypeChanged={onOutputTypeChanged} outputType={outputType} />;
-    const sidebar = <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>;
+    const sidebar = <Sidebar actions={sidebar_actions} content={<div className={styles.description}>{t("simply.plain_description")}</div>}></Sidebar>;
 
     const examplesComponent = <ExampleListSimply onExampleClicked={onExampleClicked} />;
     const inputComponent = (
@@ -119,7 +108,7 @@ const Simply = () => {
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={
                         <>
-                            {isLoading && <AnswerLoading text={outputType === "plain" ? t("simply.answer_loading_plain") : t("simply.answer_loading_easy")} />}
+                            {isLoading && <AnswerLoading text={t("simply.answer_loading_plain")} />}
                             {error ? <AnswerError error={error.toString()} onRetry={() => makeApiRequest(lastQuestionRef.current)} /> : null}
                         </>
                     }

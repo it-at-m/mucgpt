@@ -148,7 +148,7 @@ export const SettingsDrawer = ({
                     <ul className={styles.list}>
                         <li>
                             {" "}
-                            <Link href="\#faq">FAQs</Link>
+                            <Link href="\#faq" onClick={closeDrawer}>FAQs</Link>
                         </li>
                         <li>
                             <Link download href={cheetsheet} aria-label="Cheat Sheet">

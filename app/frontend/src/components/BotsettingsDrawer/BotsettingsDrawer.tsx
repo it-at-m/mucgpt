@@ -155,13 +155,9 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                     </div>
                 </div>
             )}
-            {isEditable ? (
+            {isEditable && (
                 <div className={styles.header} role="heading" aria-level={3}>
                     <div className={styles.systemPromptHeadingContainer}>{t("create_bot.description")}</div>
-                </div>
-            ) : (
-                <div className={styles.header} role="heading" aria-level={3}>
-                    {t("create_bot.description")}
                 </div>
             )}
             <div className={styles.bodyContainer}>
@@ -191,34 +187,34 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                     </Field>
                 </div>
             </div>
-            <div className={styles.header} role="heading" aria-level={3}>
-                <div className={styles.systemPromptHeadingContainer}>
-                    <InfoLabel
-                        info={
-                            <div>
-                                <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
-                                {t("components.chattsettingsdrawer.system_prompt_info")}
-                            </div>
-                        }
-                    >
-                        {t("components.chattsettingsdrawer.system_prompt")}
-                    </InfoLabel>
-                    {isEditable && (
-                        <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
-                            <Button
-                                aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
-                                icon={<Dismiss24Regular />}
-                                appearance="subtle"
-                                onClick={onClearSystemPrompt}
-                                size="small"
-                            ></Button>
-                        </Tooltip>
-                    )}
+            {isEditable && <>
+                <div className={styles.header} role="heading" aria-level={3}>
+                    <div className={styles.systemPromptHeadingContainer}>
+                        <InfoLabel
+                            info={
+                                <div>
+                                    <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
+                                    {t("components.chattsettingsdrawer.system_prompt_info")}
+                                </div>
+                            }
+                        >
+                            {t("components.chattsettingsdrawer.system_prompt")}
+                        </InfoLabel>
+                        {isEditable && (
+                            <Tooltip content={t("components.chattsettingsdrawer.system_prompt_clear")} relationship="description" positioning="below">
+                                <Button
+                                    aria-label={t("components.chattsettingsdrawer.system_prompt_clear")}
+                                    icon={<Dismiss24Regular />}
+                                    appearance="subtle"
+                                    onClick={onClearSystemPrompt}
+                                    size="small"
+                                ></Button>
+                            </Tooltip>
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div className={styles.bodyContainer}>
-                <div>
-                    {isEditable && (
+                <div className={styles.bodyContainer}>
+                    <div>
                         <Field size="large">
                             <Textarea
                                 textarea={styles.systempromptTextArea}
@@ -230,100 +226,101 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 onChange={onSytemPromptChange}
                             />
                         </Field>
-                    )}
-                    {!isEditable && (
-                        <Markdown
-                            className={styles.markdownDescription}
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeRaw]}
-                            components={{
-                                code: CodeBlockRenderer
-                            }}
-                        >
-                            {systemPrompt}
-                        </Markdown>
-                    )}
+                        {!isEditable && (
+                            <Markdown
+                                className={styles.markdownDescription}
+                                remarkPlugins={[remarkGfm]}
+                                rehypePlugins={[rehypeRaw]}
+                                components={{
+                                    code: CodeBlockRenderer
+                                }}
+                            >
+                                {systemPrompt}
+                            </Markdown>
+                        )}
+                    </div>
                 </div>
-            </div>
-            <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
-                <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
-            </div>
-            <div className={styles.bodyContainer}>
-                <div className={styles.verticalContainer}>
-                    <Slider
-                        min={min_max_tokens}
-                        max={max_max_tokens}
-                        onChange={onMaxtokensChange}
-                        aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
-                        value={max_output_tokens}
-                        aria-labelledby={max_tokens_headerID}
-                        id={max_tokensID}
-                        disabled={!isEditable}
-                    />
-                    <br></br>
-                    <Label htmlFor={max_tokensID} aria-hidden>
-                        {max_output_tokens} Tokens
-                    </Label>
+                <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
+                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>{t("components.chattsettingsdrawer.max_lenght")}</InfoLabel>
                 </div>
-            </div>
-            <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
-                <InfoLabel
-                    info={
-                        <div>
-                            {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
-                            {t("components.chattsettingsdrawer.temperature_info")}
-                        </div>
-                    }
+                <div className={styles.bodyContainer}>
+                    <div className={styles.verticalContainer}>
+                        <Slider
+                            min={min_max_tokens}
+                            max={max_max_tokens}
+                            onChange={onMaxtokensChange}
+                            aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
+                            value={max_output_tokens}
+                            aria-labelledby={max_tokens_headerID}
+                            id={max_tokensID}
+                            disabled={!isEditable}
+                        />
+                        <br></br>
+                        <Label htmlFor={max_tokensID} aria-hidden>
+                            {max_output_tokens} Tokens
+                        </Label>
+                    </div>
+                </div>
+                <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
+                    <InfoLabel
+                        info={
+                            <div>
+                                {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
+                                {t("components.chattsettingsdrawer.temperature_info")}
+                            </div>
+                        }
+                    >
+                        {t("components.chattsettingsdrawer.temperature")}
+                    </InfoLabel>
+                </div>
+                <div className={styles.bodyContainer}>
+                    <div className={styles.verticalContainer}>
+                        <Label htmlFor={temperatureID} aria-hidden size="medium" className={styles.temperatureLabel}>
+                            {" "}
+                            {t("components.chattsettingsdrawer.min_temperature")}
+                        </Label>
+                        <Slider
+                            min={min_temp}
+                            max={max_temp}
+                            onChange={onTemperatureChange}
+                            aria-valuetext={t("components.chattsettingsdrawer.temperature") + ` ist ${temperature}`}
+                            value={temperature}
+                            step={0.05}
+                            aria-labelledby={temperature_headerID}
+                            id={temperatureID}
+                            disabled={!isEditable}
+                        />
+                        <Label htmlFor={temperatureID} className={styles.temperatureLabel} aria-hidden size="medium">
+                            {" "}
+                            {t("components.chattsettingsdrawer.max_temperatur")}
+                        </Label>
+                        <Label htmlFor={temperatureID} aria-hidden>
+                            {temperature}
+                        </Label>
+                    </div>
+                </div>
+                <br />
+                Veröffentlichen:
+                <br />
+                <Dropdown
+                    id="publish"
+                    aria-label="Veröffentlichen"
+                    defaultValue="Nein"
+                    appearance="underline"
+                    size="small"
+                    positioning="below-start"
+                    onOptionSelect={onPublishSelected}
+                    disabled
                 >
-                    {t("components.chattsettingsdrawer.temperature")}
-                </InfoLabel>
-            </div>
-            <div className={styles.bodyContainer}>
-                <div className={styles.verticalContainer}>
-                    <Label htmlFor={temperatureID} aria-hidden size="medium" className={styles.temperatureLabel}>
-                        {" "}
-                        {t("components.chattsettingsdrawer.min_temperature")}
-                    </Label>
-                    <Slider
-                        min={min_temp}
-                        max={max_temp}
-                        onChange={onTemperatureChange}
-                        aria-valuetext={t("components.chattsettingsdrawer.temperature") + ` ist ${temperature}`}
-                        value={temperature}
-                        step={0.05}
-                        aria-labelledby={temperature_headerID}
-                        id={temperatureID}
-                        disabled={!isEditable}
-                    />
-                    <Label htmlFor={temperatureID} className={styles.temperatureLabel} aria-hidden size="medium">
-                        {" "}
-                        {t("components.chattsettingsdrawer.max_temperatur")}
-                    </Label>
-                    <Label htmlFor={temperatureID} aria-hidden>
-                        {temperature}
-                    </Label>
-                </div>
-            </div>
-            <br />
-            Veröffentlichen:
-            <br />
-            <Dropdown
-                id="publish"
-                aria-label="Veröffentlichen"
-                defaultValue="Nein"
-                appearance="underline"
-                size="small"
-                positioning="below-start"
-                onOptionSelect={onPublishSelected}
-                disabled
-            >
-                <Option text="Ja" className={styles.option} key={1}>
-                    Ja
-                </Option>
-                <Option text="Nein" className={styles.option} key={2}>
-                    Nein
-                </Option>
-            </Dropdown>
+                    <Option text="Ja" className={styles.option} key={1}>
+                        Ja
+                    </Option>
+                    <Option text="Nein" className={styles.option} key={2}>
+                        Nein
+                    </Option>
+                </Dropdown>
+            </>
+            }
         </>
     );
     return <Sidebar actions={actions_component} content={content}></Sidebar>;

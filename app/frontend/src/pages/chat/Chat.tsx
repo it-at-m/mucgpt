@@ -16,6 +16,7 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE } from "../../constants";
 import { DBMessage, DBObject, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
+import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -44,6 +45,7 @@ const Chat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -73,6 +75,31 @@ const Chat = () => {
             setSystemPromptTokens(response.count);
         } else setSystemPromptTokens(0);
     }, [debouncedSystemPrompt, LLM]);
+
+    useEffect(() => {
+        setQuickPrompts([
+            {
+                label: t("chat.quickprompts.shorter", { lng: language }),
+                prompt: t("chat.quickprompts.shorter_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.shorter_tooltip", { lng: language })
+            },
+            {
+                label: t("chat.quickprompts.formal", { lng: language }),
+                prompt: t("chat.quickprompts.formal_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.formal_tooltip", { lng: language })
+            },
+            {
+                label: t("chat.quickprompts.informal", { lng: language }),
+                prompt: t("chat.quickprompts.informal_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.informal_tooltip", { lng: language })
+            },
+            {
+                label: t("chat.quickprompts.longer", { lng: language }),
+                prompt: t("chat.quickprompts.longer_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.longer_tooltip", { lng: language })
+            }
+        ]);
+    }, [language]);
 
     useEffect(() => {
         makeTokenCountRequest();

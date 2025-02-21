@@ -39,7 +39,6 @@ const EXAMPLES: ExampleModel[] = [
     }
 ];
 
-
 const Summarize = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);

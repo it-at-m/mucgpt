@@ -5,10 +5,11 @@ import { UserChatMessage } from "../UserChatMessage";
 import { AnswerLoading } from "../Answer/AnswerLoading";
 import { AnswerError } from "../Answer/AnswerError";
 import { ChatMessage } from "../../pages/chat/Chat";
+import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
 
 interface Props {
     answers: ChatMessage[];
-    regularBotMsg: (answer: ChatMessage, index: number) => ReactNode;
+    regularBotMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
     onRollbackMessage: (message: string) => () => void;
     isLoading: boolean;
     error: unknown;

@@ -207,7 +207,7 @@ const Simply = () => {
             const request: SimplyRequest = {
                 topic: question,
                 model: LLM.llm_name,
-                temperature: 0,
+                temperature: 0
             };
             const parsedResponse: SimplyResponse = await simplyApi(request);
             const askResponse: AskResponse = { answer: parsedResponse.content, error: parsedResponse.error };
@@ -227,7 +227,6 @@ const Simply = () => {
     };
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
-
 
     const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
     const sidebar = <Sidebar actions={sidebar_actions} content={<div className={styles.description}>{t("simply.plain_description")}</div>}></Sidebar>;

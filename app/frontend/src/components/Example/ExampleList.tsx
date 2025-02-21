@@ -9,7 +9,6 @@ export type ExampleModel = {
     system?: string;
 };
 
-
 interface Props {
     examples: ExampleModel[];
     onExampleClicked: (value: string, system?: string) => void;

@@ -78,7 +78,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             publish: false,
             temperature: 0.6,
             max_output_tokens: LLM.max_output_tokens,
-            prompt_recommandations: [],
+            quick_prompts: [],
             examples: []
         };
         const created_id = await storageService.createBotConfig(bot);

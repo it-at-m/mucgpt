@@ -19,6 +19,7 @@ import { BotStorageService } from "../../service/botstorage";
 import { DBObject, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList } from "../../components/Example/ExampleList";
+import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -26,6 +27,7 @@ const BotChat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -51,7 +53,7 @@ const BotChat = () => {
         max_output_tokens: LLM.max_output_tokens,
         system_message: "",
         temperature: 0.7,
-        prompt_recommandations: [],
+        quick_prompts: [],
         examples: []
     });
 
@@ -62,7 +64,10 @@ const BotChat = () => {
             botStorageService
                 .getBotConfig(bot_id)
                 .then(bot => {
-                    if (bot) setBotConfig(bot);
+                    if (bot) {
+                        setBotConfig(bot);
+                        setQuickPrompts(bot.quick_prompts || []);
+                    }
                     return botStorageService
                         .getNewestChatForBot(bot_id)
                         .then(existingChat => {
@@ -266,8 +271,8 @@ const BotChat = () => {
             ></BotsettingsDrawer>
         </>
     );
-    const examplesComponent = (botConfig.examples && botConfig.examples.length > 0) ?
-        <ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} /> : <></>;
+    const examplesComponent =
+        botConfig.examples && botConfig.examples.length > 0 ? <ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} /> : <></>;
     const inputComponent = (
         <QuestionInput
             clearOnSend

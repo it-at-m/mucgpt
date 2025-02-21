@@ -76,7 +76,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 onKeyDown={onEnterPress}
             />
             <div className={styles.questionInputContainerFooter}>
-                {tokens_used == 0 ? <div>{" "}</div> : <div>{description}</div>}
+                {tokens_used == 0 ? <div> </div> : <div>{description}</div>}
                 <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 <div className={styles.questionInputButtonsContainer}>
                     <Tooltip content={placeholder || ""} relationship="label">

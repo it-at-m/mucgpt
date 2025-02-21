@@ -4,7 +4,7 @@ import readNDJSONStream from "ndjson-readablestream";
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { ExampleList } from "../../components/Example";
+import { ExampleList, ExampleModel } from "../../components/Example";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
@@ -24,6 +24,21 @@ export interface ChatOptions {
     maxTokens: number;
     temperature: number;
 }
+
+const CHAT_EXAMPLES: ExampleModel[] = [
+    {
+        text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
+        value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
+    },
+    {
+        text: "Stell dir vor, es ist schlechtes Wetter.",
+        value: `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
+    },
+    {
+        text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
+        value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
+    }
+];
 
 const Chat = () => {
     const { language } = useContext(LanguageContext);
@@ -287,7 +302,7 @@ const Chat = () => {
             lastQuestionRef={lastQuestionRef}
         />
     );
-    const examplesComponent = <ExampleList onExampleClicked={onExampleClicked} />;
+    const examplesComponent = <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />;
     const inputComponent = (
         <QuestionInput
             clearOnSend

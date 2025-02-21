@@ -77,7 +77,9 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             system_message: systemPrompt,
             publish: false,
             temperature: 0.6,
-            max_output_tokens: LLM.max_output_tokens
+            max_output_tokens: LLM.max_output_tokens,
+            prompt_recommandations: [],
+            examples: []
         };
         const created_id = await storageService.createBotConfig(bot);
         if (created_id) window.location.href = "/#/bot/" + created_id;

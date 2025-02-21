@@ -94,7 +94,9 @@ export const arielle_bot: Bot = {
     publish: true,
     id: "0",
     temperature: 1.0,
-    max_output_tokens: 4096
+    max_output_tokens: 4096,
+    prompt_recommandations: [],
+    examples: []
 };
 
 const sherlock_system = `Du bist Sherlock
@@ -432,5 +434,32 @@ export const sherlock_bot: Bot = {
     publish: true,
     id: "1",
     temperature: 0.1,
-    max_output_tokens: 4096
+    max_output_tokens: 4096,
+    prompt_recommandations: [],
+    examples: [
+        {
+            text: "Testfälle Anmeldung Bildungsangebote",
+            value: `Erstelle 5 fachliche Testfälle, um die Anmeldung für Kurse
+der Münchner Volkshochschule oder städtische
+Kulturveranstaltungen online zu validieren. Berücksichtige
+dabei Frühbucherrabatte, Kontingentgrenzen bei
+begrenzten Plätzen, Ermäßigungen für bestimmte
+Personengruppen (z. B. Studenten, Senioren),
+Stornierungsregeln und mehrsprachige
+Buchungsoberflächen.`
+        },
+        {
+            text: "Grenzwerte, Randbedingungen",
+            value: `Erstelle 5 Testfälle für einen <Antragsprozess>, der ein
+Zahlenfeld (0-100) zulässt. Berücksichtige Grenzwerte am
+unteren, oberen und mittleren Rand
+`
+        },
+        {
+            text: `Fehlerbasierte Tests (Error Guessing)`,
+            value: `Nenne 5 potenzielle Fehler oder Schwachstellen, die in
+<Anwendung> auftreten könnten und erstelle dazu
+entsprechende Testfälle`
+        }
+    ]
 };

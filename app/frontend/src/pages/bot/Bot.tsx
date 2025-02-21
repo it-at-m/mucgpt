@@ -2,9 +2,8 @@ import { useRef, useState, useEffect, useContext } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, ChatResponse, createChatName } from "../../api";
-import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
+import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { UserChatMessage } from "../../components/UserChatMessage";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
@@ -12,7 +11,6 @@ import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
-import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ChatMessage } from "../chat/Chat";
@@ -20,6 +18,7 @@ import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { DBObject, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
+import { ExampleList } from "../../components/Example/ExampleList";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -51,7 +50,9 @@ const BotChat = () => {
         publish: false,
         max_output_tokens: LLM.max_output_tokens,
         system_message: "",
-        temperature: 0.7
+        temperature: 0.7,
+        prompt_recommandations: [],
+        examples: []
     });
 
     useEffect(() => {
@@ -218,6 +219,9 @@ const BotChat = () => {
             }
         };
     };
+    const onExampleClicked = (example: string) => {
+        makeApiRequest(example);
+    };
 
     const actions = (
         <>
@@ -262,7 +266,8 @@ const BotChat = () => {
             ></BotsettingsDrawer>
         </>
     );
-    const examplesComponent = <></>;
+    const examplesComponent = (botConfig.examples && botConfig.examples.length > 0) ?
+        <ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} /> : <></>;
     const inputComponent = (
         <QuestionInput
             clearOnSend

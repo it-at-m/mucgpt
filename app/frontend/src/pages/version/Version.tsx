@@ -30,7 +30,38 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems="12">
+                <Accordion multiple collapsible defaultOpenItems="13">
+                    <AccordionItem value="13">
+                        <AccordionHeader>[1.2.4] 21.02.2025</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t("version.added")}</h3>
+                                <h3>{t("version.fixed")}</h3>
+                                <ul>
+                                    <li>UI-Probleme bei einer hohen Anzahl von Tokens, die zu Verzögerungen bei z.B. der Eingabe von Prompts führten</li>
+                                    <li>Version & FAQ: Stil angepasst sowie Rechtschreib- und Grammatikfehler korrigiert</li>
+                                    <li>Token-Nutzung:
+                                        <ul>
+                                            <li>Anzeigeproblem beim Neuladen behoben.</li>
+                                            <li>Token-Usage aus den Features <i>Zusammenfassen</i> und <i>Brainstorming</i> entfernt.</li>
+                                            <li>Wenn keine Tokens verwendet werden, wird die Token-Usage nicht angezeigt um eine übersichtlichere Oberfläche zu bieten.</li>
+                                        </ul>
+                                    </li>
+                                    <li>Allgemeine Rechtschreib- und Grammatikfehler korrigiert</li>
+                                </ul>
+                                <h3>{t("version.changed")}</h3>
+                                <ul>
+                                    <li>
+                                        Einfache Sprache:
+                                        <ul>
+                                            <li><i>Leichte Sprache</i> wurde entfernt, da der Name geschützt ist bzw. muss von einer Person kontrolliert werden</li>
+                                            <li>Der Prompt für <i>einfache Sprache</i> wurde angepasst und erweitert.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="12">
                         <AccordionHeader>[1.2.3] 30.01.2025</AccordionHeader>
                         <AccordionPanel>

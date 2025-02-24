@@ -29,12 +29,14 @@ const Menu = () => {
         migrate_old_bots().then(() => {
             return botStorageService
                 .getBotConfig(arielle.id as string)
-                .then(bot => {
-                    if (!bot) botStorageService.createBotConfig(arielle, arielle.id as string);
+                .then(async (bot) => {
+                    if (!bot) return botStorageService.createBotConfig(arielle, arielle.id as string);
+                    else return botStorageService.setBotConfig(arielle.id as string, arielle);
                 })
                 .then(async () => {
                     const bot = await botStorageService.getBotConfig(sherlock.id as string);
                     if (!bot) botStorageService.createBotConfig(sherlock, sherlock.id as string);
+                    else botStorageService.setBotConfig(sherlock.id as string, sherlock);
                 })
                 .finally(() => {
                     setCommunityBots([arielle, sherlock]);

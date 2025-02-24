@@ -185,7 +185,7 @@ export const Layout = () => {
                                     onLLMSelectionChanged={onLLMSelectionChanged}
                                     llmOptions={models}
                                     currentLLM={LLM}
-                                ></SettingsDrawer>
+                                />
                             </div>
                         </div>
                     </header>

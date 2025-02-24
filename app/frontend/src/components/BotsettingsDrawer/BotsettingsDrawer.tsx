@@ -57,6 +57,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const [title, setTitle] = useState<string>(bot.title);
     const [description, setDescription] = useState<string>(bot.description);
     const [publish, setPublish] = useState<boolean>(bot.publish);
+    const [isOwner, setIsOwner] = useState<boolean>(!bot.publish);
+
 
     useEffect(() => {
         setMaxOutputTokens(bot.max_output_tokens);
@@ -65,6 +67,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setDescription(bot.description);
         setPublish(bot.publish);
         setTemperature(bot.temperature);
+        setIsOwner(!bot.publish);
     }, [bot]);
 
     const onTemperatureChange: SliderProps["onChange"] = (_, data) => {
@@ -110,9 +113,6 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const onClearSystemPrompt = () => {
         setSystemPrompt("");
     };
-    const onPublishSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        setPublish(selection.optionValue == "Ja" ? true : false);
-    };
 
     const actions_component = (
         <>
@@ -125,7 +125,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                 {isEditable ? t("components.botsettingsdrawer.finish_edit") : t("components.botsettingsdrawer.edit")}
             </Button>
             <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                <Button appearance="secondary" onClick={onDeleteBot} icon={<Delete24Regular className={styles.iconRightMargin} />}>
+                <Button appearance="secondary" onClick={onDeleteBot} icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={!isOwner}>
                     {t("components.botsettingsdrawer.delete")}
                 </Button>
             </Tooltip>
@@ -152,6 +152,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     rows={1}
                                     maxLength={50}
                                     onChange={onTitleChange}
+                                    disabled={!isOwner}
                                 />
                             }
                         </Field>
@@ -174,6 +175,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 size="large"
                                 rows={15}
                                 onChange={onDescriptionChange}
+                                disabled={!isOwner}
                             />
                         ) : (
                             <Markdown
@@ -212,6 +214,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                         appearance="subtle"
                                         onClick={onClearSystemPrompt}
                                         size="small"
+                                        disabled={!isOwner}
                                     ></Button>
                                 </Tooltip>
                             )}
@@ -228,6 +231,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     size="large"
                                     rows={15}
                                     onChange={onSytemPromptChange}
+                                    disabled={!isOwner}
                                 />
                             </Field>
                             {!isEditable && (
@@ -259,7 +263,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 value={max_output_tokens}
                                 aria-labelledby={max_tokens_headerID}
                                 id={max_tokensID}
-                                disabled={!isEditable}
+                                disabled={!isEditable || !isOwner}
                             />
                             <br></br>
                             <Label htmlFor={max_tokensID} aria-hidden>
@@ -294,7 +298,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 step={0.05}
                                 aria-labelledby={temperature_headerID}
                                 id={temperatureID}
-                                disabled={!isEditable}
+                                disabled={!isEditable || !isOwner}
                             />
                             <Label htmlFor={temperatureID} className={styles.temperatureLabel} aria-hidden size="medium">
                                 {" "}
@@ -305,26 +309,6 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                             </Label>
                         </div>
                     </div>
-                    <br />
-                    Veröffentlichen:
-                    <br />
-                    <Dropdown
-                        id="publish"
-                        aria-label="Veröffentlichen"
-                        defaultValue="Nein"
-                        appearance="underline"
-                        size="small"
-                        positioning="below-start"
-                        onOptionSelect={onPublishSelected}
-                        disabled
-                    >
-                        <Option text="Ja" className={styles.option} key={1}>
-                            Ja
-                        </Option>
-                        <Option text="Nein" className={styles.option} key={2}>
-                            Nein
-                        </Option>
-                    </Dropdown>
                 </>
             )}
         </>

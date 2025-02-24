@@ -2,9 +2,8 @@ import { useRef, useState, useEffect, useContext } from "react";
 import readNDJSONStream from "ndjson-readablestream";
 
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, Bot, ChatResponse, createChatName } from "../../api";
-import { Answer, AnswerError, AnswerLoading } from "../../components/Answer";
+import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { UserChatMessage } from "../../components/UserChatMessage";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
@@ -12,14 +11,15 @@ import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
-import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
-import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ChatMessage } from "../chat/Chat";
 import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { DBObject, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
+import { ExampleList } from "../../components/Example/ExampleList";
+import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 
 const BotChat = () => {
     const { id } = useParams();
@@ -27,12 +27,14 @@ const BotChat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
+    const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
 
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
@@ -51,7 +53,9 @@ const BotChat = () => {
         publish: false,
         max_output_tokens: LLM.max_output_tokens,
         system_message: "",
-        temperature: 0.7
+        temperature: 0.7,
+        quick_prompts: [],
+        examples: []
     });
 
     useEffect(() => {
@@ -61,7 +65,10 @@ const BotChat = () => {
             botStorageService
                 .getBotConfig(bot_id)
                 .then(bot => {
-                    if (bot) setBotConfig(bot);
+                    if (bot) {
+                        setBotConfig(bot);
+                        setQuickPrompts(bot.quick_prompts || []);
+                    }
                     return botStorageService
                         .getNewestChatForBot(bot_id)
                         .then(existingChat => {
@@ -218,6 +225,16 @@ const BotChat = () => {
             }
         };
     };
+    const onExampleClicked = (example: string) => {
+        makeApiRequest(example);
+    };
+
+    const onEditChange = (isEditable: boolean) => {
+        setSidebarWidth(isEditable ?
+            "full_width" :
+            "large");
+    }
+
 
     const actions = (
         <>
@@ -259,10 +276,12 @@ const BotChat = () => {
                 onDeleteBot={onDeleteBot}
                 actions={actions}
                 before_content={history}
+                onEditChange={onEditChange}
             ></BotsettingsDrawer>
         </>
     );
-    const examplesComponent = <></>;
+    const examplesComponent =
+        botConfig.examples && botConfig.examples.length > 0 ? <ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} /> : <></>;
     const inputComponent = (
         <QuestionInput
             clearOnSend
@@ -311,7 +330,7 @@ const BotChat = () => {
             header=""
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="large"
+            size={sidebarSize}
         ></ChatLayout>
     );
 };

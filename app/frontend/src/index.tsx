@@ -17,6 +17,7 @@ import Menu from "./pages/menu/Menu";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import Simply from "./pages/simplyfied-language/Simply";
 import Bot from "./pages/bot/Bot";
+import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
 initializeIcons();
 
 const router = createHashRouter([
@@ -81,7 +82,9 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
         <LanguageContextProvider>
             <LLMContextProvider>
-                <RouterProvider router={router} />
+                <QuickPromptProvider>
+                    <RouterProvider router={router} />
+                </QuickPromptProvider>
             </LLMContextProvider>
         </LanguageContextProvider>
     </React.StrictMode>

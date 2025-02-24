@@ -32,7 +32,25 @@ i18n
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
                         prompt: "Stelle eine Frage",
-                        answer_loading: "Erstelle Antwort"
+                        answer_loading: "Erstelle Antwort",
+                        quickprompts: {
+                            shorter_tooltip: "Schreibe eine kürzere Antwort",
+                            longer_tooltip: "Schreibe eine längere Antwort",
+                            formal_tooltip: "Schreibe eine förmlichere Antwort",
+                            informal_tooltip: "Schreibe eine informellere Antwort",
+                            shorter: "➖ Kürzer",
+                            longer: "➕ Länger",
+                            formal: "👔 Förmlicher",
+                            informal: "👕 Informeller",
+                            shorter_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen kürzeren Text, der den ursprünglichen Inhalt in einer kürzeren und prägnanteren Form wiedergibt. Dieser Text sollte die wichtigsten Informationen enthalten und das Verständnis des Lesers verbessern.",
+                            longer_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen längeren Text, der den ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen ist. Dieser Text sollte das Verständnis des Lesers vertiefen und eine umfassendere Perspektive auf das Thema bieten.",
+                            formal_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen formellen Text, der den ursprünglichen Inhalt in einer akademischen Schreibweise präsentiert. Dieser Text sollte eine klare Struktur aufweisen, präzise und sachliche Ausdrucksweise verwenden und dem Leser ein professionelles Leseerlebnis bieten.",
+                            informal_prompt:
+                                "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
+                        }
                     },
                     sum: {
                         header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
@@ -172,24 +190,8 @@ i18n
                         deleteMessage: {
                             label: "Nachricht zurückziehen"
                         },
-                        recommendanswers: {
-                            name: "Vorgeschlagene Antworten",
-                            shorter_tooltip: "Schreibe eine kürzere Antwort",
-                            longer_tooltip: "Schreibe eine längere Antwort",
-                            formal_tooltip: "Schreibe eine förmlichere Antwort",
-                            informal_tooltip: "Schreibe eine informellere Antwort",
-                            shorter: "Kürzer",
-                            longer: "Länger",
-                            formal: "Förmlicher",
-                            informal: "Informeller",
-                            shorter_prompt:
-                                "Formuliere deine letzte Nachricht zu einem neuen kürzeren Text, der den ursprünglichen Inhalt in einer kürzeren und prägnanteren Form wiedergibt. Dieser Text sollte die wichtigsten Informationen enthalten und das Verständnis des Lesers verbessern.",
-                            longer_prompt:
-                                "Formuliere deine letzte Nachricht zu einem neuen längeren Text, der den ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen ist. Dieser Text sollte das Verständnis des Lesers vertiefen und eine umfassendere Perspektive auf das Thema bieten.",
-                            formal_prompt:
-                                "Formuliere deine letzte Nachricht zu einem neuen formellen Text, der den ursprünglichen Inhalt in einer akademischen Schreibweise präsentiert. Dieser Text sollte eine klare Struktur aufweisen, präzise und sachliche Ausdrucksweise verwenden und dem Leser ein professionelles Leseerlebnis bieten.",
-                            informal_prompt:
-                                "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
+                        quickprompt: {
+                            name: "Vorgeschlagene Antworten"
                         },
                         history: {
                             button: "Gespeicherte Chats",
@@ -245,7 +247,25 @@ i18n
                     chat: {
                         header: "Ask a question or try an example",
                         prompt: "Ask a question",
-                        answer_loading: "Generating answer"
+                        answer_loading: "Generating answer",
+                        quickprompts: {
+                            shorter_tooltip: "Shorten your answer",
+                            longer_tooltip: "Write a longer response",
+                            formal_tooltip: "Write your answer more formal",
+                            informal_tooltip: "Write your answer more informal",
+                            shorter: "➖ less detail",
+                            longer: "➕  more detail",
+                            formal: "👕 more formal",
+                            informal: "more informal",
+                            shorter_prompt:
+                                "Rewrite your last message into a new, shorter text that conveys the original content in a more concise and impactful way. This text should include the most important information and improve the reader's understanding.",
+                            longer_prompt:
+                                "Rewrite your last message into a new, longer text that expands upon the original content with more details and background information. This text should deepen the reader's understanding and provide a more comprehensive perspective on the topic.",
+                            formal_prompt:
+                                "Rewrite your last message into a new formal text that presents the original content in an academic writing style. This text should have a clear structure, use precise and factual language, and provide the reader with a professional reading experience.",
+                            informal_prompt:
+                                "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
+                        }
                     },
                     sum: {
                         header: "Summarize text or try an example",
@@ -384,24 +404,8 @@ i18n
                         deleteMessage: {
                             label: "Retract message"
                         },
-                        recommendanswers: {
-                            name: "Recommended answers",
-                            shorter_tooltip: "Shorten your answer",
-                            longer_tooltip: "Write a longer response",
-                            formal_tooltip: "Write your answer more formal",
-                            informal_tooltip: "Write your answer more informal",
-                            shorter: "more precise",
-                            longer: "more detail",
-                            formal: "more formal",
-                            informal: "more informal",
-                            shorter_prompt:
-                                "Rewrite your last message into a new, shorter text that conveys the original content in a more concise and impactful way. This text should include the most important information and improve the reader's understanding.",
-                            longer_prompt:
-                                "Rewrite your last message into a new, longer text that expands upon the original content with more details and background information. This text should deepen the reader's understanding and provide a more comprehensive perspective on the topic.",
-                            formal_prompt:
-                                "Rewrite your last message into a new formal text that presents the original content in an academic writing style. This text should have a clear structure, use precise and factual language, and provide the reader with a professional reading experience.",
-                            informal_prompt:
-                                "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
+                        quickprompt: {
+                            name: "Recommended answers"
                         },
                         history: {
                             button: "Saved Chats",
@@ -457,7 +461,25 @@ i18n
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
                         prompt: "Stelle a Froog ",
-                        answer_loading: "I bearbeit grad de Frog"
+                        answer_loading: "I bearbeit grad de Frog",
+                        quickprompts: {
+                            shorter_tooltip: "Schreib a kürzere Antwort",
+                            longer_tooltip: "Schreib a längere Antwort",
+                            formal_tooltip: "Schreib a förmlichere Antwort",
+                            informal_tooltip: "Schreib a informellere Antwort",
+                            shorter: "➖ Kürzer",
+                            longer: "➕ Länger",
+                            formal: "👔 Förmlicher",
+                            informal: "👕 Informeller",
+                            shorter_prompt:
+                                "Formulier dei letzte Nachricht zu am neuen kürzeren Text, der an ursprünglichen Inhalt in a kürzere und prägnantere Form wiedagibt. Der Text soidad die wichtigsten Informationen enthalten und as Verständnis des Lesers verbessern.",
+                            longer_prompt:
+                                "Formuliere dei letzte Nachricht zu am neuen längeren Text, der an ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen is. Der Text soidad as Verständnis des Lesers vertiefen und a umfassendere Perspektive auf das Thema bieten.",
+                            formal_prompt:
+                                "Formuliere dei letzte Nachricht zu am neuen formellen Text, der an ursprünglichen Inhalt in na akademischen Schreibweise präsentiert. Der Text soidad a klare Struktur aufweisen, präzise und sachliche Ausdrucksweise benutzn und am Leser a professionelles Leseerlebnis bieten",
+                            informal_prompt:
+                                "Formuliere dei letzte Nachricht zu am neuen informelleren Text, der an ursprünglichen Inhalt in a lockeren Schreibweise wiedagibt. Dieser Text soi am Leser a ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente benutzt."
+                        }
                     },
                     sum: {
                         header: "Fassn Text zam oda probier a Beispui",
@@ -597,24 +619,8 @@ i18n
                         deleteMessage: {
                             label: "Nachricht zruckziang"
                         },
-                        recommendanswers: {
-                            name: "Vogschlagene Antworten",
-                            shorter_tooltip: "Schreib a kürzere Antwort",
-                            longer_tooltip: "Schreib a längere Antwort",
-                            formal_tooltip: "Schreib a förmlichere Antwort",
-                            informal_tooltip: "Schreib a informellere Antwort",
-                            shorter: "Kürzer",
-                            longer: "Länger",
-                            formal: "Förmlicher",
-                            informal: "Informeller",
-                            shorter_prompt:
-                                "Formulier dei letzte Nachricht zu am neuen kürzeren Text, der an ursprünglichen Inhalt in a kürzere und prägnantere Form wiedagibt. Der Text soidad die wichtigsten Informationen enthalten und as Verständnis des Lesers verbessern.",
-                            longer_prompt:
-                                "Formuliere dei letzte Nachricht zu am neuen längeren Text, der an ursprünglichen Inhalt erweitert und mit mehr Details und Hintergrundinformationen versehen is. Der Text soidad as Verständnis des Lesers vertiefen und a umfassendere Perspektive auf das Thema bieten.",
-                            formal_prompt:
-                                "Formuliere dei letzte Nachricht zu am neuen formellen Text, der an ursprünglichen Inhalt in na akademischen Schreibweise präsentiert. Der Text soidad a klare Struktur aufweisen, präzise und sachliche Ausdrucksweise benutzn und am Leser a professionelles Leseerlebnis bieten",
-                            informal_prompt:
-                                "Formuliere dei letzte Nachricht zu am neuen informelleren Text, der an ursprünglichen Inhalt in a lockeren Schreibweise wiedagibt. Dieser Text soi am Leser a ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente benutzt."
+                        quickprompt: {
+                            name: "Vogschlagene Antworten"
                         },
                         history: {
                             button: "Gespeichade Chats",
@@ -669,7 +675,25 @@ i18n
                     chat: {
                         header: "Posez une question ou essayez un exemple",
                         prompt: "Posez une question",
-                        answer_loading: "Créer une réponse"
+                        answer_loading: "Créer une réponse",
+                        quickprompts: {
+                            shorter_tooltip: "Écrire une réponse plus courte",
+                            longer_tooltip: "Écrire une réponse plus longue",
+                            formal_tooltip: "Écrire une réponse plus formelle",
+                            informal_tooltip: "Écrire une réponse plus informelle",
+                            shorter: "➖ Plus court",
+                            longer: "➕ Plus long",
+                            formal: "👔 Plus formel",
+                            informal: "👕 Plus informel",
+                            shorter_prompt:
+                                "Formulez votre dernier message en un nouveau texte plus court qui reflète le contenu original sous une forme plus courte et plus concise. Ce texte doit contenir les informations les plus importantes et améliorer la compréhension du lecteur.",
+                            longer_prompt:
+                                "Formulez votre dernier message en un nouveau texte plus long qui développe le contenu original et ajoute plus de détails et d'informations de contexte. Ce texte doit approfondir la compréhension du lecteur et offrir une perspective plus complète sur le sujet.",
+                            formal_prompt:
+                                "Formulez votre dernier message en un nouveau texte formel qui présente le contenu original dans un style académique. Ce texte doit avoir une structure claire, utiliser une expression précise et factuelle et offrir au lecteur une expérience de lecture professionnelle",
+                            informal_prompt:
+                                "Formulez votre dernier message en un nouveau texte plus informel qui reflète le contenu original dans un style plus décontracté. Ce texte doit offrir au lecteur une expérience de lecture détendue en utilisant un langage facile à comprendre et, le cas échéant, des éléments humoristiques."
+                        }
                     },
                     sum: {
                         header: "Faites résumer le texte ou essayez un exemple",
@@ -803,24 +827,8 @@ i18n
                         deleteMessage: {
                             label: "Retirer le message"
                         },
-                        recommendanswers: {
-                            name: "Réponses suggérées",
-                            shorter_tooltip: "Écrire une réponse plus courte",
-                            longer_tooltip: "Écrire une réponse plus longue",
-                            formal_tooltip: "Écrire une réponse plus formelle",
-                            informal_tooltip: "Écrire une réponse plus informelle",
-                            shorter: "Plus court",
-                            longer: "Plus long",
-                            formal: "Plus formel",
-                            informal: "Plus informel",
-                            shorter_prompt:
-                                "Formulez votre dernier message en un nouveau texte plus court qui reflète le contenu original sous une forme plus courte et plus concise. Ce texte doit contenir les informations les plus importantes et améliorer la compréhension du lecteur.",
-                            longer_prompt:
-                                "Formulez votre dernier message en un nouveau texte plus long qui développe le contenu original et ajoute plus de détails et d'informations de contexte. Ce texte doit approfondir la compréhension du lecteur et offrir une perspective plus complète sur le sujet.",
-                            formal_prompt:
-                                "Formulez votre dernier message en un nouveau texte formel qui présente le contenu original dans un style académique. Ce texte doit avoir une structure claire, utiliser une expression précise et factuelle et offrir au lecteur une expérience de lecture professionnelle",
-                            informal_prompt:
-                                "Formulez votre dernier message en un nouveau texte plus informel qui reflète le contenu original dans un style plus décontracté. Ce texte doit offrir au lecteur une expérience de lecture détendue en utilisant un langage facile à comprendre et, le cas échéant, des éléments humoristiques."
+                        quickprompt: {
+                            name: "Réponses suggérées"
                         },
                         history: {
                             button: "Chats sauvegardés",
@@ -875,7 +883,25 @@ i18n
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
                         prompt: "Задайте питання",
-                        answer_loading: "Створення відповіді"
+                        answer_loading: "Створення відповіді",
+                        quickprompts: {
+                            shorter_tooltip: "Написати коротшу відповідь",
+                            longer_tooltip: "Написати довшу відповідь",
+                            formal_tooltip: "Написати офіційнішу відповідь",
+                            informal_tooltip: "Написати неофіційнішу відповідь",
+                            shorter: "➖ Коротше",
+                            longer: "➕ Довше",
+                            formal: "👔 Офіційніше",
+                            informal: "👕 Неофіційніше",
+                            shorter_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий коротший текст, який відображає оригінальний зміст у скороченому та стислому вигляді. Цей текст має містити найважливішу інформацію та покращити розуміння читача.",
+                            longer_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий довший текст, який розширює оригінальний зміст та додає більше деталей і контекстної інформації. Цей текст має поглибити розуміння читача та надати більш всебічний погляд на тему.",
+                            formal_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий офіційний текст, який представляє оригінальний зміст у академічному стилі. Цей текст має мати чітку структуру, використовувати точну та фактичну мову та надавати читачеві професійний досвід читання",
+                            informal_prompt:
+                                "Сформулюйте ваше останнє повідомлення в новий неофіційний текст, який відображає оригінальний зміст у невимушеному стилі. Цей текст має надавати читачеві розслаблений досвід читання за допомогою легкої та зрозумілої мови та, можливо, гумористичних елементів."
+                        }
                     },
                     sum: {
                         header: "Зробіть резюме тексту або спробуйте приклад",
@@ -1008,24 +1034,8 @@ i18n
                         deleteMessage: {
                             label: "Видалити повідомлення"
                         },
-                        recommendanswers: {
-                            name: "Рекомендовані відповіді",
-                            shorter_tooltip: "Написати коротшу відповідь",
-                            longer_tooltip: "Написати довшу відповідь",
-                            formal_tooltip: "Написати офіційнішу відповідь",
-                            informal_tooltip: "Написати неофіційнішу відповідь",
-                            shorter: "Коротше",
-                            longer: "Довше",
-                            formal: "Офіційніше",
-                            informal: "Неофіційніше",
-                            shorter_prompt:
-                                "Сформулюйте ваше останнє повідомлення в новий коротший текст, який відображає оригінальний зміст у скороченому та стислому вигляді. Цей текст має містити найважливішу інформацію та покращити розуміння читача.",
-                            longer_prompt:
-                                "Сформулюйте ваше останнє повідомлення в новий довший текст, який розширює оригінальний зміст та додає більше деталей і контекстної інформації. Цей текст має поглибити розуміння читача та надати більш всебічний погляд на тему.",
-                            formal_prompt:
-                                "Сформулюйте ваше останнє повідомлення в новий офіційний текст, який представляє оригінальний зміст у академічному стилі. Цей текст має мати чітку структуру, використовувати точну та фактичну мову та надавати читачеві професійний досвід читання",
-                            informal_prompt:
-                                "Сформулюйте ваше останнє повідомлення в новий неофіційний текст, який відображає оригінальний зміст у невимушеному стилі. Цей текст має надавати читачеві розслаблений досвід читання за допомогою легкої та зрозумілої мови та, можливо, гумористичних елементів."
+                        quickprompt: {
+                            name: "Рекомендовані відповіді"
                         },
                         history: {
                             button: "Збережені чати",

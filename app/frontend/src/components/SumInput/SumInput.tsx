@@ -1,11 +1,10 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { Stack } from "@fluentui/react";
 import { Button, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import { Delete24Regular, Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./SumInput.module.css";
 import { useTranslation } from "react-i18next";
-import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
 interface Props {
     onSend: (question: string, file?: File) => void;

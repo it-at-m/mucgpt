@@ -97,7 +97,7 @@ export const arielle_bot: Bot = {
     max_output_tokens: 4096,
     quick_prompts: [
         {
-            label: "Flussdiagramm",
+            label: "🌊 Flussdiagramm",
             prompt: "Erstelle ein Flussdiagramm. Verwende dabei unterschiedliche Farben für die Kästchen der verschiedenen Schritte. Frage alle relevanten Informationoen ab, um ein möglichst detailiertes Flussdiagramm zu erstellen.",
             tooltip: "Hilft bei der Erstellung eines Flussdiagramms."
         },

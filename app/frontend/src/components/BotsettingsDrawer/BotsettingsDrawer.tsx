@@ -26,15 +26,17 @@ import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Bot } from "../../api";
+
 interface Props {
     bot: Bot;
     onBotChange: (bot: Bot) => void;
     onDeleteBot: () => void;
     actions: ReactNode;
     before_content: ReactNode;
+    onEditChange: (isEditable: boolean) => void;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
@@ -87,6 +89,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
 
     const toggleReadOnly = () => {
         setEditable(!isEditable);
+        onEditChange(!isEditable);
         if (isEditable) {
             const updatedTitle = title.trim() !== "" ? title : `Assistent ${bot.id}`;
             setTitle(updatedTitle);

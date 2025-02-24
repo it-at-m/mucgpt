@@ -11,7 +11,7 @@ import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
-import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
+import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { ChatMessage } from "../chat/Chat";
 import { BOT_STORE } from "../../constants";
@@ -34,6 +34,7 @@ const BotChat = () => {
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
+    const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
 
     const [answers, setAnswers] = useState<ChatMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
@@ -228,6 +229,13 @@ const BotChat = () => {
         makeApiRequest(example);
     };
 
+    const onEditChange = (isEditable: boolean) => {
+        setSidebarWidth(isEditable ?
+            "full_width" :
+            "large");
+    }
+
+
     const actions = (
         <>
             <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
@@ -268,6 +276,7 @@ const BotChat = () => {
                 onDeleteBot={onDeleteBot}
                 actions={actions}
                 before_content={history}
+                onEditChange={onEditChange}
             ></BotsettingsDrawer>
         </>
     );
@@ -321,7 +330,7 @@ const BotChat = () => {
             header=""
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="large"
+            size={sidebarSize}
         ></ChatLayout>
     );
 };

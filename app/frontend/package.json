@@ -25,7 +25,7 @@
         "idb": "8.0.1",
         "markmap-common": "0.18.9",
         "markmap-lib": "0.18.9",
-        "markmap-toolbar": "0.18.9",
+        "markmap-toolbar": "0.18.10",
         "markmap-view": "0.18.9",
         "mermaid": "11.4.1",
         "ndjson-readablestream": "1.2.0",

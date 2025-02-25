@@ -4,7 +4,7 @@ import readNDJSONStream from "ndjson-readablestream";
 import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { ExampleList } from "../../components/Example";
+import { ExampleList, ExampleModel } from "../../components/Example";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE } from "../../constants";
 import { DBMessage, DBObject, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
+import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -25,10 +26,26 @@ export interface ChatOptions {
     temperature: number;
 }
 
+const CHAT_EXAMPLES: ExampleModel[] = [
+    {
+        text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
+        value: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München, indem Du Dich für die tolle Leistung bedankst und den Bau eines neuen Schlosses (noch beeindruckender als Neuschwanstein) in der Stadt München wünschst."
+    },
+    {
+        text: "Stell dir vor, es ist schlechtes Wetter.",
+        value: `Stell dir vor, es ist schlechtes Wetter und du sitzt lustlos im Büro. Alle möglichen Leute wollen etwas von Dir und Du spürst eine Stimmung, als ob irgendeine Kleinigkeit gleich eskalieren wird. Schreibe mir etwas, das dir in dieser Situation gut tut und dich aufmuntert.`
+    },
+    {
+        text: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?",
+        value: "Motiviere, warum eine öffentliche Verwaltung Robot Process Automation nutzen sollte und warum nicht?"
+    }
+];
+
 const Chat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
@@ -58,6 +75,31 @@ const Chat = () => {
             setSystemPromptTokens(response.count);
         } else setSystemPromptTokens(0);
     }, [debouncedSystemPrompt, LLM]);
+
+    useEffect(() => {
+        setQuickPrompts([
+            {
+                label: t("chat.quickprompts.shorter", { lng: language }),
+                prompt: t("chat.quickprompts.shorter_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.shorter_tooltip", { lng: language })
+            },
+            {
+                label: t("chat.quickprompts.formal", { lng: language }),
+                prompt: t("chat.quickprompts.formal_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.formal_tooltip", { lng: language })
+            },
+            {
+                label: t("chat.quickprompts.informal", { lng: language }),
+                prompt: t("chat.quickprompts.informal_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.informal_tooltip", { lng: language })
+            },
+            {
+                label: t("chat.quickprompts.longer", { lng: language }),
+                prompt: t("chat.quickprompts.longer_prompt", { lng: language }),
+                tooltip: t("chat.quickprompts.longer_tooltip", { lng: language })
+            }
+        ]);
+    }, [language]);
 
     useEffect(() => {
         makeTokenCountRequest();
@@ -287,7 +329,7 @@ const Chat = () => {
             lastQuestionRef={lastQuestionRef}
         />
     );
-    const examplesComponent = <ExampleList onExampleClicked={onExampleClicked} />;
+    const examplesComponent = <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />;
     const inputComponent = (
         <QuestionInput
             clearOnSend

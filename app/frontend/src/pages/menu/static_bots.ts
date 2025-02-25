@@ -94,7 +94,87 @@ export const arielle_bot: Bot = {
     publish: true,
     id: "0",
     temperature: 1.0,
-    max_output_tokens: 4096
+    max_output_tokens: 4096,
+    quick_prompts: [
+        {
+            label: "🌊 Flussdiagramm",
+            prompt: "Erstelle ein Flussdiagramm. Verwende dabei unterschiedliche Farben für die Kästchen der verschiedenen Schritte. Frage alle relevanten Informationoen ab, um ein möglichst detailiertes Flussdiagramm zu erstellen.",
+            tooltip: "Hilft bei der Erstellung eines Flussdiagramms."
+        },
+        {
+            label: "🥧 Kuchendiagramm",
+            prompt: "Erstelle ein Kuchendiagramm. Frage alle relevanten Informationen ab, um ein möglichst detailiertes Kuchendiagramm zu erstellen.",
+            tooltip: "Hilft der Erstellung eines Kuchendiagramms. "
+        },
+        {
+            label: "🥧 Sequenzdiagramm",
+            prompt: "Erstelle ein Sequenzdiagramm. Frage alle relevanten Informationen ab, um ein möglichst detailiertes Sequenzdiagramm zu erstellen.",
+            tooltip: "Hilf  bei der Erstellung eines Sequenzdiagramm. "
+        },
+        {
+            label: "👤 User Journey",
+            prompt: "Erstelle eine UserJourney. Frage alle relevanten Informationen ab, um ein möglichst detailierte UserJourney zu erstellen.",
+            tooltip: "Hilf  bei der Erstellung eines Sequenzdiagramm. "
+        },
+        {
+            label: "❓ Hilfe",
+            prompt: "Welche Arten von Diagrammen kannst du erstellen und kannst du mir Beispiele geben?",
+            tooltip: "Erhalte Hilfe bei der Kommunikation mit Arielle"
+        }
+    ],
+    examples: [
+        {
+            text: "Flussdiagramm zum Thema Aufgabenverwaltung im Team",
+            value: "Erstelle einen detailliertes Flussdiagramm, das den Prozess der Aufgabenverwaltung in einem Team darstellt. Die Schritte sollen Folgendes beinhalten: 'Aufgabe erstellen', 'Aufgabe zuweisen', 'Aufgabe bearbeiten', 'Aufgabe abschließen' und 'Aufgabe überprüfen'. Füge außerdem eine Entscheidungsschleife hinzu, die fragt: 'Wurde die Aufgabe korrekt bearbeitet?' mit den Ausgängen 'Ja' und 'Nein', um anzugeben, ob die Aufgabe erneut bearbeitet werden muss. Verwende dabei unterschiedliche Farben für die Kästchen der verschiedenen Schritte"
+        },
+        {
+            text: "User Journey zum Thema Online Einkauf",
+            value: `Erstelle mir eine UserJourney zum Thema Thema Online Einkauf:
+
+            1. Bewusstsein (Awareness)
+
+    Aktionen: Der Nutzer sieht eine Anzeige auf sozialen Medien oder in Suchmaschinen.
+    Emotionen: Neugier, Interesse.
+    Berührungspunkt: Anzeige, Website des Unternehmens.
+
+2. Erwägung (Consideration)
+
+    Aktionen: Der Nutzer besucht die Website, um Produkte zu durchsuchen.
+    Emotionen: Aufregung, Unsicherheit (z.B. die Frage, welches Produkt am besten geeignet ist).
+    Berührungspunkt: Produktkategorien, Suchfunktion.
+
+3. Vergleich (Comparison)
+
+    Aktionen: Der Nutzer vergleicht verschiedene Produkte, liest Bewertungen und prüft Preise.
+    Emotionen: Zweifel (Zufriedenheit/Unzufriedenheit mit den Informationen).
+    Berührungspunkt: Produktdetailseiten, Kundenrezensionen.
+
+4. Entscheidung (Decision)
+
+    Aktionen: Der Nutzer fügt ein Produkt zum Warenkorb hinzu und geht zur Kasse.
+    Emotionen: Vorfreude, Nervosität (wegen der Eingabe von Zahlungsinformationen).
+    Berührungspunkt: Warenkorb, Checkout-Seite.
+
+5. Kauf (Purchase)
+
+    Aktionen: Der Nutzer schließt den Kauf ab, gibt Zahlungsinformationen ein und erhält eine Bestätigung.
+    Emotionen: Erleichterung, Zufriedenheit.
+    Berührungspunkt: Bestätigungsseite, E-Mail-Bestätigung.
+
+6. Nutzung (Usage)
+
+    Aktionen: Der Nutzer erhält das Produkt und beginnt, es zu verwenden.
+    Emotionen: Begeisterung oder Enttäuschung (je nach Produktqualität).
+    Berührungspunkt: Produktverpackung, Bedienungsanleitung.
+
+7. Rückmeldungen und Empfehlungen (Feedback & Advocacy)
+
+    Aktionen: Der Nutzer gibt eine Bewertung ab oder empfiehlt das Produkt weiter.
+    Emotionen: Loyalität oder Frustration (abhängig von der Erfahrung).
+    Berührungspunkt: E-Mails zur Feedbackanfrage, Bewertungsplattformen.
+`
+        }
+    ]
 };
 
 const sherlock_system = `Du bist Sherlock
@@ -432,5 +512,32 @@ export const sherlock_bot: Bot = {
     publish: true,
     id: "1",
     temperature: 0.1,
-    max_output_tokens: 4096
+    max_output_tokens: 4096,
+    quick_prompts: [],
+    examples: [
+        {
+            text: "Testfälle Anmeldung Bildungsangebote",
+            value: `Erstelle 5 fachliche Testfälle, um die Anmeldung für Kurse
+der Münchner Volkshochschule oder städtische
+Kulturveranstaltungen online zu validieren. Berücksichtige
+dabei Frühbucherrabatte, Kontingentgrenzen bei
+begrenzten Plätzen, Ermäßigungen für bestimmte
+Personengruppen (z. B. Studenten, Senioren),
+Stornierungsregeln und mehrsprachige
+Buchungsoberflächen.`
+        },
+        {
+            text: "Grenzwerte, Randbedingungen",
+            value: `Erstelle 5 Testfälle für einen <Antragsprozess>, der ein
+Zahlenfeld (0-100) zulässt. Berücksichtige Grenzwerte am
+unteren, oberen und mittleren Rand
+`
+        },
+        {
+            text: `Fehlerbasierte Tests (Error Guessing)`,
+            value: `Nenne 5 potenzielle Fehler oder Schwachstellen, die in
+<Anwendung> auftreten könnten und erstelle dazu
+entsprechende Testfälle`
+        }
+    ]
 };

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Stack } from "@fluentui/react";
 
 import styles from "./Answer.module.css";
@@ -12,7 +12,7 @@ import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
-import { RecommendAnswers } from "../RecommendedAnswers/RecommendedAnswers";
+import { QuickPromptList } from "../QuickPrompt/QuickPromptList";
 
 interface Props {
     answer: AskResponse;
@@ -105,7 +105,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
             </Stack.Item>
             {onRegenerateResponseClicked && (
                 <Stack.Item>
-                    <RecommendAnswers setQuestion={question => setQuestion(question)} />
+                    <QuickPromptList setQuestion={question => setQuestion(question)} />
                 </Stack.Item>
             )}
         </Stack>

@@ -1,3 +1,5 @@
+import { ExampleModel } from "../components/Example";
+import { QuickPrompt } from "../components/QuickPrompt/QuickPrompt";
 import { DBMessage } from "../service/storage";
 
 export type AskResponse = {
@@ -116,4 +118,6 @@ export type Bot = {
     id?: string;
     temperature: number;
     max_output_tokens: number;
+    examples?: ExampleModel[];
+    quick_prompts?: QuickPrompt[];
 };

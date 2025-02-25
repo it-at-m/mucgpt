@@ -1,24 +1,36 @@
 import { useRef, useState, useEffect, useContext } from "react";
 
 import { AskResponse, brainstormApi, BrainstormRequest } from "../../api";
-import { AnswerError, AnswerLoading } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { UserChatMessage } from "../../components/UserChatMessage";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
-import { ExampleListBrainstorm } from "../../components/Example/ExampleListBrainstorm";
 import { Mindmap } from "../../components/Mindmap";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
-import { ChatTurnComponent } from "../../components/ChatTurnComponent/ChatTurnComponent";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { BRAINSTORM_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
+import { ExampleList, ExampleModel } from "../../components/Example";
 
 type BrainstormMessage = DBMessage<AskResponse>;
+
+const EXAMPLES: ExampleModel[] = [
+    {
+        text: "Maßnahmen für Städte um besser mit dem Klimawandel zurechtzukommen",
+        value: "Maßnahmen für Städte um besser mit dem Klimawandel zurechtzukommen"
+    },
+    {
+        text: "Gründe in München zu wohnen",
+        value: "Gründe in München zu wohnen"
+    },
+    {
+        text: "Wie bereite ich mich am Besten fürs Oktoberfest vor",
+        value: "Wie bereite ich mich am Besten fürs Oktoberfest vor"
+    }
+];
 
 const Brainstorm = () => {
     const { language } = useContext(LanguageContext);
@@ -91,7 +103,7 @@ const Brainstorm = () => {
             setQuestion={question => setQuestion(question)}
         />
     );
-    const examplesComponent = <ExampleListBrainstorm onExampleClicked={onExampleClicked} />;
+    const examplesComponent = <ExampleList examples={EXAMPLES} onExampleClicked={onExampleClicked} />;
 
     const answerList = (
         <AnswerList

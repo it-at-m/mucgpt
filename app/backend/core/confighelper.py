@@ -1,22 +1,26 @@
 import re
+from logging import getLogger
 from os import environ, getenv
 
 from core.types.Config import (
     ApproachConfig,
     BackendConfig,
+    CommunityAssistantConfig,
     Config,
     DatabaseConfig,
+    ExampleModel,
     FrontendConfig,
     LabelsConfig,
     ModelsConfig,
+    QuickPrompt,
     SSOConfig,
 )
 from core.version import get_latest_commit, get_version
 
 
 class ConfigHelper:
-    def _find_highest_index(self):
-        pattern = re.compile(r"BACKEND_MODEL_(\d+)")
+    def _find_highest_index(self, regex:str) -> int:
+        pattern = re.compile(regex)
         highest_index = 0
         for key in environ:
             match = pattern.match(key)
@@ -40,10 +44,68 @@ class ConfigHelper:
             description = getenv(f"{prefix}DESCRIPTION"),
         )
         return config
+    
+    def _get_quick_prompt(self, assistant, index):
+        prefix = f"BACKEND_COMMUNITY_ASSISTANT_{assistant}_QUICK_PROMPT_{index}_"
+        config = QuickPrompt(
+            label= getenv(f"{prefix}LABEL"),
+            prompt= getenv(f"{prefix}PROMPT"),
+            tooltip= getenv(f"{prefix}TOOLTIP")
+        )
+        return config
+    
+    def _get_quick_prompt_list(self, assistant):
+        quick_prompts = []
+        highest_index = self._find_highest_index(r"BACKEND_COMMUNITY_ASSISTANT_"+str(assistant)+r"_QUICK_PROMPT_(\d+)") 
+        for i in range(1, highest_index + 1):
+            quick_prompts.append(self._get_quick_prompt(assistant,i))
+        return quick_prompts
+
+    def _get_example(self, assistant, index):
+        prefix = f"BACKEND_COMMUNITY_ASSISTANT_{assistant}_EXAMPLES_{index}_"
+        config = ExampleModel(
+            text= getenv(f"{prefix}TEXT"),
+            value= getenv(f"{prefix}VALUE"),
+            system= getenv(f"{prefix}SYSTEM", "")
+        )
+        return config
+    
+    def _get_example_list(self, assistant):
+        examples = []
+        highest_index = self._find_highest_index(r"BACKEND_COMMUNITY_ASSISTANT_"+str(assistant)+r"_EXAMPLES_(\d+)")
+        for i in range(1, highest_index + 1):
+            examples.append(self._get_example(assistant,i))
+        return examples
+
+    def _get_community_assistant(self, index):
+        prefix = f"BACKEND_COMMUNITY_ASSISTANT_{index}_"
+        logger = getLogger()
+        logger.info(prefix)
+        logger.info(getenv(f"{prefix}TITLE"))
+        config = CommunityAssistantConfig(
+            title= getenv(f"{prefix}TITLE"),
+            description= getenv(f"{prefix}DESCRIPTION"),
+            system_message= getenv(f"{prefix}SYSTEM_MESSAGE"),
+            examples= self._get_example_list(index),
+            quick_prompts= self._get_quick_prompt_list(index),
+            temperature= float(getenv(f"{prefix}TEMPERATURE", 0.7)),
+            max_output_tokens= int(getenv(f"{prefix}MAX_TOKENS", 100)),
+            id = str(index)
+        )
+        
+        logger.info(config)
+        return config
+    
+    def _get_community_assistants(self):
+        community_assistants = []
+        highest_index = self._find_highest_index(r"BACKEND_COMMUNITY_ASSISTANT_(\d+)")
+        for i in range(1, highest_index + 1):
+            community_assistants.append(self._get_community_assistant(i))
+        return community_assistants
 
     def _get_models_config(self):
         models_config = []
-        highest_index = self._find_highest_index()
+        highest_index = self._find_highest_index(r"BACKEND_MODEL_(\d+)")
         for i in range(1, highest_index + 1):
             models_config.append(self._get_model_config(i))
         return models_config
@@ -53,7 +115,8 @@ class ConfigHelper:
         labelsConfig = LabelsConfig(env_name=getenv("FRONTEND_LABELS_ENV_NAME", "MUCGPT"))
         frontendConfig = FrontendConfig(labels=labelsConfig,
                        alternative_logo=getenv("FRONTEND_ALTERNATIVE_LOGO", "false").lower() == "true",
-                       enable_simply=getenv("FRONTEND_ENABLE_SIMPLY", "true").lower() == "true")
+                       enable_simply=getenv("FRONTEND_ENABLE_SIMPLY", "true").lower() == "true",
+                       community_assistants=self._get_community_assistants())
         ssoConfig = SSOConfig(sso_issuer=getenv("BACKEND_SSO_ISSUER", ""),
                               role=getenv("BACKEND_SSO_ROLE","lhm-ab-mucgpt-user"))
         dbConfig = DatabaseConfig(db_host=getenv("BACKEND_DB_HOST", ""),

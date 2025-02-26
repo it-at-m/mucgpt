@@ -176,7 +176,6 @@ const Chat = () => {
             let answer: string = "";
             let streamed_tokens = 0;
             let latestResponse: ChatResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
-            setAnswers([...answers, { user: question, response: latestResponse }]);
             for await (const chunk of readNDJSONStream(response.body)) {
                 if (chunk as Chunk) {
                     switch (chunk.type) {

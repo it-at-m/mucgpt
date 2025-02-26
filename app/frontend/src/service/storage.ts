@@ -80,7 +80,7 @@ export class StorageService<M, C> {
                 name: name
             };
             const db = await this.connectToDB();
-            await db.add(this.config.objectStore_name, db_object);
+            await db.put(this.config.objectStore_name, db_object);
             return db_object.id;
         } catch (error) {
             this.onError(error);

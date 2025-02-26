@@ -48,10 +48,32 @@ class BackendConfig(BaseModel):
 class LabelsConfig(BaseModel):
     env_name: str = "MUCGPT"
 
+class ExampleModel(BaseModel):
+    text: str
+    value: str
+    system: str = ""
+
+class QuickPrompt(BaseModel):
+    label: str
+    prompt: str
+    tooltip: str
+
+class CommunityAssistantConfig(BaseModel):
+    title: str
+    description: str
+    system_message: str
+    publish: bool = True
+    id: str
+    temperature: float
+    max_output_tokens: int
+    examples: List[ExampleModel]
+    quick_prompts: List[QuickPrompt]
+
 class FrontendConfig(BaseModel):
     labels: LabelsConfig
     alternative_logo: bool = False
     enable_simply: bool = True
+    community_assistants: List[CommunityAssistantConfig] = []
 
 class Config(BaseModel):
     """Config for an environment, is loaded from ressources/env.json

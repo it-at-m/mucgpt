@@ -74,6 +74,7 @@ export interface Frontend {
     alternative_logo: boolean;
     labels: Labels;
     enable_simply: boolean;
+    community_assistants: Bot[];
 }
 
 export interface Model {

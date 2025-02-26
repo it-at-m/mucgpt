@@ -22,7 +22,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             env_name: "MUC tschibidi-C"
         },
         alternative_logo: true,
-        enable_simply: true
+        enable_simply: true,
+        community_assistants: []
     },
     version: "DEV 1.0.0",
     commit: "152b175"

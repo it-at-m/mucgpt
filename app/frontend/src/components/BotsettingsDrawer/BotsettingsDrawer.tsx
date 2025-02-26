@@ -1,4 +1,4 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular } from "@fluentui/react-icons";
+import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Slider,
@@ -10,10 +10,6 @@ import {
     Tooltip,
     Textarea,
     TextareaOnChangeData,
-    Dropdown,
-    Option,
-    SelectionEvents,
-    OptionOnSelectData
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
@@ -119,10 +115,10 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
             {actions}
             <Button
                 appearance="secondary"
-                icon={isEditable ? <Save24Regular className={styles.iconRightMargin} /> : <Edit24Regular className={styles.iconRightMargin} />}
+                icon={isOwner ? (isEditable ? <Save24Regular className={styles.iconRightMargin} /> : <Edit24Regular className={styles.iconRightMargin} />) : (isEditable ? <Dismiss24Regular className={styles.iconRightMargin} /> : <ChatSettings24Regular className={styles.iconRightMargin} />)}
                 onClick={toggleReadOnly}
             >
-                {isEditable ? t("components.botsettingsdrawer.finish_edit") : t("components.botsettingsdrawer.edit")}
+                {isOwner ? (isEditable ? t("components.botsettingsdrawer.finish_edit") : t("components.botsettingsdrawer.edit")) : (isEditable ? t("components.botsettingsdrawer.close_configutations") : t("components.botsettingsdrawer.show_configutations"))}
             </Button>
             <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                 <Button appearance="secondary" onClick={onDeleteBot} icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={!isOwner}>

@@ -1,6 +1,6 @@
 import re
-from logging import getLogger
 from os import environ, getenv
+from uuid import uuid4 as uuid
 
 from core.types.Config import (
     ApproachConfig,
@@ -79,9 +79,6 @@ class ConfigHelper:
 
     def _get_community_assistant(self, index):
         prefix = f"BACKEND_COMMUNITY_ASSISTANT_{index}_"
-        logger = getLogger()
-        logger.info(prefix)
-        logger.info(getenv(f"{prefix}TITLE"))
         config = CommunityAssistantConfig(
             title= getenv(f"{prefix}TITLE"),
             description= getenv(f"{prefix}DESCRIPTION"),
@@ -90,10 +87,8 @@ class ConfigHelper:
             quick_prompts= self._get_quick_prompt_list(index),
             temperature= float(getenv(f"{prefix}TEMPERATURE", 0.7)),
             max_output_tokens= int(getenv(f"{prefix}MAX_TOKENS", 100)),
-            id = str(index)
+            id = str(getenv(f"{prefix}ID", uuid())),
         )
-        
-        logger.info(config)
         return config
     
     def _get_community_assistants(self):

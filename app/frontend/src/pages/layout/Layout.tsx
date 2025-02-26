@@ -67,6 +67,9 @@ export const Layout = () => {
                 if (bot) setTitle([bot.id as string, bot.title]);
             });
         }
+    }, [id]);
+
+    useEffect(() => {
         configApi().then(
             result => {
                 setConfig(result);
@@ -93,7 +96,7 @@ export const Layout = () => {
             }
         );
         i18n.changeLanguage(language_pref);
-    }, [id]);
+    }, []);
 
     const onAcceptTermsOfUse = () => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));

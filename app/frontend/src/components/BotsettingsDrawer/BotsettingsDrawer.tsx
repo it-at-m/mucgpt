@@ -89,7 +89,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const toggleReadOnly = () => {
         setEditable(!isEditable);
         onEditChange(!isEditable);
-        if (isEditable) {
+        if (isEditable && isOwner) {
             const updatedTitle = title.trim() !== "" ? title : `Assistent ${bot.id}`;
             setTitle(updatedTitle);
             const updatedBot = {

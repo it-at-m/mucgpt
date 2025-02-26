@@ -30,6 +30,10 @@ Creating an assistant involves specifying a system prompt that guides the assist
 
 The flexibility of the Own Assistants feature empowers users to leverage the full potential of MUCGPT, making it a versatile tool for a wide range of applications.
 
+MUCGPT also supports the creation of static, read-only Community Assistants that are available to all users. These assistants can be defined in the `.env` file, allowing administrators to set up predefined assistants that cater to common needs or provide standardized responses. This feature ensures that all users have access to consistent and reliable assistants without the ability to modify them, maintaining uniformity and control over the provided information. These Assistants can have predefined examples and quick prompts to show the user how to use this assistant.
+
+By leveraging Community Assistants, organizations can ensure that their users have access to essential tools and information tailored to their specific requirements, enhancing the overall user experience and productivity.
+
 ## General Features
 Generated text in various formats is displayed correctly. The formats currently supported are
 - Markdown

@@ -32,30 +32,45 @@ const Version = () => {
                 <h1 className={styles.header}>{t("version.header")}</h1>
                 <Accordion multiple collapsible defaultOpenItems="13">
                     <AccordionItem value="13">
-                        <AccordionHeader>[1.2.4] 21.02.2025</AccordionHeader>
+                        <AccordionHeader>[1.2.4] 26.02.2025</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
+                                <ul>
+                                    Assistenten:
+                                    <li>Statische Community-Assistenten können über die .env-Datei konfiguriert werden.</li>
+                                    <li>Community-Assistenten können eigene Beispiele und vorgeschlagene Antworten haben.</li>
+                                </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>UI-Probleme bei einer hohen Anzahl von Tokens, die zu Verzögerungen bei z.B. der Eingabe von Prompts führten</li>
-                                    <li>Version & FAQ: Stil angepasst sowie Rechtschreib- und Grammatikfehler korrigiert</li>
+                                    <li>UI-Probleme bei einer hohen Anzahl von Tokens, die zu Verzögerungen bei z.B. der Eingabe von Prompts führten.</li>
+                                    <li>Code-Blöcke passen sich ebenfalls an die Schriftgröße an.</li>
+                                    <li>"Einstellungen & Feedback"-Button bleiben jetzt im Header beim Vergrößern der Schriftgröße.</li>
+                                    <li>Version & FAQ: Stil angepasst sowie Rechtschreib- und Grammatikfehler korrigiert.</li>
                                     <li>Token-Nutzung:
                                         <ul>
                                             <li>Anzeigeproblem beim Neuladen behoben.</li>
                                             <li>Token-Usage aus den Features <i>Zusammenfassen</i> und <i>Brainstorming</i> entfernt.</li>
-                                            <li>Wenn keine Tokens verwendet werden, wird die Token-Usage nicht angezeigt um eine übersichtlichere Oberfläche zu bieten.</li>
+                                            <li>Wenn keine Tokens verwendet werden, wird die Token-Usage nicht angezeigt, um eine übersichtlichere Oberfläche zu bieten.</li>
                                         </ul>
                                     </li>
-                                    <li>Allgemeine Rechtschreib- und Grammatikfehler korrigiert</li>
+                                    <li>Allgemeine Rechtschreib- und Grammatikfehler korrigiert.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>
                                         Einfache Sprache:
                                         <ul>
-                                            <li><i>Leichte Sprache</i> wurde entfernt, da der Name geschützt ist bzw. muss von einer Person kontrolliert werden</li>
+                                            <li><i>Leichte Sprache</i> wurde entfernt, da der Name geschützt ist bzw. von einer Person kontrolliert werden muss.</li>
                                             <li>Der Prompt für <i>einfache Sprache</i> wurde angepasst und erweitert.</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Assistenten:
+                                        <ul>
+                                            <li>Einstellungen wie <i>System-Prompt</i> oder <i>Token-Anzahl</i> werden nur beim Bearbeiten angezeigt.</li>
+                                            <li>Beim Bearbeiten eines Assistenten verbreitert sich die Sidebar.</li>
+                                            <li>Community-Assistenten sind Read-Only und können von den Benutzern nicht verändert werden.</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -485,8 +500,7 @@ const Version = () => {
                                 <ul>
                                     <li>Bei längeren Eingaben ist das Eingabetextfeld nicht mitgewachsen.</li>
                                     <li>
-                                        Falls Antworten HTML enthalten wie &lt;, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash
-                                        Skripte sollten nun wieder korrekt generiert werden.
+                                        Falls Antworten HTML enthalten wie &lt;, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash-Skripte sollten nun wieder korrekt generiert werden.
                                     </li>
                                     <li>
                                         Generierte Antworten mit Codeblöcken in Markdown: Falls keine Sprache im zurückgegebenen Codeblock definiert war und

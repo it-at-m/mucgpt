@@ -176,7 +176,9 @@ i18n
                         botsettingsdrawer: {
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
-                            finish_edit: "Bearbeitung abschließen"
+                            finish_edit: "Bearbeitung abschließen",
+                            show_configutations: "Konfigurationen anzeigen",
+                            close_configutations: "Konfigurationen schließen"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -390,7 +392,9 @@ i18n
                         botsettingsdrawer: {
                             delete: "Delete assistent",
                             edit: "Edit Assistant",
-                            finish_edit: "Finish Edit"
+                            finish_edit: "Finish Edit",
+                            show_configutations: "Show configurations",
+                            close_configutations: "Close configurations"
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -605,7 +609,9 @@ i18n
                         botsettingsdrawer: {
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
-                            finish_edit: "Bearbeitung abschließ'n"
+                            finish_edit: "Bearbeitung abschließ'n",
+                            show_configutations: "Konfigurationen anzeigen",
+                            close_configutations: "Konfigurationen schließen"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -813,7 +819,9 @@ i18n
                         botsettingsdrawer: {
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
-                            finish_edit: "Terminer la modification"
+                            finish_edit: "Terminer la modification",
+                            show_configutations: "Afficher les configurations",
+                            close_configutations: "Fermer les configurations"
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -1020,7 +1028,9 @@ i18n
                         botsettingsdrawer: {
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
-                            finish_edit: "Завершити редагування"
+                            finish_edit: "Завершити редагування",
+                            show_configutations: "Показати конфігурації",
+                            close_configutations: "Закрити конфігурації"
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"

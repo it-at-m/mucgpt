@@ -176,9 +176,7 @@ i18n
                         botsettingsdrawer: {
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
-                            finish_edit: "Bearbeitung abschließen",
-                            show_configutations: "Konfigurationen anzeigen",
-                            close_configutations: "Konfigurationen schließen"
+                            finish_edit: "Bearbeitung abschließen"
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -225,7 +223,8 @@ i18n
                             prompt_title_desc: "Vorgeschlagener System-Prompt, Titel und Beschreibung:",
                             back: "Zurück",
                             save: "Speichern",
-                            describe: "Beschreibe die Funktion..."
+                            describe: "Beschreibe die Funktion...",
+                            skip: "Überspringen"
                         }
                     }
                 }
@@ -392,9 +391,7 @@ i18n
                         botsettingsdrawer: {
                             delete: "Delete assistent",
                             edit: "Edit Assistant",
-                            finish_edit: "Finish Edit",
-                            show_configutations: "Show configurations",
-                            close_configutations: "Close configurations"
+                            finish_edit: "Finish Edit"
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -441,7 +438,8 @@ i18n
                             prompt_title_desc: "Suggested system prompt, title, and description:",
                             back: "Back",
                             save: "Save",
-                            describe: "Describe the function..."
+                            describe: "Describe the function...",
+                            skip: "Skip"
                         }
                     }
                 }
@@ -609,9 +607,7 @@ i18n
                         botsettingsdrawer: {
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
-                            finish_edit: "Bearbeitung abschließ'n",
-                            show_configutations: "Konfigurationen anzeigen",
-                            close_configutations: "Konfigurationen schließen"
+                            finish_edit: "Bearbeitung abschließ'n"
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -658,7 +654,8 @@ i18n
                             prompt_title_desc: "Vorgeschlagener System-Prompt, Titel und Beschreibung:",
                             back: "Zruck",
                             save: "Speichern",
-                            describe: "Beschreib die Funktion..."
+                            describe: "Beschreib die Funktion...",
+                            skip: "Übaspringa"
                         }
                     }
                 }
@@ -819,9 +816,7 @@ i18n
                         botsettingsdrawer: {
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
-                            finish_edit: "Terminer la modification",
-                            show_configutations: "Afficher les configurations",
-                            close_configutations: "Fermer les configurations"
+                            finish_edit: "Terminer la modification"
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -868,7 +863,8 @@ i18n
                             prompt_title_desc: "Prompt système proposé, titre et description :",
                             back: "Retour",
                             save: "Enregistrer",
-                            describe: "Décrivez la fonction..."
+                            describe: "Décrivez la fonction...",
+                            skip: "Passer"
                         }
                     }
                 }
@@ -1028,9 +1024,7 @@ i18n
                         botsettingsdrawer: {
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
-                            finish_edit: "Завершити редагування",
-                            show_configutations: "Показати конфігурації",
-                            close_configutations: "Закрити конфігурації"
+                            finish_edit: "Завершити редагування"
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"
@@ -1077,7 +1071,8 @@ i18n
                             prompt_title_desc: "Пропонований системний запит, заголовок та опис:",
                             back: "Назад",
                             save: "Зберегти",
-                            describe: "Опишіть функцію..."
+                            describe: "Опишіть функцію...",
+                            skip: "Пропустити"
                         }
                     }
                 }

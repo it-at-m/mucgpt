@@ -1,6 +1,6 @@
+import logging
 import re
 from os import environ, getenv
-from uuid import uuid4 as uuid
 
 from core.types.Config import (
     ApproachConfig,
@@ -17,6 +17,7 @@ from core.types.Config import (
 )
 from core.version import get_latest_commit, get_version
 
+logger = logging.getLogger()
 
 class ConfigHelper:
     def _find_highest_index(self, regex:str) -> int:
@@ -48,9 +49,9 @@ class ConfigHelper:
     def _get_quick_prompt(self, assistant, index):
         prefix = f"BACKEND_COMMUNITY_ASSISTANT_{assistant}_QUICK_PROMPT_{index}_"
         config = QuickPrompt(
-            label= getenv(f"{prefix}LABEL"),
-            prompt= getenv(f"{prefix}PROMPT"),
-            tooltip= getenv(f"{prefix}TOOLTIP")
+            label= getenv(f"{prefix}LABEL", f"Quick Prompt {index}"),
+            prompt= getenv(f"{prefix}PROMPT", f"Quick Prompt {index}"),
+            tooltip= getenv(f"{prefix}TOOLTIP", ""),
         )
         return config
     
@@ -64,8 +65,8 @@ class ConfigHelper:
     def _get_example(self, assistant, index):
         prefix = f"BACKEND_COMMUNITY_ASSISTANT_{assistant}_EXAMPLES_{index}_"
         config = ExampleModel(
-            text= getenv(f"{prefix}TEXT"),
-            value= getenv(f"{prefix}VALUE"),
+            text= getenv(f"{prefix}TEXT", f"Example {index}"),
+            value= getenv(f"{prefix}VALUE", f"Example {index}"),
             system= getenv(f"{prefix}SYSTEM", "")
         )
         return config
@@ -79,15 +80,18 @@ class ConfigHelper:
 
     def _get_community_assistant(self, index):
         prefix = f"BACKEND_COMMUNITY_ASSISTANT_{index}_"
+        id = getenv(f"{prefix}ID")
+        if id is None:
+            raise Exception(f"ID is missing for community assistant {index}. Please provide the env variable BACKEND_COMMUNITY_ASSISTANT_{index}_ID.")
         config = CommunityAssistantConfig(
-            title= getenv(f"{prefix}TITLE"),
-            description= getenv(f"{prefix}DESCRIPTION"),
-            system_message= getenv(f"{prefix}SYSTEM_MESSAGE"),
+            title= getenv(f"{prefix}TITLE", f"Title {index}"),
+            description= getenv(f"{prefix}DESCRIPTION", ""),
+            system_message= getenv(f"{prefix}SYSTEM_MESSAGE", ""),
             examples= self._get_example_list(index),
             quick_prompts= self._get_quick_prompt_list(index),
             temperature= float(getenv(f"{prefix}TEMPERATURE", 0.7)),
             max_output_tokens= int(getenv(f"{prefix}MAX_TOKENS", 100)),
-            id = str(getenv(f"{prefix}ID", uuid())),
+            id = id,
         )
         return config
     
@@ -95,7 +99,10 @@ class ConfigHelper:
         community_assistants = []
         highest_index = self._find_highest_index(r"BACKEND_COMMUNITY_ASSISTANT_(\d+)")
         for i in range(1, highest_index + 1):
-            community_assistants.append(self._get_community_assistant(i))
+            try:
+                community_assistants.append(self._get_community_assistant(i))
+            except Exception as e:
+                logger.error(f"Error while loading community assistant {i}: {e}")
         return community_assistants
 
     def _get_models_config(self):

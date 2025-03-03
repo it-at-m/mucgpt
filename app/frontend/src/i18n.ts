@@ -224,9 +224,6 @@ i18n
                             back: "Zurück",
                             save: "Speichern",
                             describe: "Beschreibe die Funktion..."
-                        },
-                        answer_list: {
-                            content_filter: "Es wurde ein Richtlinienverstoß festgestellt und der Chat wird hier beendet"
                         }
                     }
                 }
@@ -441,9 +438,6 @@ i18n
                             back: "Back",
                             save: "Save",
                             describe: "Describe the function..."
-                        },
-                        answer_list: {
-                            content_filter: "A policy violation has been detected and the chat is terminated here"
                         }
                     }
                 }
@@ -659,9 +653,6 @@ i18n
                             back: "Zruck",
                             save: "Speichern",
                             describe: "Beschreib die Funktion..."
-                        },
-                        answer_list: {
-                            content_filter: "Es wurde ein Richtlinienverstoß festgestellt und der Chat wird hier beendet"
                         }
                     }
                 }
@@ -870,9 +861,6 @@ i18n
                             back: "Retour",
                             save: "Enregistrer",
                             describe: "Décrivez la fonction..."
-                        },
-                        answer_list: {
-                            content_filter: "Une violation de la politique a été détectée et le chat est terminé ici"
                         }
                     }
                 }
@@ -1080,9 +1068,6 @@ i18n
                             back: "Назад",
                             save: "Зберегти",
                             describe: "Опишіть функцію..."
-                        },
-                        answer_list: {
-                            content_filter: "Виявлено порушення політики, і чат тут завершено"
                         }
                     }
                 }

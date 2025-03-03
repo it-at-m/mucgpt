@@ -48,7 +48,7 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
                     botmsg={
                         <>
                             {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                            {error ? (error.toString().includes("content_filter") ? <AnswerError error={t("components.answer_list.content_filter")} onRetry={makeApiRequest} /> : <AnswerError error={error.toString()} onRetry={makeApiRequest} />) : null}
+                            {error ? <AnswerError error={error.toString()} onRetry={makeApiRequest} /> : null}
                         </>
                     }
                 ></ChatTurnComponent>

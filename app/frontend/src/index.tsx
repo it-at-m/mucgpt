@@ -18,6 +18,7 @@ import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider"
 import Simply from "./pages/simplyfied-language/Simply";
 import Bot from "./pages/bot/Bot";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
+import { worker } from "./mocks/browser";
 initializeIcons();
 
 const router = createHashRouter([
@@ -78,14 +79,28 @@ const router = createHashRouter([
     }
 ]);
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-        <LanguageContextProvider>
-            <LLMContextProvider>
-                <QuickPromptProvider>
-                    <RouterProvider router={router} />
-                </QuickPromptProvider>
-            </LLMContextProvider>
-        </LanguageContextProvider>
-    </React.StrictMode>
-);
+async function enableMocking() {
+    // Check if we're not in development mode
+    //if (import.meta.env?.MODE !== 'development') {
+    //    return
+    //}
+
+
+    // `worker.start()` returns a Promise that resolves
+    // once the Service Worker is up and ready to intercept requests.
+    return worker.start()
+}
+
+enableMocking().then(() => {
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+        <React.StrictMode>
+            <LanguageContextProvider>
+                <LLMContextProvider>
+                    <QuickPromptProvider>
+                        <RouterProvider router={router} />
+                    </QuickPromptProvider>
+                </LLMContextProvider>
+            </LanguageContextProvider>
+        </React.StrictMode>
+    );
+});

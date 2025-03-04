@@ -9,6 +9,7 @@ from langchain_core.runnables.base import RunnableSerializable
 from pydantic import BaseModel, Field
 
 from core.datahelper import Repository, Requestinfo
+from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.textsplit import splitPDF, splitText
 from core.types.Config import ApproachConfig
@@ -150,9 +151,10 @@ class Summarize:
         except Exception as ex:
             logger.error("Error in call and cleanup: %s", ex)
             # error message
+            msg = llm_exception_handler(ex=ex, logger=logger)
             total_tokens = 0
-            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen.' )])
-            error = ex.message
+            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. '  )])
+            error = msg
 
         return (result,total_tokens, error)
 
@@ -187,6 +189,8 @@ class Summarize:
 
         logger.info("Concatenate summaries")
         # concatenate all summarys
+
+        errors = []
         for i in range(0,5):
             next_summary = DenserSummary(missing_entities=[], denser_summary="")
             for (chunk_summary, tokens, error) in chunk_summaries:
@@ -195,10 +199,12 @@ class Summarize:
                     next_summary.denser_summary += " "+ chunk_summary.data[i].denser_summary
                     next_summary.missing_entities += chunk_summary.data[i].missing_entities
                     summarys.append(next_summary)
+                else:
+                    errors.append(error)
 
         if(summarys == [] or len(summarys) < self.use_last_n_summaries):
             logger.error("No summaries generated")
-            final_summarys =  ["Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen."]
+            final_summarys =  ["Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen." + ( "" if len(errors) == 0 else " Fehler: " + errors[0])]
         else:
             logger.info("Translate and cleanup concatenated summaries")
             final_summarys = []

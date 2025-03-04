@@ -5,6 +5,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
 from core.datahelper import Repository, Requestinfo
+from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.modelhelper import num_tokens_from_messages
 from core.types.ChatRequest import ChatTurn
@@ -61,8 +62,8 @@ class Chat:
                 yield Chunk(type="C", message= event.content, order=position)
                 position += 1
         except Exception as ex:
-             logger.error("Error in chat streaming: %s", ex)
-             yield Chunk(type="E",message= ex.message, order=position)
+            msg = llm_exception_handler(ex=ex, logger=logger)
+            yield Chunk(type="E",message= msg, order=position)
         # handle exceptions
         # TODO find ratelimits
         # TODO use callbacks https://clemenssiebler.com/posts/azure_openai_load_balancing_langchain_with_fallbacks/

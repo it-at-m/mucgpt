@@ -24,6 +24,15 @@ async def format_as_ndjson(r: AsyncGenerator[Chunk, None], logger: Logger) -> As
         yield Chunk(type="E", message=msg).model_dump_json()
 
 def llm_exception_handler(ex: Exception, logger: Logger) -> str:
+    """Handles exceptions thrown by the LLM
+
+    Args:
+        ex (Exception): the exception
+        logger (Logger): the logger
+
+    Returns:
+        str: the error message
+    """
     msg = ex.message
     try:
         if hasattr(ex, 'status_code') and hasattr(ex, 'code') and ex.status_code == 400 and ex.code == "content_filter":

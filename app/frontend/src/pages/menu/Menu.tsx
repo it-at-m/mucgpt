@@ -9,7 +9,6 @@ import { AddBotButton } from "../../components/AddBotButton";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { BotStorageService } from "../../service/botstorage";
 import { Bot } from "../../api/models";
-import { arielle_bot, sherlock_bot } from "./static_bots";
 import { BOT_STORE } from "../../constants";
 import { migrate_old_bots } from "../../service/migration";
 
@@ -23,25 +22,17 @@ const Menu = () => {
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
-        const arielle: Bot = arielle_bot;
-        const sherlock: Bot = sherlock_bot;
-
-        migrate_old_bots().then(() => {
-            return botStorageService
-                .getBotConfig(arielle.id as string)
-                .then(bot => {
-                    if (!bot) botStorageService.createBotConfig(arielle, arielle.id as string);
-                })
-                .then(async () => {
-                    const bot = await botStorageService.getBotConfig(sherlock.id as string);
-                    if (!bot) botStorageService.createBotConfig(sherlock, sherlock.id as string);
-                })
-                .finally(() => {
-                    setCommunityBots([arielle, sherlock]);
-                    botStorageService.getAllBotConfigs().then(bots => {
-                        setBots(bots);
-                    });
-                });
+        migrate_old_bots().then(async () => {
+            let bots = await botStorageService.getAllBotConfigs();
+            let community_assistants = communityBots;
+            for (let bot of bots) {
+                if (bot.publish) {
+                    community_assistants.push(bot);
+                    bots = bots.filter(b => b.id !== bot.id);
+                }
+            }
+            setBots(bots);
+            setCommunityBots(community_assistants);
         });
     }, []);
 
@@ -77,20 +68,18 @@ const Menu = () => {
             <div className={styles.rowheader}>
                 {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
             </div>
-
             <div className={styles.row}>
                 {bots.map(
                     (bot: Bot, _) =>
-                        bot.id !== arielle_bot.id &&
-                        bot.id !== sherlock_bot.id && (
-                            <Tooltip content={bot.title} relationship="description" positioning="below">
-                                <Link to={`/bot/${bot.id}`} className={styles.box}>
-                                    <span>{bot.title}</span>
-                                </Link>
-                            </Tooltip>
-                        )
+                    (
+                        <Tooltip content={bot.title} relationship="description" positioning="below">
+                            <Link to={`/bot/${bot.id}`} className={styles.box}>
+                                <span>{bot.title}</span>
+                            </Link>
+                        </Tooltip>
+                    )
                 )}
-                {bots.length === 2 && <div>{t("menu.no_bots")}</div>}
+                {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}>{t("menu.community_bots")}</div>
             <div className={styles.row}>
@@ -101,6 +90,7 @@ const Menu = () => {
                         </Link>
                     </Tooltip>
                 ))}
+                {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}> </div>
         </div>

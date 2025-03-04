@@ -4,6 +4,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
+export type SidebarSizes = "small" | "medium" | "large" | "full_width";
+
 interface Props {
     sidebar: ReactNode;
     examples: ReactNode;
@@ -13,11 +15,11 @@ interface Props {
     header: string;
     header_as_markdown: boolean;
     messages_description: string;
-    size: "small" | "medium" | "large";
+    size: SidebarSizes;
 }
 
 export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExamples, header, header_as_markdown, messages_description, size }: Props) => {
-    const sidebarWidth = { small: "200px", medium: "300px", large: "460px" }[size];
+    const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
             <aside className={styles.sidebar}>{sidebar}</aside>

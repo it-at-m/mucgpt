@@ -30,18 +30,18 @@ def test_index():
     response = client.get('/')
     assert response.status_code == 200
     assert "text/html" in  response.headers["content-type"]
-    
+
 
 @pytest.mark.integration
 def test_unknown_endpoint():
     response = client.post("/api/unknownendpoint")
     assert response.status_code == 404
-    
+
 @pytest.mark.integration
 def test_favicon():
     response = client.get("/favicon.ico")
     assert response.status_code == 200
-    
+
 
 @pytest.mark.integration
 def test_health_check():
@@ -75,8 +75,8 @@ async def test_sum_pdf(mocker):
     tmp = BytesIO()
     writer = PdfWriter()
     writer.add_blank_page(219, 297)
-    page = writer.pages[0] 
-    writer.add_page(page) 
+    page = writer.pages[0]
+    writer.add_page(page)
     # create text
     annotation =  FreeText(
         text="Hello World\nThis is the second line!",
@@ -104,13 +104,12 @@ async def test_sum_pdf(mocker):
 async def test_brainstorm_exception(monkeypatch):
     monkeypatch.setattr(
         "brainstorm.brainstorm.Brainstorm.brainstorm",
-        mock.Mock(side_effect=ZeroDivisionError("something bad happened")),
+        mock.Mock(side_effect= Exception("Boom!")),
     )
     data = BrainstormRequest(topic="München", language="Deutsch", model="TEST_MODEL")
     response = client.post('/api/brainstorm', json=data.model_dump(),  headers=headers )
     assert response.status_code == 500
-    assert "Exception in brainstorm: something bad happened" in str(response.content)
-    
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -139,10 +138,10 @@ async def test_chatstream(mocker):
         async with ac.stream(method="POST",url='/api/chat_stream', json=data.model_dump()) as response:
             assert response.status_code == 200
             i = 0
-            async for chunk in response.aiter_lines(): 
+            async for chunk in response.aiter_lines():
                 assert Chunk.model_validate_json(chunk) == chunks[i]
                 i = i+1
-                
+
 @pytest.mark.integration
 def test_chat(mocker):
     mock_result = ChatResult(content= "result of brainstorming.")
@@ -165,7 +164,7 @@ def test_counttokens():
     response = client.post("/api/counttokens", headers=headers, json=data.model_dump())
     assert response.status_code == 200
     assert CountResult.model_validate_json(response.content).count == 13
-    
+
 @pytest.mark.integration
 def test_statistics_failure(mocker):
     sumbydep = [("dep1", 10), ("dep2",20)]

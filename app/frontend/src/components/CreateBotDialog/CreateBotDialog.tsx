@@ -1,4 +1,4 @@
-import { Checkmark24Filled, Dismiss24Regular, EditArrowBack24Regular } from "@fluentui/react-icons";
+import { ArrowRight24Regular, Checkmark24Filled, Dismiss24Regular, EditArrowBack24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -72,12 +72,14 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
 
     const onPromptButtonClicked = async () => {
         const bot: Bot = {
-            title: title,
-            description: description,
+            title: title == "" ? "Assistent" : title,
+            description: description == "" ? "Ein Assistent" : description,
             system_message: systemPrompt,
             publish: false,
             temperature: 0.6,
-            max_output_tokens: LLM.max_output_tokens
+            max_output_tokens: LLM.max_output_tokens,
+            quick_prompts: [],
+            examples: []
         };
         const created_id = await storageService.createBotConfig(bot);
         if (created_id) window.location.href = "/#/bot/" + created_id;
@@ -109,6 +111,12 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             setShowDialogInput(false);
         }
     };
+
+    const manuelBotCreation = () => {
+        setShowDialogInput(false);
+        setShowDialogOutput(true);
+        setInput("");
+    }
 
     return (
         <div>
@@ -149,8 +157,13 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                                 </Button>
                             </DialogTrigger>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button disabled={loading} appearance="secondary" size="small" onClick={createBot}>
+                                <Button disabled={loading || input == ""} appearance="secondary" size="small" onClick={createBot}>
                                     <Checkmark24Filled /> {t("components.create_bot_dialog.create")}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button disabled={loading} appearance="secondary" size="small" onClick={manuelBotCreation}>
+                                    <ArrowRight24Regular /> {t("components.create_bot_dialog.skip")}
                                 </Button>
                             </DialogTrigger>
                         </DialogActions>

@@ -32,19 +32,30 @@ const Version = () => {
                 <h1 className={styles.header}>{t("version.header")}</h1>
                 <Accordion multiple collapsible defaultOpenItems="13">
                     <AccordionItem value="13">
-                        <AccordionHeader>[1.2.4] 26.02.2025</AccordionHeader>
+                        <AccordionHeader>[1.2.4] 4.03.2025</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    Assistenten:
-                                    <li>Statische Community-Assistenten können über die .env-Datei konfiguriert werden.</li>
-                                    <li>Community-Assistenten können eigene Beispiele und vorgeschlagene Antworten haben.</li>
+                                    Community Assistenten:
+                                    <ul>
+                                        <li>Community-Assistenten können nun eigene Beispiele und vorgeschlagene Antworten haben.</li>
+                                        <li>Neue Versionen von Community-Assistenten
+                                            <ul>
+                                                <li>Sherlock🕵Testfallgenerator: Erstellt und exportiert Tesftälle.  Von itm.km73</li>
+                                                <li>Consultor: Berät zum Angebot von consult.in.M. Von consult.in.M  </li>
+                                                <li>🧜Arielle: Erstellt Mermaid Diagramme</li>
+                                            </ul>
+                                        </li>
+
+                                        <li>Community-Assistenten können zentral konfiguriert werden und es wird stets die neueste Version verwendet</li>
+                                    </ul>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>UI-Probleme bei einer hohen Anzahl von Tokens, die zu Verzögerungen bei z.B. der Eingabe von Prompts führten.</li>
-                                    <li>Code-Blöcke passen sich ebenfalls an die Schriftgröße an.</li>
+                                    <li>Performanceprobleme bei langen Chats (mehr als 20k Tokens). </li>
+                                    <li>Wird ein Prompt als gefährlich identifziert, wird nun nur noch "Es wurde ein Richtlinienverstoß festgestellt und der Chat wird hier beendet" zurückgegeben. </li>
+                                    <li>Code-Blöcke passen sich nun an die Schriftgröße an.</li>
                                     <li>"Einstellungen & Feedback"-Button bleiben jetzt im Header beim Vergrößern der Schriftgröße.</li>
                                     <li>Version & FAQ: Stil angepasst sowie Rechtschreib- und Grammatikfehler korrigiert.</li>
                                     <li>Token-Nutzung:
@@ -54,22 +65,22 @@ const Version = () => {
                                             <li>Wenn keine Tokens verwendet werden, wird die Token-Usage nicht angezeigt, um eine übersichtlichere Oberfläche zu bieten.</li>
                                         </ul>
                                     </li>
-                                    <li>Allgemeine Rechtschreib- und Grammatikfehler korrigiert.</li>
+                                    <li>Zahlreiche Rechtschreib- und Grammatikfehler wurden korrigiert.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>
                                         Einfache Sprache:
                                         <ul>
-                                            <li><i>Leichte Sprache</i> wurde entfernt, da der Name geschützt ist bzw. von einer Person kontrolliert werden muss.</li>
+                                            <li><i>Leichte Sprache</i> wurde entfernt, da wir keine vollständige Übersetzung in leichte Sprache durchführen können und der Name deswegen irreführend ist.</li>
                                             <li>Der Prompt für <i>einfache Sprache</i> wurde angepasst und erweitert.</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Assistenten:
+                                        Eigene Assistenten:
                                         <ul>
-                                            <li>Einstellungen wie <i>System-Prompt</i> oder <i>Token-Anzahl</i> werden nur beim Bearbeiten angezeigt.</li>
-                                            <li>Beim Bearbeiten eines Assistenten verbreitert sich die Sidebar.</li>
+                                            <li>Einstellungen wie <i>System-Prompt</i> oder <i>Maximale Token-Anzahl</i> werden nur beim Bearbeiten angezeigt.</li>
+                                            <li>Beim Bearbeiten eines Assistenten verbreitert sich die Einstellungs-Sidebar.</li>
                                             <li>Community-Assistenten sind Read-Only und können von den Benutzern nicht verändert werden.</li>
                                         </ul>
                                     </li>
@@ -84,7 +95,8 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Neuer Community-Assistent Sherlock 🕵️‍♂️. Unterstützt beim Review und der Erstellung von Testfällen. Entwickelt von itm.km73.
+                                        Neuer Community-Assistent Sherlock 🕵️‍♂️. Unterstützt beim Review und der Erstellung von Testfällen. Entwickelt von
+                                        itm.km73.
                                     </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
@@ -98,10 +110,15 @@ const Version = () => {
                                     <li>
                                         Einfache Sprache:
                                         <ul>
-                                            <li>Links werden nun beim Übersetzen in einfache Sprache ignoriert. Dies hatte zuvor zu Halluzinationen geführt.</li>
+                                            <li>
+                                                Links werden nun beim Übersetzen in einfache Sprache ignoriert. Dies hatte zuvor zu Halluzinationen geführt.
+                                            </li>
                                         </ul>
                                     </li>
-                                    <li>Es ist nun möglich, partielle Codeblöcke in Chrome zu kopieren. Dies hatte zuvor zu Zeilenumbrüchen nach jedem Wort geführt.</li>
+                                    <li>
+                                        Es ist nun möglich, partielle Codeblöcke in Chrome zu kopieren. Dies hatte zuvor zu Zeilenumbrüchen nach jedem Wort
+                                        geführt.
+                                    </li>
                                     <li>Ein Fehler bei der Kommunikation mit Mistral-Modellen über die API wurde behoben.</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
@@ -109,7 +126,10 @@ const Version = () => {
                                     <li>
                                         Brainstorming:
                                         <ul>
-                                            <li>Mindmap-Erstellung wurde verbessert. Mehr Kindknoten werden generiert, was zu größeren, detaillierteren Mindmaps führt.</li>
+                                            <li>
+                                                Mindmap-Erstellung wurde verbessert. Mehr Kindknoten werden generiert, was zu größeren, detaillierteren Mindmaps
+                                                führt.
+                                            </li>
                                         </ul>
                                     </li>
                                     <li>
@@ -124,16 +144,24 @@ const Version = () => {
                                     <li>
                                         Einfache Sprache:
                                         <ul>
-                                            <li>Der Titel des <i>leichte Sprache</i> Beispiels wurde umbenannt. Es handelt sich hierbei richtigerweise um einen Artikel zum Arbeitsschutzgesetz.</li>
+                                            <li>
+                                                Der Titel des <i>leichte Sprache</i> Beispiels wurde umbenannt. Es handelt sich hierbei richtigerweise um einen
+                                                Artikel zum Arbeitsschutzgesetz.
+                                            </li>
                                         </ul>
                                     </li>
                                     <li>
                                         Generelle Oberflächenverbesserungen:
                                         <ul>
-                                            <li>Jede Funktion (z.B. Chat, Zusammenfassen) hat nun die Aktionselemente in einer immer geöffneten Sidebar auf der linken Seite.</li>
-                                            <li>Das lokale Speichermanagement in der Browserdatenbank wurde verbessert und vereinheitlicht.
-                                                Bestehende Daten (alte Chats und Assistenten) werden migriert.
-                                                ⚠ Konversationen in <i>Zusammenfassen</i>, <i>Brainstorming</i> und <i>Einfache Sprache</i> bleiben nicht erhalten.</li>
+                                            <li>
+                                                Jede Funktion (z.B. Chat, Zusammenfassen) hat nun die Aktionselemente in einer immer geöffneten Sidebar auf der
+                                                linken Seite.
+                                            </li>
+                                            <li>
+                                                Das lokale Speichermanagement in der Browserdatenbank wurde verbessert und vereinheitlicht. Bestehende Daten
+                                                (alte Chats und Assistenten) werden migriert. ⚠ Konversationen in <i>Zusammenfassen</i>, <i>Brainstorming</i>{" "}
+                                                und <i>Einfache Sprache</i> bleiben nicht erhalten.
+                                            </li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -295,8 +323,8 @@ const Version = () => {
                                             <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favorisiert werden.</li>
                                             <li>Favorisierte Chats werden immer ganz oben angezeigt.</li>
                                             <li>
-                                                Die Chats werden nach dem letzten Bearbeitungszeitpunkt sortiert und gruppiert in "Heute", "Gestern",
-                                                "Letzte 7 Tage" und "Älter".
+                                                Die Chats werden nach dem letzten Bearbeitungszeitpunkt sortiert und gruppiert in "Heute", "Gestern", "Letzte 7
+                                                Tage" und "Älter".
                                             </li>
                                         </ul>
                                     </li>
@@ -435,7 +463,8 @@ const Version = () => {
                                         Brainstorm:
                                         <ul>
                                             <li>
-                                                Mindmaps sind nun im .mm-Format herunterladbar und können mit dem Mindmap-Tool Freeplane weiterverarbeitet werden.
+                                                Mindmaps sind nun im .mm-Format herunterladbar und können mit dem Mindmap-Tool Freeplane weiterverarbeitet
+                                                werden.
                                             </li>
                                         </ul>
                                     </li>
@@ -500,7 +529,8 @@ const Version = () => {
                                 <ul>
                                     <li>Bei längeren Eingaben ist das Eingabetextfeld nicht mitgewachsen.</li>
                                     <li>
-                                        Falls Antworten HTML enthalten wie &lt;, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash-Skripte sollten nun wieder korrekt generiert werden.
+                                        Falls Antworten HTML enthalten wie &lt;, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash Skripte sollten
+                                        nun wieder korrekt generiert werden.
                                     </li>
                                     <li>
                                         Generierte Antworten mit Codeblöcken in Markdown: Falls keine Sprache im zurückgegebenen Codeblock definiert war und

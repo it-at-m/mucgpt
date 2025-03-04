@@ -67,6 +67,9 @@ export const Layout = () => {
                 if (bot) setTitle([bot.id as string, bot.title]);
             });
         }
+    }, [id]);
+
+    useEffect(() => {
         configApi().then(
             result => {
                 setConfig(result);
@@ -76,13 +79,24 @@ export const Layout = () => {
                     console.error("Keine Modelle vorhanden");
                 }
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
+                for (let bot of result.frontend.community_assistants) {
+                    bot.system_message = bot.system_message.replace(/\\n/g, "\n");
+                    if (bot.system_message.startsWith('"') && bot.system_message.endsWith('"')) {
+                        bot.system_message = bot.system_message.slice(1, -1);
+                    }
+                    bot.description = bot.description.replace(/\\n/g, "\n").replace(/  /g, "  \n");
+                    if (bot.description.startsWith('"') && bot.description.endsWith('"')) {
+                        bot.description = bot.description.slice(1, -1);
+                    }
+                    botStorageService.createBotConfig(bot, bot.id);
+                }
             },
             () => {
                 console.error("Config nicht geladen");
             }
         );
         i18n.changeLanguage(language_pref);
-    }, [id]);
+    }, []);
 
     const onAcceptTermsOfUse = () => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
@@ -185,7 +199,7 @@ export const Layout = () => {
                                     onLLMSelectionChanged={onLLMSelectionChanged}
                                     llmOptions={models}
                                     currentLLM={LLM}
-                                ></SettingsDrawer>
+                                />
                             </div>
                         </div>
                     </header>

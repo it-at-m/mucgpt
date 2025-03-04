@@ -95,6 +95,9 @@
     align-self: flex-end;
     width: auto;
     display: flex;
+    max-height: 50px;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .header {

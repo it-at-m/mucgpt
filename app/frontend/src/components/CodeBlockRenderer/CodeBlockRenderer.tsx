@@ -49,6 +49,7 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
                     PreTag="div"
                     showLineNumbers={false}
                     wrapLongLines={true}
+                    codeTagProps={{ style: { fontSize: "var(--fontSizeBase400)" } }}
                 />
                 <div className={styles.copyContainer}>
                     {language}

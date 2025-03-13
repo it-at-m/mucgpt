@@ -9,7 +9,7 @@
   },
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d dist --remote github",
     "dev": "vite",
     "build": "tsc && vite build --outDir dist ",
     "buildlocal": "tsc && vite build",

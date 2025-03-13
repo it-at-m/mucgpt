@@ -1,12 +1,15 @@
 {
   "name": "mucgpt",
   "private": true,
-  "version": "1.2.2",
+  "version": "1.2.4",
+  "homepage": "https://it-at-m.github.io/mucgpt/",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "dev": "vite",
     "build": "tsc && vite build --outDir dist ",
     "buildlocal": "tsc && vite build",
@@ -47,6 +50,7 @@
     "@types/react-dom": "18.3.5",
     "@types/react-syntax-highlighter": "15.5.13",
     "@vitejs/plugin-react": "4.3.4",
+    "gh-pages": "^6.3.0",
     "msw": "^2.7.3",
     "prettier": "3.5.2",
     "typescript": "5.7.3",

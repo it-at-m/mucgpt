@@ -1,0 +1,10 @@
+.git*
+/app/backend/static
+/app/frontend/dist
+**/*.pyc
+.venv/
+/tests
+/notebooks
+/infra
+*.ipynb
+**/node_modules

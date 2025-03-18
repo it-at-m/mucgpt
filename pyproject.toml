@@ -15,7 +15,7 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.5.3",
+    "mistral-common==1.5.4",
     "fastapi[standard]==0.115.11",
     "langchain==0.3.20",
     "langchain-core==0.3.45",
@@ -30,7 +30,7 @@ dependencies = [
     "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",
     "gunicorn",
-    "sqlalchemy==2.0.38",
+    "sqlalchemy==2.0.39",
     "gitpython==3.1.44",
 ]
 
@@ -41,7 +41,7 @@ test = [
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.6.12",
+    "coverage==7.7.0",
     "pytest-cov"
 ]
 

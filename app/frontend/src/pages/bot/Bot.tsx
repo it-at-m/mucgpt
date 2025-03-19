@@ -114,7 +114,7 @@ const BotChat = () => {
                 language: language,
                 temperature: botConfig.temperature,
                 system_message: botConfig.system_message ? botConfig.system_message : "",
-                max_output_tokens: botConfig.max_output_tokens,
+                max_output_tokens: botConfig.max_output_tokens > LLM.max_output_tokens ? LLM.max_output_tokens : botConfig.max_output_tokens,
                 model: LLM.llm_name
             };
 

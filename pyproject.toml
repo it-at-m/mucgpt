@@ -22,7 +22,7 @@ dependencies = [
     "langchain_community==0.3.19",
     "langchain-openai==0.3.8",
     "openai==1.66.3",
-    "langsmith==0.3.13",
+    "langsmith==0.3.16",
     "joserfc",
     "tiktoken",
     "pypdf==5.3.1",

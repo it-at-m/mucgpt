@@ -1,0 +1,1 @@
+{"version":3,"file":"NoPage-DRcQil4O.js","sources":["../../src/pages/NoPage.tsx"],"sourcesContent":["export function Component(): JSX.Element {\r\n    return <h1>404</h1>;\r\n}\r\n\r\nComponent.displayName = \"NoPage\";\r\n"],"names":["Component","jsx"],"mappings":"yCAAO,SAASA,GAAyB,CAC9B,OAAAC,EAAA,IAAC,MAAG,SAAG,KAAA,CAAA,CAClB,CAEAD,EAAU,YAAc"}

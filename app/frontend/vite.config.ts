@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-    if (mode === "single") {
+    if (mode === "ghpages") {
         return {
             plugins: [react()],
             build: {

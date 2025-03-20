@@ -79,15 +79,24 @@ const router = createHashRouter([
 ]);
 
 async function enableMocking() {
-    // Check if we're not in development mode
-    if (import.meta.env?.MODE !== 'development') {
+    // Check if we're not in development mode or deploying ot gh pages
+    if (import.meta.env?.MODE !== 'development' && import.meta.env?.MODE !== 'ghpages') {
         return
     }
     const { worker } = await import('./mocks/browser.js')
 
     // `worker.start()` returns a Promise that resolves
     // once the Service Worker is up and ready to intercept requests.
-    return worker.start()
+    if (import.meta.env?.MODE === 'development')
+        return worker.start();
+    else
+        return worker.start({
+            serviceWorker: {
+                // This is useful if your application follows
+                // a strict directory structure.
+                url: '/mucgpt/mockServiceWorker.js',
+            },
+        })
 }
 
 enableMocking().then(() => {

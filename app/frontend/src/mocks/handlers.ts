@@ -19,7 +19,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     frontend: {
         labels: {
-            env_name: "MUCGPT FRONTEND DEMO (USES MOCK LLM)"
+            env_name: "MUCGPT DEMO. Find out more about us https://ki.muenchen.de/ "
         },
         alternative_logo: false,
         enable_simply: true,
@@ -97,7 +97,7 @@ const SIMPLY_RESPONSE = {
 };
 
 const CHAT_RESPONSE = {
-    content: "Hello from MUCGPT! How can i help you? ⚠ This is a Mock Response!"
+    content: "Hello from MUCGPT! How can i help you? ⚠ This is a Mock Response! No real AI here, sorry!"
 };
 
 const CHAT_STREAM_RESPONSE = [
@@ -118,6 +118,12 @@ const CHAT_STREAM_RESPONSE = [
     { type: "C", message: " mock", order: 14 },
     { type: "C", message: " response", order: 15 },
     { type: "C", message: "!", order: 16 },
+    { type: "C", message: " No", order: 17 },
+    { type: "C", message: " real", order: 18 },
+    { type: "C", message: " AI", order: 19 },
+    { type: "C", message: " here", order: 20 },
+    { type: "C", message: ",", order: 21 },
+    { type: "C", message: " sorry!", order: 22 },
     { type: "I", message: { requesttokens: 8, streamedtokens: 16 }, order: 17 }
 ];
 
@@ -137,14 +143,14 @@ export const handlers = [
         await delay(1000);
         return HttpResponse.json(SIMPLY_RESPONSE);
     }),
-    http.post("api/counttokens", () => {
+    http.post("/api/counttokens", () => {
         return HttpResponse.json({ count: 100 });
     }),
-    http.post("api/chat", async () => {
+    http.post("/api/chat", async () => {
         await delay(1000);
         return HttpResponse.json(CHAT_RESPONSE);
     }),
-    http.post("api/chat_stream", async () => {
+    http.post("/api/chat_stream", async () => {
         const stream = new ReadableStream({
             async start(controller) {
                 for (const chunk of CHAT_STREAM_RESPONSE) {

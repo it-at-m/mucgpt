@@ -8,8 +8,8 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "predeploy": "npm run build:single",
-    "build:single": "tsc && vite build --mode single",
+    "predeploy": "npm run build:ghpages",
+    "build:ghpages": "tsc  && vite build --mode ghpages",
     "deploy": "gh-pages -d dist --remote github",
     "dev": "vite",
     "build": "tsc && vite build --outDir dist ",

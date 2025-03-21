@@ -100,6 +100,14 @@ const CHAT_RESPONSE = {
     content: "Hello from MUCGPT! How can i help you? ⚠ This is a Mock Response! No real AI here, sorry!"
 };
 
+const CREATE_BOT_RESPONSE = {
+    title: "E-Mail-Assistent",
+    description:
+        "Dieser Assistent beantwortet eingehende E-Mails höflich und individuell, indem er die spezifischen Anliegen der Absender versteht und detaillierte, klare Antworten formuliert.",
+    system_prompt:
+        "Bitte beantworten Sie eingehende E-Mails höflich und individuell, indem Sie auf die spezifischen Anliegen der Absender eingehen.\n\nBerücksichtigen Sie die jeweilige Anfrage und zeigen Sie Verständnis für die Anliegen der Bürger.\n\n# Schritte\n\n- Lesen Sie die E-Mail sorgfältig durch und identifizieren Sie die Hauptanliegen des Absenders.\n- Formulieren Sie eine höfliche Anrede.\n- Beantworten Sie die Anfrage detailliert und individuell, basierend auf dem spezifischen Anliegen.\n- Schließen Sie mit einer freundlichen Grußformel.\n\n# Output Format\n\nDie Antwort sollte in Form einer formellen E-Mail verfasst werden, die klar und strukturiert ist. Verwenden Sie vollständige Sätze und achten Sie darauf, dass die Antwort ein angemessenes Maß an Höflichkeit und Professionalität aufweist.\n\n# Beispiele\n\n**Beispiel 1:**\n*Eingang:*\n„Ich habe eine Frage zu den Öffnungszeiten des Rathauses.“\n\n*Ausgang:*\n„Sehr geehrte/r [Name],  \nvielen Dank für Ihre Anfrage. Die Öffnungszeiten des Rathauses sind von Montag bis Freitag, 8:00 bis 18:00 Uhr. Bei weiteren Fragen stehe ich Ihnen gerne zur Verfügung.   \nMit freundlichen Grüßen,  \n[Ihr Name]“\n\n**Beispiel 2:**\n*Eingang:*\n„Ich benötige Informationen zu einem Bauantrag.“\n\n*Ausgang:*\n„Sehr geehrte/r [Name],  \nich danke Ihnen für Ihre E-Mail. Für Informationen bezüglich Ihres Bauantrags empfehle ich, die Plattform [Link zur Plattform] zu besuchen oder uns direkt zu kontaktieren. Gerne unterstütze ich Sie dabei!  \nMit besten Grüßen,  \n[Ihr Name]“\n\n# Notes\n\nAchten Sie darauf, dass jede Antwort individuell angepasst wird und die Anliegen der Bürger ernst genommen werden."
+};
+
 const CHAT_STREAM_RESPONSE = [
     { type: "C", message: "", order: 0 },
     { type: "C", message: "", order: 1 },
@@ -145,6 +153,10 @@ export const handlers = [
     }),
     http.post("/api/counttokens", () => {
         return HttpResponse.json({ count: 100 });
+    }),
+    http.post("api/create_bot", async () => {
+        await delay(1000);
+        return HttpResponse.json(CREATE_BOT_RESPONSE);
     }),
     http.post("/api/chat", async () => {
         await delay(1000);

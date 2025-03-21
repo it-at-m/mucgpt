@@ -8,7 +8,6 @@ import { Tag } from "@fluentui/react-components";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { useTranslation } from "react-i18next";
-import cheetsheet from "../../assets/mucgpt_cheatsheet.pdf";
 import { Model } from "../../api";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
@@ -148,13 +147,8 @@ export const SettingsDrawer = ({
                     <ul className={styles.list}>
                         <li>
                             {" "}
-                            <Link href="\#faq" onClick={closeDrawer}>
+                            <Link href={import.meta.env.BASE_URL + "#/faq"} onClick={closeDrawer}>
                                 FAQs
-                            </Link>
-                        </li>
-                        <li>
-                            <Link download href={cheetsheet} aria-label="Cheat Sheet">
-                                Cheat Sheet
                             </Link>
                         </li>
                     </ul>
@@ -167,7 +161,7 @@ export const SettingsDrawer = ({
                         Version: <Tag shape="circular">{version}</Tag> <Tag shape="circular">{commit}</Tag>
                     </div>
                     <div className={styles.faq}>
-                        <Link href="\#version" onClick={closeDrawer}>
+                        <Link href={import.meta.env.BASE_URL + `#/version`} onClick={closeDrawer}>
                             {t("version.header")}
                         </Link>
                     </div>

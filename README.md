@@ -18,6 +18,7 @@
 [![React][react-shield]][fastapi]
 [![Postgres][postgres-shield]][postgres]
 [![Langchain][langchain-shield]][langchain]
+[![Demo-Frontend][pages-shield]][pages]
 
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
@@ -30,6 +31,7 @@
 [react-shield]:https://shields.io/badge/react-lightblue?logo=react&style=for-the-badge&logoColor=white
 [postgres-shield]: https://img.shields.io/badge/postgres-lightblue?&style=for-the-badge&logo=postgresql&logoColor=white
 [langchain-shield]: https://img.shields.io/badge/LangChain-lightblue?&style=for-the-badge&logo=langchain&logoColor=white
+[pages-shield]: https://img.shields.io/badge/Demo-121013?logo=github&logoColor=white&style=for-the-badge
 
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
@@ -40,8 +42,9 @@
 [react]: https://react.dev/
 [postgres]: https://www.postgresql.org/
 [langchain]: https://python.langchain.com/docs/introduction/
+[pages]: https://it-at-m.github.io/mucgpt/
 
-MUCGPT provides a web interface based for a given large language model (LLM). The whole package is shipped with a docker container
+MUCGPT provides a web interface based for a given large language model (LLM). The whole package is shipped with a docker container. For a first impression, look at our [demo frontend](https://it-at-m.github.io/mucgpt/)
 
  The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
 
@@ -136,12 +139,11 @@ timeline
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
 
-The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [config](config/default.json) file, you can provide the user with various LLM options to select from in the frontend.
+The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [.env](config/.env.empty) file, you can provide the user with various LLM options to select from in the frontend.
 
 
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
 
-A cheatsheat to use MUCGPT is located [here](app/frontend/src/assets/mucgpt_cheatsheet.pdf).
 
 ## Contributing
 

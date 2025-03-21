@@ -116,7 +116,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
         setShowDialogInput(false);
         setShowDialogOutput(true);
         setInput("");
-    }
+    };
 
     return (
         <div>

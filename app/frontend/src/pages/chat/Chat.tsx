@@ -236,17 +236,26 @@ const Chat = () => {
         setAnswers([]);
     };
 
-    const onRollbackMessage = (message: string) => {
-        return async () => {
-            if (active_chat) {
-                let result = await storageService.rollbackMessage(message);
-                if (result) {
-                    setAnswers(result.messages);
-                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
-                }
-                setQuestion(message);
-            }
-        };
+    useEffect(() => {
+        console.log("active_chat changed: " + active_chat);
+    }, [active_chat]);
+
+    const onRollbackMessage = async (message: string) => {
+        if (!active_chat) return;
+
+        const result = await storageService.rollbackMessage(message);
+        if (!result) return;
+
+        if (result.messages.length > 0) {
+            setAnswers(result.messages);
+            lastQuestionRef.current = result.messages[result.messages.length - 1].user;
+        } else {
+            clearChat();
+            await storageService.delete(result.id);
+            fetchHistory();
+        }
+
+        setQuestion(message);
     };
 
     const onRegeneratResponseClicked = async () => {
@@ -321,7 +330,7 @@ const Chat = () => {
                     </>
                 );
             }}
-            onRollbackMessage={onRollbackMessage}
+            onRollbackMessage={(message) => () => { onRollbackMessage(message); }}
             isLoading={isLoading}
             error={error}
             makeApiRequest={() => makeApiRequest(lastQuestionRef.current, systemPrompt)}

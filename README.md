@@ -37,7 +37,6 @@
 [gitmoij]: https://gitmoji.dev/
 [uv]: https://github.com/astral-sh/uv
 [fastapi]: https://fastapi.tiangolo.com/
-[react]: https://react.dev/
 [postgres]: https://www.postgresql.org/
 [langchain]: https://python.langchain.com/docs/introduction/
 
@@ -48,7 +47,9 @@ MUCGPT provides a web interface based for a given large language model (LLM). Th
 In addition custom GPTs can be generated and saved. A own GPT is an assistant for a specific task with an custom system prompt.
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
+
 ## Table of contents
+
 * [Built With](#built-with)
 * [Getting Started](#getting-started)
 * [Roadmap](#roadmap)
@@ -57,50 +58,57 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 * [License](#license)
 * [Contact](#contact)
 
-
 ## Built With
 
-### Backend:
+### Backend
+
 * [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
 * [FastAPI](https://fastapi.tiangolo.com/)
 * [LangChain](https://www.langchain.com/)
 
-### Frontend:
+### Frontend
 
 * [React](https://de.react.dev/)
 * [Typescript](https://www.typescriptlang.org/)
 * [Javascript](https://wiki.selfhtml.org/wiki/JavaScript)
 
-### Deployment:
-  * [Node.js 20+](https://nodejs.org/en/download/package-manager)
-  * [Git](https://git-scm.com/downloads)
-  * Python 3.12
-  * [uv](https://github.com/astral-sh/uv)
-  * Docker
+### Deployment
 
+* [Node.js 20+](https://nodejs.org/en/download/package-manager)
+* [Git](https://git-scm.com/downloads)
+* Python 3.12
+* [uv](https://github.com/astral-sh/uv)
+* Docker
 
 ## Getting started
 
-- Install uv: https://docs.astral.sh/uv/getting-started/installation/
-  - [Using UV during development](/docs/DEVELOPMENT.md)
-- Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
+* Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
+  * [Using UV during development](/docs/DEVELOPMENT.md)
+* Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
 ### Install deps
+
 Sync python environment vor development:
+
 ```bash
 uv sync --all-extras # installs dev/test dependencies
 # if you only want to run mucgpt without using development deps
 uv sync
 ```
+
 Install frontend deps
+
 ```bash
 cd app/frontend
 npm install
 ```
+
 ### Configure
+
  Configure your environment. For that copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the parent directory [.env](.env). Add at least one model by providing one OpenAi comptabile endpoint.
 
 ### Run locally
+
 ```bash
 cd app\frontend
 npm run buildlocal
@@ -108,10 +116,10 @@ cd ..\backend
 uv run app.py
 ```
 
-
 ### Run with docker
+
 1. Build an Image
-   ``` docker build --build-arg COMMIT=$(git log -1 --format=%h) --build-arg VERSION=$(git describe --tags --abbrev=0) --tag mucgpt .```
+   ```docker build --build-arg COMMIT=$(git log -1 --format=%h) --build-arg VERSION=$(git describe --tags --abbrev=0) --tag mucgpt .```
 2. Run the image ```docker run --detach --publish 8080:8000  --env-file=.env  mucgpt```
 
 ## Roadmap
@@ -140,15 +148,14 @@ timeline
     2025-09 : Chat with Own Documents : 📂 Own GPTs will have access to shared knowledge and can answer questions based on provided sources.
 ```
 
-
 ## Documentation
+
 ![Architecture](docs/appcomponents_en.png)
  The architecture of MUCGPT is divided into two parts, the frontend and the backend. MUCGPT is deployed on Microsoft Azure as an AppService with a PostgreSQL database and an Azure OpenAI resource.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
 
 The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [.env](config/.env.empty) file, you can provide the user with various LLM options to select from in the frontend.
-
 
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
 
@@ -170,12 +177,10 @@ Don't forget to give the project a star! Thanks again!
 
 More about this in the [CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md) file.
 
-
 ## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) file for more information.
 
-
 ## Contact
 
-it@M - itm.kicc@muenchen.de
+it@M - <itm.kicc@muenchen.de>

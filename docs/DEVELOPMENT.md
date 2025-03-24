@@ -13,6 +13,12 @@ uv sync --all-extras
 uv lock -U
 ```
 
+Install pre-commit hooks
+
+```bash
+ uv run pre-commit install
+```
+
 ### Add Packages
 
 Packages can be added using the following command
@@ -31,6 +37,7 @@ uv remove pydantic
 ```
 
 ## Running tests
+
 ```bash
 uv run pytest
 ```

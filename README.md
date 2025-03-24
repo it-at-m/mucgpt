@@ -119,14 +119,25 @@ uv run app.py
 ```mermaid
 timeline
     title MUCGPT Roadmap
-    2024-06 : OpenSource : "Available to the public under an open-source license, allowing anyone to access, use, and modify MUCGPT without restrictions or payment."
-    2024-07 : Chat History : "Users can save their chat history in the browser."
-    2024-08 : LiveCycle LLM : "The employed LLM can be configured to meet specific requirements."
-    2024-09 : Simplified Language : "Translate text into simple or easy-to-understand language."
-    2025-01 : Own GPTs : "Create and generate custom assistants for specific tasks."
-    2025-02 : Own GPTs : "Share Assistants with the others."
-    2025-04 : Own GPTs : "Use Websearch to provide additional knowledge."
-    2025-06: Chat with Documents : "Own GPTs will have access to shared knowledge and can answer questions based on provided sources. Consequently, MUCGPT can be utilized for internal knowledge management."
+
+    section Open Source Release
+    2024-06 : Open Source : 🚀 Available to the public under an open-source license, allowing anyone to access, use, and modify MUCGPT without restrictions or payment.
+
+    section  UI Features
+    2024-07 : Chat History : 💾 Users can save their chat history in the browser.
+    2024-08 : LiveCycle LLM : ⚙️ The employed LLM can be configured to meet specific requirements.
+    2024-09 : Simplified Language : 🗣️ Translate text into simple or easy-to-understand language.
+
+    section Own GPTs
+    2025-01 : Own GPTs : 🔧 Create and generate custom assistants for specific tasks.
+
+    section Major Update for improved reusability
+    2025-05 : MUCGPT 2.0 : 🌟 Roles and rights concept for assistants; splitting into smaller Microservices: API-Gateway, MUCGPT-Core, and a Team Management Service.
+
+    section Improving Own GPTs with more Tools
+    2025-06 : Own GPTs : ☁️ Share Assistants with others.
+    2025-07 : Own GPTs : 🔍 Use Websearch/Deep Research to provide additional knowledge.
+    2025-09 : Chat with Own Documents : 📂 Own GPTs will have access to shared knowledge and can answer questions based on provided sources.
 ```
 
 

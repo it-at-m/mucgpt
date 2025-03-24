@@ -1,12 +1,37 @@
 exclude: '^tests/snapshots/'
+# .pre-commit-config.yaml
+default_language_version:
+  python: python3.12
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
-    hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
--   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.7.1
-    hooks:
-    -   id: ruff
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  # Simply check whether files parse as valid python.
+  - id: check-ast
+  - id: check-json
+      # Attempts to load all json files to verify syntax.
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+      # Attempts to load all yaml files to verify syntax.
+  - id: detect-private-key
+      # Checks for the existence of private keys.
+  - id: pretty-format-json
+      # Checks that all your JSON files are pretty. "Pretty" here means that keys are sorted and indented.
+    args: [ --autofix, --no-ensure-ascii ]
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.9.10
+  hooks:
+  # Run the linter.
+  - id: ruff
+    types_or: [ python, pyi, jupyter ]
+    args: [ --fix ]
+  - id: ruff-format
+    # Run the formatter.
+    types_or: [ python, pyi, jupyter ]
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.24.0
+  hooks:
+  - id: gitleaks
+    language_version: 1.23.6

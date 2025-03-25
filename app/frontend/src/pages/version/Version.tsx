@@ -30,7 +30,64 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems="12">
+                <Accordion multiple collapsible defaultOpenItems="13">
+                    <AccordionItem value="13">
+                        <AccordionHeader>[1.2.4] 4.03.2025</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t("version.added")}</h3>
+                                <ul>
+                                    Community Assistenten:
+                                    <ul>
+                                        <li>Community-Assistenten können nun eigene Beispiele und vorgeschlagene Antworten haben.</li>
+                                        <li>Neue Versionen von Community-Assistenten
+                                            <ul>
+                                                <li>Sherlock🕵Testfallgenerator: Erstellt und exportiert Tesftälle.  Von itm.km73</li>
+                                                <li>Consultor: Berät zum Angebot von consult.in.M. Von consult.in.M  </li>
+                                                <li>🧜Arielle: Erstellt Mermaid Diagramme</li>
+                                            </ul>
+                                        </li>
+
+                                        <li>Community-Assistenten können zentral konfiguriert werden und es wird stets die neueste Version verwendet</li>
+                                    </ul>
+                                </ul>
+                                <h3>{t("version.fixed")}</h3>
+                                <ul>
+                                    <li>Performanceprobleme bei langen Chats (mehr als 20k Tokens). </li>
+                                    <li>Wird ein Prompt als gefährlich identifziert, wird nun nur noch "Es wurde ein Richtlinienverstoß festgestellt und der Chat wird hier beendet" zurückgegeben. </li>
+                                    <li>Code-Blöcke passen sich nun an die Schriftgröße an.</li>
+                                    <li>"Einstellungen & Feedback"-Button bleiben jetzt im Header beim Vergrößern der Schriftgröße.</li>
+                                    <li>Version & FAQ: Stil angepasst sowie Rechtschreib- und Grammatikfehler korrigiert.</li>
+                                    <li>Token-Nutzung:
+                                        <ul>
+                                            <li>Anzeigeproblem beim Neuladen behoben.</li>
+                                            <li>Token-Usage aus den Features <i>Zusammenfassen</i> und <i>Brainstorming</i> entfernt.</li>
+                                            <li>Wenn keine Tokens verwendet werden, wird die Token-Usage nicht angezeigt, um eine übersichtlichere Oberfläche zu bieten.</li>
+                                        </ul>
+                                    </li>
+                                    <li>Zahlreiche Rechtschreib- und Grammatikfehler wurden korrigiert.</li>
+                                </ul>
+                                <h3>{t("version.changed")}</h3>
+                                <ul>
+                                    <li>
+                                        Einfache Sprache:
+                                        <ul>
+                                            <li><i>Leichte Sprache</i> wurde entfernt, da wir keine vollständige Übersetzung in leichte Sprache durchführen können und der Name deswegen irreführend ist.</li>
+                                            <li>Der Prompt für <i>einfache Sprache</i> wurde angepasst und erweitert.</li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        Eigene Assistenten:
+                                        <ul>
+                                            <li>Einstellungen wie <i>System-Prompt</i> oder <i>Maximale Token-Anzahl</i> werden nur beim Bearbeiten angezeigt.</li>
+                                            <li>Beim Bearbeiten eines Assistenten verbreitert sich die Einstellungs-Sidebar.</li>
+                                            <li>Community-Assistenten sind Read-Only und können von den Benutzern nicht verändert werden.</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="12">
                         <AccordionHeader>[1.2.3] 30.01.2025</AccordionHeader>
                         <AccordionPanel>

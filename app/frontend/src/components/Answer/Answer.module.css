@@ -42,22 +42,27 @@
     0% {
         content: ".";
         transform: translateY(0);
+        opacity: 0.6;
     }
     25% {
-        content: ".🐦";
-        transform: translateY(-10px);
+        content: ". 💬";
+        transform: translateY(-6px);
+        opacity: 0.7;
     }
     50% {
-        content: "..🐦";
-        transform: translateY(-20px);
+        content: ".. 💬";
+        transform: translateY(-12px);
+        opacity: 0.8;
     }
     75% {
-        content: "...🐦";
-        transform: translateY(-30px);
+        content: "... 💬";
+        transform: translateY(-6px);
+        opacity: 0.9;
     }
     100% {
-        content: "....🐦";
+        content: ".... 💬";
         transform: translateY(0);
+        opacity: 1;
     }
 }
 

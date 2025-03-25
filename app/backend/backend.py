@@ -14,7 +14,7 @@ from langchain_core.messages.human import HumanMessage
 from pydantic_core import from_json
 
 from core.authentification import AuthentificationHelper, AuthError
-from core.helper import format_as_ndjson
+from core.helper import format_as_ndjson, llm_exception_handler
 from core.logtools import getLogger
 from core.modelhelper import num_tokens_from_messages
 from core.types.AppConfig import AppConfig
@@ -113,12 +113,7 @@ async def brainstorm(request: BrainstormRequest,
         return r
     except Exception as e:
         logger.exception("Exception in /brainstorm")
-        logger.exception(str(e))
-        msg = (
-            "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
-            if "Rate limit" in str(e)
-            else "Exception in brainstorm: something bad happened"
-        )
+        msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500,detail=msg)
 
 @api_app.post("/simply")
@@ -138,11 +133,7 @@ async def simply(request: SimplyRequest,
         return r
     except Exception as e:
         logger.exception("Exception in /simply")
-        msg = (
-            "Momentan liegt eine starke Auslastung vor. Bitte in einigen Sekunden erneut versuchen."
-            if "Rate limit" in str(e)
-            else str(e)
-        )
+        msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500,detail=msg)
 
 
@@ -168,8 +159,8 @@ async def chat_stream(request: ChatRequest,
         return response
     except Exception as e:
         logger.exception("Exception in /chat stream")
-        logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+        msg = llm_exception_handler(ex=e, logger=logger)
+        raise HTTPException(status_code=500,detail=msg)
 
 
 @api_app.post("/chat")
@@ -191,8 +182,8 @@ async def chat(request: ChatRequest,
         return chatResult
     except Exception as e:
         logger.exception("Exception in /chat")
-        logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+        msg = llm_exception_handler(ex=e, logger=logger)
+        raise HTTPException(status_code=500,detail=msg)
 
 @api_app.post("/create_bot")
 async def create_bot(request: CreateBotRequest,
@@ -248,8 +239,8 @@ async def create_bot(request: CreateBotRequest,
         return {"title": title.content, "description": description.content, "system_prompt":system_prompt.content}
     except Exception as e:
         logger.exception("Exception in /create_bot")
-        logger.exception(str(e))
-        raise HTTPException(status_code=500,detail="Exception in chat: something bad happened")
+        msg = llm_exception_handler(ex=e, logger=logger)
+        raise HTTPException(status_code=500,detail=msg)
 
 
 @api_app.get("/config")
@@ -317,7 +308,7 @@ async def getStatisticsCSV(access_token: str = Header(None, alias="X-Ms-Token-Lh
         return response
     except Exception as e:
         logger.exception(str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Statistcs export failed!")
 
 
 @api_app.get("/health")

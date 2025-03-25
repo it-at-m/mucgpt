@@ -96,7 +96,6 @@ export const SettingsDrawer = ({
                         <Slider
                             min={min_temp}
                             max={max_temp}
-                            defaultValue={2}
                             onChange={onFontscaleChange}
                             aria-valuetext={t("components.settingsdrawer.fontsize") + ` ist ${Math.floor(fontscale * 100)} %`}
                             value={fontscale}

@@ -116,7 +116,6 @@ export const ChatsettingsDrawer = ({
                     <Slider
                         min={min_temp}
                         max={max_temp}
-                        defaultValue={2}
                         onChange={onTemperatureChange}
                         aria-valuetext={t("components.chattsettingsdrawer.temperature") + ` ist ${temperature}`}
                         value={temperature}
@@ -143,7 +142,6 @@ export const ChatsettingsDrawer = ({
                     <Slider
                         min={min_max_tokens}
                         max={max_max_tokens}
-                        defaultValue={20}
                         onChange={onMaxtokensChange}
                         aria-valuetext={t("components.chattsettingsdrawer.max_lenght") + ` ist ${max_tokensID}`}
                         value={max_output_tokens}

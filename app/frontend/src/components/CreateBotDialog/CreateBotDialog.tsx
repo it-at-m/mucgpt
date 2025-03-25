@@ -82,7 +82,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             examples: []
         };
         const created_id = await storageService.createBotConfig(bot);
-        if (created_id) window.location.href = "/#/bot/" + created_id;
+        if (created_id) window.location.href = import.meta.env.BASE_URL + "#bot/" + created_id;
         else console.error("Bot could not be created");
     };
 
@@ -116,11 +116,11 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
         setShowDialogInput(false);
         setShowDialogOutput(true);
         setInput("");
-    }
+    };
 
     return (
         <div>
-            <Dialog modalType="alert" defaultOpen={false} open={showDialogInput}>
+            <Dialog modalType="alert" open={showDialogInput}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>{t("components.create_bot_dialog.what_function")}</DialogTitle>
@@ -170,7 +170,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-            <Dialog modalType="alert" defaultOpen={false} open={showDialogOutput}>
+            <Dialog modalType="alert" open={showDialogOutput}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>{t("components.create_bot_dialog.prompt_title_desc")}</DialogTitle>

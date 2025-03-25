@@ -27,6 +27,9 @@ const Menu = () => {
             let community_assistants = communityBots;
             for (let bot of bots) {
                 if (bot.publish) {
+                    if (community_assistants.find(b => b.id === bot.id)) {
+                        community_assistants = community_assistants.filter(b => b.id !== bot.id);
+                    }
                     community_assistants.push(bot);
                     bots = bots.filter(b => b.id !== bot.id);
                 }

@@ -72,8 +72,8 @@ const Menu = () => {
                 {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
             </div>
             <div className={styles.row}>
-                {bots.map((bot: Bot, _) => (
-                    <Tooltip content={bot.title} relationship="description" positioning="below">
+                {bots.map((bot: Bot, key) => (
+                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
                         <Link to={`/bot/${bot.id}`} className={styles.box}>
                             <span>{bot.title}</span>
                         </Link>
@@ -83,8 +83,8 @@ const Menu = () => {
             </div>
             <div className={styles.rowheader}>{t("menu.community_bots")}</div>
             <div className={styles.row}>
-                {communityBots.map((bot: Bot, _) => (
-                    <Tooltip content={bot.title} relationship="description" positioning="below">
+                {communityBots.map((bot: Bot, key) => (
+                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
                         <Link to={`/bot/${bot.id}`} className={styles.box}>
                             {bot.title}
                         </Link>

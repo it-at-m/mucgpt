@@ -120,7 +120,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
 
     return (
         <div>
-            <Dialog modalType="alert" defaultOpen={false} open={showDialogInput}>
+            <Dialog modalType="alert" open={showDialogInput}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>{t("components.create_bot_dialog.what_function")}</DialogTitle>
@@ -170,7 +170,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-            <Dialog modalType="alert" defaultOpen={false} open={showDialogOutput}>
+            <Dialog modalType="alert" open={showDialogOutput}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>{t("components.create_bot_dialog.prompt_title_desc")}</DialogTitle>

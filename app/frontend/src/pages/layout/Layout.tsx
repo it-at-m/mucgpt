@@ -1,6 +1,6 @@
 import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import styles from "./Layout.module.css";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_black.png";
@@ -58,6 +58,8 @@ export const Layout = () => {
     };
 
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+    // Use useRef to prevent duplicate API calls
+    const configApiCalledRef = useRef(false);
 
     useEffect(() => {
         //do migrations for chat
@@ -69,7 +71,13 @@ export const Layout = () => {
         }
     }, [id]);
 
+
+
     useEffect(() => {
+        // Skip if the API has already been called
+        if (configApiCalledRef.current) return;
+        configApiCalledRef.current = true;
+
         configApi().then(
             result => {
                 setConfig(result);

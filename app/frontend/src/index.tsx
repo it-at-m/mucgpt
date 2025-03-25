@@ -78,14 +78,36 @@ const router = createHashRouter([
     }
 ]);
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-    <React.StrictMode>
-        <LanguageContextProvider>
-            <LLMContextProvider>
-                <QuickPromptProvider>
-                    <RouterProvider router={router} />
-                </QuickPromptProvider>
-            </LLMContextProvider>
-        </LanguageContextProvider>
-    </React.StrictMode>
-);
+async function enableMocking() {
+    // Check if we're not in development mode or deploying ot gh pages
+    if (import.meta.env?.MODE !== "development" && import.meta.env?.MODE !== "ghpages") {
+        return;
+    }
+    const { worker } = await import("./mocks/browser.js");
+
+    // `worker.start()` returns a Promise that resolves
+    // once the Service Worker is up and ready to intercept requests.
+    if (import.meta.env?.MODE === "development") return worker.start();
+    else
+        return worker.start({
+            serviceWorker: {
+                // This is useful if your application follows
+                // a strict directory structure.
+                url: "/mucgpt/mockServiceWorker.js"
+            }
+        });
+}
+
+enableMocking().then(() => {
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+        <React.StrictMode>
+            <LanguageContextProvider>
+                <LLMContextProvider>
+                    <QuickPromptProvider>
+                        <RouterProvider router={router} />
+                    </QuickPromptProvider>
+                </LLMContextProvider>
+            </LanguageContextProvider>
+        </React.StrictMode>
+    );
+});

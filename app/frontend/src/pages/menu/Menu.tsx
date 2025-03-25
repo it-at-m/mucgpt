@@ -27,6 +27,9 @@ const Menu = () => {
             let community_assistants = communityBots;
             for (let bot of bots) {
                 if (bot.publish) {
+                    if (community_assistants.find(b => b.id === bot.id)) {
+                        community_assistants = community_assistants.filter(b => b.id !== bot.id);
+                    }
                     community_assistants.push(bot);
                     bots = bots.filter(b => b.id !== bot.id);
                 }
@@ -69,22 +72,19 @@ const Menu = () => {
                 {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
             </div>
             <div className={styles.row}>
-                {bots.map(
-                    (bot: Bot, _) =>
-                    (
-                        <Tooltip content={bot.title} relationship="description" positioning="below">
-                            <Link to={`/bot/${bot.id}`} className={styles.box}>
-                                <span>{bot.title}</span>
-                            </Link>
-                        </Tooltip>
-                    )
-                )}
+                {bots.map((bot: Bot, key) => (
+                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
+                        <Link to={`/bot/${bot.id}`} className={styles.box}>
+                            <span>{bot.title}</span>
+                        </Link>
+                    </Tooltip>
+                ))}
                 {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.rowheader}>{t("menu.community_bots")}</div>
             <div className={styles.row}>
-                {communityBots.map((bot: Bot, _) => (
-                    <Tooltip content={bot.title} relationship="description" positioning="below">
+                {communityBots.map((bot: Bot, key) => (
+                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
                         <Link to={`/bot/${bot.id}`} className={styles.box}>
                             {bot.title}
                         </Link>

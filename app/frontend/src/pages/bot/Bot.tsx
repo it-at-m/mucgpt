@@ -230,11 +230,8 @@ const BotChat = () => {
     };
 
     const onEditChange = (isEditable: boolean) => {
-        setSidebarWidth(isEditable ?
-            "full_width" :
-            "large");
-    }
-
+        setSidebarWidth(isEditable ? "full_width" : "large");
+    };
 
     const actions = (
         <>

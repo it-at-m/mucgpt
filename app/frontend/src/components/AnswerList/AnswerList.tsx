@@ -40,7 +40,7 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
     return (
         <>
             {answersComponent}
-            {isLoading || error ? (
+            {error || isLoading ? (
                 <ChatTurnComponent
                     usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}

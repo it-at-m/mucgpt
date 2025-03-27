@@ -63,7 +63,7 @@ export const Layout = () => {
 
     useEffect(() => {
         //do migrations for chat
-        new StorageService<any, any>(CHAT_STORE, undefined).connectToDB();
+        new StorageService<any, any>(CHAT_STORE).connectToDB();
         if (id) {
             botStorageService.getBotConfig(id).then(bot => {
                 if (bot) setTitle([bot.id as string, bot.title]);

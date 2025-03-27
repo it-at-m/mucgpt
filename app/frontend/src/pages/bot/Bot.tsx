@@ -43,7 +43,7 @@ const BotChat = () => {
 
     const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
-    const botChatStorage: StorageService<ChatResponse, Bot> = botStorageService.getChatStorageService(active_chat);
+    const botChatStorage: StorageService<ChatResponse, Bot> = botStorageService.getChatStorageService();
     //history
     const [allChats, setAllChats] = useState<DBObject<ChatResponse, {}>[]>([]);
     //config
@@ -151,7 +151,7 @@ const BotChat = () => {
             }
             //chat present, if not create.
             if (active_chat) {
-                await botChatStorage.appendMessage({ user: question, response: latestResponse }, undefined);
+                await botChatStorage.appendMessage({ user: question, response: latestResponse }, active_chat, undefined);
             } else {
                 // generate chat name for first chat
                 const chatname = await createChatName(
@@ -194,8 +194,8 @@ const BotChat = () => {
     };
 
     const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0 && botChatStorage.getActiveChatId()) {
-            await botChatStorage.popMessage();
+        if (answers.length > 0 && active_chat) {
+            await botChatStorage.popMessage(active_chat);
             let last = answers.pop();
             setAnswers(answers);
             if (last) {
@@ -216,7 +216,7 @@ const BotChat = () => {
     const onRollbackMessage = (message: string) => {
         return async () => {
             if (active_chat) {
-                let result = await botChatStorage.rollbackMessage(message);
+                let result = await botChatStorage.rollbackMessage(message, active_chat);
                 if (result) {
                     setAnswers(result.messages);
                     lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";

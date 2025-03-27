@@ -47,10 +47,10 @@ const Brainstorm = () => {
     const [question, setQuestion] = useState<string>("");
 
     const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE, active_chat);
+    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE);
 
-    const clearChat = handleDeleteChat(lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
-    const onRollbackMessage = handleRollback(storageService, setAnswers, lastQuestionRef, setQuestion);
+    const clearChat = handleDeleteChat(active_chat, lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
+    const onRollbackMessage = handleRollback(active_chat, storageService, setAnswers, lastQuestionRef, setQuestion);
 
     useEffect(() => {
         setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
@@ -75,7 +75,7 @@ const Brainstorm = () => {
             const completeAnswer: BrainstormMessage = { user: question, response: result };
 
             setAnswers([...answers, completeAnswer]);
-            if (storageService.getActiveChatId()) await storageService.appendMessage(completeAnswer);
+            if (active_chat) await storageService.appendMessage(completeAnswer, active_chat);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
                 setActiveChat(id);

@@ -127,7 +127,7 @@ const CHAT_EXAMPLES: ExampleModel[] = [
 function useStorageService(activeChatId: string | undefined) {
     // Nutze useMemo für die Instanz, damit diese nur bei Änderung von activeChatId neu erstellt wird
     return useMemo(() =>
-        new StorageService<ChatResponse, ChatOptions>(CHAT_STORE, activeChatId),
+        new StorageService<ChatResponse, ChatOptions>(CHAT_STORE),
         [activeChatId]
     );
 }
@@ -192,7 +192,7 @@ const Chat = () => {
     const debouncedStorageUpdate = useMemo(() =>
         debounce((options: ChatOptions) => {
             if (active_chat) {
-                storageService.update(undefined, options);
+                storageService.update(active_chat, undefined, options);
             }
         }, 500),
         [active_chat, storageService]
@@ -362,7 +362,7 @@ const Chat = () => {
 
             // Speichern des Chats
             if (active_chat) {
-                await storageService.appendMessage(finalMessage, options);
+                await storageService.appendMessage(finalMessage, active_chat, options);
             } else {
                 // Chat-Namen generieren und neuen Chat erstellen
                 const chatname = await createChatName(
@@ -410,7 +410,7 @@ const Chat = () => {
 
         try {
             setIsLoading(true);
-            await storageService.popMessage();
+            await storageService.popMessage(active_chat);
 
             // Letzten Eintrag entfernen und speichern
             const lastAnswersCopy = [...answers];
@@ -430,14 +430,22 @@ const Chat = () => {
     }, [answers, active_chat, isLoading, storageService, makeApiRequest, systemPrompt]);
 
     // Rollback-Funktion
-    const onRollbackMessage = useCallback(async (message: string) => {
+    const onRollbackMessage = useCallback((message: string) => {
         return async () => {
             if (!active_chat || isLoading) return;
-
             try {
                 // finde die passende nachricht
-                const result = await storageService.rollbackMessage(message);
-
+                const result = await storageService.rollbackMessage(message, active_chat);
+                if (!result) return;
+                if (result.messages.length > 0) {
+                    dispatch({ type: 'SET_ANSWERS', payload: result.messages });
+                    lastQuestionRef.current = result.messages[result.messages.length - 1].user;
+                } else {
+                    clearChat();
+                    await storageService.delete(result.id ?? "");
+                    fetchHistory();
+                }
+                setQuestion(message);
             } catch (e) {
                 setError(e);
             } finally {

@@ -39,7 +39,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                     <AnswerIcon aria-hidden />
                     <div className={styles.buttonContainer}>
                         {answers.map((x, i) => (
-                            <div>
+                            <div key={i}>
                                 <Button
                                     style={{
                                         border: "0.5px solid black",

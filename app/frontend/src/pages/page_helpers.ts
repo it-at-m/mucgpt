@@ -24,6 +24,7 @@ export async function setupStore(
 }
 
 export function handleDeleteChat(
+    id: string | undefined,
     lastQuestionRef: MutableRefObject<string>,
     error: unknown,
     setError: Dispatch<unknown>,
@@ -32,14 +33,16 @@ export function handleDeleteChat(
     setActiveChat: Dispatch<SetStateAction<string | undefined>>
 ) {
     return () => {
+        if (!id) return;
         lastQuestionRef.current = "";
         error && setError(undefined);
-        storageService.delete();
+        storageService.delete(id);
         setAnswers([]);
         setActiveChat(undefined);
     };
 }
 export function handleRollback(
+    id: string | undefined,
     storageService: StorageService<any, any>,
     setAnswers: Dispatch<SetStateAction<any[]>>,
     lastQuestionRef: MutableRefObject<string>,
@@ -47,14 +50,13 @@ export function handleRollback(
 ) {
     return (message: string) => {
         return async () => {
-            if (storageService.getActiveChatId()) {
-                let result = await storageService.rollbackMessage(message);
-                if (result) {
-                    setAnswers(result.messages);
-                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
-                }
-                setQuestion(message);
+            if (!id) return;
+            let result = await storageService.rollbackMessage(message, id);
+            if (result) {
+                setAnswers(result.messages);
+                lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
             }
+            setQuestion(message);
         };
     };
 }

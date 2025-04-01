@@ -3,7 +3,7 @@
     "image": "mcr.microsoft.com/devcontainers/python:3.12",
     "features": {
         "ghcr.io/devcontainers/features/node:1.6.1": {
-            "version": "22",
+            "version": "22.14.0",
             "nodeGypDependencies": false
         },
         "ghcr.io/devcontainers/features/powershell:1.5.0": {},

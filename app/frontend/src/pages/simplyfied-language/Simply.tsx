@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useContext } from "react";
+import { useRef, useState, useEffect, useContext, useReducer, useMemo, useCallback } from "react";
 
 import { AskResponse, simplyApi, SimplyRequest, SimplyResponse } from "../../api";
 import { Answer } from "../../components/Answer";
@@ -10,9 +10,9 @@ import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { SIMPLY_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
-import { handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
+import { getChatReducer, handleDeleteChat, handleRollback, setupStore } from "../page_helpers";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
-import { ChatMessage } from "../chat/Chat";
+import { ChatMessage, ChatOptions } from "../chat/Chat";
 import styles from "./Simply.module.css";
 import { ExampleList, ExampleModel } from "../../components/Example";
 
@@ -173,33 +173,68 @@ const EXAMPLES: ExampleModel[] = [
 ];
 
 const Simply = () => {
+    // getChatReducer function to handle chat state changes
+    const chatReducer = getChatReducer<ChatOptions>()
+
+    // Zusammenhängende States mit useReducer
+    const [chatState, dispatch] = useReducer(chatReducer, {
+        answers: [],
+        temperature: 0.7,
+        max_output_tokens: 4000,
+        systemPrompt: "",
+        active_chat: undefined,
+        allChats: [],
+        totalTokens: 0
+    });
+
+    // Destrukturierung für einfacheren Zugriff
+    const {
+        answers,
+        temperature,
+        max_output_tokens,
+        systemPrompt,
+        active_chat,
+        allChats,
+        totalTokens
+    } = chatState;
+
+    // Context
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
 
+    // Refs
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
+    const activeChatRef = useRef(active_chat);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
-
-    const [answers, setAnswers] = useState<SimplyMessage[]>([]);
     const [question, setQuestion] = useState<string>("");
 
-    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
+    // StorageService
     const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(SIMPLY_STORE);
 
-    const clearChat = handleDeleteChat(active_chat, lastQuestionRef, error, setError, storageService, setAnswers, setActiveChat);
-    const onRollbackMessage = handleRollback(active_chat, storageService, setAnswers, lastQuestionRef, setQuestion);
-
+    //useEffect to set the active chat reference when the active chat changes
     useEffect(() => {
-        setupStore(error, setError, setIsLoading, storageService, setAnswers, answers, lastQuestionRef, setActiveChat);
+        activeChatRef.current = active_chat;
+    }, [active_chat]);
+
+    // useEffect to set up the store and load the initial data
+    useEffect(() => {
+        setupStore(error, setError, setIsLoading, storageService, (answers: ChatMessage[]) => dispatch({ type: 'SET_ANSWERS', payload: answers }), answers, lastQuestionRef, (id: string | undefined) => dispatch({ type: 'SET_ACTIVE_CHAT', payload: id }));
     }, []);
 
-    const onExampleClicked = (example: string) => {
-        makeApiRequest(example);
-    };
+    // clearChat function to delete the current chat and reset the state
+    const clearChat = handleDeleteChat(active_chat, lastQuestionRef, error, setError, storageService, (answers: ChatMessage[]) => dispatch({ type: 'SET_ANSWERS', payload: answers }), (id: string | undefined) => dispatch({ type: 'SET_ACTIVE_CHAT', payload: id }));
 
-    const makeApiRequest = async (question: string) => {
+    // Rollback function to handle the rollback of messages in the chat
+    const onRollbackMessage = (index: number) => {
+        if (!active_chat) return;
+        handleRollback(index, active_chat, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
+    }
+
+    // makeApiRequest function to handle API requests
+    const makeApiRequest = useCallback(async (question: string) => {
         error && setError(undefined);
         lastQuestionRef.current = question;
         setIsLoading(true);
@@ -213,26 +248,35 @@ const Simply = () => {
             const askResponse: AskResponse = { answer: parsedResponse.content, error: parsedResponse.error };
             const completeAnswer: SimplyMessage = { user: question, response: askResponse };
 
-            setAnswers([...answers, completeAnswer]);
-            if (active_chat) await storageService.appendMessage(completeAnswer, active_chat);
+            dispatch({ type: "SET_ANSWERS", payload: [...answers, completeAnswer] });
+            if (activeChatRef.current) await storageService.appendMessage(completeAnswer, activeChatRef.current);
             else {
                 const id = await storageService.create([completeAnswer], undefined);
-                setActiveChat(id);
+                dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
             }
         } catch (e) {
             setError(e);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [LLM, error, setError, setIsLoading, simplyApi, answers, activeChatRef.current, storageService]);
 
+    // Scroll to the end of the chat messages when new messages are added
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
-    const sidebar_actions = <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />;
-    const sidebar = <Sidebar actions={sidebar_actions} content={<div className={styles.description}>{t("simply.plain_description")}</div>}></Sidebar>;
+    //Sidebar component
+    const sidebar_actions = useMemo(() => (<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />), [clearChat, isLoading, lastQuestionRef.current]);
+    const sidebar = useMemo(() => (<Sidebar actions={sidebar_actions} content={<div className={styles.description}>{t("simply.plain_description")}</div>}></Sidebar>), [sidebar_actions, t]);
+
+    // ExampleList component
+    const onExampleClicked = useCallback((example: string) => {
+        makeApiRequest(example);
+    }, [makeApiRequest]);
 
     const examplesComponent = <ExampleList examples={EXAMPLES} onExampleClicked={onExampleClicked} />;
-    const inputComponent = (
+
+    // TextInput component
+    const inputComponent = useMemo(() => (
         <QuestionInput
             clearOnSend
             placeholder={t("simply.prompt")}
@@ -242,8 +286,10 @@ const Simply = () => {
             question={question}
             setQuestion={question => setQuestion(question)}
         />
-    );
-    const answerList = (
+    ), [question, isLoading, makeApiRequest]);
+
+    // AnswerList component
+    const answerList = useMemo(() => (
         <AnswerList
             answers={answers}
             regularBotMsg={(answer: ChatMessage, index: number) => {
@@ -256,7 +302,8 @@ const Simply = () => {
             chatMessageStreamEnd={chatMessageStreamEnd}
             lastQuestionRef={lastQuestionRef}
         />
-    );
+    ), [answers, onRollbackMessage, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef, lastQuestionRef.current]);
+
     return (
         <ChatLayout
             sidebar={sidebar}

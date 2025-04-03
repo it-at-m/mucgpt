@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
-import readNDJSONStream from "ndjson-readablestream";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
+import { chatApi, AskResponse, countTokensAPI, ChatResponse, } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -14,9 +13,10 @@ import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE } from "../../constants";
-import { DBMessage, DBObject, StorageService } from "../../service/storage";
+import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
+import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -54,58 +54,6 @@ export interface ChatOptions {
     temperature: number;
 }
 
-// Chat-Reducer für zusammenhängendes State-Management
-type ChatState = {
-    answers: ChatMessage[];
-    temperature: number;
-    max_output_tokens: number;
-    systemPrompt: string;
-    active_chat: string | undefined;
-    allChats: DBObject<ChatResponse, ChatOptions>[];
-    totalTokens: number;
-};
-
-type ChatAction =
-    | { type: 'SET_ANSWERS'; payload: ChatMessage[] }
-    | { type: 'ADD_ANSWER'; payload: ChatMessage }
-    | { type: 'UPDATE_LAST_ANSWER'; payload: ChatMessage }
-    | { type: 'CLEAR_ANSWERS' }
-    | { type: 'SET_TEMPERATURE'; payload: number }
-    | { type: 'SET_MAX_TOKENS'; payload: number }
-    | { type: 'SET_SYSTEM_PROMPT'; payload: string }
-    | { type: 'SET_ACTIVE_CHAT'; payload: string | undefined }
-    | { type: 'SET_ALL_CHATS'; payload: DBObject<ChatResponse, ChatOptions>[] }
-    | { type: 'SET_TOTAL_TOKENS'; payload: number };
-
-function chatReducer(state: ChatState, action: ChatAction): ChatState {
-    switch (action.type) {
-        case 'SET_ANSWERS':
-            return { ...state, answers: action.payload };
-        case 'ADD_ANSWER':
-            return { ...state, answers: [...state.answers, action.payload] };
-        case 'UPDATE_LAST_ANSWER':
-            if (state.answers.length === 0) return state;
-            const newAnswers = [...state.answers];
-            newAnswers[newAnswers.length - 1] = action.payload;
-            return { ...state, answers: newAnswers };
-        case 'CLEAR_ANSWERS':
-            return { ...state, answers: [] };
-        case 'SET_TEMPERATURE':
-            return { ...state, temperature: action.payload };
-        case 'SET_MAX_TOKENS':
-            return { ...state, max_output_tokens: action.payload };
-        case 'SET_SYSTEM_PROMPT':
-            return { ...state, systemPrompt: action.payload };
-        case 'SET_ACTIVE_CHAT':
-            return { ...state, active_chat: action.payload };
-        case 'SET_ALL_CHATS':
-            return { ...state, allChats: action.payload };
-        case 'SET_TOTAL_TOKENS':
-            return { ...state, totalTokens: action.payload };
-        default:
-            return state;
-    }
-}
 
 // Konstanten außerhalb der Komponente definieren
 const CHAT_EXAMPLES: ExampleModel[] = [
@@ -133,20 +81,14 @@ function useStorageService(activeChatId: string | undefined) {
 }
 
 const Chat = () => {
+    const chatReducer = getChatReducer<ChatOptions>()
     // Contexts
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
-    // Refs
-    const lastQuestionRef = useRef<string>("");
-    const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
-    const isFirstRender = useRef(true);
-
     // Unabhängige States
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [isGenerating, setIsGenerating] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
@@ -173,8 +115,21 @@ const Chat = () => {
         totalTokens
     } = chatState;
 
+    // Refs
+    const lastQuestionRef = useRef<string>("");
+    const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
+    const isFirstRender = useRef(true);
+    const activeChatRef = useRef(active_chat);
+    const isLoadingRef = useRef(false);
+    const isGeneratingRef = useRef(false);
+
+    // Update activeChatRef whenever active_chat changes
+    useEffect(() => {
+        activeChatRef.current = active_chat;
+    }, [active_chat]);
+
     // Storage Service mit useMemo
-    const storageService = useStorageService(active_chat);
+    const storageService = useStorageService(activeChatRef.current);
 
     // Debounced system prompt
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
@@ -182,7 +137,7 @@ const Chat = () => {
     // Token-Berechnung
     const calculateTotalTokens = useCallback(() => {
         const answerTokens = answers.reduce(
-            (sum, msg) => sum + (msg.response.user_tokens || 0) + (msg.response.tokens || 0),
+            (sum: any, msg: { response: { user_tokens: any; tokens: any; }; }) => sum + (msg.response.user_tokens || 0) + (msg.response.tokens || 0),
             0
         );
         return systemPromptTokens + answerTokens;
@@ -191,11 +146,11 @@ const Chat = () => {
     // Debounced Storage-Update
     const debouncedStorageUpdate = useMemo(() =>
         debounce((options: ChatOptions) => {
-            if (active_chat) {
-                storageService.update(active_chat, undefined, options);
+            if (activeChatRef.current) {
+                storageService.update(activeChatRef.current, undefined, options);
             }
         }, 500),
-        [active_chat, storageService]
+        [activeChatRef.current, storageService]
     );
 
     // Fetch chat history
@@ -233,7 +188,7 @@ const Chat = () => {
             setError(e);
             return false;
         }
-    }, [storageService]);
+    }, [storageService, lastQuestionRef.current]);
 
     // Clear chat state
     const clearChat = useCallback(() => {
@@ -241,15 +196,14 @@ const Chat = () => {
         setError(undefined);
         dispatch({ type: 'SET_ACTIVE_CHAT', payload: undefined });
         dispatch({ type: 'CLEAR_ANSWERS' });
-    }, []);
+    }, [lastQuestionRef.current]);
 
     // API Request mit optimiertem State Management
-    const makeApiRequest = useCallback(async (question: string, system?: string) => {
-        if (isLoading) return; // Verhindere mehrfache Anfragen
+    const callApi = useCallback(async (question: string, system?: string) => {
 
         lastQuestionRef.current = question;
         setError(undefined);
-        setIsLoading(true);
+        isLoadingRef.current = true;
 
         const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
         const options: ChatOptions = {
@@ -259,146 +213,19 @@ const Chat = () => {
         };
 
         try {
-            // Erstelle History für Request
-            const history: ChatTurn[] = answers.map(a => ({ user: a.user, bot: a.response.answer }));
-            const request: ChatRequest = {
-                history: [...history, { user: question, bot: undefined }],
-                shouldStream: true,
-                language: language,
-                temperature: temperature,
-                system_message: system ?? "",
-                max_output_tokens: max_output_tokens,
-                model: LLM.llm_name
-            };
-
-            const response = await chatApi(request);
-            handleRedirect(response);
-
-            if (!response.body) {
-                throw Error("No response body");
-            }
-
-            // Initialisiere Antwort-Variablen
-            let user_tokens = 0;
-            let answer = "";
-            let streamed_tokens = 0;
-
-            // Füge leere Antwort hinzu
-            const initialMessage = {
-                user: question,
-                response: { ...askResponse }
-            };
-            setIsGenerating(true);
-            dispatch({ type: 'ADD_ANSWER', payload: initialMessage });
-            // Buffer für Updates, um Re-Renders zu reduzieren
-            let buffer = "";
-            let updateTimer: ReturnType<typeof setTimeout> | null = null;
-
-
-
-            // Stream verarbeiten
-            for await (const chunk of readNDJSONStream(response.body)) {
-                if (chunk as Chunk) {
-                    let shouldUpdate = false;
-
-                    switch (chunk.type) {
-                        case "C":
-                            buffer += chunk.message as string;
-                            shouldUpdate = true;
-                            break;
-                        case "I":
-                            const info = chunk.message as ChunkInfo;
-                            streamed_tokens = info.streamedtokens;
-                            user_tokens = info.requesttokens;
-                            shouldUpdate = true;
-                            break;
-                        case "E":
-                            throw Error((chunk.message as string) || "Unknown error");
-                    }
-
-                    if (shouldUpdate) {
-                        // Löschen des vorherigen Timers, wenn noch vorhanden
-                        if (updateTimer) clearTimeout(updateTimer);
-
-                        // Setzen eines neuen Timers für gebündelte Updates
-                        updateTimer = setTimeout(() => {
-                            const updatedResponse = {
-                                ...askResponse,
-                                answer: buffer,
-                                tokens: streamed_tokens,
-                                user_tokens: user_tokens
-                            };
-
-                            const updatedMessage = {
-                                user: question,
-                                response: updatedResponse
-                            };
-
-                            dispatch({ type: 'UPDATE_LAST_ANSWER', payload: updatedMessage });
-                        }, 100); // 100ms Verzögerung für geschmeidigeres Rendering
-                    }
-                }
-            }
-
-            // Sicherstellen, dass die finale Antwort gesetzt wird
-            const finalResponse = {
-                ...askResponse,
-                answer: buffer,
-                tokens: streamed_tokens,
-                user_tokens: user_tokens
-            };
-
-            const finalMessage = {
-                user: question,
-                response: finalResponse
-            };
-
-            dispatch({ type: 'UPDATE_LAST_ANSWER', payload: finalMessage });
-
-            // Scroll zum Ende
-            requestAnimationFrame(() => {
-                chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
-            });
-
-            // Speichern des Chats
-            if (active_chat) {
-                await storageService.appendMessage(finalMessage, active_chat, options);
-            } else {
-                // Chat-Namen generieren und neuen Chat erstellen
-                const chatname = await createChatName(
-                    question,
-                    finalResponse.answer,
-                    language,
-                    temperature,
-                    system ?? "",
-                    max_output_tokens,
-                    LLM.llm_name
-                );
-
-                const id = await storageService.create(
-                    [finalMessage],
-                    options,
-                    undefined,
-                    chatname,
-                    false
-                );
-
-                dispatch({ type: 'SET_ACTIVE_CHAT', payload: id });
-                await fetchHistory();
-            }
+            makeApiRequest(answers, question, dispatch, chatApi, LLM, activeChatRef, storageService, options, askResponse, chatMessageStreamEnd, (isGenerating: boolean) => { isGeneratingRef.current = isGenerating }, fetchHistory, undefined);
         } catch (e) {
             setError(e);
         } finally {
-            setIsLoading(false);
-            setIsGenerating(false);
+            isLoadingRef.current = false;
+            isGeneratingRef.current = false;
         }
     }, [
-        isLoading,
         answers,
         language,
         temperature,
         max_output_tokens,
-        active_chat,
+        activeChatRef.current,
         LLM.llm_name,
         storageService,
         fetchHistory
@@ -406,53 +233,40 @@ const Chat = () => {
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
-        if (answers.length === 0 || !active_chat || isLoading) return;
+        if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
 
         try {
-            setIsLoading(true);
-            await storageService.popMessage(active_chat);
-
-            // Letzten Eintrag entfernen und speichern
-            const lastAnswersCopy = [...answers];
-            const lastAnswer = lastAnswersCopy.pop();
-
-            if (lastAnswer) {
-                dispatch({ type: 'SET_ANSWERS', payload: lastAnswersCopy });
-
-                // Verzögerung einbauen, um State-Updates zu synchronisieren
-                setTimeout(() => {
-                    makeApiRequest(lastAnswer.user, systemPrompt);
-                }, 0);
-            }
+            isLoadingRef.current = true;
+            await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi);
         } catch (e) {
             setError(e);
-        }
-    }, [answers, active_chat, isLoading, storageService, makeApiRequest, systemPrompt]);
+        } finally {
+            isLoadingRef.current = false;
+        };
+    }, [answers, storageService, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
 
     // Rollback-Funktion
-    const onRollbackMessage = useCallback((message: string) => {
-        return async () => {
-            if (!active_chat || isLoading) return;
-            try {
-                // finde die passende nachricht
-                const result = await storageService.rollbackMessage(message, active_chat);
-                if (!result) return;
-                if (result.messages.length > 0) {
-                    dispatch({ type: 'SET_ANSWERS', payload: result.messages });
-                    lastQuestionRef.current = result.messages[result.messages.length - 1].user;
-                } else {
-                    clearChat();
-                    await storageService.delete(result.id ?? "");
-                    fetchHistory();
-                }
-                setQuestion(message);
-            } catch (e) {
-                setError(e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-    }, [active_chat, isLoading, storageService, clearChat, fetchHistory]);
+    const onRollbackMessage = useCallback((index: number) => {
+        if (!activeChatRef.current || isLoadingRef.current) return;
+
+        try {
+            isLoadingRef.current = true;
+            handleRollback(
+                index,
+                activeChatRef.current,
+                dispatch,
+                storageService,
+                lastQuestionRef,
+                setQuestion,
+                clearChat,
+                fetchHistory
+            );
+        } catch (e) {
+            setError(e);
+        } finally {
+            isLoadingRef.current = false;
+        }
+    }, [storageService, clearChat, fetchHistory, setQuestion, isLoadingRef.current, activeChatRef.current]);
 
     // Konfigurationsänderungen mit memoisierten Callbacks
     const onTemperatureChanged = useCallback((temp: number) => {
@@ -495,7 +309,7 @@ const Chat = () => {
         if (!isFirstRender.current) return;
         isFirstRender.current = false;
 
-        setIsLoading(true);
+        isLoadingRef.current = true;
 
         storageService
             .getNewestChat()
@@ -511,10 +325,11 @@ const Chat = () => {
                         ? existingData.messages[existingData.messages.length - 1].user
                         : "";
                 }
+                isLoadingRef.current = false;
                 return fetchHistory();
             })
             .finally(() => {
-                setIsLoading(false);
+                isLoadingRef.current = false;
             });
     }, [fetchHistory, storageService]);
 
@@ -582,9 +397,8 @@ const Chat = () => {
     // Click handlers
     const onExampleClicked = useCallback((example: string, system?: string) => {
         if (system) onSystemPromptChanged(system);
-        makeApiRequest(example, system);
-    }, [makeApiRequest, onSystemPromptChanged]);
-
+        callApi(example, system);
+    }, [callApi, onSystemPromptChanged]);
     // Memo components
     const answerList = useMemo(() => (
         <AnswerList
@@ -611,13 +425,13 @@ const Chat = () => {
                 );
             }}
             onRollbackMessage={onRollbackMessage}
-            isLoading={isLoading && !isGenerating}
+            isLoading={isLoadingRef.current && !isGeneratingRef.current}
             error={error}
-            makeApiRequest={() => makeApiRequest(lastQuestionRef.current, systemPrompt)}
+            makeApiRequest={() => callApi(lastQuestionRef.current, systemPrompt)}
             chatMessageStreamEnd={chatMessageStreamEnd}
             lastQuestionRef={lastQuestionRef}
         />
-    ), [answers, onRegenerateResponseClicked, onRollbackMessage, isLoading, isGenerating, error, makeApiRequest, systemPrompt]);
+    ), [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoadingRef.current, isGeneratingRef.current, lastQuestionRef, chatMessageStreamEnd]);
 
     const examplesComponent = useMemo(() => (
         <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />
@@ -627,25 +441,25 @@ const Chat = () => {
         <QuestionInput
             clearOnSend
             placeholder={t("chat.prompt")}
-            disabled={isLoading}
-            onSend={question => makeApiRequest(question, systemPrompt)}
+            disabled={isLoadingRef.current}
+            onSend={question => callApi(question, systemPrompt)}
             tokens_used={totalTokens}
             question={question}
             setQuestion={question => setQuestion(question)}
         />
-    ), [isLoading, makeApiRequest, systemPrompt, totalTokens, question, t]);
+    ), [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current]);
 
     const sidebar_actions = useMemo(() => (
         <>
-            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />
         </>
-    ), [clearChat, lastQuestionRef, isLoading]);
+    ), [clearChat, lastQuestionRef.current, isLoadingRef.current]);
 
     const sidebar_content = useMemo(() => (
         <>
             <History
                 allChats={allChats}
-                currentActiveChatId={active_chat}
+                currentActiveChatId={activeChatRef.current}
                 onDeleteChat={async id => {
                     await storageService.delete(id);
                     await fetchHistory();
@@ -664,7 +478,7 @@ const Chat = () => {
                 }}
             ></History>
         </>
-    ), [allChats, active_chat, fetchHistory, storageService, loadChat, t]);
+    ), [allChats, activeChatRef.current, fetchHistory, storageService, loadChat, t]);
 
     const sidebar = useMemo(() => (
         <ChatsettingsDrawer
@@ -700,7 +514,7 @@ const Chat = () => {
             messages_description={t("common.messages")}
             size="large"
         ></ChatLayout>
-    ), [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef, t]);
+    ), [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t]);
 
     return layout;
 };

@@ -10,7 +10,7 @@ import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
 interface Props {
     answers: ChatMessage[];
     regularBotMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
-    onRollbackMessage: (message: string) => () => void;
+    onRollbackMessage: (index: number) => void;
     isLoading: boolean;
     error: unknown;
     makeApiRequest: () => void;
@@ -28,7 +28,7 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
             answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={regularBotMsg(answer, index)}
@@ -42,7 +42,7 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
             {answersComponent}
             {error || isLoading ? (
                 <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

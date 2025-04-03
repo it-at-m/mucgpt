@@ -177,17 +177,18 @@ export class StorageService<M, C> {
         }
     }
 
-    async rollbackMessage(message: string, id: string) {
+    async rollbackMessage(index: number, id: string, setQuestion: (question: string) => void) {
         try {
             const stored = await this.get(id);
             if (stored) {
-                while (stored.messages.length) {
-                    let last = stored.messages.pop();
-                    if (last && last.user == message) {
-                        break;
-                    }
+                let last = stored.messages[stored.messages.length - 1];
+                while (stored.messages.length !== index) {
+                    const popped = stored.messages.pop();
+                    if (!popped) break;
+                    last = popped;
                 }
                 const updated = await this.update(id, stored.messages, stored.config);
+                setQuestion(last.user);
                 return updated;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {

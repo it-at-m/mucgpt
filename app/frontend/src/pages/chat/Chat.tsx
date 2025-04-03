@@ -121,7 +121,6 @@ const Chat = () => {
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
     const isLoadingRef = useRef(false);
-    const isGeneratingRef = useRef(false);
 
     // Update activeChatRef whenever active_chat changes
     useEffect(() => {
@@ -200,7 +199,6 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(async (question: string, system?: string) => {
-
         lastQuestionRef.current = question;
         setError(undefined);
         isLoadingRef.current = true;
@@ -213,14 +211,13 @@ const Chat = () => {
         };
 
         try {
-            makeApiRequest(answers, question, dispatch, chatApi, LLM, activeChatRef, storageService, options, askResponse, chatMessageStreamEnd, (isGenerating: boolean) => { isGeneratingRef.current = isGenerating }, fetchHistory, undefined);
+            await makeApiRequest(answers, question, dispatch, chatApi, LLM, activeChatRef, storageService, options, askResponse, chatMessageStreamEnd, isLoadingRef, fetchHistory, undefined);
         } catch (e) {
             setError(e);
-        } finally {
-            isLoadingRef.current = false;
-            isGeneratingRef.current = false;
         }
+        isLoadingRef.current = false;
     }, [
+        isLoadingRef.current,
         answers,
         language,
         temperature,
@@ -236,12 +233,9 @@ const Chat = () => {
         if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
 
         try {
-            isLoadingRef.current = true;
             await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi);
         } catch (e) {
             setError(e);
-        } finally {
-            isLoadingRef.current = false;
         };
     }, [answers, storageService, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
 
@@ -425,13 +419,13 @@ const Chat = () => {
                 );
             }}
             onRollbackMessage={onRollbackMessage}
-            isLoading={isLoadingRef.current && !isGeneratingRef.current}
+            isLoading={isLoadingRef.current}
             error={error}
             makeApiRequest={() => callApi(lastQuestionRef.current, systemPrompt)}
             chatMessageStreamEnd={chatMessageStreamEnd}
             lastQuestionRef={lastQuestionRef}
         />
-    ), [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoadingRef.current, isGeneratingRef.current, lastQuestionRef, chatMessageStreamEnd]);
+    ), [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoadingRef.current, lastQuestionRef, chatMessageStreamEnd]);
 
     const examplesComponent = useMemo(() => (
         <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />

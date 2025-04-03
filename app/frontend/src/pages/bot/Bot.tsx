@@ -138,19 +138,19 @@ const BotChat = () => {
         lastQuestionRef.current = question;
         error && setError(undefined);
         isLoadingRef.current = true;
-        let askResponse: AskResponse = {} as AskResponse;
+
+        const askResponse: AskResponse = {} as AskResponse;
         const options: ChatOptions = {
             system: systemPrompt ?? "",
             maxTokens: max_output_tokens,
             temperature: temperature
         };
         try {
-            makeApiRequest(answers, question, dispatch, chatApi, LLM, activeChatRef, botChatStorage, options, askResponse, chatMessageStreamEnd, undefined, fetchHistory, bot_id)
+            await makeApiRequest(answers, question, dispatch, chatApi, LLM, activeChatRef, botChatStorage, options, askResponse, chatMessageStreamEnd, isLoadingRef, fetchHistory, bot_id)
         } catch (e) {
             setError(e);
-        } finally {
-            isLoadingRef.current = false;
         }
+        isLoadingRef.current = false;
     }, [lastQuestionRef.current, error, isLoadingRef.current, chatState, answers, dispatch, chatApi, LLM, activeChatRef, botChatStorage, chatMessageStreamEnd, fetchHistory]);
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoadingRef.current]);
@@ -180,16 +180,13 @@ const BotChat = () => {
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
         if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
-
         try {
-            isLoadingRef.current = true;
             await handleRegenerate(answers, dispatch, activeChatRef.current, botChatStorage, systemPrompt, callApi);
         } catch (e) {
             setError(e);
-        } finally {
-            isLoadingRef.current = false;
-        };
-    }, [answers, botChatStorage, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
+        }
+    }, [answers, botChatStorage, callApi, systemPrompt, activeChatRef.current]);
+
     // ClearChat-Funktion
     const clearChat = useCallback(() => {
         lastQuestionRef.current = "";
@@ -203,8 +200,8 @@ const BotChat = () => {
     // Rollback-Funktion
     const onRollbackMessage = useCallback((index: number) => {
         if (!activeChatRef.current || isLoadingRef.current) return;
+        isLoadingRef.current = true;
         try {
-            isLoadingRef.current = true;
             handleRollback(
                 index,
                 activeChatRef.current,
@@ -217,9 +214,8 @@ const BotChat = () => {
             );
         } catch (e) {
             setError(e);
-        } finally {
-            isLoadingRef.current = false;
         }
+        isLoadingRef.current = false;
     }, [botChatStorage, clearChat, fetchHistory, setQuestion]);
 
     // on Example Clicked-Funktion

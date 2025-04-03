@@ -110,7 +110,7 @@ export const makeApiRequest = async (
     options: ChatOptions,
     askResponse: ChatResponse,
     chatMessageStreamEnd: MutableRefObject<HTMLDivElement | null>,
-    setIsGenerating?: (isGenerating: boolean) => void,
+    isLoadingRef: MutableRefObject<boolean>,
     fetchHistory?: () => void,
     bot_id?: string
 ) => {
@@ -143,7 +143,7 @@ export const makeApiRequest = async (
         user: question,
         response: { ...askResponse }
     };
-    if (setIsGenerating) setIsGenerating(true);
+    isLoadingRef.current = false;
     dispatch({ type: "ADD_ANSWER", payload: initialMessage });
     // Buffer für Updates, um Re-Renders zu reduzieren
     let buffer = "";

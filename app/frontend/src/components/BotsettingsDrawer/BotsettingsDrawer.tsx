@@ -1,8 +1,8 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular } from "@fluentui/react-icons";
-import { Button, Slider, Label, useId, SliderProps, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular, Checkmark24Filled } from "@fluentui/react-icons";
+import { Button, Slider, Label, useId, SliderProps, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { ReactNode, useContext, useEffect, useState } from "react";
+import { ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import Markdown from "react-markdown";
@@ -43,6 +43,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const [description, setDescription] = useState<string>(bot.description);
     const [publish, setPublish] = useState<boolean>(bot.publish);
     const [isOwner, setIsOwner] = useState<boolean>(!bot.publish);
+    const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
 
     useEffect(() => {
         setMaxOutputTokens(bot.max_output_tokens);
@@ -98,9 +99,34 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setSystemPrompt("");
     };
 
+    const deleteDialog = useMemo(() => (
+        <Dialog modalType="alert" open={showDeleteDialog}>
+            <DialogSurface className={styles.dialog}>
+                <DialogBody className={styles.dialogContent}>
+                    <DialogTitle>{t("components.botsettingsdrawer.deleteDialog.title")}</DialogTitle>
+                    <DialogContent>
+                        {t("components.botsettingsdrawer.deleteDialog.content")}
+                    </DialogContent>
+                    <DialogActions>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button appearance="secondary" size="small" onClick={() => setShowDeleteDialog(false)}>
+                                <Dismiss24Regular /> {t("components.botsettingsdrawer.deleteDialog.cancel")}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button appearance="secondary" size="small" onClick={() => { setShowDeleteDialog(false); onDeleteBot(); }}>
+                                <Checkmark24Filled /> {t("components.botsettingsdrawer.deleteDialog.confirm")}
+                            </Button>
+                        </DialogTrigger>
+                    </DialogActions>
+                </DialogBody>
+            </DialogSurface>
+        </Dialog>), [showDeleteDialog, onDeleteBot]);
+
     const actions_component = (
         <>
             {actions}
+            {deleteDialog}
             <Button
                 appearance="secondary"
                 icon={
@@ -123,11 +149,11 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                         ? t("components.botsettingsdrawer.finish_edit")
                         : t("components.botsettingsdrawer.edit")
                     : isEditable
-                      ? t("components.botsettingsdrawer.close_configutations")
-                      : t("components.botsettingsdrawer.show_configutations")}
+                        ? t("components.botsettingsdrawer.close_configutations")
+                        : t("components.botsettingsdrawer.show_configutations")}
             </Button>
             <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                <Button appearance="secondary" onClick={onDeleteBot} icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={!isOwner}>
+                <Button appearance="secondary" onClick={() => setShowDeleteDialog(true)} icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={!isOwner}>
                     {t("components.botsettingsdrawer.delete")}
                 </Button>
             </Tooltip>

@@ -1,5 +1,5 @@
-import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, Mail24Regular } from "@fluentui/react-icons";
-import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link } from "@fluentui/react-components";
+import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, ListBar24Filled, Mail24Regular } from "@fluentui/react-icons";
+import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link, Switch } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
 import { useCallback, useState } from "react";
@@ -23,6 +23,7 @@ interface Props {
     llmOptions: Model[];
     currentLLM: Model;
 }
+export const SHOW_SIDEBAR = "SHOW_SIDEBAR";
 
 export const SettingsDrawer = ({
     onLanguageSelectionChanged,
@@ -54,6 +55,13 @@ export const SettingsDrawer = ({
     const closeDrawer = () => {
         setIsOpen(false);
     };
+    const [showSidebar, setShowSidebar] = useState(localStorage.getItem(SHOW_SIDEBAR) === "true" ? true : false);
+    const onChangeShowSidebar = (event: React.ChangeEvent) => {
+        const checked = (event.target as HTMLInputElement).checked;
+        setShowSidebar(checked);
+        localStorage.setItem(SHOW_SIDEBAR, JSON.stringify(checked));
+        location.reload();
+    }
 
     return (
         <div>
@@ -126,6 +134,9 @@ export const SettingsDrawer = ({
                         </Tooltip>
 
                         {isLight ? <div>{t("components.settingsdrawer.theme_light")}</div> : <div>{t("components.settingsdrawer.theme_dark")}</div>}
+                    </div>
+                    <div className={styles.verticalContainer}>
+                        <Switch checked={showSidebar} onChange={onChangeShowSidebar} /> {t("components.settingsdrawer.chat_sidebar")}
                     </div>
                 </div>
                 <div className={styles.header} role="heading" aria-level={3} id={feedback_headerID}>

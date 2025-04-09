@@ -148,7 +148,8 @@ i18n
                             change_theme: "Design wechseln",
                             theme_light: "Hell",
                             theme_dark: "Dunkel",
-                            llm: "Sprachmodell"
+                            llm: "Sprachmodell",
+                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token verbraucht",
@@ -371,7 +372,8 @@ i18n
                             change_theme: "Switch theme",
                             theme_light: "Light",
                             theme_dark: "Dark",
-                            llm: "language model"
+                            llm: "language model",
+                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token used",
@@ -595,7 +597,8 @@ i18n
                             change_theme: "Design wechseln",
                             theme_light: "Hell",
                             theme_dark: "Dunkel",
-                            llm: "Sprachmodell"
+                            llm: "Sprachmodell",
+                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token vabrocht",
@@ -812,7 +815,8 @@ i18n
                             change_theme: "Changer de thème",
                             theme_light: "Clair",
                             theme_dark: "Sombre",
-                            llm: "Modèle de langage"
+                            llm: "Modèle de langage",
+                            chat_sidebar: "Barre latérale de chat"
                         },
                         questioninput: {
                             tokensused: "Tokens utilisés",
@@ -1028,7 +1032,8 @@ i18n
                             change_theme: "Змінити тему",
                             theme_light: "Світла",
                             theme_dark: "Темна",
-                            llm: "Мовна модель"
+                            llm: "Мовна модель",
+                            chat_sidebar: "Бічна панель чату"
                         },
                         questioninput: {
                             tokensused: "Використано токени",

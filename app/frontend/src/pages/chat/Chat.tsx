@@ -92,6 +92,7 @@ const Chat = () => {
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem("SHOW_SIDEBAR") === "true" || false);
 
     // Zusammenhängende States mit useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -506,7 +507,7 @@ const Chat = () => {
             header={t("chat.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="large"
+            size={showSidebar ? "large" : "none"}
         ></ChatLayout>
     ), [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t]);
 

@@ -88,7 +88,8 @@ i18n
                         settings: "Einstellungen",
                         close: "Schließen",
                         messages: "Nachrichten",
-                        examples: "Beispiele"
+                        examples: "Beispiele",
+                        sidebar_show: "Sidebar anzeigen"
                     },
                     create_bot: {
                         title: "Titel",
@@ -312,7 +313,8 @@ i18n
                         settings: "Settings",
                         close: "Close",
                         messages: "Messages",
-                        examples: "Examples"
+                        examples: "Examples",
+                        sidebar_show: "Show sidebar"
                     },
                     create_bot: {
                         title: "Title",
@@ -531,7 +533,8 @@ i18n
                         settings: "Konfiguration",
                         close: "Schließen",
                         messages: "Nochrichten",
-                        examples: "Beispui"
+                        examples: "Beispui",
+                        sidebar_show: "Sidebar zoagn"
                     },
                     version: {
                         header: "Wos gibts neis?",
@@ -761,7 +764,8 @@ i18n
                         settings: "Paramètres",
                         close: "Fermer",
                         messages: "Messages",
-                        examples: "Exemples"
+                        examples: "Exemples",
+                        sidebar_show: "Afficher la barre latérale"
                     },
                     components: {
                         roles: {
@@ -978,7 +982,8 @@ i18n
                         settings: "Налаштування",
                         close: "Закрити",
                         messages: "Повідомлення",
-                        examples: "Приклади"
+                        examples: "Приклади",
+                        sidebar_show: "Показати бічну панель"
                     },
                     components: {
                         roles: {

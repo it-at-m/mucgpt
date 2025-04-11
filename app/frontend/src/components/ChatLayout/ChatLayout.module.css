@@ -7,7 +7,7 @@
 .chatRoot {
     width: calc(100% - var(--sidebarWidth));
     overflow-y: auto;
-    margin-left: var(--sidebarWidth);
+    margin-left: calc(100px + var(--sidebarWidth));
     float: right;
     margin-top: 60px;
 }

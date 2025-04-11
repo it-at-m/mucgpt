@@ -17,6 +17,9 @@ import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { ListBar24Filled } from "@fluentui/react-icons";
+import { Button, Tooltip } from "@fluentui/react-components";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -92,7 +95,7 @@ const Chat = () => {
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem("SHOW_SIDEBAR") === "true" || true);
+    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true");
 
     // Zusammenhängende States mit useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -446,9 +449,14 @@ const Chat = () => {
 
     const sidebar_actions = useMemo(() => (
         <>
-            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />
+            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
+            {!showSidebar && (
+                <Tooltip content={t("common.sidebar_show")} relationship="description" positioning="below">
+                    <Button style={{ marginLeft: "5px" }} appearance="primary" icon={<ListBar24Filled />} onClick={() => setShowSidebar(true)} />
+                </Tooltip>
+            )}
         </>
-    ), [clearChat, lastQuestionRef.current, isLoadingRef.current]);
+    ), [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]);
 
     const sidebar_content = useMemo(() => (
         <>
@@ -509,7 +517,7 @@ const Chat = () => {
             messages_description={t("common.messages")}
             size={showSidebar ? "large" : "none"}
         ></ChatLayout>
-    ), [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t]);
+    ), [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, showSidebar]);
 
     return layout;
 };

@@ -1,4 +1,4 @@
-import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, ListBar24Filled, Mail24Regular } from "@fluentui/react-icons";
+import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, Mail24Regular } from "@fluentui/react-icons";
 import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link, Switch } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
@@ -9,6 +9,7 @@ import { LanguageSelector } from "../../components/LanguageSelector";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { useTranslation } from "react-i18next";
 import { Model } from "../../api";
+import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
@@ -23,7 +24,6 @@ interface Props {
     llmOptions: Model[];
     currentLLM: Model;
 }
-export const SHOW_SIDEBAR = "SHOW_SIDEBAR";
 
 export const SettingsDrawer = ({
     onLanguageSelectionChanged,
@@ -48,7 +48,7 @@ export const SettingsDrawer = ({
     const min_temp = 0.8;
     const max_temp = 1.8;
 
-    const [showSidebar, setShowSidebar] = useState(localStorage.getItem(SHOW_SIDEBAR) === "true" ? true : false);
+    const [showSidebar, setShowSidebar] = useState(localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === "true" ? true : false);
 
     // open settings drawer
     const onClickRightButton = useCallback(() => {
@@ -67,7 +67,7 @@ export const SettingsDrawer = ({
     const onChangeShowSidebar = useCallback((event: React.ChangeEvent) => {
         const checked = (event.target as HTMLInputElement).checked;
         setShowSidebar(checked);
-        localStorage.setItem(SHOW_SIDEBAR, JSON.stringify(checked));
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, JSON.stringify(checked));
         location.reload();
     }, []);
 

@@ -4,7 +4,7 @@ import { Send28Filled } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 }
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
 
@@ -33,7 +33,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         setDescription(text);
     }, [tokens_used, LLM.max_input_tokens]);
 
-    const sendQuestion = () => {
+    const sendQuestion = useCallback(() => {
         if (disabled || !question.trim()) {
             return;
         }
@@ -43,26 +43,26 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         if (clearOnSend) {
             setQuestion("");
         }
-    };
+    }, [disabled, question, onSend, clearOnSend, setQuestion]);
 
-    const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
+    const onEnterPress = useCallback((ev: React.KeyboardEvent<Element>) => {
         if (ev.key === "Enter" && !ev.shiftKey) {
             ev.preventDefault();
             sendQuestion();
         }
-    };
+    }, [sendQuestion]);
 
     function countWords(str: string) {
         return str.trim().split(/\s+/).length;
     }
 
-    const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    const onQuestionChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (!newValue?.value) {
             setQuestion("");
         } else {
             setQuestion(newValue.value);
         }
-    };
+    }, []);
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>

@@ -40,28 +40,36 @@ export const SettingsDrawer = ({
     currentLLM
 }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
     const fontscaleID = useId("input-fontscale");
     const feedback_headerID = useId("feedback-language");
 
+    const min_temp = 0.8;
+    const max_temp = 1.8;
+
+    const [showSidebar, setShowSidebar] = useState(localStorage.getItem(SHOW_SIDEBAR) === "true" ? true : false);
+
+    // open settings drawer
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
     }, []);
-    const min_temp = 0.8;
-    const max_temp = 1.8;
-    const onFontscaleChange: SliderProps["onChange"] = (_, data) => setFontscale(data.value);
 
-    const closeDrawer = () => {
+    // change font size
+    const onFontscaleChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => setFontscale(data.value), [setFontscale]);
+
+    // close settings drawer
+    const closeDrawer = useCallback(() => {
         setIsOpen(false);
-    };
-    const [showSidebar, setShowSidebar] = useState(localStorage.getItem(SHOW_SIDEBAR) === "true" ? true : false);
-    const onChangeShowSidebar = (event: React.ChangeEvent) => {
+    }, []);
+
+    // change visibilty of chat settings drawer
+    const onChangeShowSidebar = useCallback((event: React.ChangeEvent) => {
         const checked = (event.target as HTMLInputElement).checked;
         setShowSidebar(checked);
         localStorage.setItem(SHOW_SIDEBAR, JSON.stringify(checked));
         location.reload();
-    }
+    }, []);
 
     return (
         <div>

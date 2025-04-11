@@ -1,6 +1,7 @@
 import { RadioGroup, Radio, RadioGroupOnChangeData, Field } from "@fluentui/react-components";
 import styles from "./SummarizeSidebar.module.css";
 import { useTranslation } from "react-i18next";
+import { useCallback } from "react";
 interface Props {
     onDetaillevelChanged: (newval: string) => void;
     detaillevel_pref: string;
@@ -8,9 +9,10 @@ interface Props {
 export const SummarizeSidebar = ({ onDetaillevelChanged, detaillevel_pref }: Props) => {
     const { t } = useTranslation();
 
-    const onDetaillevelChangedInternal = (e: any, selection: RadioGroupOnChangeData) => {
+    // change detail level
+    const onDetaillevelChangedInternal = useCallback((_: any, selection: RadioGroupOnChangeData) => {
         onDetaillevelChanged(selection.value);
-    };
+    }, [onDetaillevelChanged]);
 
     return (
         <div className={styles.sidebar}>

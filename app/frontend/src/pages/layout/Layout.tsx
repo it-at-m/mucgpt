@@ -1,6 +1,6 @@
 import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import styles from "./Layout.module.css";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_black.png";
@@ -24,45 +24,63 @@ const formatDate = (date: Date) => {
 };
 
 export const Layout = () => {
+    // params
     const { id } = useParams();
+
+    //style
     const styles2 = useStyles();
+
+    // navigate
     const navigate = useNavigate();
-    const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
-    const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
-    const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
-    const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
-    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const ligth_theme_pref =
-        localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
+
+    // Contexts
     const { language, setLanguage } = useContext(LanguageContext);
     const { LLM, setLLM } = useContext(LLMContext);
-    const { t, i18n } = useTranslation();
-    const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
-    const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
-    const [simply, setSimply] = useState<boolean>(true);
 
-    const [models, setModels] = useState(config.models);
-    const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
-    const [title, setTitle] = useState<[string, string]>(["0", ""]);
-
-    const onFontscaleChange = (fontscale: number) => {
-        setFontscaling(fontscale);
-        setTheme(adjustTheme(isLight, fontscale));
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
-    };
-
-    const onThemeChange = (light: boolean) => {
-        setLight(light);
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-        setTheme(adjustTheme(light, fontscaling));
-    };
-
-    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     // Use useRef to prevent duplicate API calls
     const configApiCalledRef = useRef(false);
 
+    // Translation
+    const { t, i18n } = useTranslation();
+
+    const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
+
+    const [simply, setSimply] = useState<boolean>(true);
+    const [models, setModels] = useState(config.models);
+
+    const [title, setTitle] = useState<[string, string]>(["0", ""]);
+
+    // vars from storage
+    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+    const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
+    const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
+    const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
+
+    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
+    const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
+
+    const ligth_theme_pref =
+        localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
+    const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
+
+    const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
+
+    // scale font size
+    const onFontscaleChange = useCallback((fontscale: number) => {
+        setFontscaling(fontscale);
+        setTheme(adjustTheme(isLight, fontscale));
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
+    }, [isLight, setFontscaling, setTheme]);
+
+    // change theme
+    const onThemeChange = useCallback((light: boolean) => {
+        setLight(light);
+        localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
+        setTheme(adjustTheme(light, fontscaling));
+    }, [fontscaling, setLight, setTheme]);
+
+    //do migrations for chat
     useEffect(() => {
-        //do migrations for chat
         new StorageService<any, any>(CHAT_STORE).connectToDB();
         if (id) {
             botStorageService.getBotConfig(id).then(bot => {
@@ -70,8 +88,6 @@ export const Layout = () => {
             });
         }
     }, [id]);
-
-
 
     useEffect(() => {
         // Skip if the API has already been called
@@ -106,28 +122,32 @@ export const Layout = () => {
         i18n.changeLanguage(language_pref);
     }, []);
 
-    const onAcceptTermsOfUse = () => {
+    // terms of use
+    const onAcceptTermsOfUse = useCallback(() => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
         if (localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.version) {
             localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.version);
             navigate("version");
         }
-    };
+    }, [config.version, navigate]);
 
-    const onLanguageSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+    // language change
+    const onLanguageSelectionChanged = useCallback((e: SelectionEvents, selection: OptionOnSelectData) => {
         let lang = selection.optionValue || DEFAULTLANG;
         i18n.changeLanguage(lang);
         setLanguage(lang);
         localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
-    };
-    const onLLMSelectionChanged = (e: SelectionEvents, selection: OptionOnSelectData) => {
+    }, [setLanguage, i18n]);
+
+    // llm change
+    const onLLMSelectionChanged = useCallback((e: SelectionEvents, selection: OptionOnSelectData) => {
         let llm = selection.optionValue || DEFAULTLLM;
         let found_llm = models.find(model => model.llm_name == llm);
         if (found_llm) {
             setLLM(found_llm);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
         }
-    };
+    }, [models, setLLM]);
 
     return (
         <FluentProvider theme={theme}>

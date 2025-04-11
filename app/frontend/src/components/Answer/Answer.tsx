@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Stack } from "@fluentui/react";
 
 import styles from "./Answer.module.css";
@@ -27,13 +27,14 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
 
-    const oncopy = () => {
+    const oncopy = useCallback(() => {
         setCopied(true);
         navigator.clipboard.writeText(answer.answer);
         setTimeout(() => {
             setCopied(false);
         }, 1000);
-    };
+    }, [navigator.clipboard, answer.answer]);
+
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
             <Stack.Item>

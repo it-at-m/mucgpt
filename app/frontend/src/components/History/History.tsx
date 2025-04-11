@@ -3,6 +3,7 @@ import { Options24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./History.module.css";
 import { DBObject } from "../../service/storage";
+import { useCallback } from "react";
 
 interface Props {
     allChats: DBObject<any, any>[];
@@ -15,7 +16,9 @@ interface Props {
 export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNameChange, onFavChange, onSelect }: Props) => {
     const { t } = useTranslation();
 
-    const getCategory = (lastEdited: number, fav: boolean) => {
+    // get time category of the chat
+    // today, yesterday, last 7 days, older
+    const getCategory = useCallback((lastEdited: number, fav: boolean) => {
         if (fav) return t("components.history.favourites");
         const today = new Date();
         const lastEditedDate = new Date(lastEdited);
@@ -27,8 +30,9 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
         if (diffDays === 1) return t("components.history.yesterday");
         if (diffDays <= 7) return t("components.history.sevendays");
         return t("components.history.older");
-    };
+    }, [t]);
 
+    // sort chats by last edited date and categorize them
     const categorizedChats = allChats
         .filter((chat: DBObject<any, any>) => chat.id)
         .sort((a: DBObject<any, any>, b: DBObject<any, any>) => {

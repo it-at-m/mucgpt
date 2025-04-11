@@ -92,7 +92,7 @@ const Chat = () => {
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem("SHOW_SIDEBAR") === "true" || false);
+    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem("SHOW_SIDEBAR") === "true" || true);
 
     // Zusammenhängende States mit useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {

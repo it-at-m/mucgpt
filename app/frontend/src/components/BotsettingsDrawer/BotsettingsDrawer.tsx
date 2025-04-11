@@ -2,7 +2,7 @@ import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSe
 import { Button, Slider, Label, useId, SliderProps, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { ReactNode, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import Markdown from "react-markdown";
@@ -55,27 +55,37 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setIsOwner(!bot.publish);
     }, [bot]);
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => {
+    // Temperature change
+    const onTemperatureChange: SliderProps["onChange"] = useCallback((_: any, data: { value: SetStateAction<number>; }) => {
         setTemperature(data.value);
-    };
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => {
+    }, []);
+
+    // Token change
+    const onMaxtokensChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => {
         const maxTokens = data.value > LLM.max_output_tokens && LLM.max_output_tokens != 0 ? LLM.max_output_tokens : data.value;
         setMaxOutputTokens(maxTokens);
-    };
-    const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    }, [LLM.max_output_tokens]);
+
+    // System prompt change
+    const onSytemPromptChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
         else setSystemPrompt("");
-    };
-    const onTitleChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    }, []);
+
+    // Title change
+    const onTitleChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setTitle(newValue.value);
         else setTitle("");
-    };
+    }, []);
+
+    // Description change
     const onDescriptionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setDescription(newValue.value);
         else setDescription("");
     };
 
-    const toggleReadOnly = () => {
+    // Toggle read-only mode
+    const toggleReadOnly = useCallback(() => {
         setEditable(!isEditable);
         onEditChange(!isEditable);
         if (isEditable && isOwner) {
@@ -93,12 +103,14 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
             onBotChange(updatedBot);
             window.location.reload();
         }
-    };
+    }, [isEditable, isOwner, bot, temperature, max_output_tokens, systemPrompt, title, description, publish, onEditChange, onBotChange]);
 
-    const onClearSystemPrompt = () => {
+    // clear system prompt
+    const onClearSystemPrompt = useCallback(() => {
         setSystemPrompt("");
-    };
+    }, []);
 
+    // Delete bot confirmation dialog
     const deleteDialog = useMemo(() => (
         <Dialog modalType="alert" open={showDeleteDialog}>
             <DialogSurface className={styles.dialog}>
@@ -121,9 +133,11 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>
-        </Dialog>), [showDeleteDialog, onDeleteBot]);
+        </Dialog>)
+        , [showDeleteDialog, onDeleteBot]);
 
-    const actions_component = (
+    // actions component
+    const actions_component = useMemo(() => (
         <>
             {actions}
             {deleteDialog}
@@ -158,7 +172,9 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                 </Button>
             </Tooltip>
         </>
-    );
+    ), [actions, isEditable, isOwner, toggleReadOnly, t, deleteDialog]);
+
+    // sidebar content
     const content = (
         <>
             <>{before_content}</>{" "}

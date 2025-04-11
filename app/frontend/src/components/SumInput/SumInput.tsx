@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Stack } from "@fluentui/react";
 import { Button, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import { Delete24Regular, Send28Filled } from "@fluentui/react-icons";
@@ -16,11 +16,19 @@ interface Props {
 }
 
 export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, question, setQuestion }: Props) => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const [dragging, setDragging] = useState(false);
     const [file, setFile] = useState<File | undefined>(undefined);
+    const sendQuestionDisabled = disabled || (!question.trim() && !file);
 
-    const sendQuestion = () => {
+    // remove documents
+    const removeDocuments = useCallback(() => {
+        setFile(undefined);
+        setDragging(true);
+    }, []);
+
+    // send question
+    const sendQuestion = useCallback(() => {
         if (disabled || (!question.trim() && !file)) {
             return;
         }
@@ -30,43 +38,39 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, question,
             setQuestion("");
             removeDocuments();
         }
-    };
+    }, [disabled, question, file, onSend, clearOnSend, removeDocuments]);
 
-    const onEnterPress = (ev: React.KeyboardEvent<Element>) => {
+    // enter press
+    const onEnterPress = useCallback((ev: React.KeyboardEvent<Element>) => {
         if (ev.key === "Enter" && !ev.shiftKey) {
             ev.preventDefault();
             sendQuestion();
         }
-    };
+    }, []);
 
-    const onQuestionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    // question change
+    const onQuestionChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (!newValue?.value) {
             setQuestion("");
         } else {
             setQuestion(newValue.value);
         }
-    };
+    }, []);
 
-    const handleDrop = (e: React.DragEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    // file drag n drop
+    const handleDrop = useCallback((e: React.DragEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         e.preventDefault();
         const files = e.dataTransfer.files;
 
         if (files.length > 0) setFile(files[0]);
 
         setDragging(false);
-    };
+    }, []);
 
-    const handleDragOver = (e: React.DragEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleDragOver = useCallback((e: React.DragEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         e.preventDefault();
         setDragging(true);
-    };
-
-    const removeDocuments = () => {
-        setFile(undefined);
-        setDragging(true);
-    };
-
-    const sendQuestionDisabled = disabled || (!question.trim() && !file);
+    }, []);
 
     return (
         <Stack horizontal className={styles.questionInputContainer}>

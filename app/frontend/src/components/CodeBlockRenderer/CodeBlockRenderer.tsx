@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { IconButton } from "@fluentui/react";
-import { ClassAttributes, HTMLAttributes, useState, useEffect } from "react";
+import { ClassAttributes, HTMLAttributes, useState, useEffect, useCallback } from "react";
 import { ExtraProps } from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
@@ -16,7 +16,7 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
     const ligth_theme_pref =
         localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
 
-    const oncopy = () => {
+    const oncopy = useCallback(() => {
         setCopied(true);
         navigator.clipboard.writeText(children);
         setIcon("Checkmark");
@@ -24,11 +24,12 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
             setIcon("Copy");
             setCopied(false);
         }, 1000);
-    };
+    }, [navigator.clipboard, children]);
 
     const language = match ? match[1] : "";
     const text = String(children);
     let diagrams = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"];
+
     //check if mermaid diagramm is at the start
     if (language === "mermaid" || (language === "" && text.length > 30 && diagrams.some(type => text.indexOf(type) !== -1))) {
         const mermaidProps: MermaidProps = {

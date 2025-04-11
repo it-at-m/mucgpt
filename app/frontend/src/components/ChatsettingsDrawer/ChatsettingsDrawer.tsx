@@ -2,7 +2,7 @@ import { Dismiss24Regular } from "@fluentui/react-icons";
 import { Button, Slider, Label, useId, SliderProps, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { ReactNode, useContext } from "react";
+import { ReactNode, useCallback, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { Sidebar } from "../Sidebar/Sidebar";
@@ -27,7 +27,7 @@ export const ChatsettingsDrawer = ({
     actions,
     content
 }: Props) => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
 
     const temperature_headerID = useId("header-temperature");
@@ -40,17 +40,24 @@ export const ChatsettingsDrawer = ({
     const min_temp = 0;
     const max_temp = 1;
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => setTemperature(data.value);
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => setMaxTokens(data.value);
+    // Temperature change
+    const onTemperatureChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => setTemperature(data.value), []);
 
-    const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    // Max tokens change
+    const onMaxtokensChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => setMaxTokens(data.value), []);
+
+    // System prompt change
+    const onSytemPromptChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
         else setSystemPrompt("");
-    };
+    }, []);
 
+    // Clear system prompt
     const onClearSystemPrompt = () => {
         setSystemPrompt("");
     };
+
+    // sidebar action and content
     const sidebar_action = <>{actions}</>;
     const sidebar_content = (
         <>
@@ -156,6 +163,7 @@ export const ChatsettingsDrawer = ({
             </div>
         </>
     );
+
     return (
         <div>
             <Sidebar actions={sidebar_action} content={sidebar_content}></Sidebar>

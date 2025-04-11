@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatTurnComponent } from "../ChatTurnComponent/ChatTurnComponent";
 import { UserChatMessage } from "../UserChatMessage";
@@ -37,25 +37,30 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
         );
     }, [answers, isLoading]);
 
-    return (
-        <>
-            {answersComponent}
-            {error || isLoading ? (
-                <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} />}
-                    usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                    botmsg={
-                        <>
-                            {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                            {error ? <AnswerError error={error.toString()} onRetry={makeApiRequest} /> : null}
-                        </>
-                    }
-                ></ChatTurnComponent>
-            ) : (
-                <div></div>
-            )}
-            <div ref={chatMessageStreamEnd} />
-        </>
-    );
+    const answerList = useMemo(() => {
+        return (
+            <>
+                {answersComponent}
+                {error || isLoading ? (
+                    <ChatTurnComponent
+                        usermsg={<UserChatMessage message={lastQuestionRef.current} />}
+                        usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
+                        botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
+                        botmsg={
+                            <>
+                                {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
+                                {error ? <AnswerError error={error.toString()} onRetry={makeApiRequest} /> : null}
+                            </>
+                        }
+                    ></ChatTurnComponent>
+                ) : (
+                    <div></div>
+                )}
+                <div ref={chatMessageStreamEnd} />
+            </>
+        );
+    }, [answers, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef, t, answersComponent]);
+
+
+    return answerList;
 };

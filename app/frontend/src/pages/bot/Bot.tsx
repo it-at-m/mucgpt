@@ -181,11 +181,11 @@ const BotChat = () => {
     const onRegenerateResponseClicked = useCallback(async () => {
         if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
         try {
-            await handleRegenerate(answers, dispatch, activeChatRef.current, botChatStorage, systemPrompt, callApi);
+            await handleRegenerate(answers, dispatch, activeChatRef.current, botChatStorage, systemPrompt, callApi, isLoadingRef);
         } catch (e) {
             setError(e);
         }
-    }, [answers, botChatStorage, callApi, systemPrompt, activeChatRef.current]);
+    }, [answers, botChatStorage, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
 
     // ClearChat-Funktion
     const clearChat = useCallback(() => {

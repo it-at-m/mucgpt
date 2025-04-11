@@ -81,13 +81,15 @@ export async function handleRegenerate(
     activeChat: string,
     storageService: StorageService<any, any>,
     systemPrompt: string,
-    callApi: (question: string, systemPrompt: string) => Promise<void>
+    callApi: (question: string, systemPrompt: string) => Promise<void>,
+    isLoadingRef: MutableRefObject<boolean>
 ) {
     await storageService.popMessage(activeChat);
 
     // Letzten Eintrag entfernen und speichern
     const lastAnswersCopy = [...answers];
     const lastAnswer = lastAnswersCopy.pop();
+    isLoadingRef.current = true;
 
     if (lastAnswer) {
         dispatch({ type: "SET_ANSWERS", payload: lastAnswersCopy });

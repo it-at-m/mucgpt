@@ -234,7 +234,7 @@ const Chat = () => {
         if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
 
         try {
-            await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi);
+            await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi, isLoadingRef);
         } catch (e) {
             setError(e);
         };

@@ -48,7 +48,7 @@ export const SettingsDrawer = ({
     const min_temp = 0.8;
     const max_temp = 1.8;
 
-    const [showSidebar, setShowSidebar] = useState(localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === "true" ? true : false);
+    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true");
 
     // open settings drawer
     const onClickRightButton = useCallback(() => {

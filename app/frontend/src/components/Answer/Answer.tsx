@@ -48,6 +48,9 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     const remarkMathOptions = {
         singleDollarTextMath: false,
     };
+    const rehypeKatexOptions = {
+        output: "mathml",
+    };
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
             <Stack.Item>
@@ -102,8 +105,8 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                 {formatted && (
                     <Markdown
                         className={styles.answerText}
-                        remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]} // Pass options as the second element of the array
-                        rehypePlugins={[rehypeRaw, rehypeKatex]} // Include rehypeRaw for HTML, rehypeKatex for LaTeX
+                        remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
+                        rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
                         components={{
                             code: CodeBlockRenderer
                         }}

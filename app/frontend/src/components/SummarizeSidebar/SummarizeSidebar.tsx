@@ -10,9 +10,12 @@ export const SummarizeSidebar = ({ onDetaillevelChanged, detaillevel_pref }: Pro
     const { t } = useTranslation();
 
     // change detail level
-    const onDetaillevelChangedInternal = useCallback((_: any, selection: RadioGroupOnChangeData) => {
-        onDetaillevelChanged(selection.value);
-    }, [onDetaillevelChanged]);
+    const onDetaillevelChangedInternal = useCallback(
+        (_: any, selection: RadioGroupOnChangeData) => {
+            onDetaillevelChanged(selection.value);
+        },
+        [onDetaillevelChanged]
+    );
 
     return (
         <div className={styles.sidebar}>

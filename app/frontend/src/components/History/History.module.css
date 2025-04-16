@@ -17,6 +17,11 @@
     justify-content: end;
     margin-right: var(--spacingVerticalL);
 }
+
+.nopaddingleft {
+    padding-left: 0px;
+}
+
 .header {
     margin-bottom: 5px;
     font-size: var(--fontSizeBase400);

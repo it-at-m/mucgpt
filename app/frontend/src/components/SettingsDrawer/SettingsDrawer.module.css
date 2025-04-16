@@ -28,7 +28,10 @@
 .header {
     margin-bottom: 10px;
     font-size: var(--fontSizeBase400);
-    margin-top: var(--spacingVerticalS);
+    margin-top: var(--spacingVerticalL);
+    padding-bottom: var(--spacingHorizontalS);
+    margin-bottom: var(--spacingHorizontalS);
+    border-bottom: 1px dotted var(--colorBrandBackground2);
 }
 
 .bodyContainer {
@@ -58,8 +61,5 @@
 }
 
 .info {
-    margin-top: 8px;
-    border-style: solid;
-    border-color: black;
-    border-width: 1px;
+    margin: 8px;
 }

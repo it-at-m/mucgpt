@@ -1,7 +1,6 @@
 .container {
     flex-direction: row;
     margin-right: 1em;
-    margin-left: 1em;
 }
 
 .chatRoot {
@@ -21,11 +20,13 @@
 }
 
 .sidebar {
+    padding-left: 1em;
     position: fixed;
-    height: calc(100% - 110px);
-    margin-top: 60px;
+    margin-top: 50px;
+    height: 100%;
     padding-bottom: var(--spacingHorizontalM);
     width: var(--sidebarWidth);
+    background-color: var(--colorNeutralBackground1Hover);
 }
 
 .chatEmptyState {

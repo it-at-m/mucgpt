@@ -22,10 +22,9 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { use } from "i18next";
 
-
 const BotChat = () => {
     // useReducer für den Chat-Status
-    const chatReducer = getChatReducer<Bot>()
+    const chatReducer = getChatReducer<Bot>();
 
     // Zusammenhängende States mit useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -39,15 +38,7 @@ const BotChat = () => {
     });
 
     // Destrukturierung für einfacheren Zugriff
-    const {
-        answers,
-        temperature,
-        max_output_tokens,
-        systemPrompt,
-        active_chat,
-        allChats,
-        totalTokens
-    } = chatState;
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
 
     // Refferenzen
     const activeChatRef = useRef(active_chat);
@@ -68,7 +59,6 @@ const BotChat = () => {
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
-
 
     const [error, setError] = useState<unknown>();
     const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
@@ -108,7 +98,7 @@ const BotChat = () => {
                         .then(existingChat => {
                             if (existingChat) {
                                 const messages = existingChat.messages;
-                                dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] })
+                                dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
                                 lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
                                 dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
                             }
@@ -134,48 +124,80 @@ const BotChat = () => {
         window.location.href = "/";
     }, [botStorageService, bot_id]);
     // callApi-Funktion
-    const callApi = useCallback(async (question: string) => {
-        lastQuestionRef.current = question;
-        error && setError(undefined);
-        isLoadingRef.current = true;
+    const callApi = useCallback(
+        async (question: string) => {
+            lastQuestionRef.current = question;
+            error && setError(undefined);
+            isLoadingRef.current = true;
 
-        const askResponse: AskResponse = {} as AskResponse;
-        const options: ChatOptions = {
-            system: systemPrompt ?? "",
-            maxTokens: max_output_tokens,
-            temperature: temperature
-        };
-        try {
-            await makeApiRequest(answers, question, dispatch, chatApi, LLM, activeChatRef, botChatStorage, options, askResponse, chatMessageStreamEnd, isLoadingRef, fetchHistory, bot_id)
-        } catch (e) {
-            setError(e);
-        }
-        isLoadingRef.current = false;
-    }, [lastQuestionRef.current, error, isLoadingRef.current, chatState, answers, dispatch, chatApi, LLM, activeChatRef, botChatStorage, chatMessageStreamEnd, fetchHistory]);
+            const askResponse: AskResponse = {} as AskResponse;
+            const options: ChatOptions = {
+                system: systemPrompt ?? "",
+                maxTokens: max_output_tokens,
+                temperature: temperature
+            };
+            try {
+                await makeApiRequest(
+                    answers,
+                    question,
+                    dispatch,
+                    chatApi,
+                    LLM,
+                    activeChatRef,
+                    botChatStorage,
+                    options,
+                    askResponse,
+                    chatMessageStreamEnd,
+                    isLoadingRef,
+                    fetchHistory,
+                    bot_id
+                );
+            } catch (e) {
+                setError(e);
+            }
+            isLoadingRef.current = false;
+        },
+        [
+            lastQuestionRef.current,
+            error,
+            isLoadingRef.current,
+            chatState,
+            answers,
+            dispatch,
+            chatApi,
+            LLM,
+            activeChatRef,
+            botChatStorage,
+            chatMessageStreamEnd,
+            fetchHistory
+        ]
+    );
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoadingRef.current]);
     // useEffect für die Tokenanzahl
     useEffect(() => {
         dispatch({
             type: "SET_TOTAL_TOKENS",
-            payload: systemPromptTokens +
+            payload:
+                systemPromptTokens +
                 answers
-                    .map((answ: { response: { user_tokens: any; tokens: any; }; }) =>
-                        (answ.response.user_tokens || 0) + (answ.response.tokens || 0)
-                    )
-                    .reduce((prev: any, curr: any) => prev + curr, 0),
+                    .map((answ: { response: { user_tokens: any; tokens: any } }) => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
+                    .reduce((prev: any, curr: any) => prev + curr, 0)
         });
     }, [systemPromptTokens, answers]);
     // onBotChanged-Funktion
-    const onBotChanged = useCallback(async (newBot: Bot) => {
-        await botStorageService.setBotConfig(bot_id, newBot);
-        setBotConfig(newBot);
-        // count tokens in case of new system message
-        if (newBot.system_message !== botConfig.system_message) {
-            const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
-            setSystemPromptTokens(response.count);
-        }
-    }, [botStorageService, bot_id, LLM, botConfig.system_message]);
+    const onBotChanged = useCallback(
+        async (newBot: Bot) => {
+            await botStorageService.setBotConfig(bot_id, newBot);
+            setBotConfig(newBot);
+            // count tokens in case of new system message
+            if (newBot.system_message !== botConfig.system_message) {
+                const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
+                setSystemPromptTokens(response.count);
+            }
+        },
+        [botStorageService, bot_id, LLM, botConfig.system_message]
+    );
 
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
@@ -198,130 +220,145 @@ const BotChat = () => {
         dispatch({ type: "CLEAR_ANSWERS" });
     }, [lastQuestionRef.current, error, activeChatRef.current]);
     // Rollback-Funktion
-    const onRollbackMessage = useCallback((index: number) => {
-        if (!activeChatRef.current || isLoadingRef.current) return;
-        isLoadingRef.current = true;
-        try {
-            handleRollback(
-                index,
-                activeChatRef.current,
-                dispatch,
-                botChatStorage,
-                lastQuestionRef,
-                setQuestion,
-                clearChat,
-                fetchHistory
-            );
-        } catch (e) {
-            setError(e);
-        }
-        isLoadingRef.current = false;
-    }, [botChatStorage, clearChat, fetchHistory, setQuestion]);
+    const onRollbackMessage = useCallback(
+        (index: number) => {
+            if (!activeChatRef.current || isLoadingRef.current) return;
+            isLoadingRef.current = true;
+            try {
+                handleRollback(index, activeChatRef.current, dispatch, botChatStorage, lastQuestionRef, setQuestion, clearChat, fetchHistory);
+            } catch (e) {
+                setError(e);
+            }
+            isLoadingRef.current = false;
+        },
+        [botChatStorage, clearChat, fetchHistory, setQuestion]
+    );
 
     // on Example Clicked-Funktion
-    const onExampleClicked = useCallback((example: string) => {
-        callApi(example);
-    }, [callApi]);
+    const onExampleClicked = useCallback(
+        (example: string) => {
+            callApi(example);
+        },
+        [callApi]
+    );
     // onEdit Sidebar-Funktion
-    const onEditChange = useCallback((isEditable: boolean) => {
-        setSidebarWidth(isEditable ? "full_width" : "large");
-    }, [setSidebarWidth]);
+    const onEditChange = useCallback(
+        (isEditable: boolean) => {
+            setSidebarWidth(isEditable ? "full_width" : "large");
+        },
+        [setSidebarWidth]
+    );
 
     // History component
-    const history = useMemo(() => (
-        <History
-            allChats={allChats}
-            currentActiveChatId={activeChatRef.current}
-            onDeleteChat={async id => {
-                await botChatStorage.delete(id);
-                await fetchHistory();
-            }}
-            onChatNameChange={async (id, name: string) => {
-                const newName = prompt(t("components.history.newchat"), name);
-                await botChatStorage.renameChat(id, newName ? newName.trim() : name);
-                await fetchHistory();
-            }}
-            onFavChange={async (id: string, fav: boolean) => {
-                await botChatStorage.changeFavouritesInDb(id, fav);
-                await fetchHistory();
-            }}
-            onSelect={async (id: string) => {
-                const chat = await botChatStorage.get(id);
-                if (chat) {
-                    dispatch({ type: "SET_ANSWERS", payload: chat.messages });
-                    lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
-                    dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
-                }
-            }}
-        ></History>
-    ), [allChats, activeChatRef.current, fetchHistory, botChatStorage, t]);
+    const history = useMemo(
+        () => (
+            <History
+                allChats={allChats}
+                currentActiveChatId={activeChatRef.current}
+                onDeleteChat={async id => {
+                    await botChatStorage.delete(id);
+                    await fetchHistory();
+                }}
+                onChatNameChange={async (id, name: string) => {
+                    const newName = prompt(t("components.history.newchat"), name);
+                    await botChatStorage.renameChat(id, newName ? newName.trim() : name);
+                    await fetchHistory();
+                }}
+                onFavChange={async (id: string, fav: boolean) => {
+                    await botChatStorage.changeFavouritesInDb(id, fav);
+                    await fetchHistory();
+                }}
+                onSelect={async (id: string) => {
+                    const chat = await botChatStorage.get(id);
+                    if (chat) {
+                        dispatch({ type: "SET_ANSWERS", payload: chat.messages });
+                        lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                        dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                    }
+                }}
+            ></History>
+        ),
+        [allChats, activeChatRef.current, fetchHistory, botChatStorage, t]
+    );
     // Sidebar-Actions component
-    const actions = useMemo(() => (
-        <>
-            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />
-        </>
-    ), [clearChat, lastQuestionRef.current, isLoadingRef.current]);
+    const actions = useMemo(
+        () => (
+            <>
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />
+            </>
+        ),
+        [clearChat, lastQuestionRef.current, isLoadingRef.current]
+    );
     // Sidebar component
-    const sidebar = useMemo(() => (
-        <>
-            <BotsettingsDrawer
-                bot={botConfig}
-                onBotChange={onBotChanged}
-                onDeleteBot={onDeleteBot}
-                actions={actions}
-                before_content={history}
-                onEditChange={onEditChange}
-            ></BotsettingsDrawer>
-        </>
-    ), [botConfig, onBotChanged, onDeleteBot, actions, history, onEditChange]);
+    const sidebar = useMemo(
+        () => (
+            <>
+                <BotsettingsDrawer
+                    bot={botConfig}
+                    onBotChange={onBotChanged}
+                    onDeleteBot={onDeleteBot}
+                    actions={actions}
+                    before_content={history}
+                    onEditChange={onEditChange}
+                ></BotsettingsDrawer>
+            </>
+        ),
+        [botConfig, onBotChanged, onDeleteBot, actions, history, onEditChange]
+    );
     // Examples component
     const examplesComponent = useMemo(() => {
         if (botConfig.examples && botConfig.examples.length > 0) {
-            return (<ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} />)
+            return <ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} />;
         } else {
-            return (<></>)
+            return <></>;
         }
     }, [botConfig.examples, onExampleClicked]);
     // Text-Input component
-    const inputComponent = useMemo(() => (
-        <QuestionInput
-            clearOnSend
-            placeholder={t("chat.prompt")}
-            disabled={isLoadingRef.current}
-            onSend={question => callApi(question)}
-            tokens_used={totalTokens}
-            question={question}
-            setQuestion={question => setQuestion(question)}
-        />
-    ), [isLoadingRef.current, callApi, totalTokens, question]);
+    const inputComponent = useMemo(
+        () => (
+            <QuestionInput
+                clearOnSend
+                placeholder={t("chat.prompt")}
+                disabled={isLoadingRef.current}
+                onSend={question => callApi(question)}
+                tokens_used={totalTokens}
+                question={question}
+                setQuestion={question => setQuestion(question)}
+            />
+        ),
+        [isLoadingRef.current, callApi, totalTokens, question]
+    );
     // AnswerList component
-    const answerList = useMemo(() => (
-        <AnswerList
-            answers={answers}
-            regularBotMsg={(answer, index) => {
-                return (
-                    <>
-                        {" "}
-                        {index === answers.length - 1 && (
-                            <Answer
-                                key={index}
-                                answer={answer.response}
-                                onRegenerateResponseClicked={onRegenerateResponseClicked}
-                                setQuestion={question => setQuestion(question)}
-                            />
-                        )}
-                        {index !== answers.length - 1 && <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
-                    </>
-                );
-            }}
-            onRollbackMessage={onRollbackMessage}
-            isLoading={isLoadingRef.current}
-            error={error}
-            makeApiRequest={() => callApi(lastQuestionRef.current)}
-            chatMessageStreamEnd={chatMessageStreamEnd}
-            lastQuestionRef={lastQuestionRef}
-        />
-    ), [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]);
+    const answerList = useMemo(
+        () => (
+            <AnswerList
+                answers={answers}
+                regularBotMsg={(answer, index) => {
+                    return (
+                        <>
+                            {" "}
+                            {index === answers.length - 1 && (
+                                <Answer
+                                    key={index}
+                                    answer={answer.response}
+                                    onRegenerateResponseClicked={onRegenerateResponseClicked}
+                                    setQuestion={question => setQuestion(question)}
+                                />
+                            )}
+                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
+                        </>
+                    );
+                }}
+                onRollbackMessage={onRollbackMessage}
+                isLoading={isLoadingRef.current}
+                error={error}
+                makeApiRequest={() => callApi(lastQuestionRef.current)}
+                chatMessageStreamEnd={chatMessageStreamEnd}
+                lastQuestionRef={lastQuestionRef}
+            />
+        ),
+        [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
+    );
 
     return (
         <ChatLayout

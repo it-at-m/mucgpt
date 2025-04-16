@@ -26,13 +26,16 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
     });
 
     // copy
-    const oncopy = useCallback((text: string) => {
-        setCopied(true);
-        navigator.clipboard.writeText(text);
-        setTimeout(() => {
-            setCopied(false);
-        }, 1000);
-    }, [navigator.clipboard]);
+    const oncopy = useCallback(
+        (text: string) => {
+            setCopied(true);
+            navigator.clipboard.writeText(text);
+            setTimeout(() => {
+                setCopied(false);
+            }, 1000);
+        },
+        [navigator.clipboard]
+    );
 
     return (
         <Stack verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>

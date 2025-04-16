@@ -48,7 +48,9 @@ export const SettingsDrawer = ({
     const min_temp = 0.8;
     const max_temp = 1.8;
 
-    const [showSidebar, setShowSidebar] = useState<boolean>(localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true");
+    const [showSidebar, setShowSidebar] = useState<boolean>(
+        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
+    );
 
     // open settings drawer
     const onClickRightButton = useCallback(() => {
@@ -56,7 +58,7 @@ export const SettingsDrawer = ({
     }, []);
 
     // change font size
-    const onFontscaleChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => setFontscale(data.value), [setFontscale]);
+    const onFontscaleChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number }) => setFontscale(data.value), [setFontscale]);
 
     // close settings drawer
     const closeDrawer = useCallback(() => {

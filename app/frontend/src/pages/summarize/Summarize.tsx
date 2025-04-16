@@ -42,7 +42,7 @@ const EXAMPLES: ExampleModel[] = [
 
 const Summarize = () => {
     // getChatReducer function to handle chat state changes
-    const chatReducer = getChatReducer<ChatOptions>()
+    const chatReducer = getChatReducer<ChatOptions>();
 
     // Zusammenhängende States mit useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -56,15 +56,7 @@ const Summarize = () => {
     });
 
     // Destrukturierung für einfacheren Zugriff
-    const {
-        answers,
-        temperature,
-        max_output_tokens,
-        systemPrompt,
-        active_chat,
-        allChats,
-        totalTokens
-    } = chatState;
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
 
     // Context
     const { language } = useContext(LanguageContext);
@@ -84,7 +76,6 @@ const Summarize = () => {
     const detaillevel_pref = (localStorage.getItem(STORAGE_KEY_LEVEL_OF_DETAIL) as "long" | "medium" | "short") || "short";
     const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">(detaillevel_pref);
 
-
     // StorageService
     const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>(SUMMARIZE_STORE);
 
@@ -95,93 +86,134 @@ const Summarize = () => {
 
     // useEffect to set up the store and load the initial data
     useEffect(() => {
-        setupStore(error, setError, setIsLoading, storageService, (answers: ChatMessage[]) => dispatch({ type: 'SET_ANSWERS', payload: answers }), answers, lastQuestionRef, (id: string | undefined) => dispatch({ type: 'SET_ACTIVE_CHAT', payload: id }));
+        setupStore(
+            error,
+            setError,
+            setIsLoading,
+            storageService,
+            (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+            answers,
+            lastQuestionRef,
+            (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+        );
     }, []);
 
     // useEffect to scroll to the end of the chat message stream when loading is complete
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = handleDeleteChat(active_chat, lastQuestionRef, error, setError, storageService, (answers: ChatMessage[]) => dispatch({ type: 'SET_ANSWERS', payload: answers }), (id: string | undefined) => dispatch({ type: 'SET_ACTIVE_CHAT', payload: id }));
+    const clearChat = handleDeleteChat(
+        active_chat,
+        lastQuestionRef,
+        error,
+        setError,
+        storageService,
+        (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+        (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+    );
 
     // makeApiRequest function to handle API requests
-    const makeApiRequest = useCallback(async (question: string, file?: File) => {
-        let questionText = file ? file.name : question;
-        lastQuestionRef.current = questionText;
+    const makeApiRequest = useCallback(
+        async (question: string, file?: File) => {
+            let questionText = file ? file.name : question;
+            lastQuestionRef.current = questionText;
 
-        error && setError(undefined);
-        setIsLoading(true);
-        try {
-            const request: SumRequest = {
-                text: questionText,
-                detaillevel: detaillevel,
-                language: language,
-                model: LLM.llm_name
-            };
-            const result = await sumApi(request, file);
-            const completeAnswer: SumarizeMessage = { user: questionText, response: result };
+            error && setError(undefined);
+            setIsLoading(true);
+            try {
+                const request: SumRequest = {
+                    text: questionText,
+                    detaillevel: detaillevel,
+                    language: language,
+                    model: LLM.llm_name
+                };
+                const result = await sumApi(request, file);
+                const completeAnswer: SumarizeMessage = { user: questionText, response: result };
 
-            dispatch({ type: "SET_ANSWERS", payload: [...answers, completeAnswer] });
-            if (activeChatRef.current) await storageService.appendMessage(completeAnswer, activeChatRef.current);
-            else {
-                const id = await storageService.create([completeAnswer], undefined);
-                dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                dispatch({ type: "SET_ANSWERS", payload: [...answers, completeAnswer] });
+                if (activeChatRef.current) await storageService.appendMessage(completeAnswer, activeChatRef.current);
+                else {
+                    const id = await storageService.create([completeAnswer], undefined);
+                    dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                }
+            } catch (e) {
+                setError(e);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (e) {
-            setError(e);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [answers, error, setError, setIsLoading, sumApi, dispatch, language, LLM.llm_name, detaillevel, storageService, activeChatRef.current]);
+        },
+        [answers, error, setError, setIsLoading, sumApi, dispatch, language, LLM.llm_name, detaillevel, storageService, activeChatRef.current]
+    );
 
     // Example clicked handler
-    const onExampleClicked = useCallback((example: string) => {
-        makeApiRequest(example, undefined);
-    }, [makeApiRequest]);
+    const onExampleClicked = useCallback(
+        (example: string) => {
+            makeApiRequest(example, undefined);
+        },
+        [makeApiRequest]
+    );
 
     // Rollback message handler
-    const onRollbackMessage = useCallback((index: number) => {
-        if (!activeChatRef.current) return;
-        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
-    }, [activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat]);
+    const onRollbackMessage = useCallback(
+        (index: number) => {
+            if (!activeChatRef.current) return;
+            handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
+        },
+        [activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat]
+    );
 
     // Detaillevel ändern
-    const onDetaillevelChanged = useCallback((newValue: string) => {
-        setDetaillevel(newValue as "long" | "medium" | "short");
-        localStorage.setItem(STORAGE_KEY_LEVEL_OF_DETAIL, newValue);
-    }, [localStorage]);
+    const onDetaillevelChanged = useCallback(
+        (newValue: string) => {
+            setDetaillevel(newValue as "long" | "medium" | "short");
+            localStorage.setItem(STORAGE_KEY_LEVEL_OF_DETAIL, newValue);
+        },
+        [localStorage]
+    );
 
     // ExampleList component
     const examplesComponent = <ExampleList examples={EXAMPLES} onExampleClicked={onExampleClicked} />;
 
     // Sidebar
-    const sidebar_actions = useMemo(() => (<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />), [clearChat, isLoading, lastQuestionRef.current]);
-    const sidebar_content = useMemo(() => (<SummarizeSidebar onDetaillevelChanged={onDetaillevelChanged} detaillevel_pref={detaillevel_pref} />), [onDetaillevelChanged, detaillevel_pref]);
-    const sidebar = useMemo(() => (<Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>), [sidebar_actions, sidebar_content]);
+    const sidebar_actions = useMemo(
+        () => <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        [clearChat, isLoading, lastQuestionRef.current]
+    );
+    const sidebar_content = useMemo(
+        () => <SummarizeSidebar onDetaillevelChanged={onDetaillevelChanged} detaillevel_pref={detaillevel_pref} />,
+        [onDetaillevelChanged, detaillevel_pref]
+    );
+    const sidebar = useMemo(() => <Sidebar actions={sidebar_actions} content={sidebar_content}></Sidebar>, [sidebar_actions, sidebar_content]);
 
     // AnswerList component
-    const answerList = useMemo(() => (
-        <SumAnswerList
-            answers={answers}
-            onRollbackMessage={onRollbackMessage}
-            isLoading={isLoading}
-            error={error}
-            makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
-            chatMessageStreamEnd={chatMessageStreamEnd}
-            lastQuestionRef={lastQuestionRef}
-        />
-    ), [answers, onRollbackMessage, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef.current, lastQuestionRef]);
+    const answerList = useMemo(
+        () => (
+            <SumAnswerList
+                answers={answers}
+                onRollbackMessage={onRollbackMessage}
+                isLoading={isLoading}
+                error={error}
+                makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
+                chatMessageStreamEnd={chatMessageStreamEnd}
+                lastQuestionRef={lastQuestionRef}
+            />
+        ),
+        [answers, onRollbackMessage, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef.current, lastQuestionRef]
+    );
     // TextInput component
-    const inputComponent = useMemo(() => (
-        <SumInput
-            clearOnSend
-            placeholder={t("sum.prompt")}
-            disabled={isLoading}
-            onSend={(question, file) => makeApiRequest(question, file)}
-            question={question}
-            setQuestion={setQuestion}
-        />
-    ), [question, isLoading, makeApiRequest, t]);
+    const inputComponent = useMemo(
+        () => (
+            <SumInput
+                clearOnSend
+                placeholder={t("sum.prompt")}
+                disabled={isLoading}
+                onSend={(question, file) => makeApiRequest(question, file)}
+                question={question}
+                setQuestion={setQuestion}
+            />
+        ),
+        [question, isLoading, makeApiRequest, t]
+    );
 
     return (
         <ChatLayout

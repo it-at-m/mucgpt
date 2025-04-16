@@ -6,9 +6,12 @@
     flex-direction: row;
     justify-content: start;
     height: 50px;
+    padding-bottom: var(--spacingHorizontalS);
+    margin-bottom: var(--spacingHorizontalS);
+    border-bottom: 1px dotted var(--colorBrandBackground2);
 }
 .drawer {
-    width: var(--sidebarWidth);
+    width: calc(var(--sidebarWidth)-2em);
 }
 
 @media (max-width: 650px) {

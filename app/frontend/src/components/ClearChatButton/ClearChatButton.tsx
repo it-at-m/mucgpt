@@ -20,7 +20,7 @@ export const ClearChatButton = ({ disabled, onClick, showText = true }: Props) =
                 disabled={disabled}
                 onClick={onClick}
             >
-                {showText && (t("common.clear_chat"))}
+                {showText && t("common.clear_chat")}
             </Button>
         </Tooltip>
     );

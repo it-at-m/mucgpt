@@ -45,12 +45,15 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         }
     }, [disabled, question, onSend, clearOnSend, setQuestion]);
 
-    const onEnterPress = useCallback((ev: React.KeyboardEvent<Element>) => {
-        if (ev.key === "Enter" && !ev.shiftKey) {
-            ev.preventDefault();
-            sendQuestion();
-        }
-    }, [sendQuestion]);
+    const onEnterPress = useCallback(
+        (ev: React.KeyboardEvent<Element>) => {
+            if (ev.key === "Enter" && !ev.shiftKey) {
+                ev.preventDefault();
+                sendQuestion();
+            }
+        },
+        [sendQuestion]
+    );
 
     function countWords(str: string) {
         return str.trim().split(/\s+/).length;

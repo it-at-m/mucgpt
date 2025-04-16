@@ -66,18 +66,24 @@ export const Layout = () => {
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
     // scale font size
-    const onFontscaleChange = useCallback((fontscale: number) => {
-        setFontscaling(fontscale);
-        setTheme(adjustTheme(isLight, fontscale));
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
-    }, [isLight, setFontscaling, setTheme]);
+    const onFontscaleChange = useCallback(
+        (fontscale: number) => {
+            setFontscaling(fontscale);
+            setTheme(adjustTheme(isLight, fontscale));
+            localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
+        },
+        [isLight, setFontscaling, setTheme]
+    );
 
     // change theme
-    const onThemeChange = useCallback((light: boolean) => {
-        setLight(light);
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-        setTheme(adjustTheme(light, fontscaling));
-    }, [fontscaling, setLight, setTheme]);
+    const onThemeChange = useCallback(
+        (light: boolean) => {
+            setLight(light);
+            localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
+            setTheme(adjustTheme(light, fontscaling));
+        },
+        [fontscaling, setLight, setTheme]
+    );
 
     //do migrations for chat
     useEffect(() => {
@@ -132,22 +138,28 @@ export const Layout = () => {
     }, [config.version, navigate]);
 
     // language change
-    const onLanguageSelectionChanged = useCallback((e: SelectionEvents, selection: OptionOnSelectData) => {
-        let lang = selection.optionValue || DEFAULTLANG;
-        i18n.changeLanguage(lang);
-        setLanguage(lang);
-        localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
-    }, [setLanguage, i18n]);
+    const onLanguageSelectionChanged = useCallback(
+        (e: SelectionEvents, selection: OptionOnSelectData) => {
+            let lang = selection.optionValue || DEFAULTLANG;
+            i18n.changeLanguage(lang);
+            setLanguage(lang);
+            localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
+        },
+        [setLanguage, i18n]
+    );
 
     // llm change
-    const onLLMSelectionChanged = useCallback((e: SelectionEvents, selection: OptionOnSelectData) => {
-        let llm = selection.optionValue || DEFAULTLLM;
-        let found_llm = models.find(model => model.llm_name == llm);
-        if (found_llm) {
-            setLLM(found_llm);
-            localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
-        }
-    }, [models, setLLM]);
+    const onLLMSelectionChanged = useCallback(
+        (e: SelectionEvents, selection: OptionOnSelectData) => {
+            let llm = selection.optionValue || DEFAULTLLM;
+            let found_llm = models.find(model => model.llm_name == llm);
+            if (found_llm) {
+                setLLM(found_llm);
+                localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
+            }
+        },
+        [models, setLLM]
+    );
 
     return (
         <FluentProvider theme={theme}>

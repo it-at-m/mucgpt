@@ -61,6 +61,5 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
         );
     }, [answers, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef, t, answersComponent]);
 
-
     return answerList;
 };

@@ -41,10 +41,10 @@ export const ChatsettingsDrawer = ({
     const max_temp = 1;
 
     // Temperature change
-    const onTemperatureChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => setTemperature(data.value), []);
+    const onTemperatureChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number }) => setTemperature(data.value), []);
 
     // Max tokens change
-    const onMaxtokensChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number; }) => setMaxTokens(data.value), []);
+    const onMaxtokensChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number }) => setMaxTokens(data.value), []);
 
     // System prompt change
     const onSytemPromptChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
@@ -87,7 +87,7 @@ export const ChatsettingsDrawer = ({
             </div>
 
             <div className={styles.bodyContainer}>
-                <div>
+                <div className={styles.systempromptContainer}>
                     <Field size="large">
                         <Textarea
                             textarea={styles.systempromptTextArea}

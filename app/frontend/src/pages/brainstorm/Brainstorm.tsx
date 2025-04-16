@@ -16,7 +16,6 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
 
-
 type BrainstormMessage = DBMessage<AskResponse>;
 
 const EXAMPLES: ExampleModel[] = [
@@ -36,7 +35,7 @@ const EXAMPLES: ExampleModel[] = [
 
 const Brainstorm = () => {
     // getChatReducer function to handle chat state changes
-    const chatReducer = getChatReducer<ChatOptions>()
+    const chatReducer = getChatReducer<ChatOptions>();
 
     // Zusammenhängende States mit useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -50,15 +49,7 @@ const Brainstorm = () => {
     });
 
     // Destrukturierung für einfacheren Zugriff
-    const {
-        answers,
-        temperature,
-        max_output_tokens,
-        systemPrompt,
-        active_chat,
-        allChats,
-        totalTokens
-    } = chatState;
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
 
     // Context
     const { language } = useContext(LanguageContext);
@@ -84,91 +75,123 @@ const Brainstorm = () => {
 
     // useEffect to set up the store and load the initial data
     useEffect(() => {
-        setupStore(error, setError, setIsLoading, storageService, (answers: ChatMessage[]) => dispatch({ type: 'SET_ANSWERS', payload: answers }), answers, lastQuestionRef, (id: string | undefined) => dispatch({ type: 'SET_ACTIVE_CHAT', payload: id }));
+        setupStore(
+            error,
+            setError,
+            setIsLoading,
+            storageService,
+            (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+            answers,
+            lastQuestionRef,
+            (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+        );
     }, []);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = handleDeleteChat(activeChatRef.current, lastQuestionRef, error, setError, storageService, (answers: ChatMessage[]) => dispatch({ type: 'SET_ANSWERS', payload: answers }), (id: string | undefined) => dispatch({ type: 'SET_ACTIVE_CHAT', payload: id }));
+    const clearChat = handleDeleteChat(
+        activeChatRef.current,
+        lastQuestionRef,
+        error,
+        setError,
+        storageService,
+        (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+        (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+    );
 
     // onRollbackMessage function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
         if (!activeChatRef.current) return;
         handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
-    }
+    };
 
     // makeApiRequest function to call the API and handle the response
-    const makeApiRequest = useCallback(async (question: string) => {
-        lastQuestionRef.current = question;
+    const makeApiRequest = useCallback(
+        async (question: string) => {
+            lastQuestionRef.current = question;
 
-        error && setError(undefined);
-        setIsLoading(true);
-        try {
-            const request: BrainstormRequest = {
-                topic: question,
-                language: language,
-                model: LLM.llm_name
-            };
-            const result = await brainstormApi(request);
-            const completeAnswer: BrainstormMessage = { user: question, response: result };
+            error && setError(undefined);
+            setIsLoading(true);
+            try {
+                const request: BrainstormRequest = {
+                    topic: question,
+                    language: language,
+                    model: LLM.llm_name
+                };
+                const result = await brainstormApi(request);
+                const completeAnswer: BrainstormMessage = { user: question, response: result };
 
-            dispatch({ type: "SET_ANSWERS", payload: [...answers, completeAnswer] });
-            if (activeChatRef.current) await storageService.appendMessage(completeAnswer, activeChatRef.current);
-            else {
-                const id = await storageService.create([completeAnswer], undefined);
-                dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                dispatch({ type: "SET_ANSWERS", payload: [...answers, completeAnswer] });
+                if (activeChatRef.current) await storageService.appendMessage(completeAnswer, activeChatRef.current);
+                else {
+                    const id = await storageService.create([completeAnswer], undefined);
+                    dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                }
+            } catch (e) {
+                setError(e);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (e) {
-            setError(e);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [lastQuestionRef.current, error, language, LLM, storageService, answers, dispatch, brainstormApi, activeChatRef.current]);
+        },
+        [lastQuestionRef.current, error, language, LLM, storageService, answers, dispatch, brainstormApi, activeChatRef.current]
+    );
 
     // onClick handler for example list
-    const onExampleClicked = useCallback((example: string) => {
-        makeApiRequest(example);
-    }, [makeApiRequest]);
+    const onExampleClicked = useCallback(
+        (example: string) => {
+            makeApiRequest(example);
+        },
+        [makeApiRequest]
+    );
 
     // Scroll to the bottom of the chat when a new message is added
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     // Sidebar content
-    const sidebar_content = useMemo(() => (<ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />), [clearChat, isLoading, lastQuestionRef.current]);
+    const sidebar_content = useMemo(
+        () => <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        [clearChat, isLoading, lastQuestionRef.current]
+    );
 
     // Sidebar component
-    const sidebar = useMemo(() => (<Sidebar actions={sidebar_content} content={<></>}></Sidebar>), [sidebar_content]);
+    const sidebar = useMemo(() => <Sidebar actions={sidebar_content} content={<></>}></Sidebar>, [sidebar_content]);
 
     // TextInput component
-    const inputComponent = useMemo(() => (
-        <QuestionInput
-            clearOnSend
-            placeholder={t("brainstorm.prompt")}
-            disabled={isLoading}
-            onSend={question => makeApiRequest(question)}
-            tokens_used={0}
-            question={question}
-            setQuestion={question => setQuestion(question)}
-        />
-    ), [question, isLoading, makeApiRequest]);
+    const inputComponent = useMemo(
+        () => (
+            <QuestionInput
+                clearOnSend
+                placeholder={t("brainstorm.prompt")}
+                disabled={isLoading}
+                onSend={question => makeApiRequest(question)}
+                tokens_used={0}
+                question={question}
+                setQuestion={question => setQuestion(question)}
+            />
+        ),
+        [question, isLoading, makeApiRequest]
+    );
 
     // ExampleList component
-    const examplesComponent = useMemo(() => (<ExampleList examples={EXAMPLES} onExampleClicked={onExampleClicked} />), [onExampleClicked]);
+    const examplesComponent = useMemo(() => <ExampleList examples={EXAMPLES} onExampleClicked={onExampleClicked} />, [onExampleClicked]);
 
     // AnswerList component
-    const answerList = useMemo(() => (
-        <AnswerList
-            answers={answers}
-            regularBotMsg={(answer, _) => {
-                return <Mindmap markdown={answer.response.answer} />;
-            }}
-            onRollbackMessage={onRollbackMessage}
-            isLoading={isLoading}
-            error={error}
-            makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
-            chatMessageStreamEnd={chatMessageStreamEnd}
-            lastQuestionRef={lastQuestionRef}
-        />
-    ), [answers, isLoading, error, makeApiRequest, onRollbackMessage, chatMessageStreamEnd, lastQuestionRef]);
+    const answerList = useMemo(
+        () => (
+            <AnswerList
+                answers={answers}
+                regularBotMsg={(answer, _) => {
+                    return <Mindmap markdown={answer.response.answer} />;
+                }}
+                onRollbackMessage={onRollbackMessage}
+                isLoading={isLoading}
+                error={error}
+                makeApiRequest={() => makeApiRequest(lastQuestionRef.current)}
+                chatMessageStreamEnd={chatMessageStreamEnd}
+                lastQuestionRef={lastQuestionRef}
+            />
+        ),
+        [answers, isLoading, error, makeApiRequest, onRollbackMessage, chatMessageStreamEnd, lastQuestionRef]
+    );
 
     return (
         <ChatLayout

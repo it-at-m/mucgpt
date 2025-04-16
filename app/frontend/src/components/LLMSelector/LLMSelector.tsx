@@ -1,13 +1,6 @@
-import { Dropdown, makeStyles, Option } from "@fluentui/react-components";
+import { Dropdown, Option } from "@fluentui/react-components";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { Model } from "../../api";
-
-const useStyles = makeStyles({
-    root: {
-        // Stack the label above the field with a gap
-    },
-    option: {}
-});
 
 interface Props {
     onSelectionChange: (e: SelectionEvents, selection: OptionOnSelectData) => void;
@@ -16,9 +9,8 @@ interface Props {
 }
 
 export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
-    const styles = useStyles();
     return (
-        <div className={styles.root}>
+        <div>
             <Dropdown
                 aria-label="Sprachmodell auswählen"
                 defaultValue={defaultLLM}
@@ -28,7 +20,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                 positioning="below-start"
             >
                 {options.map((item, index) => (
-                    <Option text={item.llm_name} className={styles.option} key={index}>
+                    <Option text={item.llm_name} key={index}>
                         {item.llm_name}
                     </Option>
                 ))}

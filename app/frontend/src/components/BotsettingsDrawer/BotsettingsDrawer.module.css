@@ -5,6 +5,9 @@
     display: flex;
     flex-direction: row;
     justify-content: start;
+    padding-bottom: var(--spacingHorizontalS);
+    margin-bottom: var(--spacingHorizontalS);
+    border-bottom: 1px dotted var(--colorBrandBackground2);
 }
 
 .bodyContainer {

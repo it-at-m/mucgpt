@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version < '3.12.4'",
@@ -322,7 +323,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [
@@ -887,7 +888,7 @@ name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appnope", marker = "platform_system == 'Darwin'" },
+    { name = "appnope", marker = "sys_platform == 'darwin'" },
     { name = "comm" },
     { name = "debugpy" },
     { name = "ipython" },
@@ -1189,7 +1190,7 @@ wheels = [
 
 [[package]]
 name = "langsmith"
-version = "0.3.26"
+version = "0.3.32"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -1200,9 +1201,9 @@ dependencies = [
     { name = "requests-toolbelt" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/be/2e/9748883c40e8a3c5d628d5a81a531e1a5ae3a2bfced429ffdf86a437b269/langsmith-0.3.26.tar.gz", hash = "sha256:3bd5b952a5fc82d69b0e2c030e502ee081a8ccf20468e96fd3d53e1572aef6fc", size = 342721 }
+sdist = { url = "https://files.pythonhosted.org/packages/52/e3/575c648a91ba0277937fb93711efdef7abe47945ff33b6aa7b03b873acbd/langsmith-0.3.32.tar.gz", hash = "sha256:3d7b1149e9fbe0f388303bc94d8deeeb822acc89cdea34f24151ea1316eb487d", size = 343541 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/14/f2e972ac0cf9b4ff4d405f7843b0f14a1ef686544a54f91ac4d5ac723140/langsmith-0.3.26-py3-none-any.whl", hash = "sha256:3ae49e49d6f3c980a524d15ac2fd895896e709ecedc83ac150c38e1ead776e1b", size = 357325 },
+    { url = "https://files.pythonhosted.org/packages/67/64/87a103a6a1cdca06559b09aa270e5dbfe018df4fd1b8327ce5a720441629/langsmith-0.3.32-py3-none-any.whl", hash = "sha256:d79af299038cd13db6d53f99fdc6a7171b731702536b7635f2da132555a6bebc", size = 358248 },
 ]
 
 [[package]]
@@ -1381,7 +1382,7 @@ requires-dist = [
     { name = "langchain-community", specifier = "==0.3.21" },
     { name = "langchain-core", specifier = "==0.3.51" },
     { name = "langchain-openai", specifier = "==0.3.12" },
-    { name = "langsmith", specifier = "==0.3.26" },
+    { name = "langsmith", specifier = "==0.3.32" },
     { name = "mistral-common", specifier = "==1.5.4" },
     { name = "openai", specifier = "==1.71.0" },
     { name = "psycopg2-binary", specifier = "==2.9.10" },
@@ -1396,6 +1397,7 @@ requires-dist = [
     { name = "tiktoken" },
     { name = "uvicorn", specifier = "==0.34.1" },
 ]
+provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2896,7 +2898,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [

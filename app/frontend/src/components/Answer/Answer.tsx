@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { Stack } from "@fluentui/react";
 
 import styles from "./Answer.module.css";
@@ -13,6 +14,8 @@ import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { QuickPromptList } from "../QuickPrompt/QuickPromptList";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 
 interface Props {
     answer: AskResponse;
@@ -27,6 +30,8 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
 
+
+    const [processedText, setProcessedText] = useState<string>("");
     const oncopy = useCallback(() => {
         setCopied(true);
         navigator.clipboard.writeText(answer.answer);
@@ -35,6 +40,21 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
         }, 1000);
     }, [navigator.clipboard, answer.answer]);
 
+    useEffect(() => {
+        setProcessedText(answer.answer
+            .replace(/\\\[/g, '$$$')  // Replace all occurrences of \[ with $$
+            .replace(/\\\]/g, '$$$') // Replace all occurrences of \] with $$
+            .replace(/\\\(/g, '$$$')  // Replace all occurrences of \( with $$
+            .replace(/\\\)/g, '$$$')); // Replace all occurrences of \) with $$
+    }
+        , [answer.answer]); // Run this effect only when the message changes
+
+    const remarkMathOptions = {
+        singleDollarTextMath: false,
+    };
+    const rehypeKatexOptions = {
+        output: "mathml",
+    };
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
             <Stack.Item>
@@ -89,18 +109,18 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                 {formatted && (
                     <Markdown
                         className={styles.answerText}
-                        remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw]}
+                        remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
+                        rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
                         components={{
                             code: CodeBlockRenderer
                         }}
                     >
-                        {answer.answer}
+                        {processedText}
                     </Markdown>
                 )}
                 {!formatted && (
                     <div className={styles.unformattedAnswer} tabIndex={0}>
-                        {answer.answer}
+                        {processedText}
                     </div>
                 )}
             </Stack.Item>

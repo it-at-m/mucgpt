@@ -1,17 +1,17 @@
 {
   "dependencies": {
-    "@fluentui/react": "8.122.11",
-    "@fluentui/react-components": "9.60.1",
+    "@fluentui/react": "8.122.14",
+    "@fluentui/react-components": "9.61.6",
     "@fluentui/react-icons": "2.0.279",
     "@react-spring/web": "9.7.5",
-    "dompurify": "3.2.4",
+    "dompurify": "3.2.5",
     "i18next": "23.16.8",
     "idb": "8.0.2",
     "markmap-common": "0.18.9",
     "markmap-lib": "0.18.11",
     "markmap-toolbar": "0.18.10",
     "markmap-view": "0.18.10",
-    "mermaid": "11.5.0",
+    "mermaid": "11.6.0",
     "ndjson-readablestream": "1.2.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -19,9 +19,11 @@
     "react-markdown": "9.1.0",
     "react-router-dom": "6.30.0",
     "react-syntax-highlighter": "15.6.1",
+    "rehype-katex": "^7.0.1",
     "rehype-raw": "7.0.0",
     "remark": "15.0.1",
     "remark-gfm": "4.0.1",
+    "remark-math": "^6.0.0",
     "uuid": "11.1.0"
   },
   "devDependencies": {
@@ -31,11 +33,11 @@
     "@types/react-dom": "18.3.5",
     "@types/react-syntax-highlighter": "15.5.13",
     "@vitejs/plugin-react": "4.3.4",
-    "gh-pages": "^6.3.0",
-    "msw": "^2.7.3",
+    "gh-pages": "6.3.0",
+    "msw": "2.7.3",
     "prettier": "3.5.3",
-    "typescript": "5.8.2",
-    "vite": "5.4.14"
+    "typescript": "5.8.3",
+    "vite": "5.4.15"
   },
   "engines": {
     "node": ">=20.0.0"

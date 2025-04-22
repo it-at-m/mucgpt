@@ -89,7 +89,8 @@ i18n
                         close: "Schließen",
                         messages: "Nachrichten",
                         examples: "Beispiele",
-                        sidebar_show: "Sidebar anzeigen"
+                        sidebar_show: "Sidebar anzeigen",
+                        sidebar_hide: "Sidebar ausblenden"
                     },
                     create_bot: {
                         title: "Titel",
@@ -314,7 +315,8 @@ i18n
                         close: "Close",
                         messages: "Messages",
                         examples: "Examples",
-                        sidebar_show: "Show sidebar"
+                        sidebar_show: "Show sidebar",
+                        sidebar_hide: "Hide sidebar"
                     },
                     create_bot: {
                         title: "Title",
@@ -534,7 +536,8 @@ i18n
                         close: "Schließen",
                         messages: "Nochrichten",
                         examples: "Beispui",
-                        sidebar_show: "Sidebar zoagn"
+                        sidebar_show: "Sidebar zoagn",
+                        sidebar_hide: "Sidebar ausblenden"
                     },
                     version: {
                         header: "Wos gibts neis?",
@@ -765,7 +768,8 @@ i18n
                         close: "Fermer",
                         messages: "Messages",
                         examples: "Exemples",
-                        sidebar_show: "Afficher la barre latérale"
+                        sidebar_show: "Afficher la barre latérale",
+                        sidebar_hide: "Masquer la barre latérale"
                     },
                     components: {
                         roles: {
@@ -983,7 +987,8 @@ i18n
                         close: "Закрити",
                         messages: "Повідомлення",
                         examples: "Приклади",
-                        sidebar_show: "Показати бічну панель"
+                        sidebar_show: "Показати бічну панель",
+                        sidebar_hide: "Сховати бічну панель"
                     },
                     components: {
                         roles: {

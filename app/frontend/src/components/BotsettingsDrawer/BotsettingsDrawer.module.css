@@ -52,3 +52,11 @@
 .iconRightMargin {
     margin-right: 5 px;
 }
+
+.actionRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: center;
+    padding-bottom: var(--spacingVerticalS);
+}

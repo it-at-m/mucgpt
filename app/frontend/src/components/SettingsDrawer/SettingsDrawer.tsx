@@ -48,10 +48,6 @@ export const SettingsDrawer = ({
     const min_temp = 0.8;
     const max_temp = 1.8;
 
-    const [showSidebar, setShowSidebar] = useState<boolean>(
-        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
-    );
-
     // open settings drawer
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
@@ -63,14 +59,6 @@ export const SettingsDrawer = ({
     // close settings drawer
     const closeDrawer = useCallback(() => {
         setIsOpen(false);
-    }, []);
-
-    // change visibilty of chat settings drawer
-    const onChangeShowSidebar = useCallback((event: React.ChangeEvent) => {
-        const checked = (event.target as HTMLInputElement).checked;
-        setShowSidebar(checked);
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, JSON.stringify(checked));
-        location.reload();
     }, []);
 
     return (
@@ -144,9 +132,6 @@ export const SettingsDrawer = ({
                         </Tooltip>
 
                         {isLight ? <div>{t("components.settingsdrawer.theme_light")}</div> : <div>{t("components.settingsdrawer.theme_dark")}</div>}
-                    </div>
-                    <div className={styles.verticalContainer}>
-                        <Switch checked={showSidebar} onChange={onChangeShowSidebar} /> {t("components.settingsdrawer.chat_sidebar")}
                     </div>
                 </div>
                 <div className={styles.header} role="heading" aria-level={3} id={feedback_headerID}>

@@ -3,7 +3,6 @@ import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMe
 import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
-import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 
@@ -20,7 +19,9 @@ import { ExampleList } from "../../components/Example/ExampleList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
-import { use } from "i18next";
+import { Button, Tooltip } from "@fluentui/react-components";
+import { ArrowMinimize24Filled, ArrowMaximize24Filled } from "@fluentui/react-icons";
+import { STORAGE_KEYS } from "../layout/LayoutHelper";
 
 const BotChat = () => {
     // useReducer für den Chat-Status
@@ -64,6 +65,9 @@ const BotChat = () => {
     const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+    const [showSidebar, setShowSidebar] = useState<boolean>(
+        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
+    );
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -284,10 +288,22 @@ const BotChat = () => {
     const actions = useMemo(
         () => (
             <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
+                <Tooltip content={showSidebar ? t("common.sidebar_hide") : t("common.sidebar_show")} relationship="description" positioning="below">
+                    <Button
+                        style={{ marginLeft: "5px" }}
+                        appearance="primary"
+                        icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
+                        onClick={() => {
+                            const toggled = !showSidebar;
+                            setShowSidebar(toggled);
+                            localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, toggled.toString());
+                        }}
+                    />
+                </Tooltip>
             </>
         ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current]
+        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
     // Sidebar component
     const sidebar = useMemo(
@@ -300,10 +316,11 @@ const BotChat = () => {
                     actions={actions}
                     before_content={history}
                     onEditChange={onEditChange}
+                    minimized={!showSidebar}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onBotChanged, onDeleteBot, actions, history, onEditChange]
+        [botConfig, onBotChanged, onDeleteBot, actions, history, onEditChange, showSidebar]
     );
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -360,19 +377,23 @@ const BotChat = () => {
         [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
     );
 
-    return (
-        <ChatLayout
-            sidebar={sidebar}
-            examples={examplesComponent}
-            answers={answerList}
-            input={inputComponent}
-            showExamples={!lastQuestionRef.current}
-            header=""
-            header_as_markdown={false}
-            messages_description={t("common.messages")}
-            size={sidebarSize}
-        ></ChatLayout>
+    const layout = useMemo(
+        () => (
+            <ChatLayout
+                sidebar={sidebar}
+                examples={examplesComponent}
+                answers={answerList}
+                input={inputComponent}
+                showExamples={!lastQuestionRef.current}
+                header=""
+                header_as_markdown={false}
+                messages_description={t("common.messages")}
+                size={showSidebar ? sidebarSize : "none"}
+            ></ChatLayout>
+        ),
+        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, sidebarSize]
     );
+    return layout;
 };
 
 export default BotChat;

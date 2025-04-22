@@ -37,9 +37,10 @@ interface Props {
     actions: ReactNode;
     before_content: ReactNode;
     onEditChange: (isEditable: boolean) => void;
+    minimized: boolean;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange, minimized }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
@@ -168,47 +169,51 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     // actions component
     const actions_component = useMemo(
         () => (
-            <>
-                {actions}
-                {deleteDialog}
-                <Button
-                    appearance="secondary"
-                    icon={
-                        isOwner ? (
-                            isEditable ? (
-                                <Save24Regular className={styles.iconRightMargin} />
-                            ) : (
-                                <Edit24Regular className={styles.iconRightMargin} />
-                            )
-                        ) : isEditable ? (
-                            <Dismiss24Regular className={styles.iconRightMargin} />
-                        ) : (
-                            <ChatSettings24Regular className={styles.iconRightMargin} />
-                        )
-                    }
-                    onClick={toggleReadOnly}
-                >
-                    {isOwner
-                        ? isEditable
-                            ? t("components.botsettingsdrawer.finish_edit")
-                            : t("components.botsettingsdrawer.edit")
-                        : isEditable
-                          ? t("components.botsettingsdrawer.close_configutations")
-                          : t("components.botsettingsdrawer.show_configutations")}
-                </Button>
-                <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                    <Button
-                        appearance="secondary"
-                        onClick={() => setShowDeleteDialog(true)}
-                        icon={<Delete24Regular className={styles.iconRightMargin} />}
-                        disabled={!isOwner}
-                    >
-                        {t("components.botsettingsdrawer.delete")}
-                    </Button>
-                </Tooltip>
-            </>
+            <div>
+                <div className={styles.actionRow}> {actions}</div>
+                {!minimized && (
+                    <div className={styles.actionRow}>
+                        {deleteDialog}
+                        <Button
+                            appearance="secondary"
+                            icon={
+                                isOwner ? (
+                                    isEditable ? (
+                                        <Save24Regular className={styles.iconRightMargin} />
+                                    ) : (
+                                        <Edit24Regular className={styles.iconRightMargin} />
+                                    )
+                                ) : isEditable ? (
+                                    <Dismiss24Regular className={styles.iconRightMargin} />
+                                ) : (
+                                    <ChatSettings24Regular className={styles.iconRightMargin} />
+                                )
+                            }
+                            onClick={toggleReadOnly}
+                        >
+                            {isOwner
+                                ? isEditable
+                                    ? t("components.botsettingsdrawer.finish_edit")
+                                    : t("components.botsettingsdrawer.edit")
+                                : isEditable
+                                  ? t("components.botsettingsdrawer.close_configutations")
+                                  : t("components.botsettingsdrawer.show_configutations")}
+                        </Button>
+                        <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
+                            <Button
+                                appearance="secondary"
+                                onClick={() => setShowDeleteDialog(true)}
+                                icon={<Delete24Regular className={styles.iconRightMargin} />}
+                                disabled={!isOwner}
+                            >
+                                {t("components.botsettingsdrawer.delete")}
+                            </Button>
+                        </Tooltip>
+                    </div>
+                )}
+            </div>
         ),
-        [actions, isEditable, isOwner, toggleReadOnly, t, deleteDialog]
+        [actions, isEditable, isOwner, toggleReadOnly, t, deleteDialog, minimized]
     );
 
     // sidebar content

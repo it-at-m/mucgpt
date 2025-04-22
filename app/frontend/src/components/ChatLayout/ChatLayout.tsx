@@ -22,9 +22,9 @@ export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExa
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside className={styles.sidebar}>{sidebar}</aside>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
+            <aside className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>{sidebar}</aside>
+            <div className={styles.chatRoot} >
+                <div className={styles.chatContainer} style={size == "none" ? { marginLeft: "35px" } : {}}>
                     {showExamples ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
                             {header_as_markdown ? (

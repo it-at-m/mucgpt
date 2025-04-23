@@ -142,7 +142,7 @@ const Summarize = () => {
                 setIsLoading(false);
             }
         },
-        [answers, error, setError, setIsLoading, sumApi, dispatch, language, LLM.llm_name, detaillevel, storageService, activeChatRef.current]
+        [answers, language, detaillevel, LLM, storageService, dispatch, activeChatRef]
     );
 
     // Example clicked handler
@@ -157,7 +157,7 @@ const Summarize = () => {
     const onRollbackMessage = useCallback(
         (index: number) => {
             if (!activeChatRef.current) return;
-            handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
+            handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, () => clearChat, undefined);
         },
         [activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat]
     );
@@ -176,7 +176,7 @@ const Summarize = () => {
 
     // Sidebar
     const sidebar_actions = useMemo(
-        () => <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        () => <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} />,
         [clearChat, isLoading, lastQuestionRef.current]
     );
     const sidebar_content = useMemo(

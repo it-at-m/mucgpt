@@ -1,6 +1,6 @@
 import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
-import { useCallback, useContext, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./Mindmap.module.css";
 import { Stack } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ interface Props {
 
 export const Mindmap = ({ markdown }: Props) => {
     const { t } = useTranslation();
-    const transformer = new Transformer();
+    const transformer = useMemo(() => new Transformer(), []);
     const svgEl = useRef<SVGSVGElement>(null);
     const [isSourceView, setIsSourceView] = useState(false);
     const [freeplaneXML, setFreeplaneXML] = useState("");
@@ -44,7 +44,7 @@ export const Mindmap = ({ markdown }: Props) => {
                 createMM();
             }
         }, 50);
-    }, [isSourceView, svgEl.current]);
+    }, [isSourceView]);
 
     // download mindmap
     const download = useCallback(() => {
@@ -67,7 +67,7 @@ export const Mindmap = ({ markdown }: Props) => {
             document.body.removeChild(link);
             img.src = url;
         }
-    }, [freeplaneXML, svgEl.current]);
+    }, [freeplaneXML]);
 
     // parse XML
     const parseXML = useCallback((parsed: IPureNode) => {
@@ -112,7 +112,7 @@ export const Mindmap = ({ markdown }: Props) => {
             mm.fit(10);
         }
         svgEl.current?.setAttribute("title", "Generierte Mindmap");
-    }, [svgEl.current, transformer, markdown]);
+    }, [transformer, markdown]);
 
     return (
         <Stack verticalAlign="space-between" className={`${styles.mindmapContainer}`}>

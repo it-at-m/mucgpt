@@ -204,7 +204,10 @@ const Simply = () => {
     const [question, setQuestion] = useState<string>("");
 
     // StorageService
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(SIMPLY_STORE);
+    const storageService = useMemo(
+        () => new StorageService<AskResponse, Record<string, never>>(SIMPLY_STORE),
+        []
+    );
 
     //useEffect to set the active chat reference when the active chat changes
     useEffect(() => {
@@ -227,7 +230,7 @@ const Simply = () => {
 
     // clearChat function to delete the current chat and reset the state
     const clearChat = handleDeleteChat(
-        active_chat,
+        activeChatRef.current,
         lastQuestionRef,
         error,
         setError,
@@ -238,8 +241,8 @@ const Simply = () => {
 
     // Rollback function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
-        if (!active_chat) return;
-        handleRollback(index, active_chat, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
+        if (!activeChatRef.current) return;
+        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, () => clearChat, undefined);
     };
 
     // makeApiRequest function to handle API requests
@@ -270,15 +273,14 @@ const Simply = () => {
                 setIsLoading(false);
             }
         },
-        [LLM, error, setError, setIsLoading, simplyApi, answers, activeChatRef.current, storageService]
-    );
+        [LLM, answers, storageService, dispatch, activeChatRef]);
 
     // Scroll to the end of the chat messages when new messages are added
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     //Sidebar component
     const sidebar_actions = useMemo(
-        () => <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />,
+        () => <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} />,
         [clearChat, isLoading, lastQuestionRef.current]
     );
     const sidebar = useMemo(

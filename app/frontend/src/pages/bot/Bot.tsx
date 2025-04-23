@@ -176,7 +176,7 @@ const BotChat = () => {
         ]
     );
 
-    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoadingRef.current]);
+    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
     // useEffect für die Tokenanzahl
     useEffect(() => {
         dispatch({

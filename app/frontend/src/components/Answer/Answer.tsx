@@ -41,6 +41,10 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     }, [navigator.clipboard, answer.answer]);
 
     useEffect(() => {
+        if (answer.answer === "" || answer.answer === undefined) {
+            setProcessedText("");
+            return;
+        }
         setProcessedText(answer.answer
             .replace(/\\\[/g, '$$$')  // Replace all occurrences of \[ with $$
             .replace(/\\\]/g, '$$$') // Replace all occurrences of \] with $$

@@ -19,8 +19,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                 size="small"
                 positioning="below-start"
             >
-                {options.map((item, index) => (
-                    <Option text={item.llm_name} key={index}>
+                {options.map((item, _) => (
+                    <Option key={item.llm_name}>
                         {item.llm_name}
                     </Option>
                 ))}

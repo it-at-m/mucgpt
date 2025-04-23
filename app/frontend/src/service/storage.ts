@@ -182,7 +182,7 @@ export class StorageService<M, C> {
             const stored = await this.get(id);
             if (stored) {
                 let last = stored.messages[stored.messages.length - 1];
-                while (stored.messages.length !== index) {
+                while (stored.messages.length - 1 > index) {
                     const popped = stored.messages.pop();
                     if (!popped) break;
                     last = popped;

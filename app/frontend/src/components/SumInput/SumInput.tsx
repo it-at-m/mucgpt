@@ -24,7 +24,7 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, question,
     // remove documents
     const removeDocuments = useCallback(() => {
         setFile(undefined);
-        setDragging(true);
+        setDragging(false);
     }, []);
 
     // send question
@@ -46,7 +46,7 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, question,
             ev.preventDefault();
             sendQuestion();
         }
-    }, []);
+    }, [sendQuestion]);
 
     // question change
     const onQuestionChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {

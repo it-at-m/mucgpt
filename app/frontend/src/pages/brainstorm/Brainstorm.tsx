@@ -15,6 +15,7 @@ import { getChatReducer, handleDeleteChat, handleRollback, setupStore } from "..
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
+import { a } from "@react-spring/web";
 
 type BrainstormMessage = DBMessage<AskResponse>;
 
@@ -88,7 +89,7 @@ const Brainstorm = () => {
     }, []);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = handleDeleteChat(
+    const clearChat = useCallback(() => handleDeleteChat(
         activeChatRef.current,
         lastQuestionRef,
         error,
@@ -96,7 +97,7 @@ const Brainstorm = () => {
         storageService,
         (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
         (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
-    );
+    ), [activeChatRef.current, lastQuestionRef, error, setError, storageService, dispatch]);
 
     // onRollbackMessage function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
@@ -123,7 +124,7 @@ const Brainstorm = () => {
                 dispatch({ type: "SET_ANSWERS", payload: [...answers, completeAnswer] });
                 if (activeChatRef.current) await storageService.appendMessage(completeAnswer, activeChatRef.current);
                 else {
-                    const id = await storageService.create([completeAnswer], undefined);
+                    const id = await storageService.create([completeAnswer]);
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                 }
             } catch (e) {
@@ -132,7 +133,7 @@ const Brainstorm = () => {
                 setIsLoading(false);
             }
         },
-        [lastQuestionRef.current, error, language, LLM, storageService, answers, dispatch, brainstormApi, activeChatRef.current]
+        [error, language, LLM, storageService, answers, dispatch]
     );
 
     // onClick handler for example list

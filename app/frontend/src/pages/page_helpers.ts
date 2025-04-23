@@ -2,8 +2,7 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { chatApi, ChatRequest, ChatResponse, ChatTurn, Chunk, ChunkInfo, createChatName, handleRedirect } from "../api";
-import { question } from "mermaid/dist/rendering-util/rendering-elements/shapes/question";
+import { ChatRequest, ChatResponse, ChatTurn, Chunk, ChunkInfo, createChatName, handleRedirect } from "../api";
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import readNDJSONStream from "ndjson-readablestream";
 import { BotStorageService } from "../service/botstorage";
@@ -40,14 +39,12 @@ export function handleDeleteChat(
     setAnswers: (answers: ChatMessage[]) => void,
     setActiveChat: (id: string | undefined) => void
 ) {
-    return () => {
-        if (!id) return;
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        storageService.delete(id);
-        setAnswers([]);
-        setActiveChat(undefined);
-    };
+    if (!id) return;
+    lastQuestionRef.current = "";
+    error && setError(undefined);
+    storageService.delete(id);
+    setAnswers([]);
+    setActiveChat(undefined);
 }
 export function handleRollback(
     index: number,
@@ -157,18 +154,21 @@ export const makeApiRequest = async (
             let shouldUpdate = false;
 
             switch (chunk.type) {
-                case "C":
+                case "C": {
                     buffer += chunk.message as string;
                     shouldUpdate = true;
                     break;
-                case "I":
+                }
+                case "I": {
                     const info = chunk.message as ChunkInfo;
                     streamed_tokens = info.streamedtokens;
                     user_tokens = info.requesttokens;
                     shouldUpdate = true;
                     break;
-                case "E":
+                }
+                case "E": {
                     throw Error((chunk.message as string) || "Unknown error");
+                }
             }
 
             if (shouldUpdate) {
@@ -267,11 +267,12 @@ export function getChatReducer<A>() {
                 return { ...state, answers: action.payload };
             case "ADD_ANSWER":
                 return { ...state, answers: [...state.answers, action.payload] };
-            case "UPDATE_LAST_ANSWER":
+            case "UPDATE_LAST_ANSWER": {
                 if (state.answers.length === 0) return state;
                 const newAnswers = [...state.answers];
                 newAnswers[newAnswers.length - 1] = action.payload;
                 return { ...state, answers: newAnswers };
+            }
             case "CLEAR_ANSWERS":
                 return { ...state, answers: [] };
             case "SET_TEMPERATURE":

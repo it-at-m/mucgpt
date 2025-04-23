@@ -26,8 +26,7 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 const BotChat = () => {
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Bot>();
-
-    // Zusammenhängende States mit useReducer
+    // Combined states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
         temperature: 0.7,
@@ -38,10 +37,10 @@ const BotChat = () => {
         totalTokens: 0
     });
 
-    // Destrukturierung für einfacheren Zugriff
+    // Destructuring for easier access
     const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
 
-    // Refferenzen
+    // References
     const activeChatRef = useRef(active_chat);
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);

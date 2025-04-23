@@ -60,7 +60,7 @@ export function handleRollback(
     fetchHistory?: () => void
 ) {
     if (!activeChat) return;
-    // finde die passende Nachricht
+    // Find the corresponding message
     storageService.rollbackMessage(index, activeChat, setQuestion).then(result => {
         if (!result) return;
         if (result.messages.length > 0) {
@@ -86,7 +86,7 @@ export async function handleRegenerate(
 ) {
     await storageService.popMessage(activeChat);
 
-    // Letzten Eintrag entfernen und speichern
+    // Remove the last entry and save
     const lastAnswersCopy = [...answers];
     const lastAnswer = lastAnswersCopy.pop();
     isLoadingRef.current = true;
@@ -94,7 +94,7 @@ export async function handleRegenerate(
     if (lastAnswer) {
         dispatch({ type: "SET_ANSWERS", payload: lastAnswersCopy });
 
-        // Verzögerung einbauen, um State-Updates zu synchronisieren
+        // Add a delay to synchronize state updates
         setTimeout(() => {
             callApi(lastAnswer.user, systemPrompt);
         }, 0);
@@ -116,7 +116,7 @@ export const makeApiRequest = async (
     fetchHistory?: () => void,
     bot_id?: string
 ) => {
-    // Erstelle History für Request
+    // Create history for the request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, bot: a.response.answer }));
     const request: ChatRequest = {
         history: [...history, { user: question, bot: undefined }],
@@ -135,23 +135,23 @@ export const makeApiRequest = async (
         throw Error("No response body");
     }
 
-    // Initialisiere Antwort-Variablen
+    // Initialize response variables
     let user_tokens = 0;
     let answer = "";
     let streamed_tokens = 0;
 
-    // Füge leere Antwort hinzu
+    // Add an empty response
     const initialMessage = {
         user: question,
         response: { ...askResponse }
     };
     isLoadingRef.current = false;
     dispatch({ type: "ADD_ANSWER", payload: initialMessage });
-    // Buffer für Updates, um Re-Renders zu reduzieren
+    // Buffer for updates to reduce re-renders
     let buffer = "";
     let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Stream verarbeiten
+    // Process the stream
     for await (const chunk of readNDJSONStream(response.body)) {
         if (chunk as Chunk) {
             let shouldUpdate = false;
@@ -172,10 +172,10 @@ export const makeApiRequest = async (
             }
 
             if (shouldUpdate) {
-                // Löschen des vorherigen Timers, wenn noch vorhanden
+                // Clear the previous timer if it exists
                 if (updateTimer) clearTimeout(updateTimer);
 
-                // Setzen eines neuen Timers für gebündelte Updates
+                // Set a new timer for batched updates
                 updateTimer = setTimeout(() => {
                     const updatedResponse = {
                         ...askResponse,
@@ -190,12 +190,12 @@ export const makeApiRequest = async (
                     };
 
                     dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
-                }, 100); // 100ms Verzögerung für geschmeidigeres Rendering
+                }, 100); // 100ms delay for smoother rendering
             }
         }
     }
 
-    // Sicherstellen, dass die finale Antwort gesetzt wird
+    // Ensure the final response is set
     const finalResponse = {
         ...askResponse,
         answer: buffer,
@@ -210,16 +210,16 @@ export const makeApiRequest = async (
 
     dispatch({ type: "UPDATE_LAST_ANSWER", payload: finalMessage });
 
-    // Scroll zum Ende
+    // Scroll to the end
     requestAnimationFrame(() => {
         chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
     });
 
-    // Speichern des Chats
+    // Save the chat
     if (activeChatRef.current) {
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
     } else {
-        // Chat-Namen generieren und neuen Chat erstellen
+        // Generate chat name and create a new chat
         const chatname = await createChatName(
             question,
             finalResponse.answer,

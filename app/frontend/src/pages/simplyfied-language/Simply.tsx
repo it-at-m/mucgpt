@@ -176,7 +176,7 @@ const Simply = () => {
     // getChatReducer function to handle chat state changes
     const chatReducer = getChatReducer<ChatOptions>();
 
-    // Zusammenhängende States mit useReducer
+    // Combined states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
         temperature: 0.7,
@@ -187,7 +187,7 @@ const Simply = () => {
         totalTokens: 0
     });
 
-    // Destrukturierung für einfacheren Zugriff
+    // Destructuring for easier access
     const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
 
     // Context

@@ -62,7 +62,7 @@ export interface ChatOptions {
     temperature: number;
 }
 
-// Konstanten außerhalb der Komponente definieren
+// Define constants outside the component
 const CHAT_EXAMPLES: ExampleModel[] = [
     {
         text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
@@ -78,9 +78,9 @@ const CHAT_EXAMPLES: ExampleModel[] = [
     }
 ];
 
-// Eigener Hook für Storage-Operationen
+// Custom hook for storage operations
 function useStorageService(activeChatId: string | undefined) {
-    // Nutze useMemo für die Instanz, damit diese nur bei Änderung von activeChatId neu erstellt wird
+    // Use useMemo for the instance so that it is only recreated when activeChatId changes
     return useMemo(() => new StorageService<ChatResponse, ChatOptions>(CHAT_STORE), [activeChatId]);
 }
 
@@ -92,7 +92,7 @@ const Chat = () => {
     const { t } = useTranslation();
     const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
-    // Unabhängige States
+    // Independent states
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
@@ -100,7 +100,7 @@ const Chat = () => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
 
-    // Zusammenhängende States mit useReducer
+    // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
         temperature: 0.7,
@@ -111,7 +111,7 @@ const Chat = () => {
         totalTokens: 0
     });
 
-    // Destrukturierung für einfacheren Zugriff
+    // Destructuring for easier access
     const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
 
     // Refs

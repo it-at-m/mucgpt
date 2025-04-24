@@ -15,8 +15,6 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
 import styles from "./Simply.module.css";
 import { ExampleList, ExampleModel } from "../../components/Example";
-import { Button, Tooltip } from "@fluentui/react-components";
-import { ArrowMaximize24Filled, ArrowMinimize24Filled } from "@fluentui/react-icons";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
@@ -236,7 +234,7 @@ const Simply = () => {
     }, []);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = handleDeleteChat(
+    const clearChat = useCallback(() => handleDeleteChat(
         activeChatRef.current,
         lastQuestionRef,
         error,
@@ -244,7 +242,8 @@ const Simply = () => {
         storageService,
         (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
         (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
-    );
+    ), [activeChatRef.current, lastQuestionRef, error, setError, storageService, dispatch]);
+
 
     // Rollback function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
@@ -296,7 +295,7 @@ const Simply = () => {
     );
     const sidebar = useMemo(
         () => <Sidebar actions={sidebar_actions} content={<div className={styles.description}>{t("simply.plain_description")}</div>}></Sidebar>,
-        [sidebar_actions, t]
+        [sidebar_actions]
     );
 
     // ExampleList component

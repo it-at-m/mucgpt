@@ -19,8 +19,6 @@ import { ExampleList } from "../../components/Example/ExampleList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
-import { Button, Tooltip } from "@fluentui/react-components";
-import { ArrowMinimize24Filled, ArrowMaximize24Filled } from "@fluentui/react-icons";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 

@@ -15,7 +15,6 @@ import { getChatReducer, handleDeleteChat, handleRollback, setupStore } from "..
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
-import { a } from "@react-spring/web";
 
 type BrainstormMessage = DBMessage<AskResponse>;
 

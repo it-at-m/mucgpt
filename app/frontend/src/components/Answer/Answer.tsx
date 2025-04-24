@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { Stack } from "@fluentui/react";
 
 import styles from "./Answer.module.css";
@@ -28,15 +29,22 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     const [copied, setCopied] = useState<boolean>(false);
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
+
+
     const [processedText, setProcessedText] = useState<string>("");
-    const oncopy = () => {
+    const oncopy = useCallback(() => {
         setCopied(true);
         navigator.clipboard.writeText(answer.answer);
         setTimeout(() => {
             setCopied(false);
         }, 1000);
-    };
+    }, [navigator.clipboard, answer.answer]);
+
     useEffect(() => {
+        if (answer.answer === "" || answer.answer === undefined) {
+            setProcessedText("");
+            return;
+        }
         setProcessedText(answer.answer
             .replace(/\\\[/g, '$$$')  // Replace all occurrences of \[ with $$
             .replace(/\\\]/g, '$$$') // Replace all occurrences of \] with $$

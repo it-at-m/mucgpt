@@ -15,7 +15,7 @@ import {
 
 import styles from "./CreateBotDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { Bot, createBotApi } from "../../api";
 import { BOT_STORE, CREATE_BOT_EXAMPLE_1, CREATE_BOT_EXAMPLE_2, CREATE_BOT_EXAMPLE_3 } from "../../constants";
@@ -31,46 +31,54 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
     const [input, setInput] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [systemPrompt, setSystemPrompt] = useState<string>("");
-    const { LLM } = useContext(LLMContext);
     const [title, setTitle] = useState<string>("");
     const [showDialogOutput, setShowDialogOutput] = useState<boolean>(false);
 
+    // Context
+    const { LLM } = useContext(LLMContext);
+
     const { t } = useTranslation();
+
     const storageService: BotStorageService = new BotStorageService(BOT_STORE);
 
-    const onInputChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    // input change
+    const onInputChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setInput(newValue.value);
         } else {
             setInput("");
         }
-    };
+    }, []);
 
-    const onDescriptionChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    // description change
+    const onDescriptionChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setDescription(newValue.value);
         } else {
             setDescription("");
         }
-    };
+    }, []);
 
-    const onTitleChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    // title change
+    const onTitleChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setTitle(newValue.value);
         } else {
             setTitle("Assistent");
         }
-    };
+    }, []);
 
-    const onRefinedPromptChanged = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    // system prompt change
+    const onRefinedPromptChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setSystemPrompt(newValue.value);
         } else {
             setSystemPrompt("");
         }
-    };
+    }, []);
 
-    const onPromptButtonClicked = async () => {
+    // save bot
+    const onPromptButtonClicked = useCallback(async () => {
         const bot: Bot = {
             title: title == "" ? "Assistent" : title,
             description: description == "" ? "Ein Assistent" : description,
@@ -84,25 +92,28 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
         const created_id = await storageService.createBotConfig(bot);
         if (created_id) window.location.href = import.meta.env.BASE_URL + "#bot/" + created_id;
         else console.error("Bot could not be created");
-    };
+    }, [title, description, systemPrompt, LLM.max_output_tokens, storageService]);
 
-    const onBackButtonClicked = () => {
+    // back button clicked
+    const onBackButtonClicked = useCallback(() => {
         setShowDialogOutput(false);
         setShowDialogInput(true);
         setSystemPrompt("");
         setDescription("");
         setTitle("");
-    };
+    }, []);
 
-    const onCancelButtonClicked = () => {
+    // cancel button clicked
+    const onCancelButtonClicked = useCallback(() => {
         setShowDialogInput(false);
         setInput("");
-    };
+    }, []);
 
-    const createBot = async () => {
+    // call Bot api
+    const createBot = useCallback(async () => {
         if (input != "") {
             setLoading(true);
-            const result = await (await createBotApi({ input: input, model: "gpt-4o", max_output_tokens: LLM.max_output_tokens })).json();
+            const result = await (await createBotApi({ input: input, model: LLM.llm_name, max_output_tokens: LLM.max_output_tokens })).json();
             setSystemPrompt(result.system_prompt);
             setDescription(result.description);
             setTitle(result.title);
@@ -110,13 +121,13 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             setShowDialogOutput(true);
             setShowDialogInput(false);
         }
-    };
+    }, [input, LLM.llm_name, LLM.max_output_tokens]);
 
-    const manuelBotCreation = () => {
+    const manuelBotCreation = useCallback(() => {
         setShowDialogInput(false);
         setShowDialogOutput(true);
         setInput("");
-    };
+    }, []);
 
     return (
         <div>

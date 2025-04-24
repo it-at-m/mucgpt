@@ -30,7 +30,7 @@ export interface LegacyBot {
     max_output_tokens: number;
 }
 export async function migrate_old_bots() {
-    const legacy_store = new StorageService<any, any>(LEGACY_BOT_STORE, undefined);
+    const legacy_store = new StorageService<any, any>(LEGACY_BOT_STORE);
     const db = await legacy_store.connectToDB();
     const newStore = new BotStorageService(BOT_STORE);
     if (db.objectStoreNames.contains(LEGACY_BOT_STORE.objectStore_name)) {

@@ -3,6 +3,7 @@ import { Options24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./History.module.css";
 import { DBObject } from "../../service/storage";
+import { useCallback } from "react";
 
 interface Props {
     allChats: DBObject<any, any>[];
@@ -15,20 +16,26 @@ interface Props {
 export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNameChange, onFavChange, onSelect }: Props) => {
     const { t } = useTranslation();
 
-    const getCategory = (lastEdited: number, fav: boolean) => {
-        if (fav) return t("components.history.favourites");
-        const today = new Date();
-        const lastEditedDate = new Date(lastEdited);
-        today.setHours(0, 0, 0, 0);
-        lastEditedDate.setHours(0, 0, 0, 0);
-        const diffTime = Math.abs(today.getTime() - lastEditedDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays === 0) return t("components.history.today");
-        if (diffDays === 1) return t("components.history.yesterday");
-        if (diffDays <= 7) return t("components.history.sevendays");
-        return t("components.history.older");
-    };
+    // get time category of the chat
+    // today, yesterday, last 7 days, older
+    const getCategory = useCallback(
+        (lastEdited: number, fav: boolean) => {
+            if (fav) return t("components.history.favourites");
+            const today = new Date();
+            const lastEditedDate = new Date(lastEdited);
+            today.setHours(0, 0, 0, 0);
+            lastEditedDate.setHours(0, 0, 0, 0);
+            const diffTime = Math.abs(today.getTime() - lastEditedDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            if (diffDays === 0) return t("components.history.today");
+            if (diffDays === 1) return t("components.history.yesterday");
+            if (diffDays <= 7) return t("components.history.sevendays");
+            return t("components.history.older");
+        },
+        [t]
+    );
 
+    // sort chats by last edited date and categorize them
     const categorizedChats = allChats
         .filter((chat: DBObject<any, any>) => chat.id)
         .sort((a: DBObject<any, any>, b: DBObject<any, any>) => {
@@ -56,13 +63,13 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
 
             <div className={styles.historyContent}>
                 {sortedChats.map(([category, chats]) => (
-                    <div key={category}>
-                        <div className={styles.header} role="heading" aria-level={4}>
+                    <ul key={category} className={styles.nopaddingleft}>
+                        <li className={styles.header} role="heading" aria-level={4}>
                             {category}
-                        </div>
+                        </li>
                         {chats.map((chat: DBObject<any, any>, index: number) => (
-                            <div key={index}>
-                                <div className={styles.singlechatcontainer}>
+                            <ul key={index} className={styles.nopaddingleft}>
+                                <li className={styles.singlechatcontainer}>
                                     <Tooltip
                                         content={t("components.history.lastEdited") + new Date(chat._last_edited as number).toString()}
                                         relationship="description"
@@ -100,10 +107,10 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                             </MenuList>
                                         </MenuPopover>
                                     </Menu>
-                                </div>
-                            </div>
+                                </li>
+                            </ul>
                         ))}
-                    </div>
+                    </ul>
                 ))}
             </div>
         </div>

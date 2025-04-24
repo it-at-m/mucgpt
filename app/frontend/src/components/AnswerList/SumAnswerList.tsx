@@ -9,7 +9,7 @@ import { SumarizeMessage } from "../../api/models";
 
 interface Props {
     answers: SumarizeMessage[];
-    onRollbackMessage: (message: string) => () => void;
+    onRollbackMessage: (index: number) => void;
     isLoading: boolean;
     error: unknown;
     makeApiRequest: () => void;
@@ -27,7 +27,7 @@ export const SumAnswerList = ({ answers, onRollbackMessage, isLoading, error, ma
             answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage(answer.user)} />}
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={<SumAnswer answer={answer.response} top_n={2}></SumAnswer>}
@@ -41,7 +41,7 @@ export const SumAnswerList = ({ answers, onRollbackMessage, isLoading, error, ma
             {answersComponent}
             {isLoading || error ? (
                 <ChatTurnComponent
-                    usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackMessage(lastQuestionRef.current)} />}
+                    usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                     usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
                     botmsg={

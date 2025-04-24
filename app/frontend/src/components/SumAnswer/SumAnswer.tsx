@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import styles from "./SumAnswer.module.css";
 import { Stack } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
@@ -25,13 +25,18 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
         return DOMPurify.sanitize(answ);
     });
 
-    const oncopy = (text: string) => {
-        setCopied(true);
-        navigator.clipboard.writeText(text);
-        setTimeout(() => {
-            setCopied(false);
-        }, 1000);
-    };
+    // copy
+    const oncopy = useCallback(
+        (text: string) => {
+            setCopied(true);
+            navigator.clipboard.writeText(text);
+            setTimeout(() => {
+                setCopied(false);
+            }, 1000);
+        },
+        [navigator.clipboard]
+    );
+
     return (
         <Stack verticalAlign="space-between" className={`${styles.sumanswerContainer}`}>
             <Stack.Item>
@@ -39,7 +44,7 @@ export const SumAnswer = ({ answer, top_n }: Props) => {
                     <AnswerIcon aria-hidden />
                     <div className={styles.buttonContainer}>
                         {answers.map((x, i) => (
-                            <div>
+                            <div key={i}>
                                 <Button
                                     style={{
                                         border: "0.5px solid black",

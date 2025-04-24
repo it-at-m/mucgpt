@@ -4,7 +4,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 
-export type SidebarSizes = "small" | "medium" | "large" | "full_width";
+export type SidebarSizes = "small" | "medium" | "large" | "full_width" | "none";
 
 interface Props {
     sidebar: ReactNode;
@@ -19,12 +19,12 @@ interface Props {
 }
 
 export const ChatLayout = ({ sidebar: sidebar, examples, answers, input, showExamples, header, header_as_markdown, messages_description, size }: Props) => {
-    const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%" }[size];
+    const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside className={styles.sidebar}>{sidebar}</aside>
-            <div className={styles.chatRoot}>
-                <div className={styles.chatContainer}>
+            <aside className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>{sidebar}</aside>
+            <div className={styles.chatRoot} >
+                <div className={styles.chatContainer} style={size == "none" ? { marginLeft: "35px" } : {}}>
                     {showExamples ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
                             {header_as_markdown ? (

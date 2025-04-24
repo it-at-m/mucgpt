@@ -11,7 +11,7 @@ import remarkMath from "remark-math";
 
 interface Props {
     message: string;
-    onRollbackMessage: () => void;
+    onRollbackMessage?: () => void;
 }
 
 export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage }: Props) => {
@@ -25,7 +25,7 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
         <div className={styles.message}>
             <Stack horizontal horizontalAlign="space-between">
                 <ChatMessageIcon aria-hidden></ChatMessageIcon>
-                <RollBackMessage onRollback={onRollbackMessage} />
+                {onRollbackMessage && <RollBackMessage onRollback={onRollbackMessage} />}
             </Stack>
             <Markdown
                 className={styles.answerText}

@@ -1,8 +1,26 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular } from "@fluentui/react-icons";
-import { Button, Slider, Label, useId, SliderProps, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular, Checkmark24Filled } from "@fluentui/react-icons";
+import {
+    Button,
+    Slider,
+    Label,
+    useId,
+    SliderProps,
+    Field,
+    InfoLabel,
+    Tooltip,
+    Textarea,
+    TextareaOnChangeData,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    DialogTrigger
+} from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { ReactNode, useContext, useEffect, useState } from "react";
+import { ReactNode, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import Markdown from "react-markdown";
@@ -19,9 +37,10 @@ interface Props {
     actions: ReactNode;
     before_content: ReactNode;
     onEditChange: (isEditable: boolean) => void;
+    minimized: boolean;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange, minimized }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
@@ -43,6 +62,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const [description, setDescription] = useState<string>(bot.description);
     const [publish, setPublish] = useState<boolean>(bot.publish);
     const [isOwner, setIsOwner] = useState<boolean>(!bot.publish);
+    const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
 
     useEffect(() => {
         setMaxOutputTokens(bot.max_output_tokens);
@@ -54,27 +74,40 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setIsOwner(!bot.publish);
     }, [bot]);
 
-    const onTemperatureChange: SliderProps["onChange"] = (_, data) => {
+    // Temperature change
+    const onTemperatureChange: SliderProps["onChange"] = useCallback((_: any, data: { value: SetStateAction<number> }) => {
         setTemperature(data.value);
-    };
-    const onMaxtokensChange: SliderProps["onChange"] = (_, data) => {
-        const maxTokens = data.value > LLM.max_output_tokens && LLM.max_output_tokens != 0 ? LLM.max_output_tokens : data.value;
-        setMaxOutputTokens(maxTokens);
-    };
-    const onSytemPromptChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    }, []);
+
+    // Token change
+    const onMaxtokensChange: SliderProps["onChange"] = useCallback(
+        (_: any, data: { value: number }) => {
+            const maxTokens = data.value > LLM.max_output_tokens && LLM.max_output_tokens != 0 ? LLM.max_output_tokens : data.value;
+            setMaxOutputTokens(maxTokens);
+        },
+        [LLM.max_output_tokens]
+    );
+
+    // System prompt change
+    const onSytemPromptChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setSystemPrompt(newValue.value);
         else setSystemPrompt("");
-    };
-    const onTitleChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+    }, []);
+
+    // Title change
+    const onTitleChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setTitle(newValue.value);
         else setTitle("");
-    };
+    }, []);
+
+    // Description change
     const onDescriptionChange = (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) setDescription(newValue.value);
         else setDescription("");
     };
 
-    const toggleReadOnly = () => {
+    // Toggle read-only mode
+    const toggleReadOnly = useCallback(() => {
         setEditable(!isEditable);
         onEditChange(!isEditable);
         if (isEditable && isOwner) {
@@ -92,47 +125,98 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
             onBotChange(updatedBot);
             window.location.reload();
         }
-    };
+    }, [isEditable, isOwner, bot, temperature, max_output_tokens, systemPrompt, title, description, publish, onEditChange, onBotChange]);
 
-    const onClearSystemPrompt = () => {
+    // clear system prompt
+    const onClearSystemPrompt = useCallback(() => {
         setSystemPrompt("");
-    };
+    }, []);
 
-    const actions_component = (
-        <>
-            {actions}
-            <Button
-                appearance="secondary"
-                icon={
-                    isOwner ? (
-                        isEditable ? (
-                            <Save24Regular className={styles.iconRightMargin} />
-                        ) : (
-                            <Edit24Regular className={styles.iconRightMargin} />
-                        )
-                    ) : isEditable ? (
-                        <Dismiss24Regular className={styles.iconRightMargin} />
-                    ) : (
-                        <ChatSettings24Regular className={styles.iconRightMargin} />
-                    )
-                }
-                onClick={toggleReadOnly}
-            >
-                {isOwner
-                    ? isEditable
-                        ? t("components.botsettingsdrawer.finish_edit")
-                        : t("components.botsettingsdrawer.edit")
-                    : isEditable
-                      ? t("components.botsettingsdrawer.close_configutations")
-                      : t("components.botsettingsdrawer.show_configutations")}
-            </Button>
-            <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                <Button appearance="secondary" onClick={onDeleteBot} icon={<Delete24Regular className={styles.iconRightMargin} />} disabled={!isOwner}>
-                    {t("components.botsettingsdrawer.delete")}
-                </Button>
-            </Tooltip>
-        </>
+    // Delete bot confirmation dialog
+    const deleteDialog = useMemo(
+        () => (
+            <Dialog modalType="alert" open={showDeleteDialog}>
+                <DialogSurface className={styles.dialog}>
+                    <DialogBody className={styles.dialogContent}>
+                        <DialogTitle>{t("components.botsettingsdrawer.deleteDialog.title")}</DialogTitle>
+                        <DialogContent>{t("components.botsettingsdrawer.deleteDialog.content")}</DialogContent>
+                        <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary" size="small" onClick={() => setShowDeleteDialog(false)}>
+                                    <Dismiss24Regular /> {t("components.botsettingsdrawer.deleteDialog.cancel")}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="secondary"
+                                    size="small"
+                                    onClick={() => {
+                                        setShowDeleteDialog(false);
+                                        onDeleteBot();
+                                    }}
+                                >
+                                    <Checkmark24Filled /> {t("components.botsettingsdrawer.deleteDialog.confirm")}
+                                </Button>
+                            </DialogTrigger>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+        ),
+        [showDeleteDialog, onDeleteBot]
     );
+
+    // actions component
+    const actions_component = useMemo(
+        () => (
+            <div>
+                <div className={styles.actionRow}> {actions}</div>
+                {!minimized && (
+                    <div className={styles.actionRow}>
+                        {deleteDialog}
+                        <Button
+                            appearance="secondary"
+                            icon={
+                                isOwner ? (
+                                    isEditable ? (
+                                        <Save24Regular className={styles.iconRightMargin} />
+                                    ) : (
+                                        <Edit24Regular className={styles.iconRightMargin} />
+                                    )
+                                ) : isEditable ? (
+                                    <Dismiss24Regular className={styles.iconRightMargin} />
+                                ) : (
+                                    <ChatSettings24Regular className={styles.iconRightMargin} />
+                                )
+                            }
+                            onClick={toggleReadOnly}
+                        >
+                            {isOwner
+                                ? isEditable
+                                    ? t("components.botsettingsdrawer.finish_edit")
+                                    : t("components.botsettingsdrawer.edit")
+                                : isEditable
+                                  ? t("components.botsettingsdrawer.close_configutations")
+                                  : t("components.botsettingsdrawer.show_configutations")}
+                        </Button>
+                        <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
+                            <Button
+                                appearance="secondary"
+                                onClick={() => setShowDeleteDialog(true)}
+                                icon={<Delete24Regular className={styles.iconRightMargin} />}
+                                disabled={!isOwner}
+                            >
+                                {t("components.botsettingsdrawer.delete")}
+                            </Button>
+                        </Tooltip>
+                    </div>
+                )}
+            </div>
+        ),
+        [actions, isEditable, isOwner, toggleReadOnly, t, deleteDialog, minimized]
+    );
+
+    // sidebar content
     const content = (
         <>
             <>{before_content}</>{" "}

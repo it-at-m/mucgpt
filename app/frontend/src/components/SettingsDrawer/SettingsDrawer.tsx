@@ -1,5 +1,5 @@
 import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, Mail24Regular } from "@fluentui/react-icons";
-import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link } from "@fluentui/react-components";
+import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link, Switch } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
 import { useCallback, useState } from "react";
@@ -9,6 +9,7 @@ import { LanguageSelector } from "../../components/LanguageSelector";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { useTranslation } from "react-i18next";
 import { Model } from "../../api";
+import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;
@@ -39,21 +40,26 @@ export const SettingsDrawer = ({
     currentLLM
 }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
     const fontscaleID = useId("input-fontscale");
     const feedback_headerID = useId("feedback-language");
 
+    const min_temp = 0.8;
+    const max_temp = 1.8;
+
+    // open settings drawer
     const onClickRightButton = useCallback(() => {
         setIsOpen(true);
     }, []);
-    const min_temp = 0.8;
-    const max_temp = 1.8;
-    const onFontscaleChange: SliderProps["onChange"] = (_, data) => setFontscale(data.value);
 
-    const closeDrawer = () => {
+    // change font size
+    const onFontscaleChange: SliderProps["onChange"] = useCallback((_: any, data: { value: number }) => setFontscale(data.value), [setFontscale]);
+
+    // close settings drawer
+    const closeDrawer = useCallback(() => {
         setIsOpen(false);
-    };
+    }, []);
 
     return (
         <div>

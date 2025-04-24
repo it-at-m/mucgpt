@@ -5,10 +5,12 @@
     display: flex;
     flex-direction: row;
     justify-content: start;
-    height: 50px;
+    padding-bottom: var(--spacingHorizontalS);
+    margin-bottom: var(--spacingHorizontalS);
+    border-bottom: 1px dotted var(--colorBrandBackground2);
 }
 .drawer {
-    width: var(--sidebarWidth);
+    width: calc(var(--sidebarWidth)-2em);
 }
 
 @media (max-width: 650px) {
@@ -21,6 +23,7 @@
     overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
-    max-height: calc(100vh - 170px);
+    height: calc(100vh - 195px);
     margin-bottom: 30px;
+    border-bottom: 1px dotted var(--colorBrandBackground2);
 }

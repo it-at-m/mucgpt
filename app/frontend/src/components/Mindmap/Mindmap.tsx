@@ -1,6 +1,6 @@
 import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
-import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./Mindmap.module.css";
 import { Stack } from "@fluentui/react";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,7 @@ interface Props {
 
 export const Mindmap = ({ markdown }: Props) => {
     const { t } = useTranslation();
-    const transformer = new Transformer();
+    const transformer = useMemo(() => new Transformer(), []);
     const svgEl = useRef<SVGSVGElement>(null);
     const [isSourceView, setIsSourceView] = useState(false);
     const [freeplaneXML, setFreeplaneXML] = useState("");
@@ -25,16 +25,18 @@ export const Mindmap = ({ markdown }: Props) => {
         createMM();
     }, []);
 
-    const toggleSourceView = () => {
+    // toggle source view
+    const toggleSourceView = useCallback(() => {
         setIsSourceView(!isSourceView);
         setTimeout(() => {
             if (isSourceView) {
                 createMM();
             }
         }, 50);
-    };
+    }, [isSourceView]);
 
-    const rescale = () => {
+    // rescale midmap
+    const rescale = useCallback(() => {
         setTimeout(() => {
             if (!isSourceView) {
                 let mm = Markmap.create(svgEl.current as SVGSVGElement);
@@ -42,9 +44,10 @@ export const Mindmap = ({ markdown }: Props) => {
                 createMM();
             }
         }, 50);
-    };
+    }, [isSourceView]);
 
-    const download = () => {
+    // download mindmap
+    const download = useCallback(() => {
         if (svgEl && svgEl.current) {
             // fetch SVG-rendered image as a blob object
             const svgBlob = new Blob([freeplaneXML], {
@@ -64,9 +67,10 @@ export const Mindmap = ({ markdown }: Props) => {
             document.body.removeChild(link);
             img.src = url;
         }
-    };
+    }, [freeplaneXML]);
 
-    const parseXML = (parsed: IPureNode) => {
+    // parse XML
+    const parseXML = useCallback((parsed: IPureNode) => {
         const doc = document.implementation.createDocument(null, null, null);
         const mapElem = doc.createElement("map");
         mapElem.setAttribute("version", "freeplane 1.11.1");
@@ -81,9 +85,10 @@ export const Mindmap = ({ markdown }: Props) => {
         mapElem.appendChild(question);
         doc.appendChild(mapElem);
         setFreeplaneXML(new XMLSerializer().serializeToString(mapElem));
-    };
+    }, []);
 
-    const parseNodes = (to_be_parsed: IPureNode, parent: HTMLElement, doc: XMLDocument) => {
+    // parse Nodes
+    const parseNodes = useCallback((to_be_parsed: IPureNode, parent: HTMLElement, doc: XMLDocument) => {
         const result = doc.createElement("node");
         result.setAttribute("TEXT", to_be_parsed.content);
 
@@ -94,9 +99,10 @@ export const Mindmap = ({ markdown }: Props) => {
             parseNodes(child, result, doc);
         }
         parent.appendChild(result);
-    };
+    }, []);
 
-    const createMM = () => {
+    // create mindmap
+    const createMM = useCallback(() => {
         let mm = Markmap.create(svgEl.current as SVGSVGElement, { autoFit: true });
         if (mm) {
             const { root } = transformer.transform(markdown || "");
@@ -106,7 +112,7 @@ export const Mindmap = ({ markdown }: Props) => {
             mm.fit(10);
         }
         svgEl.current?.setAttribute("title", "Generierte Mindmap");
-    };
+    }, [transformer, markdown]);
 
     return (
         <Stack verticalAlign="space-between" className={`${styles.mindmapContainer}`}>

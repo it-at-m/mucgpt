@@ -6,9 +6,10 @@ import { useTranslation } from "react-i18next";
 interface Props {
     onClick: () => void;
     disabled?: boolean;
+    showText?: boolean;
 }
 
-export const ClearChatButton = ({ disabled, onClick }: Props) => {
+export const ClearChatButton = ({ disabled, onClick, showText = true }: Props) => {
     const { t } = useTranslation();
     return (
         <Tooltip content={t("common.clear_chat")} relationship="description" positioning="below">
@@ -19,7 +20,7 @@ export const ClearChatButton = ({ disabled, onClick }: Props) => {
                 disabled={disabled}
                 onClick={onClick}
             >
-                {t("common.clear_chat")}
+                {showText && t("common.clear_chat")}
             </Button>
         </Tooltip>
     );

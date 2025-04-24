@@ -34,6 +34,8 @@ jobs:
         - name: Install dependencies
           run: |
             uv sync --all-extras
+        - name: Create missing static directory
+          run: mkdir -p ./app/backend/static
         - name: Lint with ruff
           run: uv run ruff check .
         - name: Run Python tests

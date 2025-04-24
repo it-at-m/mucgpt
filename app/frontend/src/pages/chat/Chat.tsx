@@ -1,7 +1,6 @@
-import { useRef, useState, useEffect, useContext, useCallback } from "react";
-import readNDJSONStream from "ndjson-readablestream";
+import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { chatApi, AskResponse, ChatRequest, ChatTurn, handleRedirect, Chunk, ChunkInfo, countTokensAPI, ChatResponse, createChatName } from "../../api";
+import { chatApi, AskResponse, countTokensAPI, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -14,9 +13,46 @@ import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE } from "../../constants";
-import { DBMessage, DBObject, StorageService } from "../../service/storage";
+import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
+import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
+import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import {
+    ArrowCollapseAll24Filled,
+    ArrowMaximize24Filled,
+    ArrowMinimize24Filled,
+    Eye24Filled,
+    List20Regular,
+    ListBar24Filled,
+    TextCollapse24Filled
+} from "@fluentui/react-icons";
+import { Button, Tooltip } from "@fluentui/react-components";
+
+/**
+ * Creates a debounced function that delays invoking the provided function
+ * until after the specified wait time has elapsed since the last invocation.
+ *
+ * @param func The function to debounce
+ * @param wait The number of milliseconds to delay
+ * @returns A debounced version of the provided function
+ */
+export function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    return function (...args: Parameters<T>): void {
+        const later = () => {
+            timeout = null;
+            func(...args);
+        };
+
+        if (timeout !== null) {
+            clearTimeout(timeout);
+        }
+
+        timeout = setTimeout(later, wait);
+    };
+}
 
 export type ChatMessage = DBMessage<ChatResponse>;
 
@@ -26,6 +62,7 @@ export interface ChatOptions {
     temperature: number;
 }
 
+// Define constants outside the component
 const CHAT_EXAMPLES: ExampleModel[] = [
     {
         text: "Du bist König Ludwig II. von Bayern. Schreibe einen Brief an alle Mitarbeiter*innen der Stadtverwaltung München.",
@@ -41,41 +78,298 @@ const CHAT_EXAMPLES: ExampleModel[] = [
     }
 ];
 
+// Custom hook for storage operations
+function useStorageService(activeChatId: string | undefined) {
+    // Use useMemo for the instance so that it is only recreated when activeChatId changes
+    return useMemo(() => new StorageService<ChatResponse, ChatOptions>(CHAT_STORE), [activeChatId]);
+}
+
 const Chat = () => {
+    const chatReducer = getChatReducer<ChatOptions>();
+    // Contexts
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
 
+    // Independent states
+    const [error, setError] = useState<unknown>();
+    const [question, setQuestion] = useState<string>("");
+    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+    const [showSidebar, setShowSidebar] = useState<boolean>(
+        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
+    );
+
+    // Related states with useReducer
+    const [chatState, dispatch] = useReducer(chatReducer, {
+        answers: [],
+        temperature: 0.7,
+        max_output_tokens: 4000,
+        systemPrompt: "",
+        active_chat: undefined,
+        allChats: [],
+        totalTokens: 0
+    });
+
+    // Destructuring for easier access
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+
+    // Refs
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
+    const isFirstRender = useRef(true);
+    const activeChatRef = useRef(active_chat);
+    const isLoadingRef = useRef(false);
 
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<unknown>();
+    // Update activeChatRef whenever active_chat changes
+    useEffect(() => {
+        activeChatRef.current = active_chat;
+    }, [active_chat]);
 
-    const [answers, setAnswers] = useState<ChatMessage[]>([]);
-    const [question, setQuestion] = useState<string>("");
+    // Storage Service mit useMemo
+    const storageService = useStorageService(activeChatRef.current);
 
-    const [temperature, setTemperature] = useState(0.7);
-    const [max_output_tokens, setMaxOutputTokens] = useState(4000);
-    const [systemPrompt, setSystemPrompt] = useState<string>("");
-
-    const [active_chat, setActiveChat] = useState<string | undefined>(undefined);
-    const storageService: StorageService<ChatResponse, ChatOptions> = new StorageService<ChatResponse, ChatOptions>(CHAT_STORE, active_chat);
-
+    // Debounced system prompt
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
-    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
-    const [totalTokens, setTotalTokens] = useState<number>(0);
 
-    const [allChats, setAllChats] = useState<DBObject<ChatResponse, ChatOptions>[]>([]);
+    // Token-Berechnung
+    const calculateTotalTokens = useCallback(() => {
+        const answerTokens = answers.reduce(
+            (sum: any, msg: { response: { user_tokens: any; tokens: any } }) => sum + (msg.response.user_tokens || 0) + (msg.response.tokens || 0),
+            0
+        );
+        return systemPromptTokens + answerTokens;
+    }, [answers, systemPromptTokens]);
 
-    const makeTokenCountRequest = useCallback(async () => {
-        if (debouncedSystemPrompt && debouncedSystemPrompt !== "") {
-            const response = await countTokensAPI({ text: debouncedSystemPrompt, model: LLM });
-            setSystemPromptTokens(response.count);
-        } else setSystemPromptTokens(0);
+    // Debounced Storage-Update
+    const debouncedStorageUpdate = useMemo(
+        () =>
+            debounce((options: ChatOptions) => {
+                if (activeChatRef.current) {
+                    storageService.update(activeChatRef.current, undefined, options);
+                }
+            }, 500),
+        [activeChatRef.current, storageService]
+    );
+
+    // Fetch chat history
+    const fetchHistory = useCallback(async () => {
+        try {
+            const chats = await storageService.getAll();
+            if (chats) {
+                dispatch({ type: "SET_ALL_CHATS", payload: chats });
+            }
+            return chats;
+        } catch (e) {
+            console.error("Error fetching history:", e);
+            setError(e);
+            return [];
+        }
+    }, [storageService]);
+
+    // Load chat by ID
+    const loadChat = useCallback(
+        async (id: string) => {
+            try {
+                const chat = await storageService.get(id);
+                if (chat) {
+                    dispatch({ type: "SET_ANSWERS", payload: chat.messages });
+                    dispatch({ type: "SET_TEMPERATURE", payload: chat.config.temperature });
+                    dispatch({ type: "SET_MAX_TOKENS", payload: chat.config.maxTokens });
+                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
+                    dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+                    lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.error("Error loading chat:", e);
+                setError(e);
+                return false;
+            }
+        },
+        [storageService, lastQuestionRef.current]
+    );
+
+    // Clear chat state
+    const clearChat = useCallback(() => {
+        lastQuestionRef.current = "";
+        setError(undefined);
+        dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });
+        dispatch({ type: "CLEAR_ANSWERS" });
+    }, [lastQuestionRef.current]);
+
+    // API Request mit optimiertem State Management
+    const callApi = useCallback(
+        async (question: string, system?: string) => {
+            lastQuestionRef.current = question;
+            setError(undefined);
+            isLoadingRef.current = true;
+
+            const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
+            const options: ChatOptions = {
+                system: system ?? "",
+                maxTokens: max_output_tokens,
+                temperature: temperature
+            };
+
+            try {
+                await makeApiRequest(
+                    answers,
+                    question,
+                    dispatch,
+                    chatApi,
+                    LLM,
+                    activeChatRef,
+                    storageService,
+                    options,
+                    askResponse,
+                    chatMessageStreamEnd,
+                    isLoadingRef,
+                    fetchHistory,
+                    undefined
+                );
+            } catch (e) {
+                setError(e);
+            }
+            isLoadingRef.current = false;
+        },
+        [isLoadingRef.current, answers, language, temperature, max_output_tokens, activeChatRef.current, LLM.llm_name, storageService, fetchHistory]
+    );
+
+    // Regenerate-Funktion
+    const onRegenerateResponseClicked = useCallback(async () => {
+        if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
+
+        try {
+            await handleRegenerate(answers, dispatch, activeChatRef.current, storageService, systemPrompt, callApi, isLoadingRef);
+        } catch (e) {
+            setError(e);
+        }
+    }, [answers, storageService, callApi, systemPrompt, activeChatRef.current, isLoadingRef.current]);
+
+    // Rollback-Funktion
+    const onRollbackMessage = useCallback(
+        (index: number) => {
+            if (!activeChatRef.current || isLoadingRef.current) return;
+
+            try {
+                isLoadingRef.current = true;
+                handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, fetchHistory);
+            } catch (e) {
+                setError(e);
+            } finally {
+                isLoadingRef.current = false;
+            }
+        },
+        [storageService, clearChat, fetchHistory, setQuestion, isLoadingRef.current, activeChatRef.current]
+    );
+
+    // Konfigurationsänderungen mit memoisierten Callbacks
+    const onTemperatureChanged = useCallback(
+        (temp: number) => {
+            dispatch({ type: "SET_TEMPERATURE", payload: temp });
+
+            debouncedStorageUpdate({
+                system: systemPrompt,
+                maxTokens: max_output_tokens,
+                temperature: temp
+            });
+        },
+        [systemPrompt, max_output_tokens, debouncedStorageUpdate]
+    );
+
+    const onMaxTokensChanged = useCallback(
+        (maxTokens: number) => {
+            const finalTokens = maxTokens > LLM.max_output_tokens && LLM.max_output_tokens !== 0 ? LLM.max_output_tokens : maxTokens;
+
+            dispatch({ type: "SET_MAX_TOKENS", payload: finalTokens });
+
+            debouncedStorageUpdate({
+                system: systemPrompt,
+                maxTokens: finalTokens,
+                temperature: temperature
+            });
+        },
+        [LLM.max_output_tokens, systemPrompt, temperature, debouncedStorageUpdate]
+    );
+
+    const onSystemPromptChanged = useCallback(
+        (newSystemPrompt: string) => {
+            dispatch({ type: "SET_SYSTEM_PROMPT", payload: newSystemPrompt });
+
+            debouncedStorageUpdate({
+                system: newSystemPrompt,
+                maxTokens: max_output_tokens,
+                temperature: temperature
+            });
+        },
+        [max_output_tokens, temperature, debouncedStorageUpdate]
+    );
+
+    // Initialisierung beim ersten Laden
+    useEffect(() => {
+        if (!isFirstRender.current) return;
+        isFirstRender.current = false;
+
+        isLoadingRef.current = true;
+
+        storageService
+            .getNewestChat()
+            .then(existingData => {
+                if (existingData) {
+                    dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
+                    dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
+                    dispatch({ type: "SET_MAX_TOKENS", payload: existingData.config.maxTokens });
+                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
+                    dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
+
+                    lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
+                }
+                isLoadingRef.current = false;
+                return fetchHistory();
+            })
+            .finally(() => {
+                isLoadingRef.current = false;
+            });
+    }, [fetchHistory, storageService]);
+
+    // Token-Zählung für System-Prompt
+    useEffect(() => {
+        const countTokens = async () => {
+            if (debouncedSystemPrompt) {
+                try {
+                    const response = await countTokensAPI({
+                        text: debouncedSystemPrompt,
+                        model: LLM
+                    });
+                    setSystemPromptTokens(response.count);
+                } catch (e) {
+                    console.error("Failed to count tokens:", e);
+                    setSystemPromptTokens(0);
+                }
+            } else {
+                setSystemPromptTokens(0);
+            }
+        };
+
+        countTokens();
     }, [debouncedSystemPrompt, LLM]);
 
+    // Update total tokens when answers or system prompt changes
+    useEffect(() => {
+        const newTotalTokens = calculateTotalTokens();
+        dispatch({ type: "SET_TOTAL_TOKENS", payload: newTotalTokens });
+    }, [calculateTotalTokens]);
+
+    // Update max tokens if LLM changes
+    useEffect(() => {
+        if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens !== 0) {
+            onMaxTokensChanged(LLM.max_output_tokens);
+        }
+    }, [LLM.max_output_tokens, max_output_tokens, onMaxTokensChanged]);
+
+    // Set up quick prompts
     useEffect(() => {
         setQuickPrompts([
             {
@@ -99,310 +393,149 @@ const Chat = () => {
                 tooltip: t("chat.quickprompts.longer_tooltip", { lng: language })
             }
         ]);
-    }, [language]);
+    }, [language, t, setQuickPrompts]);
 
-    useEffect(() => {
-        makeTokenCountRequest();
-        if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens);
-        }
-    }, [debouncedSystemPrompt, LLM, makeTokenCountRequest]);
-
-    const fetchHistory = () => {
-        return storageService.getAll().then(chats => {
-            if (chats) setAllChats(chats);
-        });
-    };
-
-    useEffect(() => {
-        setAnswers([]);
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        setIsLoading(true);
-
-        storageService
-            .getNewestChat()
-            .then(existingData => {
-                if (existingData) {
-                    // if the chat exists
-                    const messages = existingData.messages;
-                    let options = existingData.config;
-                    setAnswers([...answers.concat(messages)]);
-                    if (options) {
-                        setMaxOutputTokens(options.maxTokens);
-                        setTemperature(options.temperature);
-                        setSystemPrompt(options.system);
-                    }
-                    lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                    setActiveChat(existingData.id);
-                }
-                return fetchHistory();
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }, []);
-
-    const makeApiRequest = async (question: string, system?: string) => {
-        lastQuestionRef.current = question;
-        error && setError(undefined);
-        setIsLoading(true);
-        const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
-        const options: ChatOptions = {
-            system: system ? system : "",
-            maxTokens: max_output_tokens,
-            temperature: temperature //TODO model LLM.llm_name übergeben?
-        };
-
-        try {
-            const history: ChatTurn[] = answers.map(a => ({ user: a.user, bot: a.response.answer }));
-            const request: ChatRequest = {
-                history: [...history, { user: question, bot: undefined }],
-                shouldStream: true,
-                language: language,
-                temperature: temperature,
-                system_message: system ? system : "",
-                max_output_tokens: max_output_tokens,
-                model: LLM.llm_name
-            };
-
-            const response = await chatApi(request);
-            handleRedirect(response);
-
-            if (!response.body) {
-                throw Error("No response body");
-            }
-            let user_tokens = 0;
-            let answer: string = "";
-            let streamed_tokens = 0;
-            let latestResponse: ChatResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
-            setAnswers([...answers, { user: question, response: latestResponse }]);
-            for await (const chunk of readNDJSONStream(response.body)) {
-                if (chunk as Chunk) {
-                    switch (chunk.type) {
-                        case "C":
-                            answer += chunk.message as string;
-                            break;
-                        case "I":
-                            const info = chunk.message as ChunkInfo;
-                            streamed_tokens = info.streamedtokens;
-                            user_tokens = info.requesttokens;
-                            break;
-                        case "E":
-                            throw Error((chunk.message as string) || "Unknown error");
-                    }
-
-                    latestResponse = { ...askResponse, answer: answer, tokens: streamed_tokens, user_tokens: user_tokens };
-                    setAnswers([...answers, { user: question, response: latestResponse }]);
-                    setIsLoading(false);
-                }
-            }
-            chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
-            //chat present, if not create.
-            if (active_chat) {
-                await storageService.appendMessage({ user: question, response: latestResponse }, options);
-            } else {
-                // generate chat name for first chat
-                const chatname = await createChatName(
-                    question,
-                    latestResponse.answer,
-                    language,
-                    temperature,
-                    system ? system : "",
-                    max_output_tokens,
-                    LLM.llm_name
-                );
-
-                // create and save current id
-                const id = await storageService.create([{ user: question, response: latestResponse }], options, undefined, chatname, false);
-                setActiveChat(id);
-
-                // fetch all chats
-                await fetchHistory();
-            }
-        } catch (e) {
-            setError(e);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    const clearChat = () => {
-        lastQuestionRef.current = "";
-        error && setError(undefined);
-        //unset active chat
-        if (active_chat) {
-            setActiveChat(undefined);
-        }
-        setAnswers([]);
-    };
-
-    const onRollbackMessage = (message: string) => {
-        return async () => {
-            if (active_chat) {
-                let result = await storageService.rollbackMessage(message);
-                if (result) {
-                    setAnswers(result.messages);
-                    lastQuestionRef.current = result.messages.length > 0 ? result.messages[result.messages.length - 1].user : "";
-                }
-                setQuestion(message);
-            }
-        };
-    };
-
-    const onRegeneratResponseClicked = async () => {
-        if (answers.length > 0 && storageService.getActiveChatId()) {
-            await storageService.popMessage();
-            let last = answers.pop();
-            setAnswers(answers);
-            if (last) {
-                makeApiRequest(last.user, systemPrompt);
-            }
-        }
-    };
-
-    useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
-
-    useEffect(() => {
-        setTotalTokens(
-            systemPromptTokens + answers.map(answ => (answ.response.user_tokens || 0) + (answ.response.tokens || 0)).reduceRight((prev, curr) => prev + curr, 0)
-        );
-    }, [answers, systemPromptTokens]);
-
-    const onExampleClicked = async (example: string, system?: string) => {
-        if (system) onSystemPromptChanged(system);
-        makeApiRequest(example, system);
-    };
-
-    const onTemperatureChanged = (temp: number) => {
-        setTemperature(temp);
-        storageService.update(undefined, {
-            system: systemPrompt ? systemPrompt : "",
-            maxTokens: max_output_tokens,
-            temperature: temp
-        });
-    };
-
-    const onMaxTokensChanged = (maxTokens: number) => {
-        if (maxTokens > LLM.max_output_tokens && LLM.max_output_tokens != 0) {
-            onMaxTokensChanged(LLM.max_output_tokens);
-        } else {
-            setMaxOutputTokens(maxTokens);
-            storageService.update(undefined, {
-                system: systemPrompt ? systemPrompt : "",
-                maxTokens: maxTokens,
-                temperature: temperature
-            });
-        }
-    };
-
-    const onSystemPromptChanged = (systemPrompt: string) => {
-        setSystemPrompt(systemPrompt);
-        storageService.update(undefined, {
-            system: systemPrompt ? systemPrompt : "",
-            maxTokens: max_output_tokens,
-            temperature: temperature
-        });
-    };
-
-    const answerList = (
-        <AnswerList
-            answers={answers}
-            regularBotMsg={(answer, index) => {
-                return (
-                    <>
-                        {index === answers.length - 1 && (
-                            <Answer
-                                answer={answer.response}
-                                onRegenerateResponseClicked={onRegeneratResponseClicked}
-                                setQuestion={question => setQuestion(question)}
-                            />
-                        )}
-                        {index !== answers.length - 1 && <Answer answer={answer.response} setQuestion={question => setQuestion(question)} />}
-                    </>
-                );
-            }}
-            onRollbackMessage={onRollbackMessage}
-            isLoading={isLoading}
-            error={error}
-            makeApiRequest={() => makeApiRequest(lastQuestionRef.current, systemPrompt)}
-            chatMessageStreamEnd={chatMessageStreamEnd}
-            lastQuestionRef={lastQuestionRef}
-        />
+    // Click handlers
+    const onExampleClicked = useCallback(
+        (example: string, system?: string) => {
+            if (system) onSystemPromptChanged(system);
+            callApi(example, system);
+        },
+        [callApi, onSystemPromptChanged]
     );
-    const examplesComponent = <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />;
-    const inputComponent = (
-        <QuestionInput
-            clearOnSend
-            placeholder={t("chat.prompt")}
-            disabled={isLoading}
-            onSend={question => makeApiRequest(question, systemPrompt)}
-            tokens_used={totalTokens}
-            question={question}
-            setQuestion={question => setQuestion(question)}
-        />
-    );
-    const sidebar_actions = (
-        <>
-            <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} />
-        </>
-    );
-    const sidebar_content = (
-        <>
-            <History
-                allChats={allChats}
-                currentActiveChatId={active_chat}
-                onDeleteChat={async id => {
-                    await storageService.delete(id);
-                    await fetchHistory();
+    // Memo components
+    const answerList = useMemo(
+        () => (
+            <AnswerList
+                answers={answers}
+                regularBotMsg={(answer, index) => {
+                    return (
+                        <>
+                            {index === answers.length - 1 && (
+                                <Answer
+                                    key={`answer-${index}`}
+                                    answer={answer.response}
+                                    onRegenerateResponseClicked={onRegenerateResponseClicked}
+                                    setQuestion={question => setQuestion(question)}
+                                />
+                            )}
+                            {index !== answers.length - 1 && (
+                                <Answer key={`answer-${index}`} answer={answer.response} setQuestion={question => setQuestion(question)} />
+                            )}
+                        </>
+                    );
                 }}
-                onChatNameChange={async (id, name: string) => {
-                    const newName = prompt(t("components.history.newchat"), name);
-                    await storageService.renameChat(id, newName ? newName.trim() : name);
-                    await fetchHistory();
-                }}
-                onFavChange={async (id: string, fav: boolean) => {
-                    await storageService.changeFavouritesInDb(id, fav);
-                    await fetchHistory();
-                }}
-                onSelect={async (id: string) => {
-                    const chat = await storageService.get(id);
-                    if (chat) {
-                        setAnswers(chat.messages);
-                        lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
-                        setActiveChat(id);
-                        setMaxOutputTokens(chat.config.maxTokens);
-                        setTemperature(chat.config.temperature);
-                        setSystemPrompt(chat.config.system);
-                    }
-                }}
-            ></History>
-        </>
+                onRollbackMessage={onRollbackMessage}
+                isLoading={isLoadingRef.current}
+                error={error}
+                makeApiRequest={() => callApi(lastQuestionRef.current, systemPrompt)}
+                chatMessageStreamEnd={chatMessageStreamEnd}
+                lastQuestionRef={lastQuestionRef}
+            />
+        ),
+        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoadingRef.current, lastQuestionRef, chatMessageStreamEnd]
     );
-    const sidebar = (
-        <ChatsettingsDrawer
-            temperature={temperature}
-            setTemperature={onTemperatureChanged}
-            max_output_tokens={max_output_tokens}
-            setMaxTokens={onMaxTokensChanged}
-            systemPrompt={systemPrompt}
-            setSystemPrompt={onSystemPromptChanged}
-            actions={sidebar_actions}
-            content={sidebar_content}
-        />
+
+    const examplesComponent = useMemo(() => <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />, [onExampleClicked]);
+
+    const inputComponent = useMemo(
+        () => (
+            <QuestionInput
+                clearOnSend
+                placeholder={t("chat.prompt")}
+                disabled={isLoadingRef.current}
+                onSend={question => callApi(question, systemPrompt)}
+                tokens_used={totalTokens}
+                question={question}
+                setQuestion={question => setQuestion(question)}
+            />
+        ),
+        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current]
     );
-    return (
-        <ChatLayout
-            sidebar={sidebar}
-            examples={examplesComponent}
-            answers={answerList}
-            input={inputComponent}
-            showExamples={!lastQuestionRef.current}
-            header={t("chat.header")}
-            header_as_markdown={false}
-            messages_description={t("common.messages")}
-            size="large"
-        ></ChatLayout>
+
+    const sidebar_actions = useMemo(
+        () => (
+            <>
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
+                <Tooltip content={showSidebar ? t("common.sidebar_hide") : t("common.sidebar_show")} relationship="description" positioning="below">
+                    <Button
+                        style={{ marginLeft: "5px" }}
+                        appearance="primary"
+                        icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
+                        onClick={() => {
+                            const toggled = !showSidebar;
+                            setShowSidebar(toggled);
+                            localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, toggled.toString());
+                        }}
+                    />
+                </Tooltip>
+            </>
+        ),
+        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
+
+    const sidebar_content = useMemo(
+        () => (
+            <>
+                <History
+                    allChats={allChats}
+                    currentActiveChatId={activeChatRef.current}
+                    onDeleteChat={async id => {
+                        await storageService.delete(id);
+                        await fetchHistory();
+                    }}
+                    onChatNameChange={async (id, name: string) => {
+                        const newName = prompt(t("components.history.newchat"), name);
+                        await storageService.renameChat(id, newName ? newName.trim() : name);
+                        await fetchHistory();
+                    }}
+                    onFavChange={async (id: string, fav: boolean) => {
+                        await storageService.changeFavouritesInDb(id, fav);
+                        await fetchHistory();
+                    }}
+                    onSelect={async (id: string) => {
+                        loadChat(id);
+                    }}
+                ></History>
+            </>
+        ),
+        [allChats, activeChatRef.current, fetchHistory, storageService, loadChat, t]
+    );
+
+    const sidebar = useMemo(
+        () => (
+            <ChatsettingsDrawer
+                temperature={temperature}
+                setTemperature={onTemperatureChanged}
+                max_output_tokens={max_output_tokens}
+                setMaxTokens={onMaxTokensChanged}
+                systemPrompt={systemPrompt}
+                setSystemPrompt={onSystemPromptChanged}
+                actions={sidebar_actions}
+                content={sidebar_content}
+            />
+        ),
+        [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged, sidebar_actions, sidebar_content]
+    );
+
+    const layout = useMemo(
+        () => (
+            <ChatLayout
+                sidebar={sidebar}
+                examples={examplesComponent}
+                answers={answerList}
+                input={inputComponent}
+                showExamples={!lastQuestionRef.current}
+                header={t("chat.header")}
+                header_as_markdown={false}
+                messages_description={t("common.messages")}
+                size={showSidebar ? "large" : "none"}
+            ></ChatLayout>
+        ),
+        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, showSidebar]
+    );
+
+    return layout;
 };
 
 export default Chat;

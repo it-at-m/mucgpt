@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styles from "./Mermaid.module.css";
 import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
@@ -58,7 +58,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
         render();
     }, [text]);
 
-    const download = () => {
+    const download = useCallback(() => {
         const svgElement = document.getElementById(id);
 
         if (svgElement) {
@@ -70,7 +70,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
             a.href = "data:text/html;base64," + base64doc;
             a.dispatchEvent(e);
         }
-    };
+    }, [id]);
 
     if (diagram === true) {
         return <p className="...">{t("components.mermaid.render")}</p>;

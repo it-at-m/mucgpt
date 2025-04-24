@@ -19,7 +19,7 @@ export class BotStorageService {
     static CHAT_ID = "CHAT_";
 
     constructor(config: IndexedDBStorage) {
-        this.storageService = new StorageService<ChatResponse, Bot>(config, undefined);
+        this.storageService = new StorageService<ChatResponse, Bot>(config);
         this.config = config;
     }
 
@@ -32,8 +32,8 @@ export class BotStorageService {
      * @param chat_id - Optional chat ID.
      * @returns A new instance of the StorageService class.
      */
-    getChatStorageService(chat_id?: string) {
-        return new StorageService<ChatResponse, Bot>(this.config, chat_id);
+    getChatStorageService() {
+        return new StorageService<ChatResponse, Bot>(this.config);
     }
 
     /**
@@ -87,7 +87,13 @@ export class BotStorageService {
     }
 
     async setBotConfig(bot_id: string, bot_config: Bot) {
-        await this.storageService.update(undefined, bot_config, BotStorageService.GENERATE_BOT_CONFIG_ID(bot_id));
+        await this.storageService.update(
+            BotStorageService.GENERATE_BOT_CONFIG_ID(bot_id),
+            undefined,
+            bot_config,
+            undefined,
+            BotStorageService.GENERATE_BOT_CONFIG_ID(bot_id)
+        );
     }
 
     async getAllBotConfigs() {
@@ -103,7 +109,7 @@ export class BotStorageService {
      ***************************/
 
     async createChat(bot_id: string, messages: DBMessage<ChatResponse>[], chatname: string) {
-        const storageService = new StorageService<ChatResponse, Bot>(this.config, BotStorageService.GENERATE_BOT_CHAT_ID(bot_id, undefined));
+        const storageService = new StorageService<ChatResponse, Bot>(this.config);
         const id = BotStorageService.GENERATE_BOT_CHAT_ID(bot_id, uuid());
         await storageService.create(messages, undefined, id, chatname, false);
         return id;
@@ -135,7 +141,9 @@ export class BotStorageService {
             (id: string) => id === BotStorageService.GENERATE_BOT_CONFIG_ID(bot_id) || id.startsWith(BotStorageService.GENERATE_BOT_CHAT_PREFIX(bot_id))
         );
         for (let i = 0; i < results.length; i++) {
-            await this.storageService.delete(results[i].id);
+            if (results[i].id) {
+                await this.storageService.delete(results[i].id ?? "");
+            }
         }
     }
 }

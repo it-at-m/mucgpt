@@ -1,49 +1,40 @@
-import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-    if (mode === "ghpages") {
-        return {
-            plugins: [react()],
-            build: {
-                outDir: "dist",
-                emptyOutDir: true,
-                sourcemap: true,
-                rollupOptions: {
-                    output: {
-                        manualChunks: undefined, // Disable code splitting
-                        entryFileNames: "app.js",
-                        chunkFileNames: "app.js",
-                        assetFileNames: "assets/[name].[ext]",
-                        inlineDynamicImports: true // Bundle everything into a single file
-                    }
-                },
-                target: "esnext",
-                assetsInlineLimit: 100000000, // Inline assets (like images) as base64
-                cssCodeSplit: false // Combine all CSS into a single file
-            },
-            base: "https://it-at-m.github.io/mucgpt/" // Set the correct base path for GitHub Pages
-        };
-    }
+    const isGHPages = mode === "ghpages";
 
-    // Default configuration
     return {
         plugins: [react()],
+        base: isGHPages ? "/mucgpt/" : "/",
         build: {
-            outDir: "../backend/static",
-            emptyOutDir: true,
-            sourcemap: true,
+            outDir: "dist",
+            sourcemap: !isGHPages,
             rollupOptions: {
                 output: {
-                    manualChunks: id => {
-                        if (id.includes("node_modules")) {
-                            return "vendor";
-                        }
+                    manualChunks: {
+                        react: ["react", "react-dom", "react-router-dom"],
+                        fluentui: ["@fluentui/react", "@fluentui/react-components", "@fluentui/react-icons"],
+                        markdown: ["react-markdown", "remark-gfm", "rehype-raw"],
+                        visualizations: ["markmap-view", "markmap-lib", "mermaid"]
                     }
                 }
-            },
-            target: "esnext"
+            }
+        },
+        resolve: {
+            alias: {
+                "@": resolve(__dirname, "src")
+            }
+        },
+        preview: {
+            port: 4173
+        },
+        // Add environment variable handling
+        define: {
+            "process.env.NODE_ENV": JSON.stringify(mode),
+            "process.env.BUILD_TIME": JSON.stringify(new Date().toISOString())
         }
     };
 });

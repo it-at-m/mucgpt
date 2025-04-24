@@ -88,7 +88,9 @@ i18n
                         settings: "Einstellungen",
                         close: "Schließen",
                         messages: "Nachrichten",
-                        examples: "Beispiele"
+                        examples: "Beispiele",
+                        sidebar_show: "Sidebar anzeigen",
+                        sidebar_hide: "Sidebar ausblenden"
                     },
                     create_bot: {
                         title: "Titel",
@@ -148,7 +150,8 @@ i18n
                             change_theme: "Design wechseln",
                             theme_light: "Hell",
                             theme_dark: "Dunkel",
-                            llm: "Sprachmodell"
+                            llm: "Sprachmodell",
+                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token verbraucht",
@@ -178,7 +181,13 @@ i18n
                             edit: "Assistent bearbeiten",
                             finish_edit: "Bearbeitung abschließen",
                             show_configutations: "Konfigurationen anzeigen",
-                            close_configutations: "Konfigurationen schließen"
+                            close_configutations: "Konfigurationen schließen",
+                            deleteDialog: {
+                                title: "Bot Löschen",
+                                content: "Wollen Sie den Bot wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+                                confirm: "Ja",
+                                cancel: "Nein"
+                            }
                         },
                         answericon: {
                             label: "MUCGPT Nachricht"
@@ -305,7 +314,9 @@ i18n
                         settings: "Settings",
                         close: "Close",
                         messages: "Messages",
-                        examples: "Examples"
+                        examples: "Examples",
+                        sidebar_show: "Show sidebar",
+                        sidebar_hide: "Hide sidebar"
                     },
                     create_bot: {
                         title: "Title",
@@ -365,7 +376,8 @@ i18n
                             change_theme: "Switch theme",
                             theme_light: "Light",
                             theme_dark: "Dark",
-                            llm: "language model"
+                            llm: "language model",
+                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token used",
@@ -391,11 +403,17 @@ i18n
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
                         botsettingsdrawer: {
-                            delete: "Delete assistent",
+                            delete: "Delete assistant",
                             edit: "Edit Assistant",
                             finish_edit: "Finish Edit",
                             show_configutations: "Show configurations",
-                            close_configutations: "Close configurations"
+                            close_configutations: "Close configurations",
+                            deleteDialog: {
+                                title: "Delete Bot",
+                                content: "Are you sure you want to delete the bot? This action cannot be undone.",
+                                confirm: "Yes",
+                                cancel: "No"
+                            }
                         },
                         answericon: {
                             label: "MUCGPT message"
@@ -517,7 +535,9 @@ i18n
                         settings: "Konfiguration",
                         close: "Schließen",
                         messages: "Nochrichten",
-                        examples: "Beispui"
+                        examples: "Beispui",
+                        sidebar_show: "Sidebar zoagn",
+                        sidebar_hide: "Sidebar ausblenden"
                     },
                     version: {
                         header: "Wos gibts neis?",
@@ -583,7 +603,8 @@ i18n
                             change_theme: "Design wechseln",
                             theme_light: "Hell",
                             theme_dark: "Dunkel",
-                            llm: "Sprachmodell"
+                            llm: "Sprachmodell",
+                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token vabrocht",
@@ -613,7 +634,13 @@ i18n
                             edit: "Assistent bearbeit'n",
                             finish_edit: "Bearbeitung abschließ'n",
                             show_configutations: "Konfigurationen anzeigen",
-                            close_configutations: "Konfigurationen schließen"
+                            close_configutations: "Konfigurationen schließen",
+                            deleteDialog: {
+                                title: "Bot Löschn",
+                                content: "Wuißt du den Bot echt löschn? Des ko nimma rückgängig gmocht werdn.",
+                                confirm: "Ja",
+                                cancel: "Na"
+                            }
                         },
                         answericon: {
                             label: "MUCGPT Nochricht"
@@ -740,7 +767,9 @@ i18n
                         settings: "Paramètres",
                         close: "Fermer",
                         messages: "Messages",
-                        examples: "Exemples"
+                        examples: "Exemples",
+                        sidebar_show: "Afficher la barre latérale",
+                        sidebar_hide: "Masquer la barre latérale"
                     },
                     components: {
                         roles: {
@@ -794,7 +823,8 @@ i18n
                             change_theme: "Changer de thème",
                             theme_light: "Clair",
                             theme_dark: "Sombre",
-                            llm: "Modèle de langage"
+                            llm: "Modèle de langage",
+                            chat_sidebar: "Barre latérale de chat"
                         },
                         questioninput: {
                             tokensused: "Tokens utilisés",
@@ -824,7 +854,13 @@ i18n
                             edit: "Modifier l'assistant",
                             finish_edit: "Terminer la modification",
                             show_configutations: "Afficher les configurations",
-                            close_configutations: "Fermer les configurations"
+                            close_configutations: "Fermer les configurations",
+                            deleteDialog: {
+                                title: "Supprimer le Bot",
+                                content: "Êtes-vous sûr de vouloir supprimer le bot ? Cette action est irréversible.",
+                                confirm: "Oui",
+                                cancel: "Non"
+                            }
                         },
                         answericon: {
                             label: "Message de MUCGPT"
@@ -950,7 +986,9 @@ i18n
                         settings: "Налаштування",
                         close: "Закрити",
                         messages: "Повідомлення",
-                        examples: "Приклади"
+                        examples: "Приклади",
+                        sidebar_show: "Показати бічну панель",
+                        sidebar_hide: "Сховати бічну панель"
                     },
                     components: {
                         roles: {
@@ -1004,7 +1042,8 @@ i18n
                             change_theme: "Змінити тему",
                             theme_light: "Світла",
                             theme_dark: "Темна",
-                            llm: "Мовна модель"
+                            llm: "Мовна модель",
+                            chat_sidebar: "Бічна панель чату"
                         },
                         questioninput: {
                             tokensused: "Використано токени",
@@ -1034,7 +1073,13 @@ i18n
                             edit: "Редагувати асистента",
                             finish_edit: "Завершити редагування",
                             show_configutations: "Показати конфігурації",
-                            close_configutations: "Закрити конфігурації"
+                            close_configutations: "Закрити конфігурації",
+                            deleteDialog: {
+                                title: "Видалити Бота",
+                                content: "Ви впевнені, що хочете видалити бота? Цю дію не можна скасувати.",
+                                confirm: "Так",
+                                cancel: "Ні"
+                            }
                         },
                         answericon: {
                             label: "Повідомлення MUCGPT"

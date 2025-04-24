@@ -34,14 +34,8 @@ export interface DBMessage<R> {
  */
 export class StorageService<M, C> {
     config: IndexedDBStorage;
-    private active_chat_id?: string;
-    constructor(config: IndexedDBStorage, active_chat_id?: string) {
+    constructor(config: IndexedDBStorage) {
         this.config = config;
-        this.active_chat_id = active_chat_id;
-    }
-
-    getActiveChatId() {
-        return this.active_chat_id;
     }
 
     async connectToDB(): Promise<IDBPDatabase<DBObject<M, C>>> {
@@ -107,10 +101,8 @@ export class StorageService<M, C> {
         }
     }
 
-    async update(messages?: DBMessage<M>[], configuration?: C, alternative_id?: string, favorite?: boolean, name?: string) {
+    async update(id: string, messages?: DBMessage<M>[], configuration?: C, favorite?: boolean, name?: string) {
         try {
-            const id = alternative_id ? alternative_id : this.getActiveChatId();
-            if (!id) throw new Error("No active id found and alternative id not provided");
             const db = await this.connectToDB();
             const stored = await this.get(id);
             if (stored) {
@@ -134,13 +126,10 @@ export class StorageService<M, C> {
      *
      * @param alternative_id - The ID of the record to delete (optional).
      */
-    async delete(alternative_id?: string) {
+    async delete(id: string) {
         try {
-            const id = alternative_id ? alternative_id : this.getActiveChatId();
-            if (id) {
-                const db = await this.connectToDB();
-                await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).delete(id);
-            }
+            const db = await this.connectToDB();
+            await db.transaction(this.config.objectStore_name, "readwrite").objectStore(this.config.objectStore_name).delete(id);
         } catch (error) {
             this.onError(error);
         }
@@ -162,13 +151,12 @@ export class StorageService<M, C> {
         }
     }
 
-    async appendMessage(data: DBMessage<M>, configuration?: C) {
+    async appendMessage(data: DBMessage<M>, id: string, configuration?: C) {
         try {
-            const id = this.getActiveChatId() as string;
             const stored = await this.get(id);
             if (stored) {
                 stored.messages.push(data);
-                const updated = await this.update(stored.messages, configuration ? configuration : stored.config);
+                const updated = await this.update(id, stored.messages, configuration ? configuration : stored.config);
                 return updated;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {
@@ -176,14 +164,12 @@ export class StorageService<M, C> {
         }
     }
 
-    async popMessage() {
+    async popMessage(id: string) {
         try {
-            const id = this.getActiveChatId();
-            if (!id) throw new Error("No active id found");
             const stored = await this.get(id);
             if (stored) {
                 const popedMessage = stored.messages.pop();
-                const updated = await this.update(stored.messages, stored.config);
+                const updated = await this.update(id, stored.messages, stored.config);
                 return popedMessage;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {
@@ -191,19 +177,18 @@ export class StorageService<M, C> {
         }
     }
 
-    async rollbackMessage(message: string) {
+    async rollbackMessage(index: number, id: string, setQuestion: (question: string) => void) {
         try {
-            const id = this.getActiveChatId();
-            if (!id) throw new Error("No active id found");
             const stored = await this.get(id);
             if (stored) {
-                while (stored.messages.length) {
-                    let last = stored.messages.pop();
-                    if (last && last.user == message) {
-                        break;
-                    }
+                let last = stored.messages[stored.messages.length - 1];
+                while (stored.messages.length - 1 > index) {
+                    const popped = stored.messages.pop();
+                    if (!popped) break;
+                    last = popped;
                 }
-                const updated = await this.update(stored.messages, stored.config);
+                const updated = await this.update(id, stored.messages, stored.config);
+                setQuestion(last.user);
                 return updated;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {
@@ -213,7 +198,7 @@ export class StorageService<M, C> {
 
     async renameChat(id: string, newName: string) {
         try {
-            return await this.update(undefined, undefined, id, undefined, newName);
+            return await this.update(id, undefined, undefined, undefined, newName);
         } catch (error) {
             this.onError(error);
         }
@@ -221,7 +206,7 @@ export class StorageService<M, C> {
 
     async changeFavouritesInDb(id: string, fav: boolean) {
         try {
-            return await this.update(undefined, undefined, id, fav, undefined);
+            return await this.update(id, undefined, undefined, fav, undefined);
         } catch (error) {
             this.onError(error);
         }

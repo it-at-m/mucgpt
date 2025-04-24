@@ -204,7 +204,7 @@ const Brainstorm = () => {
             header={t("brainstorm.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="small"
+            size="none"
         ></ChatLayout>
     );
 };

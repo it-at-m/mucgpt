@@ -15,6 +15,11 @@ import { getChatReducer, handleDeleteChat, handleRollback, setupStore } from "..
 import { SumAnswerList } from "../../components/AnswerList/SumAnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
+import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { Button, Tooltip } from "@fluentui/react-components";
+import { ArrowMaximize24Filled, ArrowMinimize24Filled } from "@fluentui/react-icons";
+import styles from "./Summarize.module.css";
+import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
 
@@ -71,6 +76,9 @@ const Summarize = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
+    const [showSidebar, setShowSidebar] = useState<boolean>(
+        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
+    );
 
     // Detaillevel
     const detaillevel_pref = (localStorage.getItem(STORAGE_KEY_LEVEL_OF_DETAIL) as "long" | "medium" | "short") || "short";
@@ -176,8 +184,12 @@ const Summarize = () => {
 
     // Sidebar
     const sidebar_actions = useMemo(
-        () => <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-        [clearChat, isLoading, lastQuestionRef.current]
+        () => (
+            <div className={styles.actionRow}>
+                <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+            </div>),
+        [clearChat, isLoading, lastQuestionRef.current, showSidebar]
     );
     const sidebar_content = useMemo(
         () => <SummarizeSidebar onDetaillevelChanged={onDetaillevelChanged} detaillevel_pref={detaillevel_pref} />,
@@ -225,7 +237,7 @@ const Summarize = () => {
             header={t("sum.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="small"
+            size={showSidebar ? "small" : "none"}
         ></ChatLayout>
     );
 };

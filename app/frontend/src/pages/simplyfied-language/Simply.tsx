@@ -15,6 +15,10 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
 import styles from "./Simply.module.css";
 import { ExampleList, ExampleModel } from "../../components/Example";
+import { Button, Tooltip } from "@fluentui/react-components";
+import { ArrowMaximize24Filled, ArrowMinimize24Filled } from "@fluentui/react-icons";
+import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
 type SimplyMessage = DBMessage<AskResponse>;
 
@@ -202,6 +206,9 @@ const Simply = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
+    const [showSidebar, setShowSidebar] = useState<boolean>(
+        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
+    );
 
     // StorageService
     const storageService = useMemo(
@@ -280,8 +287,12 @@ const Simply = () => {
 
     //Sidebar component
     const sidebar_actions = useMemo(
-        () => <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} />,
-        [clearChat, isLoading, lastQuestionRef.current]
+        () => (
+            <div className={styles.actionRow}>
+                <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+            </div>),
+        [clearChat, isLoading, lastQuestionRef.current, showSidebar]
     );
     const sidebar = useMemo(
         () => <Sidebar actions={sidebar_actions} content={<div className={styles.description}>{t("simply.plain_description")}</div>}></Sidebar>,
@@ -343,7 +354,7 @@ const Simply = () => {
             header={t("chat.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="small"
+            size={showSidebar ? "small" : "none"}
         ></ChatLayout>
     );
 };

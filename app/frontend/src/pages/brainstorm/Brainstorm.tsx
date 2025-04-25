@@ -101,7 +101,7 @@ const Brainstorm = () => {
     // onRollbackMessage function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
         if (!activeChatRef.current) return;
-        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
+        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat);
     };
 
     // makeApiRequest function to call the API and handle the response

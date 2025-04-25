@@ -248,7 +248,7 @@ const Simply = () => {
     // Rollback function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
         if (!activeChatRef.current) return;
-        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, () => clearChat, undefined);
+        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
     };
 
     // makeApiRequest function to handle API requests
@@ -288,7 +288,7 @@ const Simply = () => {
     const sidebar_actions = useMemo(
         () => (
             <div className={styles.actionRow}>
-                <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
             </div>),
         [clearChat, isLoading, lastQuestionRef.current, showSidebar]
@@ -340,7 +340,7 @@ const Simply = () => {
                 lastQuestionRef={lastQuestionRef}
             />
         ),
-        [answers, onRollbackMessage, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef, lastQuestionRef.current]
+        [answers, isLoading, error, makeApiRequest, onRollbackMessage, chatMessageStreamEnd, lastQuestionRef]
     );
 
     return (

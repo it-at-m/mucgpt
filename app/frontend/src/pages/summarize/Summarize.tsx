@@ -110,15 +110,15 @@ const Summarize = () => {
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = handleDeleteChat(
-        active_chat,
+    const clearChat = useCallback(() => handleDeleteChat(
+        activeChatRef.current,
         lastQuestionRef,
         error,
         setError,
         storageService,
         (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
         (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
-    );
+    ), [lastQuestionRef, error, setError, storageService, dispatch]);
 
     // makeApiRequest function to handle API requests
     const makeApiRequest = useCallback(
@@ -165,7 +165,7 @@ const Summarize = () => {
     const onRollbackMessage = useCallback(
         (index: number) => {
             if (!activeChatRef.current) return;
-            handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, () => clearChat, undefined);
+            handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat);
         },
         [activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat]
     );
@@ -186,7 +186,7 @@ const Summarize = () => {
     const sidebar_actions = useMemo(
         () => (
             <div className={styles.actionRow}>
-                <ClearChatButton onClick={() => clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
             </div>),
         [clearChat, isLoading, lastQuestionRef.current, showSidebar]

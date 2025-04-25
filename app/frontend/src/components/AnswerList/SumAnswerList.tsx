@@ -27,7 +27,7 @@ export const SumAnswerList = ({ answers, onRollbackMessage, isLoading, error, ma
             answers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index)} />}
+                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                     botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                     botmsg={<SumAnswer answer={answer.response} top_n={2}></SumAnswer>}

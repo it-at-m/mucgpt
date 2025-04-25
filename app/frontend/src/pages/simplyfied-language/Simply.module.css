@@ -5,3 +5,9 @@
     border-color: black;
     border-width: 1px;
 }
+.actionRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    align-items: start;
+}

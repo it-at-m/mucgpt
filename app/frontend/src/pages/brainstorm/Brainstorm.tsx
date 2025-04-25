@@ -15,7 +15,6 @@ import { getChatReducer, handleDeleteChat, handleRollback, setupStore } from "..
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
-import { a } from "@react-spring/web";
 
 type BrainstormMessage = DBMessage<AskResponse>;
 
@@ -102,7 +101,7 @@ const Brainstorm = () => {
     // onRollbackMessage function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
         if (!activeChatRef.current) return;
-        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
+        handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat);
     };
 
     // makeApiRequest function to call the API and handle the response
@@ -204,7 +203,7 @@ const Brainstorm = () => {
             header={t("brainstorm.header")}
             header_as_markdown={false}
             messages_description={t("common.messages")}
-            size="small"
+            size="none"
         ></ChatLayout>
     );
 };

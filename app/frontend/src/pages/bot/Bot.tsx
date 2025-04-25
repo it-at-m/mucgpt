@@ -19,9 +19,8 @@ import { ExampleList } from "../../components/Example/ExampleList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
-import { Button, Tooltip } from "@fluentui/react-components";
-import { ArrowMinimize24Filled, ArrowMaximize24Filled } from "@fluentui/react-icons";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
 const BotChat = () => {
     // useReducer für den Chat-Status
@@ -288,18 +287,7 @@ const BotChat = () => {
         () => (
             <>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <Tooltip content={showSidebar ? t("common.sidebar_hide") : t("common.sidebar_show")} relationship="description" positioning="below">
-                    <Button
-                        style={{ marginLeft: "5px" }}
-                        appearance="primary"
-                        icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
-                        onClick={() => {
-                            const toggled = !showSidebar;
-                            setShowSidebar(toggled);
-                            localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, toggled.toString());
-                        }}
-                    />
-                </Tooltip>
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
             </>
         ),
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]

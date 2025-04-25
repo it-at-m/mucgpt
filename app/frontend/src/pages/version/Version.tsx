@@ -4,6 +4,7 @@ import vorgeschlageneAntworten from "../../assets/vorgeschlagene_antworten.png";
 import zurückziehen from "../../assets/zurückziehen.png";
 import history from "../../assets/History.png";
 import simply from "../../assets/simply.png";
+import latex from "../../assets/latex.png";
 import { useTranslation } from "react-i18next";
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
@@ -30,7 +31,35 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems="13">
+                <Accordion multiple collapsible defaultOpenItems="14">
+                    <AccordionItem value="14">
+                        <AccordionHeader>[1.2.5] 24.04.2025</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t("version.added")}</h3>
+                                <h3>{t("version.fixed")}</h3>
+                                <ul>
+                                    <li>Fehler beim Einstellen der Tokenanzahl im Assistentenchat gefixt.</li>
+                                    <li>Fehler mit "Nachricht zurückrufen" und "Nachricht neu generieren" der ersten Nachricht gefixt.</li>
+                                    <li>Fehler beim Darstellen des Generierens einer Nachricht wurde behoben.</li>
+                                    <li>Mathematische Formeln werden nun mit LaTeX korrekt gerendert.
+                                        <p>
+                                            <img width="50%" src={latex} alt="Bild von mathematischen Formeln in MUCGPT"></img>
+                                        </p>
+                                    </li>
+                                </ul>
+                                <h3>{t("version.changed")}</h3>
+                                <ul>
+                                    <li>
+                                        Der Prompt für <i>einfache Sprache</i> wurde an neue Guidelines angepasst.
+                                    </li>
+                                    <li>
+                                        Allgemeine Verbesserungen der Benutzeroberfläche und des Quellcodes.
+                                    </li>
+                                </ul>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="13">
                         <AccordionHeader>[1.2.4] 4.03.2025</AccordionHeader>
                         <AccordionPanel>

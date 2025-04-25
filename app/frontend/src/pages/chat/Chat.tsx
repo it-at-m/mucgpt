@@ -28,6 +28,7 @@ import {
     TextCollapse24Filled
 } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
+import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -457,18 +458,7 @@ const Chat = () => {
         () => (
             <>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <Tooltip content={showSidebar ? t("common.sidebar_hide") : t("common.sidebar_show")} relationship="description" positioning="below">
-                    <Button
-                        style={{ marginLeft: "5px" }}
-                        appearance="primary"
-                        icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
-                        onClick={() => {
-                            const toggled = !showSidebar;
-                            setShowSidebar(toggled);
-                            localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, toggled.toString());
-                        }}
-                    />
-                </Tooltip>
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
             </>
         ),
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]

@@ -1,0 +1,10 @@
+id: init realm
+author: Default
+changes:
+  - addRealm:
+      name: local_realm
+
+  - addClientScope:
+      realm: local_realm
+      name: openid
+      description: Client scope used for OpenID Connect (OIDC) based authentication

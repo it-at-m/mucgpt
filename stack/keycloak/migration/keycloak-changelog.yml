@@ -1,0 +1,8 @@
+includes:
+  - path: 01_init-realm.yml
+  - path: 02_add-clients.yml
+  - path: 03_add-roles.yml
+  - path: 04_add-users.yml
+  - path: 05_assign-roles.yml
+  - path: 06_local-audience.yml
+  #- path: permissions/P01_init_permissions.yml

@@ -1,0 +1,20 @@
+id: configure local audience
+author: Default
+realm: local_realm
+changes:
+  - addClientScope:
+      name: local_audience
+      description: Add local to audience claim
+      protocolMappers:
+        - name: local_audience
+          protocol: openid-connect
+          protocolMapper: oidc-audience-mapper
+          config:
+            access.token.claim: "true"
+            id.token.claim: "true"
+            included.client.audience: "local"
+            included.custom.audience: ""
+
+  - assignDefaultClientScope:
+      clientId: local
+      clientScopeName: local_audience

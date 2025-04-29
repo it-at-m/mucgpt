@@ -1,0 +1,35 @@
+import unittest
+
+import pytest
+from core.datahelper import Repository, Requestinfo
+from sqlalchemy import Engine
+
+
+class Test_Datahelper(unittest.TestCase):
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    def test_requestinfo_creation(self):
+        request = Requestinfo(
+            tokencount=100,
+            department="IT",
+            messagecount=50,
+            method="GET",
+            model="MUCGPT",
+        )
+        self.assertIsInstance(request, Requestinfo)
+        self.assertEqual(request.tokencount, 100)
+        self.assertEqual(request.department, "IT")
+        self.assertEqual(request.messagecount, 50)
+        self.assertEqual(request.method, "GET")
+        self.assertEqual(request.model, "MUCGPT")
+        self.assertEqual(
+            str(request),
+            "<ID None, Department 'IT', Tokencount 100, Model 'MUCGPT', Method 'GET', Messagecount 50>",
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.unit
+    def test_repository_creation(self):
+        repo = Repository("user", "host", "database", "password")
+        self.assertIsInstance(repo, Repository)
+        self.assertIsInstance(repo.engine, Engine)

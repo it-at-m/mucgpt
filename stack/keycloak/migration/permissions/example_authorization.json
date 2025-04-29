@@ -1,0 +1,72 @@
+{
+  "allowRemoteResourceManagement": false,
+  "policies": [
+    {
+      "config": {
+        "roles": "[{\"id\":\"local/writer\",\"required\":false}]"
+      },
+      "decisionStrategy": "AFFIRMATIVE",
+      "logic": "POSITIVE",
+      "name": "rolepolicy_writer",
+      "type": "role"
+    },
+    {
+      "config": {
+        "roles": "[{\"id\":\"local/reader\",\"required\":false}]"
+      },
+      "decisionStrategy": "AFFIRMATIVE",
+      "logic": "POSITIVE",
+      "name": "rolepolicy_reader",
+      "type": "role"
+    },
+    {
+      "config": {
+        "applyPolicies": "[\"rolepolicy_writer\"]",
+        "resources": "[\"REFARCH_THEENTITY_DELETE\"]"
+      },
+      "decisionStrategy": "AFFIRMATIVE",
+      "logic": "POSITIVE",
+      "name": "permission_REFARCH_THEENTITY_DELETE",
+      "type": "resource"
+    },
+    {
+      "config": {
+        "applyPolicies": "[\"rolepolicy_writer\"]",
+        "resources": "[\"REFARCH_THEENTITY_WRITE\"]"
+      },
+      "decisionStrategy": "AFFIRMATIVE",
+      "logic": "POSITIVE",
+      "name": "permission_REFARCH_THEENTITY_WRITE",
+      "type": "resource"
+    },
+    {
+      "config": {
+        "applyPolicies": "[\"rolepolicy_writer\",\"rolepolicy_reader\"]",
+        "resources": "[\"REFARCH_THEENTITY_READ\"]"
+      },
+      "decisionStrategy": "AFFIRMATIVE",
+      "logic": "POSITIVE",
+      "name": "permission_REFARCH_THEENTITY_READ",
+      "type": "resource"
+    }
+  ],
+  "policyEnforcementMode": "ENFORCING",
+  "resources": [
+    {
+      "name": "REFARCH_THEENTITY_READ",
+      "scopes": [],
+      "type": "local-backend-service"
+    },
+    {
+      "name": "REFARCH_THEENTITY_WRITE",
+      "scopes": [],
+      "type": "local-backend-service"
+    },
+    {
+      "name": "REFARCH_THEENTITY_DELETE",
+      "scopes": [],
+      "type": "local-backend-service"
+    }
+  ],
+  "scopes": []
+}

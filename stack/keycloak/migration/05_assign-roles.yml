@@ -1,0 +1,12 @@
+id: assign roles to users
+author: Default
+realm: local_realm
+changes:
+  - assignRole:
+      user: reader
+      role: reader
+      clientId: local
+  - assignRole:
+      user: writer
+      role: writer
+      clientId: local

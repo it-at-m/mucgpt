@@ -1,0 +1,17 @@
+id: add roles
+author: Default
+realm: local_realm
+changes:
+  - addRole:
+      name: reader
+      description: Example role with read access to application data
+      clientRole: true
+      clientId: local
+      composite: false
+
+  - addRole:
+      name: writer
+      description: Example role with write access to application data
+      clientRole: true
+      clientId: local
+      composite: false

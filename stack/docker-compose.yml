@@ -1,0 +1,152 @@
+name: mucgpt-stack
+
+services:
+  postgres:
+    image: postgres:17.4-alpine3.21@sha256:7062a2109c4b51f3c792c7ea01e83ed12ef9a980886e3b3d380a7d2e5f6ce3f5
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - "5432:5432"
+    healthcheck: &healthcheck
+      test: ["CMD-SHELL", "pg_isready -d postgres -U admin"]
+      interval: 30s
+      timeout: 60s
+      retries: 3
+      start_period: 60s
+    security_opt: &security_settings
+      - no-new-privileges:true
+
+   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
+  pg-admin:
+    image: dpage/pgadmin4:9.2.0@sha256:52cb72a9e3da275324ca0b9bb3891021366d501aad375db34584a7bca8ce02ff
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+      - PGADMIN_CONFIG_SERVER_MODE=False
+      - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+      - PGADMIN_LISTEN_PORT=5050
+    ports:
+      - "5050:5050"
+    depends_on:
+      - postgres
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "wget", "-O", "-", "http://localhost:5050/misc/ping"]
+    security_opt: *security_settings
+    volumes:
+      - './pgadmin/servers.json:/pgadmin4/servers.json:ro'
+      - './pgadmin/pgpass:/pgadmin4/pgpass'
+    user: root # see https://github.com/pgadmin-org/pgadmin4/issues/6257
+    entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
+
+  keycloak:
+    image: keycloak/keycloak:26.2.1@sha256:9869b88191392727f0be7301e53573cc39c13c9d9b9b08492c97d1ea40366eae
+    command:
+      - start-dev
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_HEALTH_ENABLED=true
+      - KC_HTTP_PORT=8100
+      - KC_HTTP_RELATIVE_PATH=/auth
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./keycloak/plugins:/opt/keycloak/providers/
+    networks:
+      - keycloak
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then exit 0;else exit 1;fi;"]
+    security_opt: *security_settings
+
+  init-keycloak:
+    image: klg71/keycloakmigration:0.2.81@sha256:2c73c904a644b75637a01434f357caee9c029f37bd8960793c68233d5afa468a
+    depends_on:
+      - keycloak
+    environment:
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: admin
+      BASEURL: http://keycloak:8100/auth
+      WAIT_FOR_KEYCLOAK: 'true'
+      FAIL_ON_UNDEFINED_VARIABLES: 'true'
+      KEYCLOAK_CHANGELOG: /migration/keycloak-changelog.yml
+    volumes:
+      - './keycloak/migration:/migration'
+    networks:
+      - keycloak
+    security_opt: *security_settings
+
+  refarch-gateway:
+    image: ghcr.io/it-at-m/refarch/refarch-gateway:1.5.0@sha256:9ebe76275d7aa7863f66e600ed91aa10c538faa183e06c0a6b3ef87fceb88315
+    depends_on:
+      init-keycloak:
+        condition: service_completed_successfully
+    ports:
+      - "8083:8080"
+    environment:
+    - ALLOWED_ORIGINS_PUBLIC=http://localhost:*
+    - ALLOWED_ORIGINS_CLIENTS=http://localhost:*
+    - SPRING_CLOUD_GATEWAY_ROUTES_0_ID=sso
+    - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://kubernetes.docker.internal:8100/
+    - SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0=Path=/api/sso/userinfo
+    - SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0=RewritePath=/api/sso/userinfo, /auth/realms/local_realm/protocol/openid-connect/userinfo
+    - SPRING_CLOUD_GATEWAY_ROUTES_1_ID=backend
+    - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://host.docker.internal:39146/
+    - SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0=Path=/api/backend/**
+    - SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
+    - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=frontend
+    - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://host.docker.internal:8081/
+    - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/**
+    - SPRING_PROFILES_ACTIVE=hazelcast-local
+    - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://kubernetes.docker.internal:8100/auth/realms/local_realm
+    - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
+    - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_PROVIDER=sso
+    - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=local
+    - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTSECRET=client_secret
+    - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=profile, openid
+    networks:
+      - keycloak
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      <<: *healthcheck
+      test: [ "CMD-SHELL", "curl http://localhost:8080/actuator/health/liveness" ]
+    security_opt: *security_settings
+
+  core-service:
+      profiles:
+        - backend
+      build:
+        context: ..\mucgpt-core-service
+        dockerfile: Dockerfile
+      env_file:
+        - ./.env
+      ports:
+        - "39146:8000"
+      networks:
+        - keycloak
+      healthcheck:
+        <<: *healthcheck
+        test: [ "CMD-SHELL", "curl http://localhost:39146/api/backend/health" ]
+
+
+  # If the frontend is to be started in the Docker-Compose, the following command must be executed at startup:
+  # docker-compose --profile=frontend up
+  # oder e.g.:
+  # docker-compose --profile=backend --profile=frontend --profile=online --profile=aenderungsservice --profile=eai up
+  frontend:
+    profiles:
+      - frontend
+    build:
+      context: ..\mucgpt-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    networks:
+      - keycloak
+
+networks:
+  keycloak:

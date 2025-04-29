@@ -1,0 +1,31 @@
+id: add and configure local client
+author: Default
+realm: local_realm
+changes:
+  - addSimpleClient:
+      clientId: local
+      secret: client_secret
+      publicClient: false
+      redirectUris:
+        - http://*
+        - https://*
+
+  # Maps user client roles of current client into a claim "authorities"
+  - addClientMapper:
+      clientId: local
+      name: userClientRolesAuthorities
+      protocolMapper: oidc-usermodel-client-role-mapper
+      config:
+        access.token.claim: true
+        id.token.claim: true
+        userinfo.token.claim: true
+        jsonType.label: String
+        multivalued: true
+        claim.name: "authorities"
+        usermodel.clientRoleMapping.clientId: local
+        usermodel.clientRoleMapping.rolePrefix: "ROLE_"
+
+  # !!! very import must have. Without that default scope u dont have access to userinfo-endpoint
+  - assignDefaultClientScope:
+      clientId: local
+      clientScopeName: openid

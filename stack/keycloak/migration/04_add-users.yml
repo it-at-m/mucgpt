@@ -1,0 +1,34 @@
+id: add users
+author: Default
+realm: local_realm
+changes:
+  - addUser:
+      name: none
+      lastName: none
+      firstName: none
+      enabled: true
+      emailVerified: true
+      email: none@none.com
+  - updateUserPassword:
+      name: none
+      password: "none"
+  - addUser:
+      name: reader
+      lastName: reader
+      firstName: reader
+      enabled: true
+      emailVerified: true
+      email: reader@reader.com
+  - updateUserPassword:
+      name: reader
+      password: "reader"
+  - addUser:
+      name: writer
+      lastName: writer
+      firstName: writer
+      enabled: true
+      emailVerified: true
+      email: writer@writer.com
+  - updateUserPassword:
+      name: writer
+      password: "writer"

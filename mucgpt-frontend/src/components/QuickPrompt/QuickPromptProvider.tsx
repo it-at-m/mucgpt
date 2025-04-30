@@ -1,5 +1,5 @@
 // Context.js
-import React, { Dispatch, SetStateAction, useContext, useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { QuickPrompt } from "./QuickPrompt";
 
 interface IQuickPromptProvider {
@@ -9,7 +9,7 @@ interface IQuickPromptProvider {
 
 export const QuickPromptContext = React.createContext<IQuickPromptProvider>({ quickPrompts: [], setQuickPrompts: () => {} });
 
-export const QuickPromptProvider = (props: React.PropsWithChildren<{}>) => {
+export const QuickPromptProvider = (props: React.PropsWithChildren<unknown>) => {
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
 
     return <QuickPromptContext.Provider value={{ quickPrompts: quickPrompts, setQuickPrompts: setQuickPrompts }}>{props.children}</QuickPromptContext.Provider>;

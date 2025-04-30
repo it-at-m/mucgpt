@@ -29,14 +29,19 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
             // Confirm the diagram is valid before rendering since it could be invalid
             // while streaming, or if the LLM "hallucinates" an invalid diagram.
             text = text.replaceAll("`", "");
-            let validMermaid = await mermaid.parse(text, { suppressErrors: true });
+            const validMermaid = await mermaid.parse(text, { suppressErrors: true });
             if (validMermaid) {
-                const { svg } = await mermaid.render(id, text).then(
-                    value => value,
-                    _ => {
-                        return { svg: undefined };
-                    }
-                );
+                let svg: string | undefined;
+                try {
+                    // Attempt to render the Mermaid diagram
+                    const result = await mermaid.render(id, text);
+                    svg = result.svg;
+                } catch (error) {
+                    // If rendering fails, ensure svg is undefined
+                    svg = undefined;
+                    // Optional: Log the error for debugging purposes
+                    console.error("Mermaid rendering failed:", error);
+                }
                 if (svg) {
                     const svgImage = new DOMParser().parseFromString(svg, "text/html").body.firstElementChild;
                     if (svgImage) {

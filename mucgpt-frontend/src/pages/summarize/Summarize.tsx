@@ -16,8 +16,6 @@ import { SumAnswerList } from "../../components/AnswerList/SumAnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { Button, Tooltip } from "@fluentui/react-components";
-import { ArrowMaximize24Filled, ArrowMinimize24Filled } from "@fluentui/react-icons";
 import styles from "./Summarize.module.css";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
@@ -61,7 +59,7 @@ const Summarize = () => {
     });
 
     // Destrukturierung für einfacheren Zugriff
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+    const { answers, active_chat } = chatState;
 
     // Context
     const { language } = useContext(LanguageContext);
@@ -85,7 +83,7 @@ const Summarize = () => {
     const [detaillevel, setDetaillevel] = useState<"long" | "medium" | "short">(detaillevel_pref);
 
     // StorageService
-    const storageService: StorageService<SumResponse, {}> = new StorageService<SumResponse, {}>(SUMMARIZE_STORE);
+    const storageService: StorageService<SumResponse, unknown> = new StorageService<SumResponse, unknown>(SUMMARIZE_STORE);
 
     // useEffect to keep the activeChatRef in sync with the active_chat state
     useEffect(() => {
@@ -110,23 +108,27 @@ const Summarize = () => {
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = useCallback(() => handleDeleteChat(
-        activeChatRef.current,
-        lastQuestionRef,
-        error,
-        setError,
-        storageService,
-        (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
-        (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
-    ), [lastQuestionRef, error, setError, storageService, dispatch]);
+    const clearChat = useCallback(
+        () =>
+            handleDeleteChat(
+                activeChatRef.current,
+                lastQuestionRef,
+                error,
+                setError,
+                storageService,
+                (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+                (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+            ),
+        [lastQuestionRef, error, setError, storageService, dispatch]
+    );
 
     // makeApiRequest function to handle API requests
     const makeApiRequest = useCallback(
         async (question: string, file?: File) => {
-            let questionText = file ? file.name : question;
+            const questionText = file ? file.name : question;
             lastQuestionRef.current = questionText;
 
-            error && setError(undefined);
+            if (error) setError(undefined);
             setIsLoading(true);
             try {
                 const request: SumRequest = {
@@ -188,7 +190,8 @@ const Summarize = () => {
             <div className={styles.actionRow}>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
-            </div>),
+            </div>
+        ),
         [clearChat, isLoading, lastQuestionRef.current, showSidebar]
     );
     const sidebar_content = useMemo(

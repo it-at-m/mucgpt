@@ -19,10 +19,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                 size="small"
                 positioning="below-start"
             >
-                {options.map((item, _) => (
-                    <Option key={item.llm_name}>
-                        {item.llm_name}
-                    </Option>
+                {options.map(item => (
+                    <Option key={item.llm_name}>{item.llm_name}</Option>
                 ))}
             </Dropdown>
         </div>

@@ -20,7 +20,9 @@ export async function setupStore(
     lastQuestionRef: MutableRefObject<string>,
     setActiveChat: (id: string | undefined) => void
 ) {
-    error && setError(undefined);
+    if (error) {
+        setError(undefined);
+    }
     setIsLoading(true);
     const existingData = await storageService.getNewestChat();
     if (existingData) {
@@ -43,7 +45,9 @@ export function handleDeleteChat(
 ) {
     if (!id) return;
     lastQuestionRef.current = "";
-    error && setError(undefined);
+    if (error) {
+        setError(undefined);
+    }
     storageService.delete(id);
     setAnswers([]);
     setActiveChat(undefined);
@@ -136,7 +140,6 @@ export const makeApiRequest = async (
 
     // Initialize response variables
     let user_tokens = 0;
-    let answer = "";
     let streamed_tokens = 0;
 
     // Add an empty response

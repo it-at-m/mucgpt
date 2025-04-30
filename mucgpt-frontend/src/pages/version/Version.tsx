@@ -42,7 +42,8 @@ const Version = () => {
                                     <li>Fehler beim Einstellen der Tokenanzahl im Assistentenchat gefixt.</li>
                                     <li>Fehler mit "Nachricht zurückrufen" und "Nachricht neu generieren" der ersten Nachricht gefixt.</li>
                                     <li>Fehler beim Darstellen des Generierens einer Nachricht wurde behoben.</li>
-                                    <li>Mathematische Formeln werden nun mit LaTeX korrekt gerendert.
+                                    <li>
+                                        Mathematische Formeln werden nun mit LaTeX korrekt gerendert.
                                         <p>
                                             <img width="50%" src={latex} alt="Bild von mathematischen Formeln in MUCGPT"></img>
                                         </p>
@@ -53,9 +54,7 @@ const Version = () => {
                                     <li>
                                         Der Prompt für <i>einfache Sprache</i> wurde an neue Guidelines angepasst.
                                     </li>
-                                    <li>
-                                        Allgemeine Verbesserungen der Benutzeroberfläche und des Quellcodes.
-                                    </li>
+                                    <li>Allgemeine Verbesserungen der Benutzeroberfläche und des Quellcodes.</li>
                                 </ul>
                             </div>
                         </AccordionPanel>

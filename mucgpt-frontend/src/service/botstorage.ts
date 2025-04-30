@@ -74,7 +74,7 @@ export class BotStorageService {
      ***************************/
 
     async createBotConfig(bot_config: Bot, id: string = uuid()) {
-        let config_with_id = { ...bot_config, ...{ id: id } };
+        const config_with_id = { ...bot_config, ...{ id: id } };
         await this.storageService.create([], config_with_id, BotStorageService.GENERATE_BOT_CONFIG_ID(id));
         return id;
     }

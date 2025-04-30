@@ -24,6 +24,7 @@
     "remark": "15.0.1",
     "remark-gfm": "4.0.1",
     "remark-math": "6.0.0",
+    "typescript-eslint": "^8.31.1",
     "uuid": "11.1.0"
   },
   "devDependencies": {
@@ -33,6 +34,8 @@
     "@types/react-dom": "18.3.6",
     "@types/react-syntax-highlighter": "15.5.13",
     "@vitejs/plugin-react": "4.4.1",
+    "eslint": "9.25.1",
+    "eslint-plugin-react": "7.37.5",
     "gh-pages": "6.3.0",
     "msw": "2.7.5",
     "prettier": "3.5.3",
@@ -56,10 +59,11 @@
     "buildlocal": "tsc && vite build",
     "deploy": "gh-pages -d dist --remote origin",
     "dev": "vite",
-    "fix": "prettier . --write",
-    "lint": "prettier . --check ",
+    "fix": "prettier . --write && eslint . --fix",
+    "lint": "prettier . --check && eslint . && vue-tsc --build --noEmit",
     "predeploy": "npm run build:ghpages",
     "preview": "vite preview",
+    "type-check": "tsc --noEmit",
     "watch": "tsc && vite build --watch"
   },
   "type": "module",

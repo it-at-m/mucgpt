@@ -111,7 +111,7 @@ export class StorageService<M, C> {
                 stored._last_edited = Date.now();
                 if (favorite !== undefined) stored.favorite = favorite;
                 if (name) stored.name = name;
-                const result = await db.put(this.config.objectStore_name, stored);
+                await db.put(this.config.objectStore_name, stored);
                 return stored;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {
@@ -169,7 +169,7 @@ export class StorageService<M, C> {
             const stored = await this.get(id);
             if (stored) {
                 const popedMessage = stored.messages.pop();
-                const updated = await this.update(id, stored.messages, stored.config);
+                await this.update(id, stored.messages, stored.config);
                 return popedMessage;
             } else throw new Error("No object with id " + id + " found");
         } catch (error) {

@@ -41,12 +41,15 @@ export const SumInput = ({ onSend, disabled, placeholder, clearOnSend, question,
     }, [disabled, question, file, onSend, clearOnSend, removeDocuments]);
 
     // enter press
-    const onEnterPress = useCallback((ev: React.KeyboardEvent<Element>) => {
-        if (ev.key === "Enter" && !ev.shiftKey) {
-            ev.preventDefault();
-            sendQuestion();
-        }
-    }, [sendQuestion]);
+    const onEnterPress = useCallback(
+        (ev: React.KeyboardEvent<Element>) => {
+            if (ev.key === "Enter" && !ev.shiftKey) {
+                ev.preventDefault();
+                sendQuestion();
+            }
+        },
+        [sendQuestion]
+    );
 
     // question change
     const onQuestionChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {

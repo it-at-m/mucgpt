@@ -30,7 +30,6 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
 
-
     const [processedText, setProcessedText] = useState<string>("");
     const oncopy = useCallback(() => {
         setCopied(true);
@@ -45,19 +44,20 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
             setProcessedText("");
             return;
         }
-        setProcessedText(answer.answer
-            .replace(/\\\[/g, '$$$')  // Replace all occurrences of \[ with $$
-            .replace(/\\\]/g, '$$$') // Replace all occurrences of \] with $$
-            .replace(/\\\(/g, '$$$')  // Replace all occurrences of \( with $$
-            .replace(/\\\)/g, '$$$')); // Replace all occurrences of \) with $$
-    }
-        , [answer.answer]); // Run this effect only when the message changes
+        setProcessedText(
+            answer.answer
+                .replace(/\\\[/g, "$$$") // Replace all occurrences of \[ with $$
+                .replace(/\\\]/g, "$$$") // Replace all occurrences of \] with $$
+                .replace(/\\\(/g, "$$$") // Replace all occurrences of \( with $$
+                .replace(/\\\)/g, "$$$")
+        ); // Replace all occurrences of \) with $$
+    }, [answer.answer]); // Run this effect only when the message changes
 
     const remarkMathOptions = {
-        singleDollarTextMath: false,
+        singleDollarTextMath: false
     };
     const rehypeKatexOptions = {
-        output: "mathml",
+        output: "mathml"
     };
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">

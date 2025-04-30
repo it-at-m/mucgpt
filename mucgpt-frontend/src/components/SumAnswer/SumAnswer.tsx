@@ -10,10 +10,9 @@ import { CheckmarkSquare24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { AnswerIcon } from "../Answer/AnswerIcon";
 interface Props {
     answer: SumResponse;
-    top_n: number; // die besten zwei Varianten darstellen
 }
 
-export const SumAnswer = ({ answer, top_n }: Props) => {
+export const SumAnswer = ({ answer }: Props) => {
     const { t } = useTranslation();
     const [getSelected, setSelected] = useState(0);
     const [copied, setCopied] = useState<boolean>(false);

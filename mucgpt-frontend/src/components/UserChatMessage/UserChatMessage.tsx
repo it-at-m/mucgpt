@@ -16,10 +16,10 @@ interface Props {
 
 export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage }: Props) => {
     const remarkMathOptions = {
-        singleDollarTextMath: false,
+        singleDollarTextMath: false
     };
     const rehypeKatexOptions = {
-        output: "mathml",
+        output: "mathml"
     };
     return (
         <div className={styles.message}>

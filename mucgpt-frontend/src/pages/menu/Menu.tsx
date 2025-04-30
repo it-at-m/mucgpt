@@ -25,7 +25,7 @@ const Menu = () => {
         migrate_old_bots().then(async () => {
             let bots = await botStorageService.getAllBotConfigs();
             let community_assistants = communityBots;
-            for (let bot of bots) {
+            for (const bot of bots) {
                 if (bot.publish) {
                     if (community_assistants.find(b => b.id === bot.id)) {
                         community_assistants = community_assistants.filter(b => b.id !== bot.id);

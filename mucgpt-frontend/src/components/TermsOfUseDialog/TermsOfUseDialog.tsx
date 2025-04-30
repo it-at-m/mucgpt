@@ -108,7 +108,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: Props) => {
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="small" onClick={_ => onAccept()}>
+                                <Button appearance="secondary" size="small" onClick={onAccept}>
                                     <Checkmark24Filled className={styles.checkIcon} />
                                     Zustimmen
                                 </Button>

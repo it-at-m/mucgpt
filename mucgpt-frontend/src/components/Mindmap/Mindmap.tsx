@@ -39,7 +39,7 @@ export const Mindmap = ({ markdown }: Props) => {
     const rescale = useCallback(() => {
         setTimeout(() => {
             if (!isSourceView) {
-                let mm = Markmap.create(svgEl.current as SVGSVGElement);
+                const mm = Markmap.create(svgEl.current as SVGSVGElement);
                 mm.destroy();
                 createMM();
             }
@@ -79,7 +79,7 @@ export const Mindmap = ({ markdown }: Props) => {
         question.setAttribute("TEXT", parsed.content);
         question.setAttribute("FOLDED", "false");
 
-        for (let child of parsed.children) {
+        for (const child of parsed.children) {
             parseNodes(child, question, doc);
         }
         mapElem.appendChild(question);
@@ -95,7 +95,7 @@ export const Mindmap = ({ markdown }: Props) => {
         //const edge = doc.createElement("edge");
         //edge.setAttribute("COLOR", "")
 
-        for (let child of to_be_parsed.children) {
+        for (const child of to_be_parsed.children) {
             parseNodes(child, result, doc);
         }
         parent.appendChild(result);
@@ -103,7 +103,7 @@ export const Mindmap = ({ markdown }: Props) => {
 
     // create mindmap
     const createMM = useCallback(() => {
-        let mm = Markmap.create(svgEl.current as SVGSVGElement, { autoFit: true });
+        const mm = Markmap.create(svgEl.current as SVGSVGElement, { autoFit: true });
         if (mm) {
             const { root } = transformer.transform(markdown || "");
             parseXML(root);

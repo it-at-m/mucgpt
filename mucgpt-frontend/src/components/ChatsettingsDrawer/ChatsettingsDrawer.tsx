@@ -58,7 +58,7 @@ export const ChatsettingsDrawer = ({
     };
 
     // sidebar action and content
-    const sidebar_action = <div className={styles.actionRow}> {actions}</div>
+    const sidebar_action = <div className={styles.actionRow}> {actions}</div>;
     const sidebar_content = (
         <>
             <>{content}</>
@@ -164,7 +164,5 @@ export const ChatsettingsDrawer = ({
         </>
     );
 
-    return (
-        <Sidebar actions={sidebar_action} content={sidebar_content} ></Sidebar>
-    );
+    return <Sidebar actions={sidebar_action} content={sidebar_content}></Sidebar>;
 };

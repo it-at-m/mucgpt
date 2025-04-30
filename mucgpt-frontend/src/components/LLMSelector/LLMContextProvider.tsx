@@ -13,7 +13,7 @@ export const LLMContext = React.createContext<ILLMProvider>({
     setLLM: () => {}
 });
 
-export const LLMContextProvider = (props: React.PropsWithChildren<{}>) => {
+export const LLMContextProvider = (props: React.PropsWithChildren<unknown>) => {
     const [LLM, setLLM] = useState<Model>({ llm_name: DEFAULTLLM, max_output_tokens: 0, max_input_tokens: 0, description: "" });
 
     return <LLMContext.Provider value={{ LLM, setLLM }}>{props.children}</LLMContext.Provider>;

@@ -18,16 +18,6 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import {
-    ArrowCollapseAll24Filled,
-    ArrowMaximize24Filled,
-    ArrowMinimize24Filled,
-    Eye24Filled,
-    List20Regular,
-    ListBar24Filled,
-    TextCollapse24Filled
-} from "@fluentui/react-icons";
-import { Button, Tooltip } from "@fluentui/react-components";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
 /**
@@ -91,7 +81,7 @@ const Chat = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
-    const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
+    const { setQuickPrompts } = useContext(QuickPromptContext);
 
     // Independent states
     const [error, setError] = useState<unknown>();

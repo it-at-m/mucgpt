@@ -24,7 +24,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
     const [description, setDescription] = useState<string>("0");
 
     useEffect(() => {
-        let actual = countWords(question) + tokens_used;
+        const actual = countWords(question) + tokens_used;
         let text;
         if (token_limit_tracking) {
             text = `${actual}/ ${LLM.max_input_tokens} ${t("components.questioninput.tokensused")}`;

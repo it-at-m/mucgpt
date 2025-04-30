@@ -36,9 +36,9 @@ export async function migrate_old_bots() {
     if (db.objectStoreNames.contains(LEGACY_BOT_STORE.objectStore_name)) {
         const oldbots: LegacyBot[] = (await db.getAll(LEGACY_BOT_STORE.objectStore_name)) as LegacyBot[];
         await db.clear(LEGACY_BOT_STORE.objectStore_name);
-        for (let oldbot of oldbots) {
+        for (const oldbot of oldbots) {
             if (oldbot.id == 0 || oldbot.id == 1) continue; //skip the default bots
-            let newBot = {
+            const newBot = {
                 title: oldbot.title,
                 description: oldbot.description,
                 system_message: oldbot.system_message,
@@ -66,8 +66,8 @@ export async function migrateChats(
         if (storeName === CHAT_STORE.objectStore_name && _oldVersion == 2) {
             transaction.oncomplete = async () => {
                 const oldchats: LegacyChatObject[] = (await db.getAll(storeName)) as [LegacyChatObject];
-                for (let chat of oldchats) {
-                    let newChat: DBObject<ChatResponse, ChatOptions> = {
+                for (const chat of oldchats) {
+                    const newChat: DBObject<ChatResponse, ChatOptions> = {
                         messages: chat.Data.Answers.map(answer => {
                             return {
                                 user: answer[0],

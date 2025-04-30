@@ -19,7 +19,7 @@ import { BotStorageService } from "../../service/botstorage";
 import { StorageService } from "../../service/storage";
 
 const formatDate = (date: Date) => {
-    let formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
+    const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
     return formatted_date;
 };
 
@@ -34,7 +34,7 @@ export const Layout = () => {
     const navigate = useNavigate();
 
     // Contexts
-    const { language, setLanguage } = useContext(LanguageContext);
+    const { setLanguage } = useContext(LanguageContext);
     const { LLM, setLLM } = useContext(LLMContext);
 
     // Use useRef to prevent duplicate API calls
@@ -109,12 +109,12 @@ export const Layout = () => {
                     console.error("Keine Modelle vorhanden");
                 }
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
-                for (let bot of result.frontend.community_assistants) {
+                for (const bot of result.frontend.community_assistants) {
                     bot.system_message = bot.system_message.replace(/\\n/g, "\n");
                     if (bot.system_message.startsWith('"') && bot.system_message.endsWith('"')) {
                         bot.system_message = bot.system_message.slice(1, -1);
                     }
-                    bot.description = bot.description.replace(/\\n/g, "\n").replace(/  /g, "  \n");
+                    bot.description = bot.description.replace(/\\n/g, "\n").replace(/ {2}/g, "  \n");
                     if (bot.description.startsWith('"') && bot.description.endsWith('"')) {
                         bot.description = bot.description.slice(1, -1);
                     }
@@ -140,7 +140,7 @@ export const Layout = () => {
     // language change
     const onLanguageSelectionChanged = useCallback(
         (e: SelectionEvents, selection: OptionOnSelectData) => {
-            let lang = selection.optionValue || DEFAULTLANG;
+            const lang = selection.optionValue || DEFAULTLANG;
             i18n.changeLanguage(lang);
             setLanguage(lang);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
@@ -151,8 +151,8 @@ export const Layout = () => {
     // llm change
     const onLLMSelectionChanged = useCallback(
         (e: SelectionEvents, selection: OptionOnSelectData) => {
-            let llm = selection.optionValue || DEFAULTLLM;
-            let found_llm = models.find(model => model.llm_name == llm);
+            const llm = selection.optionValue || DEFAULTLLM;
+            const found_llm = models.find(model => model.llm_name == llm);
             if (found_llm) {
                 setLLM(found_llm);
                 localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);

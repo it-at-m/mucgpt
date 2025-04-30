@@ -190,7 +190,7 @@ const Simply = () => {
     });
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+    const { answers, active_chat } = chatState;
 
     // Context
     const { LLM } = useContext(LLMContext);
@@ -209,10 +209,7 @@ const Simply = () => {
     );
 
     // StorageService
-    const storageService = useMemo(
-        () => new StorageService<AskResponse, Record<string, never>>(SIMPLY_STORE),
-        []
-    );
+    const storageService = useMemo(() => new StorageService<AskResponse, Record<string, never>>(SIMPLY_STORE), []);
 
     //useEffect to set the active chat reference when the active chat changes
     useEffect(() => {
@@ -234,16 +231,19 @@ const Simply = () => {
     }, []);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = useCallback(() => handleDeleteChat(
-        activeChatRef.current,
-        lastQuestionRef,
-        error,
-        setError,
-        storageService,
-        (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
-        (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
-    ), [activeChatRef.current, lastQuestionRef, error, setError, storageService, dispatch]);
-
+    const clearChat = useCallback(
+        () =>
+            handleDeleteChat(
+                activeChatRef.current,
+                lastQuestionRef,
+                error,
+                setError,
+                storageService,
+                (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+                (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+            ),
+        [activeChatRef.current, lastQuestionRef, error, setError, storageService, dispatch]
+    );
 
     // Rollback function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
@@ -254,7 +254,7 @@ const Simply = () => {
     // makeApiRequest function to handle API requests
     const makeApiRequest = useCallback(
         async (question: string) => {
-            error && setError(undefined);
+            if (error) setError(undefined);
             lastQuestionRef.current = question;
             setIsLoading(true);
             try {
@@ -279,7 +279,8 @@ const Simply = () => {
                 setIsLoading(false);
             }
         },
-        [LLM, answers, storageService, dispatch, activeChatRef]);
+        [LLM, answers, storageService, dispatch, activeChatRef]
+    );
 
     // Scroll to the end of the chat messages when new messages are added
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [isLoading]);
@@ -290,7 +291,8 @@ const Simply = () => {
             <div className={styles.actionRow}>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoading} showText={showSidebar} />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
-            </div>),
+            </div>
+        ),
         [clearChat, isLoading, lastQuestionRef.current, showSidebar]
     );
     const sidebar = useMemo(

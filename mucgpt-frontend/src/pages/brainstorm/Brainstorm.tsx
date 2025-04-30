@@ -49,7 +49,7 @@ const Brainstorm = () => {
     });
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+    const { answers, active_chat } = chatState;
 
     // Context
     const { language } = useContext(LanguageContext);
@@ -66,7 +66,7 @@ const Brainstorm = () => {
     const [question, setQuestion] = useState<string>("");
 
     // StorageService
-    const storageService: StorageService<AskResponse, {}> = new StorageService<AskResponse, {}>(BRAINSTORM_STORE);
+    const storageService: StorageService<AskResponse, unknown> = new StorageService<AskResponse, unknown>(BRAINSTORM_STORE);
 
     // useEffect to update the active chat reference whenever the active chat changes
     useEffect(() => {
@@ -88,15 +88,19 @@ const Brainstorm = () => {
     }, []);
 
     // clearChat function to delete the current chat and reset the state
-    const clearChat = useCallback(() => handleDeleteChat(
-        activeChatRef.current,
-        lastQuestionRef,
-        error,
-        setError,
-        storageService,
-        (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
-        (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
-    ), [activeChatRef.current, lastQuestionRef, error, setError, storageService, dispatch]);
+    const clearChat = useCallback(
+        () =>
+            handleDeleteChat(
+                activeChatRef.current,
+                lastQuestionRef,
+                error,
+                setError,
+                storageService,
+                (answers: ChatMessage[]) => dispatch({ type: "SET_ANSWERS", payload: answers }),
+                (id: string | undefined) => dispatch({ type: "SET_ACTIVE_CHAT", payload: id })
+            ),
+        [activeChatRef.current, lastQuestionRef, error, setError, storageService, dispatch]
+    );
 
     // onRollbackMessage function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
@@ -109,7 +113,8 @@ const Brainstorm = () => {
         async (question: string) => {
             lastQuestionRef.current = question;
 
-            error && setError(undefined);
+            if (error) setError(undefined);
+
             setIsLoading(true);
             try {
                 const request: BrainstormRequest = {
@@ -179,7 +184,7 @@ const Brainstorm = () => {
         () => (
             <AnswerList
                 answers={answers}
-                regularBotMsg={(answer, _) => {
+                regularBotMsg={answer => {
                     return <Mindmap markdown={answer.response.answer} />;
                 }}
                 onRollbackMessage={onRollbackMessage}

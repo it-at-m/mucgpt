@@ -37,7 +37,7 @@ const customBrandRamp: BrandVariants = {
     160: "#212529"
 };
 export const adjustTheme = (isLight: boolean, scaling: number) => {
-    let theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
+    const theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
     theme.fontSizeBase100 = (parseFloat(theme.fontSizeBase100.replace("px", "")) * scaling).toString() + "px";
     theme.fontSizeBase200 = (parseFloat(theme.fontSizeBase200.replace("px", "")) * scaling).toString() + "px";
     theme.fontSizeBase300 = (parseFloat(theme.fontSizeBase300.replace("px", "")) * scaling).toString() + "px";

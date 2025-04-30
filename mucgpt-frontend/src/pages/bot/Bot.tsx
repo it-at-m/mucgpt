@@ -57,7 +57,7 @@ const BotChat = () => {
     // Context
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
-    const { quickPrompts, setQuickPrompts } = useContext(QuickPromptContext);
+    const { setQuickPrompts } = useContext(QuickPromptContext);
 
     const [error, setError] = useState<unknown>();
     const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
@@ -86,7 +86,7 @@ const BotChat = () => {
     // useEffect to load the bot config and chat history
     useEffect(() => {
         if (bot_id) {
-            error && setError(undefined);
+            if (error) setError(undefined);
             isLoadingRef.current = true;
             botStorageService
                 .getBotConfig(bot_id)
@@ -129,7 +129,7 @@ const BotChat = () => {
     const callApi = useCallback(
         async (question: string) => {
             lastQuestionRef.current = question;
-            error && setError(undefined);
+            if (error) setError(undefined);
             isLoadingRef.current = true;
 
             const askResponse: AskResponse = {} as AskResponse;
@@ -214,7 +214,7 @@ const BotChat = () => {
     // ClearChat-Funktion
     const clearChat = useCallback(() => {
         lastQuestionRef.current = "";
-        error && setError(undefined);
+        if (error) setError(undefined);
         //unset active chat
         if (activeChatRef.current) {
             dispatch({ type: "SET_ACTIVE_CHAT", payload: undefined });

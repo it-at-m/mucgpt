@@ -1,5 +1,5 @@
 import { ChevronDown24Regular, DarkTheme20Regular, Dismiss24Regular, FontIncrease20Regular, Mail24Regular } from "@fluentui/react-icons";
-import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link, Switch } from "@fluentui/react-components";
+import { OverlayDrawer, Button, Slider, SliderProps, Label, useId, Tooltip, Link } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
 import { useCallback, useState } from "react";
@@ -9,7 +9,6 @@ import { LanguageSelector } from "../../components/LanguageSelector";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { useTranslation } from "react-i18next";
 import { Model } from "../../api";
-import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 interface Props {
     onLanguageSelectionChanged: (e: SelectionEvents, selection: OptionOnSelectData) => void;
     defaultlang: string;

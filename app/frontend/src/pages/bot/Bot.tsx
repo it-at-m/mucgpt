@@ -93,6 +93,9 @@ const BotChat = () => {
                 .then(bot => {
                     if (bot) {
                         setBotConfig(bot);
+                        dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
+                        dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
+                        dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
                         setQuickPrompts(bot.quick_prompts || []);
                     }
                     return botStorageService

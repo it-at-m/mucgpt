@@ -1,5 +1,5 @@
 [project]
-name = "MUCGPT"
+name = "mucgpt-core-service"
 version = "1.2.5"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"

@@ -43,6 +43,6 @@ repos:
     hooks:
       - id: npm-run-fix
         name: Run npm run fix in frontend
-        entry: bash -c 'cd mucgpt-frontend && npm run fix'
+        entry: pre-commit-npm-fix.bat
         language: system
-        types: [javascript, json, css, html]
+        files: ^mucgpt-frontend/

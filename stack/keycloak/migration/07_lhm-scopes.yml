@@ -1,0 +1,111 @@
+id: lhm_scopes
+author: Default
+realm: local_realm
+changes:
+  - addClientScope:
+      name: LHM
+      displayOnConsentScreen: false
+      includeInTokenScope: true
+      protocolMappers:
+        - name: email
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          config:
+            claim.name: "email"
+            user.attribute: "email"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "true"
+        - name: surname
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          config:
+            claim.name: "surname"
+            user.attribute: "lastName"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "false"
+        - name: givenname
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          config:
+            claim.name: "givenname"
+            user.attribute: "firstName"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "false"
+        - name: username
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          config:
+            claim.name: "username"
+            user.attribute: "username"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "true"
+        - name: displayName
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-property-mapper
+          config:
+            claim.name: "displayName"
+            user.attribute: "username"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "false"
+        - name: lhmObjectID
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-attribute-mapper
+          config:
+            claim.name: "lhmObjectID"
+            user.attribute: "lhmObjectID"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "false"
+            aggregate.attrs: "false"
+            multivalued: "false"
+        - name: telephoneNumber
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-attribute-mapper
+          config:
+            claim.name: "telephoneNumber"
+            user.attribute: "telephoneNumber"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "false"
+            aggregate.attrs: "false"
+            multivalued: "false"
+        - name: department
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-attribute-mapper
+          config:
+            claim.name: "department"
+            user.attribute: "department"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "true"
+            aggregate.attrs: "false"
+            multivalued: "false"
+  - addClientScope:
+      name: LHM_Extended
+      displayOnConsentScreen: false
+      includeInTokenScope: true
+      protocolMappers:
+        - name: client roles
+          protocol: openid-connect
+          protocolMapper: oidc-usermodel-attribute-mapper
+          config:
+            claim.name: "memberof"
+            user.attribute: "memberof"
+            userinfo.token.claim: "true"
+            id.token.claim: "true"
+            access.token.claim: "false"
+            jsonType.label: "String"
+            aggregate.attrs: "false"
+            multivalued: "true"
+  # assign optional scopes to client
+  - assignDefaultClientScope:
+      clientId: mucgpt
+      clientScopeName: LHM
+  - assignOptionalClientScope:
+      clientId: mucgpt
+      clientScopeName: LHM_Extended

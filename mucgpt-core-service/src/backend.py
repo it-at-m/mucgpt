@@ -73,11 +73,10 @@ async def add_process_time_header(request: Request, call_next):
 async def sum(
     body: str = Form(...),
     file: UploadFile = None,
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> SummarizeResult:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
+    department = get_department(access_token=access_token)
     sumRequest = SumRequest.model_validate(from_json(body))
     text = sumRequest.text if file is None else None
     if file is not None:
@@ -107,11 +106,10 @@ async def sum(
 @api_app.post("/brainstorm")
 async def brainstorm(
     request: BrainstormRequest,
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> BrainstormResult:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
+    department = get_department(access_token=access_token)
     try:
         impl = cfg["brainstorm_approaches"]
         r = await impl.brainstorm(
@@ -130,11 +128,10 @@ async def brainstorm(
 @api_app.post("/simply")
 async def simply(
     request: SimplyRequest,
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
+    department = get_department(access_token=access_token)
     try:
         impl = cfg["simply_approaches"]
         r = impl.simply(
@@ -153,12 +150,10 @@ async def simply(
 @api_app.post("/chat_stream")
 async def chat_stream(
     request: ChatRequest,
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> StreamingResponse:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
-
+    department = get_department(access_token=access_token)
     try:
         impl = cfg["chat_approaches"]
         response_generator = impl.run_with_streaming(
@@ -183,11 +178,10 @@ async def chat_stream(
 @api_app.post("/chat")
 async def chat(
     request: ChatRequest,
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
+    department = get_department(access_token=access_token)
     try:
         impl = cfg["chat_approaches"]
         chatResult = impl.run_without_streaming(
@@ -208,11 +202,10 @@ async def chat(
 @api_app.post("/create_bot")
 async def create_bot(
     request: CreateBotRequest,
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
-    id_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Id-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> CreateBotResult:
     cfg = get_config_and_authentificate(access_token=access_token)
-    department = get_department(id_token=id_token)
+    department = get_department(access_token=access_token)
     try:
         impl = cfg["chat_approaches"]
 
@@ -279,7 +272,7 @@ async def create_bot(
 
 @api_app.get("/config")
 async def getConfig(
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
     response = ConfigResponse(
@@ -302,7 +295,7 @@ async def getConfig(
 
 @api_app.get("/statistics")
 async def getStatistics(
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
@@ -323,7 +316,7 @@ async def getStatistics(
 @api_app.post("/counttokens")
 async def counttokens(
     request: CountTokenRequest,
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ) -> CountResult:
     get_config_and_authentificate(access_token)
     try:
@@ -340,7 +333,7 @@ async def counttokens(
 
 @api_app.get("/statistics/export")
 async def getStatisticsCSV(
-    access_token: str = Header(None, alias="X-Ms-Token-Lhmsso-Access-Token"),
+    access_token: str = Header(None, alias="authorization"),
 ):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
@@ -370,23 +363,16 @@ def get_config():
 def get_config_and_authentificate(access_token):
     cfg = get_config()
     if cfg["configuration_features"].backend.enable_auth:
-        ensure_authentification(access_token=access_token)
+        auth_client: AuthentificationHelper = cfg["authentification_client"]
+        auth_client.authentificate(accesstoken=access_token)
     return cfg
 
 
-def ensure_authentification(access_token):
+def get_department(access_token):
     cfg = get_config()
-    auth_client: AuthentificationHelper = cfg["authentification_client"]
-    claims = auth_client.authentificate(accesstoken=access_token)
-    return auth_client, claims
-
-
-def get_department(id_token):
-    cfg = get_config()
-
     if cfg["configuration_features"].backend.enable_auth:
         auth_client: AuthentificationHelper = cfg["authentification_client"]
-        id_claims = auth_client.decode(id_token)
+        id_claims = auth_client.decode(access_token)
         return auth_client.getDepartment(claims=id_claims)
     else:
         return None

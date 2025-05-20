@@ -21,8 +21,10 @@ class AuthentificationHelper:
         self.role = role
 
     @functools.lru_cache(maxsize=None)
-    def get_jwks_data(self, issuer: str):
-        openid_configuration_endpoint = f"{issuer}/.well-known/openid-configuration"
+    def get_jwks_data(self):
+        openid_configuration_endpoint = (
+            f"{self.issuer}/.well-known/openid-configuration"
+        )
         resp = requests.get(
             url=openid_configuration_endpoint, headers={"Accept": "application/json"}
         )
@@ -45,7 +47,7 @@ class AuthentificationHelper:
     def authentificate(self, accesstoken):
         claims = self.decode(accesstoken)
         try:
-            roles = claims["resource_access"]["mucgpt"]["roles"]
+            roles = self.getRoles(claims)
         except KeyError:
             raise AuthError(
                 "Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2.",
@@ -60,9 +62,19 @@ class AuthentificationHelper:
         return claims
 
     def decode(self, token):
-        keyset = self.get_jwks_data(self.issuer)
-        decoded = jwt.decode(token, key=keyset)
-        return decoded.claims
+        try:
+            if token.lower().startswith("bearer "):
+                token = token[7:]
+            decoded = jwt.decode(
+                token,
+                key=self.get_jwks_data(),
+            )
+            return decoded.claims
+        except Exception:
+            raise AuthError(
+                "Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2.",
+                status_code=401,
+            )
 
     def getRoles(self, claims):
         return claims["resource_access"]["mucgpt"]["roles"]

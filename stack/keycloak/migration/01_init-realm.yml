@@ -1,10 +1,14 @@
+# Dokumentation: https://mayope.github.io/keycloakmigration/migrations/realm/
 id: init realm
 author: Default
 changes:
   - addRealm:
       name: local_realm
 
+  - updateRealm:
+      id: local_realm
+      unmanagedAttributePolicy: "ENABLED"
+
   - addClientScope:
       realm: local_realm
       name: openid
-      description: Client scope used for OpenID Connect (OIDC) based authentication

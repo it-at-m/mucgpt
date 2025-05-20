@@ -5,4 +5,4 @@ includes:
   - path: 04_add-users.yml
   - path: 05_assign-roles.yml
   - path: 06_local-audience.yml
-  #- path: permissions/P01_init_permissions.yml
+  - path: 07_lhm-scopes.yml

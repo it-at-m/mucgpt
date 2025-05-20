@@ -3,10 +3,6 @@ author: Default
 realm: local_realm
 changes:
   - assignRole:
-      user: reader
-      role: reader
-      clientId: local
-  - assignRole:
-      user: writer
-      role: writer
-      clientId: local
+      user: mucgpt-user
+      role: lhm-ab-mucgpt-user
+      clientId: mucgpt

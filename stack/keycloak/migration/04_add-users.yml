@@ -3,32 +3,21 @@ author: Default
 realm: local_realm
 changes:
   - addUser:
-      name: none
-      lastName: none
-      firstName: none
+      name: mucgpt-user
+      lastName: gpt
+      firstName: muc
       enabled: true
       emailVerified: true
-      email: none@none.com
+      email: mucgpt@user.com
+      attributes:
+        user_name:
+          - mucgpt-user
+        lhmObjectID:
+          - mucgpt-user
+        telephoneNumber:
+          - "089-99998000"
+        department:
+          - "IT"
   - updateUserPassword:
-      name: none
-      password: "none"
-  - addUser:
-      name: reader
-      lastName: reader
-      firstName: reader
-      enabled: true
-      emailVerified: true
-      email: reader@reader.com
-  - updateUserPassword:
-      name: reader
-      password: "reader"
-  - addUser:
-      name: writer
-      lastName: writer
-      firstName: writer
-      enabled: true
-      emailVerified: true
-      email: writer@writer.com
-  - updateUserPassword:
-      name: writer
-      password: "writer"
+      name: mucgpt-user
+      password: "mucgpt"

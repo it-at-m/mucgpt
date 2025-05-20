@@ -14,7 +14,7 @@ export function getConfig(): RequestInit {
  * Returns a default POST-Config for fetch
  * @param body Optional body to be transferred
  */
-// eslint-disable-next-line
+
 export function postConfig(body: any): RequestInit {
     return {
         method: "POST",
@@ -31,7 +31,7 @@ export function postConfig(body: any): RequestInit {
  * If available, the version of the entity to be updated is included in this as an "If-Match" header.
  * @param body Optional body to be transferred
  */
-// eslint-disable-next-line
+
 export function putConfig(body: any): RequestInit {
     const headers = getHeaders();
     if (body.version) {
@@ -52,7 +52,7 @@ export function putConfig(body: any): RequestInit {
  * If available, the version of the entity to be updated is included in this as an "If-Match" header.
  * @param body Optional body to be transferred
  */
-// eslint-disable-next-line
+
 export function patchConfig(body: any): RequestInit {
     const headers = getHeaders();
     if (body.version !== undefined) {

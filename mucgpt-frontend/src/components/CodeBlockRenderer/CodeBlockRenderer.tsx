@@ -17,7 +17,7 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
 
     const oncopy = useCallback(() => {
         setCopied(true);
-        navigator.clipboard.writeText(children);
+        navigator.clipboard.writeText(children as string);
         setIcon("Checkmark");
         setTimeout(() => {
             setIcon("Copy");
@@ -42,7 +42,7 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
         return isMultiline ? (
             <div className={styles.codeContainer}>
                 <SyntaxHighlighter
-                    {...rest}
+                    {...(rest as any)}
                     children={String(children).replace(/\n$/, "")}
                     style={ligth_theme_pref ? duotoneLight : dark}
                     language={language}

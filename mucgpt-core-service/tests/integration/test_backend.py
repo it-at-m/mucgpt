@@ -3,6 +3,10 @@ from unittest import mock
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
+from pypdf import PdfWriter
+from pypdf.annotations import FreeText
+
 from backend import backend
 from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
@@ -13,9 +17,6 @@ from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
 from core.types.SummarizeResult import SummarizeResult
 from core.types.SumRequest import SumRequest
-from fastapi.testclient import TestClient
-from pypdf import PdfWriter
-from pypdf.annotations import FreeText
 
 client = TestClient(backend)
 headers = {
@@ -54,7 +55,7 @@ async def test_sum_text(mocker):
             model="TEST_MODEL",
         ).model_dump_json()
     }
-    response = client.post(API_BASE + "/sum", headers=headers, data=data)
+    response = client.post(API_BASE + "sum", headers=headers, data=data)
     assert response.status_code == 200
     assert SummarizeResult.model_validate_json(response.content) == mock_result
 
@@ -129,7 +130,7 @@ async def test_brainstorm(mocker):
     )
     data = BrainstormRequest(topic="München", language="Deutsch", model="TEST_MODEL")
     response = client.post(
-        API_BASE + "/brainstorm", json=data.model_dump(), headers=headers
+        API_BASE + "brainstorm", json=data.model_dump(), headers=headers
     )
     assert response.status_code == 200
     assert BrainstormResult.model_validate_json(response.content) == mock_result
@@ -163,7 +164,7 @@ async def test_chatstream(mocker):
         transport=httpx.ASGITransport(app=backend), base_url="http://test"
     ) as ac:
         async with ac.stream(
-            method="POST", url=API_BASE + "/chat_stream", json=data.model_dump()
+            method="POST", url=API_BASE + "chat_stream", json=data.model_dump()
         ) as response:
             assert response.status_code == 200
             i = 0

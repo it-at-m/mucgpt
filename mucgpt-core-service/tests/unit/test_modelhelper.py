@@ -1,12 +1,13 @@
 import unittest
 
 import pytest
+from langchain_core.messages.base import BaseMessage
+
 from core.modelhelper import (
     num_tokens_from_messages,
     num_tokens_from_mistral_model,
     num_tokens_from_openai_model,
 )
-from langchain_core.messages.base import BaseMessage
 
 
 class Test_Modelhelper(unittest.TestCase):

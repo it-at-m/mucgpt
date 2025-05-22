@@ -1,9 +1,10 @@
 import unittest
 
 import pytest
+from langchain_core.runnables.base import RunnableSerializable
+
 from core.llmhelper import ModelsConfigurationException, getModel
 from core.types.Config import ModelsConfig
-from langchain_core.runnables.base import RunnableSerializable
 
 
 class Test_LLMhelper(unittest.TestCase):

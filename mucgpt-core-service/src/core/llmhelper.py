@@ -1,10 +1,11 @@
 from typing import List
 
-from core.types.Config import ModelsConfig
 from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
+
+from core.types.Config import ModelsConfig
 
 
 class ModelsConfigurationException(Exception):

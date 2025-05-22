@@ -127,7 +127,7 @@ services:
       context: ..\mucgpt-core-service
       dockerfile: Dockerfile
       args:
-        - HTTPS_PROXY=http://internet-proxy-client.muenchen.de:80
+        - HTTPS_PROXY=${HTTPS_PROXY}
     env_file:
       - ./.env
     ports:

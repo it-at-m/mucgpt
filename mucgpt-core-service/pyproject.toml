@@ -49,7 +49,7 @@ test = [
 dev-dependencies = [
     "ipykernel==6.29.5",
     "pre-commit==4.2.0",
-    "ruff==0.11.6",
+    "ruff==0.11.8",
 ]
 
 [[tool.uv.index]]

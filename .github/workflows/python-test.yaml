@@ -31,11 +31,15 @@ jobs:
           cd ./mucgpt-frontend
           npm install
           npm run buildlocal
-      - name: Change directory
-        run: cd ./mucgpt-core-service
       - name: Install dependencies
-        run: uv sync --all-extras
+        run: |
+          cd ./mucgpt-core-service
+          uv sync --all-extras
       - name: Lint with ruff
-        run: uv run ruff check .
+        run: |
+          cd ./mucgpt-core-service
+          uv run ruff check .
       - name: Run Python tests
-        run: uv run pytest
+        run: |
+          cd ./mucgpt-core-service
+          uv run pytest

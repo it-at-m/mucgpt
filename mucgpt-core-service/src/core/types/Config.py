@@ -35,7 +35,7 @@ class DatabaseConfig(BaseModel):
     db_host: str
     db_name: str
     db_user: str
-    db_passwort: str
+    db_password: str
 
 
 class BackendConfig(BaseModel):

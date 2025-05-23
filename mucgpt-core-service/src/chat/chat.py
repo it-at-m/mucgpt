@@ -76,7 +76,8 @@ class Chat:
         # handle exceptions
         # TODO find ratelimits
         # TODO use callbacks https://clemenssiebler.com/posts/azure_openai_load_balancing_langchain_with_fallbacks/
-        history[-1].bot = result
+        if history:
+            history[-1].bot = result
         streamed_tokens = num_tokens_from_messages([HumanMessage(result)], model)
         if self.config.log_tokens:
             self.repo.addInfo(

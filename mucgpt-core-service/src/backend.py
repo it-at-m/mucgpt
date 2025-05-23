@@ -74,7 +74,7 @@ async def add_process_time_header(request: Request, call_next):
 async def sum(
     body: str = Form(...),
     file: UploadFile = None,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> SummarizeResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(access_token=access_token)
@@ -107,7 +107,7 @@ async def sum(
 @api_app.post("/brainstorm")
 async def brainstorm(
     request: BrainstormRequest,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> BrainstormResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(access_token=access_token)
@@ -129,7 +129,7 @@ async def brainstorm(
 @api_app.post("/simply")
 async def simply(
     request: SimplyRequest,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(access_token=access_token)
@@ -151,7 +151,7 @@ async def simply(
 @api_app.post("/chat_stream")
 async def chat_stream(
     request: ChatRequest,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> StreamingResponse:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(access_token=access_token)
@@ -179,7 +179,7 @@ async def chat_stream(
 @api_app.post("/chat")
 async def chat(
     request: ChatRequest,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> ChatResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(access_token=access_token)
@@ -203,7 +203,7 @@ async def chat(
 @api_app.post("/create_bot")
 async def create_bot(
     request: CreateBotRequest,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> CreateBotResult:
     cfg = get_config_and_authentificate(access_token=access_token)
     department = get_department(access_token=access_token)
@@ -273,7 +273,7 @@ async def create_bot(
 
 @api_app.get("/config")
 async def getConfig(
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> ConfigResponse:
     cfg = get_config_and_authentificate(access_token)
     response = ConfigResponse(
@@ -296,7 +296,7 @@ async def getConfig(
 
 @api_app.get("/statistics")
 async def getStatistics(
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]
@@ -317,7 +317,7 @@ async def getStatistics(
 @api_app.post("/counttokens")
 async def counttokens(
     request: CountTokenRequest,
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ) -> CountResult:
     get_config_and_authentificate(access_token)
     try:
@@ -334,7 +334,7 @@ async def counttokens(
 
 @api_app.get("/statistics/export")
 async def getStatisticsCSV(
-    access_token: str = Header(None, alias="authorization"),
+    access_token: str = Header(..., alias="authorization"),
 ):
     cfg = get_config_and_authentificate(access_token)
     repo = cfg["repository"]

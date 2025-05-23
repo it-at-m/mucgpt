@@ -88,11 +88,18 @@ export function handleRedirect(response: Response, reload = true) {
 }
 
 export async function handleResponse(response: Response) {
-    const parsedResponse = await response.json();
-    if (response.status > 299 || !response.ok) {
-        throw Error(parsedResponse.error || parsedResponse.detail || "Unknown error");
+    try {
+        const parsedResponse = await response.json();
+        if (response.status > 299 || !response.ok) {
+            throw Error(parsedResponse.error || parsedResponse.detail || "Unknown error");
+        }
+        return parsedResponse;
+    } catch {
+        if (response.status > 299 || !response.ok) {
+            throw Error(`Request failed with status ${response.status}`);
+        }
+        throw Error("Failed to parse response as JSON");
     }
-    return parsedResponse;
 }
 
 /**

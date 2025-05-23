@@ -60,7 +60,7 @@
         "deploy": "gh-pages -d dist --remote origin",
         "dev": "vite",
         "fix": "prettier . --write && eslint . --fix",
-        "lint": "prettier . --check && eslint . && vue-tsc --build --noEmit",
+        "lint": "prettier . --check && eslint . && tsc --noEmit",
         "predeploy": "npm run build:ghpages",
         "preview": "vite preview",
         "type-check": "tsc --noEmit",

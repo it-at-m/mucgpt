@@ -139,11 +139,12 @@ class ConfigHelper:
             db_host=getenv("BACKEND_DB_HOST", ""),
             db_name=getenv("BACKEND_DB_NAME", ""),
             db_user=getenv("BACKEND_DB_USER", ""),
-            db_passwort=getenv("BACKEND_DB_PASSWORD", ""),
+            db_password=getenv("BACKEND_DB_PASSWORD", ""),
         )
         backendConfig = BackendConfig(
-            enable_auth=getenv("BACKEND_ENABLE_AUTH", "false") == "true",
-            enable_database=getenv("BACKEND_ENABLE_DATABASE", "false") == "true",
+            enable_auth=getenv("BACKEND_ENABLE_AUTH", "false").lower() == "true",
+            enable_database=getenv("BACKEND_ENABLE_DATABASE", "false").lower()
+            == "true",
             unauthorized_user_redirect_url=getenv(
                 "BACKEND_UNAUTHORIZED_USER_REDIRECT_URL", ""
             ),

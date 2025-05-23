@@ -1,8 +1,11 @@
 import functools
+import logging
 
 import requests
 from joserfc import jwt
 from joserfc.jwk import KeySet
+
+logger = logging.getLogger(__name__)
 
 
 class AuthError(Exception):
@@ -26,19 +29,23 @@ class AuthentificationHelper:
             f"{self.issuer}/.well-known/openid-configuration"
         )
         resp = requests.get(
-            url=openid_configuration_endpoint, headers={"Accept": "application/json"}
+            url=openid_configuration_endpoint,
+            headers={"Accept": "application/json"},
+            timeout=5,
         )
+        resp.raise_for_status()
         try:
             jwks_uri = resp.json()["jwks_uri"]
         except Exception as e:
-            print("Error fetching Openid-Config", e)
+            logger.error("Error fetching Openid-Config", e)
             raise e
         try:
             jwks_response = requests.get(
-                url=jwks_uri, headers={"Accept": "application/json"}
+                url=jwks_uri, headers={"Accept": "application/json"}, timeout=5
             )
+            jwks_response.raise_for_status()
         except Exception as e:
-            print("Error fetching JWKS", e)
+            logger.error("Error fetching JWKS", e)
             raise e
         resp = jwks_response.json()
         keyset = KeySet.import_key_set(resp)
@@ -62,6 +69,8 @@ class AuthentificationHelper:
         return claims
 
     def decode(self, token):
+        if token is None:
+            raise AuthError("Missing Authorization header", status_code=401)
         try:
             if token.lower().startswith("bearer "):
                 token = token[7:]

@@ -20,8 +20,7 @@ from core.types.SumRequest import SumRequest
 
 client = TestClient(backend)
 headers = {
-    "X-Ms-Token-Lhmsso-Id-Token": "dummy_id_token",
-    "X-Ms-Token-Lhmsso-Access-Token": "dummy_access_token",
+    "Authorization": "Bearer dummy_access_token",
 }
 
 API_BASE = "/api/"
@@ -164,7 +163,10 @@ async def test_chatstream(mocker):
         transport=httpx.ASGITransport(app=backend), base_url="http://test"
     ) as ac:
         async with ac.stream(
-            method="POST", url=API_BASE + "chat_stream", json=data.model_dump()
+            method="POST",
+            url=API_BASE + "chat_stream",
+            json=data.model_dump(),
+            headers=headers,
         ) as response:
             assert response.status_code == 200
             i = 0

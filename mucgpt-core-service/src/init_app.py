@@ -74,7 +74,7 @@ def initApp() -> AppConfig:
             username=db_config.db_user,
             host=db_config.db_host,
             database=db_config.db_name,
-            password=db_config.db_passwort,
+            password=db_config.db_password,
         )
         repoHelper.setup_schema(base=Base)
     else:

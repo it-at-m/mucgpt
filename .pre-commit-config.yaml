@@ -2,7 +2,7 @@ exclude: "^tests/snapshots/"
 # .pre-commit-config.yaml
 default_language_version:
   python: python3.12
-  node: node3.12
+  node: "20"
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

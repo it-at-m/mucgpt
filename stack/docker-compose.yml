@@ -148,6 +148,8 @@ services:
     build:
       context: ../mucgpt-frontend
       dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
     ports:
       - "8081:8080"
     networks:

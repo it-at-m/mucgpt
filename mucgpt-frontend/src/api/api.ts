@@ -1,4 +1,4 @@
-import { getConfig, getHeaders, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
+import { getConfig, getXSRFToken, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AskResponse,
@@ -45,10 +45,12 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
         })
     );
     if (file) formData.append("file", file);
-
+    const headers = {
+        "X-XSRF-TOKEN": getXSRFToken()
+    };
     const response = await fetch(API_BASE + "sum", {
         method: "POST",
-        headers: getHeaders(),
+        headers: headers,
         mode: "cors",
         redirect: "manual",
         body: formData

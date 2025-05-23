@@ -1,4 +1,4 @@
-import { getConfig, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
+import { getConfig, getHeaders, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AskResponse,
@@ -48,7 +48,7 @@ export async function sumApi(options: SumRequest, file?: File): Promise<SumRespo
 
     const response = await fetch(API_BASE + "sum", {
         method: "POST",
-        headers: {},
+        headers: getHeaders(),
         mode: "cors",
         redirect: "manual",
         body: formData

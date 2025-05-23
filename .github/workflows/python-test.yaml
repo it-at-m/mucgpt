@@ -28,15 +28,18 @@ jobs:
           node-version: 20
       - name: Build frontend
         run: |
-          cd ./app/frontend
+          cd ./mucgpt-frontend
           npm install
           npm run buildlocal
       - name: Install dependencies
         run: |
+          cd ./mucgpt-core-service
           uv sync --all-extras
-      - name: Create missing static directory
-        run: mkdir -p ./app/backend/static
       - name: Lint with ruff
-        run: uv run ruff check .
+        run: |
+          cd ./mucgpt-core-service
+          uv run ruff check .
       - name: Run Python tests
-        run: uv run pytest
+        run: |
+          cd ./mucgpt-core-service
+          uv run pytest

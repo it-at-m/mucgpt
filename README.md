@@ -7,6 +7,7 @@
 <br />
 
 <!-- ABOUT THE PROJECT -->
+
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![Gitmoij][gitmoij-shield]][gitmoij]
 [![GitHub license][license-shield]][license]
@@ -28,11 +29,10 @@
 [npm-versions-shield]: https://img.shields.io/badge/node-20+-blue?style=for-the-badge
 [uv-shield]: https://img.shields.io/badge/⚡-uv-lightblue?style=for-the-badge
 [fastapi-shield]: https://img.shields.io/badge/fastapi-lightblue?style=for-the-badge&logo=fastapi&logoColor=white
-[react-shield]:https://shields.io/badge/react-lightblue?logo=react&style=for-the-badge&logoColor=white
+[react-shield]: https://shields.io/badge/react-lightblue?logo=react&style=for-the-badge&logoColor=white
 [postgres-shield]: https://img.shields.io/badge/postgres-lightblue?&style=for-the-badge&logo=postgresql&logoColor=white
 [langchain-shield]: https://img.shields.io/badge/LangChain-lightblue?&style=for-the-badge&logo=langchain&logoColor=white
 [pages-shield]: https://img.shields.io/badge/Demo-121013?logo=github&logoColor=white&style=for-the-badge
-
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
 [releases]: https://github.com/it-at-m/mucgpt/releases
@@ -43,57 +43,58 @@
 [langchain]: https://python.langchain.com/docs/introduction/
 [pages]: https://it-at-m.github.io/mucgpt/
 
-MUCGPT provides a web interface based for a given large language model (LLM). The whole package is shipped with a docker container. For a first impression, look at our [demo frontend](https://it-at-m.github.io/mucgpt/)
+MUCGPT provides a web interface based on a given large language model (LLM). The whole package is shipped with a Docker container. For a first impression, look at our [demo frontend](https://it-at-m.github.io/mucgpt/)
 
- The interface currently connects to one or multiple OpenAI-compatible LLM-enpdoints,  which allows users to chat, summarise text, brainstorm some ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarizing allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
+The interface currently connects to one or multiple OpenAI-compatible LLM-endpoints, which allows users to chat, summarise text, brainstorm ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarising allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
 
-In addition custom GPTs can be generated and saved. A own GPT is an assistant for a specific task with an custom system prompt.
+In addition, custom GPTs can be generated and saved. An own GPT is an assistant for a specific task with a custom system prompt.
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
 ## Table of contents
 
-* [Built With](#built-with)
-* [Getting Started](#getting-started)
-* [Roadmap](#roadmap)
-* [Documentation](#documentation)
-* [Contributing](#contributing)
-* [License](#license)
-* [Contact](#contact)
+- [Built With](#built-with)
+- [Getting Started](#getting-started)
+- [Roadmap](#roadmap)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
 ## Built With
 
 ### Backend
 
-* [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
-* [FastAPI](https://fastapi.tiangolo.com/)
-* [LangChain](https://www.langchain.com/)
+- [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [LangChain](https://www.langchain.com/)
 
 ### Frontend
 
-* [React](https://de.react.dev/)
-* [Typescript](https://www.typescriptlang.org/)
-* [Javascript](https://wiki.selfhtml.org/wiki/JavaScript)
+- [React](https://de.react.dev/)
+- [Typescript](https://www.typescriptlang.org/)
+- [Javascript](https://wiki.selfhtml.org/wiki/JavaScript)
 
 ### Deployment
 
-* [Node.js 20+](https://nodejs.org/en/download/package-manager)
-* [Git](https://git-scm.com/downloads)
-* Python 3.12
-* [uv](https://github.com/astral-sh/uv)
-* Docker
+- [Node.js 20+](https://nodejs.org/en/download/package-manager)
+- [Git](https://git-scm.com/downloads)
+- Python 3.12
+- [uv](https://github.com/astral-sh/uv)
+- Docker
 
 ## Getting started
 
-* Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
-  * [Using UV during development](/docs/DEVELOPMENT.md)
-* Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
+- Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
+  - [Using UV during development](/docs/DEVELOPMENT.md)
+- Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
 ### Install deps
 
-Sync python environment vor development:
+Sync python environment for development:
 
 ```bash
+cd mucgpt-core-service
 uv sync --all-extras # installs dev/test dependencies
 # if you only want to run mucgpt without using development deps
 uv sync
@@ -102,28 +103,37 @@ uv sync
 Install frontend deps
 
 ```bash
-cd app/frontend
+cd mucgpt-frontend
 npm install
 ```
 
 ### Configure
 
- Configure your environment. For that copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the parent directory [.env](.env). Add at least one model by providing one OpenAi comptabile endpoint.
+Configure your environment. For that, copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the stack directory [stack/.env](stack/.env). Add at least one model by providing one OpenAI compatible endpoint.
 
-### Run locally
+### Run with Docker
+
+To start all required services using Docker Compose, run:
 
 ```bash
-cd app\frontend
-npm run buildlocal
-cd ..\backend
-uv run app.py
+docker-compose --profile=frontend --profile=backend up --build
 ```
 
-### Run with docker
+This command launches the following components:
 
-1. Build an Image
-   ```docker build --build-arg COMMIT=$(git log -1 --format=%h) --build-arg VERSION=$(git describe --tags --abbrev=0) --tag mucgpt .```
-2. Run the image ```docker run --detach --publish 8080:8000  --env-file=.env  mucgpt```
+- **Frontend**: A modern web interface built with React, providing users with an intuitive and responsive experience directly in their browser.
+- **Backend**: The core service that processes API requests, manages business logic, and communicates with both the database and connected LLMs.
+- **API Gateway**: Serves as the unified entry point for all client requests, efficiently routing traffic to backend services while managing authentication and security.
+- **Keycloak**: A robust, open-source identity and access management system responsible for authentication, authorization, and user administration.
+- **PostgresDB**: A reliable PostgreSQL database used to securely store and manage app statistics.
+
+Once all services are running, you can access:
+
+- The frontend at `localhost:8083` (Username: `mucgpt-user`, Password: `mucgpt`)
+- The Keycloak admin panel at `localhost:8100` (Username: `admin`, Password: `admin`)
+- The PGAdmin panel at `localhost:5050` (Username: `admin`, Password: `admin`)
+
+Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
 
 ## Roadmap
 
@@ -154,14 +164,18 @@ timeline
 ## Documentation
 
 ![Architecture](docs/appcomponents_en.png)
- The architecture of MUCGPT is divided into two parts, the frontend and the backend. MUCGPT is deployed on Microsoft Azure as an AppService with a PostgreSQL database and an Azure OpenAI resource.
+The architecture of MUCGPT is structured into two primary components: the frontend and the backend. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
 
 The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [.env](config/.env.empty) file, you can provide the user with various LLM options to select from in the frontend.
 
-For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
+The API Gateway is developed in Java based on the [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway), providing robust routing, security, and scalability for all services. [IT@M](https://github.com/it-at-m) distributes the gateway as a container image: `ghcr.io/it-at-m/refarch/refarch-gateway`. For detailed documentation, see [here](https://refarch.oss.muenchen.de/gateway.html).
 
+Authentication is managed using [Keycloak](https://www.keycloak.org/), a robust open-source identity and access management solution. Keycloak handles user authentication, authorization, and user management for the MUCGPT platform, enabling secure Single Sign-On (SSO) across all services.
+For more details on customizing authentication or extending user management, refer to the [Keycloak Migration Framework documentation](https://mayope.github.io/keycloakmigration/).
+
+For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
 
 ## Contributing
 

@@ -23,8 +23,12 @@ export const SumAnswerList = ({ answers, onRollbackMessage, isLoading, error, ma
     const [answersComponent, setAnswersComponent] = useState<JSX.Element[]>([]);
 
     useEffect(() => {
+        let shownAnswers = answers;
+        if (error) {
+            shownAnswers = answers.slice(0, -1); // Exclude the last answer if there is an error
+        }
         setAnswersComponent(
-            answers.map((answer, index) => (
+            shownAnswers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
                     usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}

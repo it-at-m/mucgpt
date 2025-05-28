@@ -155,5 +155,24 @@ services:
     networks:
       - keycloak
 
+  langflow:
+    image: langflowai/langflow:latest # or another version tag on https://hub.docker.com/r/langflowai/langflow
+    pull_policy: always # set to 'always' when using 'latest' image
+    ports:
+      - "7860:7860"
+    depends_on:
+      - postgres
+    environment:
+      - LANGFLOW_DATABASE_URL=postgresql://admin:admin@postgres:5432/postgres
+      # This variable defines where the logs, file storage, monitor data, and secret keys are stored.
+      - LANGFLOW_CONFIG_DIR=app/langflow
+      - HTTPS_PROXY=http://internet-proxy-client.muenchen.de:80
+      - HTTP_PROXY=http://internet-proxy-client.muenchen.de:80
+      - NO_PROXY=localhost, *.muenchen.de,
+    volumes:
+      - langflow-data:/app/langflow
+
+volumes:
+  langflow-data:
 networks:
   keycloak:

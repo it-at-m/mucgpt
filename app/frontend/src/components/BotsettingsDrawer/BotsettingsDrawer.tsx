@@ -196,8 +196,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     ? t("components.botsettingsdrawer.finish_edit")
                                     : t("components.botsettingsdrawer.edit")
                                 : isEditable
-                                  ? t("components.botsettingsdrawer.close_configutations")
-                                  : t("components.botsettingsdrawer.show_configutations")}
+                                    ? t("components.botsettingsdrawer.close_configutations")
+                                    : t("components.botsettingsdrawer.show_configutations")}
                         </Button>
                         <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -353,7 +353,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                             />
                             <br></br>
                             <Label htmlFor={max_tokensID} aria-hidden>
-                                {max_output_tokens} Tokens
+                                {max_output_tokens > LLM.max_output_tokens ? LLM.max_output_tokens : max_output_tokens} Tokens
                             </Label>
                         </div>
                     </div>

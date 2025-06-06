@@ -193,6 +193,7 @@ const BotChat = () => {
     // onBotChanged-Funktion
     const onBotChanged = useCallback(
         async (newBot: Bot) => {
+            setError(undefined);
             await botStorageService.setBotConfig(bot_id, newBot);
             setBotConfig(newBot);
             // count tokens in case of new system message
@@ -208,6 +209,7 @@ const BotChat = () => {
     const onRegenerateResponseClicked = useCallback(async () => {
         if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
         try {
+            setError(undefined);
             await handleRegenerate(answers, dispatch, activeChatRef.current, botChatStorage, systemPrompt, callApi, isLoadingRef);
         } catch (e) {
             setError(e);
@@ -276,6 +278,7 @@ const BotChat = () => {
                 onSelect={async (id: string) => {
                     const chat = await botChatStorage.get(id);
                     if (chat) {
+                        setError(undefined);
                         dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                         lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
                         dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
@@ -326,7 +329,7 @@ const BotChat = () => {
             <QuestionInput
                 clearOnSend
                 placeholder={t("chat.prompt")}
-                disabled={isLoadingRef.current}
+                disabled={isLoadingRef.current || error !== undefined}
                 onSend={question => callApi(question)}
                 tokens_used={totalTokens}
                 question={question}
@@ -359,9 +362,18 @@ const BotChat = () => {
                 onRollbackMessage={onRollbackMessage}
                 isLoading={isLoadingRef.current}
                 error={error}
-                makeApiRequest={() => callApi(lastQuestionRef.current)}
+                makeApiRequest={() => {
+                    dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
+                    callApi(lastQuestionRef.current);
+                }}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
+                onRollbackError={() => {
+                    setQuestion(lastQuestionRef.current);
+                    setError(undefined);
+                    lastQuestionRef.current = answers.length > 1 ? answers[answers.length - 1].user : "";
+                    dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
+                }}
             />
         ),
         [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]

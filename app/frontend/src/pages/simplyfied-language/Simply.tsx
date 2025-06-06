@@ -248,6 +248,7 @@ const Simply = () => {
     // Rollback function to handle the rollback of messages in the chat
     const onRollbackMessage = (index: number) => {
         if (!activeChatRef.current) return;
+        setError(undefined);
         handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, undefined);
     };
 
@@ -314,7 +315,7 @@ const Simply = () => {
             <QuestionInput
                 clearOnSend
                 placeholder={t("simply.prompt")}
-                disabled={isLoading}
+                disabled={isLoading || error !== undefined}
                 onSend={question => makeApiRequest(question)}
                 tokens_used={0}
                 question={question}

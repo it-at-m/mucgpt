@@ -16,16 +16,21 @@ interface Props {
     makeApiRequest: () => void;
     chatMessageStreamEnd: React.RefObject<HTMLDivElement>;
     lastQuestionRef: React.MutableRefObject<string>;
+    onRollbackError?: () => void;
 }
 
-export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef }: Props) => {
+export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoading, error, makeApiRequest, chatMessageStreamEnd, lastQuestionRef, onRollbackError }: Props) => {
     const { t } = useTranslation();
 
     const [answersComponent, setAnswersComponent] = useState<JSX.Element[]>([]);
 
     useEffect(() => {
+        let shownAnswers = answers;
+        if (error) {
+            shownAnswers = answers.slice(0, -1); // Exclude the last answer if there is an error
+        }
         setAnswersComponent(
-            answers.map((answer, index) => (
+            shownAnswers.map((answer, index) => (
                 <ChatTurnComponent
                     key={index}
                     usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
@@ -35,23 +40,28 @@ export const AnswerList = ({ answers, regularBotMsg, onRollbackMessage, isLoadin
                 ></ChatTurnComponent>
             ))
         );
-    }, [answers, isLoading]);
+    }, [answers, isLoading, error]);
 
     const answerList = useMemo(() => {
         return (
             <>
                 {answersComponent}
-                {error || isLoading ? (
+                {error ? (
+                    <ChatTurnComponent
+                        usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackError} />}
+                        usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
+                        botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
+                        botmsg={<AnswerError error={error.toString()} onRetry={makeApiRequest} />}
+                    ></ChatTurnComponent>
+                ) : (
+                    <div></div>
+                )}
+                {isLoading ? (
                     <ChatTurnComponent
                         usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
                         botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                        botmsg={
-                            <>
-                                {isLoading && <AnswerLoading text={t("chat.answer_loading")} />}
-                                {error ? <AnswerError error={error.toString()} onRetry={makeApiRequest} /> : null}
-                            </>
-                        }
+                        botmsg={<AnswerLoading text={t("chat.answer_loading")} />}
                     ></ChatTurnComponent>
                 ) : (
                     <div></div>

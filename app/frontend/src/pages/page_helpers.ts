@@ -2,7 +2,7 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, Chunk, ChunkInfo, createChatName, handleRedirect } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn, Chunk, ChunkInfo, createChatName, handleRedirect, Model } from "../api";
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import readNDJSONStream from "ndjson-readablestream";
 import { BotStorageService } from "../service/botstorage";
@@ -39,10 +39,9 @@ export function handleDeleteChat(
     setAnswers: (answers: ChatMessage[]) => void,
     setActiveChat: (id: string | undefined) => void
 ) {
-    if (!id) return;
+    if (id) storageService.delete(id);
     lastQuestionRef.current = "";
     error && setError(undefined);
-    storageService.delete(id);
     setAnswers([]);
     setActiveChat(undefined);
 }
@@ -103,7 +102,7 @@ export const makeApiRequest = async (
     question: string,
     dispatch: Dispatch<any>,
     chatApi: any,
-    LLM: any,
+    LLM: Model,
     activeChatRef: MutableRefObject<string | undefined>,
     storageService: StorageService<any, any>,
     options: ChatOptions,
@@ -121,7 +120,7 @@ export const makeApiRequest = async (
         language: language,
         temperature: options.temperature,
         system_message: options.system ?? "",
-        max_output_tokens: options.maxTokens,
+        max_output_tokens: LLM.max_output_tokens < options.maxTokens ? LLM.max_output_tokens : options.maxTokens,
         model: LLM.llm_name
     };
 

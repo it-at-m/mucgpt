@@ -165,6 +165,7 @@ const Summarize = () => {
     const onRollbackMessage = useCallback(
         (index: number) => {
             if (!activeChatRef.current) return;
+            setError(undefined);
             handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat);
         },
         [activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat]
@@ -218,7 +219,7 @@ const Summarize = () => {
             <SumInput
                 clearOnSend
                 placeholder={t("sum.prompt")}
-                disabled={isLoading}
+                disabled={isLoading || error !== undefined}
                 onSend={(question, file) => makeApiRequest(question, file)}
                 question={question}
                 setQuestion={setQuestion}

@@ -172,6 +172,7 @@ const Chat = () => {
     const loadChat = useCallback(
         async (id: string) => {
             try {
+                setError(undefined);
                 const chat = await storageService.get(id);
                 if (chat) {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
@@ -256,6 +257,7 @@ const Chat = () => {
 
             try {
                 isLoadingRef.current = true;
+                setError(undefined);
                 handleRollback(index, activeChatRef.current, dispatch, storageService, lastQuestionRef, setQuestion, clearChat, fetchHistory);
             } catch (e) {
                 setError(e);
@@ -429,9 +431,18 @@ const Chat = () => {
                 onRollbackMessage={onRollbackMessage}
                 isLoading={isLoadingRef.current}
                 error={error}
-                makeApiRequest={() => callApi(lastQuestionRef.current, systemPrompt)}
+                makeApiRequest={() => {
+                    dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
+                    callApi(lastQuestionRef.current, systemPrompt);
+                }}
                 chatMessageStreamEnd={chatMessageStreamEnd}
                 lastQuestionRef={lastQuestionRef}
+                onRollbackError={() => {
+                    setQuestion(lastQuestionRef.current);
+                    setError(undefined);
+                    lastQuestionRef.current = answers.length > 1 ? answers[answers.length - 1].user : "";
+                    dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
+                }}
             />
         ),
         [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoadingRef.current, lastQuestionRef, chatMessageStreamEnd]
@@ -444,7 +455,7 @@ const Chat = () => {
             <QuestionInput
                 clearOnSend
                 placeholder={t("chat.prompt")}
-                disabled={isLoadingRef.current}
+                disabled={isLoadingRef.current || error !== undefined}
                 onSend={question => callApi(question, systemPrompt)}
                 tokens_used={totalTokens}
                 question={question}

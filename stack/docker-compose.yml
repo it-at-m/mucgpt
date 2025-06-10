@@ -138,6 +138,24 @@ services:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
 
+  assistant-service:
+    profiles:
+      - assistant
+    build:
+      context: ../mucgpt-assistant-service
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    env_file:
+      - ./.env
+    ports:
+      - "39147:8084"
+    networks:
+      - keycloak
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl http://localhost:39147/api/backend/health"]
+
   # If the frontend is to be started in the Docker-Compose, the following command must be executed at startup:
   # docker-compose --profile=frontend up
   # oder e.g.:

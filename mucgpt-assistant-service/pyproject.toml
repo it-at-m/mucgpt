@@ -1,0 +1,21 @@
+[project]
+name = "mucgpt-assistant-service"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
+    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+]
+maintainers = [
+    { name = " ITM KICC", email = "itm.kicc@muenchen.de" },
+    { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
+    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi[standard]==0.115.12",
+    "gunicorn>=23.0.0",
+    "joserfc>=1.1.0",
+    "requests>=2.32.4",
+    "uvicorn>=0.34.3",
+]

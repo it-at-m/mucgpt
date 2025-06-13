@@ -87,7 +87,8 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
             temperature: 0.6,
             max_output_tokens: LLM.max_output_tokens,
             quick_prompts: [],
-            examples: []
+            examples: [],
+            version: "0",
         };
         const created_id = await storageService.createBotConfig(bot);
         if (created_id) window.location.href = import.meta.env.BASE_URL + "#bot/" + created_id;

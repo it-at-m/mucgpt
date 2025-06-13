@@ -34,6 +34,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
                 id: "0",
                 temperature: 1,
                 max_output_tokens: 4096,
+                version: "1.0",
                 examples: [
                     {
                         text: "Flussdiagramm zum Thema Aufgabenverwaltung im Team",

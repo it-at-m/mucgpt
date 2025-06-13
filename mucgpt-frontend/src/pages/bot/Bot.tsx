@@ -80,7 +80,8 @@ const BotChat = () => {
         system_message: "",
         temperature: 0.7,
         quick_prompts: [],
-        examples: []
+        examples: [],
+        version: "0",
     });
 
     // useEffect to load the bot config and chat history

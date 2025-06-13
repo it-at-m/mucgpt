@@ -11,11 +11,15 @@ import { BotStorageService } from "../../service/botstorage";
 import { Bot } from "../../api/models";
 import { BOT_STORE } from "../../constants";
 import { migrate_old_bots } from "../../service/migration";
+import { SearchCommunityBotButton } from "../../components/SearchCommunityBotButton/SearchCommunityBotButton";
+import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
 
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
     const [communityBots, setCommunityBots] = useState<Bot[]>([]);
+    const [showSearchBot, setShowSearchBot] = useState<boolean>(false);
+    const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
 
@@ -41,6 +45,10 @@ const Menu = () => {
 
     const onAddBot = () => {
         setShowDialogInput(true);
+    };
+    const onSearchBot = () => {
+        setShowSearchBot(true);
+        setGetCommunityBots(true);
     };
 
     return (
@@ -81,7 +89,8 @@ const Menu = () => {
                 ))}
                 {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
-            <div className={styles.rowheader}>{t("menu.community_bots")}</div>
+            <div className={styles.rowheader}>{t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} /></div>
+            <CommunityBotsDialog showSearchDialogInput={showSearchBot} setShowSearchDialogInput={setShowSearchBot} takeCommunityBots={getCommunityBots} setTakeCommunityBots={setGetCommunityBots} />
             <div className={styles.row}>
                 {communityBots.map((bot: Bot, key) => (
                     <Tooltip key={key} content={bot.title} relationship="description" positioning="below">

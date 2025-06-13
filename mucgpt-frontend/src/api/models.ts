@@ -121,4 +121,7 @@ export type Bot = {
     max_output_tokens: number;
     examples?: ExampleModel[];
     quick_prompts?: QuickPrompt[];
+    version: string;
+    owner?: string;
+    tags?: string[];
 };

@@ -236,6 +236,16 @@ i18n
                             save: "Speichern",
                             describe: "Beschreibe die Funktion...",
                             skip: "Überspringen"
+                        },
+                        search_bot_button: {
+                            search_bots: "Assistenten durchsuchen"
+                        },
+                        community_bots: {
+                            title: "Community Assistenten", // Deutsch
+                            search: "Assistenten durchsuchen",
+                            filter_by_tag: "Nach Tag filtern",
+                            save: "Assistent speichern",
+                            system_message: "System-Prompt"
                         }
                     }
                 }
@@ -462,6 +472,16 @@ i18n
                             save: "Save",
                             describe: "Describe the function...",
                             skip: "Skip"
+                        },
+                        search_bot_button: {
+                            search_bots: "Search assistants"
+                        },
+                        community_bots: {
+                            title: "Community Assistants", // Englisch
+                            search: "Search assistants",
+                            filter_by_tag: "Filter by tag",
+                            save: "Save assistant",
+                            system_message: "System prompt"
                         }
                     }
                 }
@@ -689,6 +709,16 @@ i18n
                             save: "Speichern",
                             describe: "Beschreib die Funktion...",
                             skip: "Übaspringa"
+                        },
+                        search_bot_button: {
+                            search_bots: "Assistentn durchschaun"
+                        },
+                        community_bots: {
+                            title: "Community Assistentn", // Bairisch
+                            search: "Assistentn durchschaun",
+                            filter_by_tag: "Noch Tag filtern",
+                            save: "Assistent speichan",
+                            system_message: "System-Prompt"
                         }
                     }
                 }
@@ -909,6 +939,16 @@ i18n
                             save: "Enregistrer",
                             describe: "Décrivez la fonction...",
                             skip: "Passer"
+                        },
+                        community_bots: {
+                            title: "Assistants Communautaires", // French
+                            search: "Rechercher des assistants",
+                            filter_by_tag: "Filtrer par tag",
+                            save: "Enregistrer l'assistant",
+                            system_message: "Prompt système"
+                        },
+                        search_bot_button: {
+                            search_bots: "Rechercher des assistants"
                         }
                     }
                 }
@@ -1128,6 +1168,17 @@ i18n
                             save: "Зберегти",
                             describe: "Опишіть функцію...",
                             skip: "Пропустити"
+                        },
+                        search_bot_button: {
+                            search_bots: "Пошук асистентів"
+                        },
+                        community_bots: {
+                            title: "Громадські Асистенти", // Ukrainisch
+                            search: "Пошук асистентів",
+                            filter_by_tag: "Фільтрувати за тегом",
+                            save: "Зберегти асистента",
+                            system_message: "Системний запит",
+                            search_button: ""
                         }
                     }
                 }

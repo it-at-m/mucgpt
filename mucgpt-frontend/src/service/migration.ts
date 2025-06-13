@@ -4,6 +4,7 @@ import { BOT_STORE, CHAT_STORE, LEGACY_BOT_STORE } from "../constants";
 import { ChatOptions } from "../pages/chat/Chat";
 import { BotStorageService } from "./botstorage";
 import { DBObject, StorageService } from "./storage";
+import { version } from "dompurify";
 
 interface LegacyChatObject {
     id: string;
@@ -44,7 +45,8 @@ export async function migrate_old_bots() {
                 system_message: oldbot.system_message,
                 publish: oldbot.publish,
                 temperature: oldbot.temperature,
-                max_output_tokens: oldbot.max_output_tokens
+                max_output_tokens: oldbot.max_output_tokens,
+                version: "0" // Set a default version for new bots
             };
             //save to new bot storage
             await newStore.createBotConfig(newBot);

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.models import AssistantCreate, AssistantResponse, AssistantUpdate
 from core.auth import authenticate_user
+from core.auth_models import AuthenticationResult
 from database.models import Assistant, Owner, Tool
 from database.repo import Repository
 from database.session import get_db_session
@@ -19,7 +20,7 @@ backend.mount("/api/", api_app)
 async def createBot(
     assistant: AssistantCreate,
     db: Session = Depends(get_db_session),
-    user_claims=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     # Create a new assistant using the repository
     assistant_repo = Repository(Assistant, db)
@@ -39,11 +40,18 @@ async def createBot(
         for tool_id in assistant.tools:
             tool = tool_repo.get(tool_id)
             if tool:
-                new_assistant.tools.append(tool)
-    # Add owner_ids if specified
-    if assistant.owner_ids:
+                new_assistant.tools.append(
+                    tool
+                )  # Add owner_ids if specified, and ensure the creating user is always an owner
+    owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
+
+    # Add the user's lhmobjektid if not already present
+    if user_info.lhm_object_id not in owner_ids:
+        owner_ids.append(user_info.lhm_object_id)
+
+    if owner_ids:
         owner_repo = Repository(Owner, db)
-        for owner_id in assistant.owner_ids:
+        for owner_id in owner_ids:
             # Get or create the Owner
             owner = (
                 owner_repo.session.query(Owner)
@@ -66,13 +74,26 @@ async def createBot(
 async def deleteBot(
     id: int,
     db: Session = Depends(get_db_session),
-    user_claims=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     assistant_repo = Repository(Assistant, db)
+    assistant = assistant_repo.get(id)
+
+    if not assistant:
+        raise HTTPException(status_code=404, detail=f"Assistant with ID {id} not found")
+
+    if not assistant.is_owner(user_info.lhm_object_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: You must be an owner of this assistant to delete it",
+        )
+
     success = assistant_repo.delete(id)
 
     if not success:
-        raise HTTPException(status_code=404, detail=f"Assistant with ID {id} not found")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to delete assistant with ID {id}"
+        )
 
     return {"message": f"Assistant with ID {id} successfully deleted"}
 
@@ -82,13 +103,19 @@ async def updateBot(
     id: int,
     assistant_update: AssistantUpdate,
     db: Session = Depends(get_db_session),
-    user_claims=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     assistant_repo = Repository(Assistant, db)
     assistant = assistant_repo.get(id)
 
     if not assistant:
         raise HTTPException(status_code=404, detail=f"Assistant with ID {id} not found")
+
+    if not assistant.is_owner(user_info.lhm_object_id):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: You must be an owner of this assistant to update it",
+        )
 
     # Update basic fields if provided
     update_data = {
@@ -139,10 +166,12 @@ async def updateBot(
 
 @api_app.get("/bot", response_model=List[AssistantResponse])
 async def getAllBots(
-    db: Session = Depends(get_db_session), user_claims=Depends(authenticate_user)
+    db: Session = Depends(get_db_session), user_info=Depends(authenticate_user)
 ):
     assistant_repo = Repository(Assistant, db)
-    assistants = assistant_repo.get_all()
+    assistants = assistant_repo.get_all_possible_assistants_for_user_with_department(
+        user_info.department
+    )
     return assistants
 
 
@@ -150,7 +179,7 @@ async def getAllBots(
 async def getBot(
     id: int,
     db: Session = Depends(get_db_session),
-    user_claims=Depends(authenticate_user),
+    user_info=Depends(authenticate_user),
 ):
     assistant_repo = Repository(Assistant, db)
     assistant = assistant_repo.get(id)
@@ -165,7 +194,7 @@ async def getBot(
 async def getUserBots(
     lhmobjekt_id: str,
     db: Session = Depends(get_db_session),
-    user_claims=Depends(authenticate_user),
+    user_info=Depends(authenticate_user),
 ):
     """Get all assistants where the specified lhmobjektID is an owner."""
     # Get all assistants where this lhmobjektID is an owner

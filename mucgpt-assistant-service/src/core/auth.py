@@ -7,6 +7,7 @@ from joserfc import jwt
 from joserfc.jwk import KeySet
 
 from config.configuration import ConfigHelper
+from core.auth_models import AuthenticationResult
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,12 @@ class AuthentificationHelper:
         keyset = KeySet.import_key_set(resp)
         return keyset
 
-    def authentificate(self, accesstoken):
+    def authentificate(self, accesstoken) -> AuthenticationResult:
+        """Authenticates the user based on the access token.
+        Checks if the user has the required role.
+        Returns an AuthenticationResult if authenticated.
+        Raises AuthError if the user is not authenticated or does not have the required role.
+        """
         claims = self.decode(accesstoken)
         try:
             roles = self.getRoles(claims)
@@ -69,7 +75,13 @@ class AuthentificationHelper:
                 "Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2.",
                 status_code=401,
             )
-        return claims
+
+        return AuthenticationResult(
+            lhm_object_id=self.getLHMObjectID(claims),
+            department=self.getDepartment(claims),
+            name=self.getName(claims),
+            roles=roles,
+        )
 
     def decode(self, token):
         if token is None:
@@ -97,9 +109,15 @@ class AuthentificationHelper:
     def getDepartment(self, claims):
         return str(claims["department"])
 
+    def getLHMObjectID(self, claims):
+        """Get the LHM Objekt ID from the claims."""
+        return str(claims.get("lhmobjektID", ""))
+
 
 # Authentication dependency
-def authenticate_user(access_token: str = Header(..., alias="authorization")):
+def authenticate_user(
+    access_token: str = Header(..., alias="authorization"),
+) -> AuthenticationResult:
     """Dependency to authenticate users based on access token."""
 
     # Load configuration
@@ -111,11 +129,16 @@ def authenticate_user(access_token: str = Header(..., alias="authorization")):
         issuer=config.backend.sso_config.sso_issuer, role=config.backend.sso_config.role
     )
     if not config.backend.enable_auth:
-        # Return dummy claims when auth is disabled for development
-        return {"name": "Development User", "department": "Dev"}
+        # Return dummy authentication result when auth is disabled for development
+        return AuthenticationResult(
+            lhm_object_id="dev-123",
+            department="Development",
+            name="Development User",
+            roles=["mucgpt-user"],
+        )
 
     try:
-        claims = auth_helper.authentificate(access_token)
-        return claims
+        user_info = auth_helper.authentificate(access_token)
+        return user_info
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))

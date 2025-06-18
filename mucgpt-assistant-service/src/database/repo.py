@@ -1,5 +1,6 @@
 from typing import Generic, Type
 
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .models import Assistant, ModelType, assistant_owners
@@ -44,13 +45,36 @@ class Repository(Generic[ModelType]):
             return True
         return False
 
+    def get_all_possible_assistants_for_user_with_department(
+        self, department: str
+    ) -> list[Assistant]:
+        """Get all assistants that are allowed for a specific department.
+
+        for example an assistant has the path:
+        ITM-KM
+
+        This means that a user from the department ITM-KM-DI is allowed to use this assistant.
+        But a user from the department ITM-AB-DI is not allowed to use this assistant.
+        """
+        if self.model != Assistant:
+            raise ValueError("This method can only be used with the Assistant model")
+
+        # Query for assistants where:
+        # Either organization_path is None/empty (available to all) OR
+        # the department starts with the organization_path (hierarchical access)
+        query = self.session.query(Assistant).filter(
+            Assistant.hierarchical_access.is_(None),
+            Assistant.hierarchical_access == "",
+            func.substr(department, 1, func.length(Assistant.hierarchical_access))
+            == Assistant.hierarchical_access,
+        )
+
+        return query.all()
+
     def get_assistants_by_owner(self, lhmobjektID: str) -> list[Assistant]:
         """Get all assistants where the given lhmobjektID is an owner."""
         if self.model != Assistant:
             raise ValueError("This method can only be used with the Assistant model")
-
-        # Query assistants using the assistant_owners association table
-        from sqlalchemy import select
 
         stmt = (
             select(Assistant)

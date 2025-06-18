@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import TypeVar
 
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
     Float,
@@ -65,8 +64,7 @@ class Assistant(Base):
     system_prompt = Column(Text, nullable=False)  # maps to "system_message" in frontend
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    is_active = Column(Boolean, default=True)
-    organization_path = Column(String(1000))
+    hierarchical_access = Column(String(1000))
 
     temperature = Column(Float, default=0.7)
     max_output_tokens = Column(Integer, default=1000)
@@ -92,8 +90,12 @@ class Assistant(Base):
         creator=lambda tool_obj: AssistantTool(tool=tool_obj),
     )
 
+    def is_owner(self, lhmobjektID: str) -> bool:
+        """Check if the given lhmobjektID is an owner of this assistant."""
+        return any(owner.lhmobjektID == lhmobjektID for owner in self.owners)
+
     def __repr__(self):
-        return f"<Assistant(name='{self.name}', active={self.is_active})>"
+        return f"<Assistant(name='{self.name}')>"
 
 
 class Tool(Base):

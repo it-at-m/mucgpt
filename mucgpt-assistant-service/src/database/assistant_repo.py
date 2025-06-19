@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .database_models import Assistant, AssistantVersion, Owner, assistant_owners
@@ -66,14 +66,12 @@ class AssistantRepository(Repository[Assistant]):
         """
         # Query for assistants where:
         # Either hierarchical_access is None/empty (available to all) OR
-        # the department starts with the hierarchical_access
+        # the department matches exactly OR starts with hierarchical_access followed by a delimiter
         query = self.session.query(Assistant).filter(
             Assistant.hierarchical_access.is_(None)
             | (Assistant.hierarchical_access == "")
-            | (
-                func.substr(department, 1, func.length(Assistant.hierarchical_access))
-                == Assistant.hierarchical_access
-            )
+            | (department == Assistant.hierarchical_access)
+            | (department.like(Assistant.hierarchical_access + "-%"))
         )
 
         return query.all()

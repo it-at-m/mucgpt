@@ -122,7 +122,10 @@ class Assistant(Base):
         """Check if a user with a given department is allowed to use this assistant."""
         if not self.hierarchical_access or self.hierarchical_access == "":
             return True
-        return department.startswith(self.hierarchical_access)
+        # Allow access if department matches exactly or starts with hierarchical_access followed by a delimiter
+        return department == self.hierarchical_access or department.startswith(
+            self.hierarchical_access + "-"
+        )
 
     @property
     def latest_version(self) -> "AssistantVersion | None":

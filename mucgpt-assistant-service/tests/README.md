@@ -10,15 +10,15 @@ This directory contains comprehensive unit tests for the repository classes in t
 
 ## Type-Safe Test Fixtures
 
-The test suite uses modern Python features for better type safety and IDE support:
+The test suite uses the actual SQLAlchemy models for better type safety and IDE support:
 
-### AssistantVersionTestData Dataclass
-The `sample_assistant_version_data` fixture returns a typed dataclass (`AssistantVersionTestData`) instead of a plain dictionary. This provides:
+### AssistantVersion Model Instance
+The `sample_assistant_version_data` fixture returns an actual `AssistantVersion` SQLAlchemy model instance instead of a plain dictionary. This provides:
 
-- **Type Safety**: Full typing support with proper field types
+- **Type Safety**: Full typing support using the actual model class
 - **IDE Support**: Auto-completion and type checking in your IDE
-- **Immutable Updates**: Use `dataclasses.replace()` for creating modified copies
-- **Better Documentation**: Clear field definitions with default values
+- **Model Consistency**: Tests use the same models as production code
+- **Better Documentation**: Clear field definitions with SQLAlchemy column types
 
 **Usage Example:**
 ```python
@@ -27,11 +27,15 @@ def test_example(sample_assistant_version_data):
     assert sample_assistant_version_data.name == "Test Assistant"
     assert sample_assistant_version_data.temperature == 0.7
 
-    # Convert to dict for function calls
+    # Convert to dict for function calls using the to_dict() method
     version = repo.create_assistant_version(**sample_assistant_version_data.to_dict())
 
-    # Create modified copies immutably
-    modified_data = replace(sample_assistant_version_data, name="New Name")
+    # Create new instances for modified copies
+    modified_data = AssistantVersion(
+        name="New Name",
+        system_prompt=sample_assistant_version_data.system_prompt,
+        # ... other fields
+    )
 ```
 
 ## Test Coverage

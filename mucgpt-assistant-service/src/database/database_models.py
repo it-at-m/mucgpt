@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TypeVar
+from typing import Optional, TypeVar
 
 from sqlalchemy import (
     Column,
@@ -89,6 +89,19 @@ class AssistantVersion(Base):
             for assoc in self.tool_associations
         ]
 
+    def to_dict(self):
+        """Convert AssistantVersion instance to a dictionary for test compatibility."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "system_prompt": self.system_prompt,
+            "temperature": self.temperature,
+            "max_output_tokens": self.max_output_tokens,
+            "examples": self.examples,
+            "quick_prompts": self.quick_prompts,
+            "tags": self.tags,
+        }
+
     __table_args__ = (
         UniqueConstraint("assistant_id", "version", name="uq_assistant_version"),
     )
@@ -123,14 +136,13 @@ class Assistant(Base):
     def is_allowed_for_user(self, department: str) -> bool:
         """Check if a user with a given department is allowed to use this assistant."""
         if not self.hierarchical_access or self.hierarchical_access == "":
-            return True
-        # Allow access if department matches exactly or starts with hierarchical_access followed by a delimiter
+            return True  # Allow access if department matches exactly or starts with hierarchical_access followed by a delimiter
         return department == self.hierarchical_access or department.startswith(
             self.hierarchical_access + "-"
         )
 
     @property
-    def latest_version(self) -> "AssistantVersion | None":
+    def latest_version(self) -> Optional["AssistantVersion"]:
         return self.versions[0] if self.versions else None
 
     def __repr__(self):

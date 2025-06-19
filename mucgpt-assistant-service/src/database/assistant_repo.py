@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,7 +13,7 @@ class AssistantRepository(Repository[Assistant]):
 
     def get_assistant_version(
         self, assistant_id: int, version: int
-    ) -> AssistantVersion | None:
+    ) -> Optional[AssistantVersion]:
         """Gets a specific version of an assistant."""
         return (
             self.session.query(AssistantVersion)
@@ -55,7 +57,7 @@ class AssistantRepository(Repository[Assistant]):
 
     def get_all_possible_assistants_for_user_with_department(
         self, department: str
-    ) -> list[Assistant]:
+    ) -> List[Assistant]:
         """Get all assistants that are allowed for a specific department.
 
         for example an assistant has the path:
@@ -77,7 +79,7 @@ class AssistantRepository(Repository[Assistant]):
 
         return query.all()
 
-    def get_assistants_by_owner(self, lhmobjektID: str) -> list[Assistant]:
+    def get_assistants_by_owner(self, lhmobjektID: str) -> List[Assistant]:
         """Get all assistants where the given lhmobjektID is an owner."""
         stmt = (
             select(Assistant)
@@ -88,7 +90,7 @@ class AssistantRepository(Repository[Assistant]):
         return list(self.session.execute(stmt).scalars().all())
 
     def create(
-        self, hierarchical_access: str = "", owner_ids: list[str] = None
+        self, hierarchical_access: str = "", owner_ids: List[str] = None
     ) -> Assistant:
         """Create a new assistant with explicit parameters."""
         assistant = Assistant(hierarchical_access=hierarchical_access)
@@ -116,8 +118,8 @@ class AssistantRepository(Repository[Assistant]):
         self,
         assistant_id: int,
         hierarchical_access: str = None,
-        owner_ids: list[str] = None,
-    ) -> Assistant | None:
+        owner_ids: List[str] = None,
+    ) -> Optional[Assistant]:
         """Update an assistant with explicit parameters."""
         assistant = self.get(assistant_id)
         if assistant:

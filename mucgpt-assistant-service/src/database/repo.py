@@ -1,4 +1,4 @@
-from typing import Generic, Type
+from typing import Generic, List, Optional, Type
 
 from sqlalchemy.orm import Session
 
@@ -17,14 +17,14 @@ class Repository(Generic[ModelType]):
         self.session.refresh(instance)
         return instance
 
-    def get(self, id_value) -> ModelType | None:
+    def get(self, id_value) -> Optional[ModelType]:
         # Assuming the primary key column is named 'id'
         return self.session.query(self.model).filter(self.model.id == id_value).first()
 
-    def get_all(self) -> list[ModelType]:
+    def get_all(self) -> List[ModelType]:
         return self.session.query(self.model).all()
 
-    def update(self, id_value, **kwargs) -> ModelType | None:
+    def update(self, id_value, **kwargs) -> Optional[ModelType]:
         instance = self.get(id_value)
         if instance:
             for key, value in kwargs.items():

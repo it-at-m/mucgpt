@@ -1,7 +1,7 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database_models import Assistant, AssistantVersion, assistant_owners
+from .database_models import Assistant, AssistantVersion, Owner, assistant_owners
 from .repo import Repository
 
 
@@ -20,15 +20,33 @@ class AssistantRepository(Repository[Assistant]):
         )
 
     def create_assistant_version(
-        self, assistant: Assistant, **kwargs
+        self,
+        assistant: Assistant,
+        name: str,
+        system_prompt: str,
+        description: str,
+        temperature: float,
+        max_output_tokens: int,
+        examples: list = [],
+        quick_prompts: list = [],
+        tags: list = [],
     ) -> AssistantVersion:
-        """Creates a new version for an assistant."""
+        """Creates a new version for an assistant with explicit parameters."""
         latest_version = assistant.latest_version
         new_version_number = latest_version.version + 1 if latest_version else 1
 
         # Create a new version
         new_version = AssistantVersion(
-            assistant=assistant, version=new_version_number, **kwargs
+            assistant=assistant,
+            version=new_version_number,
+            name=name,
+            description=description,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_output_tokens=max_output_tokens,
+            examples=examples or [],
+            quick_prompts=quick_prompts or [],
+            tags=tags or [],
         )
         self.session.add(new_version)
         self.session.commit()
@@ -69,3 +87,60 @@ class AssistantRepository(Repository[Assistant]):
         )
 
         return list(self.session.execute(stmt).scalars().all())
+
+    def create(
+        self, hierarchical_access: str = "", owner_ids: list[str] = None
+    ) -> Assistant:
+        """Create a new assistant with explicit parameters."""
+        assistant = Assistant(hierarchical_access=hierarchical_access)
+        self.session.add(assistant)
+
+        # Add owners if specified
+        if owner_ids:
+            for owner_id in owner_ids:
+                # Get or create the Owner
+                owner = (
+                    self.session.query(Owner)
+                    .filter(Owner.lhmobjektID == owner_id)
+                    .first()
+                )
+                if not owner:
+                    owner = Owner(lhmobjektID=owner_id)
+                    self.session.add(owner)
+                assistant.owners.append(owner)
+
+        self.session.commit()
+        self.session.refresh(assistant)
+        return assistant
+
+    def update(
+        self,
+        assistant_id: int,
+        hierarchical_access: str = None,
+        owner_ids: list[str] = None,
+    ) -> Assistant | None:
+        """Update an assistant with explicit parameters."""
+        assistant = self.get(assistant_id)
+        if assistant:
+            if hierarchical_access is not None:
+                assistant.hierarchical_access = hierarchical_access
+
+            if owner_ids is not None:
+                # Clear existing owners and add new ones
+                assistant.owners.clear()
+                for owner_id in owner_ids:
+                    # Get or create the Owner
+                    owner = (
+                        self.session.query(Owner)
+                        .filter(Owner.lhmobjektID == owner_id)
+                        .first()
+                    )
+                    if not owner:
+                        owner = Owner(lhmobjektID=owner_id)
+                        self.session.add(owner)
+                    assistant.owners.append(owner)
+
+            self.session.commit()
+            self.session.refresh(assistant)
+            return assistant
+        return None

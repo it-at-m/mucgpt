@@ -23,7 +23,7 @@ from api.exceptions import (
 from core.auth import AuthError, authenticate_user
 from core.auth_models import AuthenticationResult
 from database.assistant_repo import AssistantRepository
-from database.database_models import AssistantTool, Owner, Tool
+from database.database_models import AssistantTool, Tool
 from database.repo import Repository
 from database.session import get_db_session
 
@@ -94,13 +94,16 @@ async def createBot(
     assistant: AssistantCreate,
     db: Session = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
-):
-    # Create a new assistant using the repository
+):  # Create a new assistant using the repository
     assistant_repo = AssistantRepository(db)
 
-    # Create the assistant with only the properties that belong to the Assistant table
+    # Prepare owner_ids: include the creating user if not already present
+    owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
+    if user_info.lhm_object_id not in owner_ids:
+        owner_ids.append(user_info.lhm_object_id)
+
     new_assistant = assistant_repo.create(
-        hierarchical_access=assistant.hierarchical_access or ""
+        hierarchical_access=assistant.hierarchical_access or "", owner_ids=owner_ids
     )
 
     # Create the first version with the actual assistant data
@@ -128,30 +131,7 @@ async def createBot(
             assistant_tool = AssistantTool(
                 assistant_version=first_version, tool=tool, config=tool_data.config
             )
-            db.add(
-                assistant_tool
-            )  # Add owner_ids if specified, and ensure the creating user is always an owner
-    owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
-
-    # Add the user's lhmobjektid if not already present
-    if user_info.lhm_object_id not in owner_ids:
-        owner_ids.append(user_info.lhm_object_id)
-
-    if owner_ids:
-        owner_repo = Repository(Owner, db)
-        for owner_id in owner_ids:
-            # Get or create the Owner
-            owner = (
-                owner_repo.session.query(Owner)
-                .filter(Owner.lhmobjektID == owner_id)
-                .first()
-            )
-            if not owner:
-                owner = Owner(lhmobjektID=owner_id)
-                owner_repo.session.add(owner)
-            new_assistant.owners.append(owner)
-
-    # Commit changes
+            db.add(assistant_tool)  # Commit changes
     db.commit()
     db.refresh(new_assistant)
     # first_version is already committed and refreshed by create_assistant_version
@@ -280,42 +260,42 @@ async def updateBot(
     if assistant_update.version != latest_version.version:
         raise VersionConflictException(assistant_update.version, latest_version.version)
 
-    # Handle global properties
-    if assistant_update.hierarchical_access is not None:
-        assistant.hierarchical_access = assistant_update.hierarchical_access
+    # Handle global properties using the repository update method
+    assistant_repo.update(
+        assistant_id=id,
+        hierarchical_access=assistant_update.hierarchical_access,
+        owner_ids=assistant_update.owner_ids,
+    )
 
-    if assistant_update.owner_ids is not None:
-        assistant.owners.clear()
-        owner_repo = Repository(Owner, db)
-        for owner_id in assistant_update.owner_ids:
-            owner = (
-                owner_repo.session.query(Owner)
-                .filter(Owner.lhmobjektID == owner_id)
-                .first()
-            )
-            if not owner:
-                owner = Owner(lhmobjektID=owner_id)
-                db.add(owner)
-            assistant.owners.append(owner)  # Create a new version with updated data
+    # Create a new version with updated data
     # Using the latest_version already retrieved above
-
-    version_data = {
-        "name": latest_version.name,
-        "description": latest_version.description,
-        "system_prompt": latest_version.system_prompt,
-        "temperature": latest_version.temperature,
-        "max_output_tokens": latest_version.max_output_tokens,
-        "examples": latest_version.examples,
-        "quick_prompts": latest_version.quick_prompts,
-        "tags": latest_version.tags,
-    }
-
-    update_payload = assistant_update.model_dump(exclude_unset=True)
-    for key, value in update_payload.items():
-        if key in version_data:
-            version_data[key] = value
-
-    new_version = assistant_repo.create_assistant_version(assistant, **version_data)
+    new_version = assistant_repo.create_assistant_version(
+        assistant,
+        name=assistant_update.name
+        if assistant_update.name is not None
+        else latest_version.name,
+        description=assistant_update.description
+        if assistant_update.description is not None
+        else latest_version.description,
+        system_prompt=assistant_update.system_prompt
+        if assistant_update.system_prompt is not None
+        else latest_version.system_prompt,
+        temperature=assistant_update.temperature
+        if assistant_update.temperature is not None
+        else latest_version.temperature,
+        max_output_tokens=assistant_update.max_output_tokens
+        if assistant_update.max_output_tokens is not None
+        else latest_version.max_output_tokens,
+        examples=assistant_update.examples
+        if assistant_update.examples is not None
+        else latest_version.examples,
+        quick_prompts=assistant_update.quick_prompts
+        if assistant_update.quick_prompts is not None
+        else latest_version.quick_prompts,
+        tags=assistant_update.tags
+        if assistant_update.tags is not None
+        else latest_version.tags,
+    )
 
     # Handle tools for the new version
     if assistant_update.tools is not None:

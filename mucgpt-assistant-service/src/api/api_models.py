@@ -154,10 +154,10 @@ class AssistantBase(BaseModel):
             {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
         ],
     )
-    owner_ids: Optional[List[int]] = Field(
+    owner_ids: Optional[List[str]] = Field(
         [],
         description="List of lhmobjektIDs who will own this assistant",
-        example=[12345, 67890],
+        example=["12345", "67890"],
     )
 
     class Config:
@@ -175,7 +175,7 @@ class AssistantBase(BaseModel):
                         "config": {"url": "muenchen.de", "max_results": 5},
                     }
                 ],
-                "owner_ids": [12345],
+                "owner_ids": ["12345"],
                 "examples": [
                     {"text": "Reset password", "value": "How can i reset my password?"},
                     {
@@ -216,7 +216,7 @@ class AssistantCreate(AssistantBase):
                         "config": {"url": "muenchen.de", "max_results": 5},
                     }
                 ],
-                "owner_ids": [12345],
+                "owner_ids": ["12345"],
                 "examples": [
                     {"text": "Reset password", "value": "How can i reset my password?"},
                     {
@@ -317,10 +317,10 @@ class AssistantUpdate(BaseModel):
             {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
         ],
     )
-    owner_ids: Optional[List[int]] = Field(
+    owner_ids: Optional[List[str]] = Field(
         None,
         description="List of lhmobjektIDs who will own this assistant",
-        example=[12345, 67890],
+        example=["12345", "67890"],
     )
 
 
@@ -363,10 +363,10 @@ class AssistantResponse(BaseModel):
         description="Hierarchical access control string for organizational permissions. All users under this hierarchy can access the assistant. Leave empty for no restrictions.",
         example="department-underdepartment-underunderdepartment",
     )
-    owner_ids: Optional[List[int]] = Field(
+    owner_ids: Optional[List[str]] = Field(
         [],
         description="List of lhmobjektIDs who will own this assistant",
-        example=[12345, 67890],
+        example=["12345", "67890"],
     )
     latest_version: AssistantVersionResponse = Field(
         ..., description="The latest version of the assistant"
@@ -380,7 +380,7 @@ class AssistantResponse(BaseModel):
                 "created_at": "2025-06-18T10:30:00Z",
                 "updated_at": "2025-06-18T15:45:00Z",
                 "hierarchical_access": "department-underdepartment-underunderdepartment",
-                "owner_ids": [12345, 67890],
+                "owner_ids": ["12345", "67890"],
                 "latest_version": {
                     "id": 1,
                     "version": 1,
@@ -397,7 +397,7 @@ class AssistantResponse(BaseModel):
                             "config": {"url": "muenchen.de", "max_results": 5},
                         }
                     ],
-                    "owner_ids": [12345],
+                    "owner_ids": ["12345"],
                     "examples": [
                         {
                             "text": "Reset password",

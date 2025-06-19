@@ -138,13 +138,42 @@ async def createBot(
             if not owner:
                 owner = Owner(lhmobjektID=owner_id)
                 owner_repo.session.add(owner)
-            new_assistant.owners.append(owner)
-
-    # Commit changes
+            new_assistant.owners.append(owner)  # Commit changes
     db.commit()
     db.refresh(new_assistant)
 
-    return new_assistant
+    # Create explicit response model
+    latest_version = new_assistant.latest_version
+
+    # Build AssistantVersionResponse
+    assistant_version_response = AssistantVersionResponse(
+        id=latest_version.id,
+        version=latest_version.version,
+        created_at=latest_version.created_at,
+        name=latest_version.name,
+        description=latest_version.description or "",
+        system_prompt=latest_version.system_prompt,
+        hierarchical_access=new_assistant.hierarchical_access or "",
+        temperature=latest_version.temperature,
+        max_output_tokens=latest_version.max_output_tokens,
+        examples=latest_version.examples or [],
+        quick_prompts=latest_version.quick_prompts or [],
+        tags=latest_version.tags or [],
+        tools=latest_version.tools or [],
+        owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
+    )
+
+    # Build AssistantResponse
+    response = AssistantResponse(
+        id=new_assistant.id,
+        created_at=new_assistant.created_at,
+        updated_at=new_assistant.updated_at,
+        hierarchical_access=new_assistant.hierarchical_access or "",
+        owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
+        latest_version=assistant_version_response,
+    )
+
+    return response
 
 
 @api_app.post(
@@ -276,9 +305,9 @@ async def updateBot(
         if key in version_data:
             version_data[key] = value
 
-    new_version = assistant_repo.create_assistant_version(assistant, **version_data)
-
-    # Handle tools for the new version
+    new_version = assistant_repo.create_assistant_version(
+        assistant, **version_data
+    )  # Handle tools for the new version
     if assistant_update.tools is not None:
         tool_repo = Repository(Tool, db)
         for tool_data in assistant_update.tools:
@@ -295,7 +324,38 @@ async def updateBot(
     db.commit()
     db.refresh(assistant)
 
-    return assistant
+    # Create explicit response model
+    latest_version = assistant.latest_version
+
+    # Build AssistantVersionResponse
+    assistant_version_response = AssistantVersionResponse(
+        id=latest_version.id,
+        version=latest_version.version,
+        created_at=latest_version.created_at,
+        name=latest_version.name,
+        description=latest_version.description or "",
+        system_prompt=latest_version.system_prompt,
+        hierarchical_access=assistant.hierarchical_access or "",
+        temperature=latest_version.temperature,
+        max_output_tokens=latest_version.max_output_tokens,
+        examples=latest_version.examples or [],
+        quick_prompts=latest_version.quick_prompts or [],
+        tags=latest_version.tags or [],
+        tools=latest_version.tools or [],
+        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+    )
+
+    # Build AssistantResponse
+    response = AssistantResponse(
+        id=assistant.id,
+        created_at=assistant.created_at,
+        updated_at=assistant.updated_at,
+        hierarchical_access=assistant.hierarchical_access or "",
+        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        latest_version=assistant_version_response,
+    )
+
+    return response
 
 
 @api_app.get(
@@ -320,7 +380,42 @@ async def getAllBots(
     assistants = assistant_repo.get_all_possible_assistants_for_user_with_department(
         user_info.department
     )
-    return assistants
+
+    # Create explicit response models
+    response_list = []
+    for assistant in assistants:
+        latest_version = assistant.latest_version
+        if latest_version:
+            # Build AssistantVersionResponse
+            assistant_version_response = AssistantVersionResponse(
+                id=latest_version.id,
+                version=latest_version.version,
+                created_at=latest_version.created_at,
+                name=latest_version.name,
+                description=latest_version.description or "",
+                system_prompt=latest_version.system_prompt,
+                hierarchical_access=assistant.hierarchical_access or "",
+                temperature=latest_version.temperature,
+                max_output_tokens=latest_version.max_output_tokens,
+                examples=latest_version.examples or [],
+                quick_prompts=latest_version.quick_prompts or [],
+                tags=latest_version.tags or [],
+                tools=latest_version.tools or [],
+                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+            )
+
+            # Build AssistantResponse
+            response = AssistantResponse(
+                id=assistant.id,
+                created_at=assistant.created_at,
+                updated_at=assistant.updated_at,
+                hierarchical_access=assistant.hierarchical_access or "",
+                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+                latest_version=assistant_version_response,
+            )
+            response_list.append(response)
+
+    return response_list
 
 
 @api_app.get(
@@ -352,7 +447,38 @@ async def getBot(
     if not assistant.is_allowed_for_user(user_info.department):
         raise NotAllowedToAccessException(id)
 
-    return assistant
+    # Create explicit response model
+    latest_version = assistant.latest_version
+
+    # Build AssistantVersionResponse
+    assistant_version_response = AssistantVersionResponse(
+        id=latest_version.id,
+        version=latest_version.version,
+        created_at=latest_version.created_at,
+        name=latest_version.name,
+        description=latest_version.description or "",
+        system_prompt=latest_version.system_prompt,
+        hierarchical_access=assistant.hierarchical_access or "",
+        temperature=latest_version.temperature,
+        max_output_tokens=latest_version.max_output_tokens,
+        examples=latest_version.examples or [],
+        quick_prompts=latest_version.quick_prompts or [],
+        tags=latest_version.tags or [],
+        tools=latest_version.tools or [],
+        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+    )
+
+    # Build AssistantResponse
+    response = AssistantResponse(
+        id=assistant.id,
+        created_at=assistant.created_at,
+        updated_at=assistant.updated_at,
+        hierarchical_access=assistant.hierarchical_access or "",
+        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        latest_version=assistant_version_response,
+    )
+
+    return response
 
 
 @api_app.get(
@@ -378,7 +504,41 @@ async def getUserBots(
     assistant_repo = AssistantRepository(db)
     assistants = assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
 
-    return assistants
+    # Create explicit response models
+    response_list = []
+    for assistant in assistants:
+        latest_version = assistant.latest_version
+        if latest_version:
+            # Build AssistantVersionResponse
+            assistant_version_response = AssistantVersionResponse(
+                id=latest_version.id,
+                version=latest_version.version,
+                created_at=latest_version.created_at,
+                name=latest_version.name,
+                description=latest_version.description or "",
+                system_prompt=latest_version.system_prompt,
+                hierarchical_access=assistant.hierarchical_access or "",
+                temperature=latest_version.temperature,
+                max_output_tokens=latest_version.max_output_tokens,
+                examples=latest_version.examples or [],
+                quick_prompts=latest_version.quick_prompts or [],
+                tags=latest_version.tags or [],
+                tools=latest_version.tools or [],
+                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+            )
+
+            # Build AssistantResponse
+            response = AssistantResponse(
+                id=assistant.id,
+                created_at=assistant.created_at,
+                updated_at=assistant.updated_at,
+                hierarchical_access=assistant.hierarchical_access or "",
+                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+                latest_version=assistant_version_response,
+            )
+            response_list.append(response)
+
+    return response_list
 
 
 @api_app.get(
@@ -420,7 +580,25 @@ async def get_assistant_version(
     if not assistant_version:
         raise NoVersionException(id, version)
 
-    return assistant_version
+    # Create explicit response model
+    response = AssistantVersionResponse(
+        id=assistant_version.id,
+        version=assistant_version.version,
+        created_at=assistant_version.created_at,
+        name=assistant_version.name,
+        description=assistant_version.description or "",
+        system_prompt=assistant_version.system_prompt,
+        hierarchical_access=assistant.hierarchical_access or "",
+        temperature=assistant_version.temperature,
+        max_output_tokens=assistant_version.max_output_tokens,
+        examples=assistant_version.examples or [],
+        quick_prompts=assistant_version.quick_prompts or [],
+        tags=assistant_version.tags or [],
+        tools=assistant_version.tools or [],
+        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+    )
+
+    return response
 
 
 @api_app.get(

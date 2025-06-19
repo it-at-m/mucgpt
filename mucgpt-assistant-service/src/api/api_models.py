@@ -5,6 +5,54 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
+class ExampleModel(BaseModel):
+    text: str = Field(
+        ...,
+        description="The display text for the example",
+        example="Reset password",
+    )
+    value: str = Field(
+        ...,
+        description="The actual prompt value for the example",
+        example="How can I reset my password?",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "text": "Reset password",
+                "value": "How can I reset my password?",
+            }
+        }
+
+
+class QuickPrompt(BaseModel):
+    label: str = Field(
+        ...,
+        description="The label for the quick prompt button",
+        example="Troubleshoot Connection",
+    )
+    prompt: str = Field(
+        ...,
+        description="The prompt to be sent when the quick prompt is used",
+        example="Help me troubleshoot a network connection issue",
+    )
+    tooltip: str = Field(
+        "",
+        description="A tooltip to display for the quick prompt",
+        example="Use this prompt to quickly get help with network issues",
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "label": "Troubleshoot Connection",
+                "prompt": "Help me troubleshoot a network connection issue",
+                "tooltip": "Use this prompt to quickly get help with network issues",
+            }
+        }
+
+
 class ToolBase(BaseModel):
     """Response model for an assistant tool.
 
@@ -71,7 +119,7 @@ class AssistantBase(BaseModel):
         le=32000,
         example=1000,
     )
-    examples: Optional[List[Dict[str, Any]]] = Field(
+    examples: Optional[List[ExampleModel]] = Field(
         [],
         description="Example conversations starters",
         example=[
@@ -82,7 +130,7 @@ class AssistantBase(BaseModel):
             },
         ],
     )
-    quick_prompts: Optional[List[Dict[str, Any]]] = Field(
+    quick_prompts: Optional[List[QuickPrompt]] = Field(
         [],
         description="Pre-defined quick prompts/actions for the assistant",
         example=[

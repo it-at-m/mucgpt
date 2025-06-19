@@ -1,10 +1,20 @@
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from api.api_models import AssistantCreate, AssistantResponse, AssistantUpdate
-from core.auth import authenticate_user
+from api.exceptions import (
+    AssistantNotFoundException,
+    AuthenticationException,
+    DeleteFailedException,
+    NotOwnerException,
+    NoVersionException,
+    VersionConflictException,
+)
+from core.auth import AuthError, authenticate_user
 from core.auth_models import AuthenticationResult
 from database.database_models import Assistant, AssistantTool, Owner, Tool
 from database.repo import Repository
@@ -33,7 +43,7 @@ api_app = FastAPI(
             "description": "Operations for managing tools that can be used by assistants",
         },
         {
-            "name": "Assistants Owned By User",
+            "name": "Users",
             "description": "User-related operations including ownership queries",
         },
         {
@@ -45,6 +55,20 @@ api_app = FastAPI(
 backend.mount("/api/", api_app)
 
 
+@api_app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred."},
+    )
+
+
+@api_app.exception_handler(AuthError)
+async def auth_exception_handler(request: Request, exc: AuthError):
+    http_exc = AuthenticationException(detail=exc.error, status_code=exc.status_code)
+    return await http_exception_handler(request, http_exc)
+
+
 @api_app.post(
     "/bot/create",
     response_model=AssistantResponse,
@@ -53,7 +77,10 @@ backend.mount("/api/", api_app)
     Create a new AI assistant with specified configuration, tools, and owners.
 
     """,
-    response_description="The created assistant with all associated data",
+    responses={
+        200: {"description": "The created assistant with all associated data"},
+        401: {"description": "Unauthorized"},
+    },
     tags=["Assistants"],
 )
 async def createBot(
@@ -127,8 +154,14 @@ async def createBot(
 
     **Note:** This action is irreversible.
     """,
-    response_description="Confirmation message of successful deletion",
     tags=["Assistants"],
+    responses={
+        200: {"description": "Confirmation message of successful deletion"},
+        401: {"description": "Unauthorized"},
+        403: {"description": "User is not an owner of the assistant"},
+        404: {"description": "Assistant not found"},
+        500: {"description": "Failed to delete the assistant"},
+    },
 )
 async def deleteBot(
     id: int,
@@ -139,20 +172,15 @@ async def deleteBot(
     assistant = assistant_repo.get(id)
 
     if not assistant:
-        raise HTTPException(status_code=404, detail=f"Assistant with ID {id} not found")
+        raise AssistantNotFoundException(id)
 
     if not assistant.is_owner(user_info.lhm_object_id):
-        raise HTTPException(
-            status_code=403,
-            detail="Access denied: You must be an owner of this assistant to delete it",
-        )
+        raise NotOwnerException()
 
     success = assistant_repo.delete(id)
 
     if not success:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to delete assistant with ID {id}"
-        )
+        raise DeleteFailedException(id)
 
     return {"message": f"Assistant with ID {id} successfully deleted"}
 
@@ -170,8 +198,15 @@ async def deleteBot(
 
     **Note:** When updating tools or owners, the entire list is replaced.
     """,
-    response_description="The updated assistant with all current data",
     tags=["Assistants"],
+    responses={
+        200: {"description": "The updated assistant with all current data"},
+        401: {"description": "Unauthorized"},
+        403: {"description": "User is not an owner of the assistant"},
+        404: {"description": "Assistant not found"},
+        409: {"description": "Version conflict detected"},
+        500: {"description": "Assistant has no versions and cannot be updated"},
+    },
 )
 async def updateBot(
     id: int,
@@ -183,25 +218,17 @@ async def updateBot(
     assistant = assistant_repo.get(id)
 
     if not assistant:
-        raise HTTPException(status_code=404, detail=f"Assistant with ID {id} not found")
+        raise AssistantNotFoundException(id)
 
     if not assistant.is_owner(user_info.lhm_object_id):
-        raise HTTPException(
-            status_code=403,
-            detail="Access denied: You must be an owner of this assistant to update it",
-        )
+        raise NotOwnerException()
 
     latest_version = assistant.latest_version
     if not latest_version:
-        raise HTTPException(
-            status_code=500, detail="Assistant has no versions, cannot update"
-        )
+        raise NoVersionException()
 
     if assistant_update.version != latest_version.version:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Version conflict: You are trying to update version {assistant_update.version}, but the latest version is {latest_version.version}.",
-        )
+        raise VersionConflictException(assistant_update.version, latest_version.version)
 
     # Handle global properties
     if assistant_update.hierarchical_access is not None:
@@ -224,9 +251,7 @@ async def updateBot(
     # Create a new version with updated data
     latest_version = assistant.latest_version
     if not latest_version:
-        raise HTTPException(
-            status_code=500, detail="Assistant has no versions, cannot update"
-        )
+        raise NoVersionException()
 
     version_data = {
         "name": latest_version.name,
@@ -275,7 +300,10 @@ async def updateBot(
     and organizational hierarchy.
 
     """,
-    response_description="List of all accessible assistants",
+    responses={
+        200: {"description": "List of all accessible assistants"},
+        401: {"description": "Unauthorized"},
+    },
     tags=["Assistants"],
 )
 async def getAllBots(
@@ -296,8 +324,12 @@ async def getAllBots(
     Retrieve detailed information about a specific AI assistant by its ID.
 
     """,
-    response_description="Detailed information about the requested assistant",
     tags=["Assistants"],
+    responses={
+        200: {"description": "Detailed information about the requested assistant"},
+        401: {"description": "Unauthorized"},
+        404: {"description": "Assistant not found"},
+    },
 )
 async def getBot(
     id: int,
@@ -308,7 +340,7 @@ async def getBot(
     assistant = assistant_repo.get(id)
 
     if not assistant:
-        raise HTTPException(status_code=404, detail=f"Assistant with ID {id} not found")
+        raise AssistantNotFoundException(id)
 
     return assistant
 
@@ -321,7 +353,10 @@ async def getBot(
     Retrieve all AI assistants where the specified lhmobjektID is listed as an owner.
 
     """,
-    response_description="List of assistants owned by the specified user",
+    responses={
+        200: {"description": "List of assistants owned by the specified user"},
+        401: {"description": "Unauthorized"},
+    },
     tags=["Assistants", "Users"],
 )
 async def getUserBots(
@@ -343,7 +378,7 @@ async def getUserBots(
     description="""
     Simple health check endpoint to verify that the API service is running and responsive.
     """,
-    response_description="Simple OK status message",
+    responses={200: {"description": "Simple OK status message"}},
     tags=["System"],
 )
 def health_check() -> str:

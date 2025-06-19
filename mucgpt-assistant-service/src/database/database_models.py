@@ -33,20 +33,6 @@ assistant_owners = Table(
 )
 
 
-class Tool(Base):
-    __tablename__ = "tools"
-
-    id = Column(String(255), primary_key=True)
-    description = Column(Text, nullable=True)
-
-    assistant_associations = relationship(
-        "AssistantTool", back_populates="tool", cascade="all, delete-orphan"
-    )
-
-    def __repr__(self):
-        return f"<Tool(id='{self.id}')>"
-
-
 class AssistantTool(Base):
     __tablename__ = "assistant_tools"
     assistant_version_id = Column(
@@ -54,15 +40,12 @@ class AssistantTool(Base):
         ForeignKey("assistant_versions.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    tool_id = Column(
-        String(255), ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True
-    )
+    tool_id = Column(String(255), primary_key=True)
     config = Column(JSON, nullable=True)
 
     assistant_version = relationship(
         "AssistantVersion", back_populates="tool_associations"
     )
-    tool = relationship("Tool", back_populates="assistant_associations")
 
     def __repr__(self):
         return f"<AssistantTool(assistant_version_id={self.assistant_version_id}, tool_id='{self.tool_id}')>"
@@ -88,17 +71,19 @@ class AssistantVersion(Base):
     tags = Column(JSON, nullable=True)
 
     assistant = relationship("Assistant", back_populates="versions")
-    tool_associations = relationship(
-        "AssistantTool",
-        back_populates="assistant_version",
-        cascade="all, delete-orphan",
+    tool_associations = (
+        relationship(
+            "AssistantTool",
+            back_populates="assistant_version",
+            cascade="all, delete-orphan",
+        )
+        @ property
     )
 
-    @property
     def tools(self):
         """Return a list of tool configurations for the assistant version."""
         return [
-            {"id": assoc.tool.id, "config": assoc.config}
+            {"id": assoc.tool_id, "config": assoc.config}
             for assoc in self.tool_associations
         ]
 

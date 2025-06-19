@@ -19,12 +19,12 @@ from api.exceptions import (
     NotOwnerException,
     NoVersionException,
     VersionConflictException,
+    VersionNotFoundException,
 )
 from core.auth import AuthError, authenticate_user
 from core.auth_models import AuthenticationResult
 from database.assistant_repo import AssistantRepository
-from database.database_models import AssistantTool, Tool
-from database.repo import Repository
+from database.database_models import AssistantTool
 from database.session import get_db_session
 
 # serves static files and the api
@@ -117,21 +117,16 @@ async def createBot(
         examples=assistant.examples or [],
         quick_prompts=assistant.quick_prompts or [],
         tags=assistant.tags or [],
-    )
-
-    # Add tools if specified
+    )  # Add tools if specified
     if assistant.tools:
-        tool_repo = Repository(Tool, db)
         for tool_data in assistant.tools:
-            tool = tool_repo.session.query(Tool).filter(Tool.id == tool_data.id).first()
-            if not tool:
-                tool = Tool(id=tool_data.id)
-                db.add(tool)
-
             assistant_tool = AssistantTool(
-                assistant_version=first_version, tool=tool, config=tool_data.config
+                assistant_version=first_version,
+                tool_id=tool_data.id,
+                config=tool_data.config,
             )
-            db.add(assistant_tool)  # Commit changes
+            db.add(assistant_tool)
+
     db.commit()
     db.refresh(new_assistant)
     # first_version is already committed and refreshed by create_assistant_version
@@ -295,19 +290,13 @@ async def updateBot(
         tags=assistant_update.tags
         if assistant_update.tags is not None
         else latest_version.tags,
-    )
-
-    # Handle tools for the new version
+    )  # Handle tools for the new version
     if assistant_update.tools is not None:
-        tool_repo = Repository(Tool, db)
         for tool_data in assistant_update.tools:
-            tool = tool_repo.session.query(Tool).filter(Tool.id == tool_data.id).first()
-            if not tool:
-                tool = Tool(id=tool_data.id)
-                db.add(tool)
-
             assistant_tool = AssistantTool(
-                assistant_version=new_version, tool=tool, config=tool_data.config
+                assistant_version=new_version,
+                tool_id=tool_data.id,
+                config=tool_data.config,
             )
             db.add(assistant_tool)
 
@@ -562,13 +551,13 @@ async def get_assistant_version(
     if not assistant:
         raise AssistantNotFoundException(id)
 
-    if not assistant.is_allowed_for_user(user_info.lhm_department):
-        raise NotAllowedToAccessException()
+    if not assistant.is_allowed_for_user(user_info.department):
+        raise NotAllowedToAccessException(id)
 
     assistant_version = assistant_repo.get_assistant_version(id, version)
 
     if not assistant_version:
-        raise NoVersionException(id, version)
+        raise VersionNotFoundException(id, version)
 
     # Create explicit response model
     response = AssistantVersionResponse(

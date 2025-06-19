@@ -36,6 +36,14 @@ class NoVersionException(HTTPException):
         )
 
 
+class VersionNotFoundException(HTTPException):
+    def __init__(self, assistant_id: int, version: int):
+        super().__init__(
+            status_code=404,
+            detail=f"Version {version} not found for assistant with ID {assistant_id}",
+        )
+
+
 class DeleteFailedException(HTTPException):
     def __init__(self, assistant_id: int):
         super().__init__(

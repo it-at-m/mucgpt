@@ -14,7 +14,6 @@ class DatabaseConfig(BaseModel):
 
 
 class BackendConfig(BaseModel):
-    enable_auth: bool
     unauthorized_user_redirect_url: str
     sso_config: SSOConfig
     db_config: DatabaseConfig

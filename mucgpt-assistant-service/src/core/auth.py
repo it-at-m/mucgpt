@@ -128,15 +128,6 @@ def authenticate_user(
     auth_helper = AuthentificationHelper(
         issuer=config.backend.sso_config.sso_issuer, role=config.backend.sso_config.role
     )
-    if not config.backend.enable_auth:
-        # Return dummy authentication result when auth is disabled for development
-        return AuthenticationResult(
-            lhm_object_id="dev-123",
-            department="Development",
-            name="Development User",
-            roles=["mucgpt-user"],
-        )
-
     try:
         user_info = auth_helper.authentificate(access_token)
         return user_info

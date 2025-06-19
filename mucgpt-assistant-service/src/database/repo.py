@@ -35,6 +35,18 @@ class Repository(Generic[ModelType]):
             return instance
         return None
 
+    def get_assistant_version(
+        self, assistant_id: int, version: int
+    ) -> AssistantVersion | None:
+        """Gets a specific version of an assistant."""
+        if self.model != Assistant:
+            raise ValueError("This method can only be used with the Assistant model")
+        return (
+            self.session.query(AssistantVersion)
+            .filter_by(assistant_id=assistant_id, version=version)
+            .first()
+        )
+
     def delete(self, id_value) -> bool:
         instance = self.get(id_value)
         if instance:

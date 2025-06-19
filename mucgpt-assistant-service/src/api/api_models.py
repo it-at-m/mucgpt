@@ -372,9 +372,6 @@ class AssistantResponse(BaseModel):
     latest_version: AssistantVersionResponse = Field(
         ..., description="The latest version of the assistant"
     )
-    versions: List[AssistantVersionResponse] = Field(
-        ..., description="All versions of the assistant"
-    )
 
     class Config:
         from_attributes = True

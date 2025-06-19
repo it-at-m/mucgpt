@@ -5,7 +5,12 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from api.api_models import AssistantCreate, AssistantResponse, AssistantUpdate
+from api.api_models import (
+    AssistantCreate,
+    AssistantResponse,
+    AssistantUpdate,
+    AssistantVersionResponse,
+)
 from api.exceptions import (
     AssistantNotFoundException,
     AuthenticationException,
@@ -373,6 +378,48 @@ async def getUserBots(
     assistants = assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
 
     return assistants
+
+
+@api_app.get(
+    "/bot/{id}/version/{version}",
+    response_model=AssistantVersionResponse,
+    summary="Get a specific version of an AI assistant",
+    description="""
+    Retrieve a specific version of an existing AI assistant.
+
+    **Security:**
+    - Requires authentication
+    - User must have access to the assistant
+    """,
+    tags=["Assistants"],
+    responses={
+        200: {"description": "The requested assistant version"},
+        401: {"description": "Unauthorized"},
+        403: {"description": "User is not allowed to access the assistant"},
+        404: {"description": "Assistant or version not found"},
+    },
+)
+async def get_assistant_version(
+    id: int,
+    version: int,
+    db: Session = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
+):
+    assistant_repo = Repository(Assistant, db)
+    assistant = assistant_repo.get(id)
+
+    if not assistant:
+        raise AssistantNotFoundException(id)
+
+    if not assistant.is_allowed_for_user(user_info.lhm_department):
+        raise NotAllowedToAccessException()
+
+    assistant_version = assistant_repo.get_assistant_version(id, version)
+
+    if not assistant_version:
+        raise NoVersionException(id, version)
+
+    return assistant_version
 
 
 @api_app.get(

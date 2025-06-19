@@ -65,7 +65,7 @@ class ToolBase(BaseModel):
     config: Optional[Dict[str, Any]] = Field(
         None,
         description="Tool-specific configuration settings",
-        example={"url": "muenchen.de", "max_reults": 5},
+        example={"url": "muenchen.de", "max_results": 5},
     )
 
     class Config:
@@ -73,8 +73,8 @@ class ToolBase(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": "WEB_SEARCH",
-            },
-            "config": {"url": "muenchen.de", "max_reults": 5},
+                "config": {"url": "muenchen.de", "max_results": 5},
+            }
         }
 
 
@@ -166,7 +166,7 @@ class AssistantBase(BaseModel):
                 "name": "Technical Support Bot",
                 "description": "An AI assistant specialized in providing technical support for software issues",
                 "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                "hierarchical_access": "department-underdepartment-underunderdepartment*",
+                "hierarchical_access": "department-underdepartment-underunderdepartment",
                 "temperature": 0.7,
                 "max_output_tokens": 1000,
                 "tools": [
@@ -210,7 +210,6 @@ class AssistantCreate(AssistantBase):
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
                 "temperature": 0.5,
                 "max_output_tokens": 800,
-                "version": 3,
                 "tools": [
                     {
                         "id": "WEB_SEARCH",
@@ -377,35 +376,46 @@ class AssistantResponse(BaseModel):
         from_attributes = True
         json_schema_extra = {
             "example": {
-                "name": "Customer Service Bot",
-                "description": "AI assistant for handling customer inquiries",
-                "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
-                "temperature": 0.5,
-                "max_output_tokens": 800,
-                "version": 3,
+                "id": 1,
                 "created_at": "2025-06-18T10:30:00Z",
                 "updated_at": "2025-06-18T15:45:00Z",
-                "tools": [
-                    {
-                        "id": "WEB_SEARCH",
-                        "config": {"url": "muenchen.de", "max_results": 5},
-                    }
-                ],
-                "owner_ids": [12345],
-                "examples": [
-                    {"text": "Reset password", "value": "How can i reset my password?"},
-                    {
-                        "text": "Network Issue",
-                        "value": "Help me troubleshoot a network connection issue",
-                    },
-                ],
-                "quick_prompts": [
-                    {
-                        "label": "Troubleshoot Connection",
-                        "prompt": "Help me troubleshoot a network connection issue",
-                        "tooltip": "Use this prompt to quickly get help with network issues",
-                    }
-                ],
-                "tags": ["customer-service", "support"],
+                "hierarchical_access": "department-underdepartment-underunderdepartment",
+                "owner_ids": [12345, 67890],
+                "latest_version": {
+                    "id": 1,
+                    "version": 1,
+                    "created_at": "2025-06-18T10:30:00Z",
+                    "name": "Technical Support Bot",
+                    "description": "An AI assistant specialized in providing technical support for software issues",
+                    "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
+                    "hierarchical_access": "department-underdepartment-underunderdepartment",
+                    "temperature": 0.7,
+                    "max_output_tokens": 1000,
+                    "tools": [
+                        {
+                            "id": "WEB_SEARCH",
+                            "config": {"url": "muenchen.de", "max_results": 5},
+                        }
+                    ],
+                    "owner_ids": [12345],
+                    "examples": [
+                        {
+                            "text": "Reset password",
+                            "value": "How can i reset my password?",
+                        },
+                        {
+                            "text": "Network Issue",
+                            "value": "Help me troubleshoot a network connection issue",
+                        },
+                    ],
+                    "quick_prompts": [
+                        {
+                            "label": "Troubleshoot Connection",
+                            "prompt": "Help me troubleshoot a network connection issue",
+                            "tooltip": "Use this prompt to quickly get help with network issues",
+                        }
+                    ],
+                    "tags": ["support", "technical", "customer-service"],
+                },
             }
         }

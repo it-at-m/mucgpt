@@ -98,11 +98,22 @@ async def createBot(
     # Create a new assistant using the repository
     assistant_repo = AssistantRepository(db)
 
-    # Create the assistant with basic properties
+    # Create the assistant with only the properties that belong to the Assistant table
     new_assistant = assistant_repo.create(
+        hierarchical_access=assistant.hierarchical_access or ""
+    )
+
+    # Create the first version with the actual assistant data
+    first_version = assistant_repo.create_assistant_version(
+        new_assistant,
         name=assistant.name,
-        description=assistant.description,
+        description=assistant.description or "",
         system_prompt=assistant.system_prompt,
+        temperature=assistant.temperature,
+        max_output_tokens=assistant.max_output_tokens,
+        examples=assistant.examples or [],
+        quick_prompts=assistant.quick_prompts or [],
+        tags=assistant.tags or [],
     )
 
     # Add tools if specified
@@ -115,11 +126,11 @@ async def createBot(
                 db.add(tool)
 
             assistant_tool = AssistantTool(
-                assistant=new_assistant, tool=tool, config=tool_data.config
+                assistant_version=first_version, tool=tool, config=tool_data.config
             )
-            db.add(assistant_tool)
-
-    # Add owner_ids if specified, and ensure the creating user is always an owner
+            db.add(
+                assistant_tool
+            )  # Add owner_ids if specified, and ensure the creating user is always an owner
     owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
 
     # Add the user's lhmobjektid if not already present
@@ -138,9 +149,12 @@ async def createBot(
             if not owner:
                 owner = Owner(lhmobjektID=owner_id)
                 owner_repo.session.add(owner)
-            new_assistant.owners.append(owner)  # Commit changes
+            new_assistant.owners.append(owner)
+
+    # Commit changes
     db.commit()
     db.refresh(new_assistant)
+    # first_version is already committed and refreshed by create_assistant_version
 
     # Create explicit response model
     latest_version = new_assistant.latest_version
@@ -282,12 +296,8 @@ async def updateBot(
             if not owner:
                 owner = Owner(lhmobjektID=owner_id)
                 db.add(owner)
-            assistant.owners.append(owner)
-
-    # Create a new version with updated data
-    latest_version = assistant.latest_version
-    if not latest_version:
-        raise NoVersionException()
+            assistant.owners.append(owner)  # Create a new version with updated data
+    # Using the latest_version already retrieved above
 
     version_data = {
         "name": latest_version.name,
@@ -300,14 +310,14 @@ async def updateBot(
         "tags": latest_version.tags,
     }
 
-    update_payload = assistant_update.dict(exclude_unset=True)
+    update_payload = assistant_update.model_dump(exclude_unset=True)
     for key, value in update_payload.items():
         if key in version_data:
             version_data[key] = value
 
-    new_version = assistant_repo.create_assistant_version(
-        assistant, **version_data
-    )  # Handle tools for the new version
+    new_version = assistant_repo.create_assistant_version(assistant, **version_data)
+
+    # Handle tools for the new version
     if assistant_update.tools is not None:
         tool_repo = Repository(Tool, db)
         for tool_data in assistant_update.tools:

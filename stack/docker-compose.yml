@@ -121,8 +121,6 @@ services:
     security_opt: *security_settings
 
   core-service:
-    profiles:
-      - backend
     build:
       context: ../mucgpt-core-service
       dockerfile: Dockerfile
@@ -139,8 +137,6 @@ services:
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
 
   assistant-service:
-    profiles:
-      - assistant
     build:
       context: ../mucgpt-assistant-service
       dockerfile: Dockerfile
@@ -156,10 +152,6 @@ services:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39147/api/backend/health"]
 
-  # If the frontend is to be started in the Docker-Compose, the following command must be executed at startup:
-  # docker-compose --profile=frontend up
-  # oder e.g.:
-  # docker-compose --profile=backend --profile=frontend --profile=online --profile=aenderungsservice --profile=eai up
   frontend:
     profiles:
       - frontend
@@ -173,24 +165,5 @@ services:
     networks:
       - keycloak
 
-  langflow:
-    image: langflowai/langflow:latest # or another version tag on https://hub.docker.com/r/langflowai/langflow
-    pull_policy: always # set to 'always' when using 'latest' image
-    ports:
-      - "7860:7860"
-    depends_on:
-      - postgres
-    environment:
-      - LANGFLOW_DATABASE_URL=postgresql://admin:admin@postgres:5432/postgres
-      # This variable defines where the logs, file storage, monitor data, and secret keys are stored.
-      - LANGFLOW_CONFIG_DIR=app/langflow
-      - HTTPS_PROXY=http://internet-proxy-client.muenchen.de:80
-      - HTTP_PROXY=http://internet-proxy-client.muenchen.de:80
-      - NO_PROXY=localhost, *.muenchen.de,
-    volumes:
-      - langflow-data:/app/langflow
-
-volumes:
-  langflow-data:
 networks:
   keycloak:

@@ -63,15 +63,16 @@ class AssistantRepository(Repository[Assistant]):
 
         This means that a user from the department ITM-KM-DI is allowed to use this assistant.
         But a user from the department ITM-AB-DI is not allowed to use this assistant.
-        """
-        # Query for assistants where:
+        """  # Query for assistants where:
         # Either hierarchical_access is None/empty (available to all) OR
-        # the department matches exactly OR starts with hierarchical_access followed by a delimiter
+        # the department matches exactly OR department starts with hierarchical_access followed by a delimiter
+        from sqlalchemy import literal
+
         query = self.session.query(Assistant).filter(
             Assistant.hierarchical_access.is_(None)
             | (Assistant.hierarchical_access == "")
-            | (department == Assistant.hierarchical_access)
-            | (department.like(Assistant.hierarchical_access + "-%"))
+            | (Assistant.hierarchical_access == department)
+            | literal(department).like(Assistant.hierarchical_access + "-%")
         )
 
         return query.all()

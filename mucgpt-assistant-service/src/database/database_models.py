@@ -28,7 +28,12 @@ assistant_owners = Table(
         ForeignKey("assistants.id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    Column("lhmobjektID", String(255), primary_key=True),
+    Column(
+        "lhmobjektID",
+        String(255),
+        ForeignKey("owners.lhmobjektID", ondelete="CASCADE"),
+        primary_key=True,
+    ),
     UniqueConstraint("assistant_id", "lhmobjektID", name="uq_assistant_owner"),
 )
 
@@ -71,14 +76,11 @@ class AssistantVersion(Base):
     tags = Column(JSON, nullable=True)
 
     assistant = relationship("Assistant", back_populates="versions")
-
-    @property
-    def tool_associations(self):
-        return relationship(
-            "AssistantTool",
-            back_populates="assistant_version",
-            cascade="all, delete-orphan",
-        )
+    tool_associations = relationship(
+        "AssistantTool",
+        back_populates="assistant_version",
+        cascade="all, delete-orphan",
+    )
 
     def tools(self):
         """Return a list of tool configurations for the assistant version."""

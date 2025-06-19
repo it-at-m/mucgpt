@@ -1,10 +1,8 @@
 """Unit tests for the AssistantRepository class."""
 
-from dataclasses import replace
-
 import pytest
 from src.database.assistant_repo import AssistantRepository
-from src.database.database_models import Assistant, Owner
+from src.database.database_models import Assistant, AssistantVersion, Owner
 
 
 class TestAssistantRepository:
@@ -120,9 +118,7 @@ class TestAssistantRepository:
         # Act
         version = assistant_repo.create_assistant_version(
             assistant=sample_assistant, **sample_assistant_version_data.to_dict()
-        )
-
-        # Assert
+        )  # Assert
         assert version is not None
         assert version.version == 1
         assert version.assistant_id == sample_assistant.id
@@ -139,7 +135,17 @@ class TestAssistantRepository:
             assistant=sample_assistant, **sample_assistant_version_data.to_dict()
         )
 
-        version2_data = replace(sample_assistant_version_data, name="Updated Assistant")
+        # Create a new AssistantVersion instance with modified name
+        version2_data = AssistantVersion(
+            name="Updated Assistant",
+            system_prompt=sample_assistant_version_data.system_prompt,
+            description=sample_assistant_version_data.description,
+            temperature=sample_assistant_version_data.temperature,
+            max_output_tokens=sample_assistant_version_data.max_output_tokens,
+            examples=sample_assistant_version_data.examples,
+            quick_prompts=sample_assistant_version_data.quick_prompts,
+            tags=sample_assistant_version_data.tags,
+        )
         version2 = assistant_repo.create_assistant_version(
             assistant=sample_assistant, **version2_data.to_dict()
         )
@@ -274,20 +280,30 @@ class TestAssistantRepository:
         # Act
         result = assistant_repo.get_all_possible_assistants_for_user_with_department(
             "ANY-DEPT"
-        )
-        # Assert
+        )  # Assert
         assistant_ids = [a.id for a in result]
         assert assistant.id in assistant_ids
 
     def test_latest_version_property(
         self, assistant_repo, sample_assistant, sample_assistant_version_data
     ):
-        """Test that latest_version property returns the most recent version."""  # Arrange
+        """Test that latest_version property returns the most recent version."""
+        # Arrange
         assistant_repo.create_assistant_version(
             sample_assistant, **sample_assistant_version_data.to_dict()
         )
 
-        version2_data = replace(sample_assistant_version_data, name="Version 2")
+        # Create a new AssistantVersion instance with modified name
+        version2_data = AssistantVersion(
+            name="Version 2",
+            system_prompt=sample_assistant_version_data.system_prompt,
+            description=sample_assistant_version_data.description,
+            temperature=sample_assistant_version_data.temperature,
+            max_output_tokens=sample_assistant_version_data.max_output_tokens,
+            examples=sample_assistant_version_data.examples,
+            quick_prompts=sample_assistant_version_data.quick_prompts,
+            tags=sample_assistant_version_data.tags,
+        )
         version2 = assistant_repo.create_assistant_version(
             sample_assistant, **version2_data.to_dict()
         )

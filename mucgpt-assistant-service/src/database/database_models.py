@@ -133,6 +133,12 @@ class Assistant(Base):
         """Check if the given lhmobjektID is an owner of this assistant."""
         return any(owner.lhmobjektID == lhmobjektID for owner in self.owners)
 
+    def is_allowed_for_user(self, department: str) -> bool:
+        """Check if a user with a given department is allowed to use this assistant."""
+        if not self.hierarchical_access or self.hierarchical_access == "":
+            return True
+        return department.startswith(self.hierarchical_access)
+
     @property
     def latest_version(self) -> "AssistantVersion | None":
         return self.versions[0] if self.versions else None

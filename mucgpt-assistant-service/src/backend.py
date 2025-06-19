@@ -10,6 +10,7 @@ from api.exceptions import (
     AssistantNotFoundException,
     AuthenticationException,
     DeleteFailedException,
+    NotAllowedToAccessException,
     NotOwnerException,
     NoVersionException,
     VersionConflictException,
@@ -342,6 +343,9 @@ async def getBot(
     if not assistant:
         raise AssistantNotFoundException(id)
 
+    if not assistant.is_allowed_for_user(user_info.department):
+        raise NotAllowedToAccessException(id)
+
     return assistant
 
 
@@ -360,14 +364,13 @@ async def getBot(
     tags=["Assistants", "Users"],
 )
 async def getUserBots(
-    lhmobjekt_id: str,
     db: Session = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):
     """Get all assistants where the specified lhmobjektID is an owner."""
     # Get all assistants where this lhmobjektID is an owner
     assistant_repo = Repository(Assistant, db)
-    assistants = assistant_repo.get_assistants_by_owner(lhmobjekt_id)
+    assistants = assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
 
     return assistants
 

@@ -41,3 +41,11 @@ class DeleteFailedException(HTTPException):
         super().__init__(
             status_code=500, detail=f"Failed to delete assistant with ID {assistant_id}"
         )
+
+
+class NotAllowedToAccessException(HTTPException):
+    def __init__(self, assistant_id: int):
+        super().__init__(
+            status_code=403,
+            detail=f"You are not allowed to access assistant with ID {assistant_id}",
+        )

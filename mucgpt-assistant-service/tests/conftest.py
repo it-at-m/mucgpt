@@ -1,28 +1,27 @@
 """Test configuration and fixtures."""
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from src.database.database_models import AssistantVersion, Base
 
 
-@pytest.fixture
-def in_memory_db():
+@pytest_asyncio.fixture(scope="function")
+async def async_engine():
     """Create an in-memory SQLite database for testing."""
-    engine = create_engine("sqlite:///:memory:", echo=False)
-    Base.metadata.create_all(engine)
-    return engine
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield engine
+    await engine.dispose()
 
 
-@pytest.fixture
-def db_session(in_memory_db):
+@pytest_asyncio.fixture(scope="function")
+async def db_session(async_engine):
     """Create a database session for testing."""
-    SessionLocal = sessionmaker(bind=in_memory_db)
-    session = SessionLocal()
-    try:
+    SessionLocal = async_sessionmaker(bind=async_engine, expire_on_commit=False)
+    async with SessionLocal() as session:
         yield session
-    finally:
-        session.close()
 
 
 @pytest.fixture

@@ -28,7 +28,9 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with factory() as session:
         try:
             yield session
-            await session.commit()
+            # Remove automatic commit - let the caller handle transaction boundaries
         except exc.SQLAlchemyError:
             await session.rollback()
             raise
+        finally:
+            await session.close()

@@ -3,7 +3,7 @@ from typing import List
 from fastapi import Depends, FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import (
     AssistantCreate,
@@ -92,77 +92,81 @@ async def auth_exception_handler(request: Request, exc: AuthError):
 )
 async def createBot(
     assistant: AssistantCreate,
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):  # Create a new assistant using the repository
-    assistant_repo = AssistantRepository(db)
+    try:
+        assistant_repo = AssistantRepository(db)
 
-    # Prepare owner_ids: include the creating user if not already present
-    owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
-    if user_info.lhm_object_id not in owner_ids:
-        owner_ids.append(user_info.lhm_object_id)
+        # Prepare owner_ids: include the creating user if not already present
+        owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
+        if user_info.lhm_object_id not in owner_ids:
+            owner_ids.append(user_info.lhm_object_id)
 
-    new_assistant = assistant_repo.create(
-        hierarchical_access=assistant.hierarchical_access or "", owner_ids=owner_ids
-    )
+        new_assistant = await assistant_repo.create(
+            hierarchical_access=assistant.hierarchical_access or "", owner_ids=owner_ids
+        )
 
-    # Create the first version with the actual assistant data
-    first_version = assistant_repo.create_assistant_version(
-        new_assistant,
-        name=assistant.name,
-        description=assistant.description or "",
-        system_prompt=assistant.system_prompt,
-        temperature=assistant.temperature,
-        max_output_tokens=assistant.max_output_tokens,
-        examples=assistant.examples or [],
-        quick_prompts=assistant.quick_prompts or [],
-        tags=assistant.tags or [],
-    )  # Add tools if specified
-    if assistant.tools:
-        for tool_data in assistant.tools:
-            assistant_tool = AssistantTool(
-                assistant_version=first_version,
-                tool_id=tool_data.id,
-                config=tool_data.config,
-            )
-            db.add(assistant_tool)
+        # Create the first version with the actual assistant data
+        first_version = await assistant_repo.create_assistant_version(
+            new_assistant,
+            name=assistant.name,
+            description=assistant.description or "",
+            system_prompt=assistant.system_prompt,
+            temperature=assistant.temperature,
+            max_output_tokens=assistant.max_output_tokens,
+            examples=assistant.examples or [],
+            quick_prompts=assistant.quick_prompts or [],
+            tags=assistant.tags or [],
+        )  # Add tools if specified
+        if assistant.tools:
+            for tool_data in assistant.tools:
+                assistant_tool = AssistantTool(
+                    assistant_version=first_version,
+                    tool_id=tool_data.id,
+                    config=tool_data.config,
+                )
+                db.add(assistant_tool)
 
-    db.commit()
-    db.refresh(new_assistant)
-    # first_version is already committed and refreshed by create_assistant_version
+        await db.commit()
+        await db.refresh(new_assistant)
+        # first_version is already committed and refreshed by create_assistant_version
 
-    # Create explicit response model
-    latest_version = new_assistant.latest_version
+        # Create explicit response model
+        latest_version = new_assistant.latest_version
 
-    # Build AssistantVersionResponse
-    assistant_version_response = AssistantVersionResponse(
-        id=latest_version.id,
-        version=latest_version.version,
-        created_at=latest_version.created_at,
-        name=latest_version.name,
-        description=latest_version.description or "",
-        system_prompt=latest_version.system_prompt,
-        hierarchical_access=new_assistant.hierarchical_access or "",
-        temperature=latest_version.temperature,
-        max_output_tokens=latest_version.max_output_tokens,
-        examples=latest_version.examples or [],
-        quick_prompts=latest_version.quick_prompts or [],
-        tags=latest_version.tags or [],
-        tools=latest_version.tools or [],
-        owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
-    )
+        # Build AssistantVersionResponse
+        assistant_version_response = AssistantVersionResponse(
+            id=latest_version.id,
+            version=latest_version.version,
+            created_at=latest_version.created_at,
+            name=latest_version.name,
+            description=latest_version.description or "",
+            system_prompt=latest_version.system_prompt,
+            hierarchical_access=new_assistant.hierarchical_access or "",
+            temperature=latest_version.temperature,
+            max_output_tokens=latest_version.max_output_tokens,
+            examples=latest_version.examples or [],
+            quick_prompts=latest_version.quick_prompts or [],
+            tags=latest_version.tags or [],
+            tools=latest_version.tools or [],
+            owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
+        )
 
-    # Build AssistantResponse
-    response = AssistantResponse(
-        id=new_assistant.id,
-        created_at=new_assistant.created_at,
-        updated_at=new_assistant.updated_at,
-        hierarchical_access=new_assistant.hierarchical_access or "",
-        owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
-        latest_version=assistant_version_response,
-    )
+        # Build AssistantResponse
+        response = AssistantResponse(
+            id=new_assistant.id,
+            created_at=new_assistant.created_at,
+            updated_at=new_assistant.updated_at,
+            hierarchical_access=new_assistant.hierarchical_access or "",
+            owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
+            latest_version=assistant_version_response,
+        )
 
-    return response
+        return response
+    except Exception:
+        await db.rollback()
+        raise
 
 
 @api_app.post(
@@ -190,11 +194,11 @@ async def createBot(
 )
 async def deleteBot(
     id: int,
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     assistant_repo = AssistantRepository(db)
-    assistant = assistant_repo.get(id)
+    assistant = await assistant_repo.get(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -202,7 +206,7 @@ async def deleteBot(
     if not assistant.is_owner(user_info.lhm_object_id):
         raise NotOwnerException()
 
-    success = assistant_repo.delete(id)
+    success = await assistant_repo.delete(id)
 
     if not success:
         raise DeleteFailedException(id)
@@ -236,11 +240,11 @@ async def deleteBot(
 async def updateBot(
     id: int,
     assistant_update: AssistantUpdate,
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     assistant_repo = AssistantRepository(db)
-    assistant = assistant_repo.get(id)
+    assistant = await assistant_repo.get(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -256,7 +260,7 @@ async def updateBot(
         raise VersionConflictException(assistant_update.version, latest_version.version)
 
     # Handle global properties using the repository update method
-    assistant_repo.update(
+    await assistant_repo.update(
         assistant_id=id,
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
@@ -264,7 +268,7 @@ async def updateBot(
 
     # Create a new version with updated data
     # Using the latest_version already retrieved above
-    new_version = assistant_repo.create_assistant_version(
+    new_version = await assistant_repo.create_assistant_version(
         assistant,
         name=assistant_update.name
         if assistant_update.name is not None
@@ -300,8 +304,8 @@ async def updateBot(
             )
             db.add(assistant_tool)
 
-    db.commit()
-    db.refresh(assistant)
+    await db.commit()
+    await db.refresh(assistant)
 
     # Create explicit response model
     latest_version = assistant.latest_version
@@ -353,11 +357,13 @@ async def updateBot(
     tags=["Assistants"],
 )
 async def getAllBots(
-    db: Session = Depends(get_db_session), user_info=Depends(authenticate_user)
+    db: AsyncSession = Depends(get_db_session), user_info=Depends(authenticate_user)
 ):
     assistant_repo = AssistantRepository(db)
-    assistants = assistant_repo.get_all_possible_assistants_for_user_with_department(
-        user_info.department
+    assistants = (
+        await assistant_repo.get_all_possible_assistants_for_user_with_department(
+            user_info.department
+        )
     )
 
     # Create explicit response models
@@ -414,11 +420,11 @@ async def getAllBots(
 )
 async def getBot(
     id: int,
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):
     assistant_repo = AssistantRepository(db)
-    assistant = assistant_repo.get(id)
+    assistant = await assistant_repo.get(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -475,13 +481,13 @@ async def getBot(
     tags=["Assistants", "Users"],
 )
 async def getUserBots(
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):
     """Get all assistants where the specified lhmobjektID is an owner."""
     # Get all assistants where this lhmobjektID is an owner
     assistant_repo = AssistantRepository(db)
-    assistants = assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
+    assistants = await assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
 
     # Create explicit response models
     response_list = []
@@ -542,11 +548,11 @@ async def getUserBots(
 async def get_assistant_version(
     id: int,
     version: int,
-    db: Session = Depends(get_db_session),
+    db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     assistant_repo = AssistantRepository(db)
-    assistant = assistant_repo.get(id)
+    assistant = await assistant_repo.get(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
@@ -554,7 +560,7 @@ async def get_assistant_version(
     if not assistant.is_allowed_for_user(user_info.department):
         raise NotAllowedToAccessException(id)
 
-    assistant_version = assistant_repo.get_assistant_version(id, version)
+    assistant_version = await assistant_repo.get_assistant_version(id, version)
 
     if not assistant_version:
         raise VersionNotFoundException(id, version)

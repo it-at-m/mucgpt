@@ -1,43 +1,60 @@
 from typing import Generic, List, Optional, Type
 
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from .database_models import ModelType
 
 
 class Repository(Generic[ModelType]):
-    def __init__(self, model: Type[ModelType], session: Session):
+    def __init__(self, model: Type[ModelType], session: AsyncSession):
         self.model = model
         self.session = session
 
-    def create(self, **kwargs) -> ModelType:
-        instance = self.model(**kwargs)
-        self.session.add(instance)
-        self.session.commit()
-        self.session.refresh(instance)
-        return instance
-
-    def get(self, id_value) -> Optional[ModelType]:
-        # Assuming the primary key column is named 'id'
-        return self.session.query(self.model).filter(self.model.id == id_value).first()
-
-    def get_all(self) -> List[ModelType]:
-        return self.session.query(self.model).all()
-
-    def update(self, id_value, **kwargs) -> Optional[ModelType]:
-        instance = self.get(id_value)
-        if instance:
-            for key, value in kwargs.items():
-                setattr(instance, key, value)
-            self.session.commit()
-            self.session.refresh(instance)
+    async def create(self, **kwargs) -> ModelType:
+        try:
+            instance = self.model(**kwargs)
+            self.session.add(instance)
+            await self.session.flush()  # Flush to get ID without committing
+            await self.session.refresh(instance)
             return instance
-        return None
+        except Exception:
+            await self.session.rollback()
+            raise
 
-    def delete(self, id_value) -> bool:
-        instance = self.get(id_value)
-        if instance:
-            self.session.delete(instance)
-            self.session.commit()
-            return True
-        return False
+    async def get(self, id_value) -> Optional[ModelType]:
+        # Assuming the primary key column is named 'id'
+        result = await self.session.execute(
+            select(self.model).filter(self.model.id == id_value)
+        )
+        return result.scalars().first()
+
+    async def get_all(self) -> List[ModelType]:
+        result = await self.session.execute(select(self.model))
+        return list(result.scalars().all())
+
+    async def update(self, id_value, **kwargs) -> Optional[ModelType]:
+        try:
+            instance = await self.get(id_value)
+            if instance:
+                for key, value in kwargs.items():
+                    setattr(instance, key, value)
+                await self.session.flush()
+                await self.session.refresh(instance)
+                return instance
+            return None
+        except Exception:
+            await self.session.rollback()
+            raise
+
+    async def delete(self, id_value) -> bool:
+        try:
+            instance = await self.get(id_value)
+            if instance:
+                await self.session.delete(instance)
+                await self.session.flush()
+                return True
+            return False
+        except Exception:
+            await self.session.rollback()
+            raise

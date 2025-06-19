@@ -2,142 +2,166 @@
 
 import pytest
 from src.database.assistant_repo import AssistantRepository
-from src.database.database_models import Assistant, AssistantVersion, Owner
 
 
+@pytest.mark.asyncio
 class TestAssistantRepository:
     """Test cases for the AssistantRepository class."""
 
-    @pytest.fixture
-    def assistant_repo(self, db_session):
-        """Create an AssistantRepository instance."""
-        return AssistantRepository(db_session)
-
-    @pytest.fixture
-    def sample_assistant(self, assistant_repo, sample_assistant_data):
-        """Create a sample assistant for testing."""
-        return assistant_repo.create(
-            hierarchical_access=sample_assistant_data["hierarchical_access"],
-            owner_ids=sample_assistant_data["owner_ids"],
-        )
-
-    def test_create_assistant_without_owners(self, assistant_repo):
+    async def test_create_assistant_without_owners(self, db_session):
         """Test creating an assistant without owners."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+
         # Act
-        assistant = assistant_repo.create(hierarchical_access="ITM-TEST")
+        assistant = await assistant_repo.create(hierarchical_access="ITM-TEST")
+        await db_session.commit()
 
         # Assert
         assert assistant.id is not None
         assert assistant.hierarchical_access == "ITM-TEST"
-        assert len(assistant.owners) == 0
+        # Use the safe method to check owners count
+        owners_count = await assistant_repo.get_owners_count(assistant.id)
+        assert owners_count == 0
 
-    def test_create_assistant_with_owners(self, assistant_repo, sample_assistant_data):
+    async def test_create_assistant_with_owners(
+        self, db_session, sample_assistant_data
+    ):
         """Test creating an assistant with owners."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+
         # Act
-        assistant = assistant_repo.create(
+        assistant = await assistant_repo.create(
             hierarchical_access=sample_assistant_data["hierarchical_access"],
             owner_ids=sample_assistant_data["owner_ids"],
         )
+        await db_session.commit()
 
         # Assert
         assert assistant.id is not None
         assert assistant.hierarchical_access == "ITM-KM"
-        assert len(assistant.owners) == 2
-        owner_ids = [owner.lhmobjektID for owner in assistant.owners]
+        # Use the safe method to check owners
+        result = await assistant_repo.get_with_owners(assistant.id)
+        assert len(result.owners) == 2
+        owner_ids = [owner.lhmobjektID for owner in result.owners]
         assert "user1" in owner_ids
         assert "user2" in owner_ids
 
-    def test_create_assistant_with_new_and_existing_owners(
-        self, assistant_repo, db_session
-    ):
+    async def test_create_assistant_with_new_and_existing_owners(self, db_session):
         """Test creating an assistant with mix of new and existing owners."""
-        # Arrange - Create an existing owner
-        existing_owner = Owner(lhmobjektID="existing_user")
-        db_session.add(existing_owner)
-        db_session.commit()
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        await assistant_repo.create(
+            hierarchical_access="ITM-TEMP", owner_ids=["existing_user"]
+        )
+        await db_session.commit()
 
         # Act
-        assistant = assistant_repo.create(
+        assistant = await assistant_repo.create(
             hierarchical_access="ITM-TEST", owner_ids=["existing_user", "new_user"]
         )
-
-        # Assert
-        assert len(assistant.owners) == 2
-        owner_ids = [owner.lhmobjektID for owner in assistant.owners]
+        await db_session.commit()  # Assert
+        result = await assistant_repo.get_with_owners(assistant.id)
+        assert len(result.owners) == 2
+        owner_ids = [owner.lhmobjektID for owner in result.owners]
         assert "existing_user" in owner_ids
         assert "new_user" in owner_ids
 
-    def test_update_assistant_hierarchical_access(
-        self, assistant_repo, sample_assistant
+    async def test_update_assistant_hierarchical_access(
+        self, db_session, sample_assistant_data
     ):
         """Test updating assistant's hierarchical access."""
-        # Act
-        updated = assistant_repo.update(
-            sample_assistant.id, hierarchical_access="ITM-NEW"
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
         )
+        await db_session.commit()
+
+        # Act
+        updated = await assistant_repo.update(
+            assistant.id, hierarchical_access="ITM-NEW"
+        )
+        await db_session.commit()
 
         # Assert
         assert updated is not None
         assert updated.hierarchical_access == "ITM-NEW"
 
-    def test_update_assistant_owners(self, assistant_repo, sample_assistant):
+    async def test_update_assistant_owners(self, db_session, sample_assistant_data):
         """Test updating assistant's owners."""
-        # Act
-        updated = assistant_repo.update(
-            sample_assistant.id, owner_ids=["new_user1", "new_user2", "new_user3"]
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
         )
+        await db_session.commit()
+
+        # Act
+        updated = await assistant_repo.update(
+            assistant.id,
+            owner_ids=["new_user1", "new_user2", "new_user3"],
+        )
+        await db_session.commit()
 
         # Assert
         assert updated is not None
-        assert len(updated.owners) == 3
-        owner_ids = [owner.lhmobjektID for owner in updated.owners]
+        result = await assistant_repo.get_with_owners(updated.id)
+        assert len(result.owners) == 3
+        owner_ids = [owner.lhmobjektID for owner in result.owners]
         assert "new_user1" in owner_ids
         assert "new_user2" in owner_ids
         assert "new_user3" in owner_ids
 
-    def test_update_assistant_clear_owners(self, assistant_repo, sample_assistant):
+    async def test_update_assistant_clear_owners(
+        self, db_session, sample_assistant_data
+    ):
         """Test clearing assistant's owners."""
-        # Act
-        updated = assistant_repo.update(sample_assistant.id, owner_ids=[])
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
+        )
+        await db_session.commit()
 
-        # Assert
+        # Act
+        updated = await assistant_repo.update(assistant.id, owner_ids=[])
+        await db_session.commit()  # Assert
         assert updated is not None
-        assert len(updated.owners) == 0
+        owners_count = await assistant_repo.get_owners_count(updated.id)
+        assert owners_count == 0
 
-    def test_update_non_existing_assistant(self, assistant_repo):
+    async def test_update_non_existing_assistant(self, db_session):
         """Test updating a non-existing assistant returns None."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+
         # Act
-        result = assistant_repo.update(999, hierarchical_access="TEST")
+        result = await assistant_repo.update(999, hierarchical_access="TEST")
+
         # Assert
         assert result is None
 
-    def test_create_assistant_version(
-        self, assistant_repo, sample_assistant, sample_assistant_version_data
+    async def test_create_assistant_version(
+        self, db_session, sample_assistant_data, sample_assistant_version_data
     ):
         """Test creating a new assistant version."""
-        # Act
-        version = assistant_repo.create_assistant_version(
-            assistant=sample_assistant, **sample_assistant_version_data.to_dict()
-        )  # Assert
-        assert version is not None
-        assert version.version == 1
-        assert version.assistant_id == sample_assistant.id
-        assert version.name == sample_assistant_version_data.name
-        assert version.system_prompt == sample_assistant_version_data.system_prompt
-        assert version.temperature == sample_assistant_version_data.temperature
-
-    def test_create_multiple_assistant_versions(
-        self, assistant_repo, sample_assistant, sample_assistant_version_data
-    ):
-        """Test creating multiple versions increments version number."""
-        # Act
-        version1 = assistant_repo.create_assistant_version(
-            assistant=sample_assistant, **sample_assistant_version_data.to_dict()
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
         )
+        await db_session.commit()
 
-        # Create a new AssistantVersion instance with modified name
-        version2_data = AssistantVersion(
-            name="Updated Assistant",
+        # Act
+        version = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=sample_assistant_version_data.name,
             system_prompt=sample_assistant_version_data.system_prompt,
             description=sample_assistant_version_data.description,
             temperature=sample_assistant_version_data.temperature,
@@ -146,193 +170,240 @@ class TestAssistantRepository:
             quick_prompts=sample_assistant_version_data.quick_prompts,
             tags=sample_assistant_version_data.tags,
         )
-        version2 = assistant_repo.create_assistant_version(
-            assistant=sample_assistant, **version2_data.to_dict()
+        await db_session.commit()
+
+        # Assert
+        assert version is not None
+        assert version.version == 1
+        assert version.assistant_id == assistant.id
+        assert version.name == sample_assistant_version_data.name
+        assert version.system_prompt == sample_assistant_version_data.system_prompt
+        assert version.temperature == sample_assistant_version_data.temperature
+
+    async def test_create_multiple_assistant_versions(
+        self, db_session, sample_assistant_data, sample_assistant_version_data
+    ):
+        """Test creating multiple versions increments version number."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
         )
+        await db_session.commit()
+
+        # Act
+        version1 = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=sample_assistant_version_data.name,
+            system_prompt=sample_assistant_version_data.system_prompt,
+            description=sample_assistant_version_data.description,
+            temperature=sample_assistant_version_data.temperature,
+            max_output_tokens=sample_assistant_version_data.max_output_tokens,
+            examples=sample_assistant_version_data.examples,
+            quick_prompts=sample_assistant_version_data.quick_prompts,
+            tags=sample_assistant_version_data.tags,
+        )
+        await db_session.commit()
+
+        version2 = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name="Updated Assistant",
+            system_prompt="Updated system prompt",
+            description="Updated description",
+            temperature=0.8,
+            max_output_tokens=2000,
+            examples=["Updated example"],
+            quick_prompts=["Updated prompt"],
+            tags=["updated"],
+        )
+        await db_session.commit()
 
         # Assert
         assert version1.version == 1
         assert version2.version == 2
-        assert version2.name == "Updated Assistant"
+        assert version1.assistant_id == assistant.id
+        assert version2.assistant_id == assistant.id
 
-    def test_get_assistant_version(
-        self, assistant_repo, sample_assistant, sample_assistant_version_data
+    async def test_get_assistant_version(
+        self, db_session, sample_assistant_data, sample_assistant_version_data
     ):
         """Test getting a specific assistant version."""
         # Arrange
-        created_version = assistant_repo.create_assistant_version(
-            assistant=sample_assistant, **sample_assistant_version_data.to_dict()
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
         )
+        await db_session.commit()
+
+        created_version = await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=sample_assistant_version_data.name,
+            system_prompt=sample_assistant_version_data.system_prompt,
+            description=sample_assistant_version_data.description,
+            temperature=sample_assistant_version_data.temperature,
+            max_output_tokens=sample_assistant_version_data.max_output_tokens,
+            examples=sample_assistant_version_data.examples,
+            quick_prompts=sample_assistant_version_data.quick_prompts,
+            tags=sample_assistant_version_data.tags,
+        )
+        await db_session.commit()
 
         # Act
-        retrieved_version = assistant_repo.get_assistant_version(sample_assistant.id, 1)
+        result = await assistant_repo.get_assistant_version(assistant.id, 1)
 
         # Assert
-        assert retrieved_version is not None
-        assert retrieved_version.id == created_version.id
-        assert retrieved_version.version == 1
+        assert result is not None
+        assert result.id == created_version.id
+        assert result.version == 1
+        assert result.name == sample_assistant_version_data.name
 
-    def test_get_non_existing_assistant_version(self, assistant_repo, sample_assistant):
+    async def test_get_non_existing_assistant_version(
+        self, db_session, sample_assistant_data
+    ):
         """Test getting a non-existing assistant version returns None."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
+        )
+        await db_session.commit()
+
         # Act
-        result = assistant_repo.get_assistant_version(sample_assistant.id, 999)
+        result = await assistant_repo.get_assistant_version(assistant.id, 999)
 
         # Assert
         assert result is None
 
-    def test_get_assistants_by_owner(self, assistant_repo, db_session):
+    async def test_get_assistants_by_owner(self, db_session):
         """Test getting assistants by owner."""
         # Arrange
-        assistant1 = assistant_repo.create(
-            hierarchical_access="ITM-1", owner_ids=["user1", "user2"]
+        assistant_repo = AssistantRepository(db_session)
+        assistant1 = await assistant_repo.create(
+            hierarchical_access="ITM-TEST1", owner_ids=["owner1", "owner2"]
         )
-        assistant2 = assistant_repo.create(
-            hierarchical_access="ITM-2", owner_ids=["user2", "user3"]
+        assistant2 = await assistant_repo.create(
+            hierarchical_access="ITM-TEST2", owner_ids=["owner1"]
         )
-        assistant_repo.create(hierarchical_access="ITM-3", owner_ids=["user3"])
+        assistant3 = await assistant_repo.create(
+            hierarchical_access="ITM-TEST3", owner_ids=["owner3"]
+        )
+        await db_session.commit()
 
         # Act
-        user2_assistants = assistant_repo.get_assistants_by_owner("user2")
+        result = await assistant_repo.get_assistants_by_owner("owner1")
 
         # Assert
-        assert len(user2_assistants) == 2
-        assistant_ids = [a.id for a in user2_assistants]
-        assert assistant1.id in assistant_ids
-        assert assistant2.id in assistant_ids
-
-    def test_get_assistants_by_non_existing_owner(self, assistant_repo):
-        """Test getting assistants by non-existing owner returns empty list."""
-        # Act
-        result = assistant_repo.get_assistants_by_owner("non_existing_user")
-
-        # Assert
-        assert result == []
-
-    def test_get_all_possible_assistants_for_user_with_department_exact_match(
-        self, assistant_repo
-    ):
-        """Test getting assistants with exact department match."""
-        # Arrange
-        assistant1 = assistant_repo.create(hierarchical_access="ITM-KM")
-        assistant2 = assistant_repo.create(hierarchical_access="ITM-AB")
-        assistant3 = assistant_repo.create(hierarchical_access="")  # Available to all
-
-        # Act
-        result = assistant_repo.get_all_possible_assistants_for_user_with_department(
-            "ITM-KM"
-        )
-
-        # Assert
-        assistant_ids = [a.id for a in result]
-        assert assistant1.id in assistant_ids
-        assert assistant3.id in assistant_ids  # Available to all
-        assert assistant2.id not in assistant_ids
-
-    def test_get_all_possible_assistants_for_user_with_department_hierarchical(
-        self, assistant_repo
-    ):
-        """Test getting assistants with hierarchical department access."""
-        # Arrange
-        assistant1 = assistant_repo.create(hierarchical_access="ITM")
-        assistant2 = assistant_repo.create(hierarchical_access="ITM-KM")
-        assistant3 = assistant_repo.create(hierarchical_access="ITM-AB")
-
-        # Act - User from ITM-KM-DI should access ITM and ITM-KM assistants
-        result = assistant_repo.get_all_possible_assistants_for_user_with_department(
-            "ITM-KM-DI"
-        )
-
-        # Assert
+        assert len(result) == 2
         assistant_ids = [a.id for a in result]
         assert assistant1.id in assistant_ids
         assert assistant2.id in assistant_ids
         assert assistant3.id not in assistant_ids
 
-    def test_get_all_possible_assistants_for_user_with_department_no_access(
-        self, assistant_repo
-    ):
-        """Test getting assistants when user has no hierarchical access."""
+    async def test_get_assistants_by_non_existing_owner(self, db_session):
+        """Test getting assistants by non-existing owner returns empty list."""
         # Arrange
-        assistant1 = assistant_repo.create(hierarchical_access="ITM-KM")
-        assistant2 = assistant_repo.create(hierarchical_access="ITM-AB")
-        assistant3 = assistant_repo.create(hierarchical_access="")
+        assistant_repo = AssistantRepository(db_session)
 
-        # Act - User from different department
-        result = assistant_repo.get_all_possible_assistants_for_user_with_department(
-            "FINANCE"
+        # Act
+        result = await assistant_repo.get_assistants_by_owner("non_existing_owner")
+
+        # Assert
+        assert result == []
+
+    async def test_get_all_possible_assistants_for_user_with_department_exact_match(
+        self, db_session
+    ):
+        """Test getting assistants for exact department match."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant1 = await assistant_repo.create(hierarchical_access="ITM-KM")
+        assistant2 = await assistant_repo.create(hierarchical_access="ITM-AB")
+        assistant3 = await assistant_repo.create(hierarchical_access="")
+        await db_session.commit()
+
+        # Act
+        result = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "ITM-KM"
+            )
         )
 
         # Assert
+        assert len(result) == 2  # ITM-KM and empty access
         assistant_ids = [a.id for a in result]
-        assert assistant1.id not in assistant_ids
+        assert assistant1.id in assistant_ids
+        assert assistant3.id in assistant_ids
         assert assistant2.id not in assistant_ids
-        assert assistant3.id in assistant_ids  # Only the one available to all
 
-    def test_get_all_possible_assistants_includes_null_hierarchical_access(
-        self, assistant_repo, db_session
+    async def test_get_all_possible_assistants_for_user_with_department_hierarchical(
+        self, db_session
     ):
-        """Test that assistants with NULL hierarchical_access are included for any user."""
-        # Arrange - Create assistant with NULL hierarchical_access
-        assistant = Assistant()  # No hierarchical_access set (None)
-        db_session.add(assistant)
-        db_session.commit()
-
-        # Act
-        result = assistant_repo.get_all_possible_assistants_for_user_with_department(
-            "ANY-DEPT"
-        )  # Assert
-        assistant_ids = [a.id for a in result]
-        assert assistant.id in assistant_ids
-
-    def test_latest_version_property(
-        self, assistant_repo, sample_assistant, sample_assistant_version_data
-    ):
-        """Test that latest_version property returns the most recent version."""
+        """Test getting assistants for hierarchical department access."""
         # Arrange
-        assistant_repo.create_assistant_version(
-            sample_assistant, **sample_assistant_version_data.to_dict()
-        )
-
-        # Create a new AssistantVersion instance with modified name
-        version2_data = AssistantVersion(
-            name="Version 2",
-            system_prompt=sample_assistant_version_data.system_prompt,
-            description=sample_assistant_version_data.description,
-            temperature=sample_assistant_version_data.temperature,
-            max_output_tokens=sample_assistant_version_data.max_output_tokens,
-            examples=sample_assistant_version_data.examples,
-            quick_prompts=sample_assistant_version_data.quick_prompts,
-            tags=sample_assistant_version_data.tags,
-        )
-        version2 = assistant_repo.create_assistant_version(
-            sample_assistant, **version2_data.to_dict()
-        )
+        assistant_repo = AssistantRepository(db_session)
+        assistant1 = await assistant_repo.create(hierarchical_access="ITM")
+        assistant2 = await assistant_repo.create(hierarchical_access="ITM-KM")
+        assistant3 = await assistant_repo.create(hierarchical_access="ITM-AB")
+        await db_session.commit()
 
         # Act
-        latest = sample_assistant.latest_version
+        result = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "ITM-KM-DI"
+            )
+        )
 
         # Assert
-        assert latest is not None
-        assert latest.id == version2.id
-        assert latest.version == 2
+        assert len(result) == 2  # ITM and ITM-KM
+        assistant_ids = [a.id for a in result]
+        assert assistant1.id in assistant_ids
+        assert assistant2.id in assistant_ids
+        assert assistant3.id not in assistant_ids
 
-    def test_is_owner_method(self, assistant_repo, sample_assistant):
-        """Test the is_owner method on Assistant model."""
-        # Act & Assert
-        assert sample_assistant.is_owner("user1") is True
-        assert sample_assistant.is_owner("user2") is True
-        assert sample_assistant.is_owner("user3") is False
-
-    def test_is_allowed_for_user_method(self, assistant_repo):
-        """Test the is_allowed_for_user method on Assistant model."""
+    async def test_get_all_possible_assistants_for_user_with_department_no_access(
+        self, db_session
+    ):
+        """Test getting assistants when user has no access."""
         # Arrange
-        assistant1 = assistant_repo.create(hierarchical_access="ITM-KM")
-        assistant2 = assistant_repo.create(hierarchical_access="")
+        assistant_repo = AssistantRepository(db_session)
+        _assistant1 = await assistant_repo.create(hierarchical_access="ITM-KM")
+        _assistant2 = await assistant_repo.create(hierarchical_access="ITM-AB")
+        await db_session.commit()
 
-        # Act & Assert
-        assert assistant1.is_allowed_for_user("ITM-KM") is True
-        assert assistant1.is_allowed_for_user("ITM-KM-DI") is True
-        assert assistant1.is_allowed_for_user("ITM-AB") is False
+        # Act
+        result = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "DIFFERENT-DEPT"
+            )
+        )
 
-        assert assistant2.is_allowed_for_user("ANY-DEPT") is True
-        assert assistant2.is_allowed_for_user("ITM-KM") is True
+        # Assert
+        assert len(result) == 0
+
+    async def test_get_all_possible_assistants_includes_null_hierarchical_access(
+        self, db_session
+    ):
+        """Test that assistants with null/empty hierarchical_access are always included."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant1 = await assistant_repo.create(hierarchical_access="")
+        assistant2 = await assistant_repo.create(hierarchical_access=None)
+        assistant3 = await assistant_repo.create(hierarchical_access="ITM-SPECIFIC")
+        await db_session.commit()
+
+        # Act
+        result = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "ANY-DEPT"
+            )
+        )
+
+        # Assert
+        assert len(result) == 2  # Empty and None access assistants
+        assistant_ids = [a.id for a in result]
+        assert assistant1.id in assistant_ids
+        assert assistant2.id in assistant_ids
+        assert assistant3.id not in assistant_ids

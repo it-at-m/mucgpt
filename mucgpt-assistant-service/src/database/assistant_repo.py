@@ -1,27 +1,29 @@
 from typing import List, Optional
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import delete, func, insert, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .database_models import Assistant, AssistantVersion, Owner, assistant_owners
 from .repo import Repository
 
 
 class AssistantRepository(Repository[Assistant]):
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         super().__init__(Assistant, session)
 
-    def get_assistant_version(
+    async def get_assistant_version(
         self, assistant_id: int, version: int
     ) -> Optional[AssistantVersion]:
         """Gets a specific version of an assistant."""
-        return (
-            self.session.query(AssistantVersion)
-            .filter_by(assistant_id=assistant_id, version=version)
-            .first()
+        result = await self.session.execute(
+            select(AssistantVersion).filter_by(
+                assistant_id=assistant_id, version=version
+            )
         )
+        return result.scalars().first()
 
-    def create_assistant_version(
+    async def create_assistant_version(
         self,
         assistant: Assistant,
         name: str,
@@ -34,28 +36,39 @@ class AssistantRepository(Repository[Assistant]):
         tags: list = [],
     ) -> AssistantVersion:
         """Creates a new version for an assistant with explicit parameters."""
-        latest_version = assistant.latest_version
-        new_version_number = latest_version.version + 1 if latest_version else 1
+        try:
+            # Query for the latest version directly to avoid lazy loading
+            result = await self.session.execute(
+                select(AssistantVersion)
+                .filter(AssistantVersion.assistant_id == assistant.id)
+                .order_by(AssistantVersion.version.desc())
+                .limit(1)
+            )
+            latest_version = result.scalars().first()
+            new_version_number = latest_version.version + 1 if latest_version else 1
 
-        # Create a new version
-        new_version = AssistantVersion(
-            assistant=assistant,
-            version=new_version_number,
-            name=name,
-            description=description,
-            system_prompt=system_prompt,
-            temperature=temperature,
-            max_output_tokens=max_output_tokens,
-            examples=examples or [],
-            quick_prompts=quick_prompts or [],
-            tags=tags or [],
-        )
-        self.session.add(new_version)
-        self.session.commit()
-        self.session.refresh(new_version)
-        return new_version
+            # Create a new version
+            new_version = AssistantVersion(
+                assistant=assistant,
+                version=new_version_number,
+                name=name,
+                description=description,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_output_tokens=max_output_tokens,
+                examples=examples or [],
+                quick_prompts=quick_prompts or [],
+                tags=tags or [],
+            )
+            self.session.add(new_version)
+            await self.session.flush()
+            await self.session.refresh(new_version)
+            return new_version
+        except Exception:
+            await self.session.rollback()
+            raise
 
-    def get_all_possible_assistants_for_user_with_department(
+    async def get_all_possible_assistants_for_user_with_department(
         self, department: str
     ) -> List[Assistant]:
         """Get all assistants that are allowed for a specific department.
@@ -70,16 +83,18 @@ class AssistantRepository(Repository[Assistant]):
         # the department matches exactly OR department starts with hierarchical_access followed by a delimiter
         from sqlalchemy import literal
 
-        query = self.session.query(Assistant).filter(
-            Assistant.hierarchical_access.is_(None)
-            | (Assistant.hierarchical_access == "")
-            | (Assistant.hierarchical_access == department)
-            | literal(department).like(Assistant.hierarchical_access + "-%")
+        query = await self.session.execute(
+            select(Assistant).filter(
+                Assistant.hierarchical_access.is_(None)
+                | (Assistant.hierarchical_access == "")
+                | (Assistant.hierarchical_access == department)
+                | literal(department).like(Assistant.hierarchical_access + "-%")
+            )
         )
 
-        return query.all()
+        return list(query.scalars().all())
 
-    def get_assistants_by_owner(self, lhmobjektID: str) -> List[Assistant]:
+    async def get_assistants_by_owner(self, lhmobjektID: str) -> List[Assistant]:
         """Get all assistants where the given lhmobjektID is an owner."""
         stmt = (
             select(Assistant)
@@ -87,61 +102,132 @@ class AssistantRepository(Repository[Assistant]):
             .where(assistant_owners.c.lhmobjektID == lhmobjektID)
         )
 
-        return list(self.session.execute(stmt).scalars().all())
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
-    def create(
+    async def create(
         self, hierarchical_access: str = "", owner_ids: List[str] = None
     ) -> Assistant:
         """Create a new assistant with explicit parameters."""
-        assistant = Assistant(hierarchical_access=hierarchical_access)
-        self.session.add(assistant)
+        try:
+            assistant = Assistant(hierarchical_access=hierarchical_access)
+            self.session.add(assistant)
 
-        # Add owners if specified
-        if owner_ids:
-            for owner_id in owner_ids:
-                # Get or create the Owner
-                owner = (
-                    self.session.query(Owner)
-                    .filter(Owner.lhmobjektID == owner_id)
-                    .first()
-                )
-                if not owner:
-                    owner = Owner(lhmobjektID=owner_id)
-                    self.session.add(owner)
-                assistant.owners.append(owner)
+            # Flush to get the assistant ID
+            await self.session.flush()
 
-        self.session.commit()
-        self.session.refresh(assistant)
-        return assistant
+            # Add owners if specified
+            if owner_ids:
+                # Create owners and associations
+                for owner_id in owner_ids:
+                    # Get or create the Owner
+                    result = await self.session.execute(
+                        select(Owner).filter(Owner.lhmobjektID == owner_id)
+                    )
+                    owner = result.scalars().first()
+                    if not owner:
+                        owner = Owner(lhmobjektID=owner_id)
+                        self.session.add(owner)
+                        await self.session.flush()  # Ensure owner is persisted
 
-    def update(
+                    # Create association directly using insert
+                    stmt = insert(assistant_owners).values(
+                        assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
+                    )
+                    await self.session.execute(stmt)
+
+            await self.session.flush()
+            await self.session.refresh(assistant)
+            return assistant
+        except Exception:
+            await self.session.rollback()
+            raise
+
+            # Add owners if specified
+            if owner_ids:
+                # Create owners and associations
+                for owner_id in owner_ids:
+                    # Get or create the Owner
+                    result = await self.session.execute(
+                        select(Owner).filter(Owner.lhmobjektID == owner_id)
+                    )
+                    owner = result.scalars().first()
+                    if not owner:
+                        owner = Owner(lhmobjektID=owner_id)
+                        self.session.add(owner)
+                        await self.session.flush()  # Ensure owner has an ID
+                    # Create association directly using insert
+                    stmt = insert(assistant_owners).values(
+                        assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
+                    )
+                    await self.session.execute(stmt)
+
+            await self.session.flush()
+            await self.session.refresh(assistant)
+            return assistant
+        except Exception:
+            await self.session.rollback()
+            raise
+
+    async def update(
         self,
         assistant_id: int,
         hierarchical_access: str = None,
         owner_ids: List[str] = None,
     ) -> Optional[Assistant]:
         """Update an assistant with explicit parameters."""
-        assistant = self.get(assistant_id)
-        if assistant:
-            if hierarchical_access is not None:
-                assistant.hierarchical_access = hierarchical_access
+        try:
+            assistant = await self.get(assistant_id)
+            if assistant:
+                if hierarchical_access is not None:
+                    assistant.hierarchical_access = hierarchical_access
 
-            if owner_ids is not None:
-                # Clear existing owners and add new ones
-                assistant.owners.clear()
-                for owner_id in owner_ids:
-                    # Get or create the Owner
-                    owner = (
-                        self.session.query(Owner)
-                        .filter(Owner.lhmobjektID == owner_id)
-                        .first()
+                if owner_ids is not None:  # Clear existing owners using direct delete
+                    delete_stmt = delete(assistant_owners).where(
+                        assistant_owners.c.assistant_id == assistant_id
                     )
-                    if not owner:
-                        owner = Owner(lhmobjektID=owner_id)
-                        self.session.add(owner)
-                    assistant.owners.append(owner)
+                    await self.session.execute(delete_stmt)
 
-            self.session.commit()
-            self.session.refresh(assistant)
-            return assistant
-        return None
+                    # Add new owners
+                    for owner_id in owner_ids:
+                        # Get or create the Owner
+                        result = await self.session.execute(
+                            select(Owner).filter(Owner.lhmobjektID == owner_id)
+                        )
+                        owner = result.scalars().first()
+                        if not owner:
+                            owner = Owner(lhmobjektID=owner_id)
+                            self.session.add(owner)
+                            await self.session.flush()  # Ensure owner is persisted
+
+                        # Create association directly using insert
+                        stmt = insert(assistant_owners).values(
+                            assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
+                        )
+                        await self.session.execute(stmt)
+
+                await self.session.flush()
+                await self.session.refresh(assistant)
+                return assistant
+            return None
+        except Exception:
+            await self.session.rollback()
+            raise
+
+    async def get_with_owners(self, assistant_id: int) -> Optional[Assistant]:
+        """Get assistant with eagerly loaded owners."""
+        result = await self.session.execute(
+            select(Assistant)
+            .options(selectinload(Assistant.owners))
+            .filter(Assistant.id == assistant_id)
+        )
+        return result.scalars().first()
+
+    async def get_owners_count(self, assistant_id: int) -> int:
+        """Get the count of owners for an assistant."""
+        result = await self.session.execute(
+            select(func.count(assistant_owners.c.lhmobjektID)).where(
+                assistant_owners.c.assistant_id == assistant_id
+            )
+        )
+        return result.scalar() or 0

@@ -22,7 +22,8 @@ from api.exceptions import (
 )
 from core.auth import AuthError, authenticate_user
 from core.auth_models import AuthenticationResult
-from database.database_models import Assistant, AssistantTool, Owner, Tool
+from database.assistant_repo import AssistantRepository
+from database.database_models import AssistantTool, Owner, Tool
 from database.repo import Repository
 from database.session import get_db_session
 
@@ -95,7 +96,7 @@ async def createBot(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     # Create a new assistant using the repository
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
 
     # Create the assistant with basic properties
     new_assistant = assistant_repo.create(
@@ -174,7 +175,7 @@ async def deleteBot(
     db: Session = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
     assistant = assistant_repo.get(id)
 
     if not assistant:
@@ -220,7 +221,7 @@ async def updateBot(
     db: Session = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
     assistant = assistant_repo.get(id)
 
     if not assistant:
@@ -315,7 +316,7 @@ async def updateBot(
 async def getAllBots(
     db: Session = Depends(get_db_session), user_info=Depends(authenticate_user)
 ):
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
     assistants = assistant_repo.get_all_possible_assistants_for_user_with_department(
         user_info.department
     )
@@ -342,7 +343,7 @@ async def getBot(
     db: Session = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
     assistant = assistant_repo.get(id)
 
     if not assistant:
@@ -374,7 +375,7 @@ async def getUserBots(
 ):
     """Get all assistants where the specified lhmobjektID is an owner."""
     # Get all assistants where this lhmobjektID is an owner
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
     assistants = assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
 
     return assistants
@@ -405,7 +406,7 @@ async def get_assistant_version(
     db: Session = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    assistant_repo = Repository(Assistant, db)
+    assistant_repo = AssistantRepository(db)
     assistant = assistant_repo.get(id)
 
     if not assistant:

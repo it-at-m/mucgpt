@@ -132,8 +132,11 @@ async def createBot(
         await db.refresh(new_assistant)
         # first_version is already committed and refreshed by create_assistant_version
 
+        # Get assistant with owners and latest version safely
+        assistant_with_owners = await assistant_repo.get_with_owners(new_assistant.id)
+        latest_version = await assistant_repo.get_latest_version(new_assistant.id)
+
         # Create explicit response model
-        latest_version = new_assistant.latest_version
 
         # Build AssistantVersionResponse
         assistant_version_response = AssistantVersionResponse(
@@ -150,7 +153,7 @@ async def createBot(
             quick_prompts=latest_version.quick_prompts or [],
             tags=latest_version.tags or [],
             tools=latest_version.tools or [],
-            owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
+            owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         )
 
         # Build AssistantResponse
@@ -159,7 +162,7 @@ async def createBot(
             created_at=new_assistant.created_at,
             updated_at=new_assistant.updated_at,
             hierarchical_access=new_assistant.hierarchical_access or "",
-            owner_ids=[owner.lhmobjektID for owner in new_assistant.owners],
+            owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             latest_version=assistant_version_response,
         )
 
@@ -211,6 +214,7 @@ async def deleteBot(
     if not success:
         raise DeleteFailedException(id)
 
+    await db.commit()
     return {"message": f"Assistant with ID {id} successfully deleted"}
 
 
@@ -252,7 +256,8 @@ async def updateBot(
     if not assistant.is_owner(user_info.lhm_object_id):
         raise NotOwnerException()
 
-    latest_version = assistant.latest_version
+    # Get latest version safely
+    latest_version = await assistant_repo.get_latest_version(id)
     if not latest_version:
         raise NoVersionException()
 
@@ -307,9 +312,11 @@ async def updateBot(
     await db.commit()
     await db.refresh(assistant)
 
-    # Create explicit response model
-    latest_version = assistant.latest_version
+    # Get assistant with owners and latest version safely
+    assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
+    latest_version = await assistant_repo.get_latest_version(assistant.id)
 
+    # Create explicit response model
     # Build AssistantVersionResponse
     assistant_version_response = AssistantVersionResponse(
         id=latest_version.id,
@@ -325,7 +332,7 @@ async def updateBot(
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
         tools=latest_version.tools or [],
-        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 
     # Build AssistantResponse
@@ -334,7 +341,7 @@ async def updateBot(
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or "",
-        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         latest_version=assistant_version_response,
     )
 
@@ -368,8 +375,11 @@ async def getAllBots(
 
     # Create explicit response models
     response_list = []
-    for assistant in assistants:
-        latest_version = assistant.latest_version
+    for assistant in assistants:  # Use safe method to get assistant with owners
+        assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
+        # Use safe method to access latest version through repository
+        latest_version = await assistant_repo.get_latest_version(assistant.id)
+
         if latest_version:
             # Build AssistantVersionResponse
             assistant_version_response = AssistantVersionResponse(
@@ -386,7 +396,7 @@ async def getAllBots(
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
                 tools=latest_version.tools or [],
-                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             )
 
             # Build AssistantResponse
@@ -395,7 +405,7 @@ async def getAllBots(
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or "",
-                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
                 latest_version=assistant_version_response,
             )
             response_list.append(response)
@@ -432,9 +442,12 @@ async def getBot(
     if not assistant.is_allowed_for_user(user_info.department):
         raise NotAllowedToAccessException(id)
 
-    # Create explicit response model
-    latest_version = assistant.latest_version
+    # Get assistant with owners safely
+    assistant_with_owners = await assistant_repo.get_with_owners(id)
+    # Get latest version safely
+    latest_version = await assistant_repo.get_latest_version(id)
 
+    # Create explicit response model
     # Build AssistantVersionResponse
     assistant_version_response = AssistantVersionResponse(
         id=latest_version.id,
@@ -450,7 +463,7 @@ async def getBot(
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
         tools=latest_version.tools or [],
-        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 
     # Build AssistantResponse
@@ -459,7 +472,7 @@ async def getBot(
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or "",
-        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         latest_version=assistant_version_response,
     )
 
@@ -487,12 +500,16 @@ async def getUserBots(
     """Get all assistants where the specified lhmobjektID is an owner."""
     # Get all assistants where this lhmobjektID is an owner
     assistant_repo = AssistantRepository(db)
-    assistants = await assistant_repo.get_assistants_by_owner(user_info.lhm_object_id)
-
-    # Create explicit response models
+    assistants = await assistant_repo.get_assistants_by_owner(
+        user_info.lhm_object_id
+    )  # Create explicit response models
     response_list = []
     for assistant in assistants:
-        latest_version = assistant.latest_version
+        # Get assistant with owners safely
+        assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
+        # Get latest version safely
+        latest_version = await assistant_repo.get_latest_version(assistant.id)
+
         if latest_version:
             # Build AssistantVersionResponse
             assistant_version_response = AssistantVersionResponse(
@@ -509,7 +526,7 @@ async def getUserBots(
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
                 tools=latest_version.tools or [],
-                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             )
 
             # Build AssistantResponse
@@ -518,7 +535,7 @@ async def getUserBots(
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or "",
-                owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
                 latest_version=assistant_version_response,
             )
             response_list.append(response)
@@ -565,6 +582,9 @@ async def get_assistant_version(
     if not assistant_version:
         raise VersionNotFoundException(id, version)
 
+    # Get assistant with owners safely for the owner_ids field
+    assistant_with_owners = await assistant_repo.get_with_owners(id)
+
     # Create explicit response model
     response = AssistantVersionResponse(
         id=assistant_version.id,
@@ -580,7 +600,7 @@ async def get_assistant_version(
         quick_prompts=assistant_version.quick_prompts or [],
         tags=assistant_version.tags or [],
         tools=assistant_version.tools or [],
-        owner_ids=[owner.lhmobjektID for owner in assistant.owners],
+        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 
     return response

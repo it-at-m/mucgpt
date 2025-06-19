@@ -143,32 +143,6 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-            # Add owners if specified
-            if owner_ids:
-                # Create owners and associations
-                for owner_id in owner_ids:
-                    # Get or create the Owner
-                    result = await self.session.execute(
-                        select(Owner).filter(Owner.lhmobjektID == owner_id)
-                    )
-                    owner = result.scalars().first()
-                    if not owner:
-                        owner = Owner(lhmobjektID=owner_id)
-                        self.session.add(owner)
-                        await self.session.flush()  # Ensure owner has an ID
-                    # Create association directly using insert
-                    stmt = insert(assistant_owners).values(
-                        assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
-                    )
-                    await self.session.execute(stmt)
-
-            await self.session.flush()
-            await self.session.refresh(assistant)
-            return assistant
-        except Exception:
-            await self.session.rollback()
-            raise
-
     async def update(
         self,
         assistant_id: int,
@@ -231,3 +205,17 @@ class AssistantRepository(Repository[Assistant]):
             )
         )
         return result.scalar() or 0
+
+    async def get_latest_version(self, assistant_id: int) -> Optional[AssistantVersion]:
+        """Get the latest version for an assistant safely without lazy loading."""
+        try:
+            result = await self.session.execute(
+                select(AssistantVersion)
+                .filter(AssistantVersion.assistant_id == assistant_id)
+                .order_by(AssistantVersion.version.desc())
+                .limit(1)
+            )
+            return result.scalars().first()
+        except Exception:
+            await self.session.rollback()
+            raise

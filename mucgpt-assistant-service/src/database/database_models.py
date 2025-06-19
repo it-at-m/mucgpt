@@ -71,14 +71,14 @@ class AssistantVersion(Base):
     tags = Column(JSON, nullable=True)
 
     assistant = relationship("Assistant", back_populates="versions")
-    tool_associations = (
-        relationship(
+
+    @property
+    def tool_associations(self):
+        return relationship(
             "AssistantTool",
             back_populates="assistant_version",
             cascade="all, delete-orphan",
         )
-        @ property
-    )
 
     def tools(self):
         """Return a list of tool configurations for the assistant version."""

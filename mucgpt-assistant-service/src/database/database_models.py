@@ -12,7 +12,6 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import JSON
@@ -34,25 +33,35 @@ assistant_owners = Table(
 )
 
 
+class Tool(Base):
+    __tablename__ = "tools"
+
+    id = Column(String(255), primary_key=True)
+    description = Column(Text, nullable=True)
+
+    assistant_associations = relationship(
+        "AssistantTool", back_populates="tool", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self):
+        return f"<Tool(id='{self.id}')>"
+
+
 class AssistantTool(Base):
-    __tablename__ = "assistant_tool"
+    __tablename__ = "assistant_tools"
     assistant_id = Column(
         Integer, ForeignKey("assistants.id", ondelete="CASCADE"), primary_key=True
     )
     tool_id = Column(
-        Integer, ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True
+        String(255), ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True
     )
+    config = Column(JSON, nullable=True)
 
-    # Relationships to parent objects
     assistant = relationship("Assistant", back_populates="tool_associations")
     tool = relationship("Tool", back_populates="assistant_associations")
 
-    __table_args__ = (
-        UniqueConstraint("assistant_id", "tool_id", name="uq_assistant_tool"),
-    )
-
-
-# Removed AssistantUserAccess class
+    def __repr__(self):
+        return f"<AssistantTool(assistant_id={self.assistant_id}, tool_id='{self.tool_id}')>"
 
 
 class Assistant(Base):
@@ -78,16 +87,17 @@ class Assistant(Base):
         "AssistantTool", back_populates="assistant", cascade="all, delete-orphan"
     )
 
+    @property
+    def tools(self):
+        """Return a list of tool configurations for the assistant."""
+        return [
+            {"id": assoc.tool.id, "config": assoc.config}
+            for assoc in self.tool_associations
+        ]
+
     # Many-to-many relationship with owners through assistant_owners table
     owners = relationship(
         "Owner", secondary=assistant_owners, back_populates="assistants"
-    )
-
-    # Association proxies for direct access
-    tools = association_proxy(
-        "tool_associations",
-        "tool",
-        creator=lambda tool_obj: AssistantTool(tool=tool_obj),
     )
 
     def is_owner(self, lhmobjektID: str) -> bool:
@@ -96,30 +106,6 @@ class Assistant(Base):
 
     def __repr__(self):
         return f"<Assistant(name='{self.name}')>"
-
-
-class Tool(Base):
-    __tablename__ = "tools"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    description = Column(Text)
-    config = Column(JSON, nullable=True)
-
-    # Relationship to association objects
-    assistant_associations = relationship(
-        "AssistantTool", back_populates="tool", cascade="all, delete-orphan"
-    )
-
-    # Association proxy for direct access
-    assistants = association_proxy(
-        "assistant_associations",
-        "assistant",
-        creator=lambda assistant_obj: AssistantTool(assistant=assistant_obj),
-    )
-
-    def __repr__(self):
-        return f"<Tool(name='{self.name}')>"
 
 
 class Owner(Base):

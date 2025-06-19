@@ -3,7 +3,7 @@ from typing import Generic, Type
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .models import Assistant, ModelType, assistant_owners
+from .database_models import Assistant, ModelType, assistant_owners
 
 # Removed User class
 
@@ -60,8 +60,8 @@ class Repository(Generic[ModelType]):
             raise ValueError("This method can only be used with the Assistant model")
 
         # Query for assistants where:
-        # Either organization_path is None/empty (available to all) OR
-        # the department starts with the organization_path (hierarchical access)
+        # Either hierarchical_access is None/empty (available to all) OR
+        # the department starts with the hierarchical_access
         query = self.session.query(Assistant).filter(
             Assistant.hierarchical_access.is_(None),
             Assistant.hierarchical_access == "",

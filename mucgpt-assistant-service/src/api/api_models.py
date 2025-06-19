@@ -237,55 +237,111 @@ class AssistantCreate(AssistantBase):
         }
 
 
-class AssistantUpdate(AssistantBase):
+class AssistantUpdate(BaseModel):
     """Model for updating an existing AI assistant.
 
     All fields are optional to allow partial updates. Only provided fields
     will be updated, leaving others unchanged.
     """
 
-    id: int = Field(..., description="Unique identifier for the assistant", example=1)
-
     version: int = Field(
-        1, description="Version identifier for the assistant configuration", example=1
+        ...,
+        description="The version of the assistant being updated, to prevent conflicts.",
+        example=1,
+    )
+    name: Optional[str] = Field(
+        None,
+        description="The name/title of the assistant",
+        example="Technical Support Bot",
+    )
+    description: Optional[str] = Field(
+        None,
+        description="A detailed description of the assistant's purpose and capabilities",
+        example="An AI assistant specialized in providing technical support for software issues",
+    )
+    system_prompt: Optional[str] = Field(
+        None,
+        description="The system prompt that defines the assistant's personality and behavior",
+        example="You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
+    )
+    hierarchical_access: Optional[str] = Field(
+        None,
+        description="Hierarchical access control string for organizational permissions. All users under this hierarchy can access the assistant. Leave empty for no restrictions.",
+        example="department-underdepartment-underunderdepartment",
+    )
+    temperature: Optional[float] = Field(
+        None,
+        description="Controls randomness in AI responses (0.0 = deterministic, 1.0 = very random)",
+        ge=0.0,
+        le=2.0,
+        example=0.7,
+    )
+    max_output_tokens: Optional[int] = Field(
+        None,
+        description="Maximum number of tokens the assistant can generate in a single response",
+        gt=0,
+        le=32000,
+        example=1000,
+    )
+    examples: Optional[List[ExampleModel]] = Field(
+        None,
+        description="Example conversations starters",
+        example=[
+            {"text": "Reset password", "value": "How can i reset my password?"},
+            {
+                "text": "Network Issue",
+                "value": "Help me troubleshoot a network connection issue",
+            },
+        ],
+    )
+    quick_prompts: Optional[List[QuickPrompt]] = Field(
+        None,
+        description="Pre-defined quick prompts/actions for the assistant",
+        example=[
+            {
+                "label": "Troubleshoot Connection",
+                "prompt": "Help me troubleshoot a network connection issue",
+                "tooltip": "Use this prompt to quickly get help with network issues",
+            }
+        ],
+    )
+    tags: Optional[List[str]] = Field(
+        None,
+        description="Tags for categorizing and filtering assistants",
+        example=["support", "technical", "customer-service"],
     )
 
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "name": "Customer Service Bot",
-                "description": "AI assistant for handling customer inquiries",
-                "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
-                "temperature": 0.5,
-                "max_output_tokens": 800,
-                "version": 3,
-                "tools": [
-                    {
-                        "id": "WEB_SEARCH",
-                        "config": {"url": "muenchen.de", "max_results": 5},
-                    }
-                ],
-                "owner_ids": [12345],
-                "examples": [
-                    {"text": "Reset password", "value": "How can i reset my password?"},
-                    {
-                        "text": "Network Issue",
-                        "value": "Help me troubleshoot a network connection issue",
-                    },
-                ],
-                "quick_prompts": [
-                    {
-                        "label": "Troubleshoot Connection",
-                        "prompt": "Help me troubleshoot a network connection issue",
-                        "tooltip": "Use this prompt to quickly get help with network issues",
-                    }
-                ],
-                "tags": ["customer-service", "support"],
-            }
-        }
+    tools: Optional[List[ToolBase]] = Field(
+        None,
+        description="List of toos that this assistant can use",
+        example=[
+            {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
+        ],
+    )
+    owner_ids: Optional[List[int]] = Field(
+        None,
+        description="List of lhmobjektIDs who will own this assistant",
+        example=[12345, 67890],
+    )
 
 
-class AssistantResponse(AssistantBase):
+class AssistantVersionResponse(AssistantBase):
+    """Response model for a specific version of an AI assistant."""
+
+    id: int = Field(
+        ..., description="Unique identifier for the assistant version", example=1
+    )
+    version: int = Field(
+        ..., description="Version number of the assistant configuration", example=1
+    )
+    created_at: datetime = Field(
+        ...,
+        description="Timestamp when this version was created",
+        example="2025-06-18T10:30:00Z",
+    )
+
+
+class AssistantResponse(BaseModel):
     """Complete response model for AI assistant data.
 
     This includes all assistant properties plus database-generated fields
@@ -293,9 +349,6 @@ class AssistantResponse(AssistantBase):
     """
 
     id: int = Field(..., description="Unique identifier for the assistant", example=1)
-    version: int = Field(
-        1, description="Version identifier for the assistant configuration", example=1
-    )
     created_at: datetime = Field(
         ...,
         description="Timestamp when the assistant was created",
@@ -305,6 +358,22 @@ class AssistantResponse(AssistantBase):
         ...,
         description="Timestamp when the assistant was last updated",
         example="2025-06-18T15:45:00Z",
+    )
+    hierarchical_access: Optional[str] = Field(
+        "",
+        description="Hierarchical access control string for organizational permissions. All users under this hierarchy can access the assistant. Leave empty for no restrictions.",
+        example="department-underdepartment-underunderdepartment",
+    )
+    owner_ids: Optional[List[int]] = Field(
+        [],
+        description="List of lhmobjektIDs who will own this assistant",
+        example=[12345, 67890],
+    )
+    latest_version: AssistantVersionResponse = Field(
+        ..., description="The latest version of the assistant"
+    )
+    versions: List[AssistantVersionResponse] = Field(
+        ..., description="All versions of the assistant"
     )
 
     class Config:

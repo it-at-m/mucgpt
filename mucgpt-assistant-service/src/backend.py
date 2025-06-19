@@ -191,41 +191,26 @@ async def updateBot(
             detail="Access denied: You must be an owner of this assistant to update it",
         )
 
-    # Update basic fields if provided
-    update_data = {
-        k: v
-        for k, v in assistant_update.dict(exclude_unset=True).items()
-        if k not in ["tools", "owner_ids"]
-    }
+    latest_version = assistant.latest_version
+    if not latest_version:
+        raise HTTPException(
+            status_code=500, detail="Assistant has no versions, cannot update"
+        )
 
-    if update_data:
-        assistant = assistant_repo.update(id, **update_data)
+    if assistant_update.version != latest_version.version:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Version conflict: You are trying to update version {assistant_update.version}, but the latest version is {latest_version.version}.",
+        )
 
-    # Update tools if provided
-    if assistant_update.tools is not None:
-        # Clear existing tools
-        assistant.tool_associations.clear()
+    # Handle global properties
+    if assistant_update.hierarchical_access is not None:
+        assistant.hierarchical_access = assistant_update.hierarchical_access
 
-        # Add new tools
-        tool_repo = Repository(Tool, db)
-        for tool_data in assistant_update.tools:
-            tool = tool_repo.session.query(Tool).filter(Tool.id == tool_data.id).first()
-            if not tool:
-                tool = Tool(id=tool_data.id)
-                db.add(tool)
-
-            assistant_tool = AssistantTool(tool=tool, config=tool_data.config)
-            assistant.tool_associations.append(assistant_tool)
-
-    # Update owner_ids if provided
     if assistant_update.owner_ids is not None:
-        # Clear existing owners
         assistant.owners.clear()
-
-        # Add new owners
         owner_repo = Repository(Owner, db)
         for owner_id in assistant_update.owner_ids:
-            # Get or create the Owner
             owner = (
                 owner_repo.session.query(Owner)
                 .filter(Owner.lhmobjektID == owner_id)
@@ -233,10 +218,48 @@ async def updateBot(
             )
             if not owner:
                 owner = Owner(lhmobjektID=owner_id)
-                owner_repo.session.add(owner)
+                db.add(owner)
             assistant.owners.append(owner)
 
-    # Commit changes
+    # Create a new version with updated data
+    latest_version = assistant.latest_version
+    if not latest_version:
+        raise HTTPException(
+            status_code=500, detail="Assistant has no versions, cannot update"
+        )
+
+    version_data = {
+        "name": latest_version.name,
+        "description": latest_version.description,
+        "system_prompt": latest_version.system_prompt,
+        "temperature": latest_version.temperature,
+        "max_output_tokens": latest_version.max_output_tokens,
+        "examples": latest_version.examples,
+        "quick_prompts": latest_version.quick_prompts,
+        "tags": latest_version.tags,
+    }
+
+    update_payload = assistant_update.dict(exclude_unset=True)
+    for key, value in update_payload.items():
+        if key in version_data:
+            version_data[key] = value
+
+    new_version = assistant_repo.create_assistant_version(assistant, **version_data)
+
+    # Handle tools for the new version
+    if assistant_update.tools is not None:
+        tool_repo = Repository(Tool, db)
+        for tool_data in assistant_update.tools:
+            tool = tool_repo.session.query(Tool).filter(Tool.id == tool_data.id).first()
+            if not tool:
+                tool = Tool(id=tool_data.id)
+                db.add(tool)
+
+            assistant_tool = AssistantTool(
+                assistant_version=new_version, tool=tool, config=tool_data.config
+            )
+            db.add(assistant_tool)
+
     db.commit()
     db.refresh(assistant)
 

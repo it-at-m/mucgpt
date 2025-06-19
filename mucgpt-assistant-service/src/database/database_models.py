@@ -49,53 +49,82 @@ class Tool(Base):
 
 class AssistantTool(Base):
     __tablename__ = "assistant_tools"
-    assistant_id = Column(
-        Integer, ForeignKey("assistants.id", ondelete="CASCADE"), primary_key=True
+    assistant_version_id = Column(
+        Integer,
+        ForeignKey("assistant_versions.id", ondelete="CASCADE"),
+        primary_key=True,
     )
     tool_id = Column(
         String(255), ForeignKey("tools.id", ondelete="CASCADE"), primary_key=True
     )
     config = Column(JSON, nullable=True)
 
-    assistant = relationship("Assistant", back_populates="tool_associations")
+    assistant_version = relationship(
+        "AssistantVersion", back_populates="tool_associations"
+    )
     tool = relationship("Tool", back_populates="assistant_associations")
 
     def __repr__(self):
-        return f"<AssistantTool(assistant_id={self.assistant_id}, tool_id='{self.tool_id}')>"
+        return f"<AssistantTool(assistant_version_id={self.assistant_version_id}, tool_id='{self.tool_id}')>"
+
+
+class AssistantVersion(Base):
+    __tablename__ = "assistant_versions"
+
+    id = Column(Integer, primary_key=True)
+    assistant_id = Column(
+        Integer, ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+    )
+    version = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    name = Column(String(255), nullable=False)
+    description = Column(Text)
+    system_prompt = Column(Text, nullable=False)
+    temperature = Column(Float, default=0.7)
+    max_output_tokens = Column(Integer, default=1000)
+    examples = Column(JSON, nullable=True)
+    quick_prompts = Column(JSON, nullable=True)
+    tags = Column(JSON, nullable=True)
+
+    assistant = relationship("Assistant", back_populates="versions")
+    tool_associations = relationship(
+        "AssistantTool",
+        back_populates="assistant_version",
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def tools(self):
+        """Return a list of tool configurations for the assistant version."""
+        return [
+            {"id": assoc.tool.id, "config": assoc.config}
+            for assoc in self.tool_associations
+        ]
+
+    __table_args__ = (
+        UniqueConstraint("assistant_id", "version", name="uq_assistant_version"),
+    )
+
+    def __repr__(self):
+        return f"<AssistantVersion(assistant_id={self.assistant_id}, version='{self.version}')>"
 
 
 class Assistant(Base):
     __tablename__ = "assistants"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)  # maps to "title" in frontend
-    description = Column(Text)
-    system_prompt = Column(Text, nullable=False)  # maps to "system_message" in frontend
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     hierarchical_access = Column(String(1000))
 
-    temperature = Column(Float, default=0.7)
-    max_output_tokens = Column(Integer, default=1000)
-    version = Column(String(50), default="1.0")
-    examples = Column(JSON, nullable=True)  # Store ExampleModel[] as JSON
-    quick_prompts = Column(JSON, nullable=True)  # Store QuickPrompt[] as JSON
-    tags = Column(JSON, nullable=True)  # Store string[] as JSON
-
-    # Relationships to association objects
-    tool_associations = relationship(
-        "AssistantTool", back_populates="assistant", cascade="all, delete-orphan"
+    versions = relationship(
+        "AssistantVersion",
+        back_populates="assistant",
+        cascade="all, delete-orphan",
+        order_by="desc(AssistantVersion.version)",
     )
 
-    @property
-    def tools(self):
-        """Return a list of tool configurations for the assistant."""
-        return [
-            {"id": assoc.tool.id, "config": assoc.config}
-            for assoc in self.tool_associations
-        ]
-
-    # Many-to-many relationship with owners through assistant_owners table
     owners = relationship(
         "Owner", secondary=assistant_owners, back_populates="assistants"
     )
@@ -104,8 +133,12 @@ class Assistant(Base):
         """Check if the given lhmobjektID is an owner of this assistant."""
         return any(owner.lhmobjektID == lhmobjektID for owner in self.owners)
 
+    @property
+    def latest_version(self) -> "AssistantVersion | None":
+        return self.versions[0] if self.versions else None
+
     def __repr__(self):
-        return f"<Assistant(name='{self.name}')>"
+        return f"<Assistant(id='{self.id}')>"
 
 
 class Owner(Base):
@@ -113,7 +146,6 @@ class Owner(Base):
 
     lhmobjektID = Column(String(255), primary_key=True)
 
-    # Many-to-many relationship with assistants through assistant_owners table
     assistants = relationship(
         "Assistant", secondary=assistant_owners, back_populates="owners"
     )

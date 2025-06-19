@@ -3,9 +3,7 @@ from typing import Generic, Type
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from .database_models import Assistant, ModelType, assistant_owners
-
-# Removed User class
+from .database_models import Assistant, AssistantVersion, ModelType, assistant_owners
 
 
 class Repository(Generic[ModelType]):
@@ -45,6 +43,22 @@ class Repository(Generic[ModelType]):
             return True
         return False
 
+    def create_assistant_version(
+        self, assistant: Assistant, **kwargs
+    ) -> AssistantVersion:
+        """Creates a new version for an assistant."""
+        latest_version = assistant.latest_version
+        new_version_number = latest_version.version + 1 if latest_version else 1
+
+        # Create a new version
+        new_version = AssistantVersion(
+            assistant=assistant, version=new_version_number, **kwargs
+        )
+        self.session.add(new_version)
+        self.session.commit()
+        self.session.refresh(new_version)
+        return new_version
+
     def get_all_possible_assistants_for_user_with_department(
         self, department: str
     ) -> list[Assistant]:
@@ -63,10 +77,12 @@ class Repository(Generic[ModelType]):
         # Either hierarchical_access is None/empty (available to all) OR
         # the department starts with the hierarchical_access
         query = self.session.query(Assistant).filter(
-            Assistant.hierarchical_access.is_(None),
-            Assistant.hierarchical_access == "",
-            func.substr(department, 1, func.length(Assistant.hierarchical_access))
-            == Assistant.hierarchical_access,
+            Assistant.hierarchical_access.is_(None)
+            | (Assistant.hierarchical_access == "")
+            | (
+                func.substr(department, 1, func.length(Assistant.hierarchical_access))
+                == Assistant.hierarchical_access
+            )
         )
 
         return query.all()

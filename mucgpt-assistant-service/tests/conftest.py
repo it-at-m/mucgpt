@@ -1,9 +1,20 @@
 """Test configuration and fixtures."""
 
+import os
+import sys
+from pathlib import Path
+
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from src.database.database_models import AssistantVersion, Base
+
+# Add the src directory to the Python path
+# This will allow imports to work without the 'src.' prefix
+root_dir = Path(__file__).parent.parent
+src_dir = os.path.join(root_dir, "src")
+if src_dir not in sys.path:
+    sys.path.insert(0, str(src_dir))
 
 
 @pytest_asyncio.fixture(scope="function")

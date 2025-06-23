@@ -76,18 +76,6 @@ async def auth_exception_handler(request: Request, exc: AuthError):
     return await http_exception_handler(request, http_exc)
 
 
-def testfunction():
-    """A test function to ensure the backend is running."""
-    return "Test function is working!"
-
-
-@api_app.get("/test/textauth")
-async def test_text_auth(
-    test=Depends(testfunction),
-):
-    return test
-
-
 @api_app.post(
     "/bot/create",
     response_model=AssistantResponse,

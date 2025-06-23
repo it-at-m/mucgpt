@@ -6,7 +6,6 @@ from src.api.api_models import (
     QuickPrompt,
     ToolBase,
 )
-from src.backend import api_app, testfunction
 
 # Headers for authentication
 headers = {
@@ -63,32 +62,6 @@ def test_health_check(test_client):
     response = test_client.get("health")
     assert response.status_code == 200
     assert response.text == '"OK"'
-
-
-def testfunctionoverride():
-    """A test function to ensure the backend is running."""
-    return "Override successful"
-
-
-@pytest.mark.integration
-@pytest.mark.asyncio
-async def test_auth_api(test_client):
-    """Test the authentication API endpoint."""
-    # Save original dependency
-    original = api_app.dependency_overrides.get(testfunction)
-    # Override test function
-    api_app.dependency_overrides[testfunction] = testfunctionoverride
-
-    try:
-        response = test_client.get("test/textauth", headers=headers)
-        assert response.status_code == 200
-        assert response.text == '"Override successful"'
-    finally:
-        # Restore original dependency or remove override
-        if original:
-            api_app.dependency_overrides[testfunction] = original
-        else:
-            api_app.dependency_overrides.pop(testfunction, None)
 
 
 @pytest.mark.integration

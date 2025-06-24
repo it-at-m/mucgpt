@@ -1,7 +1,7 @@
 import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import logo from "../../assets/mucgpt_logo.png";
+import logo from "../../assets/mucgpt_pride.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_black.png";
 import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";

@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="#">
-    <img src="app/frontend/src/assets/mucgpt_black_filled.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
+    <img src="mucgpt-frontend/src/assets/mucgpt_pride.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
   </a>
 </div>
 <br />

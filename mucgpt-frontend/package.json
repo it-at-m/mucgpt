@@ -10,7 +10,7 @@
         "markmap-common": "0.18.9",
         "markmap-lib": "0.18.11",
         "markmap-toolbar": "0.18.10",
-        "markmap-view": "0.18.10",
+        "markmap-view": "0.18.12",
         "mermaid": "11.6.0",
         "ndjson-readablestream": "1.2.0",
         "react": "18.3.1",

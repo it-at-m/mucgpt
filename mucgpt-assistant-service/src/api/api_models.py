@@ -90,20 +90,22 @@ class AssistantBase(BaseModel):
         description="The name/title of the assistant",
         example="Technical Support Bot",
     )
+
     description: Optional[str] = Field(
         "",
         description="A detailed description of the assistant's purpose and capabilities",
         example="An AI assistant specialized in providing technical support for software issues",
     )
+
     system_prompt: str = Field(
         ...,
         description="The system prompt that defines the assistant's personality and behavior",
         example="You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
     )
-    hierarchical_access: Optional[str] = Field(
-        "",
-        description="Hierarchical access control string for organizational permissions. All users under this hierarchy can access the assistant. Leave empty for no restrictions.",
-        example="department-underdepartment-underunderdepartment",
+    hierarchical_access: Optional[List[str]] = Field(
+        [],
+        description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
+        example=["department-underdepartment", "anotherdepartment"],
     )
     temperature: float = Field(
         0.7,
@@ -166,7 +168,10 @@ class AssistantBase(BaseModel):
                 "name": "Technical Support Bot",
                 "description": "An AI assistant specialized in providing technical support for software issues",
                 "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                "hierarchical_access": "department-underdepartment-underunderdepartment",
+                "hierarchical_access": [
+                    "department-underdepartment",
+                    "anotherdepartment-underdepartment",
+                ],
                 "temperature": 0.7,
                 "max_output_tokens": 1000,
                 "tools": [
@@ -248,25 +253,28 @@ class AssistantUpdate(BaseModel):
         description="The version of the assistant being updated, to prevent conflicts.",
         example=1,
     )
+
     name: Optional[str] = Field(
         None,
         description="The name/title of the assistant",
         example="Technical Support Bot",
     )
+
     description: Optional[str] = Field(
         None,
         description="A detailed description of the assistant's purpose and capabilities",
         example="An AI assistant specialized in providing technical support for software issues",
     )
+
     system_prompt: Optional[str] = Field(
         None,
         description="The system prompt that defines the assistant's personality and behavior",
         example="You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
     )
-    hierarchical_access: Optional[str] = Field(
+    hierarchical_access: Optional[List[str]] = Field(
         None,
-        description="Hierarchical access control string for organizational permissions. All users under this hierarchy can access the assistant. Leave empty for no restrictions.",
-        example="department-underdepartment-underunderdepartment",
+        description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
+        example=["department-underdepartment", "anotherdepartment"],
     )
     temperature: Optional[float] = Field(
         None,
@@ -352,20 +360,22 @@ class AssistantResponse(BaseModel):
         description="Unique identifier for the assistant (UUID v4)",
         example="123e4567-e89b-12d3-a456-426614174000",
     )
+
     created_at: datetime = Field(
         ...,
         description="Timestamp when the assistant was created",
         example="2025-06-18T10:30:00Z",
     )
+
     updated_at: datetime = Field(
         ...,
         description="Timestamp when the assistant was last updated",
         example="2025-06-18T15:45:00Z",
     )
-    hierarchical_access: Optional[str] = Field(
-        "",
-        description="Hierarchical access control string for organizational permissions. All users under this hierarchy can access the assistant. Leave empty for no restrictions.",
-        example="department-underdepartment-underunderdepartment",
+    hierarchical_access: Optional[List[str]] = Field(
+        [],
+        description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
+        example=["department-underdepartment", "anotherdepartment-underdepartment"],
     )
     owner_ids: Optional[List[str]] = Field(
         [],
@@ -383,7 +393,10 @@ class AssistantResponse(BaseModel):
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "created_at": "2025-06-18T10:30:00Z",
                 "updated_at": "2025-06-18T15:45:00Z",
-                "hierarchical_access": "department-underdepartment-underunderdepartment",
+                "hierarchical_access": [
+                    "department-underdepartment",
+                    "anotherdepartment-underdepartment",
+                ],
                 "owner_ids": ["12345", "67890"],
                 "latest_version": {
                     "id": 1,
@@ -392,7 +405,6 @@ class AssistantResponse(BaseModel):
                     "name": "Technical Support Bot",
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                    "hierarchical_access": "department-underdepartment-underunderdepartment",
                     "temperature": 0.7,
                     "max_output_tokens": 1000,
                     "tools": [

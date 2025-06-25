@@ -96,15 +96,16 @@ async def createBot(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):  # Create a new assistant using the repository
     try:
-        assistant_repo = AssistantRepository(db)
-
-        # Prepare owner_ids: include the creating user if not already present
+        assistant_repo = AssistantRepository(
+            db
+        )  # Prepare owner_ids: include the creating user if not already present
         owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
+
         if user_info.lhm_object_id not in owner_ids:
             owner_ids.append(user_info.lhm_object_id)
 
         new_assistant = await assistant_repo.create(
-            hierarchical_access=assistant.hierarchical_access or "", owner_ids=owner_ids
+            hierarchical_access=assistant.hierarchical_access or [], owner_ids=owner_ids
         )
 
         # Create the first version with the actual assistant data
@@ -154,7 +155,7 @@ async def createBot(
             name=latest_version.name,
             description=latest_version.description or "",
             system_prompt=latest_version.system_prompt,
-            hierarchical_access=new_assistant.hierarchical_access or "",
+            hierarchical_access=new_assistant.hierarchical_access or [],
             temperature=latest_version.temperature,
             max_output_tokens=latest_version.max_output_tokens,
             examples=latest_version.examples or [],
@@ -169,7 +170,7 @@ async def createBot(
             id=new_assistant.id,
             created_at=new_assistant.created_at,
             updated_at=new_assistant.updated_at,
-            hierarchical_access=new_assistant.hierarchical_access or "",
+            hierarchical_access=new_assistant.hierarchical_access or [],
             owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             latest_version=assistant_version_response,
         )
@@ -333,7 +334,7 @@ async def updateBot(
         name=latest_version.name,
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
-        hierarchical_access=assistant.hierarchical_access or "",
+        hierarchical_access=assistant.hierarchical_access or [],
         temperature=latest_version.temperature,
         max_output_tokens=latest_version.max_output_tokens,
         examples=latest_version.examples or [],
@@ -348,7 +349,7 @@ async def updateBot(
         id=assistant.id,
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
-        hierarchical_access=assistant.hierarchical_access or "",
+        hierarchical_access=assistant.hierarchical_access or [],
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         latest_version=assistant_version_response,
     )
@@ -397,7 +398,7 @@ async def getAllBots(
                 name=latest_version.name,
                 description=latest_version.description or "",
                 system_prompt=latest_version.system_prompt,
-                hierarchical_access=assistant.hierarchical_access or "",
+                hierarchical_access=assistant.hierarchical_access or [],
                 temperature=latest_version.temperature,
                 max_output_tokens=latest_version.max_output_tokens,
                 examples=latest_version.examples or [],
@@ -412,7 +413,7 @@ async def getAllBots(
                 id=assistant.id,
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
-                hierarchical_access=assistant.hierarchical_access or "",
+                hierarchical_access=assistant.hierarchical_access or [],
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
                 latest_version=assistant_version_response,
             )
@@ -464,7 +465,7 @@ async def getBot(
         name=latest_version.name,
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
-        hierarchical_access=assistant.hierarchical_access or "",
+        hierarchical_access=assistant.hierarchical_access or [],
         temperature=latest_version.temperature,
         max_output_tokens=latest_version.max_output_tokens,
         examples=latest_version.examples or [],
@@ -479,7 +480,7 @@ async def getBot(
         id=assistant.id,
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
-        hierarchical_access=assistant.hierarchical_access or "",
+        hierarchical_access=assistant.hierarchical_access or [],
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         latest_version=assistant_version_response,
     )
@@ -527,7 +528,7 @@ async def getUserBots(
                 name=latest_version.name,
                 description=latest_version.description or "",
                 system_prompt=latest_version.system_prompt,
-                hierarchical_access=assistant.hierarchical_access or "",
+                hierarchical_access=assistant.hierarchical_access or [],
                 temperature=latest_version.temperature,
                 max_output_tokens=latest_version.max_output_tokens,
                 examples=latest_version.examples or [],
@@ -542,7 +543,7 @@ async def getUserBots(
                 id=assistant.id,
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
-                hierarchical_access=assistant.hierarchical_access or "",
+                hierarchical_access=assistant.hierarchical_access or [],
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
                 latest_version=assistant_version_response,
             )
@@ -601,7 +602,7 @@ async def get_assistant_version(
         name=assistant_version.name,
         description=assistant_version.description or "",
         system_prompt=assistant_version.system_prompt,
-        hierarchical_access=assistant.hierarchical_access or "",
+        hierarchical_access=assistant.hierarchical_access or [],
         temperature=assistant_version.temperature,
         max_output_tokens=assistant_version.max_output_tokens,
         examples=assistant_version.examples or [],

@@ -87,6 +87,7 @@ class AssistantRepository(Repository[Assistant]):
                 quick_prompts=serialized_quick_prompts,
                 tags=tags or [],
             )
+
             self.session.add(new_version)
             await self.session.flush()
             await self.session.refresh(new_version)
@@ -100,27 +101,44 @@ class AssistantRepository(Repository[Assistant]):
     ) -> List[Assistant]:
         """Get all assistants that are allowed for a specific department.
 
-        for example an assistant has the path:
+        For example an assistant has the path:
         ITM-KM
 
         This means that a user from the department ITM-KM-DI is allowed to use this assistant.
         But a user from the department ITM-AB-DI is not allowed to use this assistant.
         """
-        # Query for assistants where:
-        # Either hierarchical_access is None/empty (available to all) OR
-        # the department matches exactly OR department starts with hierarchical_access followed by a delimiter
-        from sqlalchemy import literal
 
-        query = await self.session.execute(
-            select(Assistant).filter(
-                Assistant.hierarchical_access.is_(None)
-                | (Assistant.hierarchical_access == "")
-                | (Assistant.hierarchical_access == department)
-                | literal(department).like(Assistant.hierarchical_access + "-%")
-            )
-        )
+        # Since SQLite doesn't support ANY(), we need to implement this logic differently
+        # We'll get all assistants and filter them in Python
+        all_assistants_query = await self.session.execute(select(Assistant))
+        all_assistants = list(all_assistants_query.scalars().all())
 
-        return list(query.scalars().all())
+        matching_assistants = []
+
+        for assistant in all_assistants:
+            # Include assistants with no hierarchical access restrictions (available to all)
+            if (
+                not assistant.hierarchical_access
+                or len(assistant.hierarchical_access) == 0
+            ):
+                matching_assistants.append(assistant)
+                continue
+
+            # Check each path in the hierarchical_access array
+            for path in assistant.hierarchical_access:
+                # Exact match
+                if department == path:
+                    matching_assistants.append(assistant)
+                    break
+
+                # Prefix match with delimiter (hierarchical access)
+                if department.startswith(path + "-") or department.startswith(
+                    path + "/"
+                ):
+                    matching_assistants.append(assistant)
+                    break
+
+        return matching_assistants
 
     async def get_assistants_by_owner(self, lhmobjektID: str) -> List[Assistant]:
         """Get all assistants where the given lhmobjektID is an owner."""
@@ -134,14 +152,14 @@ class AssistantRepository(Repository[Assistant]):
         return list(result.scalars().all())
 
     async def create(
-        self, hierarchical_access: str = "", owner_ids: List[str] = None
+        self, hierarchical_access: List[str] = None, owner_ids: List[str] = None
     ) -> Assistant:
         """Create a new assistant with explicit parameters."""
         try:
             # Generate a UUID version 4 (random) for the assistant
             assistant_id = str(uuid.uuid4())  # Using version 4 (random) UUID
             assistant = Assistant(
-                id=assistant_id, hierarchical_access=hierarchical_access
+                id=assistant_id, hierarchical_access=hierarchical_access or []
             )
             self.session.add(assistant)
 
@@ -160,9 +178,7 @@ class AssistantRepository(Repository[Assistant]):
                     if not owner:
                         owner = Owner(lhmobjektID=owner_id)
                         self.session.add(owner)
-                        await self.session.flush()  # Ensure owner is persisted
-
-                    # Create association directly using insert
+                        await self.session.flush()  # Ensure owner is persisted                    # Create association directly using insert
                     stmt = insert(assistant_owners).values(
                         assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
                     )
@@ -178,7 +194,7 @@ class AssistantRepository(Repository[Assistant]):
     async def update(
         self,
         assistant_id: str,
-        hierarchical_access: str = None,
+        hierarchical_access: List[str] = None,
         owner_ids: List[str] = None,
     ) -> Optional[Assistant]:
         """Update an assistant with explicit parameters."""

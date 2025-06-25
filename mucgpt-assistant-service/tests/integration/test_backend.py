@@ -18,11 +18,12 @@ headers = {
 @pytest.fixture
 def sample_assistant_create():
     """Sample assistant creation data."""
+
     return AssistantCreate(
         name="Test Assistant",
         description="A test AI assistant",
         system_prompt="You are a helpful test assistant.",
-        hierarchical_access="IT",
+        hierarchical_access=["IT"],
         temperature=0.7,
         max_output_tokens=1000,
         examples=[{"text": "Test Example", "value": "This is a test example"}],

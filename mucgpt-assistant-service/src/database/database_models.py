@@ -112,13 +112,12 @@ class AssistantVersion(Base):
 
 
 class Assistant(Base):
-    __tablename__ = "assistants"
-
-    # Use UUID version 4 (random) as the primary key
+    __tablename__ = "assistants"  # Use UUID version 4 (random) as the primary key
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    hierarchical_access = Column(String(1000))
+    hierarchical_access = Column(JSON, default=list)
 
     versions = relationship(
         "AssistantVersion",
@@ -137,11 +136,20 @@ class Assistant(Base):
 
     def is_allowed_for_user(self, department: str) -> bool:
         """Check if a user with a given department is allowed to use this assistant."""
-        if not self.hierarchical_access or self.hierarchical_access == "":
-            return True  # Allow access if department matches exactly or starts with hierarchical_access followed by a delimiter
-        return department == self.hierarchical_access or department.startswith(
-            self.hierarchical_access + "-"
-        )
+        # If no hierarchical access restrictions are set, allow everyone
+        if not self.hierarchical_access or len(self.hierarchical_access) == 0:
+            return True
+
+        # Check if department matches any of the hierarchical access paths
+        for access_path in self.hierarchical_access:
+            if (
+                department == access_path
+                or department.startswith(access_path + "-")
+                or department.startswith(access_path + "/")
+            ):
+                return True
+
+        return False
 
     @property
     def latest_version(self) -> Optional["AssistantVersion"]:

@@ -347,7 +347,11 @@ class AssistantResponse(BaseModel):
     like ID, timestamps, and related entities (tools and owners).
     """
 
-    id: int = Field(..., description="Unique identifier for the assistant", example=1)
+    id: str = Field(
+        ...,
+        description="Unique identifier for the assistant (UUID v4)",
+        example="123e4567-e89b-12d3-a456-426614174000",
+    )
     created_at: datetime = Field(
         ...,
         description="Timestamp when the assistant was created",
@@ -376,7 +380,7 @@ class AssistantResponse(BaseModel):
         from_attributes = True
         json_schema_extra = {
             "example": {
-                "id": 1,
+                "id": "123e4567-e89b-12d3-a456-426614174000",
                 "created_at": "2025-06-18T10:30:00Z",
                 "updated_at": "2025-06-18T15:45:00Z",
                 "hierarchical_access": "department-underdepartment-underunderdepartment",

@@ -204,7 +204,7 @@ async def createBot(
     },
 )
 async def deleteBot(
-    id: int,
+    id: str,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
@@ -250,7 +250,7 @@ async def deleteBot(
     },
 )
 async def updateBot(
-    id: int,
+    id: str,
     assistant_update: AssistantUpdate,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
@@ -437,7 +437,7 @@ async def getAllBots(
     },
 )
 async def getBot(
-    id: int,
+    id: str,
     db: AsyncSession = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):
@@ -571,7 +571,7 @@ async def getUserBots(
     },
 )
 async def get_assistant_version(
-    id: int,
+    id: str,
     version: int,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),

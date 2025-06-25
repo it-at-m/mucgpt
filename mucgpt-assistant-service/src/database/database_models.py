@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Optional, TypeVar
 
@@ -24,7 +25,7 @@ assistant_owners = Table(
     Base.metadata,
     Column(
         "assistant_id",
-        Integer,
+        String(36),
         ForeignKey("assistants.id", ondelete="CASCADE"),
         primary_key=True,
     ),
@@ -61,7 +62,7 @@ class AssistantVersion(Base):
 
     id = Column(Integer, primary_key=True)
     assistant_id = Column(
-        Integer, ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+        String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
     )
     version = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -113,7 +114,8 @@ class AssistantVersion(Base):
 class Assistant(Base):
     __tablename__ = "assistants"
 
-    id = Column(Integer, primary_key=True)
+    # Use UUID version 4 (random) as the primary key
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     hierarchical_access = Column(String(1000))

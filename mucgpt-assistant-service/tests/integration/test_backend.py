@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from src.api.api_models import (
     AssistantCreate,
@@ -73,14 +75,22 @@ def test_create_bot_success(sample_assistant_create, test_client):
         "bot/create", json=sample_assistant_create.model_dump(), headers=headers
     )
 
-    assert response.status_code == 200
-
-    # Parse the response into the API model
+    assert response.status_code == 200  # Parse the response into the API model
     response_data = response.json()
-    assistant_response = AssistantResponse.model_validate(response_data)
-
-    # Assert using the model properties
+    assistant_response = AssistantResponse.model_validate(
+        response_data
+    )  # Assert using the model properties
     assert assistant_response.id is not None
+    assert isinstance(assistant_response.id, str)
+    # Verify it's a valid UUID v4
+    try:
+        uuid_obj = uuid.UUID(assistant_response.id, version=4)
+        assert (
+            str(uuid_obj) == assistant_response.id
+        )  # Ensures it's a valid string representation
+        assert uuid_obj.version == 4  # Ensures it's version 4
+    except ValueError:
+        pytest.fail(f"Invalid UUID4: {assistant_response.id}")
     assert assistant_response.latest_version is not None
     assert assistant_response.latest_version.name == sample_assistant_create.name
     assert (

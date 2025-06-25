@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional
 
 from sqlalchemy import delete, func, insert, select
@@ -39,7 +40,7 @@ class AssistantRepository(Repository[Assistant]):
         return []
 
     async def get_assistant_version(
-        self, assistant_id: int, version: int
+        self, assistant_id: str, version: int
     ) -> Optional[AssistantVersion]:
         """Gets a specific version of an assistant."""
         result = await self.session.execute(
@@ -104,7 +105,8 @@ class AssistantRepository(Repository[Assistant]):
 
         This means that a user from the department ITM-KM-DI is allowed to use this assistant.
         But a user from the department ITM-AB-DI is not allowed to use this assistant.
-        """  # Query for assistants where:
+        """
+        # Query for assistants where:
         # Either hierarchical_access is None/empty (available to all) OR
         # the department matches exactly OR department starts with hierarchical_access followed by a delimiter
         from sqlalchemy import literal
@@ -136,7 +138,11 @@ class AssistantRepository(Repository[Assistant]):
     ) -> Assistant:
         """Create a new assistant with explicit parameters."""
         try:
-            assistant = Assistant(hierarchical_access=hierarchical_access)
+            # Generate a UUID version 4 (random) for the assistant
+            assistant_id = str(uuid.uuid4())  # Using version 4 (random) UUID
+            assistant = Assistant(
+                id=assistant_id, hierarchical_access=hierarchical_access
+            )
             self.session.add(assistant)
 
             # Flush to get the assistant ID
@@ -171,7 +177,7 @@ class AssistantRepository(Repository[Assistant]):
 
     async def update(
         self,
-        assistant_id: int,
+        assistant_id: str,
         hierarchical_access: str = None,
         owner_ids: List[str] = None,
     ) -> Optional[Assistant]:
@@ -182,7 +188,8 @@ class AssistantRepository(Repository[Assistant]):
                 if hierarchical_access is not None:
                     assistant.hierarchical_access = hierarchical_access
 
-                if owner_ids is not None:  # Clear existing owners using direct delete
+                if owner_ids is not None:
+                    # Clear existing owners using direct delete
                     delete_stmt = delete(assistant_owners).where(
                         assistant_owners.c.assistant_id == assistant_id
                     )
@@ -214,7 +221,7 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-    async def get_with_owners(self, assistant_id: int) -> Optional[Assistant]:
+    async def get_with_owners(self, assistant_id: str) -> Optional[Assistant]:
         """Get assistant with eagerly loaded owners."""
         result = await self.session.execute(
             select(Assistant)
@@ -223,7 +230,7 @@ class AssistantRepository(Repository[Assistant]):
         )
         return result.scalars().first()
 
-    async def get_owners_count(self, assistant_id: int) -> int:
+    async def get_owners_count(self, assistant_id: str) -> int:
         """Get the count of owners for an assistant."""
         result = await self.session.execute(
             select(func.count(assistant_owners.c.lhmobjektID)).where(
@@ -232,7 +239,7 @@ class AssistantRepository(Repository[Assistant]):
         )
         return result.scalar() or 0
 
-    async def get_latest_version(self, assistant_id: int) -> Optional[AssistantVersion]:
+    async def get_latest_version(self, assistant_id: str) -> Optional[AssistantVersion]:
         """Get the latest version for an assistant safely without lazy loading."""
         try:
             result = await self.session.execute(

@@ -121,10 +121,20 @@ async def createBot(
         )  # Add tools if specified
         if assistant.tools:
             for tool_data in assistant.tools:
+                # Handle both dictionary and ToolBase objects
+                tool_id = (
+                    tool_data.get("id") if isinstance(tool_data, dict) else tool_data.id
+                )
+                tool_config = (
+                    tool_data.get("config")
+                    if isinstance(tool_data, dict)
+                    else tool_data.config
+                )
+
                 assistant_tool = AssistantTool(
                     assistant_version=first_version,
-                    tool_id=tool_data.id,
-                    config=tool_data.config,
+                    tool_id=tool_id,
+                    config=tool_config,
                 )
                 db.add(assistant_tool)
 
@@ -136,9 +146,7 @@ async def createBot(
         assistant_with_owners = await assistant_repo.get_with_owners(new_assistant.id)
         latest_version = await assistant_repo.get_latest_version(new_assistant.id)
 
-        # Create explicit response model
-
-        # Build AssistantVersionResponse
+        # Create explicit response model        # Build AssistantVersionResponse
         assistant_version_response = AssistantVersionResponse(
             id=latest_version.id,
             version=latest_version.version,
@@ -152,7 +160,7 @@ async def createBot(
             examples=latest_version.examples or [],
             quick_prompts=latest_version.quick_prompts or [],
             tags=latest_version.tags or [],
-            tools=latest_version.tools or [],
+            tools=assistant_repo.get_tools_from_version(latest_version),
             owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         )
 
@@ -331,7 +339,7 @@ async def updateBot(
         examples=latest_version.examples or [],
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
-        tools=latest_version.tools or [],
+        tools=assistant_repo.get_tools_from_version(latest_version),
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 
@@ -395,7 +403,7 @@ async def getAllBots(
                 examples=latest_version.examples or [],
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
-                tools=latest_version.tools or [],
+                tools=assistant_repo.get_tools_from_version(latest_version),
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             )
 
@@ -462,7 +470,7 @@ async def getBot(
         examples=latest_version.examples or [],
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
-        tools=latest_version.tools or [],
+        tools=assistant_repo.get_tools_from_version(latest_version),
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 
@@ -525,7 +533,7 @@ async def getUserBots(
                 examples=latest_version.examples or [],
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
-                tools=latest_version.tools or [],
+                tools=assistant_repo.get_tools_from_version(latest_version),
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             )
 
@@ -599,7 +607,7 @@ async def get_assistant_version(
         examples=assistant_version.examples or [],
         quick_prompts=assistant_version.quick_prompts or [],
         tags=assistant_version.tags or [],
-        tools=assistant_version.tools or [],
+        tools=assistant_repo.get_tools_from_version(assistant_version),
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 

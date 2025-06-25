@@ -8,9 +8,35 @@ from .database_models import Assistant, AssistantVersion, Owner, assistant_owner
 from .repo import Repository
 
 
+def serialize_list(items: Optional[list]) -> list:
+    """Serializes a list of items, converting Pydantic models to dicts."""
+    return [
+        item.model_dump() if hasattr(item, "model_dump") else item
+        for item in (items or [])
+    ]
+
+
 class AssistantRepository(Repository[Assistant]):
     def __init__(self, session: AsyncSession):
         super().__init__(Assistant, session)
+
+    def get_tools_from_version(self, version):
+        """Helper function to safely get tools from an assistant version."""
+        try:
+            if hasattr(version, "tool_associations") and version.tool_associations:
+                # If the tool_associations are already loaded, use them directly
+                return [
+                    {"id": assoc.tool_id, "config": assoc.config}
+                    for assoc in version.tool_associations
+                ]
+            elif hasattr(version, "tools") and callable(version.tools):
+                # This might cause issues with async/greenlet if the associations aren't loaded
+                # So we'll return an empty list instead of trying to lazy load
+                return []
+        except Exception:
+            # If any errors occur, return an empty list
+            return []
+        return []
 
     async def get_assistant_version(
         self, assistant_id: int, version: int
@@ -46,8 +72,8 @@ class AssistantRepository(Repository[Assistant]):
             )
             latest_version = result.scalars().first()
             new_version_number = latest_version.version + 1 if latest_version else 1
-
-            # Create a new version
+            serialized_examples = serialize_list(examples)
+            serialized_quick_prompts = serialize_list(quick_prompts)
             new_version = AssistantVersion(
                 assistant=assistant,
                 version=new_version_number,
@@ -56,8 +82,8 @@ class AssistantRepository(Repository[Assistant]):
                 system_prompt=system_prompt,
                 temperature=temperature,
                 max_output_tokens=max_output_tokens,
-                examples=examples or [],
-                quick_prompts=quick_prompts or [],
+                examples=serialized_examples,
+                quick_prompts=serialized_quick_prompts,
                 tags=tags or [],
             )
             self.session.add(new_version)

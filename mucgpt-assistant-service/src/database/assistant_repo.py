@@ -143,6 +143,17 @@ class AssistantRepository(Repository[Assistant]):
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def is_owner(self, assistant_id: str, lhmobjektID: str) -> bool:
+        """Check if the given lhmobjektID is an owner of the specified assistant."""
+        stmt = (
+            select(assistant_owners)
+            .where(assistant_owners.c.assistant_id == assistant_id)
+            .where(assistant_owners.c.lhmobjektID == lhmobjektID)
+        )
+
+        result = await self.session.execute(stmt)
+        return result.first() is not None
+
     async def create(
         self, hierarchical_access: List[str] = None, owner_ids: List[str] = None
     ) -> Assistant:

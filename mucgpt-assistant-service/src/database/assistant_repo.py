@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import attributes, selectinload
 
 from utils import serialize_list
 
@@ -18,16 +18,13 @@ class AssistantRepository(Repository[Assistant]):
     def get_tools_from_version(self, version):
         """Helper function to safely get tools from an assistant version."""
         try:
-            if hasattr(version, "tool_associations") and version.tool_associations:
+            # Check if 'tool_associations' is loaded without triggering a lazy load
+            if "tool_associations" not in attributes.instance_state(version).unloaded:
                 # If the tool_associations are already loaded, use them directly
                 return [
                     {"id": assoc.tool_id, "config": assoc.config}
                     for assoc in version.tool_associations
                 ]
-            elif hasattr(version, "tools") and callable(version.tools):
-                # This might cause issues with async/greenlet if the associations aren't loaded
-                # So we'll return an empty list instead of trying to lazy load
-                return []
         except Exception:
             # If any errors occur, return an empty list
             return []

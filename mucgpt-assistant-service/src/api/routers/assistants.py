@@ -213,7 +213,7 @@ async def updateBot(
     if not assistant:
         raise AssistantNotFoundException(id)
 
-    if not assistant.is_owner(user_info.lhm_object_id):
+    if not await assistant_repo.is_owner(id, user_info.lhm_object_id):
         raise NotOwnerException()
 
     # Get latest version safely

@@ -1803,3 +1803,283 @@ async def test_get_all_bots_performance_with_many_assistants(
         assistant_response = AssistantResponse.model_validate(assistant_data)
         assert assistant_response.id is not None
         assert assistant_response.latest_version is not None
+
+
+# ===== GET SPECIFIC BOT TESTS =====
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_bot_success(test_client, test_db_session):
+    """Test successful retrieval of a specific assistant."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant
+    assistant = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123"],
+    )
+
+    # Create first version
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Get Test Assistant",
+        system_prompt="You are a test assistant for get operations.",
+        description="A test assistant for testing get operations",
+        temperature=0.7,
+        max_output_tokens=1000,
+        examples=[{"text": "Example", "value": "Value"}],
+        quick_prompts=[
+            {"label": "Test", "prompt": "Test prompt", "tooltip": "Test tooltip"}
+        ],
+        tags=["get-test", "test"],
+    )
+
+    # Add a tool
+    version = await assistant_repo.get_latest_version(assistant.id)
+    tool = AssistantTool(
+        assistant_version=version,
+        tool_id="WEB_SEARCH",
+        config={"max_results": 5},
+    )
+    test_db_session.add(tool)
+
+    await test_db_session.commit()
+
+    response = test_client.get(f"bot/{assistant.id}", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assistant_response = AssistantResponse.model_validate(response_data)
+
+    # Verify basic data
+    assert assistant_response.id == assistant.id
+    assert assistant_response.latest_version.name == "Get Test Assistant"
+    assert (
+        assistant_response.latest_version.description
+        == "A test assistant for testing get operations"
+    )
+    assert assistant_response.latest_version.temperature == 0.7
+    assert assistant_response.latest_version.max_output_tokens == 1000
+
+    # Verify complex data
+    assert len(assistant_response.latest_version.examples) == 1
+    assert assistant_response.latest_version.examples[0].text == "Example"
+
+    assert len(assistant_response.latest_version.quick_prompts) == 1
+    assert assistant_response.latest_version.quick_prompts[0].label == "Test"
+
+    assert len(assistant_response.latest_version.tags) == 2
+    assert "get-test" in assistant_response.latest_version.tags
+
+    # Verify tool
+    assert len(assistant_response.latest_version.tools) == 1
+    assert assistant_response.latest_version.tools[0].id == "WEB_SEARCH"
+
+    # Verify owner
+    assert "test_user_123" in assistant_response.owner_ids
+
+
+@pytest.mark.integration
+def test_get_bot_not_found(test_client):
+    """Test retrieving a non-existent assistant."""
+    non_existent_id = "00000000-0000-4000-8000-000000000000"
+
+    response = test_client.get(f"bot/{non_existent_id}", headers=headers)
+
+    assert response.status_code == 404
+    error_data = response.json()
+    assert "detail" in error_data
+    assert non_existent_id in error_data["detail"]
+
+
+@pytest.mark.integration
+def test_get_bot_invalid_uuid(test_client):
+    """Test retrieving with invalid UUID format."""
+    invalid_id = "invalid-uuid-format"
+
+    response = test_client.get(f"bot/{invalid_id}", headers=headers)
+
+    # This might return 404 or 422 depending on FastAPI's UUID validation
+    assert response.status_code in [404, 422]
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_bot_access_control(test_db_session, test_client):
+    """Test access control for retrieving assistants."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with different department access
+    assistant = await assistant_repo.create(
+        hierarchical_access=["HR-Department"],  # Different from test user's department
+        owner_ids=["other_user"],  # Not owned by test user
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Restricted Assistant",
+        system_prompt="You are a restricted assistant.",
+        description="An assistant with access restrictions",
+        temperature=0.5,
+        max_output_tokens=800,
+        examples=[],
+        quick_prompts=[],
+        tags=["restricted"],
+    )
+
+    await test_db_session.commit()
+
+    # Try to retrieve the assistant
+    response = test_client.get(f"bot/{assistant.id}", headers=headers)
+
+    # Should be forbidden due to hierarchical access control
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_bot_with_unicode_content(test_db_session, test_client):
+    """Test retrieving an assistant with Unicode content."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with Unicode content
+    assistant = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123"],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Unicode Assistant 🤖",
+        system_prompt="You are a helpful assistant. Vous êtes très utile! 您好!",
+        description="An assistant with émojis and spëcial characters: 中文",
+        temperature=0.7,
+        max_output_tokens=1000,
+        examples=[{"text": "Beispiel 🔍", "value": "Wert 📚"}],
+        quick_prompts=[
+            {"label": "翻译", "prompt": "请翻译这段文字", "tooltip": "快速翻译"}
+        ],
+        tags=["unicode", "国际化", "🌍"],
+    )
+
+    await test_db_session.commit()
+
+    # Retrieve the assistant
+    response = test_client.get(f"bot/{assistant.id}", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assistant_response = AssistantResponse.model_validate(response_data)
+
+    # Verify Unicode content was preserved
+    assert assistant_response.latest_version.name == "Unicode Assistant 🤖"
+    assert (
+        "Vous êtes très utile! 您好!" in assistant_response.latest_version.system_prompt
+    )
+    assert (
+        "émojis and spëcial characters: 中文"
+        in assistant_response.latest_version.description
+    )
+    assert assistant_response.latest_version.examples[0].text == "Beispiel 🔍"
+    assert assistant_response.latest_version.quick_prompts[0].label == "翻译"
+    assert "🌍" in assistant_response.latest_version.tags
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_bot_empty_fields(test_db_session, test_client):
+    """Test retrieving an assistant with empty optional fields."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with empty optional fields
+    assistant = await assistant_repo.create(
+        hierarchical_access=[],  # Empty access - public
+        owner_ids=["test_user_123"],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Minimal Assistant",
+        system_prompt="You are a minimal assistant.",
+        description="",  # Empty description
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],  # Empty examples
+        quick_prompts=[],  # Empty quick prompts
+        tags=[],  # Empty tags
+    )
+
+    await test_db_session.commit()
+
+    # Retrieve the assistant
+    response = test_client.get(f"bot/{assistant.id}", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assistant_response = AssistantResponse.model_validate(response_data)
+
+    # Verify empty fields are properly handled
+    assert assistant_response.latest_version.description == ""
+    assert assistant_response.latest_version.examples == []
+    assert assistant_response.latest_version.quick_prompts == []
+    assert assistant_response.latest_version.tags == []
+    assert assistant_response.latest_version.tools == []
+    assert assistant_response.hierarchical_access == []
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_bot_hierarchical_access(test_db_session, test_client):
+    """Test hierarchical access control for retrieving assistants."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create three assistants with different access configurations:
+
+    # 1. Parent department of user's department (should be accessible)
+    assistant1 = await assistant_repo.create(
+        hierarchical_access=["IT"],  # Parent of IT-Test-Department
+        owner_ids=["other_user"],
+    )
+
+    # 2. Child department of user's department (should NOT be accessible)
+    assistant2 = await assistant_repo.create(
+        hierarchical_access=[
+            "IT-Test-Department-SubTeam"
+        ],  # Child of user's department
+        owner_ids=["other_user"],
+    )
+
+    # 3. Completely different department path (should NOT be accessible)
+    assistant3 = await assistant_repo.create(
+        hierarchical_access=["HR-Department/Team1"],  # Different hierarchy path
+        owner_ids=["other_user"],
+    )
+
+    # Create versions for all assistants
+    for idx, assistant in enumerate([assistant1, assistant2, assistant3]):
+        await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=f"Access Test Assistant {idx + 1}",
+            system_prompt=f"You are access test assistant {idx + 1}.",
+            description=f"Testing access control scenario {idx + 1}",
+            temperature=0.5,
+            max_output_tokens=1000,
+            examples=[],
+            quick_prompts=[],
+            tags=[f"access-test-{idx + 1}"],
+        )
+
+    await test_db_session.commit()
+
+    # Test access to parent department assistant (should be allowed)
+    response1 = test_client.get(f"bot/{assistant1.id}", headers=headers)
+    assert response1.status_code == 200
+
+    # Test access to child department assistant (should be forbidden)
+    response2 = test_client.get(f"bot/{assistant2.id}", headers=headers)
+    assert response2.status_code == 403
+
+    # Test access to different department path (should be forbidden)
+    response3 = test_client.get(f"bot/{assistant3.id}", headers=headers)
+    assert response3.status_code == 403

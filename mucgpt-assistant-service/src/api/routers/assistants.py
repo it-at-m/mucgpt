@@ -385,6 +385,7 @@ async def getAllBots(
     responses={
         200: {"description": "Detailed information about the requested assistant"},
         401: {"description": "Unauthorized"},
+        403: {"description": "User is not allowed to access the assistant"},
         404: {"description": "Assistant not found"},
     },
 )

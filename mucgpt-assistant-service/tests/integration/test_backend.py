@@ -10,6 +10,7 @@ from src.api.api_models import (
     ToolBase,
 )
 from src.database.assistant_repo import AssistantRepository
+from src.database.database_models import AssistantTool
 
 # Headers for authentication
 headers = {
@@ -1234,7 +1235,7 @@ async def test_update_bot_modify_owners(test_client, test_db_session):
     response_data = update_response.json()
     updated_response = AssistantResponse.model_validate(response_data)
 
-    # Verify owners were updated
+    # Verify owners were updated (note: current user should still be included)
     updated_owner_ids = updated_response.owner_ids
     assert "test_user_123" in updated_owner_ids
     assert "initial_owner_1" in updated_owner_ids
@@ -1329,3 +1330,476 @@ async def test_update_bot_multiple_owners_can_update(test_client, test_db_sessio
     assert updated_response_2.latest_version.description == "Updated again by same user"
     assert updated_response_2.latest_version.temperature == 0.9
     assert updated_response_2.latest_version.version == 3
+
+
+# ===== GET ALL BOTS TESTS =====
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_empty_list(test_client, test_db_session):
+    """Test getting all bots when no bots exist."""
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert isinstance(response_data, list)
+    assert len(response_data) == 0
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_single_bot(test_client, test_db_session):
+    """Test getting all bots with a single bot."""
+    # Create an assistant using repository directly
+    assistant_repo = AssistantRepository(test_db_session)
+
+    assistant = await assistant_repo.create(
+        hierarchical_access=[
+            "IT-Test-Department"
+        ],  # Matches the test user's department
+        owner_ids=["test_user_123"],
+    )
+
+    # Create first version
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Single Test Assistant",
+        system_prompt="You are a single test assistant.",
+        description="A single test AI assistant",
+        temperature=0.7,
+        max_output_tokens=1000,
+        examples=[{"text": "Example", "value": "Value"}],
+        quick_prompts=[{"label": "Label", "prompt": "Prompt", "tooltip": "Tooltip"}],
+        tags=["single", "test"],
+    )
+    await test_db_session.commit()
+
+    # Get all bots
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert isinstance(response_data, list)
+    assert len(response_data) == 1
+
+    # Validate the response structure
+    assistant_response = AssistantResponse.model_validate(response_data[0])
+    assert assistant_response.id == assistant.id
+    assert assistant_response.latest_version.name == "Single Test Assistant"
+    assert assistant_response.latest_version.version == 1
+    assert "test_user_123" in assistant_response.owner_ids
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_multiple_bots(test_client, test_db_session):
+    """Test getting all bots with multiple bots."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create multiple assistants
+    assistant1 = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123"],
+    )
+
+    assistant2 = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123", "other_user"],
+    )
+
+    assistant3 = await assistant_repo.create(
+        hierarchical_access=[],  # Empty access - should be visible to all
+        owner_ids=["different_user"],
+    )
+
+    # Create versions for all assistants
+    await assistant_repo.create_assistant_version(
+        assistant=assistant1,
+        name="First Assistant",
+        system_prompt="You are the first assistant.",
+        description="First assistant description",
+        temperature=0.5,
+        max_output_tokens=800,
+        examples=[],
+        quick_prompts=[],
+        tags=["first"],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant2,
+        name="Second Assistant",
+        system_prompt="You are the second assistant.",
+        description="Second assistant description",
+        temperature=0.8,
+        max_output_tokens=1200,
+        examples=[],
+        quick_prompts=[],
+        tags=["second"],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant3,
+        name="Third Assistant",
+        system_prompt="You are the third assistant.",
+        description="Third assistant description",
+        temperature=0.3,
+        max_output_tokens=600,
+        examples=[],
+        quick_prompts=[],
+        tags=["third"],
+    )
+
+    await test_db_session.commit()
+
+    # Get all bots
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert isinstance(response_data, list)
+    assert len(response_data) == 3  # All 3 should be accessible
+
+    # Validate all assistants are present
+    assistant_names = [
+        assistant["latest_version"]["name"] for assistant in response_data
+    ]
+    assert "First Assistant" in assistant_names
+    assert "Second Assistant" in assistant_names
+    assert "Third Assistant" in assistant_names
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_hierarchical_access_filtering(test_client, test_db_session):
+    """Test that hierarchical access filtering works correctly."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistants with different hierarchical access
+    # Test user department is "IT-Test-Department"
+
+    # Should be accessible - exact match
+    assistant1 = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["other_user"],
+    )
+
+    # Should be accessible - parent department
+    assistant2 = await assistant_repo.create(
+        hierarchical_access=["IT"],  # Parent of IT-Test-Department
+        owner_ids=["other_user"],
+    )
+
+    # Should NOT be accessible - different department
+    assistant3 = await assistant_repo.create(
+        hierarchical_access=["HR-Department"],
+        owner_ids=["other_user"],
+    )
+
+    # Should be accessible - empty access (available to all)
+    assistant4 = await assistant_repo.create(
+        hierarchical_access=[],
+        owner_ids=["other_user"],
+    )
+
+    # Create versions
+    await assistant_repo.create_assistant_version(
+        assistant=assistant1,
+        name="Exact Match Assistant",
+        system_prompt="Exact match",
+        description="",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=[],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant2,
+        name="Parent Department Assistant",
+        system_prompt="Parent department",
+        description="",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=[],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant3,
+        name="Different Department Assistant",
+        system_prompt="Different department",
+        description="",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=[],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant4,
+        name="Public Assistant",
+        system_prompt="Public access",
+        description="",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=[],
+    )
+
+    await test_db_session.commit()
+
+    # Get all bots
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert isinstance(response_data, list)
+
+    # Should only return 3 assistants (exact match, parent, and public)
+    assistant_names = [
+        assistant["latest_version"]["name"] for assistant in response_data
+    ]
+    assert "Exact Match Assistant" in assistant_names
+    assert "Parent Department Assistant" in assistant_names
+    assert "Public Assistant" in assistant_names
+    assert "Different Department Assistant" not in assistant_names
+    assert len(response_data) == 3
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_with_complex_data(test_client, test_db_session):
+    """Test getting all bots with complex data structures (tools, examples, etc.)."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with complex data
+    assistant = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123", "co_owner"],
+    )
+
+    # Create version with complex data
+    version = await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Complex Assistant",
+        system_prompt="You are a complex assistant with many features.",
+        description="A very detailed assistant with lots of features",
+        temperature=0.8,
+        max_output_tokens=2000,
+        examples=[
+            {"text": "Example 1", "value": "Value 1"},
+            {"text": "Example 2", "value": "Value 2"},
+            {"text": "Example 3", "value": "Value 3"},
+        ],
+        quick_prompts=[
+            {
+                "label": "Summarize",
+                "prompt": "Please summarize",
+                "tooltip": "Quick summary",
+            },
+            {
+                "label": "Explain",
+                "prompt": "Please explain",
+                "tooltip": "Quick explanation",
+            },
+        ],
+        tags=["complex", "feature-rich", "advanced", "multi-tool"],
+    )
+
+    tool1 = AssistantTool(
+        assistant_version=version,
+        tool_id="WEB_SEARCH",
+        config={"max_results": 10, "timeout": 30},
+    )
+    tool2 = AssistantTool(
+        assistant_version=version,
+        tool_id="CALCULATOR",
+        config={"precision": 6, "mode": "scientific"},
+    )
+    test_db_session.add(tool1)
+    test_db_session.add(tool2)
+
+    await test_db_session.commit()
+
+    # Re-fetch to confirm tools are saved before API call
+    retrieved_version = await assistant_repo.get_latest_version(assistant.id)
+    assert retrieved_version is not None
+    assert len(retrieved_version.tool_associations) == 2
+
+    # Get all bots
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert len(response_data) == 1
+
+    # Validate complex data structure
+    assistant_response = AssistantResponse.model_validate(response_data[0])
+
+    # Check basic info
+    assert assistant_response.latest_version.name == "Complex Assistant"
+    assert assistant_response.latest_version.temperature == 0.8
+    assert assistant_response.latest_version.max_output_tokens == 2000  # Check examples
+    assert len(assistant_response.latest_version.examples) == 3
+    example_texts = [ex.text for ex in assistant_response.latest_version.examples]
+    assert "Example 1" in example_texts
+    assert "Example 2" in example_texts
+    assert "Example 3" in example_texts
+
+    # Check quick prompts
+    assert len(assistant_response.latest_version.quick_prompts) == 2
+    prompt_labels = [qp.label for qp in assistant_response.latest_version.quick_prompts]
+    assert "Summarize" in prompt_labels
+    assert "Explain" in prompt_labels  # Check tags
+    assert len(assistant_response.latest_version.tags) == 4
+    assert "complex" in assistant_response.latest_version.tags
+    assert "feature-rich" in assistant_response.latest_version.tags
+
+    # Check tools
+    assert len(assistant_response.latest_version.tools) == 2
+    tool_ids = {tool.id for tool in assistant_response.latest_version.tools}
+    assert "WEB_SEARCH" in tool_ids
+    assert "CALCULATOR" in tool_ids
+
+    # Check owners
+    assert len(assistant_response.owner_ids) == 2
+    assert "test_user_123" in assistant_response.owner_ids
+    assert "co_owner" in assistant_response.owner_ids
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_with_multiple_versions(test_client, test_db_session):
+    """Test that getAllBots returns only the latest version of each assistant."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant
+    assistant = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123"],
+    )  # Create multiple versions
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Version 1 Name",
+        system_prompt="Version 1 prompt",
+        description="Version 1 description",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=["v1"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Version 2 Name",
+        system_prompt="Version 2 prompt",
+        description="Version 2 description",
+        temperature=0.7,
+        max_output_tokens=1500,
+        examples=[],
+        quick_prompts=[],
+        tags=["v2"],
+    )
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Latest Version Name",
+        system_prompt="Latest version prompt",
+        description="Latest version description",
+        temperature=0.9,
+        max_output_tokens=2000,
+        examples=[],
+        quick_prompts=[],
+        tags=["latest"],
+    )
+
+    await test_db_session.commit()
+
+    # Get all bots
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert len(response_data) == 1
+
+    # Should return only the latest version
+    assistant_response = AssistantResponse.model_validate(response_data[0])
+    assert assistant_response.latest_version.name == "Latest Version Name"
+    assert assistant_response.latest_version.version == 3
+    assert assistant_response.latest_version.temperature == 0.9
+    assert assistant_response.latest_version.max_output_tokens == 2000
+    assert assistant_response.latest_version.tags == ["latest"]
+
+
+@pytest.mark.integration
+def test_get_all_bots_response_format(test_client):
+    """Test that getAllBots returns the correct response format even when empty."""
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+
+    # Should be a list
+    assert isinstance(response_data, list)
+
+    # Content-Type should be JSON
+    assert "application/json" in response.headers.get("content-type", "")
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_all_bots_performance_with_many_assistants(
+    test_client, test_db_session
+):
+    """Test getAllBots performance with a larger number of assistants."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create many assistants
+    num_assistants = 50
+    for i in range(num_assistants):
+        assistant = await assistant_repo.create(
+            hierarchical_access=["IT-Test-Department"] if i % 2 == 0 else [],
+            owner_ids=[f"owner_{i}", "test_user_123"],
+        )
+
+        await assistant_repo.create_assistant_version(
+            assistant=assistant,
+            name=f"Assistant {i}",
+            system_prompt=f"You are assistant number {i}.",
+            description=f"Description for assistant {i}",
+            temperature=0.5 + (i * 0.01),  # Vary temperature slightly
+            max_output_tokens=1000 + (i * 10),  # Vary token count
+            examples=[{"text": f"Example {i}", "value": f"Value {i}"}],
+            quick_prompts=[
+                {"label": f"Label {i}", "prompt": f"Prompt {i}", "tooltip": f"Tip {i}"}
+            ],
+            tags=[f"tag_{i}", "performance_test"],
+        )
+
+    await test_db_session.commit()
+
+    # Get all bots - should handle many assistants efficiently
+    response = test_client.get("bot", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+
+    # Should return all accessible assistants
+    assert len(response_data) == num_assistants
+
+    # Validate first and last assistants to ensure data integrity
+    assistant_names = [
+        assistant["latest_version"]["name"] for assistant in response_data
+    ]
+    assert "Assistant 0" in assistant_names
+    assert f"Assistant {num_assistants - 1}" in assistant_names
+
+    # All should be valid AssistantResponse objects
+    for assistant_data in response_data:
+        assistant_response = AssistantResponse.model_validate(assistant_data)
+        assert assistant_response.id is not None
+        assert assistant_response.latest_version is not None

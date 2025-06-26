@@ -17,27 +17,28 @@ class AssistantRepository(Repository[Assistant]):
 
     def get_tools_from_version(self, version):
         """Helper function to safely get tools from an assistant version."""
+        if not version:
+            return []
         try:
             # Check if 'tool_associations' is loaded without triggering a lazy load
-            if "tool_associations" not in attributes.instance_state(version).unloaded:
-                # If the tool_associations are already loaded, use them directly
-                return [
-                    {"id": assoc.tool_id, "config": assoc.config}
-                    for assoc in version.tool_associations
-                ]
+            if "tool_associations" in attributes.instance_state(version).unloaded:
+                return []
+
+            return [
+                {"id": assoc.tool_id, "config": assoc.config}
+                for assoc in version.tool_associations
+            ]
         except Exception:
-            # If any errors occur, return an empty list
             return []
-        return []
 
     async def get_assistant_version(
         self, assistant_id: str, version: int
     ) -> Optional[AssistantVersion]:
         """Gets a specific version of an assistant."""
         result = await self.session.execute(
-            select(AssistantVersion).filter_by(
-                assistant_id=assistant_id, version=version
-            )
+            select(AssistantVersion)
+            .options(selectinload(AssistantVersion.tool_associations))
+            .filter_by(assistant_id=assistant_id, version=version)
         )
         return result.scalars().first()
 
@@ -275,6 +276,7 @@ class AssistantRepository(Repository[Assistant]):
         try:
             result = await self.session.execute(
                 select(AssistantVersion)
+                .options(selectinload(AssistantVersion.tool_associations))
                 .filter(AssistantVersion.assistant_id == assistant_id)
                 .order_by(AssistantVersion.version.desc())
                 .limit(1)

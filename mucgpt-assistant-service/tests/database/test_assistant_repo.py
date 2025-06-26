@@ -312,6 +312,14 @@ class TestAssistantRepository:
         """Test getting assistants by non-existing owner returns empty list."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
+        # Create some assistants to ensure the database isn't empty
+        await assistant_repo.create(
+            hierarchical_access=["ITM-TEST1"], owner_ids=["owner1"]
+        )
+        await assistant_repo.create(
+            hierarchical_access=["ITM-TEST2"], owner_ids=["owner2"]
+        )
+        await db_session.commit()
 
         # Act
         result = await assistant_repo.get_assistants_by_owner(

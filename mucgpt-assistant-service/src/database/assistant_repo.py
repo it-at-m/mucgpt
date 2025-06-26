@@ -5,16 +5,10 @@ from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from utils import serialize_list
+
 from .database_models import Assistant, AssistantVersion, Owner, assistant_owners
 from .repo import Repository
-
-
-def serialize_list(items: Optional[list]) -> list:
-    """Serializes a list of items, converting Pydantic models to dicts."""
-    return [
-        item.model_dump() if hasattr(item, "model_dump") else item
-        for item in (items or [])
-    ]
 
 
 class AssistantRepository(Repository[Assistant]):
@@ -122,9 +116,7 @@ class AssistantRepository(Repository[Assistant]):
                 or len(assistant.hierarchical_access) == 0
             ):
                 matching_assistants.append(assistant)
-                continue
-
-            # Check each path in the hierarchical_access array
+                continue  # Check each path in the hierarchical_access array
             for path in assistant.hierarchical_access:
                 # Exact match
                 if department == path:
@@ -158,8 +150,17 @@ class AssistantRepository(Repository[Assistant]):
         try:
             # Generate a UUID version 4 (random) for the assistant
             assistant_id = str(uuid.uuid4())  # Using version 4 (random) UUID
+            # Clean hierarchical_access: remove empty strings, None values, and whitespace-only strings
+            cleaned_hierarchical_access = []
+            if hierarchical_access:
+                cleaned_hierarchical_access = [
+                    path.strip()
+                    for path in hierarchical_access
+                    if path is not None and str(path).strip()
+                ]
+
             assistant = Assistant(
-                id=assistant_id, hierarchical_access=hierarchical_access or []
+                id=assistant_id, hierarchical_access=cleaned_hierarchical_access
             )
             self.session.add(assistant)
 
@@ -202,7 +203,13 @@ class AssistantRepository(Repository[Assistant]):
             assistant = await self.get(assistant_id)
             if assistant:
                 if hierarchical_access is not None:
-                    assistant.hierarchical_access = hierarchical_access
+                    # Clean hierarchical_access: remove empty strings, None values, and whitespace-only strings
+                    cleaned_hierarchical_access = [
+                        path.strip()
+                        for path in hierarchical_access
+                        if path is not None and str(path).strip()
+                    ]
+                    assistant.hierarchical_access = cleaned_hierarchical_access
 
                 if owner_ids is not None:
                     # Clear existing owners using direct delete

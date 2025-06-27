@@ -1,4 +1,4 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular, Checkmark24Filled } from "@fluentui/react-icons";
+import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular, Checkmark24Filled, CloudArrowUp24Filled } from "@fluentui/react-icons";
 import {
     Button,
     Slider,
@@ -16,7 +16,10 @@ import {
     DialogContent,
     DialogSurface,
     DialogTitle,
-    DialogTrigger
+    DialogTrigger,
+    SelectionEvents,
+    OptionOnSelectData,
+    Checkbox
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
@@ -28,7 +31,8 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { Bot } from "../../api";
+import { Bot, createCommunityAssistantApi } from "../../api";
+import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
 
 interface Props {
     bot: Bot;
@@ -63,6 +67,9 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const [publish, setPublish] = useState<boolean>(bot.publish);
     const [isOwner, setIsOwner] = useState<boolean>(!bot.publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+    const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
+    const [publishDepartments, setPublishDepartments] = useState<string[]>([]);
+    const [invisibleChecked, setInvisibleChecked] = useState<boolean>(false);
 
     useEffect(() => {
         setMaxOutputTokens(bot.max_output_tokens);
@@ -196,8 +203,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     ? t("components.botsettingsdrawer.finish_edit")
                                     : t("components.botsettingsdrawer.edit")
                                 : isEditable
-                                  ? t("components.botsettingsdrawer.close_configutations")
-                                  : t("components.botsettingsdrawer.show_configutations")}
+                                    ? t("components.botsettingsdrawer.close_configutations")
+                                    : t("components.botsettingsdrawer.show_configutations")}
                         </Button>
                         <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -215,6 +222,123 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         ),
         [actions, isEditable, isOwner, toggleReadOnly, t, deleteDialog, minimized]
     );
+
+    // publish
+    const onPublishClick = useCallback(() => {
+        console.log({
+            name: bot.title,
+            description: bot.description,
+            system_prompt: systemPrompt,
+            temperature: bot.temperature,
+            max_output_tokens: bot.max_output_tokens,
+            tools: [],
+            owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
+            examples: bot.examples?.map((e) => ({ text: e.text, value: e.value })),
+            quick_prompts: bot.quick_prompts?.map((qp) => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
+            tags: bot.tags || [],
+            hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
+        })
+        createCommunityAssistantApi({
+            name: bot.title,
+            description: bot.description,
+            system_prompt: bot.system_message,
+            temperature: bot.temperature,
+            max_output_tokens: bot.max_output_tokens,
+            tools: [],
+            owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
+            examples: bot.examples?.map((e) => ({ text: e.text, value: e.value })),
+            quick_prompts: bot.quick_prompts?.map((qp) => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
+            tags: bot.tags || [],
+            hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
+        }).then((response) => {
+            let updatedBot: Bot = {
+                title: response.latest_version.name,
+                description: response.latest_version.description || "",
+                system_message: response.latest_version.system_prompt,
+                publish: true,
+                id: response.id,
+                temperature: response.latest_version.temperature,
+                max_output_tokens: response.latest_version.max_output_tokens,
+                examples: response.latest_version.examples || [],
+                quick_prompts: response.latest_version.quick_prompts || [],
+                version: response.latest_version.version.toString(),
+                owner_ids: response.latest_version.owner_ids ? response.latest_version.owner_ids : undefined,
+                tags: response.latest_version.tags || []
+            };
+            onBotChange(updatedBot);
+            onDeleteBot(); // Remove the old bot
+        });
+        setShowPublishDialog(false);
+    }, [bot, onBotChange, onDeleteBot, invisibleChecked, publishDepartments, createCommunityAssistantApi]);
+
+    const publishDialog = useMemo(
+        () => (
+            <Dialog modalType="alert" open={showPublishDialog}>
+                <DialogSurface className={styles.dialog}>
+                    <DialogBody className={styles.dialogContent}>
+                        <DialogTitle>Bot veröffentlichen</DialogTitle>
+                        <DialogContent>
+                            Hinweise für das Veröffentlichen eines Bots:
+                            <ul>
+                                <li>Der Bot wird für alle Nutzer:innen im System sichtbar.</li>
+                                <li>Der Bot kann von allen Nutzer:innen verwendet werden.</li>
+                                <li>Die Veröffentlichung kann nicht rückgängig gemacht werden.</li>
+                            </ul>
+                            <Checkbox
+                                label="unsichtbar veröffentlichen"
+                                checked={invisibleChecked}
+                                onChange={(_, data) => setInvisibleChecked(!!data.checked)}
+                            />
+                            <br />
+                            {invisibleChecked && (
+                                <>
+                                    <Label htmlFor="publish-link" style={{ marginRight: 8 }}>Link zum Kopieren:</Label>
+                                    <Tooltip content="In Zwischenablage kopieren" relationship="description" positioning="below">
+                                        <Button
+                                            id="publish-link"
+                                            appearance="secondary"
+                                            size="small"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/bot/${bot.id}`);
+                                            }}
+                                        >
+                                            {`${window.location.origin}/bot/${bot.id}`}
+                                        </Button>
+                                    </Tooltip>
+                                </>
+                            )}
+                            {!invisibleChecked && (<>
+                                Veröffentlichen für
+                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
+                            </>)}
+                            <br />
+                            Version: {bot.version}
+
+                        </DialogContent>
+                        <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary" size="small" onClick={() => setShowPublishDialog(false)}>
+                                    <Dismiss24Regular /> {t("components.botsettingsdrawer.deleteDialog.cancel")}
+                                </Button>
+                            </DialogTrigger>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="secondary"
+                                    size="small"
+                                    onClick={onPublishClick}
+                                >
+                                    <Checkmark24Filled /> {t("components.botsettingsdrawer.deleteDialog.confirm")}
+                                </Button>
+                            </DialogTrigger>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+        ),
+        [showPublishDialog, publishDepartments, invisibleChecked]
+    );
+
+
 
     // sidebar content
     const content = (
@@ -395,8 +519,13 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                             </Label>
                         </div>
                     </div>
+                    <Tooltip content={"veröffentlichen"} relationship="description" positioning="below">
+                        <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>{publish ? "veröffentlicht" : "veröffentlichen"}</Button>
+                    </Tooltip>
+
                 </>
             )}
+            {publishDialog}
         </>
     );
     return <Sidebar actions={actions_component} content={content}></Sidebar>;

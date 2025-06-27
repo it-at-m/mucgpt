@@ -1,17 +1,24 @@
+import { parse } from "uuid";
 import { getConfig, getXSRFToken, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AskResponse,
+    AssistantCreateInput,
+    AssistantCreateResponse,
     BrainstormRequest,
     ChatRequest,
     ChatTurn,
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
+    DepartementsResponse,
     SimplyRequest,
     SimplyResponse,
     SumRequest,
-    SumResponse
+    SumResponse,
+    AssistantResponse,
+    AssistantUpdateInput,
+    Bot
 } from "./models";
 
 const CHAT_NAME_PROMPT =
@@ -113,6 +120,13 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     return parsedResponse;
 }
 
+export async function getDepartements(): Promise<string[]> {
+    const response = await fetch(API_BASE + "departements", getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: string[] = await handleResponse(response);
+    return parsedResponse;
+}
+
 export async function createBotApi(options: CreateBotRequest): Promise<Response> {
     return await fetch(
         API_BASE + "create_bot",
@@ -160,4 +174,53 @@ export async function createChatName(
         throw Error(parsedResponse.error || "Unknown error");
     }
     return parsedResponse.content;
+}
+
+export async function createCommunityAssistantApi(input: AssistantCreateInput): Promise<AssistantCreateResponse> {
+    const response = await fetch("/api/bot/create", postConfig(input));
+    handleRedirect(response, true);
+    const parsedResponse: AssistantCreateResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function getAllCommunityAssistantsApi(): Promise<AssistantResponse[]> {
+    const response = await fetch("/api/bot", getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: AssistantResponse[] = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function getCommunityAssistantApi(id: string): Promise<AssistantResponse> {
+    const response = await fetch(`/api/bot/${id}`, getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: AssistantResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function updateCommunityAssistantApi(id: string, input: AssistantUpdateInput): Promise<AssistantResponse> {
+    const response = await fetch(`/api/bot/${id}/update`, postConfig(input));
+    handleRedirect(response, true);
+    const parsedResponse: AssistantResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function deleteCommunityAssistantApi(id: string): Promise<{ message: string }> {
+    const response = await fetch(`/api/bot/${id}/delete`, postConfig({}));
+    handleRedirect(response, true);
+    const parsedResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function getCommunityAssistantVersionApi(id: string, version: string): Promise<Bot> {
+    const response = await fetch(`/api/bot/${id}/version/${version}`, getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: Bot = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function getOwnedCommunityBots(): Promise<AssistantResponse[]> {
+    const response = await fetch("/api/bot/create", getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: AssistantResponse[] = await handleResponse(response);
+    return parsedResponse;
 }

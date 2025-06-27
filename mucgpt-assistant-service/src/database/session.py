@@ -20,6 +20,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         drivername="postgresql+asyncpg",
         username=db_config.db_user,
         host=db_config.db_host,
+        port=db_config.db_port,
         database=db_config.db_name,
         password=db_config.db_password,
     )

@@ -60,3 +60,15 @@
     align-items: center;
     padding-bottom: var(--spacingVerticalS);
 }
+.dialog {
+    width: 100%; /* Breite übernimmt die des Containers (z.B. Dropdown) */
+    height: auto; /* Keine maximale Höhe */
+    overflow: visible; /* Keine Scrollbar */
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    background: #fff;
+    position: absolute; /* Für freie Platzierung */
+    z-index: 1000;
+    left: 0; /* Optional: Positionierung anpassen */
+    top: 100%; /* Optional: direkt unter dem Dropdown */
+}

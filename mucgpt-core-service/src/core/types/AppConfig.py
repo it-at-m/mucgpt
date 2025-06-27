@@ -20,3 +20,4 @@ class AppConfig(TypedDict):
     configuration_features: Config
     repository: Repository
     backend_config: BackendConfig
+    departements: list[str]

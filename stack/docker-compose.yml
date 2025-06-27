@@ -9,6 +9,8 @@ services:
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
+    networks:
+      - keycloak
     healthcheck: &healthcheck
       test: ["CMD-SHELL", "pg_isready -d postgres -U admin"]
       interval: 30s
@@ -36,7 +38,7 @@ services:
       test: ["CMD", "wget", "-O", "-", "http://localhost:5050/misc/ping"]
     security_opt: *security_settings
     volumes:
-      - "./pgadmin/servers.json:/pgadmin4/servers.json:ro"
+      - "./pgadmin/servers.json:/pgadmin4/servers.json"
       - "./pgadmin/pgpass:/pgadmin4/pgpass"
     user: root # see https://github.com/pgadmin-org/pgadmin4/issues/6257
     entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
@@ -101,9 +103,12 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://core-service:8000/
       - SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0=Path=/api/backend/**
       - SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=frontend
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://frontend:8080/
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/bot/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://kubernetes.docker.internal:8100/auth/realms/local_realm
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}

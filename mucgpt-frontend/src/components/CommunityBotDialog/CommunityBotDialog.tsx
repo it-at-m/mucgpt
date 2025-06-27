@@ -19,7 +19,7 @@ import styles from "./CommunityBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
-import { Bot } from "../../api";
+import { AssistantResponse, Bot, getAllCommunityAssistantsApi, getCommunityAssistantApi, getCommunityAssistantVersionApi } from "../../api";
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -36,7 +36,7 @@ interface Props {
 }
 
 export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput, takeCommunityBots, setTakeCommunityBots }: Props) => {
-    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: "0", temperature: 0.0, max_output_tokens: 0, version: "", owner: "owner", tags: [] };
+    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: "0", temperature: 0.0, max_output_tokens: 0, version: "0", owner_ids: ["owner"], tags: [] };
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
     const [bots, setBot] = useState<any[]>([]);
@@ -48,50 +48,6 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const [choosenTag, setChoosenTag] = useState<string>("");
     const communitybotStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
-
-
-    // DUMMY
-    const getCommunityBots = async (): Promise<Bot[][]> => {
-        // Return some dummy bots with different versions and tags
-        return [
-            [
-                { ...mockBot, id: "1", title: "WeatherBot", version: "1.0", tags: ["weather", "info"], description: "Get weather updates.", system_message: "Weather info", owner: "alice" },
-                { ...mockBot, id: "1", title: "WeatherBot", version: "1.1", tags: ["weather", "info"], description: "Get weather updates (v1.1).", system_message: "Weather info", owner: "alice" }
-            ],
-            [
-                { ...mockBot, id: "2", title: "NewsBot", version: "2.0", tags: ["news"], description: "Latest news headlines.", system_message: "News info", owner: "bob" }
-            ],
-            [
-                { ...mockBot, id: "3", title: "JokeBot", version: "1.0", tags: ["fun", "jokes"], description: "Tells jokes.", system_message: "Joke info", owner: "carol" }
-            ]
-        ];
-    };
-
-    const getCommunityBot = async (id: string, version: string): Promise<Bot> => {
-        // Return a dummy bot matching the id and version
-        return { ...mockBot, id, version, title: `Bot ${id}`, description: `Description for Bot ${id} v${version}`, tags: ["dummy"], system_message: `System message for Bot ${id}` };
-    };
-
-    const getCommunityBotAllVersions = async (id: string): Promise<Bot[]> => {
-        // Return some dummy versions for a bot
-        if (id === "1") {
-            return [
-                { ...mockBot, id: "1", title: "WeatherBot", version: "1.0", tags: ["weather", "info"], description: "Get weather updates.", system_message: "Weather info", owner: "alice" },
-                { ...mockBot, id: "1", title: "WeatherBot", version: "1.1", tags: ["weather", "info"], description: "Get weather updates (v1.1).", system_message: "Weather info", owner: "alice" }
-            ];
-        }
-        if (id === "2") {
-            return [
-                { ...mockBot, id: "2", title: "NewsBot", version: "2.0", tags: ["news"], description: "Latest news headlines.", system_message: "News info", owner: "bob" }
-            ];
-        }
-        if (id === "3") {
-            return [
-                { ...mockBot, id: "3", title: "JokeBot", version: "1.0", tags: ["fun", "jokes"], description: "Tells jokes.", system_message: "Joke info", owner: "carol" }
-            ];
-        }
-        return [{ ...mockBot, id, version: "1.0", title: `Bot ${id}`, tags: ["dummy"], description: `Description for Bot ${id}`, system_message: `System message for Bot ${id}` }];
-    };
 
     function findLatestVersion(bots: Bot[]): Bot {
         let latestVersion = bots[0];
@@ -118,10 +74,24 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
 
     useEffect(() => {
         if (takeCommunityBots && showSearchDialogInput) {
-            getCommunityBots().then((bots: Bot[][]) => {
+            getAllCommunityAssistantsApi().then((bots: AssistantResponse[]) => {
                 let latestBots: Bot[] = []
+
                 for (let bot of bots) {
-                    latestBots.push(findLatestVersion(bot))
+                    let latest = bot.latest_version
+                    let latest_bot: Bot = {
+                        title: latest.name,
+                        description: latest.description || "",
+                        system_message: latest.system_prompt,
+                        publish: true,
+                        id: bot.id,
+                        temperature: latest.temperature,
+                        max_output_tokens: latest.max_output_tokens,
+                        version: latest.version.toString(),
+                        owner_ids: latest.owner_ids,
+                        tags: latest.tags || [],
+                    }
+                    latestBots.push(latest_bot);
                 }
                 setBot(latestBots.sort(compareBotsByTitle))
                 setFilteredBots(latestBots.sort(compareBotsByTitle))
@@ -180,7 +150,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         if (version == undefined || version == String(choosenBot.version) || choosenBot.id == undefined) {
             return
         }
-        getCommunityBot(choosenBot.id, version).then((bot: Bot) => {
+        getCommunityAssistantVersionApi(choosenBot.id, version).then((bot: Bot) => {
             setChoosenBot(bot);
         });
     };
@@ -210,8 +180,21 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         setChoosenBot(bot);
         setShowBotDialog(true);
         setShowSearchDialogInput(false);
-        getCommunityBotAllVersions(bot.id).then((bots) => {
-            setChoosenBotAll(bots);
+        getCommunityAssistantApi(bot.id).then((bots) => {
+            let latest = bots.latest_version;
+            let latest_version: Bot = {
+                title: latest.name,
+                description: latest.description || "",
+                system_message: latest.system_prompt,
+                publish: true,
+                id: bots.id,
+                temperature: latest.temperature,
+                max_output_tokens: latest.max_output_tokens,
+                version: latest.version.toString(),
+                owner_ids: latest.owner_ids,
+                tags: latest.tags || [],
+            }
+            setChoosenBotAll([latest_version]);//TODO all Versions
         });
         communitybotStorageService.getBotConfig(bot.id).then((bot: Bot | undefined) => {
             setBotAlreadySaved(bot !== undefined);

@@ -1,3 +1,5 @@
+import json
+import os
 from typing import Tuple
 
 from brainstorm.brainstorm import Brainstorm
@@ -85,6 +87,16 @@ def initApp() -> AppConfig:
         initApproaches(cfg=cfg.backend, repoHelper=repoHelper)
     )
 
+    departments_path = os.path.join(os.path.dirname(__file__), "departements.json")
+    try:
+        with open(departments_path, encoding="utf-8") as f:
+            data = json.load(f)
+            departments = data.get("departements", [])
+        logger.info("Loaded %d departments from departements.json", len(departments))
+    except Exception as e:
+        logger.error("Failed to load departements.json: %s", e)
+        departments = []
+
     logger.info("finished init App")
 
     return AppConfig(
@@ -96,4 +108,5 @@ def initApp() -> AppConfig:
         sum_approaches=sum_approaches,
         repository=repoHelper,
         backend_config=cfg.backend,
+        departements=departments,
     )

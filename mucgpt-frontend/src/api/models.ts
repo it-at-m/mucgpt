@@ -107,6 +107,11 @@ export type CountTokenRequest = {
 export type CountTokenResponse = {
     count: number;
 };
+
+export type DepartementsResponse = {
+    departments: string[];
+};
+
 export type SimplyResponse = {
     content: string;
     error?: string;
@@ -122,6 +127,80 @@ export type Bot = {
     examples?: ExampleModel[];
     quick_prompts?: QuickPrompt[];
     version: string;
-    owner?: string;
+    owner_ids?: string[];
     tags?: string[];
 };
+
+export interface ToolBase {
+    id: string;
+    config?: Record<string, any>;
+}
+
+export interface ExampleModelInput {
+    text: string;
+    value: string;
+}
+
+export interface AssistantCreateInput {
+    name: string;
+    description?: string;
+    system_prompt: string;
+    hierarchical_access?: string[];
+    temperature?: number;
+    max_output_tokens: number;
+    tools?: ToolBase[];
+    owner_ids?: string[];
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+}
+
+export interface AssistantVersionResponse {
+    id: string;
+    version: number;
+    created_at: string;
+    name: string;
+    description?: string;
+    system_prompt: string;
+    hierarchical_access?: string[];
+    temperature: number;
+    max_output_tokens: number;
+    tools?: ToolBase[];
+    owner_ids?: string[];
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+}
+
+export interface AssistantCreateResponse {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    hierarchical_access?: string[];
+    owner_ids?: string[];
+    latest_version: AssistantVersionResponse;
+}
+
+export interface AssistantUpdateInput {
+    name?: string;
+    description?: string;
+    system_prompt?: string;
+    hierarchical_access?: string[];
+    temperature?: number;
+    max_output_tokens?: number;
+    tools?: ToolBase[];
+    owner_ids?: string[];
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+    version: number;
+}
+
+export interface AssistantResponse {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    hierarchical_access?: string[];
+    owner_ids?: string[];
+    latest_version: AssistantVersionResponse;
+}

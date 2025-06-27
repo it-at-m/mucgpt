@@ -8,12 +8,14 @@ class SSOConfig(BaseModel):
 
 class DatabaseConfig(BaseModel):
     db_host: str
+    db_port: str
     db_name: str
     db_user: str
     db_password: str
 
 
 class BackendConfig(BaseModel):
+    enable_auth: bool = True
     unauthorized_user_redirect_url: str
     sso_config: SSOConfig
     db_config: DatabaseConfig

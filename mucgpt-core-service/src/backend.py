@@ -352,6 +352,14 @@ async def getStatisticsCSV(
         raise HTTPException(status_code=500, detail="Statistcs export failed!")
 
 
+@api_app.get("/departements")
+async def getDepartements(
+    access_token: str = Header(..., alias="authorization"),
+):
+    cfg = get_config_and_authentificate(access_token)
+    return cfg["departements"]
+
+
 @api_app.get("/health")
 def health_check() -> str:
     return "OK"

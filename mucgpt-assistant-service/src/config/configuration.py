@@ -20,11 +20,13 @@ class ConfigHelper:
         )
         dbConfig = DatabaseConfig(
             db_host=getenv("BACKEND_DB_HOST", ""),
+            db_port=getenv("BACKEND_DB_PORT", "5432"),
             db_name=getenv("BACKEND_DB_NAME", ""),
             db_user=getenv("BACKEND_DB_USER", ""),
             db_password=getenv("BACKEND_DB_PASSWORD", ""),
         )
         backendConfig = BackendConfig(
+            enable_auth=getenv("BACKEND_ENABLE_AUTH", "true").lower() == "true",
             unauthorized_user_redirect_url=getenv(
                 "BACKEND_UNAUTHORIZED_USER_REDIRECT_URL", ""
             ),

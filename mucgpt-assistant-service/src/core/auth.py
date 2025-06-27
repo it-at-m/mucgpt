@@ -123,7 +123,13 @@ def authenticate_user(
     # Load configuration
     config_helper = ConfigHelper()
     config = config_helper.loadData()
-
+    if not config.backend.enable_auth:
+        return AuthenticationResult(
+            lhm_object_id="999999999",
+            department="ITM",
+            name="MUCGPT Guest",
+            roles=["lhm-ab-mucgpt-user"],
+        )
     # Initialize authentication helper
     auth_helper = AuthentificationHelper(
         issuer=config.backend.sso_config.sso_issuer, role=config.backend.sso_config.role

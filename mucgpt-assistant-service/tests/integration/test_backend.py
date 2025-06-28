@@ -5,6 +5,7 @@ from src.api.api_models import (
     AssistantCreate,
     AssistantResponse,
     AssistantUpdate,
+    AssistantVersionResponse,
     ExampleModel,
     QuickPrompt,
     ToolBase,
@@ -1825,7 +1826,7 @@ async def test_get_bot_success(test_client, test_db_session):
         assistant=assistant,
         name="Get Test Assistant",
         system_prompt="You are a test assistant for get operations.",
-        description="A test assistant for testing get operations",
+        description="A test AI assistant for testing get operations",
         temperature=0.7,
         max_output_tokens=1000,
         examples=[{"text": "Example", "value": "Value"}],
@@ -1857,7 +1858,7 @@ async def test_get_bot_success(test_client, test_db_session):
     assert assistant_response.latest_version.name == "Get Test Assistant"
     assert (
         assistant_response.latest_version.description
-        == "A test assistant for testing get operations"
+        == "A test AI assistant for testing get operations"
     )
     assert assistant_response.latest_version.temperature == 0.7
     assert assistant_response.latest_version.max_output_tokens == 1000
@@ -2083,3 +2084,447 @@ async def test_get_bot_hierarchical_access(test_db_session, test_client):
     # Test access to different department path (should be forbidden)
     response3 = test_client.get(f"bot/{assistant3.id}", headers=headers)
     assert response3.status_code == 403
+
+
+# ===== GET SPECIFIC VERSION TESTS =====
+
+
+@pytest.fixture
+def assistant_with_multiple_versions(test_client):
+    """Fixture that creates an assistant with multiple versions for version testing."""
+    # Create the assistant
+    assistant_data = AssistantCreate(
+        name="Version Test Assistant",
+        description="Original description",
+        system_prompt="You are version 1 assistant.",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[{"text": "V1 Example", "value": "Version 1 example"}],
+        quick_prompts=[
+            {
+                "label": "V1 Prompt",
+                "prompt": "Version 1 prompt",
+                "tooltip": "V1 tooltip",
+            }
+        ],
+        tags=["v1", "original"],
+        tools=[{"id": "WEB_SEARCH", "config": {"max_results": 3}}],
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    # Create assistant via API to get proper structure
+    create_response = test_client.post(
+        "bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_response = AssistantResponse.model_validate(create_response.json())
+    assistant_id = assistant_response.id
+
+    # Create version 2 via update
+    update_data_v2 = AssistantUpdate(
+        version=1,
+        name="Version Test Assistant V2",
+        description="Updated description for version 2",
+        system_prompt="You are version 2 assistant.",
+        temperature=0.7,
+        tags=["v2", "updated"],
+    )
+
+    update_response = test_client.post(
+        f"bot/{assistant_id}/update", json=update_data_v2.model_dump(), headers=headers
+    )
+    assert update_response.status_code == 200
+
+    # Create version 3 via another update
+    update_data_v3 = AssistantUpdate(
+        version=2,
+        name="Version Test Assistant V3",
+        description="Final description for version 3",
+        system_prompt="You are version 3 assistant.",
+        temperature=0.9,
+        max_output_tokens=2000,
+        examples=[
+            {"text": "V3 Example 1", "value": "Version 3 example 1"},
+            {"text": "V3 Example 2", "value": "Version 3 example 2"},
+        ],
+        quick_prompts=[
+            {
+                "label": "V3 Prompt 1",
+                "prompt": "Version 3 prompt 1",
+                "tooltip": "V3 tooltip 1",
+            },
+            {
+                "label": "V3 Prompt 2",
+                "prompt": "Version 3 prompt 2",
+                "tooltip": "V3 tooltip 2",
+            },
+        ],
+        tags=["v3", "final"],
+        tools=[
+            {"id": "WEB_SEARCH", "config": {"max_results": 10}},
+            {"id": "CALCULATOR", "config": {"precision": 4}},
+        ],
+    )
+
+    update_response_v3 = test_client.post(
+        f"bot/{assistant_id}/update", json=update_data_v3.model_dump(), headers=headers
+    )
+    assert update_response_v3.status_code == 200
+
+    return assistant_id
+
+
+@pytest.mark.integration
+def test_get_assistant_version_success(assistant_with_multiple_versions, test_client):
+    """Test successful retrieval of a specific assistant version."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Test getting version 1
+    response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    version_response = AssistantVersionResponse.model_validate(
+        response_data
+    )  # Verify it's version 1 with original data
+    assert version_response.version == 1
+    assert version_response.name == "Version Test Assistant"
+    assert version_response.description == "Original description"
+    assert version_response.system_prompt == "You are version 1 assistant."
+    assert version_response.temperature == 0.5
+    assert version_response.max_output_tokens == 1000
+    assert len(version_response.examples) == 1
+    assert version_response.examples[0].text == "V1 Example"
+    assert len(version_response.quick_prompts) == 1
+    assert version_response.quick_prompts[0].label == "V1 Prompt"
+    assert version_response.tags == ["v1", "original"]
+
+
+@pytest.mark.integration
+def test_get_assistant_version_specific_versions(
+    assistant_with_multiple_versions, test_client
+):
+    """Test getting specific versions and verify their unique content."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Test version 2
+    response_v2 = test_client.get(f"bot/{assistant_id}/version/2", headers=headers)
+    assert response_v2.status_code == 200
+    version_v2 = AssistantVersionResponse.model_validate(response_v2.json())
+
+    assert version_v2.version == 2
+    assert version_v2.name == "Version Test Assistant V2"
+    assert version_v2.description == "Updated description for version 2"
+    assert version_v2.system_prompt == "You are version 2 assistant."
+    assert version_v2.temperature == 0.7
+    assert version_v2.tags == ["v2", "updated"]
+
+    # Test version 3
+    response_v3 = test_client.get(f"bot/{assistant_id}/version/3", headers=headers)
+    assert response_v3.status_code == 200
+    version_v3 = AssistantVersionResponse.model_validate(response_v3.json())
+
+    assert version_v3.version == 3
+    assert version_v3.name == "Version Test Assistant V3"
+    assert version_v3.description == "Final description for version 3"
+    assert version_v3.system_prompt == "You are version 3 assistant."
+    assert version_v3.temperature == 0.9
+    assert version_v3.max_output_tokens == 2000
+    assert len(version_v3.examples) == 2
+    assert len(version_v3.quick_prompts) == 2
+    assert version_v3.tags == ["v3", "final"]
+    assert len(version_v3.tools) == 2
+
+
+@pytest.mark.integration
+def test_get_assistant_version_not_found_assistant(test_client):
+    """Test getting version of non-existent assistant."""
+    non_existent_id = "00000000-0000-4000-8000-000000000000"
+
+    response = test_client.get(f"bot/{non_existent_id}/version/1", headers=headers)
+
+    assert response.status_code == 404
+
+
+@pytest.mark.integration
+def test_get_assistant_version_not_found_version(
+    assistant_with_multiple_versions, test_client
+):
+    """Test getting non-existent version of existing assistant."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Try to get version 99 (doesn't exist)
+    response = test_client.get(f"bot/{assistant_id}/version/99", headers=headers)
+
+    assert response.status_code == 404
+
+
+@pytest.mark.integration
+def test_get_assistant_version_invalid_uuid(test_client):
+    """Test getting version with invalid UUID format."""
+    invalid_id = "invalid-uuid-format"
+
+    response = test_client.get(f"bot/{invalid_id}/version/1", headers=headers)
+
+    # Should return 404 or 422 depending on FastAPI's UUID validation
+    assert response.status_code in [404, 422]
+
+
+@pytest.mark.integration
+def test_get_assistant_version_invalid_version_format(
+    assistant_with_multiple_versions, test_client
+):
+    """Test getting version with invalid version format."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Test with non-numeric version
+    response_invalid = test_client.get(
+        f"bot/{assistant_id}/version/invalid", headers=headers
+    )
+    assert response_invalid.status_code == 422
+
+    # Test with negative version
+    response_negative = test_client.get(
+        f"bot/{assistant_id}/version/-1", headers=headers
+    )
+    assert response_negative.status_code == 404
+
+    # Test with zero version
+    response_zero = test_client.get(f"bot/{assistant_id}/version/0", headers=headers)
+    assert response_zero.status_code == 404
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_assistant_version_access_control(test_client, test_db_session):
+    """Test access control for assistant versions based on hierarchical access."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with restricted hierarchical access
+    restricted_assistant = await assistant_repo.create(
+        hierarchical_access=[
+            "HR-Department"
+        ],  # Different from user's IT-Test-Department
+        owner_ids=["other_user"],
+    )
+
+    # Create a version for the restricted assistant
+    await assistant_repo.create_assistant_version(
+        assistant=restricted_assistant,
+        name="Restricted Version Assistant",
+        system_prompt="You are restricted.",
+        description="This should not be accessible",
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=["restricted"],
+    )
+
+    await test_db_session.commit()
+
+    # Try to access version of restricted assistant
+    response = test_client.get(
+        f"bot/{restricted_assistant.id}/version/1", headers=headers
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.integration
+def test_get_assistant_version_with_tools(
+    assistant_with_multiple_versions, test_client
+):
+    """Test getting version with tools and verify tool configuration."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Get version 3 which has multiple tools
+    response = test_client.get(f"bot/{assistant_id}/version/3", headers=headers)
+
+    assert response.status_code == 200
+    version_response = AssistantVersionResponse.model_validate(
+        response.json()
+    )  # Verify tools are present and correctly configured
+    assert len(version_response.tools) == 2
+
+    tool_ids = [tool.id for tool in version_response.tools]
+    assert "WEB_SEARCH" in tool_ids
+    assert "CALCULATOR" in tool_ids
+
+    # Find and verify WEB_SEARCH tool configuration
+    web_search_tool = next(
+        tool for tool in version_response.tools if tool.id == "WEB_SEARCH"
+    )
+    assert web_search_tool.config["max_results"] == 10
+
+    # Find and verify CALCULATOR tool configuration
+    calculator_tool = next(
+        tool for tool in version_response.tools if tool.id == "CALCULATOR"
+    )
+    assert calculator_tool.config["precision"] == 4
+
+
+@pytest.mark.integration
+def test_get_assistant_version_with_examples_and_prompts(
+    assistant_with_multiple_versions, test_client
+):
+    """Test getting version with examples and quick prompts."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Get version 3 which has multiple examples and quick prompts
+    response = test_client.get(f"bot/{assistant_id}/version/3", headers=headers)
+
+    assert response.status_code == 200
+    version_response = AssistantVersionResponse.model_validate(
+        response.json()
+    )  # Verify examples
+    assert len(version_response.examples) == 2
+    assert version_response.examples[0].text == "V3 Example 1"
+    assert version_response.examples[0].value == "Version 3 example 1"
+    assert version_response.examples[1].text == "V3 Example 2"
+    assert version_response.examples[1].value == "Version 3 example 2"
+
+    # Verify quick prompts
+    assert len(version_response.quick_prompts) == 2
+    assert version_response.quick_prompts[0].label == "V3 Prompt 1"
+    assert version_response.quick_prompts[0].prompt == "Version 3 prompt 1"
+    assert version_response.quick_prompts[0].tooltip == "V3 tooltip 1"
+    assert version_response.quick_prompts[1].label == "V3 Prompt 2"
+    assert version_response.quick_prompts[1].prompt == "Version 3 prompt 2"
+    assert version_response.quick_prompts[1].tooltip == "V3 tooltip 2"
+
+
+@pytest.mark.integration
+def test_get_assistant_version_owner_information(
+    assistant_with_multiple_versions, test_client
+):
+    """Test that version response includes correct owner information."""
+    assistant_id = assistant_with_multiple_versions
+
+    response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+
+    assert response.status_code == 200
+    version_response = AssistantVersionResponse.model_validate(response.json())
+
+    # Verify owner_ids is present and not empty
+    assert len(version_response.owner_ids) >= 1
+    # The creating user should be included as owner
+    # Note: The exact owner_id depends on your test authentication setup
+
+
+@pytest.mark.integration
+def test_get_assistant_version_hierarchical_access(
+    assistant_with_multiple_versions, test_client
+):
+    """Test that version response includes correct hierarchical access information."""
+    assistant_id = assistant_with_multiple_versions
+
+    response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+
+    assert response.status_code == 200
+    version_response = AssistantVersionResponse.model_validate(response.json())
+
+    # Verify hierarchical_access matches what was set during creation
+    assert version_response.hierarchical_access == ["IT-Test-Department"]
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_get_assistant_version_with_empty_fields(test_client, test_db_session):
+    """Test getting version of assistant with empty optional fields."""
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with minimal data
+    minimal_assistant = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user"],
+    )
+
+    # Create version with minimal data
+    await assistant_repo.create_assistant_version(
+        assistant=minimal_assistant,
+        name="Minimal Assistant",
+        system_prompt="You are minimal.",
+        description="",  # Empty description
+        temperature=0.5,
+        max_output_tokens=1000,
+        examples=[],  # Empty examples
+        quick_prompts=[],  # Empty quick prompts
+        tags=[],  # Empty tags
+    )
+
+    await test_db_session.commit()
+
+    # Get the version
+    response = test_client.get(f"bot/{minimal_assistant.id}/version/1", headers=headers)
+
+    assert response.status_code == 200
+    version_response = AssistantVersionResponse.model_validate(response.json())
+
+    # Verify empty fields are handled correctly
+    assert version_response.description == ""
+    assert version_response.examples == []
+    assert version_response.quick_prompts == []
+    assert version_response.tags == []
+    assert version_response.tools == []
+
+
+@pytest.mark.integration
+def test_get_assistant_version_concurrent_access(
+    assistant_with_multiple_versions, test_client
+):
+    """Test concurrent access to the same version."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Simulate concurrent requests to the same version
+    responses = []
+    for _ in range(5):
+        response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+        responses.append(response)
+
+    # All requests should succeed
+    for response in responses:
+        assert response.status_code == 200
+        version_response = AssistantVersionResponse.model_validate(response.json())
+        assert version_response.version == 1
+        assert version_response.name == "Version Test Assistant"
+
+
+@pytest.mark.integration
+def test_get_assistant_version_versus_latest(
+    assistant_with_multiple_versions, test_client
+):
+    """Test difference between getting specific version vs latest version."""
+    assistant_id = assistant_with_multiple_versions
+
+    # Get specific version 1
+    version_1_response = test_client.get(
+        f"bot/{assistant_id}/version/1", headers=headers
+    )
+    assert version_1_response.status_code == 200
+    version_1 = AssistantVersionResponse.model_validate(version_1_response.json())
+
+    # Get latest version via main bot endpoint
+    latest_response = test_client.get(f"bot/{assistant_id}", headers=headers)
+    assert latest_response.status_code == 200
+    latest_assistant = AssistantResponse.model_validate(latest_response.json())
+
+    # Verify they are different
+    assert version_1.version == 1
+    assert latest_assistant.latest_version.version == 3  # Should be the latest version
+    assert version_1.name != latest_assistant.latest_version.name
+    assert version_1.temperature != latest_assistant.latest_version.temperature
+
+
+@pytest.mark.integration
+def test_get_assistant_version_edge_cases(test_client):
+    """Test edge cases for version endpoint."""
+    # Test with valid UUID but non-existent assistant
+    valid_uuid = "12345678-1234-4000-8000-123456789012"
+    response = test_client.get(f"bot/{valid_uuid}/version/1", headers=headers)
+    assert response.status_code == 404
+
+    # Test with extremely large version number
+    assistant_id = "12345678-1234-4000-8000-123456789012"  # Non-existent but valid UUID
+    response = test_client.get(f"bot/{assistant_id}/version/999999999", headers=headers)
+    assert response.status_code == 404

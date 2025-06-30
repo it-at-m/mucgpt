@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get(
-    "/user/{lhmobjekt_id}/bots",
+    "/user/bots",
     response_model=List[AssistantResponse],
     summary="Get assistants owned by a specific user",
     description="""

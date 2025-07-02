@@ -33,7 +33,7 @@ class ConfigHelper:
         return highest_index
 
     def _get_model_config(self, index):
-        prefix = f"BACKEND_MODEL_{index}_"
+        prefix = f"MUCGPT_CORE_BACKEND_MODEL_{index}_"
         config = ModelsConfig(
             type=getenv(f"{prefix}TYPE"),
             llm_name=getenv(f"{prefix}LLM_NAME"),
@@ -48,7 +48,9 @@ class ConfigHelper:
         return config
 
     def _get_quick_prompt(self, assistant, index):
-        prefix = f"BACKEND_COMMUNITY_ASSISTANT_{assistant}_QUICK_PROMPT_{index}_"
+        prefix = (
+            f"MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_{assistant}_QUICK_PROMPT_{index}_"
+        )
         config = QuickPrompt(
             label=getenv(f"{prefix}LABEL", f"Quick Prompt {index}"),
             prompt=getenv(f"{prefix}PROMPT", f"Quick Prompt {index}"),
@@ -59,14 +61,18 @@ class ConfigHelper:
     def _get_quick_prompt_list(self, assistant):
         quick_prompts = []
         highest_index = self._find_highest_index(
-            r"BACKEND_COMMUNITY_ASSISTANT_" + str(assistant) + r"_QUICK_PROMPT_(\d+)"
+            r"MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_"
+            + str(assistant)
+            + r"_QUICK_PROMPT_(\d+)"
         )
         for i in range(1, highest_index + 1):
             quick_prompts.append(self._get_quick_prompt(assistant, i))
         return quick_prompts
 
     def _get_example(self, assistant, index):
-        prefix = f"BACKEND_COMMUNITY_ASSISTANT_{assistant}_EXAMPLES_{index}_"
+        prefix = (
+            f"MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_{assistant}_EXAMPLES_{index}_"
+        )
         config = ExampleModel(
             text=getenv(f"{prefix}TEXT", f"Example {index}"),
             value=getenv(f"{prefix}VALUE", f"Example {index}"),
@@ -77,18 +83,20 @@ class ConfigHelper:
     def _get_example_list(self, assistant):
         examples = []
         highest_index = self._find_highest_index(
-            r"BACKEND_COMMUNITY_ASSISTANT_" + str(assistant) + r"_EXAMPLES_(\d+)"
+            r"MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_"
+            + str(assistant)
+            + r"_EXAMPLES_(\d+)"
         )
         for i in range(1, highest_index + 1):
             examples.append(self._get_example(assistant, i))
         return examples
 
     def _get_community_assistant(self, index):
-        prefix = f"BACKEND_COMMUNITY_ASSISTANT_{index}_"
+        prefix = f"MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_{index}_"
         id = getenv(f"{prefix}ID")
         if id is None:
             raise Exception(
-                f"ID is missing for community assistant {index}. Please provide the env variable BACKEND_COMMUNITY_ASSISTANT_{index}_ID."
+                f"ID is missing for community assistant {index}. Please provide the env variable MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_{index}_ID."
             )
         config = CommunityAssistantConfig(
             title=getenv(f"{prefix}TITLE", f"Title {index}"),
@@ -104,7 +112,9 @@ class ConfigHelper:
 
     def _get_community_assistants(self):
         community_assistants = []
-        highest_index = self._find_highest_index(r"BACKEND_COMMUNITY_ASSISTANT_(\d+)")
+        highest_index = self._find_highest_index(
+            r"MUCGPT_CORE_BACKEND_COMMUNITY_ASSISTANT_(\d+)"
+        )
         for i in range(1, highest_index + 1):
             try:
                 community_assistants.append(self._get_community_assistant(i))
@@ -114,7 +124,7 @@ class ConfigHelper:
 
     def _get_models_config(self):
         models_config = []
-        highest_index = self._find_highest_index(r"BACKEND_MODEL_(\d+)")
+        highest_index = self._find_highest_index(r"MUCGPT_CORE_BACKEND_MODEL_(\d+)")
         for i in range(1, highest_index + 1):
             models_config.append(self._get_model_config(i))
         return models_config
@@ -122,45 +132,55 @@ class ConfigHelper:
     def loadData(self) -> Config:
         models_config = self._get_models_config()
         labelsConfig = LabelsConfig(
-            env_name=getenv("FRONTEND_LABELS_ENV_NAME", "MUCGPT")
+            env_name=getenv("MUCGPT_CORE_FRONTEND_LABELS_ENV_NAME", "MUCGPT")
         )
         frontendConfig = FrontendConfig(
             labels=labelsConfig,
-            alternative_logo=getenv("FRONTEND_ALTERNATIVE_LOGO", "false").lower()
+            alternative_logo=getenv(
+                "MUCGPT_CORE_FRONTEND_ALTERNATIVE_LOGO", "false"
+            ).lower()
             == "true",
-            enable_simply=getenv("FRONTEND_ENABLE_SIMPLY", "true").lower() == "true",
+            enable_simply=getenv("MUCGPT_CORE_FRONTEND_ENABLE_SIMPLY", "true").lower()
+            == "true",
             community_assistants=self._get_community_assistants(),
         )
         ssoConfig = SSOConfig(
-            sso_issuer=getenv("BACKEND_SSO_ISSUER", ""),
-            role=getenv("BACKEND_SSO_ROLE", "lhm-ab-mucgpt-user"),
+            sso_issuer=getenv("MUCGPT_CORE_BACKEND_SSO_ISSUER", ""),
+            role=getenv("MUCGPT_CORE_BACKEND_SSO_ROLE", "lhm-ab-mucgpt-user"),
         )
         dbConfig = DatabaseConfig(
-            db_host=getenv("BACKEND_DB_HOST", ""),
-            db_name=getenv("BACKEND_DB_NAME", ""),
-            db_user=getenv("BACKEND_DB_USER", ""),
-            db_password=getenv("BACKEND_DB_PASSWORD", ""),
+            db_host=getenv("MUCGPT_CORE_BACKEND_DB_HOST", ""),
+            db_name=getenv("MUCGPT_CORE_BACKEND_DB_NAME", ""),
+            db_user=getenv("MUCGPT_CORE_BACKEND_DB_USER", ""),
+            db_password=getenv("MUCGPT_CORE_BACKEND_DB_PASSWORD", ""),
         )
         backendConfig = BackendConfig(
-            enable_auth=getenv("BACKEND_ENABLE_AUTH", "false").lower() == "true",
-            enable_database=getenv("BACKEND_ENABLE_DATABASE", "false").lower()
+            enable_auth=getenv("MUCGPT_CORE_BACKEND_ENABLE_AUTH", "false").lower()
+            == "true",
+            enable_database=getenv(
+                "MUCGPT_CORE_BACKEND_ENABLE_DATABASE", "false"
+            ).lower()
             == "true",
             unauthorized_user_redirect_url=getenv(
-                "BACKEND_UNAUTHORIZED_USER_REDIRECT_URL", ""
+                "MUCGPT_CORE_BACKEND_UNAUTHORIZED_USER_REDIRECT_URL", ""
             ),
             sso_config=ssoConfig,
             db_config=dbConfig,
             chat=ApproachConfig(
-                log_tokens=getenv("BACKEND_CHAT_LOG_TOKENS", "false") == "true"
+                log_tokens=getenv("MUCGPT_CORE_BACKEND_CHAT_LOG_TOKENS", "false")
+                == "true"
             ),
             brainstorm=ApproachConfig(
-                log_tokens=getenv("BACKEND_BRAINSTORM_LOG_TOKENS", "false") == "true"
+                log_tokens=getenv("MUCGPT_CORE_BACKEND_BRAINSTORM_LOG_TOKENS", "false")
+                == "true"
             ),
             sum=ApproachConfig(
-                log_tokens=getenv("BACKEND_SUM_LOG_TOKENS", "false") == "true"
+                log_tokens=getenv("MUCGPT_CORE_BACKEND_SUM_LOG_TOKENS", "false")
+                == "true"
             ),
             simply=ApproachConfig(
-                log_tokens=getenv("BACKEND_SIMPLY_LOG_TOKENS", "false") == "true"
+                log_tokens=getenv("MUCGPT_CORE_BACKEND_SIMPLY_LOG_TOKENS", "false")
+                == "true"
             ),
             models=models_config,
         )

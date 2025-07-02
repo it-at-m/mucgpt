@@ -23,8 +23,8 @@ COPY /src  .
 ARG COMMIT
 ARG VERSION
 
-ENV MUCGPT_VERSION=${VERSION}
-ENV MUCGPT_COMMIT=${COMMIT}
+ENV MUCGPT_CORE_VERSION=${VERSION}
+ENV MUCGPT_CORE_COMMIT=${COMMIT}
 
 # sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \

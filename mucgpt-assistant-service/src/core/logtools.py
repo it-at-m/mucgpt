@@ -16,7 +16,7 @@ def getLogger(name: str = "mucgpt-backend") -> logging.Logger:
     Returns:
     logging.Logger: The logger with the specified name.
     """
-    log_config = os.getenv("LOG_CONFIG", "logconf.yaml")
+    log_config = os.getenv("MUCGPT_ASSISTANT_LOG_CONFIG", "logconf.yaml")
     with open(log_config) as file:
         log_config = safe_load(file)
 

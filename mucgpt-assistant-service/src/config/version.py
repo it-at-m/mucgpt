@@ -43,7 +43,7 @@ def get_version() -> str:
         if latest_tag:
             latest_tag = latest_tag.name
     except git.exc.InvalidGitRepositoryError:
-        latest_tag = getenv("MUCGPT_VERSION", "null")
+        latest_tag = getenv("MUCGPT_ASSISTANT_VERSION", "null")
     if latest_tag is None:
-        latest_tag = getenv("MUCGPT_VERSION", "null")
+        latest_tag = getenv("MUCGPT_ASSISTANT_VERSION", "null")
     return latest_tag

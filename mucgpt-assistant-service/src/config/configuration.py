@@ -15,20 +15,21 @@ logger = logging.getLogger()
 class ConfigHelper:
     def loadData(self) -> Config:
         ssoConfig = SSOConfig(
-            sso_issuer=getenv("BACKEND_SSO_ISSUER", ""),
-            role=getenv("BACKEND_SSO_ROLE", "lhm-ab-mucgpt-user"),
+            sso_issuer=getenv("MUCGPT_ASSISTANT_SSO_ISSUER", ""),
+            role=getenv("MUCGPT_ASSISTANT_SSO_ROLE", "lhm-ab-mucgpt-user"),
         )
         dbConfig = DatabaseConfig(
-            db_host=getenv("BACKEND_DB_HOST", ""),
-            db_port=getenv("BACKEND_DB_PORT", "5432"),
-            db_name=getenv("BACKEND_DB_NAME", ""),
-            db_user=getenv("BACKEND_DB_USER", ""),
-            db_password=getenv("BACKEND_DB_PASSWORD", ""),
+            db_host=getenv("MUCGPT_ASSISTANT_DB_HOST", ""),
+            db_port=getenv("MUCGPT_ASSISTANT_DB_PORT", "5432"),
+            db_name=getenv("MUCGPT_ASSISTANT_DB_NAME", ""),
+            db_user=getenv("MUCGPT_ASSISTANT_DB_USER", ""),
+            db_password=getenv("MUCGPT_ASSISTANT_DB_PASSWORD", ""),
         )
         backendConfig = BackendConfig(
-            enable_auth=getenv("BACKEND_ENABLE_AUTH", "true").lower() == "true",
+            enable_auth=getenv("MUCGPT_ASSISTANT_ENABLE_AUTH", "true").lower()
+            == "true",
             unauthorized_user_redirect_url=getenv(
-                "BACKEND_UNAUTHORIZED_USER_REDIRECT_URL", ""
+                "MUCGPT_ASSISTANT_UNAUTHORIZED_USER_REDIRECT_URL", ""
             ),
             sso_config=ssoConfig,
             db_config=dbConfig,

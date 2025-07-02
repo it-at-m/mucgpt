@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse
@@ -46,6 +47,8 @@ api_app = FastAPI(
 api_app.include_router(assistants_router)
 api_app.include_router(users_router)
 api_app.include_router(system_router)
+# Add correlation ID middleware for tracking requests
+api_app.add_middleware(CorrelationIdMiddleware)
 
 backend.mount("/api/", api_app)
 

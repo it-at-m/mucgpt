@@ -46,25 +46,25 @@ loggers:
     handlers: [httpx]
     propagate: no
   users_router:
-    level: INFO
+    level: ERROR
     handlers: [console]
     propagate: no
   system_router:
-    level: INFO
+    level: ERROR
     handlers: [console]
     propagate: no
   assistants_router:
-    level: INFO
+    level: ERROR
     handlers: [console]
     propagate: no
   assistant_repo:
-    level: INFO
+    level: ERROR
     handlers: [console]
     propagate: no
   mucgpt-assistant-service:
-    level: INFO
+    level: ERROR
     handlers: [console]
     propagate: no
 root:
-  level: DEBUG
+  level: INFO
   handlers: [console]

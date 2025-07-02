@@ -157,10 +157,9 @@ class AssistantRepository(Repository[Assistant]):
         )
 
         result = await self.session.execute(stmt)
-        logger.info(
-            f"Returning {len(result.scalars().all())} assistants for owner: {lhmobjektID}"
-        )
-        return list(result.scalars().all())
+        assistants = result.scalars().all()
+        logger.info(f"Returning {len(assistants)} assistants for owner: {lhmobjektID}")
+        return list(assistants)
 
     async def is_owner(self, assistant_id: str, lhmobjektID: str) -> bool:
         logger.debug(f"Checking if {lhmobjektID} is owner of assistant {assistant_id}")

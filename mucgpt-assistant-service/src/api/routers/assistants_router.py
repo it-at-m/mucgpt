@@ -20,9 +20,12 @@ from api.exceptions import (
 )
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
+from core.logtools import getLogger
 from database.assistant_repo import AssistantRepository
 from database.database_models import AssistantTool
 from database.session import get_db_session
+
+logger = getLogger("assistants_router")
 
 router = APIRouter()
 
@@ -46,6 +49,7 @@ async def createBot(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):  # Create a new assistant using the repository
+    logger.info(f"Creating assistant for user {user_info.lhm_object_id}")
     try:
         assistant_repo = AssistantRepository(
             db
@@ -126,8 +130,10 @@ async def createBot(
             latest_version=assistant_version_response,
         )
 
+        logger.info(f"Assistant created with ID: {new_assistant.id}")
         return response
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error creating assistant: {e}")
         await db.rollback()
         raise
 
@@ -160,6 +166,7 @@ async def deleteBot(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
+    logger.info(f"Deleting assistant with ID: {id} by user {user_info.lhm_object_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -175,6 +182,7 @@ async def deleteBot(
         raise DeleteFailedException(id)
 
     await db.commit()
+    logger.info(f"Assistant with ID {id} successfully deleted")
     return {"message": f"Assistant with ID {id} successfully deleted"}
 
 
@@ -207,6 +215,7 @@ async def updateBot(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
+    logger.info(f"Updating assistant with ID: {id} by user {user_info.lhm_object_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -305,6 +314,7 @@ async def updateBot(
         latest_version=assistant_version_response,
     )
 
+    logger.info(f"Assistant with ID {id} updated successfully")
     return response
 
 
@@ -326,6 +336,9 @@ async def updateBot(
 async def getAllBots(
     db: AsyncSession = Depends(get_db_session), user_info=Depends(authenticate_user)
 ):
+    logger.info(
+        f"Fetching all accessible assistants for user {user_info.lhm_object_id}"
+    )
     assistant_repo = AssistantRepository(db)
     assistants = (
         await assistant_repo.get_all_possible_assistants_for_user_with_department(
@@ -370,6 +383,9 @@ async def getAllBots(
             )
             response_list.append(response)
 
+    logger.info(
+        f"Returning {len(response_list)} accessible assistants for user {user_info.lhm_object_id}"
+    )
     return response_list
 
 
@@ -394,6 +410,7 @@ async def getBot(
     db: AsyncSession = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):
+    logger.info(f"Fetching assistant with ID: {id} for user {user_info.lhm_object_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -437,6 +454,7 @@ async def getBot(
         latest_version=assistant_version_response,
     )
 
+    logger.info(f"Returning assistant with ID: {id}")
     return response
 
 
@@ -465,6 +483,9 @@ async def get_assistant_version(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
+    logger.info(
+        f"Fetching version {version} of assistant {id} for user {user_info.lhm_object_id}"
+    )
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -500,4 +521,5 @@ async def get_assistant_version(
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
     )
 
+    logger.info(f"Returning version {version} of assistant {id}")
     return response

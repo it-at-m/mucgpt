@@ -5,17 +5,22 @@ from sqlalchemy import delete, func, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes, selectinload
 
+from core.logtools import getLogger
 from utils import serialize_list
 
 from .database_models import Assistant, AssistantVersion, Owner, assistant_owners
 from .repo import Repository
 
+logger = getLogger("assistant_repo")
+
 
 class AssistantRepository(Repository[Assistant]):
     def __init__(self, session: AsyncSession):
         super().__init__(Assistant, session)
+        logger.debug("AssistantRepository initialized")
 
     def get_tools_from_version(self, version):
+        logger.debug(f"Getting tools from version: {getattr(version, 'id', None)}")
         """Helper function to safely get tools from an assistant version."""
         if not version:
             return []
@@ -34,6 +39,9 @@ class AssistantRepository(Repository[Assistant]):
     async def get_assistant_version(
         self, assistant_id: str, version: int
     ) -> Optional[AssistantVersion]:
+        logger.info(
+            f"Fetching assistant version {version} for assistant {assistant_id}"
+        )
         """Gets a specific version of an assistant."""
         result = await self.session.execute(
             select(AssistantVersion)
@@ -54,6 +62,7 @@ class AssistantRepository(Repository[Assistant]):
         quick_prompts: list = [],
         tags: list = [],
     ) -> AssistantVersion:
+        logger.info(f"Creating new version for assistant {assistant.id}")
         """Creates a new version for an assistant with explicit parameters."""
         try:
             # Query for the latest version directly to avoid lazy loading
@@ -83,14 +92,19 @@ class AssistantRepository(Repository[Assistant]):
             self.session.add(new_version)
             await self.session.flush()
             await self.session.refresh(new_version)
+            logger.info(
+                f"Created version {new_version.version} for assistant {assistant.id}"
+            )
             return new_version
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error creating assistant version for {assistant.id}: {e}")
             await self.session.rollback()
             raise
 
     async def get_all_possible_assistants_for_user_with_department(
         self, department: str
     ) -> List[Assistant]:
+        logger.info(f"Fetching all assistants for department: {department}")
         """Get all assistants that are allowed for a specific department.
 
         For example an assistant has the path:
@@ -128,9 +142,13 @@ class AssistantRepository(Repository[Assistant]):
                     matching_assistants.append(assistant)
                     break
 
+        logger.info(
+            f"Returning {len(matching_assistants)} assistants for department: {department}"
+        )
         return matching_assistants
 
     async def get_assistants_by_owner(self, lhmobjektID: str) -> List[Assistant]:
+        logger.info(f"Fetching assistants for owner: {lhmobjektID}")
         """Get all assistants where the given lhmobjektID is an owner."""
         stmt = (
             select(Assistant)
@@ -139,9 +157,13 @@ class AssistantRepository(Repository[Assistant]):
         )
 
         result = await self.session.execute(stmt)
+        logger.info(
+            f"Returning {len(result.scalars().all())} assistants for owner: {lhmobjektID}"
+        )
         return list(result.scalars().all())
 
     async def is_owner(self, assistant_id: str, lhmobjektID: str) -> bool:
+        logger.debug(f"Checking if {lhmobjektID} is owner of assistant {assistant_id}")
         """Check if the given lhmobjektID is an owner of the specified assistant."""
         stmt = (
             select(assistant_owners)
@@ -155,6 +177,7 @@ class AssistantRepository(Repository[Assistant]):
     async def create(
         self, hierarchical_access: List[str] = None, owner_ids: List[str] = None
     ) -> Assistant:
+        logger.info(f"Creating assistant with owners: {owner_ids}")
         """Create a new assistant with explicit parameters."""
         try:
             # Generate a UUID version 4 (random) for the assistant
@@ -196,8 +219,10 @@ class AssistantRepository(Repository[Assistant]):
 
             await self.session.flush()
             await self.session.refresh(assistant)
+            logger.info(f"Created assistant with ID: {assistant.id}")
             return assistant
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error creating assistant: {e}")
             await self.session.rollback()
             raise
 
@@ -207,6 +232,7 @@ class AssistantRepository(Repository[Assistant]):
         hierarchical_access: List[str] = None,
         owner_ids: List[str] = None,
     ) -> Optional[Assistant]:
+        logger.info(f"Updating assistant {assistant_id}")
         """Update an assistant with explicit parameters."""
         try:
             assistant = await self.get(assistant_id)
@@ -247,13 +273,16 @@ class AssistantRepository(Repository[Assistant]):
 
                 await self.session.flush()
                 await self.session.refresh(assistant)
+                logger.info(f"Updated assistant {assistant_id}")
                 return assistant
             return None
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error updating assistant {assistant_id}: {e}")
             await self.session.rollback()
             raise
 
     async def get_with_owners(self, assistant_id: str) -> Optional[Assistant]:
+        logger.debug(f"Fetching assistant with owners for assistant {assistant_id}")
         """Get assistant with eagerly loaded owners."""
         result = await self.session.execute(
             select(Assistant)
@@ -263,6 +292,7 @@ class AssistantRepository(Repository[Assistant]):
         return result.scalars().first()
 
     async def get_owners_count(self, assistant_id: str) -> int:
+        logger.debug(f"Getting owners count for assistant {assistant_id}")
         """Get the count of owners for an assistant."""
         result = await self.session.execute(
             select(func.count(assistant_owners.c.lhmobjektID)).where(
@@ -272,6 +302,7 @@ class AssistantRepository(Repository[Assistant]):
         return result.scalar() or 0
 
     async def get_latest_version(self, assistant_id: str) -> Optional[AssistantVersion]:
+        logger.info(f"Fetching latest version for assistant {assistant_id}")
         """Get the latest version for an assistant safely without lazy loading."""
         try:
             result = await self.session.execute(
@@ -282,6 +313,9 @@ class AssistantRepository(Repository[Assistant]):
                 .limit(1)
             )
             return result.scalars().first()
-        except Exception:
+        except Exception as e:
+            logger.error(
+                f"Error fetching latest version for assistant {assistant_id}: {e}"
+            )
             await self.session.rollback()
             raise

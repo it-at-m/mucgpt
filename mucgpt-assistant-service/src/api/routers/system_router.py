@@ -1,5 +1,9 @@
 from fastapi import APIRouter
 
+from core.logtools import getLogger
+
+logger = getLogger("system_router")
+
 router = APIRouter()
 
 
@@ -13,4 +17,5 @@ router = APIRouter()
     tags=["System"],
 )
 def health_check() -> str:
+    logger.info("Health check endpoint called")
     return "OK"

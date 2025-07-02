@@ -5,8 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.api_models import AssistantResponse, AssistantVersionResponse
 from core.auth import authenticate_user
+from core.logtools import getLogger
 from database.assistant_repo import AssistantRepository
 from database.session import get_db_session
+
+logger = getLogger("users_router")
 
 router = APIRouter()
 
@@ -30,6 +33,7 @@ async def getUserBots(
     user_info=Depends(authenticate_user),
 ):
     """Get all assistants where the specified lhmobjektID is an owner."""
+    logger.info(f"Fetching assistants for user {user_info.lhm_object_id}")
     # Get all assistants where this lhmobjektID is an owner
     assistant_repo = AssistantRepository(db)
     assistants = await assistant_repo.get_assistants_by_owner(
@@ -71,5 +75,9 @@ async def getUserBots(
                 latest_version=assistant_version_response,
             )
             response_list.append(response)
+            logger.debug(f"Assistant found: {assistant.id}")
 
+    logger.info(
+        f"Returning {len(response_list)} assistants for user {user_info.lhm_object_id}"
+    )
     return response_list

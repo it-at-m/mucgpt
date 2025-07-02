@@ -15,6 +15,7 @@ on:
       - 'mucgpt-assistant-service/**'
       - 'mucgpt-core-service/**'
       - '.github/workflows/build-and-push-images.yml'
+  # workflow_dispatch works on all branches by default
   workflow_dispatch:
     inputs:
       build-frontend:

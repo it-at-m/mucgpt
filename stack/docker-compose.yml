@@ -158,8 +158,6 @@ services:
       test: ["CMD-SHELL", "curl http://localhost:39147/api/backend/health"]
 
   frontend:
-    profiles:
-      - frontend
     build:
       context: ../mucgpt-frontend
       dockerfile: Dockerfile

@@ -2,7 +2,7 @@ name: mucgpt-stack
 
 services:
   postgres:
-    image: postgres:17.4-alpine3.21@sha256:7062a2109c4b51f3c792c7ea01e83ed12ef9a980886e3b3d380a7d2e5f6ce3f5
+    image: postgres:17.4-alpine3.20@sha256:67c27fd3b866e5e3da543b37c70654a13d45d5c4bcb3a2cd9b2813a5c9e167dd
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=admin
@@ -44,7 +44,7 @@ services:
     entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
 
   keycloak:
-    image: keycloak/keycloak:26.2.1@sha256:9869b88191392727f0be7301e53573cc39c13c9d9b9b08492c97d1ea40366eae
+    image: keycloak/keycloak:26.2.5@sha256:4883630ef9db14031cde3e60700c9a9a8eaf1b5c24db1589d6a2d43de38ba2a9
     command:
       - start-dev
     environment:
@@ -64,7 +64,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3;if [ $? -eq 0 ]; then exit 0;else exit 1;fi;",
+          "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then exit 0;else exit 1;fi;",
         ]
     security_opt: *security_settings
 
@@ -110,7 +110,7 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://kubernetes.docker.internal:8100/auth/realms/local_realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/local_realm
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_PROVIDER=sso
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=mucgpt

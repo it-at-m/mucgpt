@@ -1,10 +1,8 @@
-name: Python check
+name: Assistant Service check
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  push
+  workflow_dispatch
 
 jobs:
   test_package:
@@ -22,24 +20,15 @@ jobs:
         with:
           version: "latest"
           architecture: x64
-      - name: Setup node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 20
-      - name: Build frontend
-        run: |
-          cd ./mucgpt-frontend
-          npm install
-          npm run buildlocal
       - name: Install dependencies
         run: |
-          cd ./mucgpt-core-service
+          cd ./mucgpt-assistant-service
           uv sync --all-extras
       - name: Lint with ruff
         run: |
-          cd ./mucgpt-core-service
+          cd ./mucgpt-assistant-service
           uv run ruff check .
       - name: Run Python tests
         run: |
-          cd ./mucgpt-core-service
+          cd ./mucgpt-assistant-service
           uv run pytest

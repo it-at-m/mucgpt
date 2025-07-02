@@ -21,6 +21,9 @@
 [![Langchain][langchain-shield]][langchain]
 [![Demo-Frontend][pages-shield]][pages]
 
+[![Assistant-service tests](https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg)](https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml)
+[![Core service tests](https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml/badge.svg)](https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml)
+
 [made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
 [github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge&color=orange
@@ -42,6 +45,7 @@
 [postgres]: https://www.postgresql.org/
 [langchain]: https://python.langchain.com/docs/introduction/
 [pages]: https://it-at-m.github.io/mucgpt/
+
 
 MUCGPT provides a web interface based on a given large language model (LLM). The whole package is shipped with a Docker container. For a first impression, look at our [demo frontend](https://it-at-m.github.io/mucgpt/)
 

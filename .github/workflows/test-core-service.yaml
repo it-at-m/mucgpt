@@ -1,4 +1,4 @@
-name: Python check
+name: Core service test
 
 on: [push, workflow_dispatch]
 

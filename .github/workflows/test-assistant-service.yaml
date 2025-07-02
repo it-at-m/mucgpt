@@ -1,4 +1,4 @@
-name: Assistant Service check
+name: Assistant service test
 
 on: [push, workflow_dispatch]
 

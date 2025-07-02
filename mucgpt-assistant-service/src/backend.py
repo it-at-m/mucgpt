@@ -1,14 +1,13 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse
-from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import create_async_engine
 
 from api.exceptions import AuthenticationException
 from api.routers import assistants_router, system_router, users_router
-from config.configuration import ConfigHelper
 from core.auth import AuthError
-from database.database_models import Base
+from database.session import initialize_database
 
 # serves static files and the api
 backend = FastAPI(title="MUCGPT-Assistant-Service")
@@ -51,22 +50,17 @@ api_app.include_router(system_router)
 backend.mount("/api/", api_app)
 
 
-@backend.on_event("startup")  # TODO: remove for production?!
-async def on_startup():
-    config_helper = ConfigHelper()
-    config = config_helper.loadData()
-    db_config = config.backend.db_config
-    url = URL.create(
-        drivername="postgresql+asyncpg",
-        username=db_config.db_user,
-        password=db_config.db_password,
-        host=db_config.db_host,
-        database=db_config.db_name,
-    )
-    engine = create_async_engine(url=url)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    await engine.dispose()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Context manager for the application lifespan.
+    It initializes the database on startup.
+    """
+    await initialize_database()
+    yield
+
+
+backend.lifespan = lifespan
 
 
 @api_app.exception_handler(Exception)

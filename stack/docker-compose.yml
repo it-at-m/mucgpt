@@ -148,8 +148,8 @@ services:
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
   assistant-migrations:
     build:
-      context: ../mucgpt-assistant-service
-      dockerfile: Dockerfile.migrations
+      context: ../mucgpt-assistant-service-migrations
+      dockerfile: Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
     depends_on:

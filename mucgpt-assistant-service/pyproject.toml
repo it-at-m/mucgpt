@@ -21,6 +21,7 @@ dependencies = [
     "gunicorn>=23.0.0",
     "joserfc>=1.1.0",
     "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.10.1",
     "requests>=2.32.4",
     "sqlalchemy>=2.0.41",
     "uvicorn>=0.34.3",
@@ -69,6 +70,11 @@ filterwarnings = [
 ]
 env = [
     "MUCGPT_ASSISTANT_LOG_CONFIG=src/logconf.yaml",
+    "MUCGPT_ASSISTANT_DB_HOST=test-host",
+    "MUCGPT_ASSISTANT_DB_NAME=test-db",
+    "MUCGPT_ASSISTANT_DB_USER=test-user",
+    "MUCGPT_ASSISTANT_DB_PASSWORD=test-password",
+    "MUCGPT_ASSISTANT_ENABLE_AUTH=False",
 ]
 
 [tool.coverage.paths]

@@ -8,7 +8,10 @@ from fastapi.responses import JSONResponse
 from api.exceptions import AuthenticationException
 from api.routers import assistants_router, system_router, users_router
 from core.auth import AuthError
+from core.logtools import getLogger
 from database.session import initialize_database
+
+logger = getLogger("mucgpt-assistant-service")
 
 # serves static files and the api
 backend = FastAPI(title="MUCGPT-Assistant-Service")
@@ -50,6 +53,7 @@ api_app.include_router(system_router)
 # Add correlation ID middleware for tracking requests
 api_app.add_middleware(CorrelationIdMiddleware)
 
+# Mount API
 backend.mount("/api/", api_app)
 
 
@@ -59,15 +63,24 @@ async def lifespan(app: FastAPI):
     Context manager for the application lifespan.
     It initializes the database on startup.
     """
+    logger.info("Starting lifespan...")
+
+    # Initialize database migrations
+    logger.info("Initializing database...")
     await initialize_database()
+    logger.info("Database initialized")
+
     yield
 
+    logger.info("Shutting down lifespan")
 
+
+# Set lifespan for backend app (the main app that serves requests)
 backend.lifespan = lifespan
 
 
 @api_app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
+async def handle_general_exception(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"detail": "An internal server error occurred."},

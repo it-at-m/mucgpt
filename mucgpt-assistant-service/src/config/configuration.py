@@ -1,4 +1,4 @@
-import logging
+from functools import lru_cache
 from os import getenv
 
 from .models import (
@@ -8,8 +8,6 @@ from .models import (
     SSOConfig,
 )
 from .version import get_latest_commit, get_version
-
-logger = logging.getLogger()
 
 
 class ConfigHelper:
@@ -39,3 +37,16 @@ class ConfigHelper:
             commit=get_latest_commit(),
             backend=backendConfig,
         )
+
+
+# Global configuration instance:
+# This implementation uses functools.lru_cache to ensure that the configuration is loaded only once per process,
+# providing thread-safe, lazy initialization and avoiding repeated environment variable lookups.
+@lru_cache(maxsize=1)
+def get_config() -> Config:
+    """
+    Get the application configuration.
+    Returns a cached instance of the configuration to avoid repeated environment variable lookups.
+    """
+    config_helper = ConfigHelper()
+    return config_helper.loadData()

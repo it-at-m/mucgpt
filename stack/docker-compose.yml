@@ -2,15 +2,13 @@ name: mucgpt-stack
 
 services:
   postgres:
-    image: postgres:17.4-alpine3.20@sha256:67c27fd3b866e5e3da543b37c70654a13d45d5c4bcb3a2cd9b2813a5c9e167dd
+    image: postgres:17.4-alpine3.21@sha256:7062a2109c4b51f3c792c7ea01e83ed12ef9a980886e3b3d380a7d2e5f6ce3f5
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
-    networks:
-      - keycloak
     healthcheck: &healthcheck
       test: ["CMD-SHELL", "pg_isready -d postgres -U admin"]
       interval: 30s
@@ -22,7 +20,7 @@ services:
 
     # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.2.0@sha256:52cb72a9e3da275324ca0b9bb3891021366d501aad375db34584a7bca8ce02ff
+    image: dpage/pgadmin4:9.0.0@sha256:1b2f1ecb93ed2c20530703f77acdfa0da8c2470a4e17044504057cea2d6b4fac
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -38,8 +36,8 @@ services:
       test: ["CMD", "wget", "-O", "-", "http://localhost:5050/misc/ping"]
     security_opt: *security_settings
     volumes:
-      - "./pgadmin/servers.json:/pgadmin4/servers.json"
-      - "./pgadmin/pgpass:/pgadmin4/pgpass"
+      - './pgadmin/servers.json:/pgadmin4/servers.json'
+      - './pgadmin/pgpass:/pgadmin4/pgpass'
     user: root # see https://github.com/pgadmin-org/pgadmin4/issues/6257
     entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
 
@@ -154,7 +152,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - MUCGPT_ASSISTANT_SSO_USERINFO_URL=http://refarch-gateway:8080/api/sso/userinfo
+      - MUCGPT_ASSISTANT_SSO_USERINFO_URL=http://keycloak:8100/auth/realms/local_realm/protocol/openid-connect/userinfo
       - MUCGPT_ASSISTANT_SSO_ROLE=lhm-ab-mucgpt-user
       - MUCGPT_ASSISTANT_DB_HOST=postgres
       - MUCGPT_ASSISTANT_DB_PORT=5432

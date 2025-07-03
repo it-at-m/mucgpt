@@ -1,8 +1,6 @@
 from collections.abc import AsyncGenerator
 from functools import lru_cache
 
-from alembic import command
-from alembic.config import Config as AlembicConfig
 from fastapi import Depends
 from sqlalchemy import URL, exc
 from sqlalchemy.ext.asyncio import (
@@ -37,18 +35,6 @@ def get_engine_and_factory(database_url: str):
     engine = create_async_engine(url=database_url)
     factory = async_sessionmaker(engine)
     return engine, factory
-
-
-async def initialize_database() -> None:
-    """Initialize database by running Alembic migrations."""
-    logger.info("Starting database migration...")
-    try:
-        alembic_cfg = AlembicConfig("migrations/alembic.ini")
-        command.upgrade(alembic_cfg, "head")
-        logger.info("Database migration completed successfully.")
-    except Exception as e:
-        logger.error(f"Alembic migration failed: {e}")
-        raise
 
 
 async def get_db_session(

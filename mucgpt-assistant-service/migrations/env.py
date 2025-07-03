@@ -1,12 +1,18 @@
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from src.config.configuration import ConfigHelper
-from src.database.database_models import Base
+
+# Add the migrations directory to the Python path to find our models
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import models for migrations from our dedicated models package
+from migrations.models.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -21,6 +27,16 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 target_metadata = Base.metadata
 
+# Get script_location from environment if not already set
+if not config.get_main_option("script_location"):
+    script_location = os.getenv("MUCGPT_ASSISTANT_ALEMBIC_CONFIG_PATH", "./migrations")
+    print(f"Setting script_location to: {script_location}", file=sys.stderr)
+    config.set_main_option("script_location", script_location)
+if not config.get_main_option("script_location"):
+    script_location = os.getenv("MUCGPT_ASSISTANT_ALEMBIC_CONFIG_PATH", "./migrations")
+    print(f"Setting script_location to: {script_location}", file=sys.stderr)
+    config.set_main_option("script_location", script_location)
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -28,16 +44,34 @@ target_metadata = Base.metadata
 
 
 def get_database_url():
-    """Get database URL from configuration"""
-    try:
-        config_helper = ConfigHelper()
-        app_config = config_helper.loadData()
-        db_config = app_config.backend.db_config
+    """Get database URL from environment variables."""
+    # First try to get from DATABASE_URL environment variable
+    database_url = os.getenv("DATABASE_URL")
+    if database_url:
+        return database_url
 
-        return f"postgresql+asyncpg://{db_config.db_user}:{db_config.db_password}@{db_config.db_host}:{db_config.db_port}/{db_config.db_name}"
-    except Exception:
-        # Fallback URL for when config is not available
-        return "postgresql+asyncpg://user:password@localhost:5432/database"
+    # If not available, build from individual environment variables
+    db_user = os.getenv("MUCGPT_ASSISTANT_DB_USER")
+    db_password = os.getenv("MUCGPT_ASSISTANT_DB_PASSWORD")
+    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
+    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
+    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
+
+    if not all([db_user, db_password, db_host, db_name]):
+        print("Error: Database environment variables not set", file=sys.stderr)
+        sys.exit(1)
+
+    return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+
+# add your model's MetaData object here
+# for 'autogenerate' support
+target_metadata = Base.metadata
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option("my_important_option")
+# ... etc.
 
 
 def run_migrations_offline() -> None:
@@ -95,6 +129,12 @@ def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
 
     asyncio.run(run_async_migrations())
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
 
 
 if context.is_offline_mode():

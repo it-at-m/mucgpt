@@ -9,7 +9,7 @@ logger = getLogger("mucgpt-assistant-service")
 
 
 class Settings(BaseSettings):
-    MUCGPT_ASSISTANT_SSO_ISSUER: Optional[str] = None
+    MUCGPT_ASSISTANT_SSO_USERINFO_URL: Optional[str] = None
     MUCGPT_ASSISTANT_SSO_ROLE: Optional[str] = None
 
     MUCGPT_ASSISTANT_DB_HOST: str

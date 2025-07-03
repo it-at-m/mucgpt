@@ -44,6 +44,7 @@ services:
     entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
 
   keycloak:
+    container_name: keycloak
     image: keycloak/keycloak:26.2.5@sha256:4883630ef9db14031cde3e60700c9a9a8eaf1b5c24db1589d6a2d43de38ba2a9
     command:
       - start-dev
@@ -84,12 +85,13 @@ services:
     networks:
       - keycloak
     security_opt: *security_settings
-
   refarch-gateway:
     image: ghcr.io/it-at-m/refarch/refarch-gateway:1.5.0@sha256:9ebe76275d7aa7863f66e600ed91aa10c538faa183e06c0a6b3ef87fceb88315
     depends_on:
       init-keycloak:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_started
     ports:
       - "8083:8080"
     environment:
@@ -140,15 +142,26 @@ services:
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
-
   assistant-service:
     build:
       context: ../mucgpt-assistant-service
       dockerfile: Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}
-    env_file:
-      - ./.env
+    depends_on:
+      refarch-gateway:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - MUCGPT_ASSISTANT_SSO_USERINFO_URL=http://refarch-gateway:8080/api/sso/userinfo
+      - MUCGPT_ASSISTANT_SSO_ROLE=lhm-ab-mucgpt-user
+      - MUCGPT_ASSISTANT_DB_HOST=postgres
+      - MUCGPT_ASSISTANT_DB_PORT=5432
+      - MUCGPT_ASSISTANT_DB_NAME=postgres
+      - MUCGPT_ASSISTANT_DB_USER=admin
+      - MUCGPT_ASSISTANT_DB_PASSWORD=admin
+
     ports:
       - "39147:8084"
     networks:

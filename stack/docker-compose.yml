@@ -143,6 +143,14 @@ services:
       - "39146:8000"
     networks:
       - keycloak
+    environment:
+      - MUCGPT_CORE_FRONTEND__LABELS__ENV_NAME=MUCGPT-LOKAL
+      - MUCGPT_CORE_FRONTEND__ALTERNATIVE_LOGO=false
+      - MUCGPT_CORE_FRONTEND__ENABLE_SIMPLY=true
+      - MUCGPT_CORE_BACKEND__ENABLE_AUTH=true
+      - MUCGPT_CORE_BACKEND__UNAUTHORIZED_USER_REDIRECT_URL=""
+      - MUCGPT_CORE_BACKEND__SSO_CONFIG__SSO_USERINFO_URL=http://keycloak:8100/auth/realms/local_realm/protocol/openid-connect/userinfo
+      - MUCGPT_CORE_BACKEND__SSO_CONFIG__ROLE=lhm-ab-mucgpt-user
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]

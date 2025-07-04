@@ -1,10 +1,11 @@
 import json
 import logging
 import logging.config
-import os
 from datetime import datetime
 
 from yaml import safe_load
+
+from config.settings import get_settings
 
 
 def getLogger(name: str = "mucgpt-backend") -> logging.Logger:
@@ -16,8 +17,10 @@ def getLogger(name: str = "mucgpt-backend") -> logging.Logger:
     Returns:
     logging.Logger: The logger with the specified name.
     """
-    log_config = os.getenv("LOG_CONFIG", "logconf.yaml")
-    with open(log_config) as file:
+    settings = get_settings()
+    log_config_path = settings.log_config
+
+    with open(log_config_path) as file:
         log_config = safe_load(file)
 
     logging.config.dictConfig(log_config)

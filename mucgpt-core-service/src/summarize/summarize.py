@@ -8,8 +8,6 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 from pydantic import BaseModel, Field
 
-from config.settings import ApproachConfig
-from core.datahelper import Repository, Requestinfo
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.textsplit import splitPDF, splitText
@@ -86,16 +84,12 @@ class Summarize:
     def __init__(
         self,
         llm: RunnableSerializable,
-        config: ApproachConfig,
-        repo: Repository,
         short_split=2100,
         medium_split=1500,
         long_split=700,
         use_last_n_summaries=-2,
     ):
         self.llm = llm
-        self.config = config
-        self.repo = repo
         self.switcher = {
             "short": short_split,
             "medium": medium_split,
@@ -256,17 +250,6 @@ class Summarize:
                 total_tokens += cb.total_tokens
                 final_summarys.append(chunk_summary.content)
         logger.info("Summarize completed with total tokens %s", total_tokens)
-        # save total tokens
-        if self.config.log_tokens:
-            self.repo.addInfo(
-                Requestinfo(
-                    tokencount=total_tokens,
-                    department=department,
-                    messagecount=1,
-                    method="Sum",
-                    model=llm_name,
-                )
-            )
 
         return SummarizeResult(answer=final_summarys)
 

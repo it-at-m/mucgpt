@@ -5,8 +5,6 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
-from config.settings import ApproachConfig
-from core.datahelper import Repository, Requestinfo
 from core.logtools import getLogger
 from core.types.ChatRequest import ChatTurn
 from core.types.ChatResult import ChatResult
@@ -18,12 +16,8 @@ logger = getLogger(name="mucgpt-backend-simply")
 class Simply:
     """Chat with a llm via multiple steps."""
 
-    def __init__(
-        self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository
-    ):
+    def __init__(self, llm: RunnableSerializable):
         self.llm = llm
-        self.config = config
-        self.repo = repo
 
     def simply(
         self, temperature: float, department: Optional[str], llm_name: str, message: str
@@ -60,16 +54,6 @@ class Simply:
         with get_openai_callback() as cb:
             ai_message: AIMessage = llm.invoke(msgs)
             total_tokens = cb.total_tokens
-        if self.config.log_tokens:
-            self.repo.addInfo(
-                Requestinfo(
-                    tokencount=total_tokens,
-                    department=department,
-                    messagecount=1,
-                    method="Simplyfied Language",
-                    model=llm_name,
-                )
-            )
         result = ChatResult(content=self.extractText(ai_message.content))
         logger.info("Total tokens: %s", total_tokens)
         logger.info("Simply completed")

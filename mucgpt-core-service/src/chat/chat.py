@@ -4,8 +4,6 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
-from config.settings import ApproachConfig
-from core.datahelper import Repository, Requestinfo
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.modelhelper import num_tokens_from_messages
@@ -20,12 +18,8 @@ logger = getLogger(name="mucgpt-backend-chat")
 class Chat:
     """Chat with a llm via multiple steps."""
 
-    def __init__(
-        self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository
-    ):
+    def __init__(self, llm: RunnableSerializable):
         self.llm = llm
-        self.config = config
-        self.repo = repo
 
     async def run_with_streaming(
         self,
@@ -79,16 +73,6 @@ class Chat:
         if history:
             history[-1].bot = result
         streamed_tokens = num_tokens_from_messages([HumanMessage(result)], model)
-        if self.config.log_tokens:
-            self.repo.addInfo(
-                Requestinfo(
-                    tokencount=streamed_tokens,
-                    department=department,
-                    messagecount=len(history),
-                    method="Chat",
-                    model=model,
-                )
-            )
 
         info = ChunkInfo(
             requesttokens=num_tokens_from_messages([msgs[-1]], model),
@@ -129,18 +113,9 @@ class Chat:
 
         with get_openai_callback() as cb:
             ai_message: AIMessage = llm.invoke(msgs)
-        total_tokens = cb.total_tokens
+        # todo, check if needed.
+        _ = cb.total_tokens
 
-        if self.config.log_tokens:
-            self.repo.addInfo(
-                Requestinfo(
-                    tokencount=total_tokens,
-                    department=department,
-                    messagecount=1,
-                    method="Brainstorm",
-                    model=llm_name,
-                )
-            )
         logger.info("Chat completed with total tokens %s", cb.total_tokens)
         return ChatResult(content=ai_message.content)
 

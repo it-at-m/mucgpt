@@ -8,16 +8,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from core.version import get_latest_commit, get_version
 
 
-class ApproachConfig(BaseModel):
-    log_tokens: bool = False
-
-
 class ModelsConfig(BaseModel):
     type: str = Field(..., min_length=1)
     llm_name: str = Field(..., min_length=1)
     deployment: str = ""
     endpoint: HttpUrl
     api_key: SecretStr
+    api_version: str = ""
     max_output_tokens: PositiveInt
     max_input_tokens: PositiveInt
     description: str = ""
@@ -37,27 +34,14 @@ class ModelsDTO(BaseModel):
 
 
 class SSOConfig(BaseModel):
-    sso_issuer: str = ""
+    sso_userinfo_url: str = ""
     role: str = "lhm-ab-mucgpt-user"
-
-
-class DatabaseConfig(BaseModel):
-    db_host: str = ""
-    db_name: str = ""
-    db_user: str = ""
-    db_password: str = ""
 
 
 class BackendConfig(BaseModel):
     enable_auth: bool = False
     unauthorized_user_redirect_url: str = ""
-    enable_database: bool = False
     sso_config: SSOConfig = Field(default_factory=SSOConfig)
-    db_config: DatabaseConfig = Field(default_factory=DatabaseConfig)
-    chat: ApproachConfig = Field(default_factory=ApproachConfig)
-    brainstorm: ApproachConfig = Field(default_factory=ApproachConfig)
-    sum: ApproachConfig = Field(default_factory=ApproachConfig)
-    simply: ApproachConfig = Field(default_factory=ApproachConfig)
     models: List[ModelsConfig] = []
     models_json: str = "[]"
 
@@ -89,6 +73,7 @@ class Settings(BaseSettings):
     # General settings
     version: str = Field(default="")
     commit: str = Field(default="")
+    log_config: str = "logconf.yaml"
 
     # Frontend settings
     frontend: FrontendConfig = Field(default_factory=FrontendConfig)
@@ -114,9 +99,6 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """Get cached settings instance."""
-    return Settings()
-
-
-# Alias for backward compatibility
-Config = Settings
+    """Return cached Settings instance."""
+    settings = Settings()
+    return settings

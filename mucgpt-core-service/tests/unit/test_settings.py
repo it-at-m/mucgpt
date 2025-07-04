@@ -68,7 +68,6 @@ class TestSettings:
             settings = Settings()
 
             assert settings.backend.enable_auth is False
-            assert settings.backend.enable_database is False
             assert settings.backend.sso_config.role == "lhm-ab-mucgpt-user"
             assert len(settings.backend.models) == 0
 

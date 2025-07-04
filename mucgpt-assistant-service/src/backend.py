@@ -1,4 +1,6 @@
-from asgi_correlation_id import CorrelationIdMiddleware
+import time
+
+from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse
@@ -53,6 +55,21 @@ api_app.add_middleware(CorrelationIdMiddleware)
 
 # Mount API
 backend.mount("/api/", api_app)
+
+
+@api_app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    # add trace information
+    if "x-request-id" in response.headers:
+        correlation_id.set(response.headers["x-request-id"])
+    logger.info(
+        "Request %s took %.3f seconds", request.url.path, time.time() - start_time
+    )
+    # remove trace information
+    correlation_id.set(None)
+    return response
 
 
 @api_app.exception_handler(Exception)

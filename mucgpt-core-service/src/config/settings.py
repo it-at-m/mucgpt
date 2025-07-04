@@ -1,11 +1,10 @@
-import os
 from functools import lru_cache
 from typing import List
 
 from pydantic import BaseModel, Field, HttpUrl, PositiveInt, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from core.version import get_latest_commit, get_version
+from core.version import VersionInfo
 
 
 class ModelsConfig(BaseModel):
@@ -85,16 +84,9 @@ class Settings(BaseSettings):
         super().__init__(**kwargs)
         # Set version and commit if not provided via environment
         if not self.version:
-            try:
-                self.version = get_version()
-            except Exception:
-                self.version = os.getenv("MUCGPT_CORE_VERSION", "unknown")
-
+            self.version = VersionInfo.get_commit
         if not self.commit:
-            try:
-                self.commit = get_latest_commit()
-            except Exception:
-                self.commit = os.getenv("MUCGPT_CORE_COMMIT", "unknown")
+            self.commit = VersionInfo.get_version
 
 
 @lru_cache

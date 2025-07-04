@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
-from core.textsplit import splitPDF, splitText
+from core.textsplit import TextProcessor
 from core.types.LlmConfigs import LlmConfigs
 from core.types.SummarizeResult import SummarizeResult
 
@@ -267,9 +267,14 @@ class Summarize:
         splitsize = self.switcher.get(detaillevel, 700)
 
         if file is not None:
-            logger.info("Split pdf")
-            splits = splitPDF(file, splitsize, 0)
+            logger.info("Split pdf using TextProcessor.pdf_to_text & split_text")
+            raw_text = TextProcessor.pdf_to_text(file)
+            splits = TextProcessor.split_text(
+                raw_text, chunk_size=splitsize, chunk_overlap=0
+            )
         else:
-            logger.info("Split text")
-            splits = splitText(text, splitsize, 0)
+            logger.info("Split text using TextProcessor.split_text")
+            splits = TextProcessor.split_text(
+                text, chunk_size=splitsize, chunk_overlap=0
+            )
         return splits

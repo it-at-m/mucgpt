@@ -1,86 +1,42 @@
-from typing import List
-
 from langchain.docstore.document import Document
 from langchain.text_splitter import TokenTextSplitter
 from pypdf import PdfReader
 
 
-def textToDocs(text: str, chunk_size=2500, chunk_overlap=100) -> List[Document]:
-    """split and convert to langchain docs
-
-    Args:
-        text (str): given text
-        chunk_size (int, optional): Splits the text into chunks of this size. Defaults to 2500.
-        chunk_overlap (int, optional): how much overlap between the chunks. Defaults to 100.
-
-    Returns:
-        List[Document]: List of documents, containing the splits
+class TextProcessor:
     """
-    text_splitter = TokenTextSplitter.from_tiktoken_encoder(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap
-    )
-    texts = text_splitter.split_text(text)
-    docs = [Document(page_content=t) for t in texts]
-    return docs
-
-
-def PDFtoDocs(pdf, chunk_size=2500, chunk_overlap=100) -> List[Document]:
-    """read pdf and convert o chunks of langchain docs
-
-    Args:
-        pdf (_type_): a pdf
-        chunk_size (int, optional): Splits the text into chunks of this size. Defaults to 2500.
-        chunk_overlap (int, optional): how much overlap between the chunks. Defaults to 100.
-    Returns:
-        List[Document]: List of documents, containing the splits
+    Text processing utilities for chunking and document conversion.
     """
-    # creating a pdf reader object
-    reader = PdfReader(pdf)
-    # read alll
-    complete = ""
-    for page in reader.pages:
-        complete += page.extract_text()
 
-    return textToDocs(text=complete, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    @staticmethod
+    def split_text(
+        text: str, chunk_size: int = 2500, chunk_overlap: int = 100
+    ) -> list[str]:
+        text_splitter = TokenTextSplitter.from_tiktoken_encoder(
+            chunk_size=chunk_size, chunk_overlap=chunk_overlap
+        )
+        return text_splitter.split_text(text)
 
+    @staticmethod
+    def text_to_documents(
+        text: str, chunk_size: int = 2500, chunk_overlap: int = 100
+    ) -> list[Document]:
+        chunks = TextProcessor.split_text(text, chunk_size, chunk_overlap)
+        return [Document(page_content=chunk) for chunk in chunks]
 
-# Same without langchain documents
+    @staticmethod
+    def pdf_to_text(
+        pdf_file,
+    ) -> str:
+        try:
+            reader = PdfReader(pdf_file)
+            return "".join(page.extract_text() for page in reader.pages)
+        except Exception as e:
+            raise ValueError(f"Failed to extract text from PDF: {str(e)}")
 
-
-def splitText(text: str, chunk_size=2500, chunk_overlap=100) -> List[str]:
-    """split and convert to text chunks
-
-    Args:
-        text (str): given text
-        chunk_size (int, optional): Splits the text into chunks of this size. Defaults to 2500.
-        chunk_overlap (int, optional): how much overlap between the chunks. Defaults to 100.
-
-    Returns:
-        List[Document]: List of documents, containing the splits
-    """
-    # split
-    text_splitter = TokenTextSplitter.from_tiktoken_encoder(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap
-    )
-    texts = text_splitter.split_text(text)
-    return texts
-
-
-def splitPDF(pdf, chunk_size=2500, chunk_overlap=100) -> List[str]:
-    """read pdf and convert o chunks of text chunks
-
-    Args:
-        pdf (_type_): a pdf
-        chunk_size (int, optional): Splits the text into chunks of this size. Defaults to 2500.
-        chunk_overlap (int, optional): how much overlap between the chunks. Defaults to 100.
-    Returns:
-        List[str]: list of chunks
-    """
-    # creating a pdf reader object
-    reader = PdfReader(pdf)
-    # read alll
-    complete = ""
-    for page in reader.pages:
-        complete += page.extract_text()
-
-    return splitText(text=complete, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    @staticmethod
+    def pdf_to_documents(
+        pdf_file, chunk_size: int = 2500, chunk_overlap: int = 100
+    ) -> list[Document]:
+        text = TextProcessor.pdf_to_text(pdf_file)
+        return TextProcessor.text_to_documents(text, chunk_size, chunk_overlap)

@@ -144,25 +144,3 @@ def test_client(override_get_db_session, override_authenticate_user):
 
     # Clear overrides after test
     api_app.dependency_overrides.clear()
-
-
-# Add a fixture to mock database connection configuration
-@pytest.fixture(autouse=True)
-def mock_db_config():
-    """Mock the database configuration to prevent actual DB connection attempts."""
-    from unittest.mock import patch
-
-    with patch("config.configuration.ConfigHelper.loadData") as mock_load_data:
-        # Create a mock configuration that will be returned by loadData
-        mock_config = MagicMock()
-        mock_config.backend.db_config.db_user = "test_user"
-        mock_config.backend.db_config.db_host = "localhost"
-        mock_config.backend.db_config.db_name = "test_db"
-        mock_config.backend.db_config.db_password = "test_password"
-        mock_config.backend.sso_config.sso_issuer = (
-            "http://localhost:8080/auth/realms/test"
-        )
-        mock_config.backend.sso_config.role = "test_role"
-
-        mock_load_data.return_value = mock_config
-        yield mock_load_data

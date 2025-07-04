@@ -20,11 +20,11 @@ def create_database_url(settings: Settings) -> URL:
     """Create database URL from settings."""
     return URL.create(
         drivername="postgresql+asyncpg",
-        username=settings.MUCGPT_ASSISTANT_DB_USER,
-        password=settings.MUCGPT_ASSISTANT_DB_PASSWORD,
-        host=settings.MUCGPT_ASSISTANT_DB_HOST,
-        port=settings.MUCGPT_ASSISTANT_DB_PORT,
-        database=settings.MUCGPT_ASSISTANT_DB_NAME,
+        username=settings.DB_USER,
+        password=settings.DB_PASSWORD,
+        host=settings.DB_HOST,
+        port=settings.DB_PORT,
+        database=settings.DB_NAME,
     )
 
 

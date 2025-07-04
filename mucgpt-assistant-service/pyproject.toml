@@ -58,7 +58,7 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 pythonpath = ["src"]
-addopts = "--strict-markers --strict-config --verbose --tb=short -ra"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=src --cov-report=term-missing"
 markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')"
 ]

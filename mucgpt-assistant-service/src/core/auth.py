@@ -173,11 +173,11 @@ def authenticate_user(
             lhm_object_id="guest",
             department="guest",
             name="Guest User",
-            roles=[settings.MUCGPT_ASSISTANT_SSO_ROLE],
+            roles=[settings.SSO_ROLE],
         )
     auth_helper = AuthenticationHelper(
-        userinfo_url=settings.MUCGPT_ASSISTANT_SSO_USERINFO_URL,
-        role=settings.MUCGPT_ASSISTANT_SSO_ROLE,
+        userinfo_url=settings.SSO_USERINFO_URL,
+        role=settings.SSO_ROLE,
     )
 
     try:

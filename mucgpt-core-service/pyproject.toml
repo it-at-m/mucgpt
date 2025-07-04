@@ -31,17 +31,7 @@ dependencies = [
     "asgi-correlation-id==4.3.4",
     "sqlalchemy==2.0.40",
     "gitpython==3.1.44",
-]
-
-[project.optional-dependencies]
-test = [
-    "pytest-env",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-snapshot",
-    "pytest-mock",
-    "coverage==7.8.0",
-    "pytest-cov"
+    "pydantic-settings>=2.8.1",
 ]
 
 [tool.uv]
@@ -49,6 +39,13 @@ dev-dependencies = [
     "ipykernel==6.29.5",
     "pre-commit==4.2.0",
     "ruff==0.11.8",
+    "pytest-env",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-snapshot",
+    "pytest-mock",
+    "coverage==7.8.0",
+    "pytest-cov"
 ]
 
 [[tool.uv.index]]
@@ -64,7 +61,7 @@ select = ["E", "F", "I", "UP"]
 ignore = ["E501", "E701"] # line too long, multiple statements on one line
 
 [tool.pytest.ini_options]
-addopts = "-ra --cov"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=src --cov-report=term-missing"
 pythonpath = ["src/"]
 testpaths = [
     "tests"]
@@ -74,30 +71,6 @@ markers = [
 ]
 env = [
     "MUCGPT_CORE_LOG_CONFIG=src/logconf.yaml",
-    "MUCGPT_CORE_FRONTEND_LABELS_ENV_NAME=MUCGPT",
-    "MUCGPT_CORE_FRONTEND_ALTERNATIVE_LOGO=false",
-    "MUCGPT_CORE_BACKEND_ENABLE_AUTH=false",
-    "MUCGPT_CORE_BACKEND_ENABLE_DATABASE=false",
-    "MUCGPT_CORE_BACKEND_UNAUTHORIZED_USER_REDIRECT_URL=NOT USED",
-    "MUCGPT_CORE_BACKEND_SSO_ISSUER=NOT USED",
-    "MUCGPT_CORE_BACKEND_SSO_ROLE=lhm-ab-mucgpt-user",
-    "MUCGPT_CORE_BACKEND_DB_HOST=NOT USED",
-    "MUCGPT_CORE_BACKEND_DB_NAME=NOT USED",
-    "MUCGPT_CORE_BACKEND_DB_USER=NOT USED",
-    "MUCGPT_CORE_BACKEND_DB_PASSWORD=NOT USED",
-    "MUCGPT_CORE_BACKEND_CHAT_LOG_TOKENS=false",
-    "MUCGPT_CORE_BACKEND_BRAINSTORM_LOG_TOKENS=false",
-    "MUCGPT_CORE_BACKEND_SUM_LOG_TOKENS=false",
-    "MUCGPT_CORE_BACKEND_SIMPLY_LOG_TOKENS=false",
-    "MUCGPT_CORE_BACKEND_MODEL_1_TYPE=AZURE",
-    "MUCGPT_CORE_BACKEND_MODEL_1_LLM_NAME=TEST_MODEL",
-    "MUCGPT_CORE_BACKEND_MODEL_1_DEPLOYMENT=NOT USED",
-    "MUCGPT_CORE_BACKEND_MODEL_1_ENDPOINT=https://myfakeendpoint.com",
-    "MUCGPT_CORE_BACKEND_MODEL_1_API_KEY=NOT USED",
-    "MUCGPT_CORE_BACKEND_MODEL_1_MAX_OUTPUT_TOKENS=128000",
-    "MUCGPT_CORE_BACKEND_MODEL_1_MAX_INPUT_TOKENS=8192",
-    "MUCGPT_CORE_BACKEND_MODEL_1_API_VERSION=NOT USED",
-    "MUCGPT_CORE_BACKEND_MODEL_1_DESCRIPTION=NOT USED",
     "MUCGPT_CORE_VERSION=0.0",
     "MUCGPT_CORE_COMMIT=12012lf",
     "GIT_PYTHON_REFRESH=quiet"

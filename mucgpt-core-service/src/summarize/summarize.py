@@ -8,11 +8,11 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 from pydantic import BaseModel, Field
 
+from config.settings import ApproachConfig
 from core.datahelper import Repository, Requestinfo
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.textsplit import splitPDF, splitText
-from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 from core.types.SummarizeResult import SummarizeResult
 

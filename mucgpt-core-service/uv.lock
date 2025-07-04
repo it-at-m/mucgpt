@@ -1334,34 +1334,30 @@ dependencies = [
     { name = "mistral-common" },
     { name = "openai" },
     { name = "psycopg2-binary" },
+    { name = "pydantic-settings" },
     { name = "pypdf" },
     { name = "sqlalchemy" },
     { name = "tiktoken" },
     { name = "uvicorn" },
 ]
 
-[package.optional-dependencies]
-test = [
+[package.dev-dependencies]
+dev = [
     { name = "coverage" },
+    { name = "ipykernel" },
+    { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-env" },
     { name = "pytest-mock" },
     { name = "pytest-snapshot" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "ipykernel" },
-    { name = "pre-commit" },
     { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "asgi-correlation-id", specifier = "==4.3.4" },
-    { name = "coverage", marker = "extra == 'test'", specifier = "==7.8.0" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.115.12" },
     { name = "gitpython", specifier = "==3.1.44" },
     { name = "joserfc" },
@@ -1373,23 +1369,24 @@ requires-dist = [
     { name = "mistral-common", specifier = "==1.5.4" },
     { name = "openai", specifier = "==1.77.0" },
     { name = "psycopg2-binary", specifier = "==2.9.10" },
+    { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = "==5.4.0" },
-    { name = "pytest", marker = "extra == 'test'" },
-    { name = "pytest-asyncio", marker = "extra == 'test'" },
-    { name = "pytest-cov", marker = "extra == 'test'" },
-    { name = "pytest-env", marker = "extra == 'test'" },
-    { name = "pytest-mock", marker = "extra == 'test'" },
-    { name = "pytest-snapshot", marker = "extra == 'test'" },
     { name = "sqlalchemy", specifier = "==2.0.40" },
     { name = "tiktoken" },
     { name = "uvicorn", specifier = "==0.34.2" },
 ]
-provides-extras = ["test"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "coverage", specifier = "==7.8.0" },
     { name = "ipykernel", specifier = "==6.29.5" },
     { name = "pre-commit", specifier = "==4.2.0" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-env" },
+    { name = "pytest-mock" },
+    { name = "pytest-snapshot" },
     { name = "ruff", specifier = "==0.11.8" },
 ]
 

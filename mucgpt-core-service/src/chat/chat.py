@@ -4,6 +4,7 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
+from config.settings import ApproachConfig
 from core.datahelper import Repository, Requestinfo
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
@@ -11,7 +12,6 @@ from core.modelhelper import num_tokens_from_messages
 from core.types.ChatRequest import ChatTurn
 from core.types.ChatResult import ChatResult
 from core.types.Chunk import Chunk, ChunkInfo
-from core.types.Config import ApproachConfig
 from core.types.LlmConfigs import LlmConfigs
 
 logger = getLogger(name="mucgpt-backend-chat")

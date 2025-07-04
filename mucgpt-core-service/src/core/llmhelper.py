@@ -5,7 +5,7 @@ from langchain_core.runnables import ConfigurableField
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
-from core.types.Config import ModelsConfig
+from config.settings import ModelsConfig
 
 
 class ModelsConfigurationException(Exception):

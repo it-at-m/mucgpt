@@ -2,9 +2,9 @@ from typing import TypedDict
 
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
+from config.settings import BackendConfig, Settings
 from core.authentification import AuthentificationHelper
 from core.datahelper import Repository
-from core.types.Config import BackendConfig, Config
 from simply.simply import Simply
 from summarize.summarize import Summarize
 
@@ -17,7 +17,7 @@ class AppConfig(TypedDict):
     brainstorm_approaches: Brainstorm
     simply_approaches: Simply
     authentification_client: AuthentificationHelper
-    configuration_features: Config
+    configuration_features: Settings
     repository: Repository
     backend_config: BackendConfig
     departements: list[str]

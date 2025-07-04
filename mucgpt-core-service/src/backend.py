@@ -12,6 +12,7 @@ from fastapi.responses import (
 from langchain_core.messages.human import HumanMessage
 from pydantic_core import from_json
 
+from config.settings import ConfigResponse, ModelsConfig, ModelsDTO
 from core.authentification import AuthentificationHelper, AuthError
 from core.helper import format_as_ndjson, llm_exception_handler
 from core.logtools import getLogger
@@ -21,7 +22,6 @@ from core.types.BrainstormRequest import BrainstormRequest
 from core.types.BrainstormResult import BrainstormResult
 from core.types.ChatRequest import ChatRequest, ChatTurn
 from core.types.ChatResult import ChatResult
-from core.types.Config import ConfigResponse, ModelsConfig, ModelsDTO
 from core.types.countresult import CountResult
 from core.types.CountTokenRequest import CountTokenRequest
 from core.types.CreateBotRequest import CreateBotRequest

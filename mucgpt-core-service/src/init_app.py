@@ -4,13 +4,12 @@ from typing import Tuple
 
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
+from config.settings import BackendConfig, DatabaseConfig, get_settings
 from core.authentification import AuthentificationHelper
-from core.confighelper import ConfigHelper
 from core.datahelper import Base, Repository
 from core.llmhelper import getModel
 from core.logtools import getLogger
 from core.types.AppConfig import AppConfig
-from core.types.Config import BackendConfig, DatabaseConfig
 from simply.simply import Simply
 from summarize.summarize import Summarize
 
@@ -61,8 +60,7 @@ def initApp() -> AppConfig:
         AppConfig: contains the configuration for the webservice
     """
     logger.info("Init app")
-    config_helper = ConfigHelper()
-    cfg = config_helper.loadData()
+    cfg = get_settings()
     # Set up authentication helper
     logger.info("Authentification enabled?:  " + str(cfg.backend.enable_auth))
     auth_helper = AuthentificationHelper(

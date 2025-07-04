@@ -10,7 +10,7 @@ from core.logtools import getLogger
 from core.types.BrainstormResult import BrainstormResult
 from core.types.LlmConfigs import LlmConfigs
 
-logger = getLogger(name="mucgpt-backend-brainstorm")
+logger = getLogger(name="mucgpt-core-brainstorm")
 
 
 class Brainstorm:

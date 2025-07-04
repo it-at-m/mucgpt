@@ -10,7 +10,7 @@ from core.types.ChatRequest import ChatTurn
 from core.types.ChatResult import ChatResult
 from core.types.LlmConfigs import LlmConfigs
 
-logger = getLogger(name="mucgpt-backend-simply")
+logger = getLogger(name="mucgpt-core-simply")
 
 
 class Simply:

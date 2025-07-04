@@ -14,7 +14,7 @@ from core.textsplit import splitPDF, splitText
 from core.types.LlmConfigs import LlmConfigs
 from core.types.SummarizeResult import SummarizeResult
 
-logger = getLogger(name="mucgpt-backend-summarize")
+logger = getLogger(name="mucgpt-core-summarize")
 
 
 class DenserSummary(BaseModel):

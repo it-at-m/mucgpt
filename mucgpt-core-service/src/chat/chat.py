@@ -12,7 +12,7 @@ from core.types.ChatResult import ChatResult
 from core.types.Chunk import Chunk, ChunkInfo
 from core.types.LlmConfigs import LlmConfigs
 
-logger = getLogger(name="mucgpt-backend-chat")
+logger = getLogger(name="mucgpt-core-chat")
 
 
 class Chat:

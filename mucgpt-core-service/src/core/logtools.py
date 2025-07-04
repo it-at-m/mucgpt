@@ -8,7 +8,7 @@ from yaml import safe_load
 from config.settings import get_settings
 
 
-def getLogger(name: str = "mucgpt-backend") -> logging.Logger:
+def getLogger(name: str = "mucgpt-core") -> logging.Logger:
     """Configures logging and returns a logger with the specified name.
 
     Parameters:

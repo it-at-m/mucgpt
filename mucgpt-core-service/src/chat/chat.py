@@ -18,7 +18,7 @@ from api.api_models import (
 from api.api_models import (
     ChatCompletionMessage as InputMessage,
 )
-from core.helper import llm_exception_handler
+from api.exception import llm_exception_handler
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-chat")

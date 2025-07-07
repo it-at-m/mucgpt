@@ -15,9 +15,9 @@ from api.api_models import (
     CountResult,
     CountTokenRequest,
 )
+from api.exception import llm_exception_handler
 from config.settings import get_settings
 from core.auth import authenticate_user
-from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from init_app import initChatService
 

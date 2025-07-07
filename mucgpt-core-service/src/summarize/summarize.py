@@ -9,8 +9,8 @@ from langchain_core.runnables.base import RunnableSerializable
 from pydantic import BaseModel, Field
 
 from api.api_models import SummarizeResult
+from api.exception import llm_exception_handler
 from config.LlmConfigs import LlmConfigs
-from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.text_processor import TextProcessor
 

@@ -5,11 +5,11 @@ from api.exception import llm_exception_handler
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
-from init_app import initSimplyService
+from init_app import init_simply_service
 
 logger = getLogger()
 settings = get_settings()
-simply_service = initSimplyService(settings.backend)
+simply_service = init_simply_service(settings.backend)
 router = APIRouter()
 
 

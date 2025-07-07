@@ -5,11 +5,11 @@ from api.exception import llm_exception_handler
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
-from init_app import initBrainstormService
+from init_app import init_brainstorm_service
 
 logger = getLogger()
 settings = get_settings()
-brainstorm_service = initBrainstormService(settings.backend)
+brainstorm_service = init_brainstorm_service(settings.backend)
 router = APIRouter()
 
 

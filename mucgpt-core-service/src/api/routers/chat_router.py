@@ -19,11 +19,11 @@ from api.exception import llm_exception_handler
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
-from init_app import initChatService
+from init_app import init_chat_service
 
 logger = getLogger()
 settings = get_settings()
-chat_service = initChatService(settings.backend)
+chat_service = init_chat_service(settings.backend)
 token_counter = TokenCounter(logger)  # Create an instance with the application logger
 router = APIRouter(prefix="/v1")
 

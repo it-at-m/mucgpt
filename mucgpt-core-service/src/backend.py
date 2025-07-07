@@ -16,12 +16,12 @@ from api.routers import (
 from config.settings import get_settings
 from core.auth_models import AuthError
 from core.logtools import getLogger
-from init_app import initDepartments
+from init_app import init_departments
 
 logger = getLogger()
 
 # Initialize the application's services and settings.
-departments = initDepartments()
+departments = init_departments()
 settings = get_settings()
 
 # serves static files and the api

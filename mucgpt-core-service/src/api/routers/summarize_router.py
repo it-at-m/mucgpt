@@ -7,11 +7,11 @@ from api.api_models import SummarizeResult, SumRequest
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
-from init_app import initSummarizeService
+from init_app import init_summarize_service
 
 logger = getLogger()
 settings = get_settings()
-summarize_service = initSummarizeService(settings.backend)
+summarize_service = init_summarize_service(settings.backend)
 router = APIRouter()
 
 

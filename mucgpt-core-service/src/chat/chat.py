@@ -90,7 +90,7 @@ class Chat:
                         )
                     ],
                 )
-                yield chunk
+                yield chunk.model_dump_json()
         except Exception as ex:
             error_msg = llm_exception_handler(ex=ex, logger=logger)
             # include error message in delta content
@@ -106,7 +106,7 @@ class Chat:
                     )
                 ],
             )
-            yield chunk
+            yield chunk.model_dump_json()
         # end of stream signal
         end_chunk = ChatCompletionChunk(
             id=id_,
@@ -118,7 +118,7 @@ class Chat:
                 )
             ],
         )
-        yield end_chunk
+        yield end_chunk.model_dump_json()
 
     def run_without_streaming(
         self,

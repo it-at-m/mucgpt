@@ -1335,6 +1335,7 @@ dependencies = [
     { name = "openai" },
     { name = "pydantic-settings" },
     { name = "pypdf" },
+    { name = "sse-starlette" },
     { name = "tiktoken" },
     { name = "uvicorn" },
 ]
@@ -1368,6 +1369,7 @@ requires-dist = [
     { name = "openai", specifier = "==1.77.0" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = "==5.4.0" },
+    { name = "sse-starlette", specifier = ">=2.4.1" },
     { name = "tiktoken" },
     { name = "uvicorn", specifier = "==0.34.2" },
 ]
@@ -2688,6 +2690,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/33/ac/e5e0a807163652a35be878c0ad5cfd8b1d29605edcadfb5df3c512cdf9f3/sqlalchemy-2.0.40-cp313-cp313-win32.whl", hash = "sha256:a669cbe5be3c63f75bcbee0b266779706f1a54bcb1000f302685b87d1b8c1500", size = 2080704, upload_time = "2025-03-27T18:46:00.193Z" },
     { url = "https://files.pythonhosted.org/packages/1c/cb/f38c61f7f2fd4d10494c1c135ff6a6ddb63508d0b47bccccd93670637309/sqlalchemy-2.0.40-cp313-cp313-win_amd64.whl", hash = "sha256:641ee2e0834812d657862f3a7de95e0048bdcb6c55496f39c6fa3d435f6ac6ad", size = 2104564, upload_time = "2025-03-27T18:46:01.442Z" },
     { url = "https://files.pythonhosted.org/packages/d1/7c/5fc8e802e7506fe8b55a03a2e1dab156eae205c91bee46305755e086d2e2/sqlalchemy-2.0.40-py3-none-any.whl", hash = "sha256:32587e2e1e359276957e6fe5dad089758bc042a971a8a09ae8ecf7a8fe23d07a", size = 1903894, upload_time = "2025-03-27T18:40:43.796Z" },
+]
+
+[[package]]
+name = "sse-starlette"
+version = "2.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/07/3e/eae74d8d33e3262bae0a7e023bb43d8bdd27980aa3557333f4632611151f/sse_starlette-2.4.1.tar.gz", hash = "sha256:7c8a800a1ca343e9165fc06bbda45c78e4c6166320707ae30b416c42da070926", size = 18635, upload_time = "2025-07-06T09:41:33.631Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/f1/6c7eaa8187ba789a6dd6d74430307478d2a91c23a5452ab339b6fbe15a08/sse_starlette-2.4.1-py3-none-any.whl", hash = "sha256:08b77ea898ab1a13a428b2b6f73cfe6d0e607a7b4e15b9bb23e4a37b087fd39a", size = 10824, upload_time = "2025-07-06T09:41:32.321Z" },
 ]
 
 [[package]]

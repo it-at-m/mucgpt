@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
+from sse_starlette.sse import EventSourceResponse
 
 from api.api_models import (
     ChatCompletionRequest,
@@ -10,7 +11,7 @@ from api.api_models import (
 )
 from config.settings import get_settings
 from core.auth import authenticate_user
-from core.helper import format_as_ndjson, llm_exception_handler
+from core.helper import llm_exception_handler
 from core.logtools import getLogger
 from core.modelhelper import num_tokens_from_messages
 from init_app import initChatService
@@ -46,9 +47,7 @@ async def chat_completions(
                 model=request.model,
                 department=user_info.department,
             )
-            response = StreamingResponse(
-                format_as_ndjson(r=gen, logger=logger), media_type="application/json"
-            )
+            response = EventSourceResponse(gen)
             response.timeout = None  # type: ignore
             return response
         else:

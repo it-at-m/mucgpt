@@ -1,12 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
-from src.core.token_counter import (
-    TokenCounter,
-    TokenCounterError,
-    UnsupportedMessageTypeError,
-    UnsupportedModelError,
-)
 from sse_starlette.sse import EventSourceResponse
 
 from api.api_models import (
@@ -19,6 +13,12 @@ from api.exception import llm_exception_handler
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
+from core.token_counter import (
+    TokenCounter,
+    TokenCounterError,
+    UnsupportedMessageTypeError,
+    UnsupportedModelError,
+)
 from init_app import init_chat_service
 
 logger = getLogger()

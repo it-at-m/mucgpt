@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.api_models import BrainstormRequest, BrainstormResult
+from config.settings import get_settings
 from core.auth import authenticate_user
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
-from init_app import brainstorm_service
+from init_app import initBrainstormService
 
 logger = getLogger()
+settings = get_settings()
+brainstorm_service = initBrainstormService(settings.backend)
 router = APIRouter()
 
 

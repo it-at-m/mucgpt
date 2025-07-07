@@ -1,4 +1,3 @@
-import { parse } from "uuid";
 import { getConfig, getXSRFToken, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
@@ -26,18 +25,26 @@ const CHAT_NAME_PROMPT =
 const API_BASE = "/api/backend/";
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
-    const url = options.shouldStream ? API_BASE + "chat_stream" : API_BASE + "chat";
-    return await fetch(
-        url,
-        postConfig({
-            history: options.history,
-            temperature: options.temperature,
-            language: options.language,
-            system_message: options.system_message,
-            max_output_tokens: options.max_output_tokens,
-            model: options.model
-        })
-    );
+    const url = API_BASE + "v1/chat/completions";
+    // build OpenAI-compatible messages array
+    const messages: Array<{ role: string; content: string }> = [];
+    if (options.system_message) {
+        messages.push({ role: "system", content: options.system_message });
+    }
+    for (const turn of options.history) {
+        messages.push({ role: "user", content: turn.user });
+        if (turn.bot !== undefined) {
+            messages.push({ role: "assistant", content: turn.bot });
+        }
+    }
+    const body = {
+        model: options.model,
+        messages,
+        temperature: options.temperature,
+        max_tokens: options.max_output_tokens,
+        stream: options.shouldStream
+    };
+    return await fetch(url, postConfig(body));
 }
 
 export async function sumApi(options: SumRequest, file?: File): Promise<SumResponse> {
@@ -120,10 +127,10 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     return parsedResponse;
 }
 
-export async function getDepartements(): Promise<string[]> {
+export async function getDepartements(): Promise<DepartementsResponse> {
     const response = await fetch(API_BASE + "departements", getConfig());
     handleRedirect(response, true);
-    const parsedResponse: string[] = await handleResponse(response);
+    const parsedResponse = await handleResponse(response);
     return parsedResponse;
 }
 

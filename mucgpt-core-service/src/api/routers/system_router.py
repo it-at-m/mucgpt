@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from config.settings import ConfigResponse, ModelsDTO
+from config.settings import ConfigResponse, ModelsDTO, get_settings
 from core.auth import authenticate_user
-from init_app import settings
 
 router = APIRouter()
+settings = get_settings()
 
 
 @router.get(

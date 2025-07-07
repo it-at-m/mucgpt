@@ -88,15 +88,23 @@ export interface Labels {
     env_name: string;
 }
 
-export interface Chunk {
-    type: "E" | "C" | "I"; //ERROR, CONTENT, INFO
-    message: string | ChunkInfo;
-    order: number;
+// OpenAI-compatible streaming chunk types
+export interface ChatCompletionDelta {
+    role?: "system" | "user" | "assistant";
+    content?: string;
 }
 
-export interface ChunkInfo {
-    requesttokens: number;
-    streamedtokens: number;
+export interface ChatCompletionChunkChoice {
+    delta: ChatCompletionDelta;
+    index: number;
+    finish_reason?: string;
+}
+
+export interface ChatCompletionChunk {
+    id: string;
+    object: "chat.completion.chunk";
+    created: number;
+    choices: ChatCompletionChunkChoice[];
 }
 
 export type CountTokenRequest = {

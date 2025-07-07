@@ -36,7 +36,18 @@ interface Props {
 }
 
 export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput, takeCommunityBots, setTakeCommunityBots }: Props) => {
-    const mockBot: Bot = { title: "", description: "", system_message: "", publish: false, id: "0", temperature: 0.0, max_output_tokens: 0, version: "0", owner_ids: ["owner"], tags: [] };
+    const mockBot: Bot = {
+        title: "",
+        description: "",
+        system_message: "",
+        publish: false,
+        id: "0",
+        temperature: 0.0,
+        max_output_tokens: 0,
+        version: "0",
+        owner_ids: ["owner"],
+        tags: []
+    };
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
     const [bots, setBot] = useState<any[]>([]);
@@ -48,16 +59,6 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const [choosenTag, setChoosenTag] = useState<string>("");
     const communitybotStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
-
-    function findLatestVersion(bots: Bot[]): Bot {
-        let latestVersion = bots[0];
-        for (let bot of bots) {
-            if (bot.version && latestVersion.version && bot.version > latestVersion.version) {
-                latestVersion = bot;
-            }
-        }
-        return latestVersion;
-    }
 
     function compareBotsByTitle(a: Bot, b: Bot) {
         const titleA = a.title.toLowerCase();
@@ -75,11 +76,11 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     useEffect(() => {
         if (takeCommunityBots && showSearchDialogInput) {
             getAllCommunityAssistantsApi().then((bots: AssistantResponse[]) => {
-                let latestBots: Bot[] = []
+                const latestBots: Bot[] = [];
 
-                for (let bot of bots) {
-                    let latest = bot.latest_version
-                    let latest_bot: Bot = {
+                for (const bot of bots) {
+                    const latest = bot.latest_version;
+                    const latest_bot: Bot = {
                         title: latest.name,
                         description: latest.description || "",
                         system_message: latest.system_prompt,
@@ -89,41 +90,43 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                         max_output_tokens: latest.max_output_tokens,
                         version: latest.version.toString(),
                         owner_ids: latest.owner_ids,
-                        tags: latest.tags || [],
-                    }
+                        tags: latest.tags || []
+                    };
                     latestBots.push(latest_bot);
                 }
-                setBot(latestBots.sort(compareBotsByTitle))
-                setFilteredBots(latestBots.sort(compareBotsByTitle))
-                let tags: string[] = []
-                for (let bot of latestBots) {
+                setBot(latestBots.sort(compareBotsByTitle));
+                setFilteredBots(latestBots.sort(compareBotsByTitle));
+                let tags: string[] = [];
+                for (const bot of latestBots) {
                     if (bot.tags) {
-                        let newTags = bot.tags.filter((tag: string) => !tags.includes(tag))
-                        tags = tags.concat(newTags)
+                        const newTags = bot.tags.filter((tag: string) => !tags.includes(tag));
+                        tags = tags.concat(newTags);
                     }
                 }
-                setAllTags(tags)
-            })
+                setAllTags(tags);
+            });
             setTakeCommunityBots(false);
         }
     }, [takeCommunityBots, showSearchDialogInput]);
 
-    let onSaveBot = () => {
+    const onSaveBot = () => {
         communitybotStorageService.createBotConfig(choosenBot);
         setShowBotDialog(false);
         setShowSearchDialogInput(false);
         window.location.href = "/#/community-bot/" + choosenBot.id + "/" + choosenBot.version.toString().replace(".", "-");
-    }
+    };
 
-    let inputHandler = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string | undefined) => {
-        if (newValue !== undefined && newValue !== '') {
+    const inputHandler = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string | undefined) => {
+        if (newValue !== undefined && newValue !== "") {
             const lowerCase = newValue.toLowerCase();
             setInputText(lowerCase);
 
-            const filter = bots.filter((bot) => {
-                // Return the item which contains the user input
-                return bot.title.toLowerCase().includes(lowerCase);
-            }).sort(compareBotsByTitle);
+            const filter = bots
+                .filter(bot => {
+                    // Return the item which contains the user input
+                    return bot.title.toLowerCase().includes(lowerCase);
+                })
+                .sort(compareBotsByTitle);
 
             setFilteredBots(filter);
         } else {
@@ -134,21 +137,21 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     };
 
     const onTagSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        let tag = selection.optionValue;
+        const tag = selection.optionValue;
         if (tag == undefined) {
-            return
+            return;
         }
         if (tag == choosenTag) {
-            setChoosenTag("")
+            setChoosenTag("");
         } else {
-            setChoosenTag(tag)
+            setChoosenTag(tag);
         }
     };
 
     const onVersionSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
-        let version = selection.optionValue;
+        const version = selection.optionValue;
         if (version == undefined || version == String(choosenBot.version) || choosenBot.id == undefined) {
-            return
+            return;
         }
         getCommunityAssistantVersionApi(choosenBot.id, version).then((bot: Bot) => {
             setChoosenBot(bot);
@@ -166,12 +169,13 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             positioning="below-start"
             onOptionSelect={onVersionSelected}
         >
-            {choosenBotAll.map(
-                (bot: Bot, _) => <Option value={String(bot.version)} text={"v" + bot.version.toString()} className={styles.option}>v{bot.version.toString()}</Option>
-            )}
+            {choosenBotAll.map((bot: Bot) => (
+                <Option value={String(bot.version)} text={"v" + bot.version.toString()} className={styles.option}>
+                    v{bot.version.toString()}
+                </Option>
+            ))}
         </Dropdown>
-    )
-
+    );
 
     const onChooseBot = (bot: Bot) => {
         if (bot.id == undefined) {
@@ -180,9 +184,9 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         setChoosenBot(bot);
         setShowBotDialog(true);
         setShowSearchDialogInput(false);
-        getCommunityAssistantApi(bot.id).then((bots) => {
-            let latest = bots.latest_version;
-            let latest_version: Bot = {
+        getCommunityAssistantApi(bot.id).then(bots => {
+            const latest = bots.latest_version;
+            const latest_version: Bot = {
                 title: latest.name,
                 description: latest.description || "",
                 system_message: latest.system_prompt,
@@ -192,45 +196,47 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                 max_output_tokens: latest.max_output_tokens,
                 version: latest.version.toString(),
                 owner_ids: latest.owner_ids,
-                tags: latest.tags || [],
-            }
-            setChoosenBotAll([latest_version]);//TODO all Versions
+                tags: latest.tags || []
+            };
+            setChoosenBotAll([latest_version]); //TODO all Versions
         });
         communitybotStorageService.getBotConfig(bot.id).then((bot: Bot | undefined) => {
             setBotAlreadySaved(bot !== undefined);
         });
-    }
+    };
 
     return (
         <div>
-            <Dialog modalType="modal" defaultOpen={false} open={showSearchDialogInput} >
+            <Dialog modalType="modal" defaultOpen={false} open={showSearchDialogInput}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
-                        <DialogTitle action={
-                            <DialogTrigger action="close">
-                                <Button
-                                    appearance="subtle"
-                                    aria-label="close"
-                                    icon={<Dismiss24Regular />}
-                                    onClick={() => { setInputText(""); setFilteredBots(bots); setShowSearchDialogInput(false) }}
-                                />
-                            </DialogTrigger>
-                        }
-                        >{t('components.community_bots.title')}</DialogTitle>
+                        <DialogTitle
+                            action={
+                                <DialogTrigger action="close">
+                                    <Button
+                                        appearance="subtle"
+                                        aria-label="close"
+                                        icon={<Dismiss24Regular />}
+                                        onClick={() => {
+                                            setInputText("");
+                                            setFilteredBots(bots);
+                                            setShowSearchDialogInput(false);
+                                        }}
+                                    />
+                                </DialogTrigger>
+                            }
+                        >
+                            {t("components.community_bots.title")}
+                        </DialogTitle>
                         <DialogContent>
                             <div className="search">
-                                <TextField
-                                    id="outlined-basic"
-                                    label={t('components.community_bots.search')}
-                                    value={inputText}
-                                    onChange={inputHandler}
-                                />
+                                <TextField id="outlined-basic" label={t("components.community_bots.search")} value={inputText} onChange={inputHandler} />
                             </div>
                             <br />
-                            {t('components.community_bots.filter_by_tag')}:
+                            {t("components.community_bots.filter_by_tag")}:
                             <Dropdown
                                 id="filter"
-                                aria-label={t('components.community_bots.filter_by_tag')}
+                                aria-label={t("components.community_bots.filter_by_tag")}
                                 defaultValue=""
                                 value={choosenTag}
                                 selectedOptions={[choosenTag]}
@@ -240,57 +246,75 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 onOptionSelect={onTagSelected}
                             >
                                 <Option text="" className={styles.option}></Option>
-                                {allTags.sort().map(
-                                    (tag: string, _) =>
-                                        <Option text={tag.toLocaleLowerCase()} className={styles.option}>{tag}</Option>
-                                )}
+                                {allTags.sort().map((tag: string) => (
+                                    <Option text={tag.toLocaleLowerCase()} className={styles.option}>
+                                        {tag}
+                                    </Option>
+                                ))}
                             </Dropdown>
                             <br />
                             <div className={styles.container}>
-                                {filteredBots.filter(bot => choosenTag == "" ? true : bot.tags.includes(choosenTag)).map(
-                                    (bot: Bot, _) =>
-                                        <Tooltip content={bot.title} relationship="description" positioning="below" >
-                                            <Button className={styles.box} onClick={() => { onChooseBot(bot) }}>
+                                {filteredBots
+                                    .filter(bot => (choosenTag == "" ? true : bot.tags.includes(choosenTag)))
+                                    .map((bot: Bot) => (
+                                        <Tooltip content={bot.title} relationship="description" positioning="below">
+                                            <Button
+                                                className={styles.box}
+                                                onClick={() => {
+                                                    onChooseBot(bot);
+                                                }}
+                                            >
                                                 <span>{bot.title}</span>
                                             </Button>
                                         </Tooltip>
-                                )}
+                                    ))}
                             </div>
                         </DialogContent>
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-            <Dialog modalType="modal" defaultOpen={false} open={showBotDialog} >
+            <Dialog modalType="modal" defaultOpen={false} open={showBotDialog}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
-                        <DialogTitle action={
-                            <DialogTrigger action="close">
-                                <Button
-                                    appearance="subtle"
-                                    aria-label="close"
-                                    icon={<Dismiss24Regular />}
-                                    onClick={() => { setChoosenBot(mockBot); setShowBotDialog(false); setShowSearchDialogInput(true) }}
-                                />
-                            </DialogTrigger>
-                        }
-                        >{choosenBot.title} Version: {versionPicker}</DialogTitle>
+                        <DialogTitle
+                            action={
+                                <DialogTrigger action="close">
+                                    <Button
+                                        appearance="subtle"
+                                        aria-label="close"
+                                        icon={<Dismiss24Regular />}
+                                        onClick={() => {
+                                            setChoosenBot(mockBot);
+                                            setShowBotDialog(false);
+                                            setShowSearchDialogInput(true);
+                                        }}
+                                    />
+                                </DialogTrigger>
+                            }
+                        >
+                            {choosenBot.title} Version: {versionPicker}
+                        </DialogTitle>
                         <DialogContent>
-                            <div className={styles.tags}>
-                                {
-                                    choosenBot.tags ? choosenBot.tags.map((tag: string) => <Tag shape="circular">{tag}</Tag>) : ""
-                                }
-                            </div>
-                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlockRenderer }}>{choosenBot.description}</Markdown>
-                            <strong>{t('components.community_bots.system_message')}: </strong>
+                            <div className={styles.tags}>{choosenBot.tags ? choosenBot.tags.map((tag: string) => <Tag shape="circular">{tag}</Tag>) : ""}</div>
+                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlockRenderer }}>
+                                {choosenBot.description}
+                            </Markdown>
+                            <strong>{t("components.community_bots.system_message")}: </strong>
                             <hr />
-                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{choosenBot.system_message}</Markdown>
+                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                {choosenBot.system_message}
+                            </Markdown>
                             <hr />
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
-                                <Tooltip content={botAlreadySaved ? "Assisstent ist bereits gespeichert!" : t('components.community_bots.save')} relationship="description" positioning="above">
+                                <Tooltip
+                                    content={botAlreadySaved ? "Assisstent ist bereits gespeichert!" : t("components.community_bots.save")}
+                                    relationship="description"
+                                    positioning="above"
+                                >
                                     <Button appearance="secondary" size="small" onClick={onSaveBot} disabled={botAlreadySaved}>
-                                        <Save24Filled /> {t('components.community_bots.save')}
+                                        <Save24Filled /> {t("components.community_bots.save")}
                                     </Button>
                                 </Tooltip>
                             </DialogTrigger>
@@ -298,7 +322,6 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-
-        </div >
+        </div>
     );
 };

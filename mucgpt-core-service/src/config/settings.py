@@ -84,9 +84,9 @@ class Settings(BaseSettings):
         super().__init__(**kwargs)
         # Set version and commit if not provided via environment
         if not self.version:
-            self.version = VersionInfo.get_commit
+            self.version = VersionInfo.get_commit()
         if not self.commit:
-            self.commit = VersionInfo.get_version
+            self.commit = VersionInfo.get_version()
 
 
 @lru_cache

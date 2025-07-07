@@ -13,32 +13,24 @@ from api.routers import (
     summarize_router,
     system_router,
 )
+from config.settings import get_settings
 from core.auth_models import AuthError
 from core.logtools import getLogger
-from init_app import initApp
+from init_app import initDepartments
 
 logger = getLogger()
 
 # Initialize the application's services and settings.
-(
-    chat_service,
-    brainstorm_service,
-    summarize_service,
-    simply_service,
-    settings,
-    departments,
-) = initApp()
+departments = initDepartments()
+settings = get_settings()
 
 # serves static files and the api
-backend = FastAPI(
-    title="MUCGPT",
-    version=settings.backend.version,
-)
+backend = FastAPI(title="MUCGPT", version=settings.version)
 # serves the api
 api_app = FastAPI(
     title="MUCGPT-API",
     description="MUCCGPT core API for AI services",
-    version=settings.backend.version,
+    version=settings.version,
 )
 backend.mount("/api/", api_app)
 

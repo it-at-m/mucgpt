@@ -2,7 +2,8 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, Chunk, ChunkInfo, createChatName } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn, createChatName } from "../api";
+import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import readNDJSONStream from "ndjson-readablestream";
@@ -139,8 +140,8 @@ export const makeApiRequest = async (
     }
 
     // Initialize response variables
-    let user_tokens = 0;
-    let streamed_tokens = 0;
+    const user_tokens = 0;
+    const streamed_tokens = 0;
 
     // Add an empty response
     const initialMessage = {
@@ -154,49 +155,35 @@ export const makeApiRequest = async (
     let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Process the stream
-    for await (const chunk of readNDJSONStream(response.body)) {
-        if (chunk as Chunk) {
-            let shouldUpdate = false;
-
-            switch (chunk.type) {
-                case "C": {
-                    buffer += chunk.message as string;
-                    shouldUpdate = true;
-                    break;
-                }
-                case "I": {
-                    const info = chunk.message as ChunkInfo;
-                    streamed_tokens = info.streamedtokens;
-                    user_tokens = info.requesttokens;
-                    shouldUpdate = true;
-                    break;
-                }
-                case "E": {
-                    throw Error((chunk.message as string) || "Unknown error");
-                }
-            }
-
-            if (shouldUpdate) {
-                // Clear the previous timer if it exists
-                if (updateTimer) clearTimeout(updateTimer);
-
-                // Set a new timer for batched updates
-                updateTimer = setTimeout(() => {
-                    const updatedResponse = {
-                        ...askResponse,
-                        answer: buffer,
-                        tokens: streamed_tokens,
-                        user_tokens: user_tokens
-                    };
-
-                    const updatedMessage = {
-                        user: question,
-                        response: updatedResponse
-                    };
-
-                    dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
-                }, 100); // 100ms delay for smoother rendering
-            }
+    for await (const chunkObj of readNDJSONStream(response.body)) {
+        // Use ChatCompletionChunk and ChatCompletionChunkChoice types
+        const chunk = chunkObj as ChatCompletionChunk;
+        const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
+        if (!choice) continue;
+        // Handle errors
+        if (choice.finish_reason === "error") {
+            throw Error(choice.delta?.content || "Unknown error");
+        }
+        // Stream end
+        if (choice.finish_reason === "stop") {
+            break;
+        }
+        // Append partial content
+        const content = choice.delta?.content;
+        if (content) {
+            buffer += content;
+            // batch UI updates
+            if (updateTimer) clearTimeout(updateTimer);
+            updateTimer = setTimeout(() => {
+                const updatedResponse = {
+                    ...askResponse,
+                    answer: buffer,
+                    tokens: streamed_tokens,
+                    user_tokens: user_tokens
+                };
+                const updatedMessage = { user: question, response: updatedResponse };
+                dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
+            }, 100);
         }
     }
 

@@ -4,7 +4,6 @@ import { BOT_STORE, CHAT_STORE, LEGACY_BOT_STORE } from "../constants";
 import { ChatOptions } from "../pages/chat/Chat";
 import { BotStorageService } from "./botstorage";
 import { DBObject, StorageService } from "./storage";
-import { version } from "dompurify";
 
 interface LegacyChatObject {
     id: string;

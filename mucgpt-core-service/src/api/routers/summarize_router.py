@@ -4,11 +4,14 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from pydantic_core import from_json
 
 from api.api_models import SummarizeResult, SumRequest
+from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
-from init_app import summarize_service
+from init_app import initSummarizeService
 
 logger = getLogger()
+settings = get_settings()
+summarize_service = initSummarizeService(settings.backend)
 router = APIRouter()
 
 

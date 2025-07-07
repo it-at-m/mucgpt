@@ -1,10 +1,9 @@
 import json
 import os
-from typing import Tuple
 
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
-from config.settings import BackendConfig, Settings, get_settings
+from config.settings import BackendConfig
 from core.llmhelper import getModel
 from core.logtools import getLogger
 from simply.simply import Simply
@@ -13,36 +12,36 @@ from summarize.summarize import Summarize
 logger = getLogger()
 
 
-def initServices(cfg: BackendConfig) -> Tuple[Chat, Brainstorm, Summarize]:
-    """init different approaches
-
-    Args:
-        cfg (BackendConfig): the config for the backend
-
-    Returns:
-        Tuple[Chat, Brainstorm, Summarize]: the implementation behind chat, brainstorm and summarize
-    """
-    logger.info("Init approaches")
-    logger.info("%s llms configured", len(cfg.models))
-    for model in cfg.models:
-        logger.info("Model: %s", model.llm_name)
-    brainstormllm = getModel(
-        models=cfg.models, max_output_tokens=4000, n=1, streaming=False, temperature=0.9
-    )
-    sumllm = getModel(
-        models=cfg.models, max_output_tokens=2000, n=1, streaming=False, temperature=0
-    )
+def initChatService(cfg: BackendConfig) -> Chat:
+    """Initialize the Chat service."""
     chatllm = getModel(
         models=cfg.models, max_output_tokens=4000, n=1, streaming=True, temperature=0.7
     )
+    return Chat(llm=chatllm)
+
+
+def initBrainstormService(cfg: BackendConfig) -> Brainstorm:
+    """Initialize the Brainstorm service."""
+    brainstormllm = getModel(
+        models=cfg.models, max_output_tokens=4000, n=1, streaming=False, temperature=0.9
+    )
+    return Brainstorm(llm=brainstormllm)
+
+
+def initSummarizeService(cfg: BackendConfig) -> Summarize:
+    """Initialize the Summarize service."""
+    sumllm = getModel(
+        models=cfg.models, max_output_tokens=2000, n=1, streaming=False, temperature=0
+    )
+    return Summarize(llm=sumllm)
+
+
+def initSimplyService(cfg: BackendConfig) -> Simply:
+    """Initialize the Simply service."""
     simplyllm = getModel(
         models=cfg.models, max_output_tokens=4000, n=1, streaming=True, temperature=0
     )
-    chat_service = Chat(llm=chatllm)
-    brainstorm_service = Brainstorm(llm=brainstormllm)
-    sum_service = Summarize(llm=sumllm)
-    simply_service = Simply(llm=simplyllm)
-    return (chat_service, brainstorm_service, sum_service, simply_service)
+    return Simply(llm=simplyllm)
 
 
 def initDepartments() -> list:
@@ -61,25 +60,3 @@ def initDepartments() -> list:
         logger.error("Failed to load departements.json: %s", e)
         departments = []
     return departments
-
-
-def initApp() -> Tuple[Chat, Brainstorm, Summarize, Simply, Settings, list]:
-    """init the app with all services and settings
-    Returns:
-        Tuple[Chat, Brainstorm, Summarize, Simply, Settings, list]: the services and settings
-    """
-    logger.info("Init app")
-    settings = get_settings()
-    (chat_service, brainstorm_service, sum_service, simply_service) = initServices(
-        cfg=settings.backend
-    )
-
-    logger.info("finished init App")
-    return (
-        chat_service,
-        brainstorm_service,
-        sum_service,
-        simply_service,
-        settings,
-        initDepartments(),
-    )

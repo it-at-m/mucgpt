@@ -5,9 +5,8 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 
+from api.api_models import ChatResult, ChatTurn
 from core.logtools import getLogger
-from core.types.ChatRequest import ChatTurn
-from core.types.ChatResult import ChatResult
 from core.types.LlmConfigs import LlmConfigs
 
 logger = getLogger(name="mucgpt-core-simply")

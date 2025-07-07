@@ -89,8 +89,15 @@ const Menu = () => {
                 ))}
                 {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
-            <div className={styles.rowheader}>{t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} /></div>
-            <CommunityBotsDialog showSearchDialogInput={showSearchBot} setShowSearchDialogInput={setShowSearchBot} takeCommunityBots={getCommunityBots} setTakeCommunityBots={setGetCommunityBots} />
+            <div className={styles.rowheader}>
+                {t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} />
+            </div>
+            <CommunityBotsDialog
+                showSearchDialogInput={showSearchBot}
+                setShowSearchDialogInput={setShowSearchBot}
+                takeCommunityBots={getCommunityBots}
+                setTakeCommunityBots={setGetCommunityBots}
+            />
             <div className={styles.row}>
                 {communityBots.map((bot: Bot, key) => (
                     <Tooltip key={key} content={bot.title} relationship="description" positioning="below">

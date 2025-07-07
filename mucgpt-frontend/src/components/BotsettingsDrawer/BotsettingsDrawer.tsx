@@ -1,4 +1,12 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, Save24Regular, ChatSettings24Regular, Checkmark24Filled, CloudArrowUp24Filled } from "@fluentui/react-icons";
+import {
+    Delete24Regular,
+    Dismiss24Regular,
+    Edit24Regular,
+    Save24Regular,
+    ChatSettings24Regular,
+    Checkmark24Filled,
+    CloudArrowUp24Filled
+} from "@fluentui/react-icons";
 import {
     Button,
     Slider,
@@ -17,8 +25,6 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
-    SelectionEvents,
-    OptionOnSelectData,
     Checkbox
 } from "@fluentui/react-components";
 
@@ -203,8 +209,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     ? t("components.botsettingsdrawer.finish_edit")
                                     : t("components.botsettingsdrawer.edit")
                                 : isEditable
-                                    ? t("components.botsettingsdrawer.close_configutations")
-                                    : t("components.botsettingsdrawer.show_configutations")}
+                                  ? t("components.botsettingsdrawer.close_configutations")
+                                  : t("components.botsettingsdrawer.show_configutations")}
                         </Button>
                         <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -233,11 +239,11 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
             max_output_tokens: bot.max_output_tokens,
             tools: [],
             owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
-            examples: bot.examples?.map((e) => ({ text: e.text, value: e.value })),
-            quick_prompts: bot.quick_prompts?.map((qp) => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
+            examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
+            quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
             tags: bot.tags || [],
             hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
-        })
+        });
         createCommunityAssistantApi({
             name: bot.title,
             description: bot.description,
@@ -246,12 +252,12 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
             max_output_tokens: bot.max_output_tokens,
             tools: [],
             owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
-            examples: bot.examples?.map((e) => ({ text: e.text, value: e.value })),
-            quick_prompts: bot.quick_prompts?.map((qp) => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
+            examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
+            quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
             tags: bot.tags || [],
             hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
-        }).then((response) => {
-            let updatedBot: Bot = {
+        }).then(response => {
+            const updatedBot: Bot = {
                 title: response.latest_version.name,
                 description: response.latest_version.description || "",
                 system_message: response.latest_version.system_prompt,
@@ -292,7 +298,9 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                             <br />
                             {invisibleChecked && (
                                 <>
-                                    <Label htmlFor="publish-link" style={{ marginRight: 8 }}>Link zum Kopieren:</Label>
+                                    <Label htmlFor="publish-link" style={{ marginRight: 8 }}>
+                                        Link zum Kopieren:
+                                    </Label>
                                     <Tooltip content="In Zwischenablage kopieren" relationship="description" positioning="below">
                                         <Button
                                             id="publish-link"
@@ -307,13 +315,14 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     </Tooltip>
                                 </>
                             )}
-                            {!invisibleChecked && (<>
-                                Veröffentlichen für
-                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
-                            </>)}
+                            {!invisibleChecked && (
+                                <>
+                                    Veröffentlichen für
+                                    <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
+                                </>
+                            )}
                             <br />
                             Version: {bot.version}
-
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
@@ -322,11 +331,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 </Button>
                             </DialogTrigger>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button
-                                    appearance="secondary"
-                                    size="small"
-                                    onClick={onPublishClick}
-                                >
+                                <Button appearance="secondary" size="small" onClick={onPublishClick}>
                                     <Checkmark24Filled /> {t("components.botsettingsdrawer.deleteDialog.confirm")}
                                 </Button>
                             </DialogTrigger>
@@ -337,8 +342,6 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         ),
         [showPublishDialog, publishDepartments, invisibleChecked]
     );
-
-
 
     // sidebar content
     const content = (
@@ -520,9 +523,10 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                         </div>
                     </div>
                     <Tooltip content={"veröffentlichen"} relationship="description" positioning="below">
-                        <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>{publish ? "veröffentlicht" : "veröffentlichen"}</Button>
+                        <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>
+                            {publish ? "veröffentlicht" : "veröffentlichen"}
+                        </Button>
                     </Tooltip>
-
                 </>
             )}
             {publishDialog}

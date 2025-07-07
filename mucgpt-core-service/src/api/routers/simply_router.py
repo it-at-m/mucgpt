@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.api_models import ChatResult, SimplyRequest
+from config.settings import get_settings
 from core.auth import authenticate_user
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
-from init_app import simply_service
+from init_app import initSimplyService
 
 logger = getLogger()
+settings = get_settings()
+simply_service = initSimplyService(settings.backend)
 router = APIRouter()
 
 

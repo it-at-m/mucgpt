@@ -6,8 +6,8 @@ from langchain.schema.output_parser import StrOutputParser
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.runnables.base import RunnableSerializable
 
+from api.api_models import BrainstormResult
 from core.logtools import getLogger
-from core.types.BrainstormResult import BrainstormResult
 from core.types.LlmConfigs import LlmConfigs
 
 logger = getLogger(name="mucgpt-core-brainstorm")

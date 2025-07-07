@@ -71,6 +71,7 @@ env = [
     "MUCGPT_CORE_LOG_CONFIG=src/logconf.yaml",
     "MUCGPT_CORE_VERSION=0.0",
     "MUCGPT_CORE_COMMIT=12012lf",
+    '''MUCGPT_CORE_BACKEND__MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Model developed by kicc. "}}]''',
     "GIT_PYTHON_REFRESH=quiet"
 ]
 

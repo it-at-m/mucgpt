@@ -12,6 +12,7 @@ from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
+    CountResult,
     CountTokenRequest,
     Usage,
 )
@@ -61,28 +62,27 @@ class TestChatRouter:
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 200, resp.text
-        data = resp.json()
+
+        # Parse response into model
+        response = ChatCompletionResponse.model_validate(resp.json())
 
         # Validate response structure
-        assert "id" in data and isinstance(data["id"], str)
-        assert data["object"] == "chat.completion"
-        assert "created" in data and isinstance(data["created"], int)
-        assert isinstance(data["choices"], list) and len(data["choices"]) == 1
+        assert response.id and isinstance(response.id, str)
+        assert response.object == "chat.completion"
+        assert response.created and isinstance(response.created, int)
+        assert isinstance(response.choices, list) and len(response.choices) == 1
 
         # Validate choice content
-        choice = data["choices"][0]
-        assert "index" in choice and choice["index"] == 0
-        assert "message" in choice
-        assert "role" in choice["message"] and choice["message"]["role"] == "assistant"
-        assert "content" in choice["message"] and choice["message"]["content"]
-        assert "finish_reason" in choice  # Validate usage information
-        assert "usage" in data
-        assert "prompt_tokens" in data["usage"] and data["usage"]["prompt_tokens"] > 0
-        assert (
-            "completion_tokens" in data["usage"]
-            and data["usage"]["completion_tokens"] > 0
-        )
-        assert "total_tokens" in data["usage"] and data["usage"]["total_tokens"] > 0
+        choice = response.choices[0]
+        assert choice.index == 0
+        assert choice.message.role == "assistant"
+        assert choice.message.content
+        assert choice.finish_reason
+
+        # Validate usage information
+        assert response.usage.prompt_tokens > 0
+        assert response.usage.completion_tokens > 0
+        assert response.usage.total_tokens > 0
 
     @patch("api.routers.chat_router.chat_service")
     def test_streaming_completion(self, mock_chat_service, test_client: TestClient):
@@ -173,37 +173,32 @@ class TestChatRouter:
                     chunk = line_text
 
                 try:
-                    chunk_data = json.loads(chunk)
+                    # Parse chunk into model
+                    chunk_data = ChatCompletionChunk.model_validate_json(chunk)
                 except json.JSONDecodeError:
                     continue
 
                 # Basic structure validation
-                assert "id" in chunk_data
-                assert "object" in chunk_data
-                assert chunk_data["object"] == "chat.completion.chunk"
-                assert "choices" in chunk_data
-                assert isinstance(chunk_data["choices"], list)
+                assert chunk_data.id
+                assert chunk_data.object == "chat.completion.chunk"
+                assert isinstance(chunk_data.choices, list)
 
                 # All chunks should have the same ID
                 if stream_id is None:
-                    stream_id = chunk_data["id"]
+                    stream_id = chunk_data.id
                 else:
-                    assert stream_id == chunk_data["id"]
+                    assert stream_id == chunk_data.id
 
                 # Process first choice content
-                if chunk_data["choices"]:
-                    choice = chunk_data["choices"][0]
+                if chunk_data.choices:
+                    choice = chunk_data.choices[0]
 
                     # Check if this chunk contains content
-                    if (
-                        "delta" in choice
-                        and "content" in choice["delta"]
-                        and choice["delta"]["content"] not in [None, ""]
-                    ):
-                        content_buffer += choice["delta"]["content"]
+                    if choice.delta.content not in [None, ""]:
+                        content_buffer += choice.delta.content
 
                     # Check for completion signal
-                    if "finish_reason" in choice and choice["finish_reason"] == "stop":
+                    if choice.finish_reason == "stop":
                         found_chunk = True
                         break
 
@@ -232,10 +227,11 @@ class TestChatRouter:
         assert response.status_code == 200, (
             f"Request failed with status {response.status_code}: {response.text}"
         )
-        data = response.json()
-        assert "count" in data, "Response missing 'count' field"
-        assert isinstance(data["count"], int), "'count' should be an integer"
-        assert data["count"] > 0, "Token count should be greater than 0"
+
+        # Parse response into model
+        result = CountResult.model_validate(response.json())
+        assert isinstance(result.count, int), "Token count should be an integer"
+        assert result.count > 0, "Token count should be greater than 0"
 
     @patch("api.routers.chat_router.chat_service")
     def test_chat_completion_invalid_model(
@@ -314,6 +310,11 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 200
 
+        # Parse response into model
+        response = ChatCompletionResponse.model_validate(resp.json())
+        assert response.id
+        assert response.choices[0].message.content
+
     @patch("api.routers.chat_router.chat_service")
     def test_chat_completion_zero_max_tokens(
         self, mock_chat_service, test_client: TestClient
@@ -345,8 +346,10 @@ class TestChatRouter:
         payload = payload_model.model_dump()
         response = test_client.post("/v1/counttokens", json=payload)
         assert response.status_code == 200
-        data = response.json()
-        assert data["count"] >= 0
+
+        # Parse response into model
+        result = CountResult.model_validate(response.json())
+        assert result.count >= 0
 
     @patch("api.routers.chat_router.num_tokens_from_messages")
     def test_count_tokens_long_text(self, mock_num_tokens, test_client: TestClient):
@@ -359,8 +362,10 @@ class TestChatRouter:
         payload = payload_model.model_dump()
         response = test_client.post("/v1/counttokens", json=payload)
         assert response.status_code == 200
-        data = response.json()
-        assert data["count"] > 1000
+
+        # Parse response into model
+        result = CountResult.model_validate(response.json())
+        assert result.count > 1000
 
     @patch("api.routers.chat_router.num_tokens_from_messages")
     def test_count_tokens_invalid_model(self, mock_num_tokens, test_client: TestClient):
@@ -445,18 +450,18 @@ class TestChatRouter:
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 200
-        data = resp.json()
-        choice = data["choices"][0]
-        assert "index" in choice and choice["index"] == 0
-        assert "message" in choice
-        assert "role" in choice["message"] and choice["message"]["role"] == "assistant"
-        assert "content" in choice["message"] and choice["message"]["content"]
-        assert "finish_reason" in choice
+
+        # Parse response into model
+        response = ChatCompletionResponse.model_validate(resp.json())
+
+        # Validate response
+        choice = response.choices[0]
+        assert choice.index == 0
+        assert choice.message.role == "assistant"
+        assert choice.message.content
+        assert choice.finish_reason
+
         # Validate usage information
-        assert "usage" in data
-        assert "prompt_tokens" in data["usage"] and data["usage"]["prompt_tokens"] > 0
-        assert (
-            "completion_tokens" in data["usage"]
-            and data["usage"]["completion_tokens"] > 0
-        )
-        assert "total_tokens" in data["usage"] and data["usage"]["total_tokens"] > 0
+        assert response.usage.prompt_tokens > 0
+        assert response.usage.completion_tokens > 0
+        assert response.usage.total_tokens > 0

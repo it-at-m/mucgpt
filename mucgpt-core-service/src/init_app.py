@@ -3,8 +3,8 @@ import os
 
 from brainstorm.brainstorm import Brainstorm
 from chat.chat import Chat
+from config.llmhelper import getModel
 from config.settings import BackendConfig
-from core.llmhelper import getModel
 from core.logtools import getLogger
 from simply.simply import Simply
 from summarize.summarize import Summarize

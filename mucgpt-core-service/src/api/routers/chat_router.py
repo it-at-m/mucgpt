@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
+from src.core.token_counter import (
+    TokenCounter,
+    TokenCounterError,
+    UnsupportedMessageTypeError,
+    UnsupportedModelError,
+)
 from sse_starlette.sse import EventSourceResponse
 
 from api.api_models import (
@@ -13,12 +19,12 @@ from config.settings import get_settings
 from core.auth import authenticate_user
 from core.helper import llm_exception_handler
 from core.logtools import getLogger
-from core.modelhelper import num_tokens_from_messages
 from init_app import initChatService
 
 logger = getLogger()
 settings = get_settings()
 chat_service = initChatService(settings.backend)
+token_counter = TokenCounter(logger)  # Create an instance with the application logger
 router = APIRouter(prefix="/v1")
 
 
@@ -83,12 +89,19 @@ async def counttokens(
     This endpoint receives a text and a model and returns the number of tokens.
     """
     try:
-        counted_tokens = num_tokens_from_messages(
-            [HumanMessage(request.text)], request.model
+        counted_tokens = token_counter.num_tokens_from_messages(
+            [HumanMessage(content=request.text)], request.model
         )
         return CountResult(count=counted_tokens)
-    except NotImplementedError as e:
+    except UnsupportedModelError as e:
+        logger.warning(f"Unsupported model in token counting: {str(e)}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except UnsupportedMessageTypeError as e:
+        logger.warning(f"Unsupported message type in token counting: {str(e)}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except TokenCounterError as e:
+        logger.error(f"Token counting error: {str(e)}")
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
-        logger.exception(str(e))
+        logger.exception(f"Unexpected error in token counting: {str(e)}")
         raise HTTPException(status_code=500, detail="Counttokens failed!")

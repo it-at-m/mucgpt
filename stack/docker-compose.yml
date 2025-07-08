@@ -105,7 +105,7 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
       - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/bot/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/bot/**, /api/user/**
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**

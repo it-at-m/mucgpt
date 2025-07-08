@@ -8,7 +8,9 @@ from api.exceptions import AuthenticationException
 from api.routers import assistants_router, system_router, users_router
 from config.configuration import ConfigHelper
 from core.auth import AuthError
+from database.assistant_repo import AssistantRepository
 from database.database_models import Base
+from database.session import get_db_session
 
 # serves static files and the api
 backend = FastAPI(title="MUCGPT-Assistant-Service")
@@ -67,6 +69,45 @@ async def on_startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     await engine.dispose()
+
+    for assistant_data in config.community_assistants:
+        async for db in get_db_session():
+            assistant_repo = AssistantRepository(db)
+
+            new_assistant = await assistant_repo.create([], owner_ids=[])
+            new_assistant.id = assistant_data.id  # Set the ID from the config
+            # Create the first version with the actual assistant data
+            # Replace escaped newlines with actual newlines
+            assistant_data.system_message = assistant_data.system_message.replace(
+                "\\n", "\n"
+            )
+            # Remove surrounding quotes if present
+            if assistant_data.system_message.startswith(
+                '"'
+            ) and assistant_data.system_message.endswith('"'):
+                assistant_data.system_message = assistant_data.system_message[1:-1]
+            # Replace escaped newlines and double spaces in description
+            assistant_data.description = assistant_data.description.replace(
+                "\\n", "\n"
+            ).replace("  ", "  \n")
+            if assistant_data.description.startswith(
+                '"'
+            ) and assistant_data.description.endswith('"'):
+                assistant_data.description = assistant_data.description[1:-1]
+            await assistant_repo.create_assistant_version(
+                new_assistant,
+                name=assistant_data.title,
+                description=assistant_data.description or "",
+                system_prompt=assistant_data.system_message,
+                temperature=assistant_data.temperature,
+                max_output_tokens=assistant_data.max_output_tokens,
+                examples=assistant_data.examples or [],
+                quick_prompts=assistant_data.quick_prompts or [],
+                tags=[],
+            )
+            await db.commit()
+            await db.refresh(new_assistant)
+            break  # Only need one session per assistant
 
 
 @api_app.exception_handler(Exception)

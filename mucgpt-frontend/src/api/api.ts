@@ -219,7 +219,7 @@ export async function getCommunityAssistantVersionApi(id: string, version: strin
 }
 
 export async function getOwnedCommunityBots(): Promise<AssistantResponse[]> {
-    const response = await fetch("/api/bot/create", getConfig());
+    const response = await fetch("/api/user/bots", getConfig());
     handleRedirect(response, true);
     const parsedResponse: AssistantResponse[] = await handleResponse(response);
     return parsedResponse;

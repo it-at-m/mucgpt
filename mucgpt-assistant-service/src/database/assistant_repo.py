@@ -8,7 +8,13 @@ from sqlalchemy.orm import attributes, selectinload
 from core.logtools import getLogger
 from utils import serialize_list
 
-from .database_models import Assistant, AssistantVersion, Owner, assistant_owners
+from .database_models import (
+    Assistant,
+    AssistantVersion,
+    Owner,
+    Subscription,
+    assistant_owners,
+)
 from .repo import Repository
 
 logger = getLogger("assistant_repo")
@@ -316,5 +322,88 @@ class AssistantRepository(Repository[Assistant]):
             logger.error(
                 f"Error fetching latest version for assistant {assistant_id}: {e}"
             )
+            await self.session.rollback()
+            raise
+
+    async def is_user_subscribed(self, assistant_id: str, lhmobjektID: str) -> bool:
+        """Check if a user is subscribed to an assistant."""
+        logger.debug(
+            f"Checking if user {lhmobjektID} is subscribed to assistant {assistant_id}"
+        )
+
+        result = await self.session.execute(
+            select(Subscription)
+            .filter(Subscription.assistant_id == assistant_id)
+            .filter(Subscription.lhmobjektID == lhmobjektID)
+        )
+        subscription = result.scalars().first()
+
+        return subscription is not None
+
+    async def create_subscription(
+        self, assistant_id: str, lhmobjektID: str
+    ) -> Subscription:
+        """Create a subscription for a user to an assistant."""
+        logger.info(
+            f"Creating subscription for user {lhmobjektID} to assistant {assistant_id}"
+        )
+
+        try:
+            subscription = Subscription(
+                assistant_id=assistant_id, lhmobjektID=lhmobjektID
+            )
+            self.session.add(subscription)
+            await self.session.flush()
+            await self.session.refresh(subscription)
+
+            logger.info(
+                f"Created subscription for user {lhmobjektID} to assistant {assistant_id}"
+            )
+            return subscription
+        except Exception as e:
+            logger.error(f"Error creating subscription: {e}")
+            await self.session.rollback()
+            raise
+
+    async def remove_subscription(self, assistant_id: str, lhmobjektID: str) -> bool:
+        """Remove a user's subscription to an assistant."""
+        logger.info(
+            f"Removing subscription for user {lhmobjektID} from assistant {assistant_id}"
+        )
+
+        try:
+            result = await self.session.execute(
+                delete(Subscription)
+                .where(Subscription.assistant_id == assistant_id)
+                .where(Subscription.lhmobjektID == lhmobjektID)
+            )
+
+            rows_deleted = result.rowcount
+            logger.info(
+                f"Removed {rows_deleted} subscription(s) for user {lhmobjektID} from assistant {assistant_id}"
+            )
+            return rows_deleted > 0
+        except Exception as e:
+            logger.error(f"Error removing subscription: {e}")
+            await self.session.rollback()
+            raise
+
+    async def get_user_subscriptions(self, lhmobjektID: str) -> List[Assistant]:
+        """Get all assistants a user has subscribed to."""
+        logger.info(f"Fetching subscriptions for user {lhmobjektID}")
+
+        try:
+            # Join Subscription with Assistant to get all subscribed assistants
+            result = await self.session.execute(
+                select(Assistant)
+                .join(Subscription, Assistant.id == Subscription.assistant_id)
+                .where(Subscription.lhmobjektID == lhmobjektID)
+            )
+
+            assistants = list(result.scalars().all())
+            logger.info(f"Found {len(assistants)} subscriptions for user {lhmobjektID}")
+            return assistants
+        except Exception as e:
+            logger.error(f"Error fetching user subscriptions: {e}")
             await self.session.rollback()
             raise

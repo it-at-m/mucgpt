@@ -57,3 +57,19 @@ class NotAllowedToAccessException(HTTPException):
             status_code=403,
             detail=f"You are not allowed to access assistant with ID {assistant_id}",
         )
+
+
+class AlreadySubscribedException(HTTPException):
+    def __init__(self, assistant_id: str):
+        super().__init__(
+            status_code=409,
+            detail=f"Already subscribed to assistant with ID {assistant_id}",
+        )
+
+
+class SubscriptionNotFoundException(HTTPException):
+    def __init__(self, assistant_id: str):
+        super().__init__(
+            status_code=404,
+            detail=f"Subscription not found for assistant with ID {assistant_id}",
+        )

@@ -170,3 +170,23 @@ class Owner(Base):
 
     def __repr__(self):
         return f"<Owner(lhmobjektID='{self.lhmobjektID}')>"
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    assistant_id = Column(
+        String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+    )
+    lhmobjektID = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    assistant = relationship("Assistant")
+
+    __table_args__ = (
+        UniqueConstraint("assistant_id", "lhmobjektID", name="uq_subscription"),
+    )
+
+    def __repr__(self):
+        return f"<Subscription(assistant_id='{self.assistant_id}', lhmobjektID='{self.lhmobjektID}')>"

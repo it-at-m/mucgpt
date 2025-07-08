@@ -103,7 +103,7 @@ class TestChatRouter:
                     )
                 ],
             )
-            yield chunk1.model_dump_json()
+            yield chunk1.model_dump()
 
             # Second chunk
             chunk2 = ChatCompletionChunk(
@@ -118,7 +118,7 @@ class TestChatRouter:
                     )
                 ],
             )
-            yield chunk2.model_dump_json()
+            yield chunk2.model_dump()
 
             # Final chunk
             chunk3 = ChatCompletionChunk(
@@ -131,7 +131,7 @@ class TestChatRouter:
                     )
                 ],
             )
-            yield chunk3.model_dump_json()
+            yield chunk3.model_dump()
 
         mock_chat_service.run_with_streaming.return_value = mock_streaming_generator()
         # Create payload using proper model
@@ -210,7 +210,7 @@ class TestChatRouter:
                 f"Combined content was: {content_buffer}"
             )
 
-    @patch("api.routers.chat_router.num_tokens_from_messages")
+    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
     def test_count_tokens(self, mock_num_tokens, test_client: TestClient):
         """Test the token counting endpoint."""
         mock_num_tokens.return_value = 12
@@ -336,7 +336,7 @@ class TestChatRouter:
         # Should either work with 0 tokens or return error
         assert resp.status_code in [200, 422, 500]
 
-    @patch("api.routers.chat_router.num_tokens_from_messages")
+    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
     def test_count_tokens_empty_text(self, mock_num_tokens, test_client: TestClient):
         """Test token counting with empty text."""
         mock_num_tokens.return_value = 0
@@ -351,7 +351,7 @@ class TestChatRouter:
         result = CountResult.model_validate(response.json())
         assert result.count >= 0
 
-    @patch("api.routers.chat_router.num_tokens_from_messages")
+    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
     def test_count_tokens_long_text(self, mock_num_tokens, test_client: TestClient):
         """Test token counting with very long text."""
         mock_num_tokens.return_value = 2500
@@ -367,7 +367,7 @@ class TestChatRouter:
         result = CountResult.model_validate(response.json())
         assert result.count > 1000
 
-    @patch("api.routers.chat_router.num_tokens_from_messages")
+    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
     def test_count_tokens_invalid_model(self, mock_num_tokens, test_client: TestClient):
         """Test token counting with invalid model."""
         mock_num_tokens.side_effect = NotImplementedError("Invalid model")

@@ -99,3 +99,14 @@ class Owner(Base):
     __tablename__ = "owners"
 
     lhmobjektID = Column(String(255), primary_key=True)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True)
+    assistant_id = Column(
+        String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
+    )
+    lhmobjektID = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

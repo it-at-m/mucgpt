@@ -693,9 +693,168 @@ class TestAssistantRepository:
             assert len(result) == 1, f"Department {dept} should match"
             assert assistant.id in [a.id for a in result]
 
-    async def test_hierarchical_access_performance_with_many_assistants(
-        self, db_session
-    ):
+    # Subscription tests
+    async def test_create_subscription(self, db_session):
+        """Test creating a subscription for a user to an assistant."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "test_user"
+
+        # Act
+        subscription = await assistant_repo.create_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Assert
+        assert subscription is not None
+        assert subscription.assistant_id == assistant.id
+        assert subscription.lhmobjektID == user_id
+
+        # Verify using is_user_subscribed
+        is_subscribed = await assistant_repo.is_user_subscribed(assistant.id, user_id)
+        assert is_subscribed is True
+
+    async def test_is_user_subscribed_when_not_subscribed(self, db_session):
+        """Test that is_user_subscribed returns False when user is not subscribed."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "nonsubscribed_user"
+
+        # Act
+        is_subscribed = await assistant_repo.is_user_subscribed(assistant.id, user_id)
+
+        # Assert
+        assert is_subscribed is False
+
+    async def test_remove_subscription(self, db_session):
+        """Test removing a subscription."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "test_user"
+        await assistant_repo.create_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Verify subscription exists
+        is_subscribed_before = await assistant_repo.is_user_subscribed(
+            assistant.id, user_id
+        )
+        assert is_subscribed_before is True
+
+        # Act
+        removed = await assistant_repo.remove_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Assert
+        assert removed is True
+
+        # Verify subscription is gone
+        is_subscribed_after = await assistant_repo.is_user_subscribed(
+            assistant.id, user_id
+        )
+        assert is_subscribed_after is False
+
+    async def test_remove_nonexistent_subscription(self, db_session):
+        """Test removing a subscription that doesn't exist."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "nonexistent_user"
+
+        # Act
+        removed = await assistant_repo.remove_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Assert
+        assert removed is False
+
+    async def test_get_user_subscriptions(self, db_session):
+        """Test getting all assistants a user has subscribed to."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant1 = await assistant_repo.create(hierarchical_access=["ITM-TEST1"])
+        assistant2 = await assistant_repo.create(hierarchical_access=["ITM-TEST2"])
+        assistant3 = await assistant_repo.create(hierarchical_access=["ITM-TEST3"])
+        await db_session.commit()
+
+        user_id = "test_user"
+
+        # Subscribe to two assistants
+        await assistant_repo.create_subscription(assistant1.id, user_id)
+        await assistant_repo.create_subscription(assistant3.id, user_id)
+        await db_session.commit()
+
+        # Act
+        subscribed_assistants = await assistant_repo.get_user_subscriptions(user_id)
+
+        # Assert
+        assert len(subscribed_assistants) == 2
+
+        assistant_ids = [a.id for a in subscribed_assistants]
+        assert assistant1.id in assistant_ids
+        assert assistant3.id in assistant_ids
+        assert assistant2.id not in assistant_ids
+
+    async def test_get_user_subscriptions_no_subscriptions(self, db_session):
+        """Test getting subscriptions for a user with no subscriptions."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        await assistant_repo.create(hierarchical_access=["ITM-TEST1"])
+        await db_session.commit()
+
+        user_id = "user_with_no_subscriptions"
+
+        # Act
+        subscribed_assistants = await assistant_repo.get_user_subscriptions(user_id)
+
+        # Assert
+        assert len(subscribed_assistants) == 0
+
+    async def test_multiple_users_subscribed_to_same_assistant(self, db_session):
+        """Test multiple users subscribing to the same assistant."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id1 = "user1"
+        user_id2 = "user2"
+
+        # Act
+        await assistant_repo.create_subscription(assistant.id, user_id1)
+        await assistant_repo.create_subscription(assistant.id, user_id2)
+        await db_session.commit()
+
+        # Assert
+        is_user1_subscribed = await assistant_repo.is_user_subscribed(
+            assistant.id, user_id1
+        )
+        is_user2_subscribed = await assistant_repo.is_user_subscribed(
+            assistant.id, user_id2
+        )
+
+        assert is_user1_subscribed is True
+        assert is_user2_subscribed is True
+
+        # Check get_user_subscriptions for both users
+        user1_assistants = await assistant_repo.get_user_subscriptions(user_id1)
+        user2_assistants = await assistant_repo.get_user_subscriptions(user_id2)
+
+        assert len(user1_assistants) == 1
+        assert len(user2_assistants) == 1
+        assert user1_assistants[0].id == assistant.id
+        assert user2_assistants[0].id == assistant.id
+
+    async def test_hierarchical_access_with_many_assistants(self, db_session):
         """Test performance with many assistants and various access patterns."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)

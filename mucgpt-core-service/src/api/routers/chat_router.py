@@ -56,7 +56,7 @@ async def chat_completions(
             )
 
             async def sse_generator():
-                async for chunk in gen:
+                for chunk in gen:
                     yield f"data: {json.dumps(chunk)}\n\n"
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
@@ -105,6 +105,9 @@ async def counttokens(
         raise HTTPException(status_code=422, detail=str(e))
     except TokenCounterError as e:
         logger.error(f"Token counting error: {str(e)}")
+        raise HTTPException(status_code=422, detail=str(e))
+    except NotImplementedError as e:
+        logger.warning(f"Not implemented error in token counting: {str(e)}")
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.exception(f"Unexpected error in token counting: {str(e)}")

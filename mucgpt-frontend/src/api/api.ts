@@ -6,7 +6,6 @@ import {
     AssistantCreateResponse,
     BrainstormRequest,
     ChatRequest,
-    ChatTurn,
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
@@ -154,33 +153,38 @@ export async function createChatName(
     max_output_tokens: number,
     model: string
 ) {
-    const history: ChatTurn[] = [{ user: query, bot: answer }];
-    const request: ChatRequest = {
-        history: [
-            ...history,
-            {
-                user: CHAT_NAME_PROMPT,
-                bot: undefined
-            }
-        ],
-        shouldStream: false,
-        language: language,
+    const url = API_BASE + "v1/chat/completions";
+    // build OpenAI-compatible messages array
+    const messages: Array<{ role: string; content: string }> = [];
+    if (system_message) {
+        messages.push({ role: "system", content: system_message });
+    }
+    messages.push({ role: "user", content: query });
+    messages.push({ role: "assistant", content: answer });
+    messages.push({ role: "user", content: CHAT_NAME_PROMPT });
+
+    const body = {
+        model: model,
+        messages,
         temperature: temperature,
-        system_message: system_message,
-        max_output_tokens: max_output_tokens,
-        model: model
+        max_tokens: max_output_tokens,
+        stream: false
     };
-    const response = await chatApi(request);
+
+    const response = await fetch(url, postConfig(body));
     handleRedirect(response);
 
     if (!response.body) {
         throw Error("No response body");
     }
-    const parsedResponse = (await response.json()) as SimplyResponse;
+
+    const parsedResponse = await response.json();
     if (response.status > 299 || !response.ok) {
         throw Error(parsedResponse.error || "Unknown error");
     }
-    return parsedResponse.content;
+
+    // Extract content from ChatCompletion response
+    return parsedResponse.choices?.[0]?.message?.content || "New Chat";
 }
 
 export async function createCommunityAssistantApi(input: AssistantCreateInput): Promise<AssistantCreateResponse> {

@@ -191,8 +191,8 @@ export const makeApiRequest = async (
                             usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
                         };
                         if (chunkWithUsage.usage) {
-                            user_tokens = chunkWithUsage.usage.prompt_tokens || 0;
-                            streamed_tokens = chunkWithUsage.usage.completion_tokens || 0;
+                            user_tokens = user_tokens + (chunkWithUsage.usage.prompt_tokens || 0);
+                            streamed_tokens = streamed_tokens + (chunkWithUsage.usage.completion_tokens || 0);
                         }
 
                         // Append partial content
@@ -221,7 +221,6 @@ export const makeApiRequest = async (
     } finally {
         reader.releaseLock();
     }
-
     // Ensure the final response is set
     const finalResponse = {
         ...askResponse,

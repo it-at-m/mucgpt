@@ -54,7 +54,23 @@ class Chat:
         Yields:
             Iterator[AsyncGenerator[Chunks, None]]: Chunks of chat messages. n messages with content. One final message with infos about the consumed tokens.
         """
-        logger.info("Chat streaming started with temperature %s", temperature)
+        logger.info(
+            "Chat streaming started with temperature %s, model %s, max_tokens %s",
+            temperature,
+            model,
+            max_output_tokens,
+        )
+        logger.debug("Department context: %s", department)
+        logger.debug("Input messages count: %s", len(messages))
+        # Log message types for debugging
+        msg_types = [f"{m.role} ({len(m.content)} chars)" for m in messages]
+        logger.debug("Message types: %s", msg_types)
+
+        # Log detailed message content (first 100 chars) for better debugging
+        for i, m in enumerate(messages):
+            truncated = m.content[:100] + "..." if len(m.content) > 100 else m.content
+            logger.debug("Streaming message %d (%s): %s", i, m.role, truncated)
+
         # configure llm
         config = {
             "llm_max_tokens": max_output_tokens,
@@ -62,22 +78,60 @@ class Chat:
             "llm_streaming": True,
             "llm": model,
         }
+        logger.debug("LLM config: %s", config)
         llm = self.llm.with_config(configurable=config)
         # convert OpenAI messages to langchain messages
         msgs = []
-        for m in messages:
+        logger.debug("Converting %d messages to langchain format", len(messages))
+        for i, m in enumerate(messages):
             if m.role == "system":
                 msgs.append(SystemMessage(m.content))
+                logger.debug(
+                    "Converted message %d: system message (%d chars)", i, len(m.content)
+                )
             elif m.role == "user":
                 msgs.append(HumanMessage(m.content))
+                logger.debug(
+                    "Converted message %d: user message (%d chars)", i, len(m.content)
+                )
             else:
                 msgs.append(AIMessage(m.content))
+                logger.debug(
+                    "Converted message %d: AI message (%d chars)", i, len(m.content)
+                )
+
         # prepare OpenAI stream metadata
         id_ = str(uuid.uuid4())
         created = int(time.time())
+        logger.debug("Stream ID: %s, created: %s", id_, created)
+
+        chunk_count = 0
+        content_length = 0
+
         # go over events
         try:
+            logger.debug("Starting streaming response")
             async for event in llm.astream(msgs):
+                chunk_count += 1
+                chunk_content_length = len(event.content) if event.content else 0
+                content_length += chunk_content_length
+
+                if chunk_count % 50 == 0:  # Log periodically to avoid flooding
+                    logger.debug(
+                        "Streaming chunks: %s, content length: %s chars",
+                        chunk_count,
+                        content_length,
+                    )
+                elif chunk_count <= 3:  # Log first few chunks for debugging
+                    logger.debug(
+                        "Chunk %d content (%d chars): %s",
+                        chunk_count,
+                        chunk_content_length,
+                        event.content[:50] + "..."
+                        if event.content and len(event.content) > 50
+                        else event.content,
+                    )
+
                 chunk = ChatCompletionChunk(
                     id=id_,
                     object="chat.completion.chunk",
@@ -90,9 +144,19 @@ class Chat:
                         )
                     ],
                 )
-                yield chunk.model_dump_json()
+                yield chunk.model_dump()
+
+            logger.info(
+                "Streaming completed successfully. Total chunks: %s, content length: %s chars",
+                chunk_count,
+                content_length,
+            )
+
         except Exception as ex:
+            logger.error("Streaming error: %s", str(ex), exc_info=True)
             error_msg = llm_exception_handler(ex=ex, logger=logger)
+            logger.debug("Returning error message to client: %s", error_msg)
+
             # include error message in delta content
             chunk = ChatCompletionChunk(
                 id=id_,
@@ -106,8 +170,10 @@ class Chat:
                     )
                 ],
             )
-            yield chunk.model_dump_json()
+            yield chunk.model_dump()
+
         # end of stream signal
+        logger.debug("Sending end-of-stream signal")
         end_chunk = ChatCompletionChunk(
             id=id_,
             object="chat.completion.chunk",
@@ -118,7 +184,7 @@ class Chat:
                 )
             ],
         )
-        yield end_chunk.model_dump_json()
+        yield end_chunk.model_dump()
 
     def run_without_streaming(
         self,
@@ -140,46 +206,125 @@ class Chat:
         Returns:
             ChatResult: the generated text from the llm
         """
-        logger.info("Chat started with temperature %s", temperature)
+        logger.info(
+            "Non-streaming chat started with temperature %s, model %s, max_tokens %s",
+            temperature,
+            model,
+            max_output_tokens,
+        )
+        logger.debug("Department context: %s", department)
+        logger.debug("Input messages count: %s", len(messages))
+        # Log message types for debugging
+        msg_types = [f"{m.role} ({len(m.content)} chars)" for m in messages]
+        logger.debug("Message types: %s", msg_types)
+
+        # Log detailed message content (first 100 chars) for better debugging
+        for i, m in enumerate(messages):
+            truncated = m.content[:100] + "..." if len(m.content) > 100 else m.content
+            logger.debug("Non-streaming message %d (%s): %s", i, m.role, truncated)
+
         # configure llm
         config = {
             "llm_max_tokens": max_output_tokens,
             "llm_temperature": temperature,
             "llm_streaming": False,
         }
+        logger.debug("LLM config: %s", config)
         llm = self.llm.with_config(configurable=config)
+
         # convert OpenAI messages to langchain messages
         msgs = []
-        for m in messages:
+        logger.debug("Converting %d messages to langchain format", len(messages))
+        for i, m in enumerate(messages):
             if m.role == "system":
                 msgs.append(SystemMessage(m.content))
+                logger.debug(
+                    "Converted message %d: system message (%d chars)", i, len(m.content)
+                )
             elif m.role == "user":
                 msgs.append(HumanMessage(m.content))
+                logger.debug(
+                    "Converted message %d: user message (%d chars)", i, len(m.content)
+                )
             else:
                 msgs.append(AIMessage(m.content))
-
-        with get_openai_callback() as cb:
-            ai_message: AIMessage = llm.invoke(msgs)
-            # use callback metrics
-            usage = Usage(
-                prompt_tokens=cb.prompt_tokens,
-                completion_tokens=cb.completion_tokens,
-                total_tokens=cb.total_tokens,
-            )
-        response = ChatCompletionResponse(
-            id=str(uuid.uuid4()),
-            object="chat.completion",
-            created=int(time.time()),
-            choices=[
-                ChatCompletionChoice(
-                    index=0,
-                    message=ChatCompletionMessage(
-                        role="assistant", content=ai_message.content
-                    ),
-                    finish_reason="stop",
+                logger.debug(
+                    "Converted message %d: AI message (%d chars)", i, len(m.content)
                 )
-            ],
-            usage=usage,
-        )
-        logger.info("Chat completed with total tokens %s", usage.total_tokens)
-        return response
+
+        try:
+            logger.debug("Invoking LLM with %s messages", len(msgs))
+            start_time = time.time()
+
+            with get_openai_callback() as cb:
+                ai_message: AIMessage = llm.invoke(msgs)
+                # use callback metrics
+                usage = Usage(
+                    prompt_tokens=cb.prompt_tokens,
+                    completion_tokens=cb.completion_tokens,
+                    total_tokens=cb.total_tokens,
+                )
+
+            elapsed_time = time.time() - start_time
+            logger.debug("LLM response received in %.2f seconds", elapsed_time)
+            logger.debug("Response length: %s chars", len(ai_message.content))
+            logger.debug(
+                "Token usage - Prompt: %d, Completion: %d, Total: %d",
+                cb.prompt_tokens,
+                cb.completion_tokens,
+                cb.total_tokens,
+            )
+
+            # Log a sample of the response for debugging
+            sample_length = min(100, len(ai_message.content))
+            logger.debug(
+                "Response sample: %s%s",
+                ai_message.content[:sample_length],
+                "..." if len(ai_message.content) > sample_length else "",
+            )
+
+            response = ChatCompletionResponse(
+                id=str(uuid.uuid4()),
+                object="chat.completion",
+                created=int(time.time()),
+                choices=[
+                    ChatCompletionChoice(
+                        index=0,
+                        message=ChatCompletionMessage(
+                            role="assistant", content=ai_message.content
+                        ),
+                        finish_reason="stop",
+                    )
+                ],
+                usage=usage,
+            )
+            logger.info(
+                "Chat completed with prompt tokens: %s, completion tokens: %s, total tokens: %s",
+                usage.prompt_tokens,
+                usage.completion_tokens,
+                usage.total_tokens,
+            )
+            return response
+
+        except Exception as ex:
+            logger.error("Non-streaming chat error: %s", str(ex), exc_info=True)
+            error_msg = llm_exception_handler(ex=ex, logger=logger)
+            logger.debug("Returning error message to client: %s", error_msg)
+
+            # Create response with error message
+            response = ChatCompletionResponse(
+                id=str(uuid.uuid4()),
+                object="chat.completion",
+                created=int(time.time()),
+                choices=[
+                    ChatCompletionChoice(
+                        index=0,
+                        message=ChatCompletionMessage(
+                            role="assistant", content=error_msg
+                        ),
+                        finish_reason="error",
+                    )
+                ],
+                usage=Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+            )
+            return response

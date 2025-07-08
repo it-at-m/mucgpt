@@ -151,6 +151,8 @@ services:
       - MUCGPT_CORE_BACKEND__UNAUTHORIZED_USER_REDIRECT_URL=""
       - MUCGPT_CORE_BACKEND__SSO_CONFIG__SSO_USERINFO_URL=http://keycloak:8100/auth/realms/local_realm/protocol/openid-connect/userinfo
       - MUCGPT_CORE_BACKEND__SSO_CONFIG__ROLE=lhm-ab-mucgpt-user
+      - MUCGPT_CORE_VERSION=#{CORE_VERSION}
+      - MUCGPT_CORE_COMMIT=#{COMMIT_HASH}
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]

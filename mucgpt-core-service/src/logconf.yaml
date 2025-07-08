@@ -15,7 +15,7 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: INFO
+    level: DEBUG
     formatter: json
     filters: [correlation_id]
     stream: ext://sys.stdout
@@ -26,35 +26,35 @@ handlers:
     stream: ext://sys.stderr
 loggers:
   uvicorn.error:
-    level: INFO
-    handlers: [console]
-    propagate: no
-  uvicorn.access:
-    level: INFO
-    handlers: [console]
-    propagate: no
-  dev:
     level: DEBUG
     handlers: [console]
     propagate: no
+  uvicorn.access:
+    level: WARN
+    handlers: [console]
+    propagate: no
+  dev:
+    level: WARN
+    handlers: [console]
+    propagate: no
   mucgpt-core:
-    level: INFO
+    level: WARN
     handlers: [console]
     propagate: no
   mucgpt-core-chat:
-    level: INFO
+    level: WARN
     handlers: [console]
     propagate: no
   mucgpt-core-simply:
-    level: INFO
+    level: WARN
     handlers: [console]
     propagate: no
   mucgpt-core-summarize:
-    level: INFO
+    level: WARN
     handlers: [console]
     propagate: no
   mucgpt-core-brainstorm:
-    level: INFO
+    level: WARN
     handlers: [console]
     propagate: no
   httpx:

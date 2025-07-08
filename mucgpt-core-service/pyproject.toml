@@ -30,7 +30,6 @@ dependencies = [
     "asgi-correlation-id==4.3.4",
     "gitpython==3.1.44",
     "pydantic-settings>=2.8.1",
-    "sse-starlette>=2.4.1",
 ]
 
 [tool.uv]

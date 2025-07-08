@@ -6,7 +6,6 @@ import { ChatRequest, ChatResponse, ChatTurn, createChatName } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
-import readNDJSONStream from "ndjson-readablestream";
 import { BotStorageService } from "../service/botstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
@@ -154,37 +153,64 @@ export const makeApiRequest = async (
     let buffer = "";
     let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
-    // Process the stream
-    for await (const chunkObj of readNDJSONStream(response.body)) {
-        // Use ChatCompletionChunk and ChatCompletionChunkChoice types
-        const chunk = chunkObj as ChatCompletionChunk;
-        const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
-        if (!choice) continue;
-        // Handle errors
-        if (choice.finish_reason === "error") {
-            throw Error(choice.delta?.content || "Unknown error");
+    // Process the SSE stream
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let streamBuffer = "";
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            streamBuffer += decoder.decode(value, { stream: true });
+            const lines = streamBuffer.split("\n");
+
+            // Keep the last incomplete line in the buffer
+            streamBuffer = lines.pop() || "";
+
+            for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                    const data = line.slice(6).trim();
+                    if (data === "[DONE]") {
+                        break;
+                    }
+
+                    try {
+                        const chunk = JSON.parse(data) as ChatCompletionChunk;
+                        const choice: ChatCompletionChunkChoice | undefined = chunk.choices?.[0];
+                        if (!choice) continue;
+
+                        // Stream end
+                        if (choice.finish_reason === "stop") {
+                            break;
+                        }
+
+                        // Append partial content
+                        const content = choice.delta?.content;
+                        if (content) {
+                            buffer += content;
+                            // batch UI updates
+                            if (updateTimer) clearTimeout(updateTimer);
+                            updateTimer = setTimeout(() => {
+                                const updatedResponse = {
+                                    ...askResponse,
+                                    answer: buffer,
+                                    tokens: streamed_tokens,
+                                    user_tokens: user_tokens
+                                };
+                                const updatedMessage = { user: question, response: updatedResponse };
+                                dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
+                            }, 100);
+                        }
+                    } catch (parseError) {
+                        console.warn("Failed to parse SSE data:", data, parseError);
+                    }
+                }
+            }
         }
-        // Stream end
-        if (choice.finish_reason === "stop") {
-            break;
-        }
-        // Append partial content
-        const content = choice.delta?.content;
-        if (content) {
-            buffer += content;
-            // batch UI updates
-            if (updateTimer) clearTimeout(updateTimer);
-            updateTimer = setTimeout(() => {
-                const updatedResponse = {
-                    ...askResponse,
-                    answer: buffer,
-                    tokens: streamed_tokens,
-                    user_tokens: user_tokens
-                };
-                const updatedMessage = { user: question, response: updatedResponse };
-                dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
-            }, 100);
-        }
+    } finally {
+        reader.releaseLock();
     }
 
     // Ensure the final response is set

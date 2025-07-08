@@ -1,7 +1,8 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
-from sse_starlette.sse import EventSourceResponse
 
 from api.api_models import (
     ChatCompletionRequest,
@@ -53,9 +54,12 @@ async def chat_completions(
                 model=request.model,
                 department=user_info.department,
             )
-            response = EventSourceResponse(gen)
-            response.timeout = None  # type: ignore
-            return response
+
+            async def sse_generator():
+                async for chunk in gen:
+                    yield f"data: {json.dumps(chunk)}\n\n"
+
+            return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
             return chat_service.run_without_streaming(
                 messages=request.messages,

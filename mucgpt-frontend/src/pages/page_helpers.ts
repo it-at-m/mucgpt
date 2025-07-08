@@ -139,8 +139,8 @@ export const makeApiRequest = async (
     }
 
     // Initialize response variables
-    const user_tokens = 0;
-    const streamed_tokens = 0;
+    let user_tokens = 0;
+    let streamed_tokens = 0;
 
     // Add an empty response
     const initialMessage = {
@@ -184,6 +184,15 @@ export const makeApiRequest = async (
                         // Stream end
                         if (choice.finish_reason === "stop") {
                             break;
+                        }
+
+                        // Handle token usage if available
+                        const chunkWithUsage = chunk as ChatCompletionChunk & {
+                            usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+                        };
+                        if (chunkWithUsage.usage) {
+                            user_tokens = chunkWithUsage.usage.prompt_tokens || 0;
+                            streamed_tokens = chunkWithUsage.usage.completion_tokens || 0;
                         }
 
                         // Append partial content

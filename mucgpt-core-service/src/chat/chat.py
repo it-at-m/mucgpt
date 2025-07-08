@@ -98,58 +98,66 @@ class Chat:
                 msgs.append(AIMessage(m.content))
                 logger.debug(
                     "Converted message %d: AI message (%d chars)", i, len(m.content)
-                )
-
-        # prepare OpenAI stream metadata
+                )  # prepare OpenAI stream metadata
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
 
         chunk_count = 0
         content_length = 0
+        total_tokens = 0
+        prompt_tokens = 0
+        completion_tokens = 0
 
         # go over events
         try:
             logger.debug("Starting streaming response")
-            async for event in llm.astream(msgs):
-                chunk_count += 1
-                chunk_content_length = len(event.content) if event.content else 0
-                content_length += chunk_content_length
+            with get_openai_callback() as cb:
+                async for event in llm.astream(msgs):
+                    chunk_count += 1
+                    chunk_content_length = len(event.content) if event.content else 0
+                    content_length += chunk_content_length
 
-                if chunk_count % 50 == 0:  # Log periodically to avoid flooding
-                    logger.debug(
-                        "Streaming chunks: %s, content length: %s chars",
-                        chunk_count,
-                        content_length,
-                    )
-                elif chunk_count <= 3:  # Log first few chunks for debugging
-                    logger.debug(
-                        "Chunk %d content (%d chars): %s",
-                        chunk_count,
-                        chunk_content_length,
-                        event.content[:50] + "..."
-                        if event.content and len(event.content) > 50
-                        else event.content,
-                    )
-
-                chunk = ChatCompletionChunk(
-                    id=id_,
-                    object="chat.completion.chunk",
-                    created=created,
-                    choices=[
-                        ChatCompletionChunkChoice(
-                            delta=ChatCompletionDelta(content=event.content),
-                            index=0,
-                            finish_reason=None,
+                    if chunk_count % 50 == 0:  # Log periodically to avoid flooding
+                        logger.debug(
+                            "Streaming chunks: %s, content length: %s chars",
+                            chunk_count,
+                            content_length,
                         )
-                    ],
-                )
-                yield chunk.model_dump()
+                    elif chunk_count <= 3:  # Log first few chunks for debugging
+                        logger.debug(
+                            "Chunk %d content (%d chars): %s",
+                            chunk_count,
+                            chunk_content_length,
+                            event.content[:50] + "..."
+                            if event.content and len(event.content) > 50
+                            else event.content,
+                        )
+
+                    chunk = ChatCompletionChunk(
+                        id=id_,
+                        object="chat.completion.chunk",
+                        created=created,
+                        choices=[
+                            ChatCompletionChunkChoice(
+                                delta=ChatCompletionDelta(content=event.content),
+                                index=0,
+                                finish_reason=None,
+                            )
+                        ],
+                    )
+                    yield chunk.model_dump()
+
+                # Get token usage after streaming is complete
+                prompt_tokens = cb.prompt_tokens
+                completion_tokens = cb.completion_tokens
+                total_tokens = cb.total_tokens
 
             logger.info(
-                "Streaming completed successfully. Total chunks: %s, content length: %s chars",
+                "Streaming completed successfully. Total chunks: %s, content length: %s chars, tokens: %s",
                 chunk_count,
                 content_length,
+                total_tokens,
             )
 
         except Exception as ex:
@@ -170,10 +178,30 @@ class Chat:
                     )
                 ],
             )
-            yield chunk.model_dump()
-
-        # end of stream signal
+            yield chunk.model_dump()  # end of stream signal
         logger.debug("Sending end-of-stream signal")
+
+        # Send final chunk with token usage
+        if prompt_tokens > 0 or completion_tokens > 0:
+            usage_chunk = ChatCompletionChunk(
+                id=id_,
+                object="chat.completion.chunk",
+                created=created,
+                choices=[
+                    ChatCompletionChunkChoice(
+                        delta=ChatCompletionDelta(),
+                        index=0,
+                        finish_reason=None,
+                    )
+                ],
+                usage=Usage(
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=total_tokens,
+                ),
+            )
+            yield usage_chunk.model_dump()
+
         end_chunk = ChatCompletionChunk(
             id=id_,
             object="chat.completion.chunk",

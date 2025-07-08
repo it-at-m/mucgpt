@@ -8,7 +8,7 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi } from "../../api";
+import { ApplicationConfig, AssistantCreateInput, configApi, createCommunityAssistantApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
@@ -109,22 +109,7 @@ export const Layout = () => {
                     console.error("Keine Modelle vorhanden");
                 }
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
-                for (const bot of result.frontend.community_assistants) {
-                    bot.system_message = bot.system_message.replace(/\\n/g, "\n");
-                    if (bot.system_message.startsWith('"') && bot.system_message.endsWith('"')) {
-                        bot.system_message = bot.system_message.slice(1, -1);
-                    }
-                    bot.description = bot.description.replace(/\\n/g, "\n").replace(/ {2}/g, "  \n");
-                    if (bot.description.startsWith('"') && bot.description.endsWith('"')) {
-                        bot.description = bot.description.slice(1, -1);
-                    }
-                    botStorageService.createBotConfig(bot, bot.id);
-                }
-            },
-            () => {
-                console.error("Config nicht geladen");
-            }
-        );
+            })
         i18n.changeLanguage(language_pref);
     }, []);
 

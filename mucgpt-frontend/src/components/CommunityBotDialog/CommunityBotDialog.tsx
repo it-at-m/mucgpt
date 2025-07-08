@@ -109,12 +109,12 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         }
     }, [takeCommunityBots, showSearchDialogInput]);
 
-    const onSaveBot = () => {
-        communitybotStorageService.createBotConfig(choosenBot);
+    let onSaveBot = () => {
+        communitybotStorageService.createBotConfig(choosenBot, choosenBot.id);
         setShowBotDialog(false);
         setShowSearchDialogInput(false);
-        window.location.href = "/#/community-bot/" + choosenBot.id + "/" + choosenBot.version.toString().replace(".", "-");
-    };
+        window.location.href = "/#/bot/" + choosenBot.id;
+    }
 
     const inputHandler = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string | undefined) => {
         if (newValue !== undefined && newValue !== "") {

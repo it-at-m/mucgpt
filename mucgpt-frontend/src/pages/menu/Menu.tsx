@@ -8,16 +8,18 @@ import { useEffect, useState } from "react";
 import { AddBotButton } from "../../components/AddBotButton";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
 import { BotStorageService } from "../../service/botstorage";
-import { Bot } from "../../api/models";
+import { AssistantResponse, Bot } from "../../api/models";
 import { BOT_STORE } from "../../constants";
 import { migrate_old_bots } from "../../service/migration";
 import { SearchCommunityBotButton } from "../../components/SearchCommunityBotButton/SearchCommunityBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
+import { getOwnedCommunityBots } from "../../api";
 
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
     const [communityBots, setCommunityBots] = useState<Bot[]>([]);
+    const [ownedCommunityBots, setOwnedCommunityBots] = useState<AssistantResponse[]>([]);
     const [showSearchBot, setShowSearchBot] = useState<boolean>(false);
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
 
@@ -40,6 +42,9 @@ const Menu = () => {
             }
             setBots(bots);
             setCommunityBots(community_assistants);
+        });
+        getOwnedCommunityBots().then((response) => {
+            setOwnedCommunityBots(response);
         });
     }, []);
 
@@ -89,15 +94,20 @@ const Menu = () => {
                 ))}
                 {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
-            <div className={styles.rowheader}>
-                {t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} />
+            <div className={styles.rowheader}>{t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} /></div>
+            <CommunityBotsDialog showSearchDialogInput={showSearchBot} setShowSearchDialogInput={setShowSearchBot} takeCommunityBots={getCommunityBots} setTakeCommunityBots={setGetCommunityBots} />
+            <div className={styles.subrowheader}>Eigene:</div>
+            <div className={styles.row}>
+                {ownedCommunityBots.map((bot: AssistantResponse, key) => (
+                    <Tooltip key={key} content={bot.latest_version.name} relationship="description" positioning="below">
+                        <Link to={`/published-bot/${bot.id}`} className={styles.box}>
+                            {bot.latest_version.name}
+                        </Link>
+                    </Tooltip>
+                ))}
+                {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
-            <CommunityBotsDialog
-                showSearchDialogInput={showSearchBot}
-                setShowSearchDialogInput={setShowSearchBot}
-                takeCommunityBots={getCommunityBots}
-                setTakeCommunityBots={setGetCommunityBots}
-            />
+            <div className={styles.subrowheader}>Abonnierte:</div>
             <div className={styles.row}>
                 {communityBots.map((bot: Bot, key) => (
                     <Tooltip key={key} content={bot.title} relationship="description" positioning="below">

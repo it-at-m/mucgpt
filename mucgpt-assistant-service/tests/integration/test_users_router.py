@@ -2,6 +2,8 @@ import pytest
 from src.api.api_models import (
     AssistantCreate,
     AssistantResponse,
+    StatusResponse,
+    SubscriptionResponse,
 )
 
 # Headers for authentication
@@ -111,13 +113,12 @@ def test_get_user_bots_multiple_owned(test_client):
 
 @pytest.mark.integration
 def test_get_user_bots_owner_filter_is_strict(test_client):
-    """Test that users get bots where they are owners (including auto-added ownership)."""
-    # Bot is owned by another user, but test_user_123 will be auto-added as owner
+    """Test that users get bots where they are owners (including auto-added ownership)."""  # Create assistant with hierarchical access that matches the test user's department
     assistant_data = AssistantCreate(
         name="Hierarchical Bot",
         system_prompt="A bot accessible hierarchically.",
         owner_ids=["another_user"],
-        hierarchical_access=["it-support"],  # test_user_123 has this role
+        hierarchical_access=["IT-Test-Department"],  # test_user_123 has this role
     )
     create_response = test_client.post(
         "/bot/create", json=assistant_data.model_dump(), headers=headers
@@ -446,3 +447,679 @@ async def test_get_user_bots_access_control_repo(test_client, test_db_session):
             assert "other_user_456" in assistant_response.owner_ids
             assert "third_user_789" in assistant_response.owner_ids
             assert len(assistant_response.owner_ids) == 3
+
+
+@pytest.mark.integration
+def test_subscribe_to_assistant_success(test_client):
+    """Test successfully subscribing to an assistant."""
+    # Create an assistant with hierarchical access that matches the test user's department
+    assistant_data = AssistantCreate(
+        name="Subscribe Test Bot",
+        system_prompt="A bot for testing subscriptions.",
+        owner_ids=["other_user_456"],  # Not owned by test_user_123
+        hierarchical_access=["IT-Test-Department"],  # test_user_123 has this department
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )  # Validate successful subscription
+    assert subscribe_response.status_code == 200
+
+    # Validate StatusResponse model
+    status_response = StatusResponse.model_validate(subscribe_response.json())
+    assert (
+        status_response.message == "Successfully subscribed to assistant"
+    )  # Verify subscription was created by getting user subscriptions
+    subscriptions_response = test_client.get("/user/subscriptions", headers=headers)
+    assert subscriptions_response.status_code == 200
+
+    subscriptions = subscriptions_response.json()
+    assert len(subscriptions) == 1
+
+    # Validate using SubscriptionResponse model
+    subscription_response = SubscriptionResponse.model_validate(subscriptions[0])
+    assert subscription_response.id == assistant_id
+    assert subscription_response.name == "Subscribe Test Bot"
+
+
+@pytest.mark.integration
+def test_subscribe_to_assistant_already_subscribed(test_client):
+    """Test subscribing to an assistant that the user is already subscribed to."""
+    # Create an assistant
+    assistant_data = AssistantCreate(
+        name="Already Subscribed Bot",
+        system_prompt="Testing already subscribed scenario.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Subscribe to the assistant
+    first_subscribe = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert first_subscribe.status_code == 200
+
+    # Try to subscribe again
+    second_subscribe = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+
+    # Should return 409 Conflict
+    assert second_subscribe.status_code == 409
+    assert "Already subscribed" in second_subscribe.json()["detail"]
+
+
+@pytest.mark.integration
+def test_subscribe_to_nonexistent_assistant(test_client):
+    """Test subscribing to an assistant that doesn't exist."""
+    # Try to subscribe to a non-existent assistant
+    nonexistent_id = "00000000-0000-0000-0000-000000000000"
+    response = test_client.post(
+        f"/user/subscriptions/{nonexistent_id}", headers=headers
+    )
+
+    # Should return 404 Not Found
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()
+
+
+@pytest.mark.integration
+def test_subscribe_to_assistant_no_access(test_client):
+    """Test subscribing to an assistant that the user doesn't have access to."""  # Create an assistant with hierarchical access that doesn't match test user's department
+    assistant_data = AssistantCreate(
+        name="No Access Bot",
+        system_prompt="A bot user can't access.",
+        owner_ids=["other_user_456"],
+        hierarchical_access=["HR-Test"],  # test_user_123 doesn't have this department
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Try to subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+
+    # Should return 403 Forbidden
+    assert subscribe_response.status_code == 403
+    assert "not allowed to access" in subscribe_response.json()["detail"].lower()
+
+
+@pytest.mark.integration
+def test_unsubscribe_from_assistant_success(test_client):
+    """Test successfully unsubscribing from an assistant."""
+    # Create an assistant
+    assistant_data = AssistantCreate(
+        name="Unsubscribe Test Bot",
+        system_prompt="A bot for testing unsubscribing.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200  # Verify subscription exists
+    subscriptions_before = test_client.get(
+        "/user/subscriptions", headers=headers
+    ).json()
+    assert len(subscriptions_before) == 1
+
+    # Validate using SubscriptionResponse model
+    subscription_response = SubscriptionResponse.model_validate(subscriptions_before[0])
+    assert subscription_response.id == assistant_id
+    assert subscription_response.name == "Unsubscribe Test Bot"
+
+    # Unsubscribe from the assistant
+    unsubscribe_response = test_client.delete(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )  # Validate successful unsubscription
+    assert unsubscribe_response.status_code == 200
+
+    # Validate StatusResponse model
+    status_response = StatusResponse.model_validate(unsubscribe_response.json())
+    assert status_response.message == "Successfully unsubscribed from assistant"
+
+    # Verify subscription was removed
+    subscriptions_after = test_client.get("/user/subscriptions", headers=headers).json()
+    assert len(subscriptions_after) == 0
+
+
+@pytest.mark.integration
+def test_unsubscribe_from_nonexistent_subscription(test_client):
+    """Test unsubscribing from an assistant that the user isn't subscribed to."""
+    # Create an assistant but don't subscribe
+    assistant_data = AssistantCreate(
+        name="Not Subscribed Bot",
+        system_prompt="A bot user isn't subscribed to.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Try to unsubscribe
+    unsubscribe_response = test_client.delete(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+
+    # Should return 404 Not Found
+    assert unsubscribe_response.status_code == 404
+    assert "subscription not found" in unsubscribe_response.json()["detail"].lower()
+
+
+@pytest.mark.integration
+def test_get_user_subscriptions_empty(test_client):
+    """Test getting user subscriptions when they have none."""
+    # Get subscriptions without subscribing to anything
+    response = test_client.get("/user/subscriptions", headers=headers)
+
+    # Validate empty response
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.integration
+def test_get_user_subscriptions_multiple(test_client):
+    """Test getting multiple subscriptions."""  # Create multiple assistants
+    assistant_names = ["Subscription Bot 1", "Subscription Bot 2", "Subscription Bot 3"]
+    assistant_ids = []
+
+    for name in assistant_names:
+        assistant_data = AssistantCreate(
+            name=name,
+            system_prompt=f"A bot for testing multiple subscriptions: {name}",
+            hierarchical_access=["IT-Test-Department"],
+        )
+
+        create_response = test_client.post(
+            "/bot/create", json=assistant_data.model_dump(), headers=headers
+        )
+        assert create_response.status_code == 200
+        assistant_ids.append(create_response.json()["id"])
+
+    # Subscribe to the first and third assistants only
+    test_client.post(f"/user/subscriptions/{assistant_ids[0]}", headers=headers)
+    test_client.post(f"/user/subscriptions/{assistant_ids[2]}", headers=headers)
+
+    # Get subscriptions
+    response = test_client.get(
+        "/user/subscriptions", headers=headers
+    )  # Validate response
+    assert response.status_code == 200
+    subscriptions = response.json()
+    assert len(subscriptions) == 2
+
+    # Check that we have the correct assistants with simplified structure
+    subscription_names = [sub["name"] for sub in subscriptions]
+    assert "Subscription Bot 1" in subscription_names
+    assert "Subscription Bot 2" not in subscription_names
+    assert (
+        "Subscription Bot 3" in subscription_names
+    )  # Validate subscription objects using Pydantic model
+    for subscription in subscriptions:
+        # Parse with SubscriptionResponse model to ensure structure is correct
+        subscription_response = SubscriptionResponse.model_validate(subscription)
+        assert subscription_response.id in [assistant_ids[0], assistant_ids[2]]
+        assert subscription_response.name in [
+            "Subscription Bot 1",
+            "Subscription Bot 3",
+        ]
+
+        # Also validate that only expected fields are present
+        assert "id" in subscription
+        assert "name" in subscription
+        # Should NOT have complex fields like latest_version
+        assert "latest_version" not in subscription
+        assert "created_at" not in subscription
+        assert "updated_at" not in subscription
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_subscription_lifecycle(test_client, test_db_session):
+    """Test the full subscription lifecycle: create, subscribe, list, unsubscribe."""  # Create an assistant
+    assistant_data = AssistantCreate(
+        name="Lifecycle Test Bot",
+        system_prompt="Testing the subscription lifecycle.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # 1. Verify no initial subscriptions
+    initial_subs = test_client.get("/user/subscriptions", headers=headers).json()
+    assert len(initial_subs) == 0
+
+    # 2. Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200  # 3. Verify subscription exists
+    after_subscribe = test_client.get("/user/subscriptions", headers=headers).json()
+    assert len(after_subscribe) == 1
+
+    # Validate using SubscriptionResponse model
+    subscription_response = SubscriptionResponse.model_validate(after_subscribe[0])
+    assert subscription_response.id == assistant_id
+    assert subscription_response.name == "Lifecycle Test Bot"
+
+    # Also validate that only expected fields are present
+    assert "latest_version" not in after_subscribe[0]
+    assert "created_at" not in after_subscribe[0]
+
+    # 4. Attempting to subscribe again should fail
+    duplicate_subscribe = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert duplicate_subscribe.status_code == 409  # 5. Unsubscribe from the assistant
+    unsubscribe_response = test_client.delete(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert unsubscribe_response.status_code == 200
+
+    # 6. Verify subscription is removed
+    after_unsubscribe = test_client.get("/user/subscriptions", headers=headers).json()
+    assert len(after_unsubscribe) == 0
+
+    # 7. Attempting to unsubscribe again should fail
+    duplicate_unsubscribe = test_client.delete(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert duplicate_unsubscribe.status_code == 404
+
+
+@pytest.mark.integration
+def test_hierarchical_access_exact_match(test_client):
+    """Test that user can access bot with exact department match."""
+    # Create assistant with exact department match
+    assistant_data = AssistantCreate(
+        name="Exact Match Bot",
+        system_prompt="Bot with exact department match.",
+        owner_ids=["other_user"],
+        hierarchical_access=["IT-Test-Department"],  # Exact match
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should be able to subscribe (has access)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+
+@pytest.mark.integration
+def test_hierarchical_access_parent_department(test_client):
+    """Test that user can access bot with parent department access."""
+    # Create assistant with parent department access
+    assistant_data = AssistantCreate(
+        name="Parent Department Bot",
+        system_prompt="Bot with parent department access.",
+        owner_ids=["other_user"],
+        hierarchical_access=["IT-Test"],  # Parent of IT-Test-Department
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should be able to subscribe (has access through hierarchy)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+
+@pytest.mark.integration
+def test_hierarchical_access_root_department(test_client):
+    """Test that user can access bot with root department access."""
+    # Create assistant with root department access
+    assistant_data = AssistantCreate(
+        name="Root Department Bot",
+        system_prompt="Bot with root department access.",
+        owner_ids=["other_user"],
+        hierarchical_access=["IT"],  # Root of IT hierarchy
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should be able to subscribe (has access through hierarchy)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+
+@pytest.mark.integration
+def test_hierarchical_access_empty_access(test_client):
+    """Test that user can access bot with empty hierarchical access (public)."""
+    # Create assistant with empty hierarchical access (public)
+    assistant_data = AssistantCreate(
+        name="Public Bot",
+        system_prompt="Bot with public access.",
+        owner_ids=["other_user"],
+        hierarchical_access=[""],  # Empty string means public access
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should be able to subscribe (public access)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+
+@pytest.mark.integration
+def test_hierarchical_access_no_access_different_root(test_client):
+    """Test that user cannot access bot from different root department."""
+    # Create assistant with different root department
+    assistant_data = AssistantCreate(
+        name="HR Bot",
+        system_prompt="Bot from HR department.",
+        owner_ids=["other_user"],
+        hierarchical_access=["HR"],  # Different root department
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should NOT be able to subscribe (no access)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 403
+
+
+@pytest.mark.integration
+def test_hierarchical_access_no_access_different_branch(test_client):
+    """Test that user cannot access bot from different branch of IT."""
+    # Create assistant with different IT branch
+    assistant_data = AssistantCreate(
+        name="IT Support Bot",
+        system_prompt="Bot from IT Support branch.",
+        owner_ids=["other_user"],
+        hierarchical_access=["IT-Support"],  # Different branch under IT
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should NOT be able to subscribe (no access)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 403
+
+
+@pytest.mark.integration
+def test_hierarchical_access_no_access_child_department(test_client):
+    """Test that user cannot access bot from child department they don't belong to."""
+    # Create assistant with child department (more specific than user's department)
+    assistant_data = AssistantCreate(
+        name="Child Department Bot",
+        system_prompt="Bot from child department.",
+        owner_ids=["other_user"],
+        hierarchical_access=[
+            "IT-Test-Department-SubTeam"
+        ],  # Child of user's department
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should NOT be able to subscribe (no access to child department)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 403
+
+
+@pytest.mark.integration
+def test_hierarchical_access_multiple_departments(test_client):
+    """Test bot with multiple hierarchical access departments."""
+    # Create assistant with multiple departments, one accessible, one not
+    assistant_data = AssistantCreate(
+        name="Multi Department Bot",
+        system_prompt="Bot with multiple department access.",
+        owner_ids=["other_user"],
+        hierarchical_access=["HR", "IT-Test"],  # HR not accessible, IT-Test accessible
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should be able to subscribe (has access through IT-Test)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+
+@pytest.mark.integration
+def test_hierarchical_access_mixed_valid_invalid(test_client):
+    """Test bot with mix of valid and invalid hierarchical access paths."""
+    # Create assistant with mixed access paths
+    assistant_data = AssistantCreate(
+        name="Mixed Access Bot",
+        system_prompt="Bot with mixed access paths.",
+        owner_ids=["other_user"],
+        hierarchical_access=[
+            "Finance",
+            "IT-Test-Department",
+            "Marketing",
+        ],  # Only IT-Test-Department accessible
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should be able to subscribe (has access through IT-Test-Department)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+
+@pytest.mark.integration
+def test_hierarchical_access_case_sensitivity(test_client):
+    """Test that hierarchical access is case sensitive."""
+    # Create assistant with different case
+    assistant_data = AssistantCreate(
+        name="Case Sensitive Bot",
+        system_prompt="Bot testing case sensitivity.",
+        owner_ids=["other_user"],
+        hierarchical_access=["it-test-department"],  # Different case
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # User should NOT be able to subscribe (case sensitive)
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 403
+
+
+@pytest.mark.integration
+def test_get_user_bots_hierarchical_access_filtering(test_client):
+    """Test that get user bots respects hierarchical access when user is not owner."""
+    # Create bots with different hierarchical access levels
+    accessible_bot = AssistantCreate(
+        name="Accessible Bot",
+        system_prompt="Bot user can access.",
+        owner_ids=["other_user"],
+        hierarchical_access=["IT"],  # User has access
+    )
+
+    inaccessible_bot = AssistantCreate(
+        name="Inaccessible Bot",
+        system_prompt="Bot user cannot access.",
+        owner_ids=["other_user"],
+        hierarchical_access=["HR"],  # User has no access
+    )
+
+    # Create both bots
+    accessible_response = test_client.post(
+        "/bot/create", json=accessible_bot.model_dump(), headers=headers
+    )
+    assert accessible_response.status_code == 200
+
+    inaccessible_response = test_client.post(
+        "/bot/create", json=inaccessible_bot.model_dump(), headers=headers
+    )
+    assert inaccessible_response.status_code == 200
+
+    # Get user's bots - should only return accessible bot (due to auto-ownership)
+    response = test_client.get("/user/bots", headers=headers)
+    assert response.status_code == 200
+    user_bots = response.json()
+
+    # Both bots should be returned since test_user_123 is auto-added as owner
+    # regardless of hierarchical access
+    assert len(user_bots) == 2
+
+    # Verify both bots are owned by test_user_123
+    for bot in user_bots:
+        assistant_response = AssistantResponse.model_validate(bot)
+        assert "test_user_123" in assistant_response.owner_ids
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_hierarchical_access_subscription_vs_ownership(
+    test_client, test_db_session
+):
+    """Test difference between hierarchical access for subscriptions vs ownership."""
+    from src.database.assistant_repo import AssistantRepository
+
+    assistant_repo = AssistantRepository(test_db_session)
+
+    # Create assistant with HR access (user cannot access) and no test_user_123 as owner
+    assistant_hr = await assistant_repo.create(
+        hierarchical_access=["HR"],
+        owner_ids=["other_user_only"],  # Only other user as owner
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant_hr,
+        name="HR Only Bot",
+        system_prompt="Bot only for HR.",
+        description="This bot is only for HR department",
+        temperature=0.7,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=["hr-only"],
+    )
+
+    # Create assistant with IT access (user can access) and no test_user_123 as owner
+    assistant_it = await assistant_repo.create(
+        hierarchical_access=["IT"],
+        owner_ids=["other_user_only"],  # Only other user as owner
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant_it,
+        name="IT Accessible Bot",
+        system_prompt="Bot accessible to IT.",
+        description="This bot is accessible to IT department",
+        temperature=0.7,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=["it-accessible"],
+    )
+
+    await test_db_session.commit()
+
+    # Get user's bots - should NOT return either bot (user is not owner)
+    response = test_client.get("/user/bots", headers=headers)
+    assert response.status_code == 200
+    user_bots = response.json()
+    assert len(user_bots) == 0  # User is not owner of either bot
+
+    # Try to subscribe to HR bot - should fail (no hierarchical access)
+    subscribe_hr_response = test_client.post(
+        f"/user/subscriptions/{assistant_hr.id}", headers=headers
+    )
+    assert subscribe_hr_response.status_code == 403
+
+    # Try to subscribe to IT bot - should succeed (has hierarchical access)
+    subscribe_it_response = test_client.post(
+        f"/user/subscriptions/{assistant_it.id}", headers=headers
+    )
+    assert subscribe_it_response.status_code == 200
+
+    # Verify subscription was created
+    subscriptions = test_client.get("/user/subscriptions", headers=headers).json()
+    assert len(subscriptions) == 1
+    assert subscriptions[0]["name"] == "IT Accessible Bot"

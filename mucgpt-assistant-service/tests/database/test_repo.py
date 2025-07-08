@@ -10,7 +10,7 @@ from src.database.repo import Repository
 TestBase = declarative_base()
 
 
-class TestModel(TestBase):
+class MockModel(TestBase):
     __tablename__ = "test_models"
 
     id = Column(Integer, primary_key=True)
@@ -34,7 +34,7 @@ class TestRepository:
     async def test_create(self, db_session):
         """Test creating a new model instance."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         data = {"name": "Test Name", "description": "Test Description"}
 
         # Act
@@ -49,7 +49,7 @@ class TestRepository:
     async def test_get_existing(self, db_session):
         """Test getting an existing model by ID."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         created = await test_repo.create(name="Test", description="Test Desc")
         await db_session.commit()
 
@@ -64,7 +64,7 @@ class TestRepository:
     async def test_get_non_existing(self, db_session):
         """Test getting a non-existing model returns None."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
 
         # Act
         result = await test_repo.get(999)
@@ -75,7 +75,7 @@ class TestRepository:
     async def test_get_all_empty(self, db_session):
         """Test getting all models when none exist."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
 
         # Act
         result = await test_repo.get_all()
@@ -86,7 +86,7 @@ class TestRepository:
     async def test_get_all_with_data(self, db_session):
         """Test getting all models when some exist."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         await test_repo.create(name="Test1", description="Desc1")
         await test_repo.create(name="Test2", description="Desc2")
         await db_session.commit()
@@ -102,7 +102,7 @@ class TestRepository:
     async def test_update_existing(self, db_session):
         """Test updating an existing model."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         created = await test_repo.create(name="Original", description="Original Desc")
         await db_session.commit()
 
@@ -121,7 +121,7 @@ class TestRepository:
     async def test_update_partial(self, db_session):
         """Test updating only some fields of an existing model."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         created = await test_repo.create(name="Original", description="Original Desc")
         await db_session.commit()
 
@@ -137,7 +137,7 @@ class TestRepository:
     async def test_update_non_existing(self, db_session):
         """Test updating a non-existing model returns None."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
 
         # Act
         result = await test_repo.update(999, name="Updated")
@@ -148,7 +148,7 @@ class TestRepository:
     async def test_delete_existing(self, db_session):
         """Test deleting an existing model."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         created = await test_repo.create(name="To Delete", description="Delete me")
         await db_session.commit()
 
@@ -163,7 +163,7 @@ class TestRepository:
     async def test_delete_non_existing(self, db_session):
         """Test deleting a non-existing model returns False."""
         # Arrange
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
 
         # Act
         result = await test_repo.delete(999)
@@ -174,7 +174,7 @@ class TestRepository:
     async def test_repository_maintains_session_state(self, db_session):
         """Test that repository operations maintain session state correctly."""
         # Arrange & Act
-        test_repo = Repository(TestModel, db_session)
+        test_repo = Repository(MockModel, db_session)
         created = await test_repo.create(name="Test", description="Test")
         await db_session.commit()
         fetched = await test_repo.get(created.id)

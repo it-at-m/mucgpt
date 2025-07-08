@@ -336,10 +336,14 @@ class AssistantVersionResponse(AssistantBase):
     """Response model for a specific version of an AI assistant."""
 
     id: int = Field(
-        ..., description="Unique identifier for the assistant version", example=1
+        ...,
+        description="Unique identifier for the assistant version",
+        example=1,
     )
     version: int = Field(
-        ..., description="Version number of the assistant configuration", example=1
+        ...,
+        description="Version number of the assistant configuration",
+        example=1,
     )
     created_at: datetime = Field(
         ...,
@@ -433,5 +437,35 @@ class AssistantResponse(BaseModel):
                     ],
                     "tags": ["support", "technical", "customer-service"],
                 },
+            }
+        }
+
+
+class StatusResponse(BaseModel):
+    """Standard status message response model."""
+
+    message: str
+
+
+class SubscriptionResponse(BaseModel):
+    """Simple response model for subscribed assistants containing only ID and name."""
+
+    id: str = Field(
+        ...,
+        description="Unique identifier for the assistant (UUID v4)",
+        example="123e4567-e89b-12d3-a456-426614174000",
+    )
+    name: str = Field(
+        ...,
+        description="The name/title of the assistant",
+        example="Technical Support Bot",
+    )
+
+    class Config:
+        from_attributes = True
+        json_schema_extra = {
+            "example": {
+                "id": "123e4567-e89b-12d3-a456-426614174000",
+                "name": "Technical Support Bot",
             }
         }

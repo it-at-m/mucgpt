@@ -98,7 +98,25 @@ const SIMPLY_RESPONSE = {
 };
 
 const CHAT_RESPONSE = {
-    content: "Hello from MUCGPT! How can i help you? ⚠ This is a Mock Response! No real AI here, sorry!"
+    id: "chatcmpl-mock-123",
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: "KICCGPT",
+    choices: [
+        {
+            index: 0,
+            message: {
+                role: "assistant",
+                content: "Hello from MUCGPT! How can i help you? ⚠ This is a Mock Response! No real AI here, sorry!"
+            },
+            finish_reason: "stop"
+        }
+    ],
+    usage: {
+        prompt_tokens: 10,
+        completion_tokens: 20,
+        total_tokens: 30
+    }
 };
 
 const CREATE_BOT_RESPONSE = {
@@ -110,30 +128,311 @@ const CREATE_BOT_RESPONSE = {
 };
 
 const CHAT_STREAM_RESPONSE = [
-    { type: "C", message: "", order: 0 },
-    { type: "C", message: "", order: 1 },
-    { type: "C", message: "Hello", order: 2 },
-    { type: "C", message: "!", order: 3 },
-    { type: "C", message: " How", order: 4 },
-    { type: "C", message: " can", order: 5 },
-    { type: "C", message: " MUCGPT", order: 6 },
-    { type: "C", message: " assist", order: 7 },
-    { type: "C", message: " you", order: 8 },
-    { type: "C", message: " today", order: 9 },
-    { type: "C", message: "?", order: 10 },
-    { type: "C", message: " ⚠ This", order: 11 },
-    { type: "C", message: " is", order: 12 },
-    { type: "C", message: " a", order: 13 },
-    { type: "C", message: " mock", order: 14 },
-    { type: "C", message: " response", order: 15 },
-    { type: "C", message: "!", order: 16 },
-    { type: "C", message: " No", order: 17 },
-    { type: "C", message: " real", order: 18 },
-    { type: "C", message: " AI", order: 19 },
-    { type: "C", message: " here", order: 20 },
-    { type: "C", message: ",", order: 21 },
-    { type: "C", message: " sorry!", order: 22 },
-    { type: "I", message: { requesttokens: 8, streamedtokens: 16 }, order: 17 }
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: "Hello" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: "!" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " How" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " can" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " MUCGPT" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " assist" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " you" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " today" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: "?" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " ⚠ This" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " is" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " a" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " mock" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " response" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: "!" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " No" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " real" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " AI" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " here" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: "," },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: " sorry!" },
+                finish_reason: null
+            }
+        ]
+    },
+
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {},
+                finish_reason: null
+            }
+        ],
+        usage: {
+            prompt_tokens: 15,
+            completion_tokens: 25,
+            total_tokens: 40
+        }
+    },
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {},
+                finish_reason: "stop"
+            }
+        ]
+    }
 ];
 
 export const handlers = [
@@ -159,29 +458,32 @@ export const handlers = [
         await delay(1000);
         return HttpResponse.json(CREATE_BOT_RESPONSE);
     }),
-    http.post("/api/backend/chat", async () => {
-        await delay(1000);
-        return HttpResponse.json(CHAT_RESPONSE);
-    }),
-    http.post("/api/backend/chat_stream", async () => {
-        const stream = new ReadableStream({
-            async start(controller) {
-                for (const chunk of CHAT_STREAM_RESPONSE) {
-                    // Serialize each chunk as NDJSON (newline-delimited JSON)
-                    const encodedChunk = JSON.stringify(chunk) + "\n";
-                    const encoder = new TextEncoder();
-                    controller.enqueue(encoder.encode(encodedChunk));
-                    await delay(100); // Reduced delay for faster response
+    http.post("/api/backend/v1/chat/completions", async ({ request }) => {
+        // Check if streaming is requested
+        const body = (await request.json()) as { stream?: boolean };
+        if (body?.stream) {
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+                async start(controller) {
+                    for (const chunk of CHAT_STREAM_RESPONSE) {
+                        const data = `data: ${JSON.stringify(chunk)}\n\n`;
+                        controller.enqueue(encoder.encode(data));
+                        await delay(100);
+                    }
+                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                    controller.close();
                 }
-                controller.close();
-            }
-        });
-        await delay(500);
-        return new HttpResponse(stream, {
-            headers: {
-                "Content-Type": "application/x-ndjson", // Proper NDJSON content type
-                "Transfer-Encoding": "chunked"
-            }
-        });
+            });
+            return new HttpResponse(stream, {
+                headers: {
+                    "Content-Type": "text/event-stream",
+                    "Cache-Control": "no-cache",
+                    Connection: "keep-alive"
+                }
+            });
+        } else {
+            await delay(1000);
+            return HttpResponse.json(CHAT_RESPONSE);
+        }
     })
 ];

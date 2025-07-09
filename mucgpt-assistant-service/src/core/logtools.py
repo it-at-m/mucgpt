@@ -1,6 +1,7 @@
 import json
 import logging
 import logging.config
+import traceback
 from datetime import datetime
 
 from yaml import safe_load
@@ -53,6 +54,9 @@ class JsonFormatter(logging.Formatter):
         # Add exception information if present
         if record.exc_info:
             log_data["exception"] = str(record.exc_info)
+            log_data["traceback"] = "".join(
+                traceback.format_exception(*record.exc_info)
+            )
 
         # Add extra fields if needed
         if hasattr(record, "extra"):

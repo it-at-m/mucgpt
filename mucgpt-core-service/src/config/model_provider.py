@@ -99,7 +99,7 @@ def _create_llm_instance(
                 default_headers={"extra-parameters": "drop"},
                 model=model_config.llm_name,
                 api_key=model_config.api_key,
-                base_url=model_config.endpoint.unicode_string(),
+                openai_api_base=model_config.endpoint.unicode_string(),
                 max_tokens=max_output_tokens,
                 n=n,
                 streaming=streaming,

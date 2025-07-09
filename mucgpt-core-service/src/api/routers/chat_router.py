@@ -56,7 +56,7 @@ async def chat_completions(
             )
 
             async def sse_generator():
-                for chunk in gen:
+                async for chunk in gen:
                     yield f"data: {json.dumps(chunk)}\n\n"
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")

@@ -1392,7 +1392,6 @@ dependencies = [
     { name = "openai" },
     { name = "pydantic-settings" },
     { name = "pypdf" },
-    { name = "pytest-asyncio" },
     { name = "tiktoken" },
     { name = "uvicorn" },
 ]
@@ -1427,7 +1426,6 @@ requires-dist = [
     { name = "openai", specifier = "==1.77.0" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = "==5.4.0" },
-    { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "tiktoken" },
     { name = "uvicorn", specifier = "==0.34.2" },
 ]
@@ -1438,7 +1436,7 @@ dev = [
     { name = "ipykernel", specifier = "==6.29.5" },
     { name = "pre-commit", specifier = "==4.2.0" },
     { name = "pytest" },
-    { name = "pytest-asyncio" },
+    { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-cov" },
     { name = "pytest-env" },
     { name = "pytest-mock" },

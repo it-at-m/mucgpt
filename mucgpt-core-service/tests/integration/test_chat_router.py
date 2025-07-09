@@ -87,9 +87,9 @@ class TestChatRouter:
     @patch("api.routers.chat_router.chat_service")
     def test_streaming_completion(self, mock_chat_service, test_client: TestClient):
         """Test the streaming chat completion endpoint."""
-        # Mock streaming response - return a generator that yields JSON strings
+        # Mock streaming response - return an async generator that yields JSON strings
 
-        def mock_streaming_generator():
+        async def mock_streaming_generator():
             # First chunk
             chunk1 = ChatCompletionChunk(
                 id="chatcmpl-stream123",

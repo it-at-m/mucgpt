@@ -170,12 +170,13 @@ class MUCGPTAgent:
             # Stream directly from the LLM
             tool_calls_detected = False
             async for message in llm.astream(msgs):
+                logger.debug("Streaming message: %r", message)
                 # Check if this message has tool calls
                 if hasattr(message, "tool_calls") and message.tool_calls:
                     tool_calls_detected = True
                     for tool_call in message.tool_calls:
                         # Emit tool start event
-                        logger.info("Streaming tool start: %s", tool_call.name)
+                        logger.info("Streaming tool start: %s", tool_call["name"])
                         start_chunk = ChatCompletionChunk(
                             id=id_,
                             object="chat.completion.chunk",
@@ -185,8 +186,8 @@ class MUCGPTAgent:
                                     delta=ChatCompletionDelta(
                                         tool_calls=[
                                             {
-                                                "name": tool_call.name,
-                                                "args": tool_call.args,
+                                                "name": tool_call["name"],
+                                                "args": tool_call["args"],
                                                 "status": "started",
                                             }
                                         ]
@@ -200,13 +201,13 @@ class MUCGPTAgent:
 
                         # Execute the tool
                         tool = next(
-                            (t for t in self.tools if t.name == tool_call.name), None
+                            (t for t in self.tools if t.name == tool_call["name"]), None
                         )
                         if tool:
                             try:
-                                output = tool.invoke(tool_call.args)
+                                output = tool.invoke(tool_call["args"])
                                 # Emit tool end event
-                                logger.info("Streaming tool end: %s", tool_call.name)
+                                logger.info("Streaming tool end: %s", tool_call["name"])
                                 end_chunk = ChatCompletionChunk(
                                     id=id_,
                                     object="chat.completion.chunk",
@@ -216,7 +217,7 @@ class MUCGPTAgent:
                                             delta=ChatCompletionDelta(
                                                 tool_calls=[
                                                     {
-                                                        "name": tool_call.name,
+                                                        "name": tool_call["name"],
                                                         "output": output,
                                                         "status": "finished",
                                                     }
@@ -240,7 +241,7 @@ class MUCGPTAgent:
                                             delta=ChatCompletionDelta(
                                                 tool_calls=[
                                                     {
-                                                        "name": tool_call.name,
+                                                        "name": tool_call["name"],
                                                         "output": f"Error: {str(tool_ex)}",
                                                         "status": "error",
                                                     }

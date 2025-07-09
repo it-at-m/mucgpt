@@ -30,6 +30,7 @@ dependencies = [
     "asgi-correlation-id==4.3.4",
     "gitpython==3.1.44",
     "pydantic-settings>=2.8.1",
+    "langgraph>=0.5.1",
 ]
 
 [tool.uv]
@@ -39,7 +40,7 @@ dev-dependencies = [
     "ruff==0.11.8",
     "pytest-env",
     "pytest",
-    "pytest-asyncio",
+    "pytest-asyncio>=0.26.0",
     "pytest-snapshot",
     "pytest-mock",
     "coverage==7.8.0",

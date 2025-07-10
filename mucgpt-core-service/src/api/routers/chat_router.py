@@ -20,11 +20,11 @@ from core.token_counter import (
     UnsupportedMessageTypeError,
     UnsupportedModelError,
 )
-from init_app import init_chat_service
+from init_app import init_agent
 
 logger = getLogger()
 settings = get_settings()
-chat_service = init_chat_service(settings.backend)
+agent_runner = init_agent(settings.backend)
 token_counter = TokenCounter(logger)  # Create an instance with the application logger
 router = APIRouter(prefix="/v1")
 
@@ -45,9 +45,10 @@ async def chat_completions(
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
+    global agent_runner
     try:
         if request.stream:
-            gen = chat_service.run_with_streaming(
+            gen = agent_runner.run_with_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
@@ -61,7 +62,7 @@ async def chat_completions(
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
-            return chat_service.run_without_streaming(
+            return agent_runner.run_without_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
@@ -92,6 +93,7 @@ async def counttokens(
     """
     This endpoint receives a text and a model and returns the number of tokens.
     """
+    global token_counter
     try:
         counted_tokens = token_counter.num_tokens_from_messages(
             [HumanMessage(content=request.text)], request.model

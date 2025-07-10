@@ -3,7 +3,7 @@ import os
 from typing import Any, Optional, Type
 
 from brainstorm.brainstorm import Brainstorm
-from chat.chat import Chat
+from chat.agent import MUCGPTAgent
 from config.model_provider import get_model
 from config.settings import BackendConfig
 from core.logtools import getLogger
@@ -72,9 +72,9 @@ def init_service(
         raise
 
 
-def init_chat_service(cfg: BackendConfig, custom_model=None) -> Chat:
+def init_chat_service(cfg: BackendConfig, custom_model=None) -> MUCGPTAgent:
     return init_service(
-        Chat,
+        MUCGPTAgent,
         cfg,
         streaming=True,
         temperature=0.7,

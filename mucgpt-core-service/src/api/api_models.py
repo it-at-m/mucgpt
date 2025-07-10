@@ -153,6 +153,7 @@ class ChatCompletionDelta(BaseModel):
         description="Role indicated when provided (assistant only after initial chunk)",
     )
     content: Optional[str] = Field(None, description="New content for this chunk")
+    tool_calls: Optional[List[dict]] = Field(None, description="Tool call information")
 
 
 class ChatCompletionChunkChoice(BaseModel):

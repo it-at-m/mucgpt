@@ -18,7 +18,7 @@
 [![FastAPI][fastapi-shield]][fastapi]
 [![React][react-shield]][fastapi]
 [![Postgres][postgres-shield]][postgres]
-[![Langchain][langchain-shield]][langchain]
+[![LangGraph][langgraph-shield]][langgraph]
 [![Demo-Frontend][pages-shield]][pages]
 
 [![Assistant-service tests](https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg)](https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml)
@@ -34,7 +34,7 @@
 [fastapi-shield]: https://img.shields.io/badge/fastapi-lightblue?style=for-the-badge&logo=fastapi&logoColor=white
 [react-shield]: https://shields.io/badge/react-lightblue?logo=react&style=for-the-badge&logoColor=white
 [postgres-shield]: https://img.shields.io/badge/postgres-lightblue?&style=for-the-badge&logo=postgresql&logoColor=white
-[langchain-shield]: https://img.shields.io/badge/LangChain-lightblue?&style=for-the-badge&logo=langchain&logoColor=white
+[langgraph-shield]: https://img.shields.io/badge/LangGraph-lightblue?&style=for-the-badge&logo=langgraph&logoColor=white
 [pages-shield]: https://img.shields.io/badge/Demo-121013?logo=github&logoColor=white&style=for-the-badge
 [itm-opensource]: https://opensource.muenchen.de/
 [license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
@@ -43,7 +43,7 @@
 [uv]: https://github.com/astral-sh/uv
 [fastapi]: https://fastapi.tiangolo.com/
 [postgres]: https://www.postgresql.org/
-[langchain]: https://python.langchain.com/docs/introduction/
+[langgraph]: https://langchain-ai.github.io/langgraph/
 [pages]: https://it-at-m.github.io/mucgpt/
 
 
@@ -71,7 +71,7 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 - [Python 3.10, 3.11 or 3.12](https://www.python.org/downloads/)
 - [FastAPI](https://fastapi.tiangolo.com/)
-- [LangChain](https://www.langchain.com/)
+- [LangGraph](https://www.langchain.com/langgraph)
 
 ### Frontend
 
@@ -167,8 +167,8 @@ timeline
 
 ## Documentation
 
-![Architecture](docs/appcomponents_en.png)
-The architecture of MUCGPT is structured into two primary components: the frontend and the backend. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
+![Architecture](docs/architecture.png)
+The architecture of MUCGPT is structured into three primary components: the frontend, the core service for handling tools and the communication with the llm, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
 

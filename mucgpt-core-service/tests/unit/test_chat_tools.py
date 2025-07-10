@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from chat.tools import ChatTools
+from chat.tools import ToolCollection
 
 
 class TestChatTools:
@@ -21,7 +21,7 @@ class TestChatTools:
         self.mock_llm.invoke.return_value = self.mock_response
 
         # Create the ChatTools instance
-        self.chat_tools = ChatTools(self.mock_llm)
+        self.chat_tools = ToolCollection(self.mock_llm)
 
     @patch("builtins.open", new_callable=mock_open, read_data="Test system message")
     def test_simplify_tool_with_file_loading(self, mock_file):
@@ -68,7 +68,7 @@ class TestChatTools:
         # Verify that the markdown content was extracted correctly
         assert result == "# Test Topic\n\n## Main Point 1\n\n- Subpoint 1"
 
-    @patch("chat.tools.ChatTools._extract_text")
+    @patch("chat.tools.ToolCollection._extract_text")
     def test_simplify_tool_extraction(self, mock_extract):
         """Test that the simplify tool correctly extracts text"""
         # Setup the mock extraction function
@@ -121,7 +121,7 @@ class TestChatTools:
 
         # Verify we get a list with two tools
         assert isinstance(tool_list, list)
-        assert len(tool_list) == 2
+        assert len(tool_list) == 3
 
         # Verify both tools are callable
         assert callable(tool_list[0])
@@ -148,10 +148,12 @@ class TestChatTools:
 
     def test_add_instructions(self):
         """Test that add_instructions properly updates messages with tool information"""
-        # Create a tool mock
-        tool_mock = MagicMock()
-        tool_mock.name = "test_tool"
-        tool_mock.description = "A test tool"
+        from langchain_core.tools import tool
+
+        # Create a real test tool using the decorator
+        @tool(description="A test tool")
+        def test_tool():
+            pass
 
         # Create a list of messages
         messages = [
@@ -160,7 +162,7 @@ class TestChatTools:
         ]
 
         # Add instructions
-        updated = self.chat_tools.add_instructions(messages, [tool_mock])
+        updated = self.chat_tools.add_instructions(messages, [test_tool])
 
         # Verify instructions were added to the system message
         assert "You are a helpful assistant." in updated[0].content
@@ -169,7 +171,7 @@ class TestChatTools:
 
         # Test with no system message
         messages = [HumanMessage(content="Hello")]
-        updated = self.chat_tools.add_instructions(messages, [tool_mock])
+        updated = self.chat_tools.add_instructions(messages, [test_tool])
 
         # Verify a system message was inserted
         assert isinstance(updated[0], SystemMessage)

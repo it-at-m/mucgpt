@@ -53,9 +53,19 @@ class MUCGPTAgent:
         return END
 
     def call_model(self, state: MessagesState, config: RunnableConfig):
-        # TODO bind tools based on config, add tool instructions if needed
+        # Dynamically enable tools based on config
         messages = state["messages"]
-        response = self.model.with_config(configurable=config).invoke(messages)
+        enabled_tools = config.get("enabled_tools") if config else None
+        tools_to_use = (
+            self.toolCollection.get_all(enabled_tools) if enabled_tools else []
+        )
+        # Inject tool instructions if tools are enabled
+        if enabled_tools:
+            messages = self.toolCollection.add_instructions(messages, enabled_tools)
+        model = self.model
+        if tools_to_use:
+            model = model.bind_tools(tools_to_use)
+        response = model.with_config(configurable=config).invoke(messages)
         return {"messages": [response]}
 
     """Responsible for tool and agent construction only."""
@@ -65,8 +75,9 @@ class MUCGPTAgent:
     ):
         self.model = llm
         self.toolCollection = ToolCollection(model=llm)
-        self.tools = self.toolCollection.get_all()
-        self.model = self.model.bind_tools(self.tools)
+        self.tools = (
+            self.toolCollection.get_all()
+        )  # Default: all tools, but not bound here
         self.tool_node = ToolNode(self.tools)
         builder = StateGraph(MessagesState)
         builder.add_node("call_model", self.call_model)
@@ -92,6 +103,7 @@ class MUCGPTAgentRunner:
         max_output_tokens: int,
         model: str,
         department: Optional[str],
+        enabled_tools: Optional[List[str]] = None,
     ) -> AsyncGenerator[dict, None]:
         logger.info(
             "Chat streaming started with temperature %s, model %s, max_tokens %s",
@@ -110,6 +122,7 @@ class MUCGPTAgentRunner:
                 "llm_temperature": temperature,
                 "llm": model,
                 "llm_streaming": True,
+                "enabled_tools": enabled_tools,
             }
             async for message_chunk, metadata in self.agent.graph.astream(
                 {"messages": msgs}, stream_mode="messages", config=config
@@ -210,6 +223,7 @@ class MUCGPTAgentRunner:
         max_output_tokens: int,
         model: str,
         department: Optional[str],
+        enabled_tools: Optional[List[str]] = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s, max_tokens %s",
@@ -218,19 +232,16 @@ class MUCGPTAgentRunner:
             max_output_tokens,
         )
         msgs = _convert_to_langchain_messages(messages)
-        if self.agent.tools:
-            msgs = self.agent.tools.add_instructions(msgs, self.agent.tools)
+        config = {
+            "llm_max_tokens": max_output_tokens,
+            "llm_temperature": temperature,
+            "llm": model,
+            "llm_streaming": False,
+            "enabled_tools": enabled_tools,
+        }
         try:
             logger.debug("Starting non-streaming response")
-            config = {
-                "llm_max_tokens": max_output_tokens,
-                "llm_temperature": temperature,
-                "llm": model,
-                "llm_streaming": False,
-            }
             llm = self.agent.model.with_config(configurable=config)
-            if self.agent.tools:
-                llm = llm.bind_tools(self.agent.tools)
             ai_message = llm.invoke(msgs)
             logger.info("Non-streaming completed successfully.")
             response = ChatCompletionResponse(

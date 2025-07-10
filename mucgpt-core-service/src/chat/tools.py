@@ -247,31 +247,46 @@ Hier ist der schwer verständliche Text:
 
 {message}"""
 
-    def get_all(self, enabled_tools=None) -> list[BaseTool]:
-        """Return a list of ToolInfo with tool name and callable."""
+    @property
+    def simplify(self):
+        return self._simplify_tool
+
+    @property
+    def brainstorm(self):
+        return self._brainstorm_tool
+
+    def get_tools(self):
+        """Return a list of all tool callables."""
         return [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
+
+    def get_all(self, enabled_tools=None) -> list[BaseTool]:
+        """Return a list of tools, optionally filtered by enabled_tools."""
+        all_tools = [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
+        if enabled_tools:
+            return [tool for tool in all_tools if tool.name in enabled_tools]
+        return all_tools
 
     def filter_tools_by_names(self, tool_names: list[str]) -> list[BaseTool]:
         """Return only tools whose name is in tool_names."""
-        all_tools = self.get_all()
-        return [tool for tool in all_tools if tool.name in tool_names]
+        return [tool for tool in self.get_all() if tool.name in tool_names]
 
     def add_instructions(
-        self, messages: List[BaseMessage], enabled_tools: List[str]
+        self, messages: List[BaseMessage], enabled_tools: list
     ) -> List[BaseMessage]:
         """Inject a system message describing available tools."""
         if not enabled_tools or len(enabled_tools) == 0:
             return messages
 
         tool_descriptions = []
-        all_tools = self.get_all(enabled_tools)
+        # Support both tool names (str) and tool objects (for tests)
         for t in enabled_tools:
-            # find i a tool with the name t exists in all_tools
-            tool = next((tool for tool in all_tools if tool.name == t), None)
-            if not tool:
-                logger.warning(f"Tool {t} not found in all tools.")
-                continue
-            tool_descriptions.append(tool.description)
+            if hasattr(t, "name") and hasattr(t, "description"):
+                tool_descriptions.append(f"- {t.name}: {t.description}")
+            else:
+                # Look up real tool by name
+                tool = next((tool for tool in self.get_all() if tool.name == t), None)
+                if tool:
+                    tool_descriptions.append(f"- {tool.name}: {tool.description}")
 
         tool_instructions = (
             "You have access to the following tools:\n"

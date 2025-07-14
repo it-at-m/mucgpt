@@ -26,18 +26,18 @@ class ToolCollection:
 
     def _create_weather_tool(self):
         @tool(description="Get the current weather for a given location.")
-        def get_weather(location: str):
+        def Wettervorhersage(location: str):
             """Call to get the current weather."""
             if location.lower() in ["sf", "san francisco"]:
                 return "It's 60 degrees and foggy."
             else:
                 return "It's 90 degrees and sunny."
 
-        return get_weather
+        return Wettervorhersage
 
     def _create_brainstorm_tool(self):
         @tool(description="Generate a mind map for a given topic in markdown format.")
-        def brainstorm(topic: str, context: Optional[str] = None) -> str:
+        def Brainstorming(topic: str, context: Optional[str] = None) -> str:
             """Generate a comprehensive mind map for a given topic in structured markdown format."""
             logger.info("Brainstorm tool called for topic: %s", topic)
 
@@ -108,11 +108,11 @@ class ToolCollection:
                 logger.error("Brainstorm tool error: %s", str(e))
                 return f"Error brainstorming for '{topic}'"
 
-        return brainstorm
+        return Brainstorming
 
     def _create_simplify_tool(self):
         @tool(description="Simplify complex text to A2 level using Leichte Sprache.")
-        def simplify(text: str) -> str:
+        def Vereinfachen(text: str) -> str:
             """Simplify complex text using the same approach as the simply.py service."""
 
             try:
@@ -151,7 +151,7 @@ class ToolCollection:
                 logger.error("Simplify tool error: %s", str(e))
                 return f"Error simplifying text: {str(e)}"
 
-        return simplify
+        return Vereinfachen
 
     def _cleanup_mindmap(self, mindmap_result: str) -> str:
         """Remove leading explanation and extract markdown content.

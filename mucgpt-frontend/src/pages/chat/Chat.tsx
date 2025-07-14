@@ -90,6 +90,7 @@ const Chat = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -219,14 +220,26 @@ const Chat = () => {
                     chatMessageStreamEnd,
                     isLoadingRef,
                     fetchHistory,
-                    undefined
+                    undefined,
+                    selectedTools
                 );
             } catch (e) {
                 setError(e);
             }
             isLoadingRef.current = false;
         },
-        [isLoadingRef.current, answers, language, temperature, max_output_tokens, activeChatRef.current, LLM.llm_name, storageService, fetchHistory]
+        [
+            isLoadingRef.current,
+            answers,
+            language,
+            temperature,
+            max_output_tokens,
+            activeChatRef.current,
+            LLM.llm_name,
+            storageService,
+            fetchHistory,
+            selectedTools
+        ]
     );
 
     // Regenerate-Funktion
@@ -450,9 +463,11 @@ const Chat = () => {
                 tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
             />
         ),
-        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current]
+        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current, selectedTools]
     );
 
     const sidebar_actions = useMemo(

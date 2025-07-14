@@ -37,13 +37,16 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             messages.push({ role: "assistant", content: turn.bot });
         }
     }
-    const body = {
+    const body: any = {
         model: options.model,
         messages,
         temperature: options.temperature,
         max_tokens: options.max_output_tokens,
         stream: options.shouldStream
     };
+    if (options.enabled_tools) {
+        body.enabled_tools = options.enabled_tools;
+    }
     return await fetch(url, postConfig(body));
 }
 

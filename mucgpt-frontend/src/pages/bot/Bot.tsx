@@ -66,6 +66,7 @@ const BotChat = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -156,7 +157,8 @@ const BotChat = () => {
                     chatMessageStreamEnd,
                     isLoadingRef,
                     fetchHistory,
-                    bot_id
+                    bot_id,
+                    selectedTools
                 );
             } catch (e) {
                 setError(e);
@@ -175,7 +177,8 @@ const BotChat = () => {
             activeChatRef,
             botChatStorage,
             chatMessageStreamEnd,
-            fetchHistory
+            fetchHistory,
+            selectedTools
         ]
     );
 
@@ -336,9 +339,11 @@ const BotChat = () => {
                 tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question]
+        [isLoadingRef.current, callApi, totalTokens, question, selectedTools]
     );
     // AnswerList component
     const answerList = useMemo(

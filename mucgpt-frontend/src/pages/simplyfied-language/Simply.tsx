@@ -207,6 +207,7 @@ const Simply = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const [selectedTools, setSelectedTools] = useState<string[]>([]); // tool names
 
     // StorageService
     const storageService = useMemo(() => new StorageService<AskResponse, Record<string, never>>(SIMPLY_STORE), []);
@@ -262,7 +263,9 @@ const Simply = () => {
                 const request: SimplyRequest = {
                     topic: question,
                     model: LLM.llm_name,
-                    temperature: 0
+                    temperature: 0,
+                    // @ts-expect-error: allow extra field for backend extension
+                    enabled_tools: selectedTools.length > 0 ? selectedTools : undefined
                 };
                 const parsedResponse: SimplyResponse = await simplyApi(request);
                 const askResponse: AskResponse = { answer: parsedResponse.content, error: parsedResponse.error };
@@ -280,7 +283,7 @@ const Simply = () => {
                 setIsLoading(false);
             }
         },
-        [LLM, answers, storageService, dispatch, activeChatRef]
+        [LLM, answers, storageService, dispatch, activeChatRef, selectedTools]
     );
 
     // Scroll to the end of the chat messages when new messages are added
@@ -322,9 +325,11 @@ const Simply = () => {
                 tokens_used={0}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
             />
         ),
-        [question, isLoading, makeApiRequest]
+        [question, isLoading, makeApiRequest, selectedTools]
     );
 
     // AnswerList component

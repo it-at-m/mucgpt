@@ -48,8 +48,12 @@ async def chat_completions(
     """
     global agent_executor
     try:
-        # Get all available tool names using list_tool_metadata (no model needed)
-        all_tool_names = [tool["name"] for tool in ToolCollection.list_tool_metadata()]
+        # Use enabled_tools from request if provided, otherwise use all available tools
+        enabled_tools = (
+            request.enabled_tools
+            if request.enabled_tools is not None
+            else [tool["name"] for tool in ToolCollection.list_tool_metadata()]
+        )
         if request.stream:
             gen = agent_executor.run_with_streaming(
                 messages=request.messages,
@@ -57,7 +61,7 @@ async def chat_completions(
                 max_output_tokens=request.max_tokens,
                 model=request.model,
                 department=user_info.department,
-                enabled_tools=all_tool_names,
+                enabled_tools=enabled_tools,
             )
 
             async def sse_generator():
@@ -72,7 +76,7 @@ async def chat_completions(
                 max_output_tokens=request.max_tokens,
                 model=request.model,
                 department=user_info.department,
-                enabled_tools=all_tool_names,
+                enabled_tools=enabled_tools,
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")

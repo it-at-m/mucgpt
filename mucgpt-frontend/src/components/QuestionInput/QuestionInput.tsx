@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
-import { ToolInfo, ToolListResponse } from "../../api/models";
+import { ToolListResponse } from "../../api/models";
 import { getTools } from "../../api/api";
 
 const TOOL_BADGE_COLOR_LIST = ["#1976d2", "#388e3c", "#d32f2f", "#fbc02d", "#7b1fa2", "#0288d1", "#c2185b", "#ffa000", "#388e3c", "#455a64"];
@@ -21,15 +21,27 @@ interface Props {
     token_limit_tracking?: boolean;
     question: string;
     setQuestion: (question: string) => void;
+    selectedTools: string[];
+    setSelectedTools: (tools: string[]) => void;
 }
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, tokens_used, token_limit_tracking = true, question, setQuestion }: Props) => {
+export const QuestionInput = ({
+    onSend,
+    disabled,
+    placeholder,
+    clearOnSend,
+    tokens_used,
+    token_limit_tracking = true,
+    question,
+    setQuestion,
+    selectedTools,
+    setSelectedTools
+}: Props) => {
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
     const [toolsSelectorOpen, setToolsSelectorOpen] = useState(false);
     const [tools, setTools] = useState<ToolListResponse | null>(null);
-    const [selectedTools, setSelectedTools] = useState<ToolInfo[]>([]);
 
     useEffect(() => {
         const actual = countWords(question) + tokens_used;
@@ -91,10 +103,10 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                 open={toolsSelectorOpen}
                 onClose={tools => {
                     setToolsSelectorOpen(false);
-                    if (tools) setSelectedTools(tools);
+                    if (tools) setSelectedTools(tools.map(t => t.name));
                 }}
                 tools={tools}
-                selectedTools={selectedTools}
+                selectedTools={tools ? tools.tools.filter(t => selectedTools.includes(t.name)) : []}
             />
             <Stack horizontal className={styles.questionInputContainer}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -113,26 +125,26 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                             <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                         </div>
                         <div className={styles.toolBadgesSection}>
-                            {selectedTools.map(tool => {
+                            {selectedTools.map(toolName => {
                                 let hash = 0;
-                                for (let i = 0; i < tool.name.length; i++) hash = tool.name.charCodeAt(i) + ((hash << 5) - hash);
+                                for (let i = 0; i < toolName.length; i++) hash = toolName.charCodeAt(i) + ((hash << 5) - hash);
                                 const color = TOOL_BADGE_COLOR_LIST[Math.abs(hash) % TOOL_BADGE_COLOR_LIST.length];
                                 return (
                                     <Badge
-                                        key={tool.name}
+                                        key={toolName}
                                         appearance="filled"
                                         className={styles.toolBadge}
                                         style={{ background: color }}
                                         size="medium"
                                         shape="rounded"
-                                        onClick={() => setSelectedTools(selectedTools.filter(t => t.name !== tool.name))}
+                                        onClick={() => setSelectedTools(selectedTools.filter(t => t !== toolName))}
                                         icon={
-                                            <span className={styles.toolBadgeIcon} aria-label={`Entferne ${tool.name}`}>
+                                            <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
                                                 ×
                                             </span>
                                         }
                                     >
-                                        {tool.name}
+                                        {toolName}
                                     </Badge>
                                 );
                             })}

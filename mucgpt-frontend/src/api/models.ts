@@ -33,6 +33,7 @@ export type ChatRequest = {
     system_message?: string;
     shouldStream?: boolean;
     model?: string;
+    enabled_tools?: string[];
 };
 
 export type CreateBotRequest = {

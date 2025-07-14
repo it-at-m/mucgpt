@@ -46,7 +46,7 @@ class TestChatRouter:
             mock_response.model_dump()
         )
 
-        # Create payload using proper model
+        # Create payload using proper model, now with enabled_tools
         payload_model = ChatCompletionRequest(
             model="gpt-4o-mini",
             messages=[
@@ -58,6 +58,7 @@ class TestChatRouter:
             temperature=0.0,
             max_tokens=10,
             stream=False,
+            enabled_tools=["tool1", "tool2"],
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
@@ -134,7 +135,7 @@ class TestChatRouter:
             yield chunk3.model_dump()
 
         mock_chat_service.run_with_streaming.return_value = mock_streaming_generator()
-        # Create payload using proper model
+        # Create payload using proper model, now with enabled_tools
         payload_model = ChatCompletionRequest(
             model="gpt-4o-mini",
             messages=[
@@ -146,6 +147,7 @@ class TestChatRouter:
             temperature=0.0,
             max_tokens=10,
             stream=True,
+            enabled_tools=["tool1", "tool2"],
         )
         payload = payload_model.model_dump()
 

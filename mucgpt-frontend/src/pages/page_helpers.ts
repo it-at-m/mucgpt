@@ -117,7 +117,8 @@ export const makeApiRequest = async (
     chatMessageStreamEnd: MutableRefObject<HTMLDivElement | null>,
     isLoadingRef: MutableRefObject<boolean>,
     fetchHistory?: () => void,
-    bot_id?: string
+    bot_id?: string,
+    enabled_tools?: string[]
 ) => {
     // Create history for the request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, bot: a.response.answer }));
@@ -128,7 +129,8 @@ export const makeApiRequest = async (
         temperature: options.temperature,
         system_message: options.system ?? "",
         max_output_tokens: options.maxTokens,
-        model: LLM.llm_name
+        model: LLM.llm_name,
+        enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined
     };
 
     const response = await chatApi(request);

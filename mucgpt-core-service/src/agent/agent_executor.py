@@ -48,31 +48,35 @@ def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMes
 class MUCGPTAgentExecutor:
     """Provides run_with_streaming and run_without_streaming methods using MUCGPTAgent."""
 
-    def __init__(self, agent: MUCGPTAgent, settings: Settings):
+    def __init__(
+        self, agent: MUCGPTAgent = None, settings: Settings = None, logger=None
+    ):
+        self.logger = logger
         self.agent = agent
         self.langfuse = None
         self.langfuse_handler = None
 
-        if (
-            settings.backend.langfuse_host
-            and settings.backend.langfuse_secret_key
-            and settings.backend.langfuse_public_key
-        ):
-            try:
-                self.langfuse = Langfuse(
-                    public_key=settings.backend.langfuse_public_key,
-                    host=settings.backend.langfuse_host,
-                    secret_key=settings.backend.langfuse_secret_key,
-                    release=settings.version,
-                )
-                self.langfuse.auth_check()
-                self.langfuse_handler = CallbackHandler(
-                    public_key=settings.backend.langfuse_public_key
-                )
-            except Exception as e:
-                logger.error(f"Error initializing Langfuse: {e}")
-                self.langfuse = None
-                self.langfuse_handler = None
+        if settings is not None:
+            if (
+                settings.backend.langfuse_host
+                and settings.backend.langfuse_secret_key
+                and settings.backend.langfuse_public_key
+            ):
+                try:
+                    self.langfuse = Langfuse(
+                        public_key=settings.backend.langfuse_public_key,
+                        host=settings.backend.langfuse_host,
+                        secret_key=settings.backend.langfuse_secret_key,
+                        release=settings.version,
+                    )
+                    self.langfuse.auth_check()
+                    self.langfuse_handler = CallbackHandler(
+                        public_key=settings.backend.langfuse_public_key
+                    )
+                except Exception as e:
+                    self.logger.error(f"Error initializing Langfuse: {e}")
+                    self.langfuse = None
+                    self.langfuse_handler = None
         callbacks = [self.langfuse_handler] if self.langfuse_handler else []
         self.base_config: RunnableConfig = RunnableConfig(
             callbacks=callbacks,
@@ -81,6 +85,13 @@ class MUCGPTAgentExecutor:
                 "langfuse_tags": ["default-bot"],
             },
         )
+        # If agent is not provided, create it here (for backward compatibility)
+        if self.agent is None and settings is not None:
+            from agent.agent import MUCGPTAgent
+            from core.llmtools import get_llm
+
+            llm = get_llm(settings)
+            self.agent = MUCGPTAgent(llm, logger=self.logger)
 
     async def run_with_streaming(
         self,

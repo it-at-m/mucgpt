@@ -48,9 +48,7 @@ def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMes
 class MUCGPTAgentExecutor:
     """Provides run_with_streaming and run_without_streaming methods using MUCGPTAgent."""
 
-    def __init__(
-        self, agent: MUCGPTAgent = None, settings: Settings = None, logger=None
-    ):
+    def __init__(self, agent: MUCGPTAgent = None, settings: Settings = None):
         self.logger = logger
         self.agent = agent
         self.langfuse = None
@@ -85,13 +83,6 @@ class MUCGPTAgentExecutor:
                 "langfuse_tags": ["default-bot"],
             },
         )
-        # If agent is not provided, create it here (for backward compatibility)
-        if self.agent is None and settings is not None:
-            from agent.agent import MUCGPTAgent
-            from core.llmtools import get_llm
-
-            llm = get_llm(settings)
-            self.agent = MUCGPTAgent(llm, logger=self.logger)
 
     async def run_with_streaming(
         self,
@@ -124,6 +115,11 @@ class MUCGPTAgentExecutor:
         config = merge_configs(self.base_config, request_config)
         try:
             logger.debug("Starting streaming response")
+            # log the tools
+            if enabled_tools:
+                logger.debug(
+                    "Enabled tools for this request: %s", ", ".join(enabled_tools)
+                )
             astream = self.agent.graph.astream(
                 {"messages": msgs}, stream_mode="messages", config=config
             )
@@ -148,7 +144,7 @@ class MUCGPTAgentExecutor:
                         ],
                     ).model_dump()
                     return
-                logger.debug("Streaming message: %r", message_chunk)
+
                 if isinstance(message_chunk, AIMessageChunk):
                     if hasattr(message_chunk, "tool_call_chunks"):
                         if (
@@ -185,12 +181,9 @@ class MUCGPTAgentExecutor:
                                     ],
                                 )
                                 yield start_chunk.model_dump()
-                    # Get the entire content for this chunk
                     chunk_content = message_chunk.content
-                    # If the content is empty, skip this chunk
                     if not chunk_content:
                         continue
-                    # just stream the content, no tool calls
                     yield ChatCompletionChunk(
                         id=id_,
                         object="chat.completion.chunk",

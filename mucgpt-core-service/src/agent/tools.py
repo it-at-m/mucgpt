@@ -273,7 +273,7 @@ Hier ist der schwer verständliche Text:
     def add_instructions(
         self, messages: List[BaseMessage], enabled_tools: list
     ) -> List[BaseMessage]:
-        """Inject a system message describing available tools."""
+        """Inject a system message describing available tools and XML tag instructions."""
         if not enabled_tools or len(enabled_tools) == 0:
             return messages
 
@@ -291,7 +291,8 @@ Hier ist der schwer verständliche Text:
         tool_instructions = (
             "You have access to the following tools:\n"
             + "\n".join(tool_descriptions)
-            + "\nInvoke them when helpful to the user's request."
+            + "\nInvoke them when helpful to the user's request.\n"
+            + "\nIMPORTANT: If you see any <mucgpt-*> XML tags in the conversation, you must keep them unchanged in your response. Do not remove, alter, or reformat these tags. They are required for downstream processing."
         )
 
         if messages and isinstance(messages[0], SystemMessage):

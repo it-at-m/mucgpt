@@ -4,6 +4,7 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from agent.tools import ToolCollection
+from core.logtools import getLogger
 
 
 class XMLWrappingToolNode(ToolNode):
@@ -40,14 +41,11 @@ class MUCGPTAgent:
     def call_model(self, state: MessagesState, config: RunnableConfig):
         # Dynamically enable tools based on config
         messages = state["messages"]
-        enabled_tools = config.get("enabled_tools") if config else None
+        enabled_tools = config["configurable"].get("enabled_tools") if config else None
         tools_to_use = (
             self.toolCollection.get_all(enabled_tools) if enabled_tools else []
         )
-        # Log model and enabled tools
         if self.logger:
-            model_name = getattr(self.model, "model_name", str(self.model))
-            self.logger.info(f"MUCGPTAgent: Using model: {model_name}")
             self.logger.info(
                 f"MUCGPTAgent: Enabled tools: {enabled_tools if enabled_tools else 'None'}"
             )
@@ -67,7 +65,7 @@ class MUCGPTAgent:
         self.toolCollection = ToolCollection(model=llm)
         self.tools = self.toolCollection.get_all()
         self.tool_node = XMLWrappingToolNode(self.tools)
-        self.logger = logger
+        self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
         builder = StateGraph(MessagesState)
         builder.add_node("call_model", self.call_model)
         builder.add_node("tools", self.tool_node)

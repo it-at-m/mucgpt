@@ -9,11 +9,8 @@ from langchain_core.messages import (
     HumanMessage,
     SystemMessage,
 )
-from langchain_core.runnables import RunnableConfig
-from langchain_core.runnables.base import RunnableSerializable
-from langgraph.graph import END, START, MessagesState, StateGraph
-from langgraph.prebuilt import ToolNode
 
+from agent.agent import MUCGPTAgent
 from api.api_models import (
     ChatCompletionChoice,
     ChatCompletionChunk,
@@ -25,10 +22,9 @@ from api.api_models import (
 )
 from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
-from chat.tools import ToolCollection
 from core.logtools import getLogger
 
-logger = getLogger(name="mucgpt-core-chat")
+logger = getLogger(name="mucgpt-core-agent")
 
 
 def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMessage]:
@@ -44,53 +40,7 @@ def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMes
     return msgs
 
 
-class MUCGPTAgent:
-    def should_continue(self, state: MessagesState):
-        messages = state["messages"]
-        last_message = messages[-1]
-        if last_message.tool_calls:
-            return "tools"
-        return END
-
-    def call_model(self, state: MessagesState, config: RunnableConfig):
-        # Dynamically enable tools based on config
-        messages = state["messages"]
-        enabled_tools = config.get("enabled_tools") if config else None
-        tools_to_use = (
-            self.toolCollection.get_all(enabled_tools) if enabled_tools else []
-        )
-        # Inject tool instructions if tools are enabled
-        if enabled_tools:
-            messages = self.toolCollection.add_instructions(messages, enabled_tools)
-        model = self.model
-        if tools_to_use:
-            model = model.bind_tools(tools_to_use)
-        response = model.with_config(configurable=config).invoke(messages)
-        return {"messages": [response]}
-
-    """Responsible for tool and agent construction only."""
-
-    def __init__(
-        self, llm: RunnableSerializable, enabled_tools: Optional[List[str]] = None
-    ):
-        self.model = llm
-        self.toolCollection = ToolCollection(model=llm)
-        self.tools = (
-            self.toolCollection.get_all()
-        )  # Default: all tools, but not bound here
-        self.tool_node = ToolNode(self.tools)
-        builder = StateGraph(MessagesState)
-        builder.add_node("call_model", self.call_model)
-        builder.add_node("tools", self.tool_node)
-        builder.add_edge(START, "call_model")
-        builder.add_conditional_edges(
-            "call_model", self.should_continue, ["tools", END]
-        )
-        builder.add_edge("tools", "call_model")
-        self.graph = builder.compile()
-
-
-class MUCGPTAgentRunner:
+class MUCGPTAgentExecutor:
     """Provides run_with_streaming and run_without_streaming methods using MUCGPTAgent."""
 
     def __init__(self, agent: MUCGPTAgent):
@@ -115,18 +65,39 @@ class MUCGPTAgentRunner:
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
+        config = {
+            "llm_max_tokens": max_output_tokens,
+            "llm_temperature": temperature,
+            "llm": model,
+            "llm_streaming": True,
+            "enabled_tools": enabled_tools,
+        }
         try:
             logger.debug("Starting streaming response")
-            config = {
-                "llm_max_tokens": max_output_tokens,
-                "llm_temperature": temperature,
-                "llm": model,
-                "llm_streaming": True,
-                "enabled_tools": enabled_tools,
-            }
-            async for message_chunk, metadata in self.agent.graph.astream(
+            astream = self.agent.graph.astream(
                 {"messages": msgs}, stream_mode="messages", config=config
-            ):
+            )
+            while True:
+                try:
+                    message_chunk, metadata = await astream.__anext__()
+                except StopAsyncIteration:
+                    break
+                except Exception as ex:
+                    logger.error("Streaming error: %s", str(ex), exc_info=True)
+                    error_msg = llm_exception_handler(ex=ex, logger=logger)
+                    yield ChatCompletionChunk(
+                        id=id_,
+                        object="chat.completion.chunk",
+                        created=created,
+                        choices=[
+                            ChatCompletionChunkChoice(
+                                delta=ChatCompletionDelta(content=error_msg),
+                                index=0,
+                                finish_reason="error",
+                            )
+                        ],
+                    ).model_dump()
+                    return
                 logger.debug("Streaming message: %r", message_chunk)
                 if isinstance(message_chunk, AIMessageChunk):
                     if hasattr(message_chunk, "tool_call_chunks"):
@@ -164,24 +135,24 @@ class MUCGPTAgentRunner:
                                     ],
                                 )
                                 yield start_chunk.model_dump()
-                        # Get the entire content for this chunk
-                        chunk_content = message_chunk.content
-                        # If the content is empty, skip this chunk
-                        if not chunk_content:
-                            continue
-                        # just stream the content, no tool calls
-                        yield ChatCompletionChunk(
-                            id=id_,
-                            object="chat.completion.chunk",
-                            created=created,
-                            choices=[
-                                ChatCompletionChunkChoice(
-                                    delta=ChatCompletionDelta(content=chunk_content),
-                                    index=0,
-                                    finish_reason=None,
-                                )
-                            ],
-                        ).model_dump()
+                    # Get the entire content for this chunk
+                    chunk_content = message_chunk.content
+                    # If the content is empty, skip this chunk
+                    if not chunk_content:
+                        continue
+                    # just stream the content, no tool calls
+                    yield ChatCompletionChunk(
+                        id=id_,
+                        object="chat.completion.chunk",
+                        created=created,
+                        choices=[
+                            ChatCompletionChunkChoice(
+                                delta=ChatCompletionDelta(content=chunk_content),
+                                index=0,
+                                finish_reason=None,
+                            )
+                        ],
+                    ).model_dump()
                 else:
                     logger.debug(
                         f"Unexpected message type in streaming response: {type(message_chunk)}, expected AIMessage"

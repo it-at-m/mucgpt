@@ -2,8 +2,9 @@ import json
 import os
 from typing import Any, Optional, Type
 
+from agent.agent import MUCGPTAgent
+from agent.agent_executor import MUCGPTAgentExecutor
 from brainstorm.brainstorm import Brainstorm
-from chat.agent import MUCGPTAgent, MUCGPTAgentRunner
 from config.model_provider import get_model
 from config.settings import BackendConfig
 from core.logtools import getLogger
@@ -72,8 +73,8 @@ def init_service(
         raise
 
 
-def init_agent(cfg: BackendConfig, custom_model=None) -> MUCGPTAgentRunner:
-    return MUCGPTAgentRunner(
+def init_agent(cfg: BackendConfig, custom_model=None) -> MUCGPTAgentExecutor:
+    return MUCGPTAgentExecutor(
         agent=init_service(
             MUCGPTAgent,
             cfg,

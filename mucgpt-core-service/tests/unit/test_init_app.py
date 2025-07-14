@@ -2,7 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from chat.agent import MUCGPTAgent, MUCGPTAgentRunner
+from agent.agent import MUCGPTAgent
+from agent.agent_executor import MUCGPTAgentExecutor
 from config.settings import BackendConfig
 from init_app import init_agent, init_service
 
@@ -67,7 +68,7 @@ class TestInitApp:
             custom_model=None,
         )
 
-        assert isinstance(service, MUCGPTAgentRunner)
+        assert isinstance(service, MUCGPTAgentExecutor)
 
     def test_init_service_validates_temperature_too_high(self):
         """Test that init_service validates temperature is not too high."""

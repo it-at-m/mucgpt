@@ -1,12 +1,11 @@
 from unittest.mock import MagicMock, mock_open, patch
 
-import pytest
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from chat.tools import ToolCollection
+from agent.tools import ToolCollection
 
 
-class TestChatTools:
+class TestAgentTools:
     def setup_method(self):
         """Setup test fixtures before each test method"""
         # Create a mock LLM
@@ -68,7 +67,7 @@ class TestChatTools:
         # Verify that the markdown content was extracted correctly
         assert result == "# Test Topic\n\n## Main Point 1\n\n- Subpoint 1"
 
-    @patch("chat.tools.ToolCollection._extract_text")
+    @patch("agent.tools.ToolCollection._extract_text")
     def test_simplify_tool_extraction(self, mock_extract):
         """Test that the simplify tool correctly extracts text"""
         # Setup the mock extraction function
@@ -183,7 +182,3 @@ class TestChatTools:
 
         # Verify no changes
         assert updated == messages
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])

@@ -68,7 +68,7 @@ const BotChat = () => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | null>(null);
+    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
 
     useEffect(() => {
         const fetchTools = async () => {

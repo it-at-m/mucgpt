@@ -7,7 +7,7 @@ import styles from "./ToolsSelector.module.css";
 interface ToolsSelectorProps {
     open: boolean;
     onClose: (selectedTools?: ToolInfo[]) => void;
-    tools: ToolListResponse | null;
+    tools?: ToolListResponse;
     selectedTools?: ToolInfo[];
 }
 

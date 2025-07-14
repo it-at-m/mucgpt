@@ -22,7 +22,7 @@ interface Props {
     setQuestion: (question: string) => void;
     selectedTools: string[];
     setSelectedTools: (tools: string[]) => void;
-    tools: ToolListResponse | null;
+    tools?: ToolListResponse;
 }
 
 export const QuestionInput = ({

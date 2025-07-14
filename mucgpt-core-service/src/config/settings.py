@@ -43,6 +43,9 @@ class BackendConfig(BaseModel):
     sso_config: SSOConfig = Field(default_factory=SSOConfig)
     models: List[ModelsConfig] = []
     models_json: str = "[]"
+    langfuse_public_key: str | None = None
+    langfuse_secret_key: str | None = None
+    langfuse_host: str | None = None
 
 
 class LabelsConfig(BaseModel):

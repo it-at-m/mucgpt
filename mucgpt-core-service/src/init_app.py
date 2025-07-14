@@ -6,7 +6,7 @@ from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
 from brainstorm.brainstorm import Brainstorm
 from config.model_provider import get_model
-from config.settings import BackendConfig
+from config.settings import BackendConfig, Settings
 from core.logtools import getLogger
 from simply.simply import Simply
 from summarize.summarize import Summarize
@@ -73,16 +73,17 @@ def init_service(
         raise
 
 
-def init_agent(cfg: BackendConfig, custom_model=None) -> MUCGPTAgentExecutor:
+def init_agent(cfg: Settings, custom_model=None) -> MUCGPTAgentExecutor:
     return MUCGPTAgentExecutor(
         agent=init_service(
             MUCGPTAgent,
-            cfg,
+            cfg.backend,
             streaming=True,
             temperature=0.7,
             max_tokens=4000,
             custom_model=custom_model,
-        )
+        ),
+        settings=cfg,
     )
 
 

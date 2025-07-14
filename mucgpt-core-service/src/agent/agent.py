@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import RunnableSerializable
 from langgraph.graph import END, START, MessagesState, StateGraph
@@ -34,12 +32,10 @@ class MUCGPTAgent:
 
     """Responsible for tool and agent construction only."""
 
-    def __init__(
-        self, llm: RunnableSerializable, enabled_tools: Optional[List[str]] = None
-    ):
+    def __init__(self, llm: RunnableSerializable):
         self.model = llm
         self.toolCollection = ToolCollection(model=llm)
-        self.tools = self.toolCollection.get_all()  # Always all tools
+        self.tools = self.toolCollection.get_all()
         self.tool_node = ToolNode(self.tools)
         builder = StateGraph(MessagesState)
         builder.add_node("call_model", self.call_model)

@@ -259,11 +259,11 @@ Hier ist der schwer verständliche Text:
         """Return a list of all tool callables."""
         return [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
 
-    def get_all(self, enabled_tools=None) -> list[BaseTool]:
+    def get_all(self, enabled_tools: Optional[list[str]] = None) -> list[BaseTool]:
         """Return a list of tools, optionally filtered by enabled_tools."""
         all_tools = [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
         if enabled_tools:
-            return [tool for tool in all_tools if tool.name in enabled_tools]
+            return self.filter_tools_by_names(enabled_tools)
         return all_tools
 
     def filter_tools_by_names(self, tool_names: list[str]) -> list[BaseTool]:

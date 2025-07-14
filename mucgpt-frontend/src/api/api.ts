@@ -16,7 +16,8 @@ import {
     SumResponse,
     AssistantResponse,
     AssistantUpdateInput,
-    Bot
+    Bot,
+    ToolListResponse
 } from "./models";
 
 const CHAT_NAME_PROMPT =
@@ -233,5 +234,12 @@ export async function getOwnedCommunityBots(): Promise<AssistantResponse[]> {
     const response = await fetch("/api/bot/create", getConfig());
     handleRedirect(response, true);
     const parsedResponse: AssistantResponse[] = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function getTools(): Promise<ToolListResponse> {
+    const response = await fetch(API_BASE + "v1/tools", getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: ToolListResponse = await handleResponse(response);
     return parsedResponse;
 }

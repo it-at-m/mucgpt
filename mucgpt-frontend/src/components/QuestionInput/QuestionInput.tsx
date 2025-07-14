@@ -1,11 +1,14 @@
 import { Stack } from "@fluentui/react";
-import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Send28Filled } from "@fluentui/react-icons";
+import { Button, Textarea, TextareaOnChangeData, Tooltip, Badge } from "@fluentui/react-components";
+import { Send28Filled, Toolbox24Color } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
+import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
+import { ToolInfo, ToolListResponse } from "../../api/models";
+import { getTools } from "../../api/api";
 
 interface Props {
     onSend: (question: string) => void;
@@ -22,6 +25,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
+    const [toolsSelectorOpen, setToolsSelectorOpen] = useState(false);
+    const [tools, setTools] = useState<ToolListResponse | null>(null);
+    const [selectedTools, setSelectedTools] = useState<ToolInfo[]>([]);
 
     useEffect(() => {
         const actual = countWords(question) + tokens_used;
@@ -67,26 +73,106 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
         }
     }, []);
 
+    const fetchTools = async () => {
+        try {
+            const result = await getTools();
+            setTools(result);
+        } catch {
+            setTools({ tools: [] });
+        }
+        setToolsSelectorOpen(true);
+    };
+
     return (
-        <Stack horizontal className={styles.questionInputContainer}>
-            <Textarea
-                textarea={styles.questionInputTextArea}
-                placeholder={placeholder}
-                resize="vertical"
-                value={question}
-                size="large"
-                onChange={onQuestionChange}
-                onKeyDown={onEnterPress}
+        <>
+            <ToolsSelector
+                open={toolsSelectorOpen}
+                onClose={tools => {
+                    setToolsSelectorOpen(false);
+                    if (tools) setSelectedTools(tools);
+                }}
+                tools={tools}
+                selectedTools={selectedTools}
             />
-            <div className={styles.questionInputContainerFooter}>
-                {tokens_used == 0 ? <div> </div> : <div>{description}</div>}
-                <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
-                <div className={styles.questionInputButtonsContainer}>
-                    <Tooltip content={placeholder || ""} relationship="label">
-                        <Button size="large" appearance="subtle" icon={<Send28Filled />} disabled={disabled || !question.trim()} onClick={sendQuestion} />
-                    </Tooltip>
+            <Stack horizontal className={styles.questionInputContainer}>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                    <Textarea
+                        textarea={styles.questionInputTextArea}
+                        placeholder={placeholder}
+                        resize="vertical"
+                        value={question}
+                        size="large"
+                        onChange={onQuestionChange}
+                        onKeyDown={onEnterPress}
+                    />
+                    <div className={styles.questionInputContainerFooter}>
+                        <div className={styles.errorhintSection}>
+                            {tokens_used == 0 ? <div> </div> : <div>{description}</div>}
+                            <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
+                        </div>
+                        <div className={styles.toolBadgesSection}>
+                            {selectedTools.map(tool => {
+                                // Generate a random color for each badge (stable per tool)
+                                const colorList = [
+                                    "#1976d2",
+                                    "#388e3c",
+                                    "#d32f2f",
+                                    "#fbc02d",
+                                    "#7b1fa2",
+                                    "#0288d1",
+                                    "#c2185b",
+                                    "#ffa000",
+                                    "#388e3c",
+                                    "#455a64"
+                                ];
+                                let hash = 0;
+                                for (let i = 0; i < tool.name.length; i++) hash = tool.name.charCodeAt(i) + ((hash << 5) - hash);
+                                const color = colorList[Math.abs(hash) % colorList.length];
+                                return (
+                                    <Badge
+                                        key={tool.name}
+                                        appearance="filled"
+                                        className={styles.toolBadge}
+                                        style={{ background: color }}
+                                        size="medium"
+                                        shape="rounded"
+                                        onClick={() => setSelectedTools(selectedTools.filter(t => t.name !== tool.name))}
+                                        icon={
+                                            <span className={styles.toolBadgeIcon} aria-label={`Entferne ${tool.name}`}>
+                                                ×
+                                            </span>
+                                        }
+                                    >
+                                        {tool.name}
+                                    </Badge>
+                                );
+                            })}
+                        </div>
+                        <div className={styles.questionInputButtonsContainer}>
+                            <Tooltip content={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"} relationship="label">
+                                <Button
+                                    appearance="subtle"
+                                    size="large"
+                                    icon={<Toolbox24Color />}
+                                    onClick={fetchTools}
+                                    disabled={disabled}
+                                    aria-label={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"}
+                                />
+                            </Tooltip>
+                            <Tooltip content={placeholder || ""} relationship="label">
+                                <Button
+                                    size="large"
+                                    appearance="subtle"
+                                    icon={<Send28Filled />}
+                                    aria-label={t("components.questioninput.sendbutton_tooltip") || "Send question"}
+                                    disabled={disabled || !question.trim()}
+                                    onClick={sendQuestion}
+                                />
+                            </Tooltip>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </Stack>
+            </Stack>
+        </>
     );
 };

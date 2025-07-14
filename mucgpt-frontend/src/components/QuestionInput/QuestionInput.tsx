@@ -10,6 +10,8 @@ import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
 import { ToolInfo, ToolListResponse } from "../../api/models";
 import { getTools } from "../../api/api";
 
+const TOOL_BADGE_COLOR_LIST = ["#1976d2", "#388e3c", "#d32f2f", "#fbc02d", "#7b1fa2", "#0288d1", "#c2185b", "#ffa000", "#388e3c", "#455a64"];
+
 interface Props {
     onSend: (question: string) => void;
     disabled: boolean;
@@ -112,22 +114,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, toke
                         </div>
                         <div className={styles.toolBadgesSection}>
                             {selectedTools.map(tool => {
-                                // Generate a random color for each badge (stable per tool)
-                                const colorList = [
-                                    "#1976d2",
-                                    "#388e3c",
-                                    "#d32f2f",
-                                    "#fbc02d",
-                                    "#7b1fa2",
-                                    "#0288d1",
-                                    "#c2185b",
-                                    "#ffa000",
-                                    "#388e3c",
-                                    "#455a64"
-                                ];
                                 let hash = 0;
                                 for (let i = 0; i < tool.name.length; i++) hash = tool.name.charCodeAt(i) + ((hash << 5) - hash);
-                                const color = colorList[Math.abs(hash) % colorList.length];
+                                const color = TOOL_BADGE_COLOR_LIST[Math.abs(hash) % TOOL_BADGE_COLOR_LIST.length];
                                 return (
                                     <Badge
                                         key={tool.name}

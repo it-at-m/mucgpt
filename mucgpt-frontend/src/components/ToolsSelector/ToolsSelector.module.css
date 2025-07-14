@@ -54,8 +54,8 @@
     gap: var(--spacingHorizontalS, 8px);
 }
 .toolCard {
+    width: 100%;
     min-width: 0;
-    max-width: 100%;
     margin-bottom: var(--spacingVerticalXS, 4px);
     border-radius: var(--borderRadiusM, 10px);
     background: var(--colorNeutralBackground1, #fff);
@@ -83,4 +83,9 @@
 }
 .toolCardCheckbox {
     margin-left: auto;
+}
+.toolCardsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }

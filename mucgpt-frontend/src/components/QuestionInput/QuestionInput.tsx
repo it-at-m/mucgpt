@@ -8,7 +8,6 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
 import { ToolListResponse } from "../../api/models";
-import { getTools } from "../../api/api";
 
 const TOOL_BADGE_COLOR_LIST = ["#1976d2", "#388e3c", "#d32f2f", "#fbc02d", "#7b1fa2", "#0288d1", "#c2185b", "#ffa000", "#388e3c", "#455a64"];
 
@@ -23,6 +22,7 @@ interface Props {
     setQuestion: (question: string) => void;
     selectedTools: string[];
     setSelectedTools: (tools: string[]) => void;
+    tools: ToolListResponse | null;
 }
 
 export const QuestionInput = ({
@@ -35,13 +35,13 @@ export const QuestionInput = ({
     question,
     setQuestion,
     selectedTools,
-    setSelectedTools
+    setSelectedTools,
+    tools
 }: Props) => {
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
     const [toolsSelectorOpen, setToolsSelectorOpen] = useState(false);
-    const [tools, setTools] = useState<ToolListResponse | null>(null);
 
     useEffect(() => {
         const actual = countWords(question) + tokens_used;
@@ -86,16 +86,6 @@ export const QuestionInput = ({
             setQuestion(newValue.value);
         }
     }, []);
-
-    const fetchTools = async () => {
-        try {
-            const result = await getTools();
-            setTools(result);
-        } catch {
-            setTools({ tools: [] });
-        }
-        setToolsSelectorOpen(true);
-    };
 
     return (
         <>
@@ -155,7 +145,7 @@ export const QuestionInput = ({
                                     appearance="subtle"
                                     size="large"
                                     icon={<Toolbox24Color />}
-                                    onClick={fetchTools}
+                                    onClick={() => setToolsSelectorOpen(true)}
                                     disabled={disabled}
                                     aria-label={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"}
                                 />

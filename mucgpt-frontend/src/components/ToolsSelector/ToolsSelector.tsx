@@ -63,7 +63,7 @@ export const ToolsSelector: React.FC<ToolsSelectorProps> = ({ open, onClose, too
                                         {t("components.toolsselector.select_all")}
                                     </Button>
                                 </div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                                <div className={styles.toolCardsContainer}>
                                     {tools.tools.map((tool: ToolInfo, idx: number) => (
                                         <div key={tool.name + idx} className={styles.toolCard}>
                                             <span className={styles.toolCardHeader}>

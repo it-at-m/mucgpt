@@ -19,6 +19,7 @@
     align-items: center;
     font-size: var(--fontSizeBase100);
     line-height: var(--lineHeightBase100);
+    margin-top: 12px;
 }
 
 .errorhint {

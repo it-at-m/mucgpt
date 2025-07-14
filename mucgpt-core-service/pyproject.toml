@@ -20,7 +20,7 @@ dependencies = [
     "langchain==0.3.25",
     "langchain-core==0.3.61",
     "langchain_community==0.3.24",
-    "langchain-openai==0.3.18",
+    "langchain-openai==0.3.28",
     "openai==1.82.0",
     "langsmith==0.3.42",
     "joserfc",

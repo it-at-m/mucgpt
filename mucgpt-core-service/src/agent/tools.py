@@ -300,3 +300,19 @@ Hier ist der schwer verständliche Text:
         else:
             messages.insert(0, SystemMessage(content=tool_instructions))
         return messages
+
+    @staticmethod
+    def list_tool_metadata():
+        """Dynamically return metadata for all available tools (name, description) without requiring a model."""
+
+        # Create dummy ToolCollection with a mock model (None or a dummy callable)
+        class DummyModel:
+            def with_config(self, *args, **kwargs):
+                return self
+
+            def invoke(self, *args, **kwargs):
+                return type("DummyResponse", (), {"content": ""})()
+
+        dummy = ToolCollection(DummyModel())
+        tools = [dummy._brainstorm_tool, dummy._simplify_tool, dummy._weather_tool]
+        return [{"name": t.name, "description": t.description} for t in tools]

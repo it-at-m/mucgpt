@@ -77,7 +77,7 @@ class MUCGPTAgentExecutor:
         self.base_config: RunnableConfig = RunnableConfig(
             callbacks=callbacks,
             run_name="MUCGPTAgent",
-            configurable={
+            metadata={
                 "langfuse_tags": ["default-bot"],
             },
         )

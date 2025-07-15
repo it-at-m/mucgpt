@@ -185,17 +185,6 @@ timeline
     2025-09 : 🧠 Deep Research : Advanced research tools
     2025-10 : 📂 Knowledge Base : Assistants with their own KB & retrieval
     2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
-
-  %% Custom styles for sections (works in most Mermaid renderers)
-  classDef openSource fill:#ffe066,stroke:#ffbe0b,stroke-width:2px;
-  classDef ui fill:#a0c4ff,stroke:#4361ee,stroke-width:2px;
-  classDef assistants fill:#b9fbc0,stroke:#38b000,stroke-width:2px;
-  classDef tools fill:#ffd6e0,stroke:#ff006e,stroke-width:2px;
-
-  class 2024-06 openSource;
-  class 2024-07,2024-08,2024-09 ui;
-  class 2025-01 assistants;
-  class 2025-07,2025-08,2025-09,2025-10,2025-12 tools;
 ```
 
 ## Documentation

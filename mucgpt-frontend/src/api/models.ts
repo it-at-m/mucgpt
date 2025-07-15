@@ -89,9 +89,17 @@ export interface Labels {
 }
 
 // OpenAI-compatible streaming chunk types
+export interface ToolCall {
+    name: string;
+    state: string;
+    content: string;
+    metadata?: Record<string, any>;
+}
+
 export interface ChatCompletionDelta {
     role?: "system" | "user" | "assistant";
     content?: string;
+    tool_calls?: ToolCall[];
 }
 
 export interface ChatCompletionChunkChoice {

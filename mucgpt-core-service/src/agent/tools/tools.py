@@ -31,7 +31,7 @@ def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = N
         writer(
             ToolStreamChunk(
                 state=ToolStreamState.ENDED,
-                content="Brainstorming abgeschlossen.",
+                content=result,
                 tool_name="Brainstorming",
             ).model_dump_json()
         )
@@ -58,7 +58,7 @@ def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = Non
         writer(
             ToolStreamChunk(
                 state=ToolStreamState.ENDED,
-                content="Vereinfachung abgeschlossen.",
+                content=result,
                 tool_name="Vereinfachen",
             ).model_dump_json()
         )
@@ -84,7 +84,7 @@ def make_weather_tool(logger: logging.Logger = None):
         writer(
             ToolStreamChunk(
                 state=ToolStreamState.ENDED,
-                content="Wetterabfrage abgeschlossen.",
+                content=result,
                 tool_name="Wettervorhersage",
             ).model_dump_json()
         )

@@ -144,10 +144,9 @@ class MUCGPTAgentExecutor:
         if enabled_tools:
             logger.debug("Enabled tools for this request: %s", ", ".join(enabled_tools))
         try:
-            stream = self.agent.graph.stream(
+            async for item in self.agent.graph.astream(
                 {"messages": msgs}, stream_mode=["messages", "custom"], config=config
-            )
-            for item in stream:
+            ):
                 logger.debug("Received item from stream: %s", item)
                 # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
                 if not isinstance(item, tuple) or len(item) != 2:
@@ -156,11 +155,14 @@ class MUCGPTAgentExecutor:
                     )
                     continue
                 if isinstance(item, tuple) and item[0] == "messages":
-                    _, (message_chunk, _) = item
+                    _, (message_chunk, metadata) = item
                     logger.debug("Processing message chunk: %s", message_chunk)
                     logger.debug("Message chunk type: %s", type(message_chunk))
                     logger.debug("messages: %s", messages)
-                    if isinstance(message_chunk, AIMessageChunk):
+                    # only stream model call and no tool chunks
+                    if metadata["langgraph_node"] == "call_model" and isinstance(
+                        message_chunk, AIMessageChunk
+                    ):
                         chunk_content = message_chunk.content
                         if not chunk_content or chunk_content.isspace():
                             continue

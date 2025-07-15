@@ -3,10 +3,12 @@ import logging
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 from agent.tools.brainstorm import brainstorming
 from agent.tools.prompts_fallback import TOOL_INSTRUCTIONS_TEMPLATE
 from agent.tools.simplify import simplify
+from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from agent.tools.weather import weather
 from core.logtools import getLogger
 
@@ -17,7 +19,23 @@ def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = N
         description="Generate a mind map for a given topic in markdown format.",
     )
     def brainstorm_tool(topic: str, context: str = None):
-        return brainstorming(topic, context, model, logger)
+        writer = get_stream_writer()
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.STARTED,
+                content=f"Starte Brainstorming für Thema: {topic}",
+                tool_name="Brainstorming",
+            ).model_dump_json()
+        )
+        result = brainstorming(topic, context, model, logger)
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.ENDED,
+                content="Brainstorming abgeschlossen.",
+                tool_name="Brainstorming",
+            ).model_dump_json()
+        )
+        return result
 
     return brainstorm_tool
 
@@ -28,7 +46,23 @@ def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = Non
         description="Simplify complex text to A2 level using Leichte Sprache.",
     )
     def simplify_tool(text: str):
-        return simplify(text, model, logger)
+        writer = get_stream_writer()
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.STARTED,
+                content="Vereinfachung gestartet.",
+                tool_name="Vereinfachen",
+            ).model_dump_json()
+        )
+        result = simplify(text, model, logger)
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.ENDED,
+                content="Vereinfachung abgeschlossen.",
+                tool_name="Vereinfachen",
+            ).model_dump_json()
+        )
+        return result
 
     return simplify_tool
 
@@ -38,7 +72,23 @@ def make_weather_tool(logger: logging.Logger = None):
         "Wettervorhersage", description="Get the current weather for a given location."
     )
     def weather_tool(location: str):
-        return weather(location, logger)
+        writer = get_stream_writer()
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.STARTED,
+                content=f"Wetterabfrage für: {location} gestartet",
+                tool_name="Wettervorhersage",
+            ).model_dump_json()
+        )
+        result = weather(location, logger)
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.ENDED,
+                content="Wetterabfrage abgeschlossen.",
+                tool_name="Wettervorhersage",
+            ).model_dump_json()
+        )
+        return result
 
     return weather_tool
 

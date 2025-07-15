@@ -15,6 +15,7 @@ from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler
 
 from agent.agent import MUCGPTAgent
+from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
     ChatCompletionChoice,
     ChatCompletionChunk,
@@ -43,6 +44,31 @@ def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMes
         else:
             msgs.append(AIMessage(m.content))
     return msgs
+
+
+def toolchunk_to_chatcompletionchunk(
+    tool_chunk: ToolStreamChunk, id_: str, created: int, index: int = 0
+) -> ChatCompletionChunk:
+    """
+    Convert a ToolStreamChunk to a ChatCompletionChunk, preserving state and metadata in the tool_calls field.
+    """
+
+    delta = ChatCompletionDelta(
+        role="assistant",
+        content=None,
+        tool_calls=[
+            {
+                "name": tool_chunk.tool_name,
+                "state": tool_chunk.state.value,
+                "content": tool_chunk.content,
+                "metadata": tool_chunk.metadata,
+            }
+        ],
+    )
+    choice = ChatCompletionChunkChoice(delta=delta, index=index, finish_reason=None)
+    return ChatCompletionChunk(
+        id=id_, object="chat.completion.chunk", created=created, choices=[choice]
+    )
 
 
 class MUCGPTAgentExecutor:
@@ -103,103 +129,68 @@ class MUCGPTAgentExecutor:
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
-        request_config = RunnableConfig(
-            configurable={
-                "llm_max_tokens": max_output_tokens,
-                "llm_temperature": temperature,
-                "llm": model,
-                "llm_streaming": True,
-                "enabled_tools": enabled_tools,
-            },
+        config = merge_configs(
+            self.base_config,
+            RunnableConfig(
+                configurable={
+                    "llm_max_tokens": max_output_tokens,
+                    "llm_temperature": temperature,
+                    "llm": model,
+                    "llm_streaming": True,
+                    "enabled_tools": enabled_tools,
+                },
+            ),
         )
-        config = merge_configs(self.base_config, request_config)
+        if enabled_tools:
+            logger.debug("Enabled tools for this request: %s", ", ".join(enabled_tools))
         try:
-            logger.debug("Starting streaming response")
-            # log the tools
-            if enabled_tools:
-                logger.debug(
-                    "Enabled tools for this request: %s", ", ".join(enabled_tools)
-                )
-            astream = self.agent.graph.astream(
-                {"messages": msgs}, stream_mode="messages", config=config
+            stream = self.agent.graph.stream(
+                {"messages": msgs}, stream_mode=["messages", "custom"], config=config
             )
-            while True:
-                try:
-                    message_chunk, metadata = await astream.__anext__()
-                except StopAsyncIteration:
-                    break
-                except Exception as ex:
-                    logger.error("Streaming error: %s", str(ex), exc_info=True)
-                    error_msg = llm_exception_handler(ex=ex, logger=logger)
-                    yield ChatCompletionChunk(
-                        id=id_,
-                        object="chat.completion.chunk",
-                        created=created,
-                        choices=[
-                            ChatCompletionChunkChoice(
-                                delta=ChatCompletionDelta(content=error_msg),
-                                index=0,
-                                finish_reason="error",
-                            )
-                        ],
-                    ).model_dump()
-                    return
-
-                if isinstance(message_chunk, AIMessageChunk):
-                    if hasattr(message_chunk, "tool_call_chunks"):
-                        if (
-                            message_chunk.tool_call_chunks is not None
-                            and len(message_chunk.tool_call_chunks) >= 1
-                        ):
-                            if len(message_chunk.tool_call_chunks) > 1:
-                                logger.warning(
-                                    f"Multiple tool calls in a single chunk, only the first will be processed. Found calls {len(message_chunk.tool_call_chunks)}"
-                                )
-                            if message_chunk.tool_call_chunks[0]["name"] is not None:
-                                tool_call = message_chunk.tool_call_chunks[0]
-                                logger.info(
-                                    "Streaming tool start: %s", tool_call["name"]
-                                )
-                                start_chunk = ChatCompletionChunk(
-                                    id=id_,
-                                    object="chat.completion.chunk",
-                                    created=created,
-                                    choices=[
-                                        ChatCompletionChunkChoice(
-                                            delta=ChatCompletionDelta(
-                                                tool_calls=[
-                                                    {
-                                                        "name": tool_call["name"],
-                                                        "args": tool_call["args"],
-                                                        "status": "started",
-                                                    }
-                                                ]
-                                            ),
-                                            index=0,
-                                            finish_reason=None,
-                                        )
-                                    ],
-                                )
-                                yield start_chunk.model_dump()
-                    chunk_content = message_chunk.content
-                    if not chunk_content:
-                        continue
-                    yield ChatCompletionChunk(
-                        id=id_,
-                        object="chat.completion.chunk",
-                        created=created,
-                        choices=[
-                            ChatCompletionChunkChoice(
-                                delta=ChatCompletionDelta(content=chunk_content),
-                                index=0,
-                                finish_reason=None,
-                            )
-                        ],
-                    ).model_dump()
-                else:
-                    logger.debug(
-                        f"Unexpected message type in streaming response: {type(message_chunk)}, expected AIMessage"
+            for item in stream:
+                logger.debug("Received item from stream: %s", item)
+                # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
+                if not isinstance(item, tuple) or len(item) != 2:
+                    logger.error(
+                        "Unexpected item format in streaming response: %s", item
                     )
+                    continue
+                if isinstance(item, tuple) and item[0] == "messages":
+                    _, (message_chunk, _) = item
+                    logger.debug("Processing message chunk: %s", message_chunk)
+                    logger.debug("Message chunk type: %s", type(message_chunk))
+                    logger.debug("messages: %s", messages)
+                    if isinstance(message_chunk, AIMessageChunk):
+                        chunk_content = message_chunk.content
+                        if not chunk_content or chunk_content.isspace():
+                            continue
+                        yield ChatCompletionChunk(
+                            id=id_,
+                            object="chat.completion.chunk",
+                            created=created,
+                            choices=[
+                                ChatCompletionChunkChoice(
+                                    delta=ChatCompletionDelta(content=chunk_content),
+                                    index=0,
+                                    finish_reason=None,
+                                )
+                            ],
+                        ).model_dump()
+                elif isinstance(item, tuple) and item[0] == "custom":
+                    try:
+                        chunk_obj = ToolStreamChunk.model_validate_json(item[1])
+                        yield toolchunk_to_chatcompletionchunk(
+                            chunk_obj, id_, created
+                        ).model_dump()
+                    except Exception:
+                        logger.debug(
+                            "Non-ToolStreamChunk custom chunk: %s", message_chunk
+                        )
+                else:
+                    logger.error(
+                        "Unexpected item type in streaming response: %s", type(item)
+                    )
+                    continue
             logger.info("Streaming completed successfully.")
         except Exception as ex:
             logger.error("Streaming error: %s", str(ex), exc_info=True)

@@ -8,4 +8,4 @@ def weather(location: str, logger: logging.Logger) -> str:
         result = "It's 60 degrees and foggy."
     else:
         result = "It's 90 degrees and sunny."
-    return f"<mucgpt-Wettervorhersage>{result}</mucgpt-Wettervorhersage>"
+    return result

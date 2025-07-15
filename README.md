@@ -170,8 +170,10 @@ timeline
 
 ## Documentation
 
-![Architecture](docs/architecture-dark.png#gh-dark-mode-only)
-![Architecture](docs/architecture.png#gh-light-mode-only)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <img alt="MUCGPT Architecture Diagram" src="docs/architecture.png">
+</picture>
 The architecture of MUCGPT is structured into three primary components: the frontend, the core service for handling tools and the communication with the llm, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.

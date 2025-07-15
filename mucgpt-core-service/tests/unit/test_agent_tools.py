@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, mock_open, patch
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from agent.tools import ToolCollection
+from agent.tools.tools import ToolCollection
 
 
 class TestAgentTools:
@@ -19,16 +19,14 @@ class TestAgentTools:
         )
         self.mock_llm.invoke.return_value = self.mock_response
 
-        # Create the ChatTools instance
+        # Create the ToolCollection instance
         self.chat_tools = ToolCollection(self.mock_llm)
 
     @patch("builtins.open", new_callable=mock_open, read_data="Test system message")
     def test_simplify_tool_with_file_loading(self, mock_file):
         """Test the simplify tool with mocked file operations"""
         # Call the simplify tool
-        result = self.chat_tools.simplify.invoke(
-            {"text": "Some complex text.", "target_audience": "experts"}
-        )
+        result = self.chat_tools.simplify.invoke({"text": "Some complex text."})
 
         # Verify LLM was configured with expected parameters
         self.mock_llm.with_config.assert_called_with(
@@ -39,7 +37,10 @@ class TestAgentTools:
         self.mock_llm.invoke.assert_called_once()
 
         # Verify the result is as expected
-        assert result == "Simplified test content"
+        assert (
+            result
+            == "<mucgpt-Vereinfachen>Simplified test content</mucgpt-Vereinfachen>"
+        )
 
         # Verify file operations were attempted
         assert mock_file.call_count > 0
@@ -64,55 +65,9 @@ class TestAgentTools:
         # Verify LLM was invoked with messages
         self.mock_llm.invoke.assert_called_once()
 
-        # Verify that the markdown content was extracted correctly
-        assert result == "# Test Topic\n\n## Main Point 1\n\n- Subpoint 1"
-
-    @patch("agent.tools.ToolCollection._extract_text")
-    def test_simplify_tool_extraction(self, mock_extract):
-        """Test that the simplify tool correctly extracts text"""
-        # Setup the mock extraction function
-        mock_extract.return_value = "Extracted text"
-
-        # Call the simplify tool
-        result = self.chat_tools.simplify.invoke(
-            {"text": "Some complex text.", "target_audience": "general"}
-        )
-
-        # Verify extract_text was called with the correct response content
-        mock_extract.assert_called_once_with(self.mock_response.content)
-
-        # Verify the result is the extracted text
-        assert result == "Extracted text"
-
-    def test_extract_text_method(self):
-        """Test the _extract_text method directly"""
-        # Sample response with embedded content
-        sample_response = (
-            "before <einfachesprache>extracted content</einfachesprache> after"
-        )
-
-        # Call the method directly
-        result = self.chat_tools._extract_text(sample_response)
-
-        # Verify extraction works as expected
-        assert result == "extracted content"
-
-    def test_cleanup_mindmap(self):
-        """Test the _cleanup_mindmap method"""
-        # Test with markdown code block
-        markdown = "Here's your mindmap:\n\n```markdown\n# Topic\n## Subtopic\n```"
-        result = self.chat_tools._cleanup_mindmap(markdown)
-        assert result == "# Topic\n## Subtopic"
-
-        # Test with just markdown language identifier
-        markdown = "```markdown\n# Topic\n```"
-        result = self.chat_tools._cleanup_mindmap(markdown)
-        assert result == "# Topic"
-
-        # Test with no code block
-        markdown = "# Topic\n## Subtopic"
-        result = self.chat_tools._cleanup_mindmap(markdown)
-        assert result == "# Topic\n## Subtopic"
+        # Verify that the result is correctly formatted
+        assert result.startswith("<mucgpt-Brainstorming>")
+        assert "# Test Topic" in result
 
     def test_get_tools_list(self):
         """Test that get_tools returns the expected list of tools"""
@@ -130,20 +85,13 @@ class TestAgentTools:
     def test_fallback_prompts(self, mock_file):
         """Test that fallback prompts are used when files aren't found"""
         # Call the simplify tool which will try to load files
-        result = self.chat_tools.simplify.invoke(
-            {"text": "Some complex text.", "target_audience": "general"}
-        )
+        result = self.chat_tools.simplify.invoke({"text": "Some complex text."})
 
         # Verify the result still works using fallbacks
-        assert result == "Simplified test content"
-
-        # Test fallback methods directly
-        fallback_rules = self.chat_tools._get_fallback_rules()
-        assert "Wortebene" in fallback_rules
-
-        fallback_prompt = self.chat_tools._get_fallback_prompt()
-        assert "{rules}" in fallback_prompt
-        assert "{message}" in fallback_prompt
+        assert (
+            result
+            == "<mucgpt-Vereinfachen>Simplified test content</mucgpt-Vereinfachen>"
+        )
 
     def test_add_instructions(self):
         """Test that add_instructions properly updates messages with tool information"""

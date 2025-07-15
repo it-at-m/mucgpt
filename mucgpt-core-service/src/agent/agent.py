@@ -1,45 +1,32 @@
+from typing import Any, Dict
+
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import RunnableSerializable
 from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
-from agent.tools import ToolCollection
+from agent.tools.tools import ToolCollection
 from core.logtools import getLogger
 
 
-class XMLWrappingToolNode(ToolNode):
-    def __call__(self, state, config=None):
-        result = super().__call__(state, config)
-        messages = result.get("messages", [])
-        xml_results = []
-        for msg in messages:
-            tool_call = getattr(msg, "tool_call", None) or msg.get("tool_call")
-            if tool_call:
-                tool_name = tool_call.get("name") or tool_call.get("tool_name")
-                tool_result = tool_call.get("result")
-                if tool_name and tool_result:
-                    tag = f"mucgpt-{tool_name}"
-                    xml_results.append(f"<{tag}>{tool_result}</{tag}>")
-        if xml_results:
-            xml_string = f"<mucgpt-results>{''.join(xml_results)}</mucgpt-results>"
-            # Store the XML string in each tool_call result for downstream use
-            for msg in messages:
-                tool_call = getattr(msg, "tool_call", None) or msg.get("tool_call")
-                if tool_call and "result" in tool_call:
-                    tool_call["result"] = xml_string
-        return result
-
-
 class MUCGPTAgent:
-    def should_continue(self, state: MessagesState):
+    """
+    Agent responsible for tool and agent construction, tool invocation, and postprocessing.
+    """
+
+    def should_continue(self, state: MessagesState) -> str:
         messages = state["messages"]
         last_message = messages[-1]
-        if last_message.tool_calls:
+        if getattr(last_message, "tool_calls", None):
             return "tools"
         return END
 
-    def call_model(self, state: MessagesState, config: RunnableConfig):
-        # Dynamically enable tools based on config
+    def call_model(
+        self, state: MessagesState, config: RunnableConfig
+    ) -> Dict[str, Any]:
+        """
+        Call the model, dynamically enabling tools based on config.
+        """
         messages = state["messages"]
         enabled_tools = config["configurable"].get("enabled_tools") if config else None
         tools_to_use = (
@@ -64,7 +51,7 @@ class MUCGPTAgent:
         self.model = llm
         self.toolCollection = ToolCollection(model=llm)
         self.tools = self.toolCollection.get_all()
-        self.tool_node = XMLWrappingToolNode(self.tools)
+        self.tool_node = ToolNode(self.tools)
         self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
         builder = StateGraph(MessagesState)
         builder.add_node("call_model", self.call_model)

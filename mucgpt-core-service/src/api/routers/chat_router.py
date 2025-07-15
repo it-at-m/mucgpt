@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
 
-from agent.tools import ToolCollection
+from agent.tools.tools import ToolCollection
 from api.api_models import (
     ChatCompletionRequest,
     ChatCompletionResponse,

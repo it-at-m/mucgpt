@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from agent.tools import ToolCollection
+from agent.tools.tools import ToolCollection
 from api.api_models import ToolInfo, ToolListResponse
 from config.settings import get_settings
 from core.auth import authenticate_user

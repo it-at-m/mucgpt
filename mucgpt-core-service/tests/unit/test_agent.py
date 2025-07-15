@@ -1,7 +1,8 @@
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolCall
+from langchain_core.runnables import RunnableConfig
 
 from agent.agent import MUCGPTAgent
-from agent.tools import ToolCollection
+from agent.tools.tools import ToolCollection
 
 
 class MockToolChunk:
@@ -122,9 +123,11 @@ class TestAgent:
     def test_call_model_binds_tools_and_injects_instructions(self):
         agent = MUCGPTAgent(DummyLLM())
         state = {"messages": [AIMessage(content="hi")]}  # minimal state
-        config = {
-            "enabled_tools": [t.name for t in ToolCollection(agent.model).get_all()]
-        }
+        config = RunnableConfig(
+            configurable={
+                "enabled_tools": [t.name for t in ToolCollection(agent.model).get_all()]
+            }
+        )
         # Patch toolCollection methods to track calls
         called = {"bind_tools": False, "add_instructions": False}
         orig_bind_tools = agent.model.bind_tools

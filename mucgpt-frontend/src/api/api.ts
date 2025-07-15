@@ -16,7 +16,8 @@ import {
     SumResponse,
     AssistantResponse,
     AssistantUpdateInput,
-    Bot
+    Bot,
+    ToolListResponse
 } from "./models";
 
 const CHAT_NAME_PROMPT =
@@ -36,13 +37,16 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
             messages.push({ role: "assistant", content: turn.bot });
         }
     }
-    const body = {
+    const body: any = {
         model: options.model,
         messages,
         temperature: options.temperature,
         max_tokens: options.max_output_tokens,
         stream: options.shouldStream
     };
+    if (options.enabled_tools) {
+        body.enabled_tools = options.enabled_tools;
+    }
     return await fetch(url, postConfig(body));
 }
 
@@ -273,5 +277,12 @@ export async function getUserSubscriptionsApi(): Promise<{ id: string; name: str
     const response = await fetch("/api/user/subscriptions", getConfig());
     handleRedirect(response, true);
     const parsedResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+export async function getTools(): Promise<ToolListResponse> {
+    const response = await fetch(API_BASE + "v1/tools", getConfig());
+    handleRedirect(response, true);
+    const parsedResponse: ToolListResponse = await handleResponse(response);
     return parsedResponse;
 }

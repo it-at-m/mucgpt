@@ -1,0 +1,91 @@
+.dialogContent {
+    padding: var(--spacingHorizontalXL, 20px);
+    background-color: var(--colorNeutralBackground2, #f9f9f9);
+    border-radius: var(--borderRadiusL, 16px);
+    box-shadow: 0 4px 24px 0 rgba(30, 34, 90, 0.1);
+}
+.toolRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.toolCheckbox {
+    margin-top: 4px;
+}
+.toolTextBlock {
+    display: flex;
+    flex-direction: column;
+}
+.toolName {
+    font-weight: 700;
+    font-size: var(--fontSizeBase400, 1.08rem);
+    color: var(--colorBrandForeground1, #1a237e);
+    margin-bottom: var(--spacingVerticalXXS, 2px);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.toolDescription {
+    font-size: var(--fontSizeBase300, 0.97rem);
+    color: var(--colorNeutralForeground2, #444);
+    margin-bottom: 0;
+    opacity: 0.92;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.list {
+    padding: 0;
+}
+.listItem {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+.noTools {
+    color: var(--colorNeutralForeground3, #888);
+    font-style: italic;
+    padding: var(--spacingVerticalS, 8px) 0;
+}
+.actionsContainer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--spacingVerticalL, 16px);
+    gap: var(--spacingHorizontalS, 8px);
+}
+.toolCard {
+    width: 100%;
+    min-width: 0;
+    margin-bottom: var(--spacingVerticalXS, 4px);
+    border-radius: var(--borderRadiusM, 10px);
+    background: var(--colorNeutralBackground1, #fff);
+    border: 1px solid var(--colorNeutralStroke2, #e3e8f0);
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalL, 16px);
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalM, 12px);
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+    box-shadow: 0 1px 4px 0 rgba(30, 34, 90, 0.06);
+}
+.toolCard:hover {
+    border-color: var(--colorBrandStroke1, #b3b8d0);
+    box-shadow: 0 2px 8px 0 rgba(30, 34, 90, 0.13);
+    background: var(--colorNeutralBackground2, #f7f8fa);
+}
+.toolCardHeader {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalXXS, 2px);
+    min-width: 0;
+}
+.toolCardCheckbox {
+    margin-left: auto;
+}
+.toolCardsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}

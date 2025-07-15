@@ -1,16 +1,13 @@
 from fastapi import APIRouter, Depends
 
-from agent.tools import ToolCollection
+from agent.tools.tools import ToolCollection
 from api.api_models import ToolInfo, ToolListResponse
 from config.settings import get_settings
 from core.auth import authenticate_user
-from init_app import init_agent
 
 router = APIRouter(prefix="/v1")
 
 settings = get_settings()
-agent_runner = init_agent(settings.backend)
-# Assume agent_runner.model is the LLM model instance
 
 
 @router.get(

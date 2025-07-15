@@ -115,6 +115,9 @@ class ChatCompletionRequest(BaseModel):
     stream: Optional[bool] = Field(
         False, description="Whether to stream partial responses back"
     )
+    enabled_tools: Optional[List[str]] = Field(
+        None, description="List of enabled tool IDs for this completion request"
+    )
 
 
 class ChatCompletionChoice(BaseModel):

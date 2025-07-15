@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="#">
-    <img src="app/frontend/src/assets/mucgpt_black_filled.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
+    <img src="mucgpt-frontend/src/assets/mucgpt_black_filled.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
   </a>
 </div>
 <br />
@@ -93,23 +93,6 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
   - [Using UV during development](/docs/DEVELOPMENT.md)
 - Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
-### Install deps
-
-Sync python environment for development:
-
-```bash
-cd mucgpt-core-service
-uv sync --all-extras # installs dev/test dependencies
-# if you only want to run mucgpt without using development deps
-uv sync
-```
-
-Install frontend deps
-
-```bash
-cd mucgpt-frontend
-npm install
-```
 
 ### Configure
 
@@ -117,16 +100,21 @@ Configure your environment. For that, copy the content of the empty config from 
 
 ### Run with Docker
 
-To start all required services using Docker Compose, run:
+To start all required services using podman or docker run:
 
 ```bash
-docker-compose --profile=frontend --profile=backend up --build
+# in case of podman run
+podman compose  --build up
+# in case of docker run
+docker-compose  --build up
 ```
 
 This command launches the following components:
 
 - **Frontend**: A modern web interface built with React, providing users with an intuitive and responsive experience directly in their browser.
-- **Backend**: The core service that processes API requests, manages business logic, and communicates with both the database and connected LLMs.
+- **Core-Service**: Manages the agent to call LLMs. Also orchestrates tool usage.
+- **Assistant-Service**: Manages assistants. An Assistant is an configuratoin for an MUCGPT-Agent.
+- **Assistant-Service-Migration**: Does database migrations on startup.
 - **API Gateway**: Serves as the unified entry point for all client requests, efficiently routing traffic to backend services while managing authentication and security.
 - **Keycloak**: A robust, open-source identity and access management system responsible for authentication, authorization, and user administration.
 - **PostgresDB**: A reliable PostgreSQL database used to securely store and manage app statistics.
@@ -140,34 +128,52 @@ Once all services are running, you can access:
 Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
 
 ## Roadmap
-
 ```mermaid
+%%{init:
+{
+  "theme": "base",
+  "themeVariables": {
+      "primaryColor": "#F8B6B8",
+      "primaryTextColor": "#222222",
+      "primaryBorderColor": "#F6A6A6",
+      "lineColor": "#FFE5B4",
+      "secondaryColor": "#B6E2D3",
+      "tertiaryColor": "#FFFFFF",
+      "background": "#FFF8F0",
+      "fontSize": "20px",
+      "fontFamily": "Inter, Segoe UI, Trebuchet MS, Verdana, Arial, sans-serif"
+  }
+}
+}%%
 timeline
-    title MUCGPT Roadmap
+  title 🚀 MUCGPT Roadmap
 
-    section Open Source Release
-    2024-06 : Open Source : 🚀 Available to the public under an open-source license, allowing anyone to access, use, and modify MUCGPT without restrictions or payment.
+  section 🎉 Open Source
+    2024-06 : 🟢 Open Source : Public release for everyone!
 
-    section  UI Features
-    2024-07 : Chat History : 💾 Users can save their chat history in the browser.
-    2024-08 : LiveCycle LLM : ⚙️ The employed LLM can be configured to meet specific requirements.
-    2024-09 : Simplified Language : 🗣️ Translate text into simple or easy-to-understand language.
+  section 🖥️ UI & Experience
+    2024-07 : 💾 Chat History : Save chats in your browser
+    2024-08 : ⚙️ LLM Config : Tune the LLM to your needs
+    2024-09 : 🗣️ Easy Language : Simplify any text
 
-    section Own GPTs
-    2025-01 : Own GPTs : 🔧 Create and generate custom assistants for specific tasks.
+  section 🤖 Custom Assistants
+    2025-01 : 🛠️ Build Assistants : Create your own helpers
 
-    section Major Update for improved reusability
-    2025-05 : MUCGPT 2.0 : 🌟 Roles and rights concept for assistants; splitting into smaller Microservices: API-Gateway, MUCGPT-Core, and a Team Management Service.
-
-    section Improving Own GPTs with more Tools
-    2025-06 : Own GPTs : ☁️ Share Assistants with others.
-    2025-07 : Own GPTs : 🔍 Use Websearch/Deep Research to provide additional knowledge.
-    2025-09 : Chat with Own Documents : 📂 Own GPTs will have access to shared knowledge and can answer questions based on provided sources.
+  section 🌐 MUCGPT 2.0: Agent Mode
+    2025-07 : 🧩 Microservices : API-Gateway, Core, Assistant-Service
+    2025-07 : ☁️ Share Assistants : Share & use tools (Summarize, Brainstorm, Simple Language)
+    2025-08 : 🔍 Websearch & Slides : Search the web, create presentations
+    2025-09 : 🧠 Deep Research : Advanced research tools
+    2025-10 : 📂 Knowledge Base : Assistants with their own KB & retrieval
+    2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
 ```
 
 ## Documentation
 
-![Architecture](docs/architecture.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
+  <img alt="MUCGPT Architecture Diagram" src="docs/architecture.png">
+</picture>
 The architecture of MUCGPT is structured into three primary components: the frontend, the core service for handling tools and the communication with the llm, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.

@@ -23,7 +23,7 @@ from api.api_models import (
 
 # These fixtures are imported from conftest.py
 class TestChatRouter:
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_non_streaming_completion(self, mock_chat_service, test_client: TestClient):
         """Test the non-streaming chat completion endpoint."""
         # Mock the chat service response using proper models
@@ -46,7 +46,7 @@ class TestChatRouter:
             mock_response.model_dump()
         )
 
-        # Create payload using proper model
+        # Create payload using proper model, now with enabled_tools
         payload_model = ChatCompletionRequest(
             model="gpt-4o-mini",
             messages=[
@@ -58,6 +58,7 @@ class TestChatRouter:
             temperature=0.0,
             max_tokens=10,
             stream=False,
+            enabled_tools=["tool1", "tool2"],
         )
         payload = payload_model.model_dump()
         resp = test_client.post("/v1/chat/completions", json=payload)
@@ -84,7 +85,7 @@ class TestChatRouter:
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_streaming_completion(self, mock_chat_service, test_client: TestClient):
         """Test the streaming chat completion endpoint."""
         # Mock streaming response - return an async generator that yields JSON strings
@@ -134,7 +135,7 @@ class TestChatRouter:
             yield chunk3.model_dump()
 
         mock_chat_service.run_with_streaming.return_value = mock_streaming_generator()
-        # Create payload using proper model
+        # Create payload using proper model, now with enabled_tools
         payload_model = ChatCompletionRequest(
             model="gpt-4o-mini",
             messages=[
@@ -146,6 +147,7 @@ class TestChatRouter:
             temperature=0.0,
             max_tokens=10,
             stream=True,
+            enabled_tools=["tool1", "tool2"],
         )
         payload = payload_model.model_dump()
 
@@ -233,7 +235,7 @@ class TestChatRouter:
         assert isinstance(result.count, int), "Token count should be an integer"
         assert result.count > 0, "Token count should be greater than 0"
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_invalid_model(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -258,7 +260,7 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 422
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_empty_messages(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -275,7 +277,7 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 500
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_high_temperature(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -315,7 +317,7 @@ class TestChatRouter:
         assert response.id
         assert response.choices[0].message.content
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_zero_max_tokens(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -390,7 +392,7 @@ class TestChatRouter:
         response = test_client.post("/v1/counttokens", json=payload)
         assert response.status_code == 422
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_service_exception(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -407,7 +409,7 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 500
 
-    @patch("api.routers.chat_router.agent_runner")
+    @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_different_message_roles(
         self, mock_chat_service, test_client: TestClient
     ):

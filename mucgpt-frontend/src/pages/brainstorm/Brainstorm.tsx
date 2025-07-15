@@ -64,6 +64,7 @@ const Brainstorm = () => {
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
+    const [selectedTools, setSelectedTools] = useState<string[]>([]); // tool names
 
     // StorageService
     const storageService: StorageService<AskResponse, unknown> = new StorageService<AskResponse, unknown>(BRAINSTORM_STORE);
@@ -121,7 +122,9 @@ const Brainstorm = () => {
                 const request: BrainstormRequest = {
                     topic: question,
                     language: language,
-                    model: LLM.llm_name
+                    model: LLM.llm_name,
+                    // @ts-expect-error: allow extra field for backend extension
+                    enabled_tools: selectedTools.length > 0 ? selectedTools : undefined
                 };
                 const result = await brainstormApi(request);
                 const completeAnswer: BrainstormMessage = { user: question, response: result };
@@ -138,7 +141,7 @@ const Brainstorm = () => {
                 setIsLoading(false);
             }
         },
-        [error, language, LLM, storageService, answers, dispatch]
+        [error, language, LLM, storageService, answers, dispatch, selectedTools]
     );
 
     // onClick handler for example list
@@ -172,9 +175,11 @@ const Brainstorm = () => {
                 tokens_used={0}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
             />
         ),
-        [question, isLoading, makeApiRequest]
+        [question, isLoading, makeApiRequest, selectedTools]
     );
 
     // ExampleList component

@@ -1,0 +1,31 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+.pytest_cache/
+.venv/
+
+# Ignore test directories
+/tests/
+
+# Ignore editor and tool configs
+.vscode/
+.coverage
+.ruff_cache/
+.python-version
+
+# Ignore GitHub workflows (not needed in build context)
+.github/
+
+# Ignore other files not needed in image
+*.log
+*.md
+
+# Ignore Docker-related files (except Dockerfile itself)
+!Dockerfile
+
+# Ignore everything except source and required files
+# (uncomment if you want to be very strict)
+# *
+# !src/
+# !pyproject.toml
+# !uv.lock
+# !departements.json

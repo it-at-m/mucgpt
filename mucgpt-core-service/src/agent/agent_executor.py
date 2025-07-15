@@ -9,6 +9,10 @@ from langchain_core.messages import (
     HumanMessage,
     SystemMessage,
 )
+from langchain_core.runnables import RunnableConfig
+from langchain_core.runnables.config import merge_configs
+from langfuse import Langfuse
+from langfuse.langchain import CallbackHandler
 
 from agent.agent import MUCGPTAgent
 from api.api_models import (
@@ -22,6 +26,7 @@ from api.api_models import (
 )
 from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
+from config.settings import Settings
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-agent")
@@ -43,8 +48,41 @@ def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMes
 class MUCGPTAgentExecutor:
     """Provides run_with_streaming and run_without_streaming methods using MUCGPTAgent."""
 
-    def __init__(self, agent: MUCGPTAgent):
+    def __init__(self, agent: MUCGPTAgent = None, settings: Settings = None):
+        self.logger = logger
         self.agent = agent
+        self.langfuse = None
+        self.langfuse_handler = None
+
+        if settings is not None:
+            if (
+                settings.backend.langfuse_host
+                and settings.backend.langfuse_secret_key
+                and settings.backend.langfuse_public_key
+            ):
+                try:
+                    self.langfuse = Langfuse(
+                        public_key=settings.backend.langfuse_public_key,
+                        host=settings.backend.langfuse_host,
+                        secret_key=settings.backend.langfuse_secret_key,
+                        release=settings.version,
+                    )
+                    self.langfuse.auth_check()
+                    self.langfuse_handler = CallbackHandler(
+                        public_key=settings.backend.langfuse_public_key
+                    )
+                except Exception as e:
+                    self.logger.error(f"Error initializing Langfuse: {e}")
+                    self.langfuse = None
+                    self.langfuse_handler = None
+        callbacks = [self.langfuse_handler] if self.langfuse_handler else []
+        self.base_config: RunnableConfig = RunnableConfig(
+            callbacks=callbacks,
+            run_name="MUCGPTAgent",
+            metadata={
+                "langfuse_tags": ["default-bot"],
+            },
+        )
 
     async def run_with_streaming(
         self,
@@ -65,15 +103,23 @@ class MUCGPTAgentExecutor:
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
-        config = {
-            "llm_max_tokens": max_output_tokens,
-            "llm_temperature": temperature,
-            "llm": model,
-            "llm_streaming": True,
-            "enabled_tools": enabled_tools,
-        }
+        request_config = RunnableConfig(
+            configurable={
+                "llm_max_tokens": max_output_tokens,
+                "llm_temperature": temperature,
+                "llm": model,
+                "llm_streaming": True,
+                "enabled_tools": enabled_tools,
+            },
+        )
+        config = merge_configs(self.base_config, request_config)
         try:
             logger.debug("Starting streaming response")
+            # log the tools
+            if enabled_tools:
+                logger.debug(
+                    "Enabled tools for this request: %s", ", ".join(enabled_tools)
+                )
             astream = self.agent.graph.astream(
                 {"messages": msgs}, stream_mode="messages", config=config
             )
@@ -98,7 +144,7 @@ class MUCGPTAgentExecutor:
                         ],
                     ).model_dump()
                     return
-                logger.debug("Streaming message: %r", message_chunk)
+
                 if isinstance(message_chunk, AIMessageChunk):
                     if hasattr(message_chunk, "tool_call_chunks"):
                         if (
@@ -135,12 +181,9 @@ class MUCGPTAgentExecutor:
                                     ],
                                 )
                                 yield start_chunk.model_dump()
-                    # Get the entire content for this chunk
                     chunk_content = message_chunk.content
-                    # If the content is empty, skip this chunk
                     if not chunk_content:
                         continue
-                    # just stream the content, no tool calls
                     yield ChatCompletionChunk(
                         id=id_,
                         object="chat.completion.chunk",
@@ -203,13 +246,16 @@ class MUCGPTAgentExecutor:
             max_output_tokens,
         )
         msgs = _convert_to_langchain_messages(messages)
-        config = {
-            "llm_max_tokens": max_output_tokens,
-            "llm_temperature": temperature,
-            "llm": model,
-            "llm_streaming": False,
-            "enabled_tools": enabled_tools,
-        }
+        request_config = RunnableConfig(
+            configurable={
+                "llm_max_tokens": max_output_tokens,
+                "llm_temperature": temperature,
+                "llm": model,
+                "llm_streaming": True,
+                "enabled_tools": enabled_tools,
+            }
+        )
+        config = merge_configs(self.base_config, request_config)
         try:
             logger.debug("Starting non-streaming response")
             llm = self.agent.model.with_config(configurable=config)

@@ -1,13 +1,17 @@
+import logging
+
+from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
 
 from agent.tools.brainstorm import brainstorming
+from agent.tools.prompts_fallback import TOOL_INSTRUCTIONS_TEMPLATE
 from agent.tools.simplify import simplify
 from agent.tools.weather import weather
-from core.logtools import Logger, getLogger
+from core.logtools import getLogger
 
 
-def make_brainstorm_tool(model: RunnableSerializable, logger: Logger = None):
+def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = None):
     @tool(
         "Brainstorming",
         description="Generate a mind map for a given topic in markdown format.",
@@ -18,7 +22,7 @@ def make_brainstorm_tool(model: RunnableSerializable, logger: Logger = None):
     return brainstorm_tool
 
 
-def make_simplify_tool(model: RunnableSerializable, logger: Logger = None):
+def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = None):
     @tool(
         "Vereinfachen",
         description="Simplify complex text to A2 level using Leichte Sprache.",
@@ -29,7 +33,7 @@ def make_simplify_tool(model: RunnableSerializable, logger: Logger = None):
     return simplify_tool
 
 
-def make_weather_tool(logger: Logger = None):
+def make_weather_tool(logger: logging.Logger = None):
     @tool(
         "Wettervorhersage", description="Get the current weather for a given location."
     )
@@ -42,7 +46,7 @@ def make_weather_tool(logger: Logger = None):
 class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
-    def __init__(self, model: RunnableSerializable, logger: Logger = None):
+    def __init__(self, model: RunnableSerializable, logger: logging.Logger = None):
         self.model = model
         self.logger = logger or getLogger(name="mucgpt-core-tools")
         self._brainstorm_tool = make_brainstorm_tool(self.model, self.logger)
@@ -90,3 +94,25 @@ class ToolCollection:
             make_weather_tool(dummy_logger),
         ]
         return [{"name": t.name, "description": t.description} for t in tools]
+
+    def add_instructions(self, messages, enabled_tools):
+        """Inject a system message describing available tools and XML tag instructions."""
+        if not enabled_tools or len(enabled_tools) == 0:
+            return messages
+        tool_descriptions = []
+        for t in enabled_tools:
+            if hasattr(t, "name") and hasattr(t, "description"):
+                tool_descriptions.append(f"- {t.name}: {t.description}")
+            else:
+                tool = next((tool for tool in self.get_all() if tool.name == t), None)
+                if tool:
+                    tool_descriptions.append(f"- {tool.name}: {tool.description}")
+        tool_instructions = TOOL_INSTRUCTIONS_TEMPLATE.format(
+            tool_descriptions="\n".join(tool_descriptions)
+        )
+        if messages and isinstance(messages[0], SystemMessage):
+            updated = f"{messages[0].content}\n\n{tool_instructions}"
+            messages[0] = SystemMessage(content=updated)
+        else:
+            messages.insert(0, SystemMessage(content=tool_instructions))
+        return messages

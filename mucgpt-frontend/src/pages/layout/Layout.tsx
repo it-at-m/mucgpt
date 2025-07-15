@@ -109,7 +109,11 @@ export const Layout = () => {
                     console.error("Keine Modelle vorhanden");
                 }
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
-            })
+            },
+            () => {
+                console.error("Config nicht geladen");
+            }
+        );
         i18n.changeLanguage(language_pref);
     }, []);
 

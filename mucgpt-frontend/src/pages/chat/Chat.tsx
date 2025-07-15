@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, ChatResponse } from "../../api";
+import { chatApi, AskResponse, countTokensAPI, ChatResponse, getTools } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -19,6 +19,7 @@ import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProv
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
+import { ToolListResponse } from "../../api/models";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -90,6 +91,20 @@ const Chat = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                const result = await getTools();
+                setTools(result);
+            } catch {
+                setTools({ tools: [] });
+            }
+        };
+        fetchTools();
+    }, []);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -219,14 +234,26 @@ const Chat = () => {
                     chatMessageStreamEnd,
                     isLoadingRef,
                     fetchHistory,
-                    undefined
+                    undefined,
+                    selectedTools
                 );
             } catch (e) {
                 setError(e);
             }
             isLoadingRef.current = false;
         },
-        [isLoadingRef.current, answers, language, temperature, max_output_tokens, activeChatRef.current, LLM.llm_name, storageService, fetchHistory]
+        [
+            isLoadingRef.current,
+            answers,
+            language,
+            temperature,
+            max_output_tokens,
+            activeChatRef.current,
+            LLM.llm_name,
+            storageService,
+            fetchHistory,
+            selectedTools
+        ]
     );
 
     // Regenerate-Funktion
@@ -450,9 +477,12 @@ const Chat = () => {
                 tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
+                tools={tools}
             />
         ),
-        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current]
+        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current, selectedTools, tools]
     );
 
     const sidebar_actions = useMemo(

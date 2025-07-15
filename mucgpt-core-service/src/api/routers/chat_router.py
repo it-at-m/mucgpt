@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
 
+from agent.tools.tools import ToolCollection
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
@@ -28,7 +29,7 @@ from init_app import init_agent
 
 logger = getLogger()
 settings = get_settings()
-agent_runner = init_agent(settings.backend)
+agent_executor = init_agent(settings)
 token_counter = TokenCounter(logger)  # Create an instance with the application logger
 router = APIRouter(prefix="/v1")
 
@@ -49,15 +50,22 @@ async def chat_completions(
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    global agent_runner
+    global agent_executor
     try:
+        # Use enabled_tools from request if provided, otherwise use all available tools
+        enabled_tools = (
+            request.enabled_tools
+            if request.enabled_tools is not None
+            else [tool["name"] for tool in ToolCollection.list_tool_metadata()]
+        )
         if request.stream:
-            gen = agent_runner.run_with_streaming(
+            gen = agent_executor.run_with_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
                 model=request.model,
                 department=user_info.department,
+                enabled_tools=enabled_tools,
             )
 
             async def sse_generator():
@@ -66,12 +74,13 @@ async def chat_completions(
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
-            return agent_runner.run_without_streaming(
+            return agent_executor.run_without_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
                 model=request.model,
                 department=user_info.department,
+                enabled_tools=enabled_tools,
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")

@@ -156,7 +156,8 @@ i18n
                         questioninput: {
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
-                            errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen."
+                            errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
+                            toolsselectorbutton_tooltip: "Werkzeuge auswählen"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -246,6 +247,13 @@ i18n
                             filter_by_tag: "Nach Tag filtern",
                             save: "Assistent speichern",
                             system_message: "System-Prompt"
+                        },
+                        toolsselector: {
+                            title: "Verfügbare Tools",
+                            select_all: "Alle auswählen",
+                            none: "Keine Tools verfügbar.",
+                            apply: "Übernehmen",
+                            cancel: "Abbrechen"
                         }
                     }
                 }
@@ -392,7 +400,8 @@ i18n
                         questioninput: {
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
-                            errorhint: "MUCGPT can make errors. Verify important information."
+                            errorhint: "MUCGPT can make errors. Verify important information.",
+                            toolsselectorbutton_tooltip: "Select tools"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -482,6 +491,13 @@ i18n
                             filter_by_tag: "Filter by tag",
                             save: "Save assistant",
                             system_message: "System prompt"
+                        },
+                        toolsselector: {
+                            title: "Available tools",
+                            select_all: "Select all",
+                            none: "No tools available.",
+                            apply: "Apply",
+                            cancel: "Cancel"
                         }
                     }
                 }
@@ -629,7 +645,8 @@ i18n
                         questioninput: {
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
-                            errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma."
+                            errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
+                            toolsselectorbutton_tooltip: "Werkzeig aussuachn"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -719,6 +736,13 @@ i18n
                             filter_by_tag: "Noch Tag filtern",
                             save: "Assistent speichan",
                             system_message: "System-Prompt"
+                        },
+                        toolsselector: {
+                            title: "Verfügbare Werkzeig",
+                            select_all: "Olle aussuachn",
+                            none: "Koane Werkzeig verfügbar.",
+                            apply: "Ibernemma",
+                            cancel: "Obbrecha"
                         }
                     }
                 }
@@ -801,6 +825,12 @@ i18n
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale"
                     },
+                    create_bot: {
+                        title: "Titre",
+                        description: "Description",
+                        prompt: "System prompt",
+                        create: "Créer"
+                    },
                     components: {
                         roles: {
                             student: "Étudiant·e·s",
@@ -857,9 +887,10 @@ i18n
                             chat_sidebar: "Barre latérale de chat"
                         },
                         questioninput: {
-                            tokensused: "Tokens utilisés",
+                            tokensused: "Jetons utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
-                            errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes."
+                            errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes.",
+                            toolsselectorbutton_tooltip: "Sélectionner des outils"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -934,7 +965,7 @@ i18n
                             generating_prompt: "Génération du prompt...",
                             dismiss: "Annuler",
                             create: "Créer",
-                            prompt_title_desc: "Prompt système proposé, titre et description :",
+                            prompt_title_desc: "Prompt système proposé, titre, et description :",
                             back: "Retour",
                             save: "Enregistrer",
                             describe: "Décrivez la fonction...",
@@ -947,8 +978,12 @@ i18n
                             save: "Enregistrer l'assistant",
                             system_message: "Prompt système"
                         },
-                        search_bot_button: {
-                            search_bots: "Rechercher des assistants"
+                        toolsselector: {
+                            title: "Outils disponibles",
+                            select_all: "Tout sélectionner",
+                            none: "Aucun outil disponible.",
+                            apply: "Appliquer",
+                            cancel: "Annuler"
                         }
                     }
                 }
@@ -1088,7 +1123,8 @@ i18n
                         questioninput: {
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
-                            errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію."
+                            errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",
+                            toolsselectorbutton_tooltip: "Вибрати інструменти"
                         },
                         suminput: {
                             tokensused: "Використано токени",
@@ -1179,6 +1215,13 @@ i18n
                             save: "Зберегти асистента",
                             system_message: "Системний запит",
                             search_button: ""
+                        },
+                        toolsselector: {
+                            title: "Доступні інструменти",
+                            select_all: "Вибрати всі",
+                            none: "Немає доступних інструментів.",
+                            apply: "Застосувати",
+                            cancel: "Скасувати"
                         }
                     }
                 }

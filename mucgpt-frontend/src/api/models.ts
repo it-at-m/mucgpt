@@ -33,6 +33,7 @@ export type ChatRequest = {
     system_message?: string;
     shouldStream?: boolean;
     model?: string;
+    enabled_tools?: string[];
 };
 
 export type CreateBotRequest = {
@@ -74,7 +75,6 @@ export interface Frontend {
     alternative_logo: boolean;
     labels: Labels;
     enable_simply: boolean;
-    community_assistants: Bot[];
 }
 
 export interface Model {
@@ -211,4 +211,14 @@ export interface AssistantResponse {
     hierarchical_access?: string[];
     owner_ids?: string[];
     latest_version: AssistantVersionResponse;
+}
+
+// Tool info and list response for /tools endpoint
+export interface ToolInfo {
+    name: string;
+    description: string;
+}
+
+export interface ToolListResponse {
+    tools: ToolInfo[];
 }

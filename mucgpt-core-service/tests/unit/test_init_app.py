@@ -2,9 +2,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from chat.agent import MUCGPTAgent
+from agent.agent import MUCGPTAgent
+from agent.agent_executor import MUCGPTAgentExecutor
 from config.settings import BackendConfig
-from init_app import init_chat_service, init_service
+from init_app import init_agent, init_service
 
 
 class TestInitApp:
@@ -32,7 +33,7 @@ class TestInitApp:
         # Assert
         mock_get_model.assert_called_once()
         assert isinstance(service, MUCGPTAgent)
-        assert service.llm == self.mock_model
+        assert service.model == self.mock_model
 
     @patch("init_app.get_model")
     def test_init_service_with_custom_model(self, mock_get_model):
@@ -46,16 +47,16 @@ class TestInitApp:
         # Assert
         mock_get_model.assert_not_called()
         assert isinstance(service, MUCGPTAgent)
-        assert service.llm == custom_model
+        assert service.model == custom_model
 
     @patch("init_app.init_service")
-    def test_init_chat_service(self, mock_init_service):
-        """Test the init_chat_service function."""
+    def test_init_agent(self, mock_init_service):
+        """Test the init_agent function."""
         # Arrange
         mock_init_service.return_value = self.mock_agent
 
         # Act
-        service = init_chat_service(self.mock_config)
+        service = init_agent(self.mock_config)
 
         # Assert
         mock_init_service.assert_called_once_with(
@@ -66,7 +67,8 @@ class TestInitApp:
             max_tokens=4000,
             custom_model=None,
         )
-        assert service == self.mock_agent
+
+        assert isinstance(service, MUCGPTAgentExecutor)
 
     def test_init_service_validates_temperature_too_high(self):
         """Test that init_service validates temperature is not too high."""

@@ -179,6 +179,22 @@ class ChatCompletionChunk(BaseModel):
     )
 
 
+class ToolInfo(BaseModel):
+    """Detailed information about a tool."""
+
+    name: str = Field(..., description="Tool name or id.")
+    description: str = Field(..., description="Description of the tool.")
+    # Optionally, add more fields like parameters if needed
+
+
+class ToolListResponse(BaseModel):
+    """Response model for listing available tools with details."""
+
+    tools: List[ToolInfo] = Field(
+        ..., description="List of available tools with details."
+    )
+
+
 class CreateBotRequest(BaseModel):
     """Request model for creating a bot."""
 

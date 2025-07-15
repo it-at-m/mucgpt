@@ -6,7 +6,7 @@ from typing import List, Optional
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
 from langchain_core.tools import tool
-from pydantic import BaseModel, Field
+from langchain_core.tools.base import BaseTool
 
 # Local application imports
 from core.logtools import getLogger
@@ -14,36 +14,29 @@ from core.logtools import getLogger
 logger = getLogger(name="mucgpt-core-tools")
 
 
-class BrainstormInput(BaseModel):
-    """Input schema for brainstorm tool."""
-
-    topic: str = Field(..., description="The topic or problem to brainstorm ideas for")
-    context: Optional[str] = Field(
-        None, description="Additional context or constraints"
-    )
-
-
-class SimplifyInput(BaseModel):
-    """Input schema for simplify tool."""
-
-    text: str = Field(..., description="The text to simplify")
-    target_audience: Optional[str] = Field(
-        "general",
-        description="Target audience (e.g., 'children', 'general', 'experts')",
-    )
-
-
-class ChatTools:
+class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
-    def __init__(self, llm: RunnableSerializable):
-        self.llm = llm
+    def __init__(self, model: RunnableSerializable):
+        self.model = model
         # Create tools as bound methods
         self._brainstorm_tool = self._create_brainstorm_tool()
         self._simplify_tool = self._create_simplify_tool()
+        self._weather_tool = self._create_weather_tool()
+
+    def _create_weather_tool(self):
+        @tool(description="Get the current weather for a given location.")
+        def get_weather(location: str):
+            """Call to get the current weather."""
+            if location.lower() in ["sf", "san francisco"]:
+                return "It's 60 degrees and foggy."
+            else:
+                return "It's 90 degrees and sunny."
+
+        return get_weather
 
     def _create_brainstorm_tool(self):
-        @tool(args_schema=BrainstormInput)
+        @tool(description="Generate a mind map for a given topic in markdown format.")
         def brainstorm(topic: str, context: Optional[str] = None) -> str:
             """Generate a comprehensive mind map for a given topic in structured markdown format."""
             logger.info("Brainstorm tool called for topic: %s", topic)
@@ -102,7 +95,7 @@ class ChatTools:
             msgs: List[BaseMessage] = [system_msg, user_msg]
 
             try:
-                llm = self.llm.with_config(
+                llm = self.model.with_config(
                     {
                         "llm_temperature": 0.8,
                         "llm_max_tokens": 2000,
@@ -118,10 +111,9 @@ class ChatTools:
         return brainstorm
 
     def _create_simplify_tool(self):
-        @tool(args_schema=SimplifyInput)
-        def simplify(text: str, target_audience: Optional[str] = "general") -> str:
+        @tool(description="Simplify complex text to A2 level using Leichte Sprache.")
+        def simplify(text: str) -> str:
             """Simplify complex text using the same approach as the simply.py service."""
-            logger.info("Simplify tool called for audience: %s", target_audience)
 
             try:
                 # Use default llm_name based on target_audience or use a reasonable default
@@ -141,7 +133,7 @@ class ChatTools:
                 msgs.append(HumanMessage(content=prompt))
 
                 # Configure LLM
-                llm = self.llm.with_config(
+                llm = self.model.with_config(
                     {
                         "llm_temperature": temperature,
                         "llm_streaming": False,
@@ -255,30 +247,46 @@ Hier ist der schwer verständliche Text:
 
 {message}"""
 
-    def get_tools(self) -> List:
-        """Return the list of tool callables for LangGraph."""
-        return [self._brainstorm_tool, self._simplify_tool]
+    @property
+    def simplify(self):
+        return self._simplify_tool
 
     @property
     def brainstorm(self):
-        """Access to brainstorm tool for testing."""
         return self._brainstorm_tool
 
-    @property
-    def simplify(self):
-        """Access to simplify tool for testing."""
-        return self._simplify_tool
+    def get_tools(self):
+        """Return a list of all tool callables."""
+        return [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
+
+    def get_all(self, enabled_tools=None) -> list[BaseTool]:
+        """Return a list of tools, optionally filtered by enabled_tools."""
+        all_tools = [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
+        if enabled_tools:
+            return [tool for tool in all_tools if tool.name in enabled_tools]
+        return all_tools
+
+    def filter_tools_by_names(self, tool_names: list[str]) -> list[BaseTool]:
+        """Return only tools whose name is in tool_names."""
+        return [tool for tool in self.get_all() if tool.name in tool_names]
 
     def add_instructions(
-        self, messages: List[BaseMessage], enabled_tools: List
+        self, messages: List[BaseMessage], enabled_tools: list
     ) -> List[BaseMessage]:
         """Inject a system message describing available tools."""
-        if not enabled_tools:
+        if not enabled_tools or len(enabled_tools) == 0:
             return messages
 
         tool_descriptions = []
+        # Support both tool names (str) and tool objects (for tests)
         for t in enabled_tools:
-            tool_descriptions.append(f"- {t.name}: {t.description}")
+            if hasattr(t, "name") and hasattr(t, "description"):
+                tool_descriptions.append(f"- {t.name}: {t.description}")
+            else:
+                # Look up real tool by name
+                tool = next((tool for tool in self.get_all() if tool.name == t), None)
+                if tool:
+                    tool_descriptions.append(f"- {tool.name}: {tool.description}")
 
         tool_instructions = (
             "You have access to the following tools:\n"
@@ -292,3 +300,19 @@ Hier ist der schwer verständliche Text:
         else:
             messages.insert(0, SystemMessage(content=tool_instructions))
         return messages
+
+    @staticmethod
+    def list_tool_metadata():
+        """Dynamically return metadata for all available tools (name, description) without requiring a model."""
+
+        # Create dummy ToolCollection with a mock model (None or a dummy callable)
+        class DummyModel:
+            def with_config(self, *args, **kwargs):
+                return self
+
+            def invoke(self, *args, **kwargs):
+                return type("DummyResponse", (), {"content": ""})()
+
+        dummy = ToolCollection(DummyModel())
+        tools = [dummy._brainstorm_tool, dummy._simplify_tool, dummy._weather_tool]
+        return [{"name": t.name, "description": t.description} for t in tools]

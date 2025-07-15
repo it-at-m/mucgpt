@@ -153,5 +153,8 @@ config/c.json
 config/k.json
 config/p.json
 config/local.json
+.vscode/
 .env*
+stack/ca-bundle.crt
 departements.json
+.gitignore

@@ -23,7 +23,7 @@ from api.api_models import (
 
 # These fixtures are imported from conftest.py
 class TestChatRouter:
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_non_streaming_completion(self, mock_chat_service, test_client: TestClient):
         """Test the non-streaming chat completion endpoint."""
         # Mock the chat service response using proper models
@@ -84,12 +84,12 @@ class TestChatRouter:
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_streaming_completion(self, mock_chat_service, test_client: TestClient):
         """Test the streaming chat completion endpoint."""
-        # Mock streaming response - return a generator that yields JSON strings
+        # Mock streaming response - return an async generator that yields JSON strings
 
-        def mock_streaming_generator():
+        async def mock_streaming_generator():
             # First chunk
             chunk1 = ChatCompletionChunk(
                 id="chatcmpl-stream123",
@@ -233,7 +233,7 @@ class TestChatRouter:
         assert isinstance(result.count, int), "Token count should be an integer"
         assert result.count > 0, "Token count should be greater than 0"
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_chat_completion_invalid_model(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -258,7 +258,7 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 422
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_chat_completion_empty_messages(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -275,7 +275,7 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 500
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_chat_completion_high_temperature(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -315,7 +315,7 @@ class TestChatRouter:
         assert response.id
         assert response.choices[0].message.content
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_chat_completion_zero_max_tokens(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -390,7 +390,7 @@ class TestChatRouter:
         response = test_client.post("/v1/counttokens", json=payload)
         assert response.status_code == 422
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_chat_completion_service_exception(
         self, mock_chat_service, test_client: TestClient
     ):
@@ -407,7 +407,7 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 500
 
-    @patch("api.routers.chat_router.chat_service")
+    @patch("api.routers.chat_router.agent_runner")
     def test_chat_completion_different_message_roles(
         self, mock_chat_service, test_client: TestClient
     ):

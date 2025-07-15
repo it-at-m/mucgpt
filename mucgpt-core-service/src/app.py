@@ -1,9 +1,11 @@
 import argparse  # noqa
 import os  # noqa
+from truststore import inject_into_ssl
 
 import uvicorn
 from dotenv import find_dotenv, load_dotenv  # noqa
 
+inject_into_ssl()
 load_dotenv(find_dotenv(raise_error_if_not_found=False))  # noqa
 from backend import backend  # noqa
 

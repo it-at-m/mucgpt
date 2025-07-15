@@ -12,6 +12,7 @@ from api.routers import (
     simply_router,
     summarize_router,
     system_router,
+    tools_router,
 )
 from config.settings import get_settings
 from core.auth_models import AuthError
@@ -40,6 +41,7 @@ api_app.include_router(summarize_router.router, prefix="", tags=["summarize"])
 api_app.include_router(brainstorm_router.router, prefix="", tags=["brainstorm"])
 api_app.include_router(simply_router.router, prefix="", tags=["simply"])
 api_app.include_router(system_router.router, prefix="", tags=["system"])
+api_app.include_router(tools_router.router, prefix="", tags=["tools"])
 
 
 @api_app.exception_handler(AuthError)

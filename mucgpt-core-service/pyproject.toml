@@ -31,6 +31,7 @@ dependencies = [
     "gitpython==3.1.44",
     "pydantic-settings>=2.8.1",
     "langgraph>=0.5.1",
+    "truststore>=0.10.1",
 ]
 
 [tool.uv]

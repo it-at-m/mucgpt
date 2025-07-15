@@ -30,39 +30,39 @@ loggers:
     handlers: [console]
     propagate: no
   uvicorn.access:
-    level: WARN
+    level: DEBUG
     handlers: [console]
     propagate: no
   dev:
-    level: WARN
+    level: DEBUG
     handlers: [console]
     propagate: no
   mucgpt-core:
-    level: WARN
+    level: DEBUG
     handlers: [console]
     propagate: no
-  mucgpt-core-chat:
-    level: WARN
+  mucgpt-core-agent:
+    level: DEBUG
     handlers: [console]
     propagate: no
   mucgpt-core-simply:
-    level: WARN
+    level: DEBUG
     handlers: [console]
     propagate: no
   mucgpt-core-summarize:
-    level: WARN
+    level: DEBUG
     handlers: [console]
     propagate: no
   mucgpt-core-brainstorm:
-    level: WARN
+    level: DEBUG
     handlers: [console]
     propagate: no
   httpx:
-    level: WARN
+    level: DEBUG
     handlers: [httpx]
     propagate: no
   httpcore:
-    level: WARN
+    level: DEBUG
     handlers: [httpx]
     propagate: no
 root:

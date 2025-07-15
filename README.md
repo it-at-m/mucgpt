@@ -139,6 +139,7 @@ Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the
       "lineColor": "#FFE5B4",
       "secondaryColor": "#B6E2D3",
       "tertiaryColor": "#FFFFFF",
+      "background": "#FFF8F0",
       "fontSize": "20px",
       "fontFamily": "Inter, Segoe UI, Trebuchet MS, Verdana, Arial, sans-serif"
   }

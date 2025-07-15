@@ -145,22 +145,14 @@ Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the
 {
   "theme": "base",
   "themeVariables": {
-    "nodeBorder": "#1a237e",
-    "mainBkg": "#e3f2fd",
-    "actorBkg": "#00bcd4",
-    "signalColor": "#ff7043",
-    "textColor": "#263238",
-    "loopTextColor": "#90caf9",
-    "labelTextColor": "#ffffff",
-    "labelBoxBorderColor": "#00e676",
-    "labelBoxBkgColor": "#00e676",
-    "noteBkgColor": "#ffd600",
-    "noteBorderColor": "#ffd600",
-    "fontFamily": "Fira Code, JetBrains Mono, Menlo, Monaco, 'Courier New', monospace",
-    "fontSize": "15px",
-    "edgeLabelBackground": "#ffffff",
-    "clusterBkg": "#b3e5fc",
-    "clusterBorder": "#0288d1"
+      "primaryColor": "#F8B6B8",
+      "primaryTextColor": "#222222",
+      "primaryBorderColor": "#F6A6A6",
+      "lineColor": "#FFE5B4",
+      "secondaryColor": "#B6E2D3",
+      "tertiaryColor": "#FFFFFF",
+      "fontSize": "20px",
+      "fontFamily": "Inter, Segoe UI, Trebuchet MS, Verdana, Arial, sans-serif"
   }
 }
 }%%
@@ -178,7 +170,7 @@ timeline
   section 🤖 Custom Assistants
     2025-01 : 🛠️ Build Assistants : Create your own helpers
 
-  section 🌐 MUCGPT 2.0 & Tools
+  section 🌐 MUCGPT 2.0: Agent Mode
     2025-07 : 🧩 Microservices : API-Gateway, Core, Assistant-Service
     2025-07 : ☁️ Share Assistants : Share & use tools (Summarize, Brainstorm, Simple Language)
     2025-08 : 🔍 Websearch & Slides : Search the web, create presentations

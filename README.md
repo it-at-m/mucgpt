@@ -1,7 +1,7 @@
 <!-- PROJECT LOGO -->
 <div align="center">
   <a href="#">
-    <img src="app/frontend/src/assets/mucgpt_black_filled.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
+    <img src="mucgpt-frontend/src/assets/mucgpt_black_filled.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
   </a>
 </div>
 <br />
@@ -93,23 +93,6 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
   - [Using UV during development](/docs/DEVELOPMENT.md)
 - Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
-### Install deps
-
-Sync python environment for development:
-
-```bash
-cd mucgpt-core-service
-uv sync --all-extras # installs dev/test dependencies
-# if you only want to run mucgpt without using development deps
-uv sync
-```
-
-Install frontend deps
-
-```bash
-cd mucgpt-frontend
-npm install
-```
 
 ### Configure
 
@@ -117,16 +100,21 @@ Configure your environment. For that, copy the content of the empty config from 
 
 ### Run with Docker
 
-To start all required services using Docker Compose, run:
+To start all required services using podman or docker run:
 
 ```bash
-docker-compose --profile=frontend --profile=backend up --build
+# in case of podman run
+podman compose  --build up
+# in case of docker run
+docker-compose  --build up
 ```
 
 This command launches the following components:
 
 - **Frontend**: A modern web interface built with React, providing users with an intuitive and responsive experience directly in their browser.
-- **Backend**: The core service that processes API requests, manages business logic, and communicates with both the database and connected LLMs.
+- **Core-Service**: Manages the agent to call LLMs. Also orchestrates tool usage.
+- **Assistant-Service**: Manages assistants. An Assistant is an configuratoin for an MUCGPT-Agent.
+- **Assistant-Service-Migration**: Does database migrations on startup.
 - **API Gateway**: Serves as the unified entry point for all client requests, efficiently routing traffic to backend services while managing authentication and security.
 - **Keycloak**: A robust, open-source identity and access management system responsible for authentication, authorization, and user administration.
 - **PostgresDB**: A reliable PostgreSQL database used to securely store and manage app statistics.

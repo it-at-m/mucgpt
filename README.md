@@ -140,29 +140,62 @@ Once all services are running, you can access:
 Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
 
 ## Roadmap
-
 ```mermaid
+%%{init:
+{
+  "theme": "base",
+  "themeVariables": {
+    "nodeBorder": "#1a237e",
+    "mainBkg": "#e3f2fd",
+    "actorBkg": "#00bcd4",
+    "signalColor": "#ff7043",
+    "textColor": "#263238",
+    "loopTextColor": "#90caf9",
+    "labelTextColor": "#ffffff",
+    "labelBoxBorderColor": "#00e676",
+    "labelBoxBkgColor": "#00e676",
+    "noteBkgColor": "#ffd600",
+    "noteBorderColor": "#ffd600",
+    "fontFamily": "Fira Code, JetBrains Mono, Menlo, Monaco, 'Courier New', monospace",
+    "fontSize": "15px",
+    "edgeLabelBackground": "#ffffff",
+    "clusterBkg": "#b3e5fc",
+    "clusterBorder": "#0288d1"
+  }
+}
+}%%
 timeline
-    title MUCGPT Roadmap
+  title 🚀 MUCGPT Roadmap
 
-    section Open Source Release
-    2024-06 : Open Source : 🚀 Available to the public under an open-source license, allowing anyone to access, use, and modify MUCGPT without restrictions or payment.
+  section 🎉 Open Source
+    2024-06 : 🟢 Open Source : Public release for everyone!
 
-    section  UI Features
-    2024-07 : Chat History : 💾 Users can save their chat history in the browser.
-    2024-08 : LiveCycle LLM : ⚙️ The employed LLM can be configured to meet specific requirements.
-    2024-09 : Simplified Language : 🗣️ Translate text into simple or easy-to-understand language.
+  section 🖥️ UI & Experience
+    2024-07 : 💾 Chat History : Save chats in your browser
+    2024-08 : ⚙️ LLM Config : Tune the LLM to your needs
+    2024-09 : 🗣️ Easy Language : Simplify any text
 
-    section Own GPTs
-    2025-01 : Own GPTs : 🔧 Create and generate custom assistants for specific tasks.
+  section 🤖 Custom Assistants
+    2025-01 : 🛠️ Build Assistants : Create your own helpers
 
-    section Major Update for improved reusability
-    2025-05 : MUCGPT 2.0 : 🌟 Roles and rights concept for assistants; splitting into smaller Microservices: API-Gateway, MUCGPT-Core, and a Team Management Service.
+  section 🌐 MUCGPT 2.0 & Tools
+    2025-07 : 🧩 Microservices : API-Gateway, Core, Assistant-Service
+    2025-07 : ☁️ Share Assistants : Share & use tools (Summarize, Brainstorm, Simple Language)
+    2025-08 : 🔍 Websearch & Slides : Search the web, create presentations
+    2025-09 : 🧠 Deep Research : Advanced research tools
+    2025-10 : 📂 Knowledge Base : Assistants with their own KB & retrieval
+    2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
 
-    section Improving Own GPTs with more Tools
-    2025-06 : Own GPTs : ☁️ Share Assistants with others.
-    2025-07 : Own GPTs : 🔍 Use Websearch/Deep Research to provide additional knowledge.
-    2025-09 : Chat with Own Documents : 📂 Own GPTs will have access to shared knowledge and can answer questions based on provided sources.
+  %% Custom styles for sections (works in most Mermaid renderers)
+  classDef openSource fill:#ffe066,stroke:#ffbe0b,stroke-width:2px;
+  classDef ui fill:#a0c4ff,stroke:#4361ee,stroke-width:2px;
+  classDef assistants fill:#b9fbc0,stroke:#38b000,stroke-width:2px;
+  classDef tools fill:#ffd6e0,stroke:#ff006e,stroke-width:2px;
+
+  class 2024-06 openSource;
+  class 2024-07,2024-08,2024-09 ui;
+  class 2025-01 assistants;
+  class 2025-07,2025-08,2025-09,2025-10,2025-12 tools;
 ```
 
 ## Documentation

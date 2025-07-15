@@ -85,6 +85,7 @@ async def chat_completions(
 async def create_bot(
     request: CreateBotRequest, user_info=Depends(authenticate_user)
 ) -> CreateBotResult:
+    global agent_runner
     try:
         logger.info("createBot: reading system prompt generator")
         with open("create_bot/prompt_for_systemprompt.md", encoding="utf-8") as f:
@@ -94,7 +95,7 @@ async def create_bot(
             ChatCompletionMessage(role="user", content="Funktion: " + request.input),
         ]
         logger.info("createBot: creating system prompt")
-        system_prompt = chat_service.run_without_streaming(
+        system_prompt = agent_runner.run_without_streaming(
             messages=messages,
             temperature=1.0,
             max_output_tokens=request.max_tokens,
@@ -113,7 +114,7 @@ async def create_bot(
             ),
         ]
         logger.info("createBot: creating description")
-        description = chat_service.run_without_streaming(
+        description = agent_runner.run_without_streaming(
             messages=messages,
             temperature=1.0,
             max_output_tokens=request.max_tokens,
@@ -136,7 +137,7 @@ async def create_bot(
                 + "```",
             ),
         ]
-        title = chat_service.run_without_streaming(
+        title = agent_runner.run_without_streaming(
             messages=messages,
             temperature=1.0,
             max_output_tokens=request.max_tokens,

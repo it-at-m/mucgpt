@@ -13,12 +13,12 @@ import { BOT_STORE } from "../../constants";
 import { migrate_old_bots } from "../../service/migration";
 import { SearchCommunityBotButton } from "../../components/SearchCommunityBotButton/SearchCommunityBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
-import { getOwnedCommunityBots } from "../../api";
+import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api";
 
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
-    const [communityBots, setCommunityBots] = useState<Bot[]>([]);
+    const [communityBots, setCommunityBots] = useState<{ id: string; name: string; }[]>([]);
     const [ownedCommunityBots, setOwnedCommunityBots] = useState<AssistantResponse[]>([]);
     const [showSearchBot, setShowSearchBot] = useState<boolean>(false);
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
@@ -30,18 +30,11 @@ const Menu = () => {
     useEffect(() => {
         migrate_old_bots().then(async () => {
             let bots = await botStorageService.getAllBotConfigs();
-            let community_assistants = communityBots;
-            for (const bot of bots) {
-                if (bot.publish) {
-                    if (community_assistants.find(b => b.id === bot.id)) {
-                        community_assistants = community_assistants.filter(b => b.id !== bot.id);
-                    }
-                    community_assistants.push(bot);
-                    bots = bots.filter(b => b.id !== bot.id);
-                }
-            }
             setBots(bots);
-            setCommunityBots(community_assistants);
+            getUserSubscriptionsApi().then((subscriptions) => {
+                setCommunityBots(subscriptions);
+            })
+
         });
         getOwnedCommunityBots().then((response) => {
             setOwnedCommunityBots(response);
@@ -100,19 +93,19 @@ const Menu = () => {
             <div className={styles.row}>
                 {ownedCommunityBots.map((bot: AssistantResponse, key) => (
                     <Tooltip key={key} content={bot.latest_version.name} relationship="description" positioning="below">
-                        <Link to={`/published-bot/${bot.id}`} className={styles.box}>
+                        <Link to={`owned/communitybot/${bot.id}`} className={styles.box}>
                             {bot.latest_version.name}
                         </Link>
                     </Tooltip>
                 ))}
-                {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                {ownedCommunityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
             <div className={styles.subrowheader}>Abonnierte:</div>
             <div className={styles.row}>
-                {communityBots.map((bot: Bot, key) => (
-                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
-                        <Link to={`/bot/${bot.id}`} className={styles.box}>
-                            {bot.title}
+                {communityBots.map(({ id, name }, key) => (
+                    <Tooltip key={key} content={name} relationship="description" positioning="below">
+                        <Link to={`communitybot/${id}`} className={styles.box}>
+                            {name}
                         </Link>
                     </Tooltip>
                 ))}

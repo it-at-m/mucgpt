@@ -23,8 +23,9 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
     const [show, setShow] = useState(false);
 
     useEffect(() => {
+        if (departments.length > 0) return; // Nur einmal laden, wenn noch keine Daten vorhanden sind
         getDepartements().then(data => {
-            setDepartments(data.departments || []);
+            setDepartments(data || []);
         });
     }, []);
 

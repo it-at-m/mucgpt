@@ -126,7 +126,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     return parsedResponse;
 }
 
-export async function getDepartements(): Promise<DepartementsResponse> {
+export async function getDepartements(): Promise<string[]> {
     const response = await fetch(API_BASE + "departements", getConfig());
     handleRedirect(response, true);
     const parsedResponse = await handleResponse(response);

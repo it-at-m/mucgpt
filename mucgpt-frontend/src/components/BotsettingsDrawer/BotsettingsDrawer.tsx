@@ -85,7 +85,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setDescription(bot.description);
         setPublish(bot.publish);
         setTemperature(bot.temperature);
-        setIsOwner(isOwned || !publish);
+        setIsOwner(isOwned || !bot.publish);
     }, [bot, isOwned]);
 
     // Temperature change
@@ -509,11 +509,12 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                             </Label>
                         </div>
                     </div>
-                    <Tooltip content={"veröffentlichen"} relationship="description" positioning="below">
-                        <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>
-                            {publish ? "veröffentlicht" : "veröffentlichen"}
-                        </Button>
-                    </Tooltip>
+                    {!publish && (
+                        <Tooltip content={"veröffentlichen"} relationship="description" positioning="below">
+                            <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>
+                                veröffentlichen
+                            </Button>
+                        </Tooltip>)}
                 </>
             )}
             {publishDialog}

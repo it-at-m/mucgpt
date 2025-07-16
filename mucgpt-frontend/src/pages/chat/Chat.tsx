@@ -20,6 +20,7 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { ToolListResponse } from "../../api/models";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -83,6 +84,8 @@ const Chat = () => {
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
+    const { setHeader } = useContext(HeaderContext);
+    setHeader(t("header.chat"));
 
     // Independent states
     const [error, setError] = useState<unknown>();

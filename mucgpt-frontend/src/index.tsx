@@ -20,6 +20,7 @@ import Bot from "./pages/bot/Bot";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
 import OwnedCommunityBotChat from "./pages/bot/OwnedCommunityBot";
 import CommunityBotChat from "./pages/bot/CommunityBot";
+import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
 initializeIcons();
 
 const router = createHashRouter([
@@ -116,7 +117,9 @@ enableMocking().then(() => {
             <LanguageContextProvider>
                 <LLMContextProvider>
                     <QuickPromptProvider>
-                        <RouterProvider router={router} />
+                        <HeaderContextProvider>
+                            <RouterProvider router={router} />
+                        </HeaderContextProvider>
                     </QuickPromptProvider>
                 </LLMContextProvider>
             </LanguageContextProvider>

@@ -22,6 +22,7 @@ import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { ToolListResponse } from "../../api/models";
+import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 
 const BotChat = () => {
     // useReducer für den Chat-Status
@@ -59,6 +60,7 @@ const BotChat = () => {
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
+    const { setHeader } = useContext(HeaderContext);
 
     const [error, setError] = useState<unknown>();
     const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
@@ -109,6 +111,7 @@ const BotChat = () => {
                 .then(bot => {
                     if (bot) {
                         setBotConfig(bot);
+                        setHeader(bot.title || DEFAULTHEADER);
                         dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
                         dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
                         dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });

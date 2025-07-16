@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse, getCommunityAssistantApi, deleteCommunityAssistantApi, AssistantUpdateInput, updateCommunityAssistantApi } from "../../api";
+import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse, getTools, getCommunityAssistantApi, deleteCommunityAssistantApi, updateCommunityAssistantApi } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,8 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
+import { AssistantUpdateInput, ToolListResponse } from "../../api/models";
+import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 
 const OwnedCommunityBotChat = () => {
     // useReducer für den Chat-Status
@@ -58,6 +60,7 @@ const OwnedCommunityBotChat = () => {
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
+    const { header, setHeader } = useContext(HeaderContext);
 
     const [error, setError] = useState<unknown>();
     const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
@@ -66,6 +69,20 @@ const OwnedCommunityBotChat = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                const result = await getTools();
+                setTools(result);
+            } catch {
+                setTools({ tools: [] });
+            }
+        };
+        fetchTools();
+    }, []);
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -97,11 +114,13 @@ const OwnedCommunityBotChat = () => {
                     temperature: latest.temperature || 0.7,
                     max_output_tokens: latest.max_output_tokens || LLM.max_output_tokens,
                     version: latest.version.toString(),
-                    examples: latest.examples || [],
-                    quick_prompts: latest.quick_prompts || [],
-                    tags: latest.tags || [],
-                    owner_ids: latest.owner_ids || []
+                    examples: latest.examples,
+                    quick_prompts: latest.quick_prompts,
+                    tags: latest.tags,
+                    owner_ids: latest.owner_ids,
+                    hirachical_access: latest.hierarchical_access
                 };
+                setHeader(bot.title || DEFAULTHEADER);
                 setBotConfig(bot);
                 dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
                 dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
@@ -163,7 +182,8 @@ const OwnedCommunityBotChat = () => {
                     chatMessageStreamEnd,
                     isLoadingRef,
                     fetchHistory,
-                    bot_id
+                    bot_id,
+                    selectedTools
                 );
             } catch (e) {
                 setError(e);
@@ -182,7 +202,8 @@ const OwnedCommunityBotChat = () => {
             activeChatRef,
             botChatStorage,
             chatMessageStreamEnd,
-            fetchHistory
+            fetchHistory,
+            selectedTools
         ]
     );
 
@@ -206,7 +227,7 @@ const OwnedCommunityBotChat = () => {
                 name: newBot.title,
                 description: newBot.description,
                 system_prompt: newBot.system_message,
-                hierarchical_access: newBot.owner_ids,
+                hierarchical_access: newBot.hirachical_access,
                 temperature: newBot.temperature,
                 max_output_tokens: newBot.max_output_tokens,
                 tools: [],
@@ -216,26 +237,11 @@ const OwnedCommunityBotChat = () => {
                 tags: newBot.tags || [],
                 version: Number(newBot.version)
             }
-            let latest = (await updateCommunityAssistantApi(bot_id, updateInput)).latest_version;
-            console.log("Updated bot:", latest);
+            await updateCommunityAssistantApi(bot_id, updateInput);
             if (newBot.system_message !== botConfig.system_message) {
                 const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
                 setSystemPromptTokens(response.count);
             }
-            let bot: Bot = {
-                title: latest.name,
-                description: latest.description || "",
-                system_message: latest.system_prompt,
-                publish: true,
-                temperature: latest.temperature || 0.7,
-                max_output_tokens: latest.max_output_tokens || LLM.max_output_tokens,
-                version: latest.version.toString(),
-                examples: latest.examples || [],
-                quick_prompts: latest.quick_prompts || [],
-                tags: latest.tags || [],
-                owner_ids: latest.owner_ids || []
-            };
-            setBotConfig(bot);
         },
         [bot_id, LLM, botConfig.system_message]
     );
@@ -371,9 +377,12 @@ const OwnedCommunityBotChat = () => {
                 tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
+                tools={tools}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question]
+        [isLoadingRef.current, callApi, totalTokens, question, selectedTools, tools]
     );
     // AnswerList component
     const answerList = useMemo(

@@ -17,6 +17,7 @@ import { LightContext } from "./LightContext";
 import { BOT_STORE, CHAT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { StorageService } from "../../service/storage";
+import { DEFAULTHEADER, HeaderContext } from "./HeaderContextProvider";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -24,8 +25,6 @@ const formatDate = (date: Date) => {
 };
 
 export const Layout = () => {
-    // params
-    const { id } = useParams();
 
     //style
     const styles2 = useStyles();
@@ -36,6 +35,7 @@ export const Layout = () => {
     // Contexts
     const { setLanguage } = useContext(LanguageContext);
     const { LLM, setLLM } = useContext(LLMContext);
+    const { header } = useContext(HeaderContext);
 
     // Use useRef to prevent duplicate API calls
     const configApiCalledRef = useRef(false);
@@ -48,10 +48,7 @@ export const Layout = () => {
     const [simply, setSimply] = useState<boolean>(true);
     const [models, setModels] = useState(config.models);
 
-    const [title, setTitle] = useState<[string, string]>(["0", ""]);
-
     // vars from storage
-    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
     const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
@@ -85,15 +82,6 @@ export const Layout = () => {
         [fontscaling, setLight, setTheme]
     );
 
-    //do migrations for chat
-    useEffect(() => {
-        new StorageService<any, any>(CHAT_STORE).connectToDB();
-        if (id) {
-            botStorageService.getBotConfig(id).then(bot => {
-                if (bot) setTitle([bot.id as string, bot.title]);
-            });
-        }
-    }, [id]);
 
     useEffect(() => {
         // Skip if the API has already been called
@@ -168,50 +156,8 @@ export const Layout = () => {
                                 </h3>
                             </Link>
                             <div className={styles.headerNavList}>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        MUCGPT
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        {t("header.chat")}
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to="/sum"
-                                        state={{ from: "This is my props" }}
-                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                    >
-                                        {t("header.sum")}
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to="/brainstorm"
-                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                    >
-                                        {t("header.brainstorm")}
-                                    </NavLink>
-                                </div>
-                                {simply && (
-                                    <div className={styles.headerNavLeftMargin}>
-                                        <NavLink
-                                            to="/simply"
-                                            className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                        >
-                                            {t("header.simply")}
-                                        </NavLink>
-                                    </div>
-                                )}
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to={"/bot/" + title[0]}
-                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                    >
-                                        {title[1]}
-                                    </NavLink>
+                                <div className={styles.headerNavPageLink}>
+                                    {header}
                                 </div>
                             </div>
                             <div className={styles.SettingsDrawer}>

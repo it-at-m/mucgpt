@@ -3,7 +3,7 @@ import styles from "./Menu.module.css";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@fluentui/react-components";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { AddBotButton } from "../../components/AddBotButton";
 import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
@@ -14,6 +14,7 @@ import { migrate_old_bots } from "../../service/migration";
 import { SearchCommunityBotButton } from "../../components/SearchCommunityBotButton/SearchCommunityBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
 import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api";
+import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -24,6 +25,8 @@ const Menu = () => {
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
+    const { setHeader } = useContext(HeaderContext);
+    setHeader(DEFAULTHEADER);
 
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 

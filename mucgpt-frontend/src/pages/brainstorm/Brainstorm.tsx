@@ -15,6 +15,7 @@ import { getChatReducer, handleDeleteChat, handleRollback, setupStore } from "..
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { ChatMessage, ChatOptions } from "../chat/Chat";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 
 type BrainstormMessage = DBMessage<AskResponse>;
 
@@ -55,7 +56,8 @@ const Brainstorm = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
-
+    const { setHeader } = useContext(HeaderContext);
+    setHeader(t("header.brainstorm"));
     // Refs
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);

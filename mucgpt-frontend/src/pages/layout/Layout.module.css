@@ -46,29 +46,8 @@
 }
 
 .headerNavPageLink {
-    color: var(--colorNeutralBackround1Hover);
-    text-decoration: none;
-    opacity: 0.75;
-    font-size: var(--fontSizeBase600);
-
-    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-    transition-duration: 500ms;
-    transition-property: opacity;
-    display: none;
-}
-
-.headerNavPageLink:hover {
-    opacity: 1;
-}
-
-.headerNavPageLinkActive {
     color: var(--colorNeutralForegroundInvertedSelected);
     font-size: var(--fontSizeHero800);
-    text-decoration: none;
-}
-
-.headerNavLeftMargin {
-    font-size: var(--fontSizeBase600);
 }
 
 .headerNavRightMargin {

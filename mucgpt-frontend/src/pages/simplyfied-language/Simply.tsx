@@ -17,6 +17,7 @@ import styles from "./Simply.module.css";
 import { ExampleList, ExampleModel } from "../../components/Example";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 
 type SimplyMessage = DBMessage<AskResponse>;
 
@@ -195,6 +196,8 @@ const Simply = () => {
     // Context
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { setHeader } = useContext(HeaderContext);
+    setHeader(t("header.simply"));
 
     // Refs
     const lastQuestionRef = useRef<string>("");

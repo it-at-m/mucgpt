@@ -18,6 +18,7 @@ import { ChatMessage, ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import styles from "./Summarize.module.css";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 
 const STORAGE_KEY_LEVEL_OF_DETAIL = "SUM_LEVEL_OF_DETAIL";
 
@@ -65,6 +66,8 @@ const Summarize = () => {
     const { language } = useContext(LanguageContext);
     const { LLM } = useContext(LLMContext);
     const { t } = useTranslation();
+    const { setHeader } = useContext(HeaderContext);
+    setHeader(t("header.sum"));
 
     // Refs
     const lastQuestionRef = useRef<string>("");

@@ -44,7 +44,7 @@ def brainstorming(
         )
         response = llm.invoke(msgs)
         mindmap = cleanup_mindmap(response.content)
-        return f"<mucgpt-Brainstorming>{mindmap}</mucgpt-Brainstorming>"
+        return mindmap
     except Exception as e:
         logger.error("Brainstorm tool error: %s", str(e))
-        return f"<mucgpt-Brainstorming>Error brainstorming for '{topic}'</mucgpt-Brainstorming>"
+        return "Error brainstorming for '{topic}'"

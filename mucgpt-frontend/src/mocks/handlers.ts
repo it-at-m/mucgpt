@@ -75,6 +75,75 @@ const CREATE_BOT_RESPONSE = {
 };
 
 const CHAT_STREAM_RESPONSE = [
+    // Tool started chunk
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "pdf-enftessler-3000",
+                            state: "started",
+                            content: "Starte PDF-Entfessler 3000 für Datei: Vertrag.pdf",
+                            metadata: { file: "Vertrag.pdf" }
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool update chunk
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "pdf-enftessler-3000",
+                            state: "update",
+                            content: "Extrahiere Text... 50% abgeschlossen",
+                            metadata: { progress: 50 }
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool ended chunk
+    {
+        id: "chatcmpl-mock-stream-123",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "pdf-enftessler-3000",
+                            state: "ended",
+                            content: "PDF-Entfessler 3000 abgeschlossen. Text extrahiert!",
+                            metadata: { file: "Vertrag.pdf", result: "success" }
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
     {
         id: "chatcmpl-mock-stream-123",
         object: "chat.completion.chunk",
@@ -382,6 +451,106 @@ const CHAT_STREAM_RESPONSE = [
     }
 ];
 
+// Mindmap streaming example chunks
+const MINDMAP_STREAM_RESPONSE = [
+    // Tool started chunk
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "brainstorm",
+                            state: "started",
+                            content: "Starte Mindmap-Generierung...",
+                            metadata: {}
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool update chunk (partial mindmap)
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "brainstorm",
+                            state: "update",
+                            content: "# Hauptthema\n\n## Erster Ast\n- Punkt 1\n- Punkt 2\n",
+                            metadata: { progress: 50 }
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool ended chunk (final mindmap)
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "brainstorm",
+                            state: "finished",
+                            content: "# Hauptthema\n\n## Erster Ast\n- Punkt 1\n- Punkt 2\n\n## Zweiter Ast\n- Punkt A\n- Punkt B\n",
+                            metadata: { result: "success" }
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Normal message content after tool
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: { content: "Hier ist Ihre Mindmap!" },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {},
+                finish_reason: "stop"
+            }
+        ]
+    }
+];
+
 export const handlers = [
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
@@ -412,10 +581,12 @@ export const handlers = [
             const encoder = new TextEncoder();
             const stream = new ReadableStream({
                 async start(controller) {
-                    for (const chunk of CHAT_STREAM_RESPONSE) {
+                    //random use mindmap or normal stream (CHAT_STREAM_RESPONSE)
+                    const responseChunks = [...MINDMAP_STREAM_RESPONSE, ...CHAT_STREAM_RESPONSE];
+                    for (const chunk of responseChunks) {
                         const data = `data: ${JSON.stringify(chunk)}\n\n`;
                         controller.enqueue(encoder.encode(data));
-                        await delay(100);
+                        await delay(300);
                     }
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();

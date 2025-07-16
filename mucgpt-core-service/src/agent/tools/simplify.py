@@ -70,7 +70,7 @@ def simplify(text: str, model: RunnableSerializable, logger: logging.Logger) -> 
         )
         response = llm.invoke(msgs)
         simplified = extract_text(response.content)
-        return f"<mucgpt-Vereinfachen>{simplified}</mucgpt-Vereinfachen>"
+        return simplified
     except Exception as e:
         logger.error("Simplify tool error: %s", str(e))
-        return f"<mucgpt-Vereinfachen>Error simplifying text: {str(e)}</mucgpt-Vereinfachen>"
+        return f"Error simplifying text: {str(e)}"

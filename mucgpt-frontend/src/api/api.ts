@@ -130,7 +130,7 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     return parsedResponse;
 }
 
-export async function getDepartements(): Promise<DepartementsResponse> {
+export async function getDepartements(): Promise<string[]> {
     const response = await fetch(API_BASE + "departements", getConfig());
     handleRedirect(response, true);
     const parsedResponse = await handleResponse(response);
@@ -139,7 +139,7 @@ export async function getDepartements(): Promise<DepartementsResponse> {
 
 export async function createBotApi(options: CreateBotRequest): Promise<Response> {
     return await fetch(
-        API_BASE + "create_bot",
+        API_BASE + "v1/generate/assistant",
         postConfig({
             input: options.input,
             model: options.model,
@@ -234,9 +234,49 @@ export async function getCommunityAssistantVersionApi(id: string, version: strin
 }
 
 export async function getOwnedCommunityBots(): Promise<AssistantResponse[]> {
-    const response = await fetch("/api/bot/create", getConfig());
+    const response = await fetch("/api/user/bots", getConfig());
     handleRedirect(response, true);
     const parsedResponse: AssistantResponse[] = await handleResponse(response);
+    return parsedResponse;
+}
+
+/**
+ * Subscribe the current user to an assistant.
+ * @param assistantId The assistant's ID.
+ * @returns StatusResponse
+ */
+export async function subscribeToAssistantApi(assistantId: string): Promise<{ message: string }> {
+    const response = await fetch(`/api/user/subscriptions/${assistantId}`, postConfig({}));
+    handleRedirect(response, true);
+    const parsedResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+/**
+ * Unsubscribe the current user from an assistant.
+ * @param assistantId The assistant's ID.
+ * @returns StatusResponse
+ */
+export async function unsubscribeFromAssistantApi(assistantId: string): Promise<{ message: string }> {
+    const response = await fetch(`/api/user/subscriptions/${assistantId}`, {
+        method: "DELETE",
+        headers: {
+            ...getConfig().headers
+        }
+    });
+    handleRedirect(response, true);
+    const parsedResponse = await handleResponse(response);
+    return parsedResponse;
+}
+
+/**
+ * Get all assistants the user is subscribed to (ID and name only).
+ * @returns Array of SubscriptionResponse
+ */
+export async function getUserSubscriptionsApi(): Promise<{ id: string; name: string }[]> {
+    const response = await fetch("/api/user/subscriptions", getConfig());
+    handleRedirect(response, true);
+    const parsedResponse = await handleResponse(response);
     return parsedResponse;
 }
 

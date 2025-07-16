@@ -18,6 +18,15 @@
     justify-content: space-between;
 }
 
+.subrowheader {
+    flex: 1;
+    display: flex;
+    font-size: var(--fontSizeBase400);
+    font-weight: bold;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .row {
     padding-top: 10px;
     padding-bottom: 20px;

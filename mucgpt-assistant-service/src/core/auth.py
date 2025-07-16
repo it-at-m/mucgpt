@@ -167,7 +167,7 @@ def authenticate_user(
 ) -> AuthenticationResult:
     """Dependency to authenticate users based on access token."""  # Load configuration
     logger.debug("Loading configuration for authentication")
-    if not settings.MUCGPT_ASSISTANT_ENABLE_AUTH:
+    if not settings.ENABLE_AUTH:
         logger.info("Authentication disabled, using guest account")
         return AuthenticationResult(
             lhm_object_id="guest",

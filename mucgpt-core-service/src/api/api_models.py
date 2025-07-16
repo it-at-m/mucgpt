@@ -196,3 +196,21 @@ class ToolListResponse(BaseModel):
     tools: List[ToolInfo] = Field(
         ..., description="List of available tools with details."
     )
+
+
+class CreateBotRequest(BaseModel):
+    """Request model for creating a bot."""
+
+    input: str = Field(..., description="The input to create the bot.")
+    model: str = Field("gpt-4o-mini", description="The model to use for bot creation.")
+    max_tokens: int = Field(
+        4096, description="The maximum number of output tokens for the bot."
+    )
+
+
+class CreateBotResult(BaseModel):
+    """Result model for creating a bot."""
+
+    system_prompt: str = Field(..., description="The system prompt for the bot.")
+    description: str = Field(..., description="The description of the bot.")
+    title: str = Field(..., description="The title of the bot.")

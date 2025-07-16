@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -6,10 +7,13 @@ from langchain_core.messages.human import HumanMessage
 
 from agent.tools.tools import ToolCollection
 from api.api_models import (
+    ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
     CountResult,
     CountTokenRequest,
+    CreateBotRequest,
+    CreateBotResult,
 )
 from api.exception import llm_exception_handler
 from config.settings import get_settings
@@ -80,6 +84,84 @@ async def chat_completions(
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")
+        msg = llm_exception_handler(ex=e, logger=logger)
+        raise HTTPException(status_code=500, detail=msg)
+
+
+@router.post(
+    "/generate/assistant",
+)
+async def create_bot(
+    request: CreateBotRequest, user_info=Depends(authenticate_user)
+) -> CreateBotResult:
+    global agent_runner
+    try:
+        logger.info("createBot: reading system prompt generator")
+        with open("create_bot/prompt_for_systemprompt.md", encoding="utf-8") as f:
+            system_message = f.read()
+        messages: List[ChatCompletionMessage] = [
+            ChatCompletionMessage(role="system", content=system_message),
+            ChatCompletionMessage(role="user", content="Funktion: " + request.input),
+        ]
+        logger.info("createBot: creating system prompt")
+        system_prompt = agent_runner.run_without_streaming(
+            messages=messages,
+            temperature=1.0,
+            max_output_tokens=request.max_tokens,
+            model=request.model,
+            department=user_info.department,
+        )
+        system_prompt = system_prompt.choices[0].message.content
+        logger.info(system_prompt)
+        logger.info("createBot: creating description prompt")
+        with open("create_bot/prompt_for_description.md", encoding="utf-8") as f:
+            system_message = f.read()
+        messages: List[ChatCompletionMessage] = [
+            ChatCompletionMessage(role="system", content=system_message),
+            ChatCompletionMessage(
+                role="user", content="Systempromt: ```" + system_prompt + "```"
+            ),
+        ]
+        logger.info("createBot: creating description")
+        description = agent_runner.run_without_streaming(
+            messages=messages,
+            temperature=1.0,
+            max_output_tokens=request.max_tokens,
+            model=request.model,
+            department=user_info.department,
+        )
+        description = description.choices[0].message.content
+        logger.info("createBot: creating title prompt")
+        with open("create_bot/prompt_for_title.md", encoding="utf-8") as f:
+            system_message = f.read()
+        logger.info("createBot: creating title")
+        messages: List[ChatCompletionMessage] = [
+            ChatCompletionMessage(role="system", content=system_message),
+            ChatCompletionMessage(
+                role="user",
+                content="Systempromt: ```"
+                + system_prompt
+                + "```\nBeschreibung: ```"
+                + description
+                + "```",
+            ),
+        ]
+        title = agent_runner.run_without_streaming(
+            messages=messages,
+            temperature=1.0,
+            max_output_tokens=request.max_tokens,
+            model=request.model,
+            department=user_info.department,
+        )
+        title = title.choices[0].message.content
+        logger.info("createBot: returning finished")
+        return {
+            "title": title,
+            "description": description,
+            "system_prompt": system_prompt,
+        }
+    except Exception as e:
+        logger.exception("Exception in /create_bot")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg)
 

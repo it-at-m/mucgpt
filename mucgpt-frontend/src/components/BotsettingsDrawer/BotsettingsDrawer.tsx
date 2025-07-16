@@ -48,9 +48,10 @@ interface Props {
     before_content: ReactNode;
     onEditChange: (isEditable: boolean) => void;
     minimized: boolean;
+    isOwned?: boolean;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange, minimized }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange, minimized, isOwned }: Props) => {
     const [isEditable, setEditable] = useState(false);
     const { t } = useTranslation();
     const { LLM } = useContext(LLMContext);
@@ -71,7 +72,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const [title, setTitle] = useState<string>(bot.title);
     const [description, setDescription] = useState<string>(bot.description);
     const [publish, setPublish] = useState<boolean>(bot.publish);
-    const [isOwner, setIsOwner] = useState<boolean>(!bot.publish);
+    const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
     const [publishDepartments, setPublishDepartments] = useState<string[]>([]);
@@ -84,8 +85,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setDescription(bot.description);
         setPublish(bot.publish);
         setTemperature(bot.temperature);
-        setIsOwner(!bot.publish);
-    }, [bot]);
+        setIsOwner(isOwned || !publish);
+    }, [bot, isOwned]);
 
     // Temperature change
     const onTemperatureChange: SliderProps["onChange"] = useCallback((_: any, data: { value: SetStateAction<number> }) => {
@@ -209,15 +210,14 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     ? t("components.botsettingsdrawer.finish_edit")
                                     : t("components.botsettingsdrawer.edit")
                                 : isEditable
-                                  ? t("components.botsettingsdrawer.close_configutations")
-                                  : t("components.botsettingsdrawer.show_configutations")}
+                                    ? t("components.botsettingsdrawer.close_configutations")
+                                    : t("components.botsettingsdrawer.show_configutations")}
                         </Button>
                         <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
                                 appearance="secondary"
                                 onClick={() => setShowDeleteDialog(true)}
                                 icon={<Delete24Regular className={styles.iconRightMargin} />}
-                                disabled={!isOwner}
                             >
                                 {t("components.botsettingsdrawer.delete")}
                             </Button>
@@ -231,19 +231,6 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
 
     // publish
     const onPublishClick = useCallback(() => {
-        console.log({
-            name: bot.title,
-            description: bot.description,
-            system_prompt: systemPrompt,
-            temperature: bot.temperature,
-            max_output_tokens: bot.max_output_tokens,
-            tools: [],
-            owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
-            examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
-            quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
-            tags: bot.tags || [],
-            hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
-        });
         createCommunityAssistantApi({
             name: bot.title,
             description: bot.description,

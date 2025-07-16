@@ -8,7 +8,7 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi } from "../../api";
+import { ApplicationConfig, AssistantCreateInput, configApi, createCommunityAssistantApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";

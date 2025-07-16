@@ -19,7 +19,7 @@ import styles from "./CommunityBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { TextField } from "@fluentui/react";
 import { FormEvent, useEffect, useState } from "react";
-import { AssistantResponse, Bot, getAllCommunityAssistantsApi, getCommunityAssistantApi, getCommunityAssistantVersionApi } from "../../api";
+import { AssistantResponse, Bot, getAllCommunityAssistantsApi, getCommunityAssistantApi, getCommunityAssistantVersionApi, subscribeToAssistantApi } from "../../api";
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -109,12 +109,13 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         }
     }, [takeCommunityBots, showSearchDialogInput]);
 
-    const onSaveBot = () => {
-        communitybotStorageService.createBotConfig(choosenBot);
+    let onSaveBot = async () => {
+        if (choosenBot.id == undefined) return;
+        await subscribeToAssistantApi(choosenBot.id);
         setShowBotDialog(false);
         setShowSearchDialogInput(false);
-        window.location.href = "/#/community-bot/" + choosenBot.id + "/" + choosenBot.version.toString().replace(".", "-");
-    };
+        window.location.href = "/#/communitybot/" + choosenBot.id;
+    }
 
     const inputHandler = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string | undefined) => {
         if (newValue !== undefined && newValue !== "") {

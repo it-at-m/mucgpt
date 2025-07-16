@@ -24,7 +24,7 @@ i18n
                         create_bot: "Assistent erstellen"
                     },
                     menu: {
-                        own_bots: "Eigene Assistenten",
+                        own_bots: "Lokale Assistenten",
                         community_bots: "Community Assistenten",
                         no_bots: "Keine Assistenten gefunden",
                         soon: "In Entwicklung..."
@@ -269,7 +269,7 @@ i18n
                         create_bot: "Create assistant"
                     },
                     menu: {
-                        own_bots: "Own Assistants",
+                        own_bots: "Local Assistants", // Englisch
                         community_bots: "Community Assistants",
                         no_bots: "No Assistants found",
                         soon: "In Development..."
@@ -513,7 +513,7 @@ i18n
                         create_bot: "Assistenten erstoin"
                     },
                     menu: {
-                        own_bots: "Eigene Assitentn",
+                        own_bots: "Lokale Assitentn", // Bairisch
                         community_bots: "Community Assistentn",
                         no_bots: "Koane Assitentn gfundn",
                         soon: "In Entwicklung..."
@@ -757,7 +757,7 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
-                        own_bots: "Assistants Personnels",
+                        own_bots: "Assistants Locaux", // French
                         community_bots: "Assistants Communautaires",
                         no_bots: "Aucun Assistant trouvé",
                         soon: "En Développement..."
@@ -998,7 +998,7 @@ i18n
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
-                        own_bots: "Власні Асистенти",
+                        own_bots: "Локальні Асистенти", // Ukrainisch
                         community_bots: "Громадські Асистенти",
                         no_bots: "Асистентів не знайдено",
                         soon: "В розробці..."

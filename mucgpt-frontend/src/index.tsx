@@ -18,6 +18,8 @@ import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider"
 import Simply from "./pages/simplyfied-language/Simply";
 import Bot from "./pages/bot/Bot";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
+import OwnedCommunityBotChat from "./pages/bot/OwnedCommunityBot";
+import CommunityBotChat from "./pages/bot/CommunityBot";
 initializeIcons();
 
 const router = createHashRouter([
@@ -64,6 +66,16 @@ const router = createHashRouter([
             {
                 path: "bot/:id",
                 element: <Bot />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "owned/communitybot/:id",
+                element: <OwnedCommunityBotChat />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "communitybot/:id",
+                element: <CommunityBotChat />,
                 errorElement: <div>Fehler</div>
             },
             /** {

@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.human import HumanMessage
 
-from agent.tools.tools import ToolCollection
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
@@ -52,11 +51,9 @@ async def chat_completions(
     """
     global agent_executor
     try:
-        # Use enabled_tools from request if provided, otherwise use all available tools
+        # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = (
-            request.enabled_tools
-            if request.enabled_tools is not None
-            else [tool["name"] for tool in ToolCollection.list_tool_metadata()]
+            request.enabled_tools if request.enabled_tools is not None else []
         )
         if request.stream:
             gen = agent_executor.run_with_streaming(

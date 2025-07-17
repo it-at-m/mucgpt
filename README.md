@@ -173,16 +173,20 @@ timeline
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
   <img alt="MUCGPT Architecture Diagram" src="docs/architecture.png">
 </picture>
+
 The architecture of MUCGPT is structured into three primary components: the frontend, the core service for handling tools and the communication with the llm, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
 
-The framework used to implement the backend of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The backend uses LangChain to connect to LLMs. In the [.env](config/.env.empty) file, you can provide the user with various LLM options to select from in the frontend.
+The framework used to implement the backends (the core- and the assistant service) of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The `core service` uses LangGraph to connect to LLMs.
+TODO more about the services.
 
 The API Gateway is developed in Java based on the [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway), providing robust routing, security, and scalability for all services. [IT@M](https://github.com/it-at-m) distributes the gateway as a container image: `ghcr.io/it-at-m/refarch/refarch-gateway`. For detailed documentation, see [here](https://refarch.oss.muenchen.de/gateway.html).
 
 Authentication is managed using [Keycloak](https://www.keycloak.org/), a robust open-source identity and access management solution. Keycloak handles user authentication, authorization, and user management for the MUCGPT platform, enabling secure Single Sign-On (SSO) across all services.
 For more details on customizing authentication or extending user management, refer to the [Keycloak Migration Framework documentation](https://mayope.github.io/keycloakmigration/).
+
+[Langfuse](https://langfuse.com/) is an open-source LLM observability platform that supports agent tracing and prompt management. It is optional in MUCGPT.
 
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
 

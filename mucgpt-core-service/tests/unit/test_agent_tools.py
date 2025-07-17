@@ -37,10 +37,7 @@ class TestAgentTools:
         self.mock_llm.invoke.assert_called_once()
 
         # Verify the result is as expected
-        assert (
-            result
-            == "<mucgpt-Vereinfachen>Simplified test content</mucgpt-Vereinfachen>"
-        )
+        assert result == "Simplified test content"
 
         # Verify file operations were attempted
         assert mock_file.call_count > 0
@@ -66,7 +63,6 @@ class TestAgentTools:
         self.mock_llm.invoke.assert_called_once()
 
         # Verify that the result is correctly formatted
-        assert result.startswith("<mucgpt-Brainstorming>")
         assert "# Test Topic" in result
 
     def test_get_tools_list(self):
@@ -88,10 +84,7 @@ class TestAgentTools:
         result = self.chat_tools.simplify.invoke({"text": "Some complex text."})
 
         # Verify the result still works using fallbacks
-        assert (
-            result
-            == "<mucgpt-Vereinfachen>Simplified test content</mucgpt-Vereinfachen>"
-        )
+        assert result == "Simplified test content"
 
     def test_add_instructions(self):
         """Test that add_instructions properly updates messages with tool information"""

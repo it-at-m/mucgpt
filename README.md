@@ -46,26 +46,25 @@
 [langgraph]: https://langchain-ai.github.io/langgraph/
 [pages]: https://it-at-m.github.io/mucgpt/
 
+MUCGPT is a system that enables users to interact with a large language model (LLM) through a web interface. This interaction is facilitated by an agentic system that can access several tools. To get a feel for it, take a look at our [demo frontend](https://it-at-m.github.io/mucgpt/).
 
-MUCGPT provides a web interface based on a given large language model (LLM). The whole package is shipped with a Docker container. For a first impression, look at our [demo frontend](https://it-at-m.github.io/mucgpt/)
+Roles and rights management is facilitated by access to an OpenID Connect provider.
 
-The interface currently connects to one or multiple OpenAI-compatible LLM-endpoints, which allows users to chat, summarise text, brainstorm ideas and translate a text to plain or easy language. The chat function allows text to be generated and refined in several steps. Summarising allows PDFs or text to be shortened and made more concise. Brainstorming allows users to create mind maps for different topics. Simplified language allows the user to translate a text into plain or easy language, resulting in a more understandable and easier-to-read text.
-
-In addition, custom GPTs can be generated and saved. An own GPT is an assistant for a specific task with a custom system prompt.
+Users can create their own assistants and share them within the organisation.  A personal assistant is a configuration of the MUCGPT agent, particularly the activated tools and system prompts.
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
 ## Table of contents
 
-- [Built With](#built-with)
-- [Getting Started](#getting-started)
-- [Roadmap](#roadmap)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
+- [Built With](#🛠️-built-with)
+- [Getting Started](#🏃‍♂️‍➡️-getting-started)
+- [Roadmap](#🛤️-roadmap)
+- [Documentation](#📃-documentation)
+- [Contributing](#🖊️-contributing)
+- [License](#📝-license)
+- [Contact](#📬-contact)
 
-## Built With
+## 🛠️ Built With
 
 ### Backend
 
@@ -87,18 +86,18 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 - [uv](https://github.com/astral-sh/uv)
 - Docker
 
-## Getting started
+## 🏃‍♂️‍➡️ Getting started
 
 - Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
   - [Using UV during development](/docs/DEVELOPMENT.md)
 - Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
 
-### Configure
+### ⚙️ Configure
 
 Configure your environment. For that, copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the stack directory [stack/.env](stack/.env). Add at least one model by providing one OpenAI compatible endpoint.
 
-### Run with Docker
+### 🐋 Run with Docker
 
 To start all required services using podman or docker run:
 
@@ -127,7 +126,7 @@ Once all services are running, you can access:
 
 Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
 
-## Roadmap
+## 🛤️ Roadmap
 ```mermaid
 %%{init:
 {
@@ -168,7 +167,7 @@ timeline
     2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
 ```
 
-## Documentation
+## 📃 Documentation
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
@@ -187,7 +186,7 @@ For more details on customizing authentication or extending user management, ref
 
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
 
-## Contributing
+## 🖊️ Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
@@ -203,10 +202,10 @@ Don't forget to give the project a star! Thanks again!
 
 More about this in the [CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md) file.
 
-## License
+## 📝 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) file for more information.
 
-## Contact
+## 📬 Contact
 
 it@M - <itm.kicc@muenchen.de>

@@ -13,7 +13,7 @@
     "ghcr.io/devcontainers/features/azure-cli:1.2.7": {},
     "ghcr.io/devcontainers/features/node:1.6.2": {
       "nodeGypDependencies": false,
-      "version": "22.16.0"
+      "version": "22.17.1"
     },
     "ghcr.io/devcontainers/features/powershell:1.5.1": {}
   },

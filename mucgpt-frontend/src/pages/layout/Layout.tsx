@@ -42,7 +42,7 @@ export const Layout = () => {
 
     const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
 
-    const [setSimply] = useState<boolean>(true);
+    const [, setSimply] = useState<boolean>(true);
     const [models, setModels] = useState(config.models);
 
     // vars from storage

@@ -69,3 +69,21 @@
     font-size: var(--fontSizeBase400);
     overflow-x: auto;
 }
+
+.foxLoader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    font-size: 2.5rem;
+    animation: foxSpin 1.2s linear infinite;
+}
+
+@keyframes foxSpin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

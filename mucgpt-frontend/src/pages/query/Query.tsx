@@ -146,7 +146,12 @@ const Query = () => {
                     <span className={styles.label}>{t("🤖 MUCGPT hilft seinem Fuchsbuddy:")}</span>
                     <div>
                         {loading ? (
-                            <span className={styles.loading}>{t("Antwort wird geladen...")}</span>
+                            <div className={styles.foxLoader}>
+                                <span role="img" aria-label="firefox">
+                                    🦊
+                                </span>
+                                <span className={styles.loading}>{t("Antwort wird geladen...")}</span>
+                            </div>
                         ) : response ? (
                             <Markdown
                                 className={styles.answerText}

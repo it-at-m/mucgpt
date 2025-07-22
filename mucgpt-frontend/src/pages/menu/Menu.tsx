@@ -15,11 +15,12 @@ import { SearchCommunityBotButton } from "../../components/SearchCommunityBotBut
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
 import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import Query from "../query/Query";
 
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
-    const [communityBots, setCommunityBots] = useState<{ id: string; name: string; }[]>([]);
+    const [communityBots, setCommunityBots] = useState<{ id: string; name: string }[]>([]);
     const [ownedCommunityBots, setOwnedCommunityBots] = useState<AssistantResponse[]>([]);
     const [showSearchBot, setShowSearchBot] = useState<boolean>(false);
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
@@ -32,14 +33,13 @@ const Menu = () => {
 
     useEffect(() => {
         migrate_old_bots().then(async () => {
-            let bots = await botStorageService.getAllBotConfigs();
+            const bots = await botStorageService.getAllBotConfigs();
             setBots(bots);
-            getUserSubscriptionsApi().then((subscriptions) => {
+            getUserSubscriptionsApi().then(subscriptions => {
                 setCommunityBots(subscriptions);
-            })
-
+            });
         });
-        getOwnedCommunityBots().then((response) => {
+        getOwnedCommunityBots().then(response => {
             setOwnedCommunityBots(response);
         });
     }, []);
@@ -55,6 +55,7 @@ const Menu = () => {
     return (
         <div className={styles.container}>
             <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
+            <Query></Query>
             <div className={styles.row}>
                 <Tooltip content={t("header.chat")} relationship="description" positioning="below">
                     <Link to="/chat" className={styles.box}>
@@ -90,8 +91,15 @@ const Menu = () => {
                 ))}
                 {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
             </div>
-            <div className={styles.rowheader}>{t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} /></div>
-            <CommunityBotsDialog showSearchDialogInput={showSearchBot} setShowSearchDialogInput={setShowSearchBot} takeCommunityBots={getCommunityBots} setTakeCommunityBots={setGetCommunityBots} />
+            <div className={styles.rowheader}>
+                {t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} />
+            </div>
+            <CommunityBotsDialog
+                showSearchDialogInput={showSearchBot}
+                setShowSearchDialogInput={setShowSearchBot}
+                takeCommunityBots={getCommunityBots}
+                setTakeCommunityBots={setGetCommunityBots}
+            />
             <div className={styles.subrowheader}>Eigene:</div>
             <div className={styles.row}>
                 {ownedCommunityBots.map((bot: AssistantResponse, key) => (

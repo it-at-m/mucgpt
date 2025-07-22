@@ -1,0 +1,71 @@
+/* Modernisiertes Layout und Farben */
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 60px;
+    margin-bottom: 10px;
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    padding: 32px 24px;
+    max-width: 700px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-size: 1rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.query {
+    font-style: italic;
+    font-size: 1.3rem;
+    color: #222;
+    word-break: break-word;
+}
+
+.divider {
+    height: 1px;
+    background: #eee;
+    margin: 8px 0;
+}
+
+.responseBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.loading {
+    color: #888;
+    font-style: italic;
+}
+
+.noResponse {
+    color: #888;
+    font-style: italic;
+}
+
+.answerText {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    font-size: var(--fontSizeBase400);
+    overflow-x: auto;
+}

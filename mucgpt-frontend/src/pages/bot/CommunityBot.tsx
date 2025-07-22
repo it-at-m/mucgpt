@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse, getTools, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api";
+import { chatApi, AskResponse, Bot, ChatResponse, getTools, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -65,7 +65,7 @@ const CommunityBotChat = () => {
     const [error, setError] = useState<unknown>();
     const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
-    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+    const [systemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
@@ -104,43 +104,45 @@ const CommunityBotChat = () => {
     // useEffect to load the bot config and chat history
     useEffect(() => {
         if (bot_id) {
-            getCommunityAssistantApi(bot_id).then(response => {
-                let latest = response.latest_version;
-                let bot: Bot = {
-                    title: latest.name,
-                    description: latest.description || "",
-                    system_message: latest.system_prompt,
-                    publish: true,
-                    temperature: latest.temperature || 0.7,
-                    max_output_tokens: latest.max_output_tokens || LLM.max_output_tokens,
-                    version: latest.version.toString(),
-                    examples: latest.examples || [],
-                    quick_prompts: latest.quick_prompts || [],
-                    tags: latest.tags || [],
-                    owner_ids: latest.owner_ids || []
-                };
-                setBotConfig(bot);
-                setHeader(bot.title || DEFAULTHEADER);
-                dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
-                dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
-                dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
-                setQuickPrompts(bot.quick_prompts || []);
-                botStorageService
-                    .getNewestChatForBot(bot_id)
-                    .then(existingChat => {
-                        if (existingChat) {
-                            const messages = existingChat.messages;
-                            dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                            lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                            dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
-                        }
-                    })
-                    .then(() => {
-                        return fetchHistory();
-                    });
-            }).finally(() => {
-                isLoadingRef.current = false;
-            });
+            getCommunityAssistantApi(bot_id)
+                .then(response => {
+                    const latest = response.latest_version;
+                    const bot: Bot = {
+                        title: latest.name,
+                        description: latest.description || "",
+                        system_message: latest.system_prompt,
+                        publish: true,
+                        temperature: latest.temperature || 0.7,
+                        max_output_tokens: latest.max_output_tokens || LLM.max_output_tokens,
+                        version: latest.version.toString(),
+                        examples: latest.examples || [],
+                        quick_prompts: latest.quick_prompts || [],
+                        tags: latest.tags || [],
+                        owner_ids: latest.owner_ids || []
+                    };
+                    setBotConfig(bot);
+                    setHeader(bot.title || DEFAULTHEADER);
+                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
+                    dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
+                    dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
+                    setQuickPrompts(bot.quick_prompts || []);
+                    botStorageService
+                        .getNewestChatForBot(bot_id)
+                        .then(existingChat => {
+                            if (existingChat) {
+                                const messages = existingChat.messages;
+                                dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
+                                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                                dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
+                            }
+                        })
+                        .then(() => {
+                            return fetchHistory();
+                        });
+                })
+                .finally(() => {
+                    isLoadingRef.current = false;
+                });
         }
     }, []);
     // get History-Funktion
@@ -151,7 +153,7 @@ const CommunityBotChat = () => {
     }, [botStorageService, bot_id]);
     // deleteBot-Funktion
     const onDeleteBot = useCallback(async () => {
-        if (bot_id) await unsubscribeFromAssistantApi(bot_id)
+        if (bot_id) await unsubscribeFromAssistantApi(bot_id);
         window.location.href = "/";
     }, [bot_id]);
     // callApi-Funktion
@@ -319,7 +321,7 @@ const CommunityBotChat = () => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={() => { }}
+                    onBotChange={() => {}}
                     onDeleteBot={onDeleteBot}
                     actions={actions}
                     before_content={history}

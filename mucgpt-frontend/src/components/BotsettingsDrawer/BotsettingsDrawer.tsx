@@ -210,8 +210,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                     ? t("components.botsettingsdrawer.finish_edit")
                                     : t("components.botsettingsdrawer.edit")
                                 : isEditable
-                                    ? t("components.botsettingsdrawer.close_configutations")
-                                    : t("components.botsettingsdrawer.show_configutations")}
+                                  ? t("components.botsettingsdrawer.close_configutations")
+                                  : t("components.botsettingsdrawer.show_configutations")}
                         </Button>
                         <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -514,7 +514,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                             <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>
                                 veröffentlichen
                             </Button>
-                        </Tooltip>)}
+                        </Tooltip>
+                    )}
                 </>
             )}
             {publishDialog}

@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM node:22.15.0-alpine@sha256:ad1aedbcc1b0575074a91ac146d6956476c1f9985994810e4ee02efd932a68fd AS builder
+FROM node:22.17.1-alpine@sha256:5539840ce9d013fa13e3b9814c9353024be7ac75aca5db6d039504a56c04ea59 AS builder
 
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_OPTIONS=--max_old_space_size=4096
@@ -14,7 +14,7 @@ RUN npm run build
 
 # Stage 2: python build
 FROM python:3.12-slim@sha256:34656cd90456349040784165b9decccbcee4de66f3ead0a1168ba893455afd1e  AS python-builder
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:3b898ca84fbe7628c5adcd836c1de78a0f1ded68344d019af8478d4358417399 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:ef11ed817e6a5385c02cd49fdcc99c23d02426088252a8eace6b6e6a2a511f36 /uv /bin/uv
 
 WORKDIR /code
 

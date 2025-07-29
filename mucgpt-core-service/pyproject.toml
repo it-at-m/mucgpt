@@ -15,20 +15,20 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.5.4",
-    "fastapi[standard]==0.115.12",
-    "langchain==0.3.25",
-    "langchain-core==0.3.58",
-    "langchain_community==0.3.23",
-    "langchain-openai==0.3.16",
-    "openai==1.77.0",
-    "langsmith==0.3.42",
+    "mistral-common==1.8.3",
+    "fastapi[standard]==0.116.1",
+    "langchain==0.3.27",
+    "langchain-core==0.3.72",
+    "langchain_community==0.3.27",
+    "langchain-openai==0.3.28",
+    "openai==1.97.1",
+    "langsmith==0.4.8",
     "joserfc",
     "tiktoken",
-    "pypdf==5.4.0",
-    "uvicorn==0.34.2",
+    "pypdf==5.9.0",
+    "uvicorn==0.35.0",
     "asgi-correlation-id==4.3.4",
-    "gitpython==3.1.44",
+    "gitpython==3.1.45",
     "pydantic-settings>=2.8.1",
     "langgraph>=0.5.1",
     "truststore>=0.10.1",
@@ -37,15 +37,15 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = [
-    "ipykernel==6.29.5",
+    "ipykernel==6.30.0",
     "pre-commit==4.2.0",
-    "ruff==0.11.8",
+    "ruff==0.12.5",
     "pytest-env",
     "pytest",
-    "pytest-asyncio>=0.26.0",
+    "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.8.0",
+    "coverage==7.8.2",
     "pytest-cov"
 ]
 

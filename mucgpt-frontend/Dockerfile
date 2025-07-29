@@ -1,4 +1,4 @@
-FROM node:22.15.0-alpine@sha256:ad1aedbcc1b0575074a91ac146d6956476c1f9985994810e4ee02efd932a68fd AS builder
+FROM node:22.17.1-alpine@sha256:5539840ce9d013fa13e3b9814c9353024be7ac75aca5db6d039504a56c04ea59 AS builder
 
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_OPTIONS=--max_old_space_size=4096
@@ -12,7 +12,7 @@ RUN npm ci --verbose
 RUN npm run build
 
 # For documentation see https://github.com/sclorg/nginx-container
-FROM registry.access.redhat.com/ubi9/nginx-124:9.5-1744135631@sha256:975b78d56a064715dae8fe6c3f716fbc4d32aa302a9efceaa199cab226850d8b
+FROM registry.access.redhat.com/ubi9/nginx-124:9.6-1753698567@sha256:227db579eef86549aab1395e012e8f04eb352e8ba6f4b29601c84d1585e2c4e4
 
 # Copy built web application
 COPY --from=builder /build/dist ./

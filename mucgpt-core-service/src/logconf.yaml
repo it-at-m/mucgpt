@@ -58,13 +58,13 @@ loggers:
     handlers: [console]
     propagate: no
   httpx:
-    level: DEBUG
+    level: INFO
     handlers: [httpx]
     propagate: no
   httpcore:
-    level: DEBUG
+    level: INFO
     handlers: [httpx]
     propagate: no
 root:
-  level: DEBUG
+  level: INFO
   handlers: [console]

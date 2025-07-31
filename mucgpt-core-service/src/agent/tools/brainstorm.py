@@ -3,11 +3,13 @@ from typing import List, Optional
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
+from langgraph.types import StreamWriter
 
 from agent.tools.prompts_fallback import (
     BRAINSTORM_SYSTEM_MESSAGE,
     get_brainstorm_prompt,
 )
+from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
 
 def cleanup_mindmap(mindmap_result: str) -> str:
@@ -27,6 +29,7 @@ def brainstorming(
     context: Optional[str],
     model: RunnableSerializable,
     logger: logging.Logger,
+    writer: StreamWriter,
 ) -> str:
     """Generate a comprehensive mind map for a given topic in structured markdown format."""
     logger.info("Brainstorm tool called for topic: %s", topic)
@@ -42,8 +45,26 @@ def brainstorming(
                 "llm_streaming": False,
             }
         )
-        response = llm.invoke(msgs)
-        mindmap = cleanup_mindmap(response.content)
+        response = ""
+        for chunk in llm.stream(msgs):
+            if isinstance(chunk, BaseMessage):
+                result = chunk.content
+                response += result
+                writer(
+                    ToolStreamChunk(
+                        state=ToolStreamState.APPEND,
+                        content=result,
+                        tool_name="Brainstorming",
+                    ).model_dump_json()
+                )
+        mindmap = cleanup_mindmap(response)
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.UPDATE,
+                content=mindmap,
+                tool_name="Brainstorming",
+            ).model_dump_json()
+        )
         return mindmap
     except Exception as e:
         logger.error("Brainstorm tool error: %s", str(e))

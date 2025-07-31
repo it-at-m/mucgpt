@@ -156,9 +156,6 @@ class MUCGPTAgentExecutor:
                     continue
                 if isinstance(item, tuple) and item[0] == "messages":
                     _, (message_chunk, metadata) = item
-                    logger.debug("Processing message chunk: %s", message_chunk)
-                    logger.debug("Message chunk type: %s", type(message_chunk))
-                    logger.debug("messages: %s", messages)
                     # only stream model call and no tool chunks
                     if metadata["langgraph_node"] == "call_model" and isinstance(
                         message_chunk, AIMessageChunk

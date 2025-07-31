@@ -9,6 +9,7 @@ class ToolStreamState(str, Enum):
     ENDED = "ended"
     UPDATE = "update"
     APPEND = "append"
+    ROLLBACK = "rollback"
 
 
 class ToolStreamChunk(BaseModel):

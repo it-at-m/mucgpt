@@ -5,12 +5,18 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from agent.tools.tools import ToolCollection
 
 
+# Mock langgraph.config to avoid __pregel_runtime KeyError
+@patch("agent.tools.tools.get_stream_writer")
 class TestAgentTools:
     def setup_method(self):
         """Setup test fixtures before each test method"""
-        # Create a mock LLM
+        # Create a mock LLM with necessary attributes for the restructured code
         self.mock_llm = MagicMock()
         self.mock_llm.with_config.return_value = self.mock_llm
+        self.mock_llm.with_structured_output.return_value = self.mock_llm
+
+        # Add the __pregel_runtime attribute to avoid KeyError
+        self.mock_llm.__pregel_runtime = {}
 
         # Create a mock response
         self.mock_response = MagicMock()
@@ -20,11 +26,14 @@ class TestAgentTools:
         self.mock_llm.invoke.return_value = self.mock_response
 
         # Create the ToolCollection instance
-        self.chat_tools = ToolCollection(self.mock_llm)
+        self.chat_tools = ToolCollection(model=self.mock_llm)
 
     @patch("builtins.open", new_callable=mock_open, read_data="Test system message")
-    def test_simplify_tool_with_file_loading(self, mock_file):
+    def test_simplify_tool_with_file_loading(self, mock_file, mock_stream_writer):
         """Test the simplify tool with mocked file operations"""
+        # Configure mock stream writer to return a do-nothing function
+        mock_stream_writer.return_value = lambda x: None
+
         # Call the simplify tool
         result = self.chat_tools.simplify.invoke({"text": "Some complex text."})
 
@@ -42,8 +51,11 @@ class TestAgentTools:
         # Verify file operations were attempted
         assert mock_file.call_count > 0
 
-    def test_brainstorm_tool(self):
+    def test_brainstorm_tool(self, mock_stream_writer):
         """Test the brainstorm tool functionality"""
+        # Configure mock stream writer to return a do-nothing function
+        mock_stream_writer.return_value = lambda x: None
+
         # Setup a specific response for brainstorm tool
         self.mock_response.content = (
             "```markdown\n# Test Topic\n\n## Main Point 1\n\n- Subpoint 1\n```"
@@ -65,7 +77,7 @@ class TestAgentTools:
         # Verify that the result is correctly formatted
         assert "# Test Topic" in result
 
-    def test_get_tools_list(self):
+    def test_get_tools_list(self, mock_stream_writer):
         """Test that get_tools returns the expected list of tools"""
         tool_list = self.chat_tools.get_tools()
 
@@ -78,15 +90,18 @@ class TestAgentTools:
         assert callable(tool_list[1])
 
     @patch("builtins.open", side_effect=FileNotFoundError)
-    def test_fallback_prompts(self, mock_file):
+    def test_fallback_prompts(self, mock_file, mock_stream_writer):
         """Test that fallback prompts are used when files aren't found"""
+        # Configure mock stream writer to return a do-nothing function
+        mock_stream_writer.return_value = lambda x: None
+
         # Call the simplify tool which will try to load files
         result = self.chat_tools.simplify.invoke({"text": "Some complex text."})
 
         # Verify the result still works using fallbacks
         assert result == "Simplified test content"
 
-    def test_add_instructions(self):
+    def test_add_instructions(self, mock_stream_writer):
         """Test that add_instructions properly updates messages with tool information"""
         from langchain_core.tools import tool
 

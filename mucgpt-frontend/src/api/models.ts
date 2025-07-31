@@ -146,6 +146,7 @@ export type Bot = {
     owner_ids?: string[];
     tags?: string[];
     hirachical_access?: string[];
+    tools?: ToolBase[];
 };
 
 export interface ToolBase {

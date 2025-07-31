@@ -1,0 +1,290 @@
+.dialog {
+    padding: 0 !important;
+    min-width: 80%;
+    max-width: 90%;
+    max-height: 80vh;
+    line-height: 1.5;
+}
+
+@media (max-width: 650px) {
+    .dialog {
+        min-width: 95%;
+        max-height: 90vh;
+    }
+}
+
+.dialogContent {
+    padding: 24px;
+    overflow: hidden;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.scrollableDialogContent {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    margin-right: -8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.scrollableDialogContent > * {
+    width: 100%;
+    max-width: 800px;
+}
+
+.formField {
+    margin-bottom: 20px;
+}
+
+.formLabel {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: var(--colorNeutralForeground1);
+}
+
+.advancedSettingsButton {
+    margin: 16px auto !important;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+    padding: 12px 16px;
+    transition: all 0.2s ease;
+    display: block;
+    width: fit-content;
+}
+
+.advancedSettingsButton:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    border-color: var(--colorBrandStroke1);
+}
+
+.rangeField {
+    margin-bottom: 16px;
+}
+
+.rangeInput {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.rangeValue {
+    text-align: center;
+    font-weight: 600;
+    color: var(--colorBrandForeground1);
+    background-color: var(--colorNeutralBackground3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 50px;
+}
+
+.helpText {
+    font-size: 12px;
+    color: var(--colorNeutralForeground3);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.dynamicFieldContainer {
+    margin-bottom: 16px;
+}
+
+.dynamicFieldList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.dynamicFieldItem {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+    background-color: var(--colorNeutralBackground1);
+}
+
+.dynamicFieldInputs {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    flex-direction: column;
+}
+
+.dynamicFieldInputRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.dynamicFieldInput {
+    flex: 1;
+    min-width: 0;
+}
+
+.dynamicFieldInputLabel {
+    flex: 0 0 80px;
+    font-size: 12px;
+    color: var(--colorNeutralForeground2);
+    font-weight: 500;
+}
+
+.addFieldButton {
+    width: 100%;
+    border: 2px dashed var(--colorNeutralStroke2);
+    background-color: transparent;
+    color: var(--colorNeutralForeground2);
+    transition: all 0.2s ease;
+}
+
+.addFieldButton:hover {
+    border-color: var(--colorBrandStroke1);
+    color: var(--colorBrandForeground1);
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.removeFieldButton {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--colorPaletteRedBackground2);
+    border: none;
+    color: var(--colorPaletteRedForeground2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.removeFieldButton:hover {
+    background-color: var(--colorPaletteRedBackground3);
+    color: var(--colorPaletteRedForeground1);
+}
+
+.exampleList {
+    display: grid;
+    gap: 2%;
+    grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.exampleBox {
+    flex: 1 1 30%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 100px;
+    border-radius: 20px;
+    color: var(--colorNeutralBackround1Hover);
+    text-decoration: none;
+    opacity: 0.75;
+    font-size: var(--fontSizeBase400);
+    background: var(--colorNeutralBackground4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.exampleBox:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow:
+        0px 8px 16px rgba(0, 0, 0, 0.14),
+        0px 0px 2px rgba(0, 0, 0, 0.12);
+    outline: 2px solid var(--colorNeutralForeground3Selected);
+}
+
+.advancedSettingsSection {
+    border-top: 1px solid var(--colorNeutralStroke2);
+    margin: 20px auto;
+    padding-top: 16px;
+    max-width: 800px;
+}
+
+.advancedSettingsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    cursor: pointer;
+    padding: 8px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    text-align: center;
+}
+
+.advancedSettingsHeader:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.advancedSettingsContent {
+    margin-top: 16px;
+}
+
+.collapseButton {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.collapseButton:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.toolDescription {
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-style: italic;
+    margin-left: 8px;
+}
+
+.noToolsText {
+    color: var(--colorNeutralForeground3);
+    font-style: italic;
+    padding: 12px;
+    text-align: center;
+    border: 1px dashed var(--colorNeutralStroke2);
+    border-radius: 8px;
+    background-color: var(--colorNeutralBackground2);
+}
+
+.savedMessage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

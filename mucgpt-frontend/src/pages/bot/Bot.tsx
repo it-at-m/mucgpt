@@ -116,6 +116,7 @@ const BotChat = () => {
                         dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
                         dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
                         setQuickPrompts(bot.quick_prompts || []);
+                        setSelectedTools(bot.tools ? bot.tools.map(tool => tool.id) : []);
                     }
                     return botStorageService
                         .getNewestChatForBot(bot_id)
@@ -217,6 +218,8 @@ const BotChat = () => {
             setError(undefined);
             await botStorageService.setBotConfig(bot_id, newBot);
             setBotConfig(newBot);
+            setSelectedTools(newBot.tools ? newBot.tools.map(tool => tool.id) : []);
+            setQuickPrompts(newBot.quick_prompts || []);
             // count tokens in case of new system message
             if (newBot.system_message !== botConfig.system_message) {
                 const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
@@ -357,11 +360,9 @@ const BotChat = () => {
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
-                setSelectedTools={setSelectedTools}
-                tools={tools}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question, selectedTools, tools]
+        [isLoadingRef.current, callApi, totalTokens, question, selectedTools]
     );
     // AnswerList component
     const answerList = useMemo(

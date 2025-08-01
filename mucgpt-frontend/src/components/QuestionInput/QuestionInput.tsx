@@ -21,7 +21,7 @@ interface Props {
     question: string;
     setQuestion: (question: string) => void;
     selectedTools: string[];
-    setSelectedTools: (tools: string[]) => void;
+    setSelectedTools?: (tools: string[]) => void;
     tools?: ToolListResponse;
 }
 
@@ -93,7 +93,7 @@ export const QuestionInput = ({
                 open={toolsSelectorOpen}
                 onClose={tools => {
                     setToolsSelectorOpen(false);
-                    if (tools) setSelectedTools(tools.map(t => t.name));
+                    if (tools && setSelectedTools) setSelectedTools(tools.map(t => t.name));
                 }}
                 tools={tools}
                 selectedTools={tools ? tools.tools.filter(t => selectedTools.includes(t.name)) : []}
@@ -127,11 +127,15 @@ export const QuestionInput = ({
                                         style={{ background: color }}
                                         size="medium"
                                         shape="rounded"
-                                        onClick={() => setSelectedTools(selectedTools.filter(t => t !== toolName))}
+                                        onClick={() => {
+                                            if (setSelectedTools) setSelectedTools(selectedTools.filter(t => t !== toolName));
+                                        }}
                                         icon={
-                                            <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
-                                                ×
-                                            </span>
+                                            (setSelectedTools && (
+                                                <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
+                                                    ×
+                                                </span>
+                                            ))
                                         }
                                     >
                                         {toolName}
@@ -140,16 +144,18 @@ export const QuestionInput = ({
                             })}
                         </div>
                         <div className={styles.questionInputButtonsContainer}>
-                            <Tooltip content={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"} relationship="label">
-                                <Button
-                                    appearance="subtle"
-                                    size="large"
-                                    icon={<Toolbox24Color />}
-                                    onClick={() => setToolsSelectorOpen(true)}
-                                    disabled={disabled}
-                                    aria-label={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"}
-                                />
-                            </Tooltip>
+                            {tools && setSelectedTools && (
+                                <Tooltip content={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"} relationship="label">
+                                    <Button
+                                        appearance="subtle"
+                                        size="large"
+                                        icon={<Toolbox24Color />}
+                                        onClick={() => setToolsSelectorOpen(true)}
+                                        disabled={disabled}
+                                        aria-label={t("components.questioninput.toolsselectorbutton_tooltip") || "Select tools"}
+                                    />
+                                </Tooltip>
+                            )}
                             <Tooltip content={placeholder || ""} relationship="label">
                                 <Button
                                     size="large"

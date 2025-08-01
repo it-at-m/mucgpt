@@ -267,7 +267,18 @@ i18n
                             close: "Schließen",
                             back: "Zurück",
                             save: "Speichern",
-                            saved_successfully: "Erfolgreich gespeichert!"
+                            saved_successfully: "Erfolgreich gespeichert!",
+                            // Stepper step titles
+                            step_title: "Titel",
+                            step_description: "Beschreibung",
+                            step_system_prompt: "System-Prompt",
+                            step_tools: "Werkzeuge",
+                            step_quick_prompts: "Schnelle Eingaben",
+                            step_examples: "Beispiele",
+                            step_advanced_settings: "Erweiterte Einstellungen",
+                            // Navigation buttons
+                            next: "Weiter",
+                            previous: "Zurück"
                         },
                         search_bot_button: {
                             search_bots: "Assistenten durchsuchen"
@@ -542,7 +553,18 @@ i18n
                             close: "Close",
                             back: "Back",
                             save: "Save",
-                            saved_successfully: "Successfully saved!"
+                            saved_successfully: "Successfully saved!",
+                            // Stepper step titles
+                            step_title: "Title",
+                            step_description: "Description",
+                            step_system_prompt: "System Prompt",
+                            step_tools: "Tools",
+                            step_quick_prompts: "Quick Prompts",
+                            step_examples: "Examples",
+                            step_advanced_settings: "Advanced Settings",
+                            // Navigation buttons
+                            next: "Next",
+                            previous: "Previous"
                         },
                         search_bot_button: {
                             search_bots: "Search assistants"
@@ -818,7 +840,18 @@ i18n
                             close: "Schließen",
                             back: "Zruck",
                             save: "Speichan",
-                            saved_successfully: "Erfolgreich gspeichert!"
+                            saved_successfully: "Erfolgreich gspeichert!",
+                            // Stepper step titles
+                            step_title: "Titel",
+                            step_description: "Beschreibung",
+                            step_system_prompt: "System-Prompt",
+                            step_tools: "Werkzeig",
+                            step_quick_prompts: "Vorgeschlagene Antworn",
+                            step_examples: "Beispui",
+                            step_advanced_settings: "Erweiterte Einstellungen",
+                            // Navigation buttons
+                            next: "Weiter",
+                            previous: "Zruck"
                         },
                         search_bot_button: {
                             search_bots: "Assistentn durchschaun"
@@ -1093,7 +1126,18 @@ i18n
                             close: "Fermer",
                             back: "Retour",
                             save: "Enregistrer",
-                            saved_successfully: "Enregistré avec succès!"
+                            saved_successfully: "Enregistré avec succès!",
+                            // Stepper step titles
+                            step_title: "Titre",
+                            step_description: "Description",
+                            step_system_prompt: "Prompt système",
+                            step_tools: "Outils",
+                            step_quick_prompts: "Prompts rapides",
+                            step_examples: "Exemples",
+                            step_advanced_settings: "Paramètres avancés",
+                            // Navigation buttons
+                            next: "Suivant",
+                            previous: "Précédent"
                         },
                         community_bots: {
                             title: "Assistants Communautaires", // French
@@ -1358,7 +1402,18 @@ i18n
                             close: "Закрити",
                             back: "Назад",
                             save: "Зберегти",
-                            saved_successfully: "Успішно збережено!"
+                            saved_successfully: "Успішно збережено!",
+                            // Stepper step titles
+                            step_title: "Заголовок",
+                            step_description: "Опис",
+                            step_system_prompt: "Системний запит",
+                            step_tools: "Інструменти",
+                            step_quick_prompts: "Швидкі запити",
+                            step_examples: "Приклади",
+                            step_advanced_settings: "Розширені налаштування",
+                            // Navigation buttons
+                            next: "Далі",
+                            previous: "Назад"
                         },
                         search_bot_button: {
                             search_bots: "Пошук асистентів"

@@ -18,8 +18,6 @@ i18n
                     header: {
                         sum: "Zusammenfassen",
                         chat: "Chat",
-                        brainstorm: "Brainstorming",
-                        simply: "Einfache Sprache",
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_bot: "Assistent erstellen"
                     },
@@ -68,20 +66,6 @@ i18n
                         added: "Neu",
                         fixed: "Fehler behoben",
                         changed: "Änderungen"
-                    },
-                    brainstorm: {
-                        header: "Finde Ideen zu einem Thema oder probiere ein Beispiel",
-                        prompt: "Ideen zu diesem Thema finden",
-                        answer_loading: "Denke nach"
-                    },
-                    simply: {
-                        header: "Gib den zu übersetzenden Text ein oder probiere ein Beispiel",
-                        prompt: "Text zum Übersetzen eingeben",
-                        answer_loading_plain: "Übersetze in einfache Sprache",
-                        plain: "Einfach",
-                        outputType: "Ausgabesprache",
-                        plain_description:
-                            "Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine breitere Zielgruppe zu erreichen."
                     },
                     common: {
                         clear_chat: "Neuer Chat",
@@ -305,8 +289,6 @@ i18n
                     header: {
                         sum: "Summarize",
                         chat: "Chat",
-                        brainstorm: "Brainstorming",
-                        simply: "Simplyfied Language",
                         nutzungsbedingungen: "Terms of use",
                         create_bot: "Create assistant"
                     },
@@ -355,19 +337,6 @@ i18n
                         added: "Added",
                         fixed: "Fixed",
                         changed: "Changed"
-                    },
-                    brainstorm: {
-                        header: "Find ideas for a topic or try an example",
-                        prompt: "Find ideas for this topics",
-                        answer_loading: "Thinking"
-                    },
-                    simply: {
-                        header: "Enter the text to be translated or try an example",
-                        prompt: "Enter text to translate",
-                        answer_loading_plain: "Translating to plain language",
-                        plain: "Plain",
-                        outputType: "Output Language",
-                        plain_description: "Plain language is a simplified form of standard language that avoids complexity to reach a broader audience."
                     },
                     common: {
                         clear_chat: "New chat",
@@ -591,8 +560,6 @@ i18n
                     header: {
                         sum: "Zammfassn",
                         chat: "Redn",
-                        brainstorm: "Gedanknschmarrn",
-                        simply: "Oafache Sproch",
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_bot: "Assistenten erstoin"
                     },
@@ -635,20 +602,6 @@ i18n
                         short: "Kurz",
                         medium: "Mittel",
                         long: "Lang"
-                    },
-                    brainstorm: {
-                        header: "Ideen zu dem Thema aufaspuin oda probier a Beispui",
-                        prompt: "Ideen zu dem Thema aufaspuin",
-                        answer_loading: "Denk na"
-                    },
-                    simply: {
-                        header: "Gib den zu übasetzenden Text ei oda probier a Beispiel",
-                        prompt: "Text zum übasetzen eigeben",
-                        answer_loading_plain: "Übersetze in oafache Sproch",
-                        plain: "Oafach",
-                        outputType: "Output Sproch",
-                        plain_description:
-                            "Oafache Sproch is a veroafachte Form der Standardsprache, die auf Komplexität verzichtet, um a breitare Zielgruppn zu erreichen."
                     },
                     common: {
                         clear_chat: "Neia Chat",
@@ -878,8 +831,6 @@ i18n
                     header: {
                         sum: "Résumer",
                         chat: "Chat",
-                        brainstorm: "Brainstorming",
-                        simply: "Langage facile",
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
@@ -927,20 +878,6 @@ i18n
                         added: "Nouveau",
                         fixed: "Bugs corrigés",
                         changed: "Changements"
-                    },
-                    brainstorm: {
-                        header: "Trouvez des idées sur un sujet ou essayez un exemple",
-                        prompt: "Trouver des idées sur ce sujet",
-                        answer_loading: "Réfléchir"
-                    },
-                    simply: {
-                        header: "Entrez le texte à traduire ou essayez un exemple",
-                        prompt: "Entrez le texte à traduire",
-                        answer_loading_plain: "Traduction en langage simple",
-                        plain: "Simple",
-                        outputType: "Langue de sortie",
-                        plain_description:
-                            "Le langage simple est une forme simplifiée de la langue standard, qui évite la complexité pour atteindre un public plus large."
                     },
                     common: {
                         clear_chat: "Nouveau chat",
@@ -1161,8 +1098,6 @@ i18n
                     header: {
                         sum: "Резюме",
                         chat: "Чат",
-                        brainstorm: "Брейнштурм",
-                        simply: "Проста мова",
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
@@ -1210,19 +1145,6 @@ i18n
                         added: "Нове",
                         fixed: "Виправлено помилки",
                         changed: "Зміни"
-                    },
-                    brainstorm: {
-                        header: "Знайдіть ідеї за темою або спробуйте приклад",
-                        prompt: "Знайти ідеї за цією темою",
-                        answer_loading: "Думаю"
-                    },
-                    simply: {
-                        header: "Введіть текст для перекладу або спробуйте приклад",
-                        prompt: "Введіть текст для перекладу",
-                        answer_loading_plain: "Переклад на зрозумілу мову",
-                        plain: "Проста",
-                        outputType: "Вихідна мова",
-                        plain_description: "Проста мова - це спрощена форма стандартної мови, яка уникає складності для охоплення ширшої аудиторії."
                     },
                     common: {
                         clear_chat: "Новий чат",

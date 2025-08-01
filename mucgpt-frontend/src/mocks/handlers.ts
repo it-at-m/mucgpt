@@ -665,6 +665,451 @@ const MINDMAP_STREAM_RESPONSE = [
     }
 ];
 
+// Simplify streaming example chunks
+const SIMPLIFY_STREAM_RESPONSE = [
+    // Tool started chunk
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "STARTED",
+                            content: "Starte Vereinfachungsprozess...",
+                            metadata: {}
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool generating initial simplified text
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "Erzeuge initiale vereinfachte Version..."
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n\n<einfachesprache>\n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "Am Sonntag und an Feiertagen dürfen die Menschen nicht arbeiten.  \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "Nur in besonderen Fällen ist Arbeit erlaubt.  \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "Hier sind die Beispiele:  \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "- Rettungsdienste (Notruf, Rettung) dürfen arbeiten.  \n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "- Krankenhäuser dürfen offen sein.  \n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "- Hotels dürfen öffnen.  \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Complete text update
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "UPDATE",
+                            content: `<einfachesprache>
+
+Am Sonntag und an Feiertagen dürfen die Menschen nicht arbeiten.
+
+Nur in besonderen Fällen ist Arbeit erlaubt.
+
+Hier sind die Beispiele:
+
+- Rettungsdienste (Notruf, Rettung) dürfen arbeiten.
+- Krankenhäuser dürfen offen sein.
+- Polizei darf arbeiten.
+- Feuerwehr darf arbeiten.
+- Hotels dürfen öffnen.
+- Veranstaltungen sind erlaubt.
+- Der Verkehr (Autos, Busse) darf laufen.
+- Stromversorgung ist erlaubt.
+- In der Landwirtschaft darf man arbeiten.
+- Wachleute passen auf.
+- Reinigung ist erlaubt.
+- In der Forschung darf man arbeiten.
+
+Einige Geschäfte dürfen an Feiertagen öffnen.
+
+Man darf manchmal auch an Feiertagen arbeiten.
+
+Das ist zum Beispiel, wenn etwas Wichtiges gemacht werden muss.
+
+Zum Beispiel:
+
+- Bei der Herstellung von Sachen in Fabriken.
+- In bestimmten Geschäften, wie Bäckereien.
+
+</einfachesprache>`
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // First revision analysis
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n\n**Überarbeitung #1: Textqualität wird analysiert...**"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n⚠️ Qualitätsprobleme erkannt. Text wird überarbeitet..."
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Second revision analysis
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n\n**Überarbeitung #2: Textqualität wird analysiert...**"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n⚠️ Qualitätsprobleme erkannt. Text wird überarbeitet..."
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Third revision analysis
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n\n**Überarbeitung #3: Textqualität wird analysiert...**"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n⚠️ Qualitätsprobleme erkannt. Text wird überarbeitet..."
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Max revisions reached
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n\nℹ️ Maximale Anzahl an Überarbeitungen (5) erreicht. Text wird finalisiert."
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool completion
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "APPEND",
+                            content: "\n\n✅ Textvereinfachung abgeschlossen!"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    // Tool ended chunk
+    {
+        id: "chatcmpl-mock-stream-simplify-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Simplify",
+                            state: "ENDED",
+                            content: "Text erfolgreich in Leichte Sprache übersetzt."
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    }
+];
+
 export const handlers = [
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
@@ -691,8 +1136,18 @@ export const handlers = [
             const encoder = new TextEncoder();
             const stream = new ReadableStream({
                 async start(controller) {
-                    //random use mindmap or normal stream (CHAT_STREAM_RESPONSE)
-                    const responseChunks = [...MINDMAP_STREAM_RESPONSE, ...CHAT_STREAM_RESPONSE];
+                    // Random use mindmap, simplify, or normal stream
+                    const streamType = Math.random();
+                    let responseChunks;
+
+                    if (streamType < 0.33) {
+                        responseChunks = [...MINDMAP_STREAM_RESPONSE];
+                    } else if (streamType < 0.66) {
+                        responseChunks = [...SIMPLIFY_STREAM_RESPONSE];
+                    } else {
+                        responseChunks = [...CHAT_STREAM_RESPONSE];
+                    }
+
                     for (const chunk of responseChunks) {
                         const data = `data: ${JSON.stringify(chunk)}\n\n`;
                         controller.enqueue(encoder.encode(data));

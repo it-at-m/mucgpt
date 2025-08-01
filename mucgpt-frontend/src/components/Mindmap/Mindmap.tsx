@@ -150,7 +150,7 @@ export const Mindmap = ({ markdown }: Props) => {
     return (
         <Stack verticalAlign="space-between">
             <Stack.Item>
-                <Stack horizontal horizontalAlign="space-between">
+                <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
                     <div className={styles.title}>Brainstorming</div>
                     <div>
                         <Tooltip

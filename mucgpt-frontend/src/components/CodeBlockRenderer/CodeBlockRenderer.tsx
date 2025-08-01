@@ -6,6 +6,7 @@ import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/pri
 import styles from "./CodeBlockRenderer.module.css";
 import { Mermaid, MermaidProps } from "./Mermaid";
 import { Mindmap } from "../Mindmap/Mindmap";
+import { SimplifiedText } from "../SimplifiedText/SimplifiedText";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 
 // Constants
@@ -16,6 +17,8 @@ const MERMAID_MIN_TEXT_LENGTH = 30;
 const MERMAID_DIAGRAM_TYPES = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"] as const;
 
 const BRAINSTORMING_TOOLS = ["mucgptbrainstorming", "mucgpt-brainstorming"] as const;
+
+const SIMPLIFY_TOOLS = ["mucgptsimplify", "mucgpt-simplify"] as const;
 
 const COPY_ICONS = {
     DEFAULT: "Copy",
@@ -38,6 +41,11 @@ const getThemePreference = (): boolean => {
 const isBrainstormingTool = (language: string): boolean => {
     const normalizedLanguage = language.toLowerCase();
     return BRAINSTORMING_TOOLS.some(lang => normalizedLanguage === lang);
+};
+
+const isSimplifyTool = (language: string): boolean => {
+    const normalizedLanguage = language.toLowerCase();
+    return SIMPLIFY_TOOLS.some(lang => normalizedLanguage === lang);
 };
 
 const isMermaidDiagram = (language: string, text: string): boolean => {
@@ -66,6 +74,15 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
         return (
             <div className={styles.mindmapContainer}>
                 <Mindmap markdown={text} />
+            </div>
+        );
+    }
+
+    // Check if this is a simplify tool result that should be rendered with special formatting
+    if (isSimplifyTool(language)) {
+        return (
+            <div className={styles.simplifiedTextContainer}>
+                <SimplifiedText content={text} />
             </div>
         );
     }

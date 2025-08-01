@@ -1,0 +1,60 @@
+.iconRightMargin {
+    margin-right: 5px;
+}
+
+.simplifiedTextContent {
+    white-space: pre-wrap;
+    font-size: var(--fontSizeBase400);
+    max-width: 100%;
+    line-height: 1.8;
+    padding: 20px;
+}
+
+.markdownContent {
+    line-height: 1.8;
+    color: var(--colorNeutralForeground1);
+}
+
+.markdownContent p {
+    margin: 0 0 12px 0;
+    word-wrap: break-word;
+}
+
+.markdownContent p:last-child {
+    margin-bottom: 24px;
+}
+
+.processingInfo {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.processingTitle {
+    font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground2);
+    margin-bottom: 8px;
+}
+
+.processingContent {
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground2);
+}
+
+.processingMarkdown {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase200);
+}
+
+.processingMarkdown p {
+    margin: 4px 0;
+}
+
+.title {
+    font-size: var(--fontSizeBase400);
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--textColorSecondary);
+    opacity: 0.85;
+}

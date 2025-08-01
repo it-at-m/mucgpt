@@ -72,7 +72,7 @@ Revised Text:
 """,
 )
 
-MAX_REVISIONS = 3
+MAX_REVISIONS = 5
 
 
 class SimplifyAgent:
@@ -124,7 +124,7 @@ class SimplifyAgent:
     def _generate_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Generating initial simplification...")
         self._stream_update(
-            "Generating initial simplified version...", ToolStreamState.STARTED
+            "Erzeuge initiale vereinfachte Version...", ToolStreamState.STARTED
         )
 
         prompt = SIMPLIFY_PROMPT.format(text=state["original_text"])
@@ -163,7 +163,7 @@ class SimplifyAgent:
     def _critique_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Critiquing simplified text...")
         self._stream_update(
-            f"\n\n**Revision #{state.get('revisions', 0) + 1}: Analyzing text quality...**",
+            f"\n\n**Überarbeitung #{state.get('revisions', 0) + 1}: Textqualität wird analysiert...**",
             ToolStreamState.APPEND,
         )
 
@@ -187,7 +187,7 @@ class SimplifyAgent:
                 critique += result
                 # Don't stream the critique to the user directly
 
-        self.logger.info("Critique: %s", critique)
+        self.logger.info("Kritik: %s", critique)
 
         if "no issues found" in critique.lower():
             self._stream_update(
@@ -245,7 +245,7 @@ class SimplifyAgent:
         if revisions >= MAX_REVISIONS:
             self.logger.warning("Max revisions reached. Ending.")
             self._stream_update(
-                f"\n\nℹ️ Maximum revisions ({MAX_REVISIONS}) reached. Finalizing text.",
+                f"\n\nℹ️ Maximale Anzahl an Überarbeitungen ({MAX_REVISIONS}) erreicht. Text wird finalisiert.",
                 ToolStreamState.APPEND,
             )
             return "end"
@@ -253,9 +253,7 @@ class SimplifyAgent:
         return "refine"
 
     def run(self, original_text: str) -> str:
-        self._stream_update(
-            "Starting text simplification process...", ToolStreamState.STARTED
-        )
+        self._stream_update("Starte Vereinfachungsprozess...", ToolStreamState.STARTED)
 
         initial_state = {
             "original_text": original_text,
@@ -269,11 +267,11 @@ class SimplifyAgent:
         try:
             final_state = self.graph.invoke(initial_state)
             self._stream_update(
-                "\n\n✅ Text simplification complete!", ToolStreamState.APPEND
+                "\n\n✅ Textvereinfachung abgeschlossen!", ToolStreamState.APPEND
             )
             return final_state["simplified_text"]
         except Exception as e:
             error_message = f"Error during simplification: {str(e)}"
             self.logger.error(error_message)
             self._stream_update(f"\n\n❌ {error_message}", ToolStreamState.ENDED)
-            return f"Error simplifying text: {str(e)}"
+            return f"Fehler beim Vereinfachen des Textes: {str(e)}"

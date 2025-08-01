@@ -46,7 +46,9 @@ Use the following structure to ensure clarity and organization:
 
 # Output Format
 
-The output should be formatted as a markdown code snippet for easy copying. Include all elements in the structure specified above, maintaining organized headings and bullet points.
+1. The output should be formatted in the previous format.
+2. Just return plain markdown. No Code blocks!
+3. Include all elements in the markdown structure specified above, maintaining organized headings and bullet points.
 """,
 )
 

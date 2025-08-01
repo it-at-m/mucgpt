@@ -13,6 +13,12 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    activeTools?: Array<{
+        name: string;
+        message: string;
+        state: "STARTED" | "ENDED" | null;
+        timestamp: number;
+    }>;
 };
 
 export type SumResponse = {

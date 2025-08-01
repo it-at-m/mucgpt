@@ -5,46 +5,90 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./CodeBlockRenderer.module.css";
 import { Mermaid, MermaidProps } from "./Mermaid";
+import { Mindmap } from "../Mindmap/Mindmap";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 
-export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps) {
+// Constants
+const LANGUAGE_PATTERN = /language-(\w+)/;
+const COPY_FEEDBACK_TIMEOUT = 1000;
+const MERMAID_MIN_TEXT_LENGTH = 30;
+
+const MERMAID_DIAGRAM_TYPES = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"] as const;
+
+const BRAINSTORMING_TOOLS = ["mucgptbrainstorming", "mucgpt-brainstorming"] as const;
+
+const COPY_ICONS = {
+    DEFAULT: "Copy",
+    SUCCESS: "Checkmark"
+} as const;
+
+type CodeBlockRendererProps = ClassAttributes<HTMLElement> & HTMLAttributes<HTMLElement> & ExtraProps;
+
+// Utility functions
+const getLanguageFromClassName = (className?: string): string => {
+    const match = LANGUAGE_PATTERN.exec(className || "");
+    return match ? match[1] : "";
+};
+
+const getThemePreference = (): boolean => {
+    const storedTheme = localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME);
+    return storedTheme === null ? true : storedTheme === "true";
+};
+
+const isBrainstormingTool = (language: string): boolean => {
+    const normalizedLanguage = language.toLowerCase();
+    return BRAINSTORMING_TOOLS.some(lang => normalizedLanguage === lang);
+};
+
+const isMermaidDiagram = (language: string, text: string): boolean => {
+    if (language === "mermaid") return true;
+
+    return language === "" && text.length > MERMAID_MIN_TEXT_LENGTH && MERMAID_DIAGRAM_TYPES.some(type => text.indexOf(type) !== -1);
+};
+
+export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     const { children, className, ...rest } = props;
-    const match = /language-(\w+)/.exec(className || "");
-    const [, setCopied] = useState<boolean>(false);
-    const [icon, setIcon] = useState<string>("Copy");
-    const ligth_theme_pref =
-        localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
-
-    const oncopy = useCallback(() => {
-        setCopied(true);
-        navigator.clipboard.writeText(children as string);
-        setIcon("Checkmark");
-        setTimeout(() => {
-            setIcon("Copy");
-            setCopied(false);
-        }, 1000);
-    }, [navigator.clipboard, children]);
-
-    const language = match ? match[1] : "";
+    const [icon, setIcon] = useState<string>(COPY_ICONS.DEFAULT);
+    const language = getLanguageFromClassName(className);
     const text = String(children);
-    const diagrams = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"];
+    const lightThemePref = getThemePreference();
 
-    //check if mermaid diagramm is at the start
-    if (language === "mermaid" || (language === "" && text.length > 30 && diagrams.some(type => text.indexOf(type) !== -1))) {
+    const onCopy = useCallback(() => {
+        navigator.clipboard.writeText(text);
+        setIcon(COPY_ICONS.SUCCESS);
+        setTimeout(() => {
+            setIcon(COPY_ICONS.DEFAULT);
+        }, COPY_FEEDBACK_TIMEOUT);
+    }, [text]);
+
+    // Check if this is a brainstorming tool result that should be rendered as a mindmap
+    if (isBrainstormingTool(language)) {
+        return (
+            <div className={styles.mindmapContainer}>
+                <Mindmap markdown={text} />
+            </div>
+        );
+    }
+
+    // Check if this is a Mermaid diagram
+    if (isMermaidDiagram(language, text)) {
         const mermaidProps: MermaidProps = {
             text: text,
-            darkTheme: !ligth_theme_pref
+            darkTheme: !lightThemePref
         };
-
         return <Mermaid {...mermaidProps} />;
-    } else {
-        const isMultiline = String(children).includes("\n");
-        return isMultiline ? (
+    }
+
+    // Render code block with syntax highlighting
+    const isMultiline = text.includes("\n");
+
+    if (isMultiline) {
+        return (
             <div className={styles.codeContainer}>
                 <SyntaxHighlighter
                     {...(rest as any)}
-                    children={String(children).replace(/\n$/, "")}
-                    style={ligth_theme_pref ? duotoneLight : dark}
+                    children={text.replace(/\n$/, "")}
+                    style={lightThemePref ? duotoneLight : dark}
                     language={language}
                     PreTag="div"
                     showLineNumbers={false}
@@ -53,19 +97,15 @@ export default function CodeBlockRenderer(props: ClassAttributes<HTMLElement> & 
                 />
                 <div className={styles.copyContainer}>
                     {language}
-                    <IconButton
-                        style={{ color: "black" }}
-                        iconProps={{ iconName: icon }}
-                        onClick={() => {
-                            oncopy();
-                        }}
-                    ></IconButton>
+                    <IconButton style={{ color: "black" }} iconProps={{ iconName: icon }} onClick={onCopy} />
                 </div>
             </div>
-        ) : (
-            <code {...rest} className={className}>
-                {children}
-            </code>
         );
     }
+
+    return (
+        <code {...rest} className={className}>
+            {children}
+        </code>
+    );
 }

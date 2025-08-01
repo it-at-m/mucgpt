@@ -1,23 +1,9 @@
-import {
-    Delete24Regular,
-    Dismiss24Regular,
-    Edit24Regular,
-    Save24Regular,
-    ChatSettings24Regular,
-    Checkmark24Filled,
-    CloudArrowUp24Filled
-} from "@fluentui/react-icons";
+import { Delete24Regular, Dismiss24Regular, Edit24Regular, ChatSettings24Regular, Checkmark24Filled, CloudArrowUp24Filled } from "@fluentui/react-icons";
 import {
     Button,
-    Slider,
     Label,
-    useId,
-    SliderProps,
     Field,
-    InfoLabel,
     Tooltip,
-    Textarea,
-    TextareaOnChangeData,
     Dialog,
     DialogActions,
     DialogBody,
@@ -29,9 +15,8 @@ import {
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
-import { ReactNode, SetStateAction, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -47,12 +32,11 @@ interface Props {
     onDeleteBot: () => void;
     actions: ReactNode;
     before_content: ReactNode;
-    onEditChange: (isEditable: boolean) => void;
     minimized: boolean;
     isOwned?: boolean;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, onEditChange, minimized, isOwned }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, minimized, isOwned }: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(bot.description);
@@ -119,20 +103,10 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                         {deleteDialog}
                         <Button
                             appearance="secondary"
-                            icon={
-                                isOwner ? (
-                                    <Edit24Regular className={styles.iconRightMargin} />
-                                ) : (
-                                    <ChatSettings24Regular className={styles.iconRightMargin} />
-                                )
-                            }
+                            icon={isOwner ? <Edit24Regular className={styles.iconRightMargin} /> : <ChatSettings24Regular className={styles.iconRightMargin} />}
                             onClick={toggleReadOnly}
                         >
-                            {isOwner
-                                ?
-                                t("components.botsettingsdrawer.edit")
-                                :
-                                t("components.botsettingsdrawer.show_configutations")}
+                            {isOwner ? t("components.botsettingsdrawer.edit") : t("components.botsettingsdrawer.show_configutations")}
                         </Button>
                         <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -145,7 +119,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                         </Tooltip>
                     </div>
                 )}
-            </div >
+            </div>
         ),
         [actions, isOwner, toggleReadOnly, t, deleteDialog, minimized]
     );
@@ -252,15 +226,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     );
 
     const editDialog = useMemo(
-        () => (
-            <EditBotDialog
-                showDialog={showEditDialog}
-                setShowDialog={setShowEditDialog}
-                bot={bot}
-                onBotChanged={onBotChange}
-                isOwner={isOwner}
-            />
-        ),
+        () => <EditBotDialog showDialog={showEditDialog} setShowDialog={setShowEditDialog} bot={bot} onBotChanged={onBotChange} isOwner={isOwner} />,
         [showEditDialog, bot, onBotChange, isOwner]
     );
 

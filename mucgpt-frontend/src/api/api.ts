@@ -9,7 +9,6 @@ import {
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
-    DepartementsResponse,
     SimplyRequest,
     SimplyResponse,
     SumRequest,

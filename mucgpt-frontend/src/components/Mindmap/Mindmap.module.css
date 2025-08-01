@@ -1,26 +1,19 @@
-.mindmapContainer {
-    padding: 1em;
-    margin: 1em;
-    border-radius: 8px;
-    background: var(--colorNeutralBackground1Hover);
-    box-shadow:
-        0px 2px 4px var(--colorBrandForeground2),
-        0px 0px 2px var(--colorBrandForeground2);
-    border: transparent solid 1px;
-    height: 100%;
-}
-
-.mindmapContainer:hover {
-    border-left: 1px solid rgb(0, 0, 0);
-}
-
 .svgMark {
     min-height: 400px;
-    min-width: 700px;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+}
+
+.svgContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .iconRightMargin {
-    margin-right: 5 px;
+    margin-right: 5px;
 }
 
 .darkmindmap {
@@ -33,8 +26,7 @@
 .answerText {
     white-space: pre-wrap;
     font-size: var(--fontSizeBase400);
-    max-width: 90%;
-    overflow-x: auto;
+    max-width: 100%;
 }
 
 @media (max-width: 780px) {
@@ -43,9 +35,12 @@
         max-width: 300px;
         min-height: 0px;
     }
-    .mindmapContainer {
-        padding: 0px;
-        min-width: 50px;
-        max-width: 300px;
-    }
+}
+
+.title {
+    font-size: var(--fontSizeBase400);
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--textColorSecondary);
+    opacity: 0.85;
 }

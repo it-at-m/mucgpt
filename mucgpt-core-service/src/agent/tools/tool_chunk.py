@@ -5,11 +5,19 @@ from pydantic import BaseModel
 
 
 class ToolStreamState(str, Enum):
-    STARTED = "started"
-    ENDED = "ended"
-    UPDATE = "update"
-    APPEND = "append"
-    ROLLBACK = "rollback"
+    """Enumeration representing the state of a tool stream chunk.
+    STARTED: The tool invocation has started. Content is for status update.
+    UPDATE: The tool is providing an update. Content is the tool output. Should replace previous output.
+    APPEND: The tool is appending additional content. Content is the new output. Should be added to previous output.
+    ENDED: The tool invocation has ended. Content is for status update.
+    ROLLBACK: The tool invocation has been rolled back. Content is for status update.
+    """
+
+    STARTED = "STARTED"
+    UPDATE = "UPDATE"
+    APPEND = "APPEND"
+    ENDED = "ENDED"
+    ROLLBACK = "ROLLBACK"
 
 
 class ToolStreamChunk(BaseModel):

@@ -7,8 +7,6 @@ import {
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
-    SimplyRequest,
-    SimplyResponse,
     SumRequest,
     SumResponse,
     AssistantResponse,
@@ -81,20 +79,6 @@ export async function configApi(): Promise<ApplicationConfig> {
         const parsedResponse = await handleResponse(response);
         return parsedResponse;
     });
-}
-
-export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse> {
-    const response = await fetch(
-        API_BASE + "simply",
-        postConfig({
-            topic: options.topic,
-            temperature: options.temperature,
-            model: options.model
-        })
-    );
-    handleRedirect(response);
-    const parsedResponse: SimplyResponse = await handleResponse(response);
-    return parsedResponse;
 }
 
 export async function countTokensAPI(options: CountTokenRequest): Promise<CountTokenResponse> {

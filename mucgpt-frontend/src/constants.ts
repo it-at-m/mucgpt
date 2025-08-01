@@ -47,28 +47,11 @@ export const SUMMARIZE_STORE: IndexedDBStorage = {
     db_version: 3
 };
 
-export const SIMPLY_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-SIMPLY",
-    objectStore_name: "simply",
-    db_version: 3
-};
-
-export const BRAINSTORM_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-BRAINSTORMING",
-    objectStore_name: "brainstorming",
-    db_version: 3
-};
-
 export const CHAT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-CHAT",
     objectStore_name: "chat",
     db_version: 3
 };
-
-export const enum STORAGE_KEYS_SIMPLY {
-    SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
-    SIMPLY_OUTPUT_TYPE = "SIMPLY_OUTPUT_TYPE"
-}
 
 // Create Bot examples
 export const CREATE_BOT_EXAMPLE_1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";

@@ -14,7 +14,6 @@ import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import Menu from "./pages/menu/Menu";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
-import Simply from "./pages/simplyfied-language/Simply";
 import Bot from "./pages/bot/Bot";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
 import OwnedCommunityBotChat from "./pages/bot/OwnedCommunityBot";
@@ -51,11 +50,6 @@ const router = createHashRouter([
             {
                 path: "version",
                 element: <Version />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "simply",
-                element: <Simply />,
                 errorElement: <div>Fehler</div>
             },
             {

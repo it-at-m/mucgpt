@@ -57,12 +57,6 @@ export type SumRequest = {
 
 export type SumarizeMessage = DBMessage<SumResponse>;
 
-export type SimplyRequest = {
-    topic: string;
-    temperature?: number;
-    model?: string;
-};
-
 export interface ApplicationConfig {
     models: Model[];
     frontend: Frontend;
@@ -127,10 +121,6 @@ export type DepartementsResponse = {
     departments: string[];
 };
 
-export type SimplyResponse = {
-    content: string;
-    error?: string;
-};
 export type Bot = {
     title: string;
     description: string;

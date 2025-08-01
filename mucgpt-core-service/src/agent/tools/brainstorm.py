@@ -2,14 +2,63 @@ import logging
 from typing import List, Optional
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 from langgraph.types import StreamWriter
 
-from agent.tools.prompts_fallback import (
-    BRAINSTORM_PROMPT,
-    BRAINSTORM_SYSTEM_MESSAGE,
-)
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
+
+BRAINSTORM_SYSTEM_MESSAGE = "You are a creative brainstorming assistant that creates detailed mind maps in markdown format."
+
+BRAINSTORM_PROMPT = PromptTemplate(
+    input_variables=["topic", "context"],
+    template="""
+Plan out a mind map in a markdown file on the topic {topic} using the provided format.
+{context}
+
+Follow the following rules:
+- Be very creative and very detailed
+- Format the texts in markdown, where it fits.
+  - Display the text for the most important topic in bold.
+  - Use always more sublists, if more than one subtopic is available.
+  - Do just include the topics without structuring information (like topic 1, topic 2, etc.)
+
+Use the following structure to ensure clarity and organization:
+
+# Central topic
+
+## Main topic 1
+
+### Subtopic 1
+
+- Subsubtopic 1
+ - Subsubsubtopic 1
+ - Subsubsubtopic 2
+  - Subsubsubsubtopic 1
+- Subsubtopic 2
+- Subsubtopic 3
+
+### Subtopic 2
+
+- Subsubtopic 1
+- Subsubtopic 2
+- Subsubtopic 3
+
+## Main topic 2
+
+### Subtopic 1
+
+- Subsubtopic 1
+- Subsubtopic 2
+- Subsubtopic 3
+
+# Output Format
+
+1. The output should be formatted in the previous format.
+2. Just return plain markdown. No Code blocks!
+3. Include all elements in the markdown structure specified above, maintaining organized headings and bullet points.
+""",
+)
 
 
 def cleanup_mindmap(mindmap_result: str) -> str:

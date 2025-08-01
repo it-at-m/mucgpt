@@ -6,11 +6,19 @@ from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from agent.tools.brainstorm import brainstorming
-from agent.tools.prompts_fallback import TOOL_INSTRUCTIONS_TEMPLATE
 from agent.tools.simplify import simplify
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from agent.tools.weather import weather
 from core.logtools import getLogger
+
+TOOL_INSTRUCTIONS_TEMPLATE = """
+You have access to the following tools:
+<tools>{tool_descriptions}\n\n</tools>
+Follow the guidelines below when using tools:
+<guidelines>
+- Invoke tools when they are helpful for the user's request.
+</guidelines>
+"""
 
 
 def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = None):

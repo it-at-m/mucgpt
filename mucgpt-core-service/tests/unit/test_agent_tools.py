@@ -25,6 +25,9 @@ class TestAgentTools:
         )
         self.mock_llm.invoke.return_value = self.mock_response
 
+        # Mock the stream method for brainstorm tool
+        self.mock_llm.stream.return_value = []
+
         # Create the ToolCollection instance
         self.chat_tools = ToolCollection(model=self.mock_llm)
 
@@ -56,10 +59,13 @@ class TestAgentTools:
         # Configure mock stream writer to return a do-nothing function
         mock_stream_writer.return_value = lambda x: None
 
-        # Setup a specific response for brainstorm tool
-        self.mock_response.content = (
-            "```markdown\n# Test Topic\n\n## Main Point 1\n\n- Subpoint 1\n```"
+        # Setup a specific response for brainstorm tool using HumanMessage
+        mock_chunk = HumanMessage(
+            content="```markdown\n# Test Topic\n\n## Main Point 1\n\n- Subpoint 1\n```"
         )
+
+        # Mock the stream method to return an iterable of chunks
+        self.mock_llm.stream.return_value = [mock_chunk]
 
         # Call the brainstorm tool
         result = self.chat_tools.brainstorm.invoke(
@@ -71,8 +77,8 @@ class TestAgentTools:
             {"llm_temperature": 0.8, "llm_max_tokens": 2000, "llm_streaming": False}
         )
 
-        # Verify LLM was invoked with messages
-        self.mock_llm.invoke.assert_called_once()
+        # Verify LLM stream was called once
+        self.mock_llm.stream.assert_called_once()
 
         # Verify that the result is correctly formatted
         assert "# Test Topic" in result

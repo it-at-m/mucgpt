@@ -69,18 +69,6 @@ class SumRequest(BaseModel):
     model: str = Field("gpt-4o-mini", description="The model to use for summarization.")
 
 
-class SimplyRequest(BaseModel):
-    """Request model for the 'simply' endpoint (simplify text)."""
-
-    topic: str = Field(..., description="The text to simplify.")
-    temperature: Optional[float] = Field(
-        0, description="The temperature for the model."
-    )
-    model: Optional[str] = Field(
-        "gpt-4o-mini", description="The model to use for simplification."
-    )
-
-
 # follow openai chat completion API model structure
 class ChatCompletionMessage(BaseModel):
     role: Literal["system", "user", "assistant"] = Field(

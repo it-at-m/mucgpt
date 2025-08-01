@@ -52,21 +52,7 @@ def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = Non
     )
     def simplify_tool(text: str):
         writer = get_stream_writer()
-        writer(
-            ToolStreamChunk(
-                state=ToolStreamState.STARTED,
-                content="Vereinfachung gestartet.",
-                tool_name="Vereinfachen",
-            ).model_dump_json()
-        )
-        result = simplify(text, model, logger)
-        writer(
-            ToolStreamChunk(
-                state=ToolStreamState.ENDED,
-                content=result,
-                tool_name="Vereinfachen",
-            ).model_dump_json()
-        )
+        result = simplify(text, model, logger, writer=writer)
         return result
 
     return simplify_tool

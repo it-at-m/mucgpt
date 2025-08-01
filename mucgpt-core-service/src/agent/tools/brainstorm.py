@@ -6,8 +6,8 @@ from langchain_core.runnables.base import RunnableSerializable
 from langgraph.types import StreamWriter
 
 from agent.tools.prompts_fallback import (
+    BRAINSTORM_PROMPT,
     BRAINSTORM_SYSTEM_MESSAGE,
-    get_brainstorm_prompt,
 )
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 
@@ -33,7 +33,7 @@ def brainstorming(
 ) -> str:
     """Generate a comprehensive mind map for a given topic in structured markdown format."""
     logger.info("Brainstorm tool called for topic: %s", topic)
-    mindmap_prompt = get_brainstorm_prompt(topic, context)
+    mindmap_prompt = BRAINSTORM_PROMPT.format(topic=topic, context=context)
     system_msg = SystemMessage(content=BRAINSTORM_SYSTEM_MESSAGE)
     user_msg = HumanMessage(content=mindmap_prompt)
     msgs: List[BaseMessage] = [system_msg, user_msg]

@@ -7,7 +7,6 @@ from agent.agent_executor import MUCGPTAgentExecutor
 from config.model_provider import get_model
 from config.settings import BackendConfig, Settings
 from core.logtools import getLogger
-from simply.simply import Simply
 from summarize.summarize import Summarize
 
 logger = getLogger()
@@ -93,17 +92,6 @@ def init_summarize_service(cfg: BackendConfig, custom_model=None) -> Summarize:
         streaming=False,
         temperature=0,
         max_tokens=2000,
-        custom_model=custom_model,
-    )
-
-
-def init_simply_service(cfg: BackendConfig, custom_model=None) -> Simply:
-    return init_service(
-        Simply,
-        cfg,
-        streaming=True,
-        temperature=0,
-        max_tokens=4000,
         custom_model=custom_model,
     )
 

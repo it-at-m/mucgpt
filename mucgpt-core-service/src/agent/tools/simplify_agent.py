@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, TypedDict
+from typing import Optional, TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -16,7 +16,6 @@ class ReflectiveSimplificationState(TypedDict):
     simplified_text: str
     critique: str
     revisions: int
-    messages: List[BaseMessage]
     error: Optional[str]
 
 
@@ -173,7 +172,7 @@ SIMPLIFY_PROMPT = PromptTemplate(
 
 
 
-Schreibe den vereinfachten Text innerhalb von <einfachesprache> Tags. Füge dabei nach jedem Satz zwei Leerzeichen ein, um einen Zeilenumbruch in Markdown zu erzeugen.
+Schreibe den vereinfachten Text innerhalb von <einfachesprache> VEREINFACHTER_TEXT</einfachesprache> Tags.
 
 Hier ist der schwer verständliche Text:
 
@@ -215,14 +214,10 @@ REFINE_PROMPT = PromptTemplate(
 Your task is to revise a text based on a critique.
 
 Text to Revise:
-<text>
 {simplified_text}
-</text>
 
 Critique:
-<critique>
 {critique}
-</critique>
 
 Please rewrite the entire text, incorporating all the feedback from the critique to ensure it fully complies with Easy Language rules.
 
@@ -281,9 +276,6 @@ class SimplifyAgent:
 
     def _generate_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Generating initial simplification...")
-        self._stream_update(
-            "Erzeuge initiale vereinfachte Version...", ToolStreamState.STARTED
-        )
 
         prompt = SIMPLIFY_PROMPT.format(text=state["original_text"])
         messages = [
@@ -301,21 +293,17 @@ class SimplifyAgent:
 
         # Stream the response
         response_content = ""
-        last_chunk = None
         for chunk in llm.stream(messages):
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 response_content += result
                 self._stream_update(result)
-                last_chunk = chunk
-
         # Update with complete simplified text
-        self._stream_update(response_content, ToolStreamState.UPDATE)
+        self._stream_update("</einfachesprache>", ToolStreamState.APPEND)
 
         return {
             **state,
             "simplified_text": response_content.strip(),
-            "messages": messages + [last_chunk] if last_chunk else messages,
         }
 
     def _critique_node(self, state: ReflectiveSimplificationState):
@@ -418,14 +406,13 @@ class SimplifyAgent:
             "simplified_text": "",  # Initialize with empty string
             "critique": "",
             "revisions": 0,
-            "messages": [],
             "error": None,
         }
 
         try:
             final_state = self.graph.invoke(initial_state)
             self._stream_update(
-                "\n\n✅ Textvereinfachung abgeschlossen!", ToolStreamState.APPEND
+                "\n\n✅ Textvereinfachung abgeschlossen!", ToolStreamState.ENDED
             )
             return final_state["simplified_text"]
         except Exception as e:

@@ -14,6 +14,7 @@ def simplify(
     writer: StreamWriter = None,
 ) -> str:
     """Simplify complex text using a reflective agent with LangGraph."""
+
     try:
         # Create a SimplifyAgent instance with the writer and run the simplification workflow
         agent = SimplifyAgent(model=model, logger=logger, writer=writer)

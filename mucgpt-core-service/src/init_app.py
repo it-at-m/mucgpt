@@ -4,7 +4,6 @@ from typing import Any, Optional, Type
 
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
-from brainstorm.brainstorm import Brainstorm
 from config.model_provider import get_model
 from config.settings import BackendConfig, Settings
 from core.logtools import getLogger
@@ -84,17 +83,6 @@ def init_agent(cfg: Settings, custom_model=None) -> MUCGPTAgentExecutor:
             custom_model=custom_model,
         ),
         settings=cfg,
-    )
-
-
-def init_brainstorm_service(cfg: BackendConfig, custom_model=None) -> Brainstorm:
-    return init_service(
-        Brainstorm,
-        cfg,
-        streaming=False,
-        temperature=0.9,
-        max_tokens=4000,
-        custom_model=custom_model,
     )
 
 

@@ -7,7 +7,6 @@ from fastapi.responses import (
 )
 
 from api.routers import (
-    brainstorm_router,
     chat_router,
     simply_router,
     summarize_router,
@@ -38,7 +37,6 @@ api_app.add_middleware(CorrelationIdMiddleware)
 
 api_app.include_router(chat_router.router, prefix="", tags=["chat"])
 api_app.include_router(summarize_router.router, prefix="", tags=["summarize"])
-api_app.include_router(brainstorm_router.router, prefix="", tags=["brainstorm"])
 api_app.include_router(simply_router.router, prefix="", tags=["simply"])
 api_app.include_router(system_router.router, prefix="", tags=["system"])
 api_app.include_router(tools_router.router, prefix="", tags=["tools"])

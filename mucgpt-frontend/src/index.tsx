@@ -10,7 +10,6 @@ import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
 import Summarize from "./pages/summarize/Summarize";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
-import Brainstorm from "./pages/brainstorm/Brainstorm";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import Menu from "./pages/menu/Menu";
@@ -42,11 +41,6 @@ const router = createHashRouter([
             {
                 path: "sum",
                 element: <Summarize />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "brainstorm",
-                element: <Brainstorm />,
                 errorElement: <div>Fehler</div>
             },
             {

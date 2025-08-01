@@ -57,13 +57,6 @@ export type SumRequest = {
 
 export type SumarizeMessage = DBMessage<SumResponse>;
 
-export type BrainstormRequest = {
-    topic: string;
-    model: string;
-    temperature?: number;
-    language?: string;
-};
-
 export type SimplyRequest = {
     topic: string;
     temperature?: number;

@@ -3,22 +3,6 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
-class BrainstormRequest(BaseModel):
-    """Request model for the brainstorm endpoint."""
-
-    topic: str = Field(..., description="The topic to brainstorm about.")
-    language: str = Field(
-        "Deutsch", description="The language of the brainstorm result."
-    )
-    model: str = Field("gpt-4o-mini", description="The model to use for brainstorming.")
-
-
-class BrainstormResult(BaseModel):
-    """Result model for the brainstorm endpoint."""
-
-    answer: str = Field(..., description="The brainstormed answer.")
-
-
 class ChatTurn(BaseModel):
     """A single turn in a chat, containing a user message and an optional bot response."""
 

@@ -1,10 +1,8 @@
 import { getConfig, getXSRFToken, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
-    AskResponse,
     AssistantCreateInput,
     AssistantCreateResponse,
-    BrainstormRequest,
     ChatRequest,
     CountTokenRequest,
     CountTokenResponse,
@@ -83,22 +81,6 @@ export async function configApi(): Promise<ApplicationConfig> {
         const parsedResponse = await handleResponse(response);
         return parsedResponse;
     });
-}
-
-export async function brainstormApi(options: BrainstormRequest): Promise<AskResponse> {
-    const response = await fetch(
-        API_BASE + "brainstorm",
-        postConfig({
-            topic: options.topic,
-            temperature: options.temperature,
-            language: options.language,
-            model: options.model
-        })
-    );
-
-    handleRedirect(response, true);
-    const parsedResponse: AskResponse = await handleResponse(response);
-    return parsedResponse;
 }
 
 export async function simplyApi(options: SimplyRequest): Promise<SimplyResponse> {

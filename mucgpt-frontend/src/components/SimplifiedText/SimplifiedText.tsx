@@ -19,8 +19,29 @@ interface Props {
 export const SimplifiedText = ({ content }: Props) => {
     // Extract simplified text from the content
     const extractSimplifiedText = useCallback((rawContent: string): string => {
-        const match = rawContent.match(SIMPLE_LANGUAGE_TAG_REGEX);
-        return match ? match[1].trim() : rawContent;
+        // First try to match complete tags (opening + closing)
+        const completeMatch = rawContent.match(SIMPLE_LANGUAGE_TAG_REGEX);
+        if (completeMatch) {
+            return completeMatch[1].trim();
+        }
+
+        // If no complete match, check for opening tag and extract content until end or closing tag
+        const openingTagIndex = rawContent.indexOf("<einfachesprache>");
+        if (openingTagIndex !== -1) {
+            const contentStart = openingTagIndex + "<einfachesprache>".length;
+            const closingTagIndex = rawContent.indexOf("</einfachesprache>", contentStart);
+
+            if (closingTagIndex !== -1) {
+                // Closing tag found, extract content between tags
+                return rawContent.substring(contentStart, closingTagIndex).trim();
+            } else {
+                // No closing tag yet, extract all content after opening tag
+                return rawContent.substring(contentStart).trim();
+            }
+        }
+
+        // No tags found, return original content
+        return rawContent;
     }, []);
 
     // Extract processing info (revisions, status messages)

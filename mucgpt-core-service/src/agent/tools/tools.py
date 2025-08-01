@@ -48,7 +48,14 @@ subtopics, and relationships for the specified topic.
 def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = None):
     @tool(
         "Vereinfachen",
-        description="Simplify complex text to A2 level using Leichte Sprache.",
+        description="""Simplifies complex German text to A2 level using Leichte Sprache (Easy Language) principles.
+
+This tool transforms difficult texts into simple, accessible language following strict German accessibility standards.
+It uses short sentences (max 15 words), simple vocabulary, active voice, and clear structure with line breaks.
+
+IMPORTANT: Always pass the COMPLETE text that needs to be simplified in a single tool call.
+Do NOT split long texts into multiple parts - the tool is designed to handle entire documents at once
+and will maintain context and coherence across the full text when simplifying.""",
     )
     def simplify_tool(text: str):
         writer = get_stream_writer()

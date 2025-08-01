@@ -131,11 +131,11 @@ export const QuestionInput = ({
                                             if (setSelectedTools) setSelectedTools(selectedTools.filter(t => t !== toolName));
                                         }}
                                         icon={
-                                            (setSelectedTools && (
+                                            setSelectedTools && (
                                                 <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
                                                     ×
                                                 </span>
-                                            ))
+                                            )
                                         }
                                     >
                                         {toolName}

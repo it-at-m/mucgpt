@@ -1,4 +1,4 @@
-import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
@@ -8,16 +8,14 @@ import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, AssistantCreateInput, configApi, createCommunityAssistantApi } from "../../api";
+import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
-import { BOT_STORE, CHAT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
-import { BotStorageService } from "../../service/botstorage";
-import { StorageService } from "../../service/storage";
-import { DEFAULTHEADER, HeaderContext } from "./HeaderContextProvider";
+import { DEFAULT_APP_CONFIG } from "../../constants";
+import { HeaderContext } from "./HeaderContextProvider";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -25,7 +23,6 @@ const formatDate = (date: Date) => {
 };
 
 export const Layout = () => {
-
     //style
     const styles2 = useStyles();
 
@@ -41,11 +38,11 @@ export const Layout = () => {
     const configApiCalledRef = useRef(false);
 
     // Translation
-    const { t, i18n } = useTranslation();
+    const { i18n } = useTranslation();
 
     const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
 
-    const [simply, setSimply] = useState<boolean>(true);
+    const [, setSimply] = useState<boolean>(true);
     const [models, setModels] = useState(config.models);
 
     // vars from storage
@@ -81,7 +78,6 @@ export const Layout = () => {
         },
         [fontscaling, setLight, setTheme]
     );
-
 
     useEffect(() => {
         // Skip if the API has already been called
@@ -156,9 +152,7 @@ export const Layout = () => {
                                 </h3>
                             </Link>
                             <div className={styles.headerNavList}>
-                                <div className={styles.headerNavPageLink}>
-                                    {header}
-                                </div>
+                                <div className={styles.headerNavPageLink}>{header}</div>
                             </div>
                             <div className={styles.SettingsDrawer}>
                                 <SettingsDrawer

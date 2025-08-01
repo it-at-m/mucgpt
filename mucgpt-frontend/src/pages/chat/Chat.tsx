@@ -21,6 +21,8 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { ToolListResponse } from "../../api/models";
 import { HeaderContext } from "../layout/HeaderContextProvider";
+import ToolStatusDisplay from "../../components/ToolStatusDisplay";
+import { ToolStatus } from "../../utils/ToolStreamHandler";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -96,6 +98,7 @@ const Chat = () => {
     );
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+    const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
 
     useEffect(() => {
         const fetchTools = async () => {
@@ -222,7 +225,6 @@ const Chat = () => {
                 maxTokens: max_output_tokens,
                 temperature: temperature
             };
-
             try {
                 await makeApiRequest(
                     answers,
@@ -238,7 +240,8 @@ const Chat = () => {
                     isLoadingRef,
                     fetchHistory,
                     undefined,
-                    selectedTools
+                    selectedTools,
+                    setToolStatuses
                 );
             } catch (e) {
                 setError(e);
@@ -541,22 +544,24 @@ const Chat = () => {
         ),
         [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged, sidebar_actions, sidebar_content]
     );
-
     const layout = useMemo(
         () => (
-            <ChatLayout
-                sidebar={sidebar}
-                examples={examplesComponent}
-                answers={answerList}
-                input={inputComponent}
-                showExamples={!lastQuestionRef.current}
-                header={t("chat.header")}
-                header_as_markdown={false}
-                messages_description={t("common.messages")}
-                size={showSidebar ? "large" : "none"}
-            ></ChatLayout>
+            <>
+                <ChatLayout
+                    sidebar={sidebar}
+                    examples={examplesComponent}
+                    answers={answerList}
+                    input={inputComponent}
+                    showExamples={!lastQuestionRef.current}
+                    header={t("chat.header")}
+                    header_as_markdown={false}
+                    messages_description={t("common.messages")}
+                    size={showSidebar ? "large" : "none"}
+                />
+                <ToolStatusDisplay activeTools={toolStatuses} />
+            </>
         ),
-        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, showSidebar]
+        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, showSidebar, toolStatuses]
     );
 
     return layout;

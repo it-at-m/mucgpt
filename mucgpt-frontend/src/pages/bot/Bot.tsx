@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse, getTools } from "../../api";
+import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -21,8 +21,9 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { ToolListResponse } from "../../api/models";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import ToolStatusDisplay from "../../components/ToolStatusDisplay";
+import { ToolStatus } from "../../utils/ToolStreamHandler";
 
 const BotChat = () => {
     // useReducer für den Chat-Status
@@ -63,26 +64,14 @@ const BotChat = () => {
     const { setHeader } = useContext(HeaderContext);
 
     const [error, setError] = useState<unknown>();
-    const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
+    const [sidebarSize] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
-
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                const result = await getTools();
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, []);
+    const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -176,7 +165,8 @@ const BotChat = () => {
                     isLoadingRef,
                     fetchHistory,
                     bot_id,
-                    selectedTools
+                    selectedTools,
+                    setToolStatuses
                 );
             } catch (e) {
                 setError(e);
@@ -273,13 +263,6 @@ const BotChat = () => {
         },
         [callApi]
     );
-    // onEdit Sidebar-Funktion
-    const onEditChange = useCallback(
-        (isEditable: boolean) => {
-            setSidebarWidth(isEditable ? "full_width" : "large");
-        },
-        [setSidebarWidth]
-    );
 
     // History component
     const history = useMemo(
@@ -333,12 +316,11 @@ const BotChat = () => {
                     onDeleteBot={onDeleteBot}
                     actions={actions}
                     before_content={history}
-                    onEditChange={onEditChange}
                     minimized={!showSidebar}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onBotChanged, onDeleteBot, actions, history, onEditChange, showSidebar]
+        [botConfig, onBotChanged, onDeleteBot, actions, history, showSidebar]
     );
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -404,22 +386,24 @@ const BotChat = () => {
         ),
         [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
     );
-
     const layout = useMemo(
         () => (
-            <ChatLayout
-                sidebar={sidebar}
-                examples={examplesComponent}
-                answers={answerList}
-                input={inputComponent}
-                showExamples={!lastQuestionRef.current}
-                header=""
-                header_as_markdown={false}
-                messages_description={t("common.messages")}
-                size={showSidebar ? sidebarSize : "none"}
-            ></ChatLayout>
+            <>
+                <ChatLayout
+                    sidebar={sidebar}
+                    examples={examplesComponent}
+                    answers={answerList}
+                    input={inputComponent}
+                    showExamples={!lastQuestionRef.current}
+                    header=""
+                    header_as_markdown={false}
+                    messages_description={t("common.messages")}
+                    size={showSidebar ? sidebarSize : "none"}
+                />
+                <ToolStatusDisplay activeTools={toolStatuses} />
+            </>
         ),
-        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, sidebarSize]
+        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, sidebarSize, toolStatuses]
     );
     return layout;
 };

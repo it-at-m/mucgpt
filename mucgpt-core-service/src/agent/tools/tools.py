@@ -16,7 +16,12 @@ from core.logtools import getLogger
 def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = None):
     @tool(
         "Brainstorming",
-        description="Generate a mind map for a given topic in markdown format.",
+        description="""
+Generates a detailed mind map for a given topic in markdown format.
+The output uses headings for main ideas and subheadings for related subtopics,
+structured as a markdown code block. This helps visualize and organize concepts,
+subtopics, and relationships for the specified topic.
+""",
     )
     def brainstorm_tool(topic: str, context: str = None):
         writer = get_stream_writer()
@@ -27,11 +32,11 @@ def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = N
                 tool_name="Brainstorming",
             ).model_dump_json()
         )
-        result = brainstorming(topic, context, model, logger)
+        result = brainstorming(topic, context, model, logger, writer)
         writer(
             ToolStreamChunk(
                 state=ToolStreamState.ENDED,
-                content=result,
+                content="Brainstorming abgeschlossen.",
                 tool_name="Brainstorming",
             ).model_dump_json()
         )
@@ -133,6 +138,12 @@ class ToolCollection:
         class DummyModel(RunnableSerializable):
             def with_config(self, *args, **kwargs):
                 return self
+
+            def with_structured_output(self, *args, **kwargs):
+                return self
+
+            def __init__(self):
+                self.__pregel_runtime = {}
 
             def invoke(self, *args, **kwargs):
                 return type("DummyResponse", (), {"content": ""})()

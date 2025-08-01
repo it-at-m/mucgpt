@@ -18,7 +18,7 @@ import {
     Field,
     Textarea,
     Input,
-    TextareaOnChangeData,
+    TextareaOnChangeData
 } from "@fluentui/react-components";
 
 import styles from "./EditBotDialog.module.css";
@@ -116,9 +116,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     // Update selectedTools when tools change
     useEffect(() => {
         if (availableTools && tools.length > 0) {
-            const toolInfos = tools.map(tool =>
-                availableTools.tools.find(t => t.name === tool.id)
-            ).filter(Boolean) as ToolInfo[];
+            const toolInfos = tools.map(tool => availableTools.tools.find(t => t.name === tool.id)).filter(Boolean) as ToolInfo[];
             setSelectedTools(toolInfos);
         } else {
             setSelectedTools([]);
@@ -178,7 +176,6 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         }
     }, []);
 
-
     // Helper functions for quick prompts
     const addQuickPrompt = () => {
         // Only add if there is no empty quick prompt
@@ -188,18 +185,24 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         }
     };
 
-    const onChangeQuickPromptLabel = useCallback((e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
-        const updated = [...quickPrompts];
-        updated[index].label = e.currentTarget.value.trim();
-        updated[index].tooltip = updated[index].label;
-        setQuickPrompts(updated);
-    }, [quickPrompts]);
+    const onChangeQuickPromptLabel = useCallback(
+        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+            const updated = [...quickPrompts];
+            updated[index].label = e.currentTarget.value.trim();
+            updated[index].tooltip = updated[index].label;
+            setQuickPrompts(updated);
+        },
+        [quickPrompts]
+    );
 
-    const onChangeQuickPromptPrompt = useCallback((e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
-        const updated = [...quickPrompts];
-        updated[index].prompt = e.currentTarget.value.trim();
-        setQuickPrompts(updated);
-    }, [quickPrompts]);
+    const onChangeQuickPromptPrompt = useCallback(
+        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+            const updated = [...quickPrompts];
+            updated[index].prompt = e.currentTarget.value.trim();
+            setQuickPrompts(updated);
+        },
+        [quickPrompts]
+    );
 
     const removeQuickPrompt = (index: number) => {
         setQuickPrompts(quickPrompts.filter((_, i) => i !== index));
@@ -213,16 +216,22 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             setExamples([...examples, { text: "", value: "" }]);
         }
     };
-    const onChangeExampleText = useCallback((e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
-        const updated = [...examples];
-        updated[index].text = e.currentTarget.value.trim();
-        setExamples(updated);
-    }, [examples]);
-    const onChangeExampleValue = useCallback((e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
-        const updated = [...examples];
-        updated[index].value = e.currentTarget.value.trim();
-        setExamples(updated);
-    }, [examples]);
+    const onChangeExampleText = useCallback(
+        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+            const updated = [...examples];
+            updated[index].text = e.currentTarget.value.trim();
+            setExamples(updated);
+        },
+        [examples]
+    );
+    const onChangeExampleValue = useCallback(
+        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+            const updated = [...examples];
+            updated[index].value = e.currentTarget.value.trim();
+            setExamples(updated);
+        },
+        [examples]
+    );
 
     const removeExample = (index: number) => {
         setExamples(examples.filter((_, i) => i !== index));
@@ -248,14 +257,10 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             return;
         }
         // Filter out empty quick prompts
-        const validQuickPrompts = quickPrompts.filter(qp =>
-            qp.label && qp.label.trim() !== "" && qp.prompt && qp.prompt.trim() !== ""
-        );
+        const validQuickPrompts = quickPrompts.filter(qp => qp.label && qp.label.trim() !== "" && qp.prompt && qp.prompt.trim() !== "");
 
         // Filter out empty examples
-        const validExamples = examples.filter(ex =>
-            ex.text && ex.text.trim() !== "" && ex.value && ex.value.trim() !== ""
-        );
+        const validExamples = examples.filter(ex => ex.text && ex.text.trim() !== "" && ex.value && ex.value.trim() !== "");
 
         const bot: Bot = {
             id: botId,
@@ -271,7 +276,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             version: version,
             tools: tools,
             hirachical_access: hierarchicalAccess,
-            tags: tags,
+            tags: tags
         };
         setHeader(title);
         onBotChanged(bot);
@@ -281,85 +286,118 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             setShowSavedMessage(false);
             setShowDialog(false);
         }, 2000);
-    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, version, tools, onBotChanged, setHeader, botId, isOwner, setShowDialog, publish, ownerIds, hierarchicalAccess, tags]);
+    }, [
+        title,
+        description,
+        systemPrompt,
+        temperature,
+        maxOutputTokens,
+        quickPrompts,
+        examples,
+        version,
+        tools,
+        onBotChanged,
+        setHeader,
+        botId,
+        isOwner,
+        setShowDialog,
+        publish,
+        ownerIds,
+        hierarchicalAccess,
+        tags
+    ]);
 
     // Render saved message
-    const savedMessage = useMemo(() => showSavedMessage && (
-        <div className={styles.savedMessage}>
-            <Checkmark24Filled />
-            {t("components.edit_bot_dialog.saved_successfully")}
-        </div>
-    ), [showSavedMessage, t]);
+    const savedMessage = useMemo(
+        () =>
+            showSavedMessage && (
+                <div className={styles.savedMessage}>
+                    <Checkmark24Filled />
+                    {t("components.edit_bot_dialog.saved_successfully")}
+                </div>
+            ),
+        [showSavedMessage, t]
+    );
 
     // Render stepper progress
-    const stepperProgress = useMemo(() => (
-        <div className={styles.stepperContainer}>
-            <div className={styles.stepperHeader}>
-                <div className={styles.stepNumber}>{currentStep + 1} / {totalSteps}</div>
-                <div className={styles.stepTitle}>{t(stepTitles[currentStep])}</div>
+    const stepperProgress = useMemo(
+        () => (
+            <div className={styles.stepperContainer}>
+                <div className={styles.stepperHeader}>
+                    <div className={styles.stepNumber}>
+                        {currentStep + 1} / {totalSteps}
+                    </div>
+                    <div className={styles.stepTitle}>{t(stepTitles[currentStep])}</div>
+                </div>
+                <div className={styles.progressBar}>
+                    <div className={styles.progressFill} style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }} />
+                </div>
             </div>
-            <div className={styles.progressBar}>
-                <div
-                    className={styles.progressFill}
-                    style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
-                />
-            </div>
-        </div>
-    ), [currentStep, totalSteps, stepTitles, t]);
+        ),
+        [currentStep, totalSteps, stepTitles, t]
+    );
 
     // Step 0: Title
-    const titleStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.bot_title")}:</label>
-                <Textarea
-                    placeholder={t("components.edit_bot_dialog.bot_title")}
-                    value={title}
-                    size="large"
-                    onChange={onTitleChanged}
-                    maxLength={100}
-                    disabled={!isOwner || showSavedMessage}
-                />
-            </Field>
-        </DialogContent>
-    ), [title, onTitleChanged, isOwner, showSavedMessage, t]);
+    const titleStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.formField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.bot_title")}:</label>
+                    <Textarea
+                        placeholder={t("components.edit_bot_dialog.bot_title")}
+                        value={title}
+                        size="large"
+                        onChange={onTitleChanged}
+                        maxLength={100}
+                        disabled={!isOwner || showSavedMessage}
+                    />
+                </Field>
+            </DialogContent>
+        ),
+        [title, onTitleChanged, isOwner, showSavedMessage, t]
+    );
 
     // Step 1: Description
-    const descriptionStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.bot_description")}:</label>
-                <Textarea
-                    placeholder={t("components.edit_bot_dialog.bot_description")}
-                    value={description}
-                    rows={15}
-                    resize="vertical"
-                    size="large"
-                    onChange={onDescriptionChanged}
-                    disabled={!isOwner || showSavedMessage}
-                />
-            </Field>
-        </DialogContent>
-    ), [description, onDescriptionChanged, isOwner, showSavedMessage, t]);
+    const descriptionStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.formField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.bot_description")}:</label>
+                    <Textarea
+                        placeholder={t("components.edit_bot_dialog.bot_description")}
+                        value={description}
+                        rows={15}
+                        resize="vertical"
+                        size="large"
+                        onChange={onDescriptionChanged}
+                        disabled={!isOwner || showSavedMessage}
+                    />
+                </Field>
+            </DialogContent>
+        ),
+        [description, onDescriptionChanged, isOwner, showSavedMessage, t]
+    );
 
     // Step 2: System Prompt
-    const systemPromptStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.system_prompt")}:</label>
-                <Textarea
-                    placeholder={t("components.edit_bot_dialog.system_prompt")}
-                    rows={15}
-                    resize="vertical"
-                    value={systemPrompt}
-                    size="large"
-                    onChange={onPromptChanged}
-                    disabled={!isOwner || showSavedMessage}
-                />
-            </Field>
-        </DialogContent>
-    ), [systemPrompt, onPromptChanged, isOwner, showSavedMessage, t]);
-
+    const systemPromptStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.formField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.system_prompt")}:</label>
+                    <Textarea
+                        placeholder={t("components.edit_bot_dialog.system_prompt")}
+                        rows={15}
+                        resize="vertical"
+                        value={systemPrompt}
+                        size="large"
+                        onChange={onPromptChanged}
+                        disabled={!isOwner || showSavedMessage}
+                    />
+                </Field>
+            </DialogContent>
+        ),
+        [systemPrompt, onPromptChanged, isOwner, showSavedMessage, t]
+    );
     // Render temperature and token controls
     const { LLM } = useContext(LLMContext);
     const min_max_tokens = 10;
@@ -383,214 +421,213 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     );
 
     // Step 3: Tools
-    const toolsStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.tools")}</label>
-                <div className={styles.dynamicFieldContainer}>
-                    <div className={styles.dynamicFieldList}>
-                        {selectedTools.length > 0 ? (
-                            selectedTools.map((tool, index) => (
-                                <div key={tool.name + index} className={styles.dynamicFieldItem}>
-                                    <div className={styles.dynamicFieldInputs}>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>{tool.name}:</span>
-                                            <span className={styles.toolDescription}>{tool.description}</span>
+    const toolsStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.formField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.tools")}</label>
+                    <div className={styles.dynamicFieldContainer}>
+                        <div className={styles.dynamicFieldList}>
+                            {selectedTools.length > 0 ? (
+                                selectedTools.map((tool, index) => (
+                                    <div key={tool.name + index} className={styles.dynamicFieldItem}>
+                                        <div className={styles.dynamicFieldInputs}>
+                                            <div className={styles.dynamicFieldInputRow}>
+                                                <span className={styles.dynamicFieldInputLabel}>{tool.name}:</span>
+                                                <span className={styles.toolDescription}>{tool.description}</span>
+                                            </div>
                                         </div>
+                                        <button
+                                            className={styles.removeFieldButton}
+                                            onClick={() => {
+                                                const newTools = tools.filter(t => t.id !== tool.name);
+                                                setTools(newTools);
+                                                const newSelectedTools = selectedTools.filter(t => t.name !== tool.name);
+                                                setSelectedTools(newSelectedTools);
+                                            }}
+                                            disabled={!isOwner}
+                                            title={t("components.edit_bot_dialog.remove")}
+                                        >
+                                            <Delete24Regular />
+                                        </button>
                                     </div>
-                                    <button
-                                        className={styles.removeFieldButton}
-                                        onClick={() => {
-                                            const newTools = tools.filter(t => t.id !== tool.name);
-                                            setTools(newTools);
-                                            const newSelectedTools = selectedTools.filter(t => t.name !== tool.name);
-                                            setSelectedTools(newSelectedTools);
-                                        }}
-                                        disabled={!isOwner}
-                                        title={t("components.edit_bot_dialog.remove")}
-                                    >
-                                        <Delete24Regular />
-                                    </button>
-                                </div>
-                            ))
-                        ) : (
-                            <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_tools_selected")}</div>
+                                ))
+                            ) : (
+                                <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_tools_selected")}</div>
+                            )}
+                        </div>
+                        {!!isOwner && (
+                            <Button appearance="subtle" onClick={() => setShowToolsSelector(true)} disabled={!isOwner} className={styles.addFieldButton}>
+                                <Add24Regular /> {t("components.edit_bot_dialog.select_tools")}
+                            </Button>
                         )}
                     </div>
-                    {!!isOwner &&
-                        <Button
-                            appearance="subtle"
-                            onClick={() => setShowToolsSelector(true)}
-                            disabled={!isOwner}
-                            className={styles.addFieldButton}
-                        >
-                            <Add24Regular /> {t("components.edit_bot_dialog.select_tools")}
-                        </Button>}
-                </div>
-            </Field>
-        </DialogContent>
-    ), [selectedTools, tools, isOwner, t]);
+                </Field>
+            </DialogContent>
+        ),
+        [selectedTools, tools, isOwner, t]
+    );
 
     // Step 4: Quick Prompts
-    const quickPromptsStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.quick_prompts")}</label>
-                <div className={styles.dynamicFieldContainer}>
-                    <div className={styles.dynamicFieldList}>
-                        {quickPrompts.length > 0 ? (
-                            quickPrompts.map((qp, index) => (
-                                <div key={index} className={styles.dynamicFieldItem}>
-                                    <div className={styles.dynamicFieldInputs}>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Label:</span>
-                                            <Input
-                                                placeholder={t("components.edit_bot_dialog.quick_prompt_label_placeholder")}
-                                                value={qp.label}
-                                                onChange={(e) => onChangeQuickPromptLabel(e, index)}
-                                                disabled={!isOwner}
-                                                className={styles.dynamicFieldInput}
-                                            />
+    const quickPromptsStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.formField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.quick_prompts")}</label>
+                    <div className={styles.dynamicFieldContainer}>
+                        <div className={styles.dynamicFieldList}>
+                            {quickPrompts.length > 0 ? (
+                                quickPrompts.map((qp, index) => (
+                                    <div key={index} className={styles.dynamicFieldItem}>
+                                        <div className={styles.dynamicFieldInputs}>
+                                            <div className={styles.dynamicFieldInputRow}>
+                                                <span className={styles.dynamicFieldInputLabel}>Label:</span>
+                                                <Input
+                                                    placeholder={t("components.edit_bot_dialog.quick_prompt_label_placeholder")}
+                                                    value={qp.label}
+                                                    onChange={e => onChangeQuickPromptLabel(e, index)}
+                                                    disabled={!isOwner}
+                                                    className={styles.dynamicFieldInput}
+                                                />
+                                            </div>
+                                            <div className={styles.dynamicFieldInputRow}>
+                                                <span className={styles.dynamicFieldInputLabel}>Prompt:</span>
+                                                <Textarea
+                                                    placeholder={t("components.edit_bot_dialog.quick_prompt_text_placeholder")}
+                                                    value={qp.prompt}
+                                                    onChange={e => onChangeQuickPromptPrompt(e, index)}
+                                                    disabled={!isOwner}
+                                                    rows={2}
+                                                    className={styles.dynamicFieldInput}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Prompt:</span>
-                                            <Textarea
-                                                placeholder={t("components.edit_bot_dialog.quick_prompt_text_placeholder")}
-                                                value={qp.prompt}
-                                                onChange={(e) => onChangeQuickPromptPrompt(e, index)}
+                                        {!!isOwner && (
+                                            <button
+                                                className={styles.removeFieldButton}
+                                                onClick={() => removeQuickPrompt(index)}
                                                 disabled={!isOwner}
-                                                rows={2}
-                                                className={styles.dynamicFieldInput}
-                                            />
-                                        </div>
+                                                title={t("components.edit_bot_dialog.remove")}
+                                            >
+                                                <Delete24Regular />
+                                            </button>
+                                        )}
                                     </div>
-                                    {!!isOwner && (
-                                        <button
-                                            className={styles.removeFieldButton}
-                                            onClick={() => removeQuickPrompt(index)}
-                                            disabled={!isOwner}
-                                            title={t("components.edit_bot_dialog.remove")}
-                                        >
-                                            <Delete24Regular />
-                                        </button>
-                                    )}
-                                </div>
-                            ))
-                        ) : (
-                            <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_quick_prompts_selected")}</div>
+                                ))
+                            ) : (
+                                <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_quick_prompts_selected")}</div>
+                            )}
+                        </div>
+                        {!!isOwner && (
+                            <Button appearance="subtle" onClick={addQuickPrompt} disabled={!isOwner} className={styles.addFieldButton}>
+                                <Add24Regular /> {t("components.edit_bot_dialog.add_quick_prompt")}
+                            </Button>
                         )}
                     </div>
-                    {!!isOwner &&
-                        <Button
-                            appearance="subtle"
-                            onClick={addQuickPrompt}
-                            disabled={!isOwner}
-                            className={styles.addFieldButton}
-                        >
-                            <Add24Regular /> {t("components.edit_bot_dialog.add_quick_prompt")}
-                        </Button>}
-                </div>
-            </Field>
-        </DialogContent>
-    ), [quickPrompts, isOwner, t]);
+                </Field>
+            </DialogContent>
+        ),
+        [quickPrompts, isOwner, t]
+    );
 
     // Step 5: Examples
-    const examplesStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.examples")}</label>
-                <div className={styles.dynamicFieldContainer}>
-                    <div className={styles.dynamicFieldList}>
-                        {examples.length > 0 ? (
-                            examples.map((ex, index) => (
-                                <div key={index} className={styles.dynamicFieldItem}>
-                                    <div className={styles.dynamicFieldInputs}>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Text:</span>
-                                            <Input
-                                                placeholder={t("components.edit_bot_dialog.example_text_placeholder")}
-                                                value={ex.text}
-                                                onChange={(e) => onChangeExampleText(e, index)}
-                                                disabled={!isOwner}
-                                                className={styles.dynamicFieldInput}
-                                            />
+    const examplesStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.formField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.examples")}</label>
+                    <div className={styles.dynamicFieldContainer}>
+                        <div className={styles.dynamicFieldList}>
+                            {examples.length > 0 ? (
+                                examples.map((ex, index) => (
+                                    <div key={index} className={styles.dynamicFieldItem}>
+                                        <div className={styles.dynamicFieldInputs}>
+                                            <div className={styles.dynamicFieldInputRow}>
+                                                <span className={styles.dynamicFieldInputLabel}>Text:</span>
+                                                <Input
+                                                    placeholder={t("components.edit_bot_dialog.example_text_placeholder")}
+                                                    value={ex.text}
+                                                    onChange={e => onChangeExampleText(e, index)}
+                                                    disabled={!isOwner}
+                                                    className={styles.dynamicFieldInput}
+                                                />
+                                            </div>
+                                            <div className={styles.dynamicFieldInputRow}>
+                                                <span className={styles.dynamicFieldInputLabel}>Value:</span>
+                                                <Textarea
+                                                    placeholder={t("components.edit_bot_dialog.example_value_placeholder")}
+                                                    value={ex.value}
+                                                    onChange={e => onChangeExampleValue(e, index)}
+                                                    disabled={!isOwner}
+                                                    rows={2}
+                                                    className={styles.dynamicFieldInput}
+                                                />
+                                            </div>
                                         </div>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Value:</span>
-                                            <Textarea
-                                                placeholder={t("components.edit_bot_dialog.example_value_placeholder")}
-                                                value={ex.value}
-                                                onChange={(e) => onChangeExampleValue(e, index)}
+                                        {!!isOwner && (
+                                            <button
+                                                className={styles.removeFieldButton}
+                                                onClick={() => removeExample(index)}
                                                 disabled={!isOwner}
-                                                rows={2}
-                                                className={styles.dynamicFieldInput}
-                                            />
-                                        </div>
+                                                title={t("components.edit_bot_dialog.remove")}
+                                            >
+                                                <Delete24Regular />
+                                            </button>
+                                        )}
                                     </div>
-                                    {!!isOwner && (
-                                        <button
-                                            className={styles.removeFieldButton}
-                                            onClick={() => removeExample(index)}
-                                            disabled={!isOwner}
-                                            title={t("components.edit_bot_dialog.remove")}
-                                        >
-                                            <Delete24Regular />
-                                        </button>
-                                    )}
-                                </div>
-                            ))
-                        ) : (
-                            <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_examples_selected")}</div>
+                                ))
+                            ) : (
+                                <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_examples_selected")}</div>
+                            )}
+                        </div>
+                        {!!isOwner && (
+                            <Button appearance="subtle" onClick={addExample} disabled={!isOwner} className={styles.addFieldButton}>
+                                <Add24Regular /> {t("components.edit_bot_dialog.add_example")}
+                            </Button>
                         )}
                     </div>
-                    {!!isOwner && (
-                        <Button
-                            appearance="subtle"
-                            onClick={addExample}
-                            disabled={!isOwner}
-                            className={styles.addFieldButton}
-                        >
-                            <Add24Regular /> {t("components.edit_bot_dialog.add_example")}
-                        </Button>
-                    )}
-                </div>
-            </Field>
-        </DialogContent>
-    ), [examples, isOwner, t]);
+                </Field>
+            </DialogContent>
+        ),
+        [examples, isOwner, t]
+    );
 
     // Step 6: Advanced Settings (Temperature and Tokens)
-    const advancedSettingsStep = useMemo(() => (
-        <DialogContent>
-            <Field size="large" className={styles.rangeField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.temperature")}</label>
-                <input
-                    type="range"
-                    min={min_temp}
-                    max={max_temp}
-                    step={0.05}
-                    value={temperature}
-                    onChange={onTemperatureChange}
-                    disabled={!isOwner}
-                    className={styles.rangeInput}
-                />
-                <div className={styles.rangeValue}>{temperature}</div>
-            </Field>
-            <Field size="large" className={styles.rangeField}>
-                <label className={styles.formLabel}>{t("components.edit_bot_dialog.max_output_tokens")}</label>
-                <input
-                    type="range"
-                    min={min_max_tokens}
-                    max={max_max_tokens}
-                    step={100}
-                    value={maxOutputTokens}
-                    onChange={onMaxtokensChange}
-                    disabled={!isOwner}
-                    className={styles.rangeInput}
-                />
-                <div className={styles.rangeValue}>{maxOutputTokens}</div>
-            </Field>
-        </DialogContent>
-    ), [temperature, maxOutputTokens, onTemperatureChange, onMaxtokensChange, isOwner, t, min_temp, max_temp, min_max_tokens, max_max_tokens]);
+    const advancedSettingsStep = useMemo(
+        () => (
+            <DialogContent>
+                <Field size="large" className={styles.rangeField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.temperature")}</label>
+                    <input
+                        type="range"
+                        min={min_temp}
+                        max={max_temp}
+                        step={0.05}
+                        value={temperature}
+                        onChange={onTemperatureChange}
+                        disabled={!isOwner}
+                        className={styles.rangeInput}
+                    />
+                    <div className={styles.rangeValue}>{temperature}</div>
+                </Field>
+                <Field size="large" className={styles.rangeField}>
+                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.max_output_tokens")}</label>
+                    <input
+                        type="range"
+                        min={min_max_tokens}
+                        max={max_max_tokens}
+                        step={100}
+                        value={maxOutputTokens}
+                        onChange={onMaxtokensChange}
+                        disabled={!isOwner}
+                        className={styles.rangeInput}
+                    />
+                    <div className={styles.rangeValue}>{maxOutputTokens}</div>
+                </Field>
+            </DialogContent>
+        ),
+        [temperature, maxOutputTokens, onTemperatureChange, onMaxtokensChange, isOwner, t, min_temp, max_temp, min_max_tokens, max_max_tokens]
+    );
 
     // Function to render current step content
     const getCurrentStepContent = () => {
@@ -615,65 +652,45 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     };
 
     // Render dialog actions
-    const dialogActions = useMemo(() => (
-        <>
-            <Button
-                appearance="secondary"
-                size="small"
-                onClick={prevStep}
-                disabled={currentStep === 0 || showSavedMessage}
-            >
-                <ChevronLeft24Regular /> {t("components.edit_bot_dialog.previous")}
-            </Button>
-            <Button
-                appearance="secondary"
-                size="small"
-                onClick={onSaveButtonClicked}
-                disabled={showSavedMessage}
-            >
-                {!isOwner ? <Dismiss24Regular /> : <Save24Filled />}
-                {" "}
-                {!isOwner ? t("components.edit_bot_dialog.close") : t("components.edit_bot_dialog.save")}
-            </Button>
-            <Button
-                appearance="primary"
-                size="small"
-                onClick={nextStep}
-                disabled={!canProceedToNext() || showSavedMessage || currentStep === totalSteps - 1}
-            >
-                {t("components.edit_bot_dialog.next")} <ChevronRight24Regular />
-            </Button>
-        </>
-    ), [currentStep, totalSteps, prevStep, nextStep, canProceedToNext, onSaveButtonClicked, isOwner, showSavedMessage, t]);
-
+    const dialogActions = useMemo(
+        () => (
+            <>
+                <Button appearance="secondary" size="small" onClick={prevStep} disabled={currentStep === 0 || showSavedMessage}>
+                    <ChevronLeft24Regular /> {t("components.edit_bot_dialog.previous")}
+                </Button>
+                <Button appearance="secondary" size="small" onClick={onSaveButtonClicked} disabled={showSavedMessage}>
+                    {!isOwner ? <Dismiss24Regular /> : <Save24Filled />}{" "}
+                    {!isOwner ? t("components.edit_bot_dialog.close") : t("components.edit_bot_dialog.save")}
+                </Button>
+                <Button
+                    appearance="primary"
+                    size="small"
+                    onClick={nextStep}
+                    disabled={!canProceedToNext() || showSavedMessage || currentStep === totalSteps - 1}
+                >
+                    {t("components.edit_bot_dialog.next")} <ChevronRight24Regular />
+                </Button>
+            </>
+        ),
+        [currentStep, totalSteps, prevStep, nextStep, canProceedToNext, onSaveButtonClicked, isOwner, showSavedMessage, t]
+    );
 
     return (
         <div>
             <Dialog modalType="alert" open={showDialog}>
                 <DialogSurface className={styles.dialog}>
                     <DialogTitle>{t("components.edit_bot_dialog.title")}</DialogTitle>
-                    {!showSavedMessage && (
-                        <div className={styles.stepperFullWidth}>
-                            {stepperProgress}
-                        </div>
-                    )}
+                    {!showSavedMessage && <div className={styles.stepperFullWidth}>{stepperProgress}</div>}
                     <DialogBody className={styles.scrollableDialogContent}>
                         {savedMessage}
                         {!showSavedMessage && getCurrentStepContent()}
                     </DialogBody>
                     <DialogActions className={styles.dialogActionsContainer}>
-                        <div className={styles.stepperActions}>
-                            {dialogActions}
-                        </div>
+                        <div className={styles.stepperActions}>{dialogActions}</div>
                     </DialogActions>
                 </DialogSurface>
             </Dialog>
-            <ToolsSelector
-                open={showToolsSelector}
-                onClose={handleToolsSelected}
-                tools={availableTools}
-                selectedTools={selectedTools}
-            />
+            <ToolsSelector open={showToolsSelector} onClose={handleToolsSelected} tools={availableTools} selectedTools={selectedTools} />
         </div>
     );
 };

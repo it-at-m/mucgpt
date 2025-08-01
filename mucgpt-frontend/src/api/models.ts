@@ -13,6 +13,12 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    activeTools?: Array<{
+        name: string;
+        message: string;
+        state: "STARTED" | "ENDED" | null;
+        timestamp: number;
+    }>;
 };
 
 export type SumResponse = {
@@ -50,13 +56,6 @@ export type SumRequest = {
 };
 
 export type SumarizeMessage = DBMessage<SumResponse>;
-
-export type BrainstormRequest = {
-    topic: string;
-    model: string;
-    temperature?: number;
-    language?: string;
-};
 
 export type SimplyRequest = {
     topic: string;

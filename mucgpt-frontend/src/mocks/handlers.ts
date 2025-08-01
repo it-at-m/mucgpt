@@ -35,10 +35,6 @@ const SUM_RESPONSE = {
     ]
 };
 
-const BRAINSTORM_RESPONSE = {
-    answer: "markdown\n# **Warum sollte ich in München Wohnen?**\n\n## Lebensqualität\n\n### Hohe Lebensstandards\n\n- Vielseitige Freizeitmöglichkeiten\n  - Parks und Erholungsgebiete\n  - Museen und kulturelle Veranstaltungen\n  - Sporteinrichtungen\n- Gute Luftqualität\n  - Wenig industrielle Verschmutzung\n  - Viele Grünflächen\n- Sichere Umgebung\n  - Niedrige Kriminalitätsrate\n  - Freundliche Nachbarschaften\n\n### Gesundheitsversorgung\n\n- Exzellente Krankenhäuser\n- Zugang zu spezialisierten Ärzten\n- Gesundheitsfördernde Initiativen\n  - Sport- und Fitnessprogramme\n  - Präventionskurse\n\n## Bildung und Karriere\n\n### Bildungseinrichtungen\n\n- Renommierte Schulen\n  - Internationale Schulen\n  - Förderprogramme für Talente\n- Universitäten und Fachhochschulen\n  - Technische Universität München\n  - Ludwig-Maximilians-Universität\n  - Hochschule München\n\n### Karrieremöglichkeiten\n\n- Starke Wirtschaft\n  - Ansässige internationale Firmen\n  - Vielfältige Branchen vertreten\n- Networking-Möglichkeiten\n  - Messen und Konferenzen\n  - Innovationszentren und Start-up-Szene\n- Unterstützung für Existenzgründer\n  - Förderprogramme\n  - Coworking-Spaces\n\n## Kultur und Freizeit\n\n### Kulturelle Veranstaltungen\n\n- Jährliche Feste\n  - Oktoberfest\n  - Christkindlmarkt\n- Theater und Oper\n  - Bayerische Staatsoper\n  - Verschiedene Stadt- und Privattheater\n\n### Sport und Outdoor-Aktivitäten\n\n- Sportvereine\n  - Fußball\n  - Basketball\n  - Eishockey\n- Naturerlebnisse\n  - Wanderungen in den Alpen\n  - Radwege entlang der Isar\n\n## Infrastruktur und Verkehr\n\n### Öffentliches Verkehrsnetz\n\n- Effektives U-Bahn-System\n- Straßenbahn- und Busverbindungen\n- Fahrradfreundliche Stadt\n\n### Anbindung und Erreichbarkeit\n\n- Internationale Flughäfen\n- Autobahnverbindungen\n- Nähe zu anderen europäischen Städten\n"
-};
-
 const SIMPLY_RESPONSE = {
     content:
         "Jedes Kind hat einen Anspruch.  \n\nDas Kind lebt mit einem Eltern-Teil.  \n\nDer Eltern-Teil ist ledig, verwitwet oder geschieden.  \n\nDas Kind bekommt weniger Geld für Unterhalt oder Waisen-Bezüge.  \n\nDas Geld ist weniger als die Leistungen nach dem Unterhaltsvorschuss-Gesetz.  \n\nDas Kind hat die deutsche Staatsangehörigkeit.  \n\nDas Kind hat eine Berechtigung zur Freizügigkeit.  \n\nDas bedeutet, das Kind hat eine EU oder EWR Staatsangehörigkeit.  \n\nDas Kind hat eine Niederlassungs-Erlaubnis oder Aufenthalts-Erlaubnis.  \n\nDas Kind hat das Recht auf Erwerbstätigkeit.  \n\nDas Kind hat das Recht auf Daueraufenthalt.  \n\nAb dem 12. Lebensjahr gibt es besondere Regeln.  \n\nDas betreuende Eltern-Teil bekommt keine Leistungen nach dem SGB II.  \n\nOder das betreuende Eltern-Teil bekommt Leistungen nach dem SGB II.  \n\nDas betreuende Eltern-Teil hat ein Einkommen von mindestens 600 Euro brutto im Monat.  \n\nOder das Kind braucht keine Hilfe, weil es Unterhaltsvorschuss-Leistungen bekommt."
@@ -75,75 +71,6 @@ const CREATE_BOT_RESPONSE = {
 };
 
 const CHAT_STREAM_RESPONSE = [
-    // Tool started chunk
-    {
-        id: "chatcmpl-mock-stream-123",
-        object: "chat.completion.chunk",
-        created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
-        choices: [
-            {
-                index: 0,
-                delta: {
-                    tool_calls: [
-                        {
-                            name: "pdf-enftessler-3000",
-                            state: "started",
-                            content: "Starte PDF-Entfessler 3000 für Datei: Vertrag.pdf",
-                            metadata: { file: "Vertrag.pdf" }
-                        }
-                    ]
-                },
-                finish_reason: null
-            }
-        ]
-    },
-    // Tool update chunk
-    {
-        id: "chatcmpl-mock-stream-123",
-        object: "chat.completion.chunk",
-        created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
-        choices: [
-            {
-                index: 0,
-                delta: {
-                    tool_calls: [
-                        {
-                            name: "pdf-enftessler-3000",
-                            state: "update",
-                            content: "Extrahiere Text... 50% abgeschlossen",
-                            metadata: { progress: 50 }
-                        }
-                    ]
-                },
-                finish_reason: null
-            }
-        ]
-    },
-    // Tool ended chunk
-    {
-        id: "chatcmpl-mock-stream-123",
-        object: "chat.completion.chunk",
-        created: Math.floor(Date.now() / 1000),
-        model: "KICCGPT",
-        choices: [
-            {
-                index: 0,
-                delta: {
-                    tool_calls: [
-                        {
-                            name: "pdf-enftessler-3000",
-                            state: "ended",
-                            content: "PDF-Entfessler 3000 abgeschlossen. Text extrahiert!",
-                            metadata: { file: "Vertrag.pdf", result: "success" }
-                        }
-                    ]
-                },
-                finish_reason: null
-            }
-        ]
-    },
     {
         id: "chatcmpl-mock-stream-123",
         object: "chat.completion.chunk",
@@ -465,9 +392,9 @@ const MINDMAP_STREAM_RESPONSE = [
                 delta: {
                     tool_calls: [
                         {
-                            name: "brainstorm",
-                            state: "started",
-                            content: "Starte Mindmap-Generierung...",
+                            name: "Brainstorming",
+                            state: "STARTED",
+                            content: "Starte Mindmap-Generierung zum Thema 'Künstliche Intelligenz'",
                             metadata: {}
                         }
                     ]
@@ -488,10 +415,9 @@ const MINDMAP_STREAM_RESPONSE = [
                 delta: {
                     tool_calls: [
                         {
-                            name: "brainstorm",
-                            state: "update",
-                            content: "# Hauptthema\n\n## Erster Ast\n- Punkt 1\n- Punkt 2\n",
-                            metadata: { progress: 50 }
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "# Künstliche Intelligenz \n\n"
                         }
                     ]
                 },
@@ -499,7 +425,6 @@ const MINDMAP_STREAM_RESPONSE = [
             }
         ]
     },
-    // Tool ended chunk (final mindmap)
     {
         id: "chatcmpl-mock-stream-mindmap-1",
         object: "chat.completion.chunk",
@@ -511,10 +436,199 @@ const MINDMAP_STREAM_RESPONSE = [
                 delta: {
                     tool_calls: [
                         {
-                            name: "brainstorm",
-                            state: "finished",
-                            content: "# Hauptthema\n\n## Erster Ast\n- Punkt 1\n- Punkt 2\n\n## Zweiter Ast\n- Punkt A\n- Punkt B\n",
-                            metadata: { result: "success" }
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "## Deep Learning \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "### Supervised Learning \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "#### Classification \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "#### Regression \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "- Neural Networks \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "## Machine Learning \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "### SVM \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "APPEND",
+                            content: "### Decision Trees \n\n"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    },
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "UPDATE",
+                            content:
+                                "# Artifical Intelligence \n\n## Deep Learning\n- Supervised Learning\n  - Classification\n  - Regression\n- Neural Networks\n\n## Machine Learning\n- SVM\n- Decision Trees"
+                        }
+                    ]
+                },
+                finish_reason: null
+            }
+        ]
+    }, // Tool ended chunk (final mindmap)
+    {
+        id: "chatcmpl-mock-stream-mindmap-1",
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    tool_calls: [
+                        {
+                            name: "Brainstorming",
+                            state: "ENDED",
+                            content: "Erfolgreich Mindmap zum Thema 'Künstliche Intelligenz' erstellt."
                         }
                     ]
                 },
@@ -558,10 +672,6 @@ export const handlers = [
     http.post("/api/backend/sum", async () => {
         await delay(1000);
         return HttpResponse.json(SUM_RESPONSE);
-    }),
-    http.post("/api/backend/brainstorm", async () => {
-        await delay(1000);
-        return HttpResponse.json(BRAINSTORM_RESPONSE);
     }),
     http.post("/api/backend/simply", async () => {
         await delay(1000);

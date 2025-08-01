@@ -7,7 +7,7 @@ interface IHeaderProvider {
 }
 
 export const DEFAULTHEADER = "MUCGPT";
-export const HeaderContext = React.createContext<IHeaderProvider>({ header: DEFAULTHEADER, setHeader: () => { } });
+export const HeaderContext = React.createContext<IHeaderProvider>({ header: DEFAULTHEADER, setHeader: () => {} });
 
 export const HeaderContextProvider = (props: React.PropsWithChildren<unknown>) => {
     const [header, setHeader] = useState<string>(DEFAULTHEADER);

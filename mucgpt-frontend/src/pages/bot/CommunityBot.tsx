@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse, getTools, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api";
+import { chatApi, AskResponse, Bot, ChatResponse, getTools, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -23,6 +23,8 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { ToolListResponse } from "../../api/models";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import ToolStatusDisplay from "../../components/ToolStatusDisplay";
+import { ToolStatus } from "../../utils/ToolStreamHandler";
 
 const CommunityBotChat = () => {
     // useReducer für den Chat-Status
@@ -63,14 +65,15 @@ const CommunityBotChat = () => {
     const { setHeader } = useContext(HeaderContext);
 
     const [error, setError] = useState<unknown>();
-    const [sidebarSize, setSidebarWidth] = useState<SidebarSizes>("large");
+    const [sidebarSize] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
-    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
+    const [systemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+    const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
 
     useEffect(() => {
         const fetchTools = async () => {
@@ -104,43 +107,45 @@ const CommunityBotChat = () => {
     // useEffect to load the bot config and chat history
     useEffect(() => {
         if (bot_id) {
-            getCommunityAssistantApi(bot_id).then(response => {
-                let latest = response.latest_version;
-                let bot: Bot = {
-                    title: latest.name,
-                    description: latest.description || "",
-                    system_message: latest.system_prompt,
-                    publish: true,
-                    temperature: latest.temperature || 0.7,
-                    max_output_tokens: latest.max_output_tokens || LLM.max_output_tokens,
-                    version: latest.version.toString(),
-                    examples: latest.examples || [],
-                    quick_prompts: latest.quick_prompts || [],
-                    tags: latest.tags || [],
-                    owner_ids: latest.owner_ids || []
-                };
-                setBotConfig(bot);
-                setHeader(bot.title || DEFAULTHEADER);
-                dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
-                dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
-                dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
-                setQuickPrompts(bot.quick_prompts || []);
-                botStorageService
-                    .getNewestChatForBot(bot_id)
-                    .then(existingChat => {
-                        if (existingChat) {
-                            const messages = existingChat.messages;
-                            dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                            lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                            dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
-                        }
-                    })
-                    .then(() => {
-                        return fetchHistory();
-                    });
-            }).finally(() => {
-                isLoadingRef.current = false;
-            });
+            getCommunityAssistantApi(bot_id)
+                .then(response => {
+                    const latest = response.latest_version;
+                    const bot: Bot = {
+                        title: latest.name,
+                        description: latest.description || "",
+                        system_message: latest.system_prompt,
+                        publish: true,
+                        temperature: latest.temperature || 0.7,
+                        max_output_tokens: latest.max_output_tokens || LLM.max_output_tokens,
+                        version: latest.version.toString(),
+                        examples: latest.examples || [],
+                        quick_prompts: latest.quick_prompts || [],
+                        tags: latest.tags || [],
+                        owner_ids: latest.owner_ids || []
+                    };
+                    setBotConfig(bot);
+                    setHeader(bot.title || DEFAULTHEADER);
+                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
+                    dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
+                    dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
+                    setQuickPrompts(bot.quick_prompts || []);
+                    botStorageService
+                        .getNewestChatForBot(bot_id)
+                        .then(existingChat => {
+                            if (existingChat) {
+                                const messages = existingChat.messages;
+                                dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
+                                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                                dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
+                            }
+                        })
+                        .then(() => {
+                            return fetchHistory();
+                        });
+                })
+                .finally(() => {
+                    isLoadingRef.current = false;
+                });
         }
     }, []);
     // get History-Funktion
@@ -151,7 +156,7 @@ const CommunityBotChat = () => {
     }, [botStorageService, bot_id]);
     // deleteBot-Funktion
     const onDeleteBot = useCallback(async () => {
-        if (bot_id) await unsubscribeFromAssistantApi(bot_id)
+        if (bot_id) await unsubscribeFromAssistantApi(bot_id);
         window.location.href = "/";
     }, [bot_id]);
     // callApi-Funktion
@@ -182,7 +187,8 @@ const CommunityBotChat = () => {
                     isLoadingRef,
                     fetchHistory,
                     bot_id,
-                    selectedTools
+                    selectedTools,
+                    setToolStatuses
                 );
             } catch (e) {
                 setError(e);
@@ -263,13 +269,6 @@ const CommunityBotChat = () => {
         },
         [callApi]
     );
-    // onEdit Sidebar-Funktion
-    const onEditChange = useCallback(
-        (isEditable: boolean) => {
-            setSidebarWidth(isEditable ? "full_width" : "large");
-        },
-        [setSidebarWidth]
-    );
 
     // History component
     const history = useMemo(
@@ -319,16 +318,15 @@ const CommunityBotChat = () => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={() => { }}
+                    onBotChange={() => {}}
                     onDeleteBot={onDeleteBot}
                     actions={actions}
                     before_content={history}
-                    onEditChange={onEditChange}
                     minimized={!showSidebar}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onDeleteBot, actions, history, onEditChange, showSidebar]
+        [botConfig, onDeleteBot, actions, history, showSidebar]
     );
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -396,22 +394,24 @@ const CommunityBotChat = () => {
         ),
         [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
     );
-
     const layout = useMemo(
         () => (
-            <ChatLayout
-                sidebar={sidebar}
-                examples={examplesComponent}
-                answers={answerList}
-                input={inputComponent}
-                showExamples={!lastQuestionRef.current}
-                header=""
-                header_as_markdown={false}
-                messages_description={t("common.messages")}
-                size={showSidebar ? sidebarSize : "none"}
-            ></ChatLayout>
+            <>
+                <ChatLayout
+                    sidebar={sidebar}
+                    examples={examplesComponent}
+                    answers={answerList}
+                    input={inputComponent}
+                    showExamples={!lastQuestionRef.current}
+                    header=""
+                    header_as_markdown={false}
+                    messages_description={t("common.messages")}
+                    size={showSidebar ? sidebarSize : "none"}
+                />
+                <ToolStatusDisplay activeTools={toolStatuses} />
+            </>
         ),
-        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, sidebarSize]
+        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, sidebarSize, toolStatuses]
     );
     return layout;
 };

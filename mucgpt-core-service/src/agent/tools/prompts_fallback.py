@@ -80,19 +80,14 @@ Hier ist der schwer verständliche Text:
 {message}""",
 )
 
-TOOL_INSTRUCTIONS_TEMPLATE = (
-    "You have access to the following tools:\n"
-    "<tools>{tool_descriptions}\n\n</tools>\n\n"
-    "Follow the guidelines below when using tools:\n"
-    "<guidelines>\n"
-    "- Invoke tools when they are helpful for the user's request.\n"
-    "- The output from each tool is wrapped in <mucgpt-*> XML tags. Do not remove, alter, or reformat these tags; they are required for downstream processing.\n"
-    "- Do not modify the output of any tool. The tool output is already in the correct format.\n"
-    "- If the tool output is incorrect, you may call another tool to fix it, but do not change the output yourself.\n"
-    "- You may add explanations or additional information in your response, but never alter the tool output.\n"
-    "- If you use a tool, always return its result wrapped in the corresponding <mucgpt-*> XML tags.\n"
-    "</guidelines>\n\n"
-)
+TOOL_INSTRUCTIONS_TEMPLATE = """
+You have access to the following tools:
+<tools>{tool_descriptions}\n\n</tools>
+Follow the guidelines below when using tools:
+<guidelines>
+- Invoke tools when they are helpful for the user's request.
+</guidelines>
+"""
 
 
 def get_brainstorm_prompt(topic, context=None):

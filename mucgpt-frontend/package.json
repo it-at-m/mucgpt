@@ -39,7 +39,7 @@
         "gh-pages": "6.3.0",
         "msw": "2.10.4",
         "prettier": "3.6.2",
-        "typescript": "5.8.3",
+        "typescript": "5.9.2",
         "vite": "5.4.19"
     },
     "engines": {

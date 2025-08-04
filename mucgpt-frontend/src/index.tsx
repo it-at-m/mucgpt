@@ -8,7 +8,6 @@ import "./index.css";
 
 import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
-import Summarize from "./pages/summarize/Summarize";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
@@ -35,11 +34,6 @@ const router = createHashRouter([
             {
                 path: "chat",
                 element: <Chat />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "sum",
-                element: <Summarize />,
                 errorElement: <div>Fehler</div>
             },
             {

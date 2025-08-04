@@ -60,11 +60,6 @@ const Menu = () => {
                         {t("header.chat")}
                     </Link>
                 </Tooltip>
-                <Tooltip content={t("header.sum")} relationship="description" positioning="below">
-                    <Link to="/sum" className={styles.box}>
-                        {t("header.sum")}
-                    </Link>
-                </Tooltip>
             </div>
             <div className={styles.rowheader}>
                 {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>

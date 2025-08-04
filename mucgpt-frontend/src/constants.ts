@@ -41,12 +41,6 @@ export const LEGACY_BOT_STORE: IndexedDBStorage = {
     db_version: 3
 };
 
-export const SUMMARIZE_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-SUMMARIZE",
-    objectStore_name: "summarize",
-    db_version: 3
-};
-
 export const CHAT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-CHAT",
     objectStore_name: "chat",

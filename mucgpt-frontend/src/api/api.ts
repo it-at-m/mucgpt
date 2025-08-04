@@ -1,4 +1,4 @@
-import { getConfig, getXSRFToken, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
+import { getConfig, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import {
     ApplicationConfig,
     AssistantCreateInput,
@@ -7,8 +7,6 @@ import {
     CountTokenRequest,
     CountTokenResponse,
     CreateBotRequest,
-    SumRequest,
-    SumResponse,
     AssistantResponse,
     AssistantUpdateInput,
     Bot,
@@ -43,34 +41,6 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
         body.enabled_tools = options.enabled_tools;
     }
     return await fetch(url, postConfig(body));
-}
-
-export async function sumApi(options: SumRequest, file?: File): Promise<SumResponse> {
-    const formData = new FormData();
-    formData.append(
-        "body",
-        JSON.stringify({
-            text: options.text,
-            detaillevel: options.detaillevel,
-            language: options.language,
-            model: options.model
-        })
-    );
-    if (file) formData.append("file", file);
-    const headers = {
-        "X-XSRF-TOKEN": getXSRFToken()
-    };
-    const response = await fetch(API_BASE + "sum", {
-        method: "POST",
-        headers: headers,
-        mode: "cors",
-        redirect: "manual",
-        body: formData
-    });
-
-    const parsedResponse: SumResponse = await handleResponse(response);
-
-    return parsedResponse;
 }
 
 export async function configApi(): Promise<ApplicationConfig> {

@@ -2,16 +2,15 @@
     display: flex;
     flex-direction: column;
     list-style: none;
+    width: 100%;
 }
 
 .chatMessageUser {
-    max-width: 90%;
-    min-width: 20%;
+    width: 50%;
     align-self: flex-end;
 }
 
 .chatMessageGpt {
-    max-width: 90%;
-    min-width: 20%;
+    width: 98%;
     align-self: flex-start;
 }

@@ -9,7 +9,7 @@ import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
 import { ToolListResponse } from "../../api/models";
 
-const TOOL_BADGE_COLOR_LIST = ["#1976d2", "#388e3c", "#d32f2f", "#fbc02d", "#7b1fa2", "#0288d1", "#c2185b", "#ffa000", "#388e3c", "#455a64"];
+const TOOL_BADGE_COLOR_LIST = ["#4285f4", "#34a853", "#ea4335", "#6c5ce7", "#00b894", "#0984e3", "#e84393", "#fdcb6e", "#00cec9", "#636e72"];
 
 interface Props {
     onSend: (question: string) => void;
@@ -205,7 +205,7 @@ export const QuestionInput = ({
                                         appearance="filled"
                                         className={styles.toolBadge}
                                         style={{ background: color }}
-                                        size="medium"
+                                        size="small"
                                         shape="rounded"
                                         onClick={() => {
                                             if (setSelectedTools) setSelectedTools(selectedTools.filter(t => t !== toolName));
@@ -213,7 +213,7 @@ export const QuestionInput = ({
                                         icon={
                                             setSelectedTools && (
                                                 <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
-                                                    ×
+                                                    ✕
                                                 </span>
                                             )
                                         }

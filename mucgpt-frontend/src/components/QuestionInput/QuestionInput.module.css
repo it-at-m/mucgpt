@@ -62,16 +62,18 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
     max-width: 500px;
     width: 100%;
+    padding: 2px 0;
 }
 .toolBadges {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
+    align-items: center;
 }
 .toolBadge {
     margin-left: 0;
@@ -79,19 +81,35 @@
     cursor: pointer;
     user-select: none;
     color: #fff;
-    font-weight: 600;
+    font-weight: 500;
     transition: all 0.2s ease;
-    opacity: 0.9;
+    opacity: 0.85;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.01em;
 }
 .toolBadge:hover {
     opacity: 1;
     transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 .toolBadgeIcon {
-    margin-left: 4px;
+    margin-left: 6px;
     font-weight: 700;
     color: #fff;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 14px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 .toolBadgesSection {
     flex-basis: 50%;
@@ -102,7 +120,9 @@
     align-items: center;
     flex-wrap: wrap;
     overflow-x: auto;
-    padding: 0 4px;
+    padding: 4px 6px;
+    gap: 6px;
+    scrollbar-width: thin;
 }
 
 .questionInputButtonsContainer {
@@ -154,8 +174,16 @@
         justify-content: center;
     }
     .toolBadge {
-        font-size: 13px;
-        padding: 2px 8px;
+        font-size: 12px;
+        padding: 3px 6px;
+        margin-bottom: 2px;
+    }
+
+    .toolBadgeIcon {
+        width: 14px;
+        height: 14px;
+        font-size: 12px;
+        margin-left: 4px;
     }
     .questionInputButtonsContainer {
         gap: 12px;

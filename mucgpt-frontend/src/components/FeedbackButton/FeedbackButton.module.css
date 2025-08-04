@@ -1,0 +1,30 @@
+.container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.buttonContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    color: inherit;
+    text-decoration: none;
+}
+
+.buttonContainer:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+}
+
+.feedbackText {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.iconRightMargin {
+    margin-right: 4px;
+}

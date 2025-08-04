@@ -16,9 +16,9 @@ import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextP
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { HeaderContext } from "./HeaderContextProvider";
-import { Mail24Regular } from "@fluentui/react-icons";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
+import { FeedbackButton } from "../../components/FeedbackButton";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -155,14 +155,7 @@ export const Layout = () => {
                             </div>
 
                             <div className={styles.headerNavList}>
-                                <a
-                                    href="mailto:itm.kicc@muenchen.de?subject=MUCGPT"
-                                    className={styles.headerNavPageLink}
-                                    style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}
-                                >
-                                    <Mail24Regular className={styles.iconRightMargin} aria-hidden />
-                                    Feedback
-                                </a>
+                                <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
                             </div>
                             <div className={styles.SettingsDrawer}>
                                 <SettingsDrawer defaultLLM={llm_pref} onLLMSelectionChanged={onLLMSelectionChanged} llmOptions={models} currentLLM={LLM} />

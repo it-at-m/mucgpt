@@ -1,5 +1,5 @@
-import { ChevronDown24Regular, Dismiss24Regular, Mail24Regular } from "@fluentui/react-icons";
-import { OverlayDrawer, Button, useId, Tooltip, Link } from "@fluentui/react-components";
+import { ChevronDown24Regular, Dismiss24Regular } from "@fluentui/react-icons";
+import { OverlayDrawer, Button, Tooltip, Link } from "@fluentui/react-components";
 
 import styles from "./SettingsDrawer.module.css";
 import { useCallback, useState } from "react";
@@ -17,8 +17,6 @@ interface Props {
 export const SettingsDrawer = ({ onLLMSelectionChanged, defaultLLM, llmOptions, currentLLM }: Props) => {
     const [isOpen, setIsOpen] = useState<boolean>(false);
     const { t } = useTranslation();
-
-    const feedback_headerID = useId("feedback-language");
 
     // open settings drawer
     const onClickRightButton = useCallback(() => {
@@ -58,17 +56,6 @@ export const SettingsDrawer = ({ onLLMSelectionChanged, defaultLLM, llmOptions, 
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t("components.settingsdrawer.theme")}
-                </div>
-                <div className={styles.header} role="heading" aria-level={3} id={feedback_headerID}>
-                    {t("components.settingsdrawer.feedback")}
-                </div>
-                <div className={styles.bodyContainer} role="heading" aria-level={3}>
-                    <div className={styles.verticalContainer}>
-                        <Mail24Regular className={styles.iconRightMargin} aria-hidden></Mail24Regular>
-                        <Link aria-labelledby={feedback_headerID} href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
-                            itm.kicc@muenchen.de
-                        </Link>
-                    </div>
                 </div>
                 <div className={styles.header} role="heading" aria-level={3}>
                     {t("components.settingsdrawer.help")}

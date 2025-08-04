@@ -10,7 +10,7 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
-import { FluentProvider, Tag, Theme } from "@fluentui/react-components";
+import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
@@ -19,6 +19,7 @@ import { HeaderContext } from "./HeaderContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
+import { VersionInfo } from "../../components/VersionInfo";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -170,7 +171,7 @@ export const Layout = () => {
                             RIT/it@M KICC <br />
                         </div>
                         <div className={styles.faq}>
-                            Version: <Tag shape="circular">{config.version}</Tag> <Tag shape="circular">{config.commit}</Tag>
+                            <VersionInfo version={config.version} commit={config.commit} />
                         </div>
                         <div className={styles.headerNavRightMargin}>
                             <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>

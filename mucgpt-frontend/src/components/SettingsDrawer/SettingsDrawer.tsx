@@ -70,16 +70,6 @@ export const SettingsDrawer = ({ onLLMSelectionChanged, defaultLLM, llmOptions, 
                         </li>
                     </ul>
                 </div>
-                <div className={styles.header} role="heading" aria-level={3}>
-                    {t("components.settingsdrawer.about")}
-                </div>
-                <div className={styles.bodyContainer}>
-                    <div className={styles.faq}>
-                        <Link href={import.meta.env.BASE_URL + `#/version`} onClick={closeDrawer}>
-                            {t("version.header")}
-                        </Link>
-                    </div>
-                </div>
             </OverlayDrawer>
 
             <div className={styles.button}>

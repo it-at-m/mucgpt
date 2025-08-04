@@ -6,7 +6,8 @@
 }
 
 .chatMessageUser {
-    width: 50%;
+    min-width: 50%;
+    max-width: 90%;
     align-self: flex-end;
 }
 

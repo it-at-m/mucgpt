@@ -340,25 +340,60 @@ const Chat = () => {
 
         isLoadingRef.current = true;
 
-        storageService
-            .getNewestChat()
-            .then(existingData => {
-                if (existingData) {
-                    dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
-                    dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
-                    dispatch({ type: "SET_MAX_TOKENS", payload: existingData.config.maxTokens });
-                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
-                    dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
+        // Check URL for question parameter - Handle hash router format
+        let questionFromUrl;
+        const hashPart = window.location.hash;
 
-                    lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
-                }
-                isLoadingRef.current = false;
-                return fetchHistory();
-            })
-            .finally(() => {
-                isLoadingRef.current = false;
-            });
-    }, [fetchHistory, storageService]);
+        // For hash router format like #/chat?q=something
+        if (hashPart && hashPart.includes("?")) {
+            const queryPart = hashPart.split("?")[1];
+            const hashParams = new URLSearchParams(queryPart);
+            questionFromUrl = hashParams.get("q") || hashParams.get("question");
+        } else {
+            // Fallback to regular URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            questionFromUrl = urlParams.get("q") || urlParams.get("question");
+        }
+
+        if (questionFromUrl) {
+            // If we have a question from URL, start a new chat with this question
+            setQuestion(decodeURIComponent(questionFromUrl));
+            storageService
+                .getNewestChat()
+                .then(() => {
+                    clearChat(); // Clear any existing chat
+                    isLoadingRef.current = false;
+                    // After a small delay, call the API with the question from URL
+                    setTimeout(() => {
+                        callApi(decodeURIComponent(questionFromUrl), systemPrompt);
+                    }, 100);
+                    return fetchHistory();
+                })
+                .finally(() => {
+                    isLoadingRef.current = false;
+                });
+        } else {
+            // Normal initialization without URL parameter
+            storageService
+                .getNewestChat()
+                .then(existingData => {
+                    if (existingData) {
+                        dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
+                        dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
+                        dispatch({ type: "SET_MAX_TOKENS", payload: existingData.config.maxTokens });
+                        dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
+                        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
+
+                        lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
+                    }
+                    isLoadingRef.current = false;
+                    return fetchHistory();
+                })
+                .finally(() => {
+                    isLoadingRef.current = false;
+                });
+        }
+    }, [fetchHistory, storageService, callApi, systemPrompt, clearChat]);
 
     // Token-Zählung für System-Prompt
     useEffect(() => {

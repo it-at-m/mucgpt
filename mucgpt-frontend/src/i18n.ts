@@ -22,6 +22,7 @@ i18n
                         create_bot: "Assistent erstellen"
                     },
                     menu: {
+                        chat_header: "Hallo, was hast du heute vor?",
                         own_bots: "Lokale Assistenten",
                         community_bots: "Community Assistenten",
                         no_bots: "Keine Assistenten gefunden",
@@ -301,6 +302,7 @@ i18n
                         create_bot: "Create assistant"
                     },
                     menu: {
+                        chat_header: "Hello, what are you planning today?",
                         own_bots: "Local Assistants", // Englisch
                         community_bots: "Community Assistants",
                         no_bots: "No Assistants found",
@@ -580,6 +582,7 @@ i18n
                         create_bot: "Assistenten erstoin"
                     },
                     menu: {
+                        chat_header: "Griaß di, wos host heid vor?",
                         own_bots: "Lokale Assitentn", // Bairisch
                         community_bots: "Community Assistentn",
                         no_bots: "Koane Assitentn gfundn",
@@ -858,6 +861,7 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
+                        chat_header: "Bonjour, qu'est-ce que vous prévoyez aujourd'hui ?",
                         own_bots: "Assistants Locaux", // French
                         community_bots: "Assistants Communautaires",
                         no_bots: "Aucun Assistant trouvé",
@@ -1136,6 +1140,7 @@ i18n
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
+                        chat_header: "Привіт, що ти плануєш сьогодні?",
                         own_bots: "Локальні Асистенти", // Ukrainisch
                         community_bots: "Громадські Асистенти",
                         no_bots: "Асистентів не знайдено",

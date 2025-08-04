@@ -15,6 +15,7 @@ import { SearchCommunityBotButton } from "../../components/SearchCommunityBotBut
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
 import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -25,12 +26,37 @@ const Menu = () => {
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
+    const [question, setQuestion] = useState<string>("");
     const { setHeader } = useContext(HeaderContext);
     setHeader(DEFAULTHEADER);
 
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
+        // Check for query parameter in both hash and regular URLs
+        let query = null;
+
+        // Check hash format like #/?q=something
+        const hashPart = window.location.hash;
+        if (hashPart && hashPart.includes("?q=")) {
+            const qIndex = hashPart.indexOf("?q=");
+            if (qIndex !== -1) {
+                query = hashPart.slice(qIndex + 3);
+            }
+        }
+        // Check regular format /?q=something
+        else {
+            const currentPath = window.location.pathname + window.location.search;
+            if (currentPath && currentPath.startsWith("/?q=")) {
+                query = currentPath.slice(4);
+            }
+        }
+
+        if (query) {
+            const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
+            setQuestion(decoded_query);
+        }
+
         migrate_old_bots().then(async () => {
             const bots = await botStorageService.getAllBotConfigs();
             setBots(bots);
@@ -51,61 +77,76 @@ const Menu = () => {
         setGetCommunityBots(true);
     };
 
+    const onSendQuestion = (question: string) => {
+        window.location.href = `#/chat?q=${encodeURIComponent(question)}`;
+    };
     return (
-        <div className={styles.container}>
-            <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
-            <div className={styles.row}>
-                <Tooltip content={t("header.chat")} relationship="description" positioning="below">
-                    <Link to="/chat" className={styles.box}>
-                        {t("header.chat")}
-                    </Link>
-                </Tooltip>
+        <div>
+            <div className={styles.chatstartercontainer}>
+                <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
+                <h1 className={styles.heading}>{t("menu.chat_header")}</h1>
+                <div className={styles.chatstarter}>
+                    <QuestionInput
+                        onSend={onSendQuestion}
+                        disabled={false}
+                        placeholder={t("chat.prompt")}
+                        tokens_used={0}
+                        token_limit_tracking={false}
+                        setQuestion={question => {
+                            setQuestion(question);
+                        }}
+                        selectedTools={[]}
+                        question={question}
+                    ></QuestionInput>
+                </div>
             </div>
-            <div className={styles.rowheader}>
-                {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
+            <div className={styles.container}>
+                <div className={styles.rowheader}>
+                    {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
+                </div>
+                <div className={styles.row}>
+                    {bots.map((bot: Bot, key) => (
+                        <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
+                            <Link to={`/bot/${bot.id}`} className={styles.box}>
+                                <span>{bot.title}</span>
+                            </Link>
+                        </Tooltip>
+                    ))}
+                    {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                </div>
+                <div className={styles.rowheader}>
+                    {t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} />
+                </div>
+                <CommunityBotsDialog
+                    showSearchDialogInput={showSearchBot}
+                    setShowSearchDialogInput={setShowSearchBot}
+                    takeCommunityBots={getCommunityBots}
+                    setTakeCommunityBots={setGetCommunityBots}
+                />
+                <div className={styles.subrowheader}>Eigene:</div>
+                <div className={styles.row}>
+                    {ownedCommunityBots.map((bot: AssistantResponse, key) => (
+                        <Tooltip key={key} content={bot.latest_version.name} relationship="description" positioning="below">
+                            <Link to={`owned/communitybot/${bot.id}`} className={styles.box}>
+                                {bot.latest_version.name}
+                            </Link>
+                        </Tooltip>
+                    ))}
+                    {ownedCommunityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                </div>
+                <div className={styles.subrowheader}>Abonnierte:</div>
+                <div className={styles.row}>
+                    {communityBots.map(({ id, name }, key) => (
+                        <Tooltip key={key} content={name} relationship="description" positioning="below">
+                            <Link to={`communitybot/${id}`} className={styles.box}>
+                                {name}
+                            </Link>
+                        </Tooltip>
+                    ))}
+                    {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                </div>
+                <div className={styles.rowheader}> </div>
             </div>
-            <div className={styles.row}>
-                {bots.map((bot: Bot, key) => (
-                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
-                        <Link to={`/bot/${bot.id}`} className={styles.box}>
-                            <span>{bot.title}</span>
-                        </Link>
-                    </Tooltip>
-                ))}
-                {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
-            </div>
-            <div className={styles.rowheader}>
-                {t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} />
-            </div>
-            <CommunityBotsDialog
-                showSearchDialogInput={showSearchBot}
-                setShowSearchDialogInput={setShowSearchBot}
-                takeCommunityBots={getCommunityBots}
-                setTakeCommunityBots={setGetCommunityBots}
-            />
-            <div className={styles.subrowheader}>Eigene:</div>
-            <div className={styles.row}>
-                {ownedCommunityBots.map((bot: AssistantResponse, key) => (
-                    <Tooltip key={key} content={bot.latest_version.name} relationship="description" positioning="below">
-                        <Link to={`owned/communitybot/${bot.id}`} className={styles.box}>
-                            {bot.latest_version.name}
-                        </Link>
-                    </Tooltip>
-                ))}
-                {ownedCommunityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
-            </div>
-            <div className={styles.subrowheader}>Abonnierte:</div>
-            <div className={styles.row}>
-                {communityBots.map(({ id, name }, key) => (
-                    <Tooltip key={key} content={name} relationship="description" positioning="below">
-                        <Link to={`communitybot/${id}`} className={styles.box}>
-                            {name}
-                        </Link>
-                    </Tooltip>
-                ))}
-                {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
-            </div>
-            <div className={styles.rowheader}> </div>
         </div>
     );
 };

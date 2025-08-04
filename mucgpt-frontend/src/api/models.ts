@@ -1,6 +1,5 @@
 import { ExampleModel } from "../components/Example";
 import { QuickPrompt } from "../components/QuickPrompt/QuickPrompt";
-import { DBMessage } from "../service/storage";
 
 export type AskResponse = {
     answer: string;
@@ -19,11 +18,6 @@ export type ChatResponse = {
         state: "STARTED" | "ENDED" | null;
         timestamp: number;
     }>;
-};
-
-export type SumResponse = {
-    answer: string[];
-    error?: string;
 };
 
 export type ChatTurn = {
@@ -47,15 +41,6 @@ export type CreateBotRequest = {
     max_output_tokens: number;
     model?: string;
 };
-
-export type SumRequest = {
-    text: string;
-    detaillevel?: "short" | "medium" | "long";
-    language?: string;
-    model: string;
-};
-
-export type SumarizeMessage = DBMessage<SumResponse>;
 
 export interface ApplicationConfig {
     models: Model[];

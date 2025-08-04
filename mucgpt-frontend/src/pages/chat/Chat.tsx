@@ -23,6 +23,7 @@ import { ToolListResponse } from "../../api/models";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { Model } from "../../api";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -83,7 +84,7 @@ const Chat = () => {
     const chatReducer = getChatReducer<ChatOptions>();
     // Contexts
     const { language } = useContext(LanguageContext);
-    const { LLM } = useContext(LLMContext);
+    const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
@@ -331,6 +332,15 @@ const Chat = () => {
             });
         },
         [max_output_tokens, temperature, debouncedStorageUpdate]
+    );
+
+    // Handler for LLM selection
+    const onLLMSelectionChange = useCallback(
+        (nextLLM: string) => {
+            const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
+            if (found) setLLM(found);
+        },
+        [availableLLMs, setLLM]
     );
 
     // Initialisierung beim ersten Laden
@@ -592,11 +602,26 @@ const Chat = () => {
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? "large" : "none"}
+                    llmOptions={availableLLMs}
+                    defaultLLM={LLM.llm_name}
+                    onLLMSelectionChange={onLLMSelectionChange}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
         ),
-        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, showSidebar, toolStatuses]
+        [
+            sidebar,
+            examplesComponent,
+            answerList,
+            inputComponent,
+            lastQuestionRef.current,
+            t,
+            showSidebar,
+            toolStatuses,
+            availableLLMs,
+            LLM.llm_name,
+            onLLMSelectionChange
+        ]
     );
 
     return layout;

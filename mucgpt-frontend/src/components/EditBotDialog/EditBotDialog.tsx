@@ -351,9 +351,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             <Dialog modalType="alert" open={closeDialogOpen}>
                 <DialogSurface>
                     <DialogTitle>{t("components.edit_bot_dialog.close_dialog_title")}</DialogTitle>
-                    <DialogBody>
-                        {t("components.edit_bot_dialog.close_dialog_message")}
-                    </DialogBody>
+                    <DialogBody>{t("components.edit_bot_dialog.close_dialog_message")}</DialogBody>
                     <DialogActions>
                         <Button appearance="secondary" onClick={() => setCloseDialogOpen(false)}>
                             {t("components.edit_bot_dialog.cancel")}
@@ -364,7 +362,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                     </DialogActions>
                 </DialogSurface>
             </Dialog>
-        )
+        );
     }, [closeDialogOpen, t, closeDialogPressed]);
 
     // Render saved message
@@ -708,8 +706,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                     />
                     <div className={styles.rangeValue}>{maxOutputTokens}</div>
                 </Field>
-                {isOwner && publish && (<DepartementDropdown
-                    publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />)}
+                {isOwner && publish && <DepartementDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />}
             </DialogContent>
         ),
         [temperature, maxOutputTokens, onTemperatureChange, onMaxtokensChange, isOwner, t, min_temp, max_temp, min_max_tokens, max_max_tokens]
@@ -769,7 +766,14 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                         <Button
                             appearance="subtle"
                             size="small"
-                            onClick={() => { if (hasChanged) { setCloseDialogOpen(true) } else { setShowDialog(false); setShowSavedMessage(false); } }}
+                            onClick={() => {
+                                if (hasChanged) {
+                                    setCloseDialogOpen(true);
+                                } else {
+                                    setShowDialog(false);
+                                    setShowSavedMessage(false);
+                                }
+                            }}
                             disabled={showSavedMessage}
                             className={styles.closeButton}
                             icon={<Dismiss24Regular />}

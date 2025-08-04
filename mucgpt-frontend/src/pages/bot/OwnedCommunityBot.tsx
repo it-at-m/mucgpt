@@ -69,7 +69,7 @@ const OwnedCommunityBotChat = () => {
     const bot_id = id || "0";
 
     // Context
-    const { LLM } = useContext(LLMContext);
+    const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
@@ -263,6 +263,15 @@ const OwnedCommunityBotChat = () => {
         [bot_id, LLM, botConfig.system_message]
     );
 
+    // Handler for LLM selection
+    const onLLMSelectionChange = useCallback(
+        (nextLLM: string) => {
+            const found = availableLLMs.find(m => m.llm_name === nextLLM);
+            if (found) setLLM(found);
+        },
+        [availableLLMs, setLLM]
+    );
+
     // Regenerate-Funktion
     const onRegenerateResponseClicked = useCallback(async () => {
         if (answers.length === 0 || !activeChatRef.current || isLoadingRef.current) return;
@@ -446,11 +455,26 @@ const OwnedCommunityBotChat = () => {
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? sidebarSize : "none"}
+                    llmOptions={availableLLMs}
+                    defaultLLM={LLM.llm_name}
+                    onLLMSelectionChange={onLLMSelectionChange}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
         ),
-        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, sidebarSize, toolStatuses]
+        [
+            sidebar,
+            examplesComponent,
+            answerList,
+            inputComponent,
+            lastQuestionRef.current,
+            t,
+            sidebarSize,
+            toolStatuses,
+            availableLLMs,
+            LLM.llm_name,
+            onLLMSelectionChange
+        ]
     );
     return layout;
 };

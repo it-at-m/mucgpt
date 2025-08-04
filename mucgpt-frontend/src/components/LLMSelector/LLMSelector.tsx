@@ -1,9 +1,8 @@
-import { Dropdown, Option } from "@fluentui/react-components";
-import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
+import { Dropdown, Option, OptionOnSelectData, SelectionEvents } from "@fluentui/react-components";
 import { Model } from "../../api";
 
 interface Props {
-    onSelectionChange: (e: SelectionEvents, selection: OptionOnSelectData) => void;
+    onSelectionChange: (nextLLM: string) => void;
     defaultLLM: string;
     options: Model[];
 }
@@ -14,7 +13,10 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
             <Dropdown
                 aria-label="Sprachmodell auswählen"
                 defaultValue={defaultLLM}
-                onOptionSelect={onSelectionChange}
+                onOptionSelect={(e: SelectionEvents, data: OptionOnSelectData) => {
+                    const selected = data.optionText;
+                    if (selected) onSelectionChange(selected);
+                }}
                 appearance="underline"
                 size="small"
                 positioning="below-start"

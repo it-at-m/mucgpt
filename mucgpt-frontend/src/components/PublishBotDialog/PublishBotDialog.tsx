@@ -1,10 +1,10 @@
-import { Checkbox, Card, CardHeader, CardPreview } from '@fluentui/react-components';
-import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger } from '@fluentui/react-dialog';
-import { useTranslation } from 'react-i18next';
-import { Button, Label, Tooltip, Text, Badge, Divider } from '@fluentui/react-components';
-import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye24Regular, EyeOff24Regular, People24Regular } from '@fluentui/react-icons';
-import styles from './PublishBotDialog.module.css';
-import { Bot } from '../../api';
+import { Checkbox, Card, CardHeader, CardPreview } from "@fluentui/react-components";
+import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger } from "@fluentui/react-dialog";
+import { useTranslation } from "react-i18next";
+import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
+import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
+import styles from "./PublishBotDialog.module.css";
+import { Bot } from "../../api";
 import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
 
 interface Props {
@@ -18,7 +18,16 @@ interface Props {
     setPublishDepartments: (departments: string[]) => void;
 }
 
-export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisibleChecked, setInvisibleChecked, publishDepartments, setPublishDepartments }: Props) => {
+export const PublishBotDialog = ({
+    open,
+    setOpen,
+    bot,
+    onPublishClick,
+    invisibleChecked,
+    setInvisibleChecked,
+    publishDepartments,
+    setPublishDepartments
+}: Props) => {
     const { t } = useTranslation();
 
     return (
@@ -27,7 +36,9 @@ export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisible
                 <DialogBody className={styles.dialogContent}>
                     <DialogTitle className={styles.title}>
                         <div className={styles.titleContainer}>
-                            <Text size={600} weight="semibold">Bot veröffentlichen</Text>
+                            <Text size={600} weight="semibold">
+                                Bot veröffentlichen
+                            </Text>
                             <Badge appearance="outline" color="informative" size="small">
                                 Version {bot.version}
                             </Badge>
@@ -40,12 +51,12 @@ export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisible
                             <CardHeader
                                 header={
                                     <Text size={400} weight="medium">
-                                        {bot.title || 'Unbenannter Bot'}
+                                        {bot.title || "Unbenannter Bot"}
                                     </Text>
                                 }
                                 description={
                                     <Text size={300} className={styles.botDescription}>
-                                        {bot.description || 'Keine Beschreibung verfügbar'}
+                                        {bot.description || "Keine Beschreibung verfügbar"}
                                     </Text>
                                 }
                             />
@@ -55,7 +66,9 @@ export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisible
                         <div className={styles.infoSection}>
                             <div className={styles.infoHeader}>
                                 <Info16Regular className={styles.infoIcon} />
-                                <Text size={400} weight="medium">Wichtige Hinweise</Text>
+                                <Text size={400} weight="medium">
+                                    Wichtige Hinweise
+                                </Text>
                             </div>
                             <ul className={styles.infoList}>
                                 <li>Der Bot wird entsprechend Ihrer Auswahl verfügbar gemacht</li>
@@ -77,19 +90,14 @@ export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisible
                                     label={
                                         <div className={styles.checkboxLabel}>
                                             {invisibleChecked ? <EyeOff24Regular /> : <Eye24Regular />}
-                                            <span>
-                                                {invisibleChecked ? 'Privat (nur über Link)' : 'Öffentlich sichtbar'}
-                                            </span>
+                                            <span>{invisibleChecked ? "Privat (nur über Link)" : "Öffentlich sichtbar"}</span>
                                         </div>
                                     }
                                     checked={invisibleChecked}
                                     onChange={(_, data) => setInvisibleChecked(!!data.checked)}
                                 />
                                 <Text size={300} className={styles.optionDescription}>
-                                    {invisibleChecked
-                                        ? 'Bot ist nur über den direkten Link erreichbar'
-                                        : 'Bot erscheint in der öffentlichen Bot-Liste'
-                                    }
+                                    {invisibleChecked ? "Bot ist nur über den direkten Link erreichbar" : "Bot erscheint in der öffentlichen Bot-Liste"}
                                 </Text>
                             </div>
 
@@ -126,16 +134,15 @@ export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisible
                                 <div className={styles.departmentSection}>
                                     <div className={styles.departmentHeader}>
                                         <People24Regular />
-                                        <Text size={400} weight="medium">Veröffentlichen für Abteilungen</Text>
+                                        <Text size={400} weight="medium">
+                                            Veröffentlichen für Abteilungen
+                                        </Text>
                                     </div>
                                     <Text size={300} className={styles.departmentDescription}>
                                         Wählen Sie die Abteilungen aus, für die der Bot verfügbar sein soll:
                                     </Text>
                                     <div className={styles.departmentDropdown}>
-                                        <DepartmentDropdown
-                                            publishDepartments={publishDepartments}
-                                            setPublishDepartments={setPublishDepartments}
-                                        />
+                                        <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
                                     </div>
                                 </div>
                             )}
@@ -144,23 +151,13 @@ export const PublishBotDialog = ({ open, setOpen, bot, onPublishClick, invisible
 
                     <DialogActions className={styles.actions}>
                         <DialogTrigger disableButtonEnhancement>
-                            <Button
-                                appearance="secondary"
-                                size="medium"
-                                onClick={() => setOpen(false)}
-                                className={styles.cancelButton}
-                            >
+                            <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
                                 <Dismiss24Regular />
                                 {t("components.botsettingsdrawer.deleteDialog.cancel")}
                             </Button>
                         </DialogTrigger>
                         <DialogTrigger disableButtonEnhancement>
-                            <Button
-                                appearance="primary"
-                                size="medium"
-                                onClick={onPublishClick}
-                                className={styles.publishButton}
-                            >
+                            <Button appearance="primary" size="medium" onClick={onPublishClick} className={styles.publishButton}>
                                 <Checkmark24Filled />
                                 {t("components.botsettingsdrawer.deleteDialog.confirm")}
                             </Button>

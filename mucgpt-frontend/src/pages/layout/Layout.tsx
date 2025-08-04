@@ -34,7 +34,7 @@ export const Layout = () => {
 
     // Contexts
     const { setLanguage } = useContext(LanguageContext);
-    const { setLLM } = useContext(LLMContext);
+    const { setLLM, setAvailableLLMs } = useContext(LLMContext);
     const { header } = useContext(HeaderContext);
 
     // Use useRef to prevent duplicate API calls
@@ -85,6 +85,7 @@ export const Layout = () => {
                 if (result.models.length === 0) {
                     console.error("Keine Modelle vorhanden");
                 }
+                setAvailableLLMs(result.models);
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
             },
             () => {

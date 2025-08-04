@@ -1,7 +1,6 @@
 import { Delete24Regular, Dismiss24Regular, Edit24Regular, ChatSettings24Regular, Checkmark24Filled, CloudArrowUp24Filled } from "@fluentui/react-icons";
 import {
     Button,
-    Label,
     Field,
     Tooltip,
     Dialog,
@@ -10,8 +9,7 @@ import {
     DialogContent,
     DialogSurface,
     DialogTitle,
-    DialogTrigger,
-    Checkbox
+    DialogTrigger
 } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
@@ -67,7 +65,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         if (!bot.id) return;
         const updatedBot: Bot = {
             ...bot,
-            publish: false,
+            publish: false
         };
         await deleteCommunityAssistantApi(bot.id);
         await storageService.createBotConfig(updatedBot);
@@ -81,8 +79,12 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
             <Dialog modalType="alert" open={showDeleteDialog}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>{publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.deleteDialog.title")}</DialogTitle>
-                        <DialogContent>{publish ? t("components.botsettingsdrawer.deleteDialog.unpublish") : t("components.botsettingsdrawer.deleteDialog.content")}</DialogContent>
+                        <DialogTitle>
+                            {publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.deleteDialog.title")}
+                        </DialogTitle>
+                        <DialogContent>
+                            {publish ? t("components.botsettingsdrawer.deleteDialog.unpublish") : t("components.botsettingsdrawer.deleteDialog.content")}
+                        </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary" size="small" onClick={() => setShowDeleteDialog(false)}>
@@ -198,7 +200,17 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
 
     // Edit bot dialog
     const editDialog = useMemo(
-        () => <EditBotDialog showDialog={showEditDialog} setShowDialog={setShowEditDialog} bot={bot} onBotChanged={onBotChange} isOwner={isOwner} publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />,
+        () => (
+            <EditBotDialog
+                showDialog={showEditDialog}
+                setShowDialog={setShowEditDialog}
+                bot={bot}
+                onBotChanged={onBotChange}
+                isOwner={isOwner}
+                publishDepartments={publishDepartments}
+                setPublishDepartments={setPublishDepartments}
+            />
+        ),
         [showEditDialog, bot, onBotChange, isOwner, publishDepartments, setPublishDepartments]
     );
 

@@ -118,7 +118,6 @@ class AssistantBase(BaseModel):
         1000,
         description="Maximum number of tokens the assistant can generate in a single response",
         gt=0,
-        le=32000,
         example=1000,
     )
     examples: Optional[List[ExampleModel]] = Field(
@@ -287,7 +286,6 @@ class AssistantUpdate(BaseModel):
         None,
         description="Maximum number of tokens the assistant can generate in a single response",
         gt=0,
-        le=32000,
         example=1000,
     )
     examples: Optional[List[ExampleModel]] = Field(

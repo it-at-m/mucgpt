@@ -1,0 +1,240 @@
+/* Dialog Container */
+.dialog {
+    max-width: 560px;
+    width: 90vw;
+}
+
+.dialogContent {
+    padding: 0;
+}
+
+/* Title Section */
+.title {
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    padding: 24px 24px 16px 24px;
+}
+
+.titleContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* Content Area */
+.content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Bot Info Card */
+.botInfoCard {
+    background: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+.botDescription {
+    color: var(--colorNeutralForeground2);
+    margin-top: 4px;
+}
+
+/* Info Section */
+.infoSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.infoHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--colorBrandForeground1);
+}
+
+.infoIcon {
+    color: var(--colorBrandForeground1);
+}
+
+.infoList {
+    margin: 0;
+    padding-left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.infoList li {
+    color: var(--colorNeutralForeground2);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Divider */
+.divider {
+    margin: 8px 0;
+}
+
+/* Options Section */
+.optionsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sectionTitle {
+    color: var(--colorNeutralForeground1);
+    margin-bottom: 8px;
+}
+
+/* Visibility Option */
+.visibilityOption {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    background: var(--colorNeutralBackground1);
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.optionDescription {
+    color: var(--colorNeutralForeground2);
+    margin-left: 32px;
+    font-size: 13px;
+}
+
+/* Link Card */
+.linkCard {
+    margin-top: 12px;
+    border: 1px solid var(--colorBrandStroke2);
+    background: var(--colorBrandBackground2);
+}
+
+.linkPreview {
+    padding: 16px;
+}
+
+.linkSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.linkLabel {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--colorBrandForeground1);
+}
+
+.linkContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 4px;
+}
+
+.linkText {
+    flex: 1;
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: 13px;
+    color: var(--colorNeutralForeground1);
+    word-break: break-all;
+}
+
+/* Department Section */
+.departmentSection {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    background: var(--colorNeutralBackground1);
+}
+
+.departmentHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--colorNeutralForeground1);
+}
+
+.departmentDescription {
+    color: var(--colorNeutralForeground2);
+    margin-bottom: 8px;
+}
+
+.departmentDropdown {
+    margin-top: 8px;
+}
+
+/* Actions */
+.actions {
+    padding: 16px 24px 24px 24px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+    gap: 12px;
+}
+
+.cancelButton {
+    min-width: 100px;
+}
+
+.publishButton {
+    min-width: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .dialog {
+        width: 95vw;
+        max-width: none;
+    }
+
+    .content {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .title {
+        padding: 16px 16px 12px 16px;
+    }
+
+    .titleContainer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .actions {
+        padding: 12px 16px 16px 16px;
+        flex-direction: column-reverse;
+    }
+
+    .cancelButton,
+    .publishButton {
+        width: 100%;
+    }
+
+    .linkContainer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+}

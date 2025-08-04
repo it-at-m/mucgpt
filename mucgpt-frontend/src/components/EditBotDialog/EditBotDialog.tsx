@@ -18,7 +18,8 @@ import {
     Field,
     Textarea,
     Input,
-    TextareaOnChangeData
+    TextareaOnChangeData,
+    InfoLabel
 } from "@fluentui/react-components";
 
 import styles from "./EditBotDialog.module.css";
@@ -30,6 +31,7 @@ import { ExampleModel } from "../Example";
 import { ToolsSelector } from "../ToolsSelector";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { HeaderContext } from "../../pages/layout/HeaderContextProvider";
+import DepartementDropdown from "../DepartementDropdown/DepartementDropdown";
 
 interface Props {
     showDialog: boolean;
@@ -37,9 +39,11 @@ interface Props {
     bot: Bot;
     onBotChanged: (bot: Bot) => void;
     isOwner: boolean;
+    publishDepartments: string[];
+    setPublishDepartments: (departments: string[]) => void;
 }
 
-export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner }: Props) => {
+export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, publishDepartments, setPublishDepartments }: Props) => {
     // Stepper state
     const [currentStep, setCurrentStep] = useState<number>(0);
     const totalSteps = 7;
@@ -68,6 +72,8 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const [ownerIds, setOwnerIds] = useState<string[]>(bot.owner_ids || []);
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(bot.hirachical_access || []);
     const [tags, setTags] = useState<string[]>(bot.tags || []);
+    const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
+    const [hasChanged, setHasChanged] = useState<boolean>(false);
 
     // Context
     const { setHeader } = useContext(HeaderContext);
@@ -153,6 +159,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const onDescriptionChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setDescription(newValue.value);
+            setHasChanged(true);
         } else {
             setDescription("");
         }
@@ -162,6 +169,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const onTitleChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setTitle(newValue.value);
+            setHasChanged(true);
         } else {
             setTitle("Assistent");
         }
@@ -171,6 +179,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const onPromptChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
         if (newValue?.value) {
             setSystemPrompt(newValue.value);
+            setHasChanged(true);
         } else {
             setSystemPrompt("");
         }
@@ -183,6 +192,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         if (!hasEmpty) {
             setQuickPrompts([...quickPrompts, { label: "", prompt: "", tooltip: "" }]);
         }
+        setHasChanged(true);
     };
 
     const onChangeQuickPromptLabel = useCallback(
@@ -191,6 +201,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             updated[index].label = e.currentTarget.value.trim();
             updated[index].tooltip = updated[index].label;
             setQuickPrompts(updated);
+            setHasChanged(true);
         },
         [quickPrompts]
     );
@@ -200,12 +211,14 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             const updated = [...quickPrompts];
             updated[index].prompt = e.currentTarget.value.trim();
             setQuickPrompts(updated);
+            setHasChanged(true);
         },
         [quickPrompts]
     );
 
     const removeQuickPrompt = (index: number) => {
         setQuickPrompts(quickPrompts.filter((_, i) => i !== index));
+        setHasChanged(true);
     };
 
     // Helper functions for examples
@@ -214,6 +227,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         const hasEmpty = examples.some(ex => !ex.text.trim() || !ex.value.trim());
         if (!hasEmpty) {
             setExamples([...examples, { text: "", value: "" }]);
+            setHasChanged(true);
         }
     };
     const onChangeExampleText = useCallback(
@@ -221,6 +235,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             const updated = [...examples];
             updated[index].text = e.currentTarget.value.trim();
             setExamples(updated);
+            setHasChanged(true);
         },
         [examples]
     );
@@ -229,12 +244,14 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             const updated = [...examples];
             updated[index].value = e.currentTarget.value.trim();
             setExamples(updated);
+            setHasChanged(true);
         },
         [examples]
     );
 
     const removeExample = (index: number) => {
         setExamples(examples.filter((_, i) => i !== index));
+        setHasChanged(true);
     };
 
     // Helper functions for tools
@@ -307,6 +324,49 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         tags
     ]);
 
+    // close dialog pressed function
+    const closeDialogPressed = useCallback(() => {
+        setCloseDialogOpen(false);
+        setShowDialog(false);
+        setShowSavedMessage(false);
+        setCurrentStep(0);
+        setDescription(bot.description);
+        setTitle(bot.title);
+        setSystemPrompt(bot.system_message);
+        setQuickPrompts(bot.quick_prompts || []);
+        setExamples(bot.examples || []);
+        setTemperature(bot.temperature);
+        setMaxOutputTokens(bot.max_output_tokens);
+        setVersion(bot.version);
+        setTools(bot.tools || []);
+        setPublish(bot.publish || false);
+        setOwnerIds(bot.owner_ids || []);
+        setHierarchicalAccess(bot.hirachical_access || []);
+        setTags(bot.tags || []);
+    }, [setShowDialog, setShowSavedMessage, bot]);
+
+    // close dialog
+    const closeDialog = useMemo(() => {
+        return (
+            <Dialog modalType="alert" open={closeDialogOpen}>
+                <DialogSurface>
+                    <DialogTitle>{t("components.edit_bot_dialog.close_dialog_title")}</DialogTitle>
+                    <DialogBody>
+                        {t("components.edit_bot_dialog.close_dialog_message")}
+                    </DialogBody>
+                    <DialogActions>
+                        <Button appearance="secondary" onClick={() => setCloseDialogOpen(false)}>
+                            {t("components.edit_bot_dialog.cancel")}
+                        </Button>
+                        <Button appearance="primary" onClick={closeDialogPressed}>
+                            {t("components.edit_bot_dialog.close")}
+                        </Button>
+                    </DialogActions>
+                </DialogSurface>
+            </Dialog>
+        )
+    }, [closeDialogOpen, t, closeDialogPressed]);
+
     // Render saved message
     const savedMessage = useMemo(
         () =>
@@ -366,7 +426,6 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                     <Textarea
                         placeholder={t("components.edit_bot_dialog.bot_description")}
                         value={description}
-                        rows={15}
                         resize="vertical"
                         size="large"
                         onChange={onDescriptionChanged}
@@ -383,10 +442,20 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         () => (
             <DialogContent>
                 <Field size="large" className={styles.formField}>
-                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.system_prompt")}:</label>
+                    <label className={styles.formLabel}>
+                        <InfoLabel
+                            info={
+                                <div>
+                                    <i>{t("components.chattsettingsdrawer.system_prompt")}s</i>
+                                    {t("components.chattsettingsdrawer.system_prompt_info")}
+                                </div>
+                            }
+                        >
+                            {t("components.edit_bot_dialog.system_prompt")}:
+                        </InfoLabel>
+                    </label>
                     <Textarea
                         placeholder={t("components.edit_bot_dialog.system_prompt")}
-                        rows={15}
                         resize="vertical"
                         value={systemPrompt}
                         size="large"
@@ -456,7 +525,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                                 <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_tools_selected")}</div>
                             )}
                         </div>
-                        {!!isOwner && (
+                        {isOwner && (
                             <Button appearance="subtle" onClick={() => setShowToolsSelector(true)} disabled={!isOwner} className={styles.addFieldButton}>
                                 <Add24Regular /> {t("components.edit_bot_dialog.select_tools")}
                             </Button>
@@ -502,7 +571,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                                                 />
                                             </div>
                                         </div>
-                                        {!!isOwner && (
+                                        {isOwner && (
                                             <button
                                                 className={styles.removeFieldButton}
                                                 onClick={() => removeQuickPrompt(index)}
@@ -518,7 +587,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                                 <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_quick_prompts_selected")}</div>
                             )}
                         </div>
-                        {!!isOwner && (
+                        {isOwner && (
                             <Button appearance="subtle" onClick={addQuickPrompt} disabled={!isOwner} className={styles.addFieldButton}>
                                 <Add24Regular /> {t("components.edit_bot_dialog.add_quick_prompt")}
                             </Button>
@@ -564,7 +633,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                                                 />
                                             </div>
                                         </div>
-                                        {!!isOwner && (
+                                        {isOwner && (
                                             <button
                                                 className={styles.removeFieldButton}
                                                 onClick={() => removeExample(index)}
@@ -580,7 +649,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                                 <div className={styles.noToolsText}>{t("components.edit_bot_dialog.no_examples_selected")}</div>
                             )}
                         </div>
-                        {!!isOwner && (
+                        {isOwner && (
                             <Button appearance="subtle" onClick={addExample} disabled={!isOwner} className={styles.addFieldButton}>
                                 <Add24Regular /> {t("components.edit_bot_dialog.add_example")}
                             </Button>
@@ -597,7 +666,18 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         () => (
             <DialogContent>
                 <Field size="large" className={styles.rangeField}>
-                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.temperature")}</label>
+                    <label className={styles.formLabel}>
+                        <InfoLabel
+                            info={
+                                <div>
+                                    {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
+                                    {t("components.chattsettingsdrawer.temperature_info")}
+                                </div>
+                            }
+                        >
+                            {t("components.edit_bot_dialog.temperature")}
+                        </InfoLabel>
+                    </label>
                     <input
                         type="range"
                         min={min_temp}
@@ -611,7 +691,11 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                     <div className={styles.rangeValue}>{temperature}</div>
                 </Field>
                 <Field size="large" className={styles.rangeField}>
-                    <label className={styles.formLabel}>{t("components.edit_bot_dialog.max_output_tokens")}</label>
+                    <label className={styles.formLabel}>
+                        <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>
+                            {t("components.edit_bot_dialog.max_output_tokens")}
+                        </InfoLabel>
+                    </label>
                     <input
                         type="range"
                         min={min_max_tokens}
@@ -624,6 +708,8 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                     />
                     <div className={styles.rangeValue}>{maxOutputTokens}</div>
                 </Field>
+                {isOwner && publish && (<DepartementDropdown
+                    publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />)}
             </DialogContent>
         ),
         [temperature, maxOutputTokens, onTemperatureChange, onMaxtokensChange, isOwner, t, min_temp, max_temp, min_max_tokens, max_max_tokens]
@@ -650,7 +736,6 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                 return titleStep;
         }
     };
-
     // Render dialog actions
     const dialogActions = useMemo(
         () => (
@@ -679,18 +764,30 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         <div>
             <Dialog modalType="alert" open={showDialog}>
                 <DialogSurface className={styles.dialog}>
-                    <DialogTitle>{t("components.edit_bot_dialog.title")}</DialogTitle>
+                    <div className={styles.dialogHeader}>
+                        <DialogTitle>{t("components.edit_bot_dialog.title")}</DialogTitle>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            onClick={() => { if (hasChanged) { setCloseDialogOpen(true) } else { setShowDialog(false); setShowSavedMessage(false); } }}
+                            disabled={showSavedMessage}
+                            className={styles.closeButton}
+                            icon={<Dismiss24Regular />}
+                        />
+                    </div>
+                    <br />
                     {!showSavedMessage && <div className={styles.stepperFullWidth}>{stepperProgress}</div>}
                     <DialogBody className={styles.scrollableDialogContent}>
                         {savedMessage}
                         {!showSavedMessage && getCurrentStepContent()}
                     </DialogBody>
-                    <DialogActions className={styles.dialogActionsContainer}>
+                    <div className={styles.dialogActionsContainer}>
                         <div className={styles.stepperActions}>{dialogActions}</div>
-                    </DialogActions>
+                    </div>
                 </DialogSurface>
             </Dialog>
             <ToolsSelector open={showToolsSelector} onClose={handleToolsSelected} tools={availableTools} selectedTools={selectedTools} />
+            {closeDialog}
         </div>
     );
 };

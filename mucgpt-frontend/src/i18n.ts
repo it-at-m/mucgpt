@@ -167,9 +167,13 @@ i18n
                             finish_edit: "Bearbeitung abschließen",
                             show_configutations: "Konfigurationen anzeigen",
                             close_configutations: "Konfigurationen schließen",
+                            "unpublish-button": "Veröffentlichung aufheben",
+                            publish: "Veröffentlichen",
+                            unpublish: "Nicht mehr veröffentlichen",
                             deleteDialog: {
                                 title: "Bot Löschen",
                                 content: "Wollen Sie den Bot wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+                                unpublish: "Wollen Sie die Veröffentlichung des Bots wirklich aufheben? Dies macht ihn für andere nicht mehr verfügbar.",
                                 confirm: "Ja",
                                 cancel: "Nein"
                             }
@@ -262,7 +266,11 @@ i18n
                             step_advanced_settings: "Erweiterte Einstellungen",
                             // Navigation buttons
                             next: "Weiter",
-                            previous: "Zurück"
+                            previous: "Zurück",
+                            // Close dialog
+                            close_dialog_title: "Dialog schließen",
+                            close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren.",
+                            cancel: "Abbrechen"
                         },
                         search_bot_button: {
                             search_bots: "Assistenten durchsuchen"
@@ -438,9 +446,13 @@ i18n
                             finish_edit: "Finish Edit",
                             show_configutations: "Show configurations",
                             close_configutations: "Close configurations",
+                            "unpublish-button": "Unpublish",
+                            publish: "Publish",
+                            unpublish: "Unpublish",
                             deleteDialog: {
                                 title: "Delete Bot",
                                 content: "Are you sure you want to delete the bot? This action cannot be undone.",
+                                unpublish: "Are you sure you want to unpublish the bot? This will make it unavailable to others.",
                                 confirm: "Yes",
                                 cancel: "No"
                             }
@@ -533,7 +545,11 @@ i18n
                             step_advanced_settings: "Advanced Settings",
                             // Navigation buttons
                             next: "Next",
-                            previous: "Previous"
+                            previous: "Previous",
+                            // Close dialog
+                            close_dialog_title: "Close Dialog",
+                            close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost.",
+                            cancel: "Cancel"
                         },
                         search_bot_button: {
                             search_bots: "Search assistants"
@@ -709,9 +725,13 @@ i18n
                             finish_edit: "Bearbeitung abschließ'n",
                             show_configutations: "Konfigurationen anzeigen",
                             close_configutations: "Konfigurationen schließen",
+                            "unpublish-button": "Veröffentlichung aufheb'n",
+                            publish: "Veröffentlich'n",
+                            unpublish: "Nimma veröffentlich'n",
                             deleteDialog: {
                                 title: "Bot Löschn",
                                 content: "Wuißt du den Bot echt löschn? Des ko nimma rückgängig gmocht werdn.",
+                                unpublish: "Wuißt du de Veröffentlichung vom Bot echt aufheb'n? Dann könn'n andere den nimma nutzen.",
                                 confirm: "Ja",
                                 cancel: "Na"
                             }
@@ -804,7 +824,11 @@ i18n
                             step_advanced_settings: "Erweiterte Einstellungen",
                             // Navigation buttons
                             next: "Weiter",
-                            previous: "Zruck"
+                            previous: "Zruck",
+                            // Close dialog
+                            close_dialog_title: "Dialog schließn",
+                            close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn.",
+                            cancel: "Obbrecha"
                         },
                         search_bot_button: {
                             search_bots: "Assistentn durchschaun"
@@ -979,9 +1003,13 @@ i18n
                             finish_edit: "Terminer la modification",
                             show_configutations: "Afficher les configurations",
                             close_configutations: "Fermer les configurations",
+                            "unpublish-button": "Dépublier",
+                            publish: "Publier",
+                            unpublish: "Dépublier",
                             deleteDialog: {
                                 title: "Supprimer le Bot",
                                 content: "Êtes-vous sûr de vouloir supprimer le bot ? Cette action est irréversible.",
+                                unpublish: "Êtes-vous sûr de vouloir dépublier le bot ? Il ne sera plus disponible pour les autres.",
                                 confirm: "Oui",
                                 cancel: "Non"
                             }
@@ -1074,7 +1102,14 @@ i18n
                             step_advanced_settings: "Paramètres avancés",
                             // Navigation buttons
                             next: "Suivant",
-                            previous: "Précédent"
+                            previous: "Précédent",
+                            // Close dialog
+                            close_dialog_title: "Fermer le dialogue",
+                            close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues.",
+                            cancel: "Annuler"
+                        },
+                        search_bot_button: {
+                            search_bots: "Rechercher des assistants"
                         },
                         community_bots: {
                             title: "Assistants Communautaires", // French
@@ -1154,6 +1189,12 @@ i18n
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель"
+                    },
+                    create_bot: {
+                        title: "Заголовок",
+                        description: "Опис",
+                        prompt: "Системний запит",
+                        create: "Створити"
                     },
                     components: {
                         roles: {
@@ -1240,9 +1281,13 @@ i18n
                             finish_edit: "Завершити редагування",
                             show_configutations: "Показати конфігурації",
                             close_configutations: "Закрити конфігурації",
+                            "unpublish-button": "Скасувати публікацію",
+                            publish: "Опублікувати",
+                            unpublish: "Скасувати публікацію",
                             deleteDialog: {
                                 title: "Видалити Бота",
                                 content: "Ви впевнені, що хочете видалити бота? Цю дію не можна скасувати.",
+                                unpublish: "Ви впевнені, що хочете скасувати публікацію бота? Він стане недоступним для інших.",
                                 confirm: "Так",
                                 cancel: "Ні"
                             }
@@ -1335,7 +1380,11 @@ i18n
                             step_advanced_settings: "Розширені налаштування",
                             // Navigation buttons
                             next: "Далі",
-                            previous: "Назад"
+                            previous: "Назад",
+                            // Close dialog
+                            close_dialog_title: "Закрити діалог",
+                            close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені.",
+                            cancel: "Скасувати"
                         },
                         search_bot_button: {
                             search_bots: "Пошук асистентів"

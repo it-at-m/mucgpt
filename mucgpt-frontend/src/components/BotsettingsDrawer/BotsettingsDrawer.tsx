@@ -22,9 +22,11 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { Bot, createCommunityAssistantApi } from "../../api";
-import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
+import { Bot, createCommunityAssistantApi, deleteCommunityAssistantApi } from "../../api";
 import { EditBotDialog } from "../EditBotDialog/EditBotDialog";
+import PublishBotDialog from "../PublishBotDialog/PublishBotDialog";
+import { BotStorageService } from "../../service/botstorage";
+import { BOT_STORE } from "../../constants";
 
 interface Props {
     bot: Bot;
@@ -48,6 +50,8 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     const [invisibleChecked, setInvisibleChecked] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
 
+    const storageService: BotStorageService = new BotStorageService(BOT_STORE);
+
     useEffect(() => {
         setDescription(bot.description);
         setPublish(bot.publish);
@@ -59,14 +63,26 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setShowEditDialog(!showEditDialog);
     }, [showEditDialog]);
 
+    const saveLocal = useCallback(async () => {
+        if (!bot.id) return;
+        const updatedBot: Bot = {
+            ...bot,
+            publish: false,
+        };
+        await deleteCommunityAssistantApi(bot.id);
+        await storageService.createBotConfig(updatedBot);
+        window.location.href = "/#/";
+        window.location.reload();
+    }, [bot, storageService, bot.id]);
+
     // Delete bot confirmation dialog
     const deleteDialog = useMemo(
         () => (
             <Dialog modalType="alert" open={showDeleteDialog}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>{t("components.botsettingsdrawer.deleteDialog.title")}</DialogTitle>
-                        <DialogContent>{t("components.botsettingsdrawer.deleteDialog.content")}</DialogContent>
+                        <DialogTitle>{publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.deleteDialog.title")}</DialogTitle>
+                        <DialogContent>{publish ? t("components.botsettingsdrawer.deleteDialog.unpublish") : t("components.botsettingsdrawer.deleteDialog.content")}</DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary" size="small" onClick={() => setShowDeleteDialog(false)}>
@@ -77,9 +93,13 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 <Button
                                     appearance="secondary"
                                     size="small"
-                                    onClick={() => {
+                                    onClick={async () => {
                                         setShowDeleteDialog(false);
-                                        onDeleteBot();
+                                        if (publish) {
+                                            await saveLocal();
+                                        } else {
+                                            onDeleteBot();
+                                        }
                                     }}
                                 >
                                     <Checkmark24Filled /> {t("components.botsettingsdrawer.deleteDialog.confirm")}
@@ -90,7 +110,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                 </DialogSurface>
             </Dialog>
         ),
-        [showDeleteDialog, onDeleteBot]
+        [showDeleteDialog, onDeleteBot, publish, t, saveLocal]
     );
 
     // actions component
@@ -114,19 +134,19 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                                 onClick={() => setShowDeleteDialog(true)}
                                 icon={<Delete24Regular className={styles.iconRightMargin} />}
                             >
-                                {t("components.botsettingsdrawer.delete")}
+                                {publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.delete")}
                             </Button>
                         </Tooltip>
                     </div>
                 )}
             </div>
         ),
-        [actions, isOwner, toggleReadOnly, t, deleteDialog, minimized]
+        [actions, isOwner, toggleReadOnly, t, deleteDialog, minimized, publish, setShowDeleteDialog]
     );
 
     // publish
-    const onPublishClick = useCallback(() => {
-        createCommunityAssistantApi({
+    const onPublishClick = useCallback(async () => {
+        await createCommunityAssistantApi({
             name: bot.title,
             description: bot.description,
             system_prompt: bot.system_message,
@@ -159,75 +179,27 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
         setShowPublishDialog(false);
     }, [bot, onBotChange, onDeleteBot, invisibleChecked, publishDepartments, createCommunityAssistantApi]);
 
+    // Publish dialog
     const publishDialog = useMemo(
         () => (
-            <Dialog modalType="alert" open={showPublishDialog}>
-                <DialogSurface className={styles.dialog}>
-                    <DialogBody className={styles.dialogContent}>
-                        <DialogTitle>Bot veröffentlichen</DialogTitle>
-                        <DialogContent>
-                            Hinweise für das Veröffentlichen eines Bots:
-                            <ul>
-                                <li>Der Bot wird für alle Nutzer:innen im System sichtbar.</li>
-                                <li>Der Bot kann von allen Nutzer:innen verwendet werden.</li>
-                                <li>Die Veröffentlichung kann nicht rückgängig gemacht werden.</li>
-                            </ul>
-                            <Checkbox
-                                label="unsichtbar veröffentlichen"
-                                checked={invisibleChecked}
-                                onChange={(_, data) => setInvisibleChecked(!!data.checked)}
-                            />
-                            <br />
-                            {invisibleChecked && (
-                                <>
-                                    <Label htmlFor="publish-link" style={{ marginRight: 8 }}>
-                                        Link zum Kopieren:
-                                    </Label>
-                                    <Tooltip content="In Zwischenablage kopieren" relationship="description" positioning="below">
-                                        <Button
-                                            id="publish-link"
-                                            appearance="secondary"
-                                            size="small"
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(`${window.location.origin}/bot/${bot.id}`);
-                                            }}
-                                        >
-                                            {`${window.location.origin}/bot/${bot.id}`}
-                                        </Button>
-                                    </Tooltip>
-                                </>
-                            )}
-                            {!invisibleChecked && (
-                                <>
-                                    Veröffentlichen für
-                                    <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
-                                </>
-                            )}
-                            <br />
-                            Version: {bot.version}
-                        </DialogContent>
-                        <DialogActions>
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="small" onClick={() => setShowPublishDialog(false)}>
-                                    <Dismiss24Regular /> {t("components.botsettingsdrawer.deleteDialog.cancel")}
-                                </Button>
-                            </DialogTrigger>
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="small" onClick={onPublishClick}>
-                                    <Checkmark24Filled /> {t("components.botsettingsdrawer.deleteDialog.confirm")}
-                                </Button>
-                            </DialogTrigger>
-                        </DialogActions>
-                    </DialogBody>
-                </DialogSurface>
-            </Dialog>
+            <PublishBotDialog
+                open={showPublishDialog}
+                setOpen={setShowPublishDialog}
+                bot={bot}
+                onPublishClick={onPublishClick}
+                invisibleChecked={invisibleChecked}
+                setInvisibleChecked={setInvisibleChecked}
+                publishDepartments={publishDepartments}
+                setPublishDepartments={setPublishDepartments}
+            />
         ),
-        [showPublishDialog, publishDepartments, invisibleChecked]
+        [showPublishDialog, setShowPublishDialog, onPublishClick, bot, invisibleChecked, setInvisibleChecked, publishDepartments, setPublishDepartments]
     );
 
+    // Edit bot dialog
     const editDialog = useMemo(
-        () => <EditBotDialog showDialog={showEditDialog} setShowDialog={setShowEditDialog} bot={bot} onBotChanged={onBotChange} isOwner={isOwner} />,
-        [showEditDialog, bot, onBotChange, isOwner]
+        () => <EditBotDialog showDialog={showEditDialog} setShowDialog={setShowEditDialog} bot={bot} onBotChanged={onBotChange} isOwner={isOwner} publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />,
+        [showEditDialog, bot, onBotChange, isOwner, publishDepartments, setPublishDepartments]
     );
 
     // sidebar content
@@ -251,9 +223,9 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                 </div>
             </div>
             {!publish && (
-                <Tooltip content={"veröffentlichen"} relationship="description" positioning="below">
+                <Tooltip content={t("components.botsettingsdrawer.publish")} relationship="description" positioning="below">
                     <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>
-                        veröffentlichen
+                        {t("components.botsettingsdrawer.publish")}
                     </Button>
                 </Tooltip>
             )}

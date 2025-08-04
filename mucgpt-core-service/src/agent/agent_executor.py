@@ -147,7 +147,6 @@ class MUCGPTAgentExecutor:
             async for item in self.agent.graph.astream(
                 {"messages": msgs}, stream_mode=["messages", "custom"], config=config
             ):
-                logger.debug("Received item from stream: %s", item)
                 # item is a tuple of (messages, (message_chunk, meta_data)) or a tool call chunk
                 if not isinstance(item, tuple) or len(item) != 2:
                     logger.error(
@@ -190,7 +189,7 @@ class MUCGPTAgentExecutor:
                         "Unexpected item type in streaming response: %s", type(item)
                     )
                     continue
-            logger.info("Streaming completed successfully.")
+            logger.debug("Streaming completed successfully.")
         except Exception as ex:
             logger.error("Streaming error: %s", str(ex), exc_info=True)
             error_msg = llm_exception_handler(ex=ex, logger=logger)

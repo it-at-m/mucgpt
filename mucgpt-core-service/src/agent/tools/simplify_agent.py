@@ -20,10 +20,7 @@ class ReflectiveSimplificationState(TypedDict):
 
 
 # Prompts
-
-
-SIMPLIFY_SYSTEM_MESSAGE = """
-Du bist ein hilfreicher Assistent, der Texte in Leichter Sprache auf Sprachniveau A2 umschreibt.
+SIMPLFIY_RULES = """
 
 <instructions>
 - Schreibe immer wahrheitsgemäß und objektiv.
@@ -32,7 +29,7 @@ Du bist ein hilfreicher Assistent, der Texte in Leichter Sprache auf Sprachnivea
 - Mache keine Annahmen und erfinde keine Informationen.
 - Schreibe einfach, klar und immer auf Deutsch.
 - Übersetze nur den gegebenen Text in Leichte Sprache.
-- Füge nach jedem Satz zwei Leerzeichen ein, um einen Zeilenumbruch in Markdown zu erzeugen.
+- Schreibe jeden Satz in eine eigene Zeile.
 - Gib bei Links immer nur den Link selbst zurück.
 - Erstelle niemals eigenständig Links.
 - Beachte alle folgenden Regeln für Leichte Sprache (A2):
@@ -153,26 +150,24 @@ Diese Regeln richten sich an Sprachmodelle und Menschen, die Texte in Leichte Sp
 - Falsch: [Klicken Sie hier](https://example.com/page123)
 - Richtig: [Weitere Informationen zur Anmeldung](https://example.com/anmeldung)
 
----
-
-## 7. Feedback und Weiterentwicklung
-
-- Nutzer können Feedback zu den Regeln geben.
-- Die Regeln werden regelmäßig überprüft und angepasst.
-
----
 
 </instructions-easy-language>
 <instructions>
 """
 
+SIMPLIFY_SYSTEM_MESSAGE = (
+    """
+Du bist ein hilfreicher Assistent, der Texte in Leichter Sprache auf Sprachniveau A2 umschreibt.
+
+"""
+    + SIMPLFIY_RULES
+)
+
+
 SIMPLIFY_PROMPT = PromptTemplate(
     input_variables=["text"],
     template="""Bitte schreibe den folgenden schwer verständlichen Text vollständig in Leichte Sprache, Sprachniveau A2, um.
 
-
-
-Schreibe den vereinfachten Text innerhalb von <einfachesprache> VEREINFACHTER_TEXT</einfachesprache> Tags.
 
 Hier ist der schwer verständliche Text:
 
@@ -198,9 +193,7 @@ Simplified Text to Critique:
 </simplified>
 
 Review the simplified text against the following rules and the original text.
-<rules>
 {rules}
-</rules>
 
 Provide a concise, point-by-point critique. Identify every rule violation, such as sentences over 15 words, use of passive voice, complex words, or missing line breaks. If the text is good, respond with "No issues found."
 
@@ -293,12 +286,12 @@ class SimplifyAgent:
 
         # Stream the response
         response_content = ""
+        self._stream_update("<einfachesprache>", ToolStreamState.UPDATE)
         for chunk in llm.stream(messages):
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 response_content += result
-                self._stream_update(result)
-        # Update with complete simplified text
+                self._stream_update(result, ToolStreamState.APPEND)
         self._stream_update("</einfachesprache>", ToolStreamState.APPEND)
 
         return {
@@ -316,7 +309,7 @@ class SimplifyAgent:
         prompt = CRITIQUE_PROMPT.format(
             original_text=state["original_text"],
             simplified_text=state["simplified_text"],
-            rules=SIMPLIFY_SYSTEM_MESSAGE,
+            rules=SIMPLFIY_RULES,
         )
 
         critique_llm = self.model.with_config(
@@ -331,18 +324,17 @@ class SimplifyAgent:
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 critique += result
-                # Don't stream the critique to the user directly
 
         self.logger.info("Kritik: %s", critique)
 
         if "no issues found" in critique.lower():
             self._stream_update(
-                "\n✓ Text quality check passed! No issues found.",
+                "\n✓ Qualitätsprüfung bestanden! Keine Probleme gefunden.",
                 ToolStreamState.APPEND,
             )
         else:
             self._stream_update(
-                "\n⚠️ Quality issues identified. Refining text...",
+                "\n⚠️ Qualitätsprobleme erkannt. Text wird überarbeitet...",
                 ToolStreamState.APPEND,
             )
 
@@ -367,15 +359,13 @@ class SimplifyAgent:
         )
 
         refined_text = ""
+        self._stream_update("<einfachesprache>", ToolStreamState.UPDATE)
         for chunk in refine_llm.stream([HumanMessage(content=prompt)]):
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 refined_text += result
-                self._stream_update(result)
-
-        # Update with complete refined text
-        self._stream_update(refined_text, ToolStreamState.UPDATE)
-
+                self._stream_update(result, ToolStreamState.APPEND)
+        self._stream_update("</einfachesprache>", ToolStreamState.APPEND)
         return {
             **state,
             "simplified_text": refined_text.strip(),

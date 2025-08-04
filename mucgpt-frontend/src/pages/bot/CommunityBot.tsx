@@ -65,7 +65,7 @@ const CommunityBotChat = () => {
     const { setHeader } = useContext(HeaderContext);
 
     const [error, setError] = useState<unknown>();
-    const [sidebarSize] = useState<SidebarSizes>("large");
+    const [sidebarSize] = useState<SidebarSizes>("medium");
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(

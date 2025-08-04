@@ -601,7 +601,7 @@ const Chat = () => {
                     header={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
-                    size={showSidebar ? "large" : "none"}
+                    size={showSidebar ? "medium" : "none"}
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}

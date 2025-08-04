@@ -135,16 +135,20 @@ export const Layout = () => {
                                 <div className={styles.headerNavPageLink}>{header}</div>
                             </div>
                             <div className={styles.headerNavList}>
-                                <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
-                            </div>
-                            <div className={styles.headerNavList}>
-                                <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
-                            </div>
-                            <div className={styles.headerNavList}>
-                                <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.settingsdrawer.help")} />
-                            </div>
-                            <div className={styles.headerNavList}>
-                                <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                <div className={styles.headerNavRightContainer}>
+                                    <div className={styles.headerNavList}>
+                                        <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                    </div>
+                                    <div className={styles.headerNavList}>
+                                        <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                    </div>
+                                    <div className={styles.headerNavList}>
+                                        <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.settingsdrawer.help")} />
+                                    </div>
+                                    <div className={styles.headerNavList}>
+                                        <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </header>

@@ -19,7 +19,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     frontend: {
         labels: {
-            env_name: "MUCGPT DEMO. Find out more about us https://ki.muenchen.de/ "
+            env_name: "MUCGPT"
         },
         alternative_logo: false,
         enable_simply: true

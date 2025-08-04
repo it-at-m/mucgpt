@@ -2,16 +2,44 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 4px;
+    border-radius: 4px;
 }
 
 .label {
     font-size: 14px;
     font-weight: 500;
     margin-right: 4px;
+    color: inherit;
 }
 
 .versionContainer {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    cursor: default;
+}
+
+.infoIcon {
+    color: var(--colorBrandForeground1);
+    margin-right: 2px;
+}
+
+.versionLink {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.versionLink:hover {
+    background-color: var(--colorBrandBackgroundHover);
+    text-decoration: none;
+}
+
+.tooltip {
+    max-width: 300px;
 }

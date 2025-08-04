@@ -96,9 +96,37 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    align-items: center;
     margin-top: auto;
     justify-content: space-between;
     background-color: var(--colorBrandBackground2);
     color: var(--colorNeutralBackground1);
-    padding: 5px;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.footerSection {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.footerLink {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--colorNeutralBackground1);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.footerLink:hover {
+    background-color: var(--colorBrandBackgroundHover);
+    text-decoration: none;
+}
+
+.footerCompanyInfo {
+    line-height: 1.5;
 }

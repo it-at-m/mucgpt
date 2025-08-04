@@ -1,21 +1,26 @@
-import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link } from "@fluentui/react-components";
-import { Checkmark24Filled } from "@fluentui/react-icons";
+import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link, Tooltip } from "@fluentui/react-components";
+import { Checkmark24Filled, TextBulletList24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./TermsOfUseDialog.module.css";
 
-interface Props {
+interface TermsOfUseDialogProps {
     defaultOpen: boolean;
     onAccept: () => void;
 }
 
-export const TermsOfUseDialog = ({ defaultOpen, onAccept }: Props) => {
+export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
     return (
-        <div>
+        <div className={styles.container}>
             <Dialog modalType="alert" defaultOpen={defaultOpen}>
                 <DialogTrigger disableButtonEnhancement>
-                    <Button appearance="primary">{t("header.nutzungsbedingungen")}</Button>
+                    <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
+                        <div className={styles.triggerContainer}>
+                            <TextBulletList24Regular className={styles.termsIcon} />
+                            <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
+                        </div>
+                    </Tooltip>
                 </DialogTrigger>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
@@ -106,11 +111,11 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: Props) => {
                                 </Link>
                             </div>
                         </DialogContent>
-                        <DialogActions>
+                        <DialogActions className={styles.dialogActions}>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="small" onClick={onAccept}>
+                                <Button appearance="primary" size="medium" onClick={onAccept} className={styles.acceptButton}>
                                     <Checkmark24Filled className={styles.checkIcon} />
-                                    Zustimmen
+                                    {t("components.terms_of_use.accept", "Zustimmen")}
                                 </Button>
                             </DialogTrigger>
                         </DialogActions>
@@ -120,3 +125,5 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: Props) => {
         </div>
     );
 };
+
+export default TermsOfUseDialog;

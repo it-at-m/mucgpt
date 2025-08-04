@@ -4,15 +4,13 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_black.png";
-import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig, configApi } from "../../api";
-import { SettingsDrawer } from "../../components/SettingsDrawer";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
-import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { HeaderContext } from "./HeaderContextProvider";
@@ -36,7 +34,7 @@ export const Layout = () => {
 
     // Contexts
     const { setLanguage } = useContext(LanguageContext);
-    const { LLM, setLLM } = useContext(LLMContext);
+    const { setLLM } = useContext(LLMContext);
     const { header } = useContext(HeaderContext);
 
     // Use useRef to prevent duplicate API calls
@@ -48,7 +46,7 @@ export const Layout = () => {
     const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
 
     const [, setSimply] = useState<boolean>(true);
-    const [models, setModels] = useState(config.models);
+    const [, setModels] = useState(config.models);
 
     // vars from storage
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
@@ -116,19 +114,6 @@ export const Layout = () => {
         [setLanguage, i18n]
     );
 
-    // llm change
-    const onLLMSelectionChanged = useCallback(
-        (e: SelectionEvents, selection: OptionOnSelectData) => {
-            const llm = selection.optionValue || DEFAULTLLM;
-            const found_llm = models.find(model => model.llm_name == llm);
-            if (found_llm) {
-                setLLM(found_llm);
-                localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
-            }
-        },
-        [models, setLLM]
-    );
-
     return (
         <FluentProvider theme={theme}>
             <LightContext.Provider value={isLight}>
@@ -161,24 +146,19 @@ export const Layout = () => {
                             <div className={styles.headerNavList}>
                                 <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
                             </div>
-                            <div className={styles.SettingsDrawer}>
-                                <SettingsDrawer defaultLLM={llm_pref} onLLMSelectionChanged={onLLMSelectionChanged} llmOptions={models} currentLLM={LLM} />
-                            </div>
                         </div>
                     </header>
                     <Outlet />
 
                     <footer className={styles.footer} role={"banner"}>
-                        <div>
+                        <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
                             Landeshauptstadt München <br />
-                            RIT/it@M KICC <br />
+                            RIT/it@M KICC
                         </div>
-                        <div className={styles.faq}>
-                            <VersionInfo version={config.version} commit={config.commit} />
+                        <div className={styles.footerSection}>
+                            <VersionInfo version={config.version} commit={config.commit} versionUrl={import.meta.env.BASE_URL + "#/version"} />
                         </div>
-                        <div className={styles.headerNavRightMargin}>
-                            <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>
-                        </div>
+                        <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
                     </footer>
                 </div>
             </LightContext.Provider>

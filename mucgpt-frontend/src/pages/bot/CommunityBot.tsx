@@ -111,6 +111,7 @@ const CommunityBotChat = () => {
                 .then(response => {
                     const latest = response.latest_version;
                     const bot: Bot = {
+                        id: bot_id,
                         title: latest.name,
                         description: latest.description || "",
                         system_message: latest.system_prompt,

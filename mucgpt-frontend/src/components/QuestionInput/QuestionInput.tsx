@@ -161,7 +161,7 @@ export const QuestionInput = ({
                                     size="large"
                                     appearance="subtle"
                                     icon={<Send28Filled />}
-                                    aria-label={t("components.questioninput.sendbutton_tooltip") || "Send question"}
+                                    aria-label={"Send question"}
                                     disabled={disabled || !question.trim()}
                                     onClick={sendQuestion}
                                 />

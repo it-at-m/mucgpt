@@ -33,14 +33,28 @@ const Menu = () => {
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
 
     useEffect(() => {
-        // Check if the current path starts with "/?q="
-        const currentPath = window.location.pathname + window.location.search;
-        if (currentPath) {
-            if (currentPath.startsWith("/?q=")) {
-                const query = currentPath.slice(4, currentPath.length - 1);
-                const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
-                setQuestion(decoded_query);
+        // Check for query parameter in both hash and regular URLs
+        let query = null;
+
+        // Check hash format like #/?q=something
+        const hashPart = window.location.hash;
+        if (hashPart && hashPart.includes("?q=")) {
+            const qIndex = hashPart.indexOf("?q=");
+            if (qIndex !== -1) {
+                query = hashPart.slice(qIndex + 3);
             }
+        }
+        // Check regular format /?q=something
+        else {
+            const currentPath = window.location.pathname + window.location.search;
+            if (currentPath && currentPath.startsWith("/?q=")) {
+                query = currentPath.slice(4);
+            }
+        }
+
+        if (query) {
+            const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
+            setQuestion(decoded_query);
         }
 
         migrate_old_bots().then(async () => {
@@ -63,6 +77,9 @@ const Menu = () => {
         setGetCommunityBots(true);
     };
 
+    const onSendQuestion = (question: string) => {
+        window.location.href = `#/chat?q=${encodeURIComponent(question)}`;
+    };
     return (
         <div>
             <div className={styles.chatstartercontainer}>
@@ -70,9 +87,7 @@ const Menu = () => {
                 <h1 className={styles.heading}>{t("menu.chat_header")}</h1>
                 <div className={styles.chatstarter}>
                     <QuestionInput
-                        onSend={question => {
-                            window.location.href = `#/chat?q=${encodeURIComponent(question)}`;
-                        }}
+                        onSend={onSendQuestion}
                         disabled={false}
                         placeholder={t("chat.prompt")}
                         tokens_used={0}

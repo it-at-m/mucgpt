@@ -20,6 +20,7 @@ import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
 import { VersionInfo } from "../../components/VersionInfo";
+import { HelpButton } from "../../components/HelpButton";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -42,7 +43,7 @@ export const Layout = () => {
     const configApiCalledRef = useRef(false);
 
     // Translation
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
 
@@ -154,7 +155,9 @@ export const Layout = () => {
                             <div className={styles.headerNavList}>
                                 <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
                             </div>
-
+                            <div className={styles.headerNavList}>
+                                <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.settingsdrawer.help")} />
+                            </div>
                             <div className={styles.headerNavList}>
                                 <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
                             </div>

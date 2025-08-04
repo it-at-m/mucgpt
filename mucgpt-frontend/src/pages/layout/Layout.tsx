@@ -10,12 +10,15 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig, configApi } from "../../api";
 import { SettingsDrawer } from "../../components/SettingsDrawer";
-import { FluentProvider, Theme } from "@fluentui/react-components";
+import { FluentProvider, Tag, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { HeaderContext } from "./HeaderContextProvider";
+import { Mail24Regular } from "@fluentui/react-icons";
+import { LanguageSelector } from "../../components/LanguageSelector";
+import { ThemeSelector } from "../../components/ThemeSelector";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -51,23 +54,13 @@ export const Layout = () => {
     const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
 
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
+    const [fontscaling] = useState<number>(font_scaling_pref);
 
     const ligth_theme_pref =
         localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
 
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
-
-    // scale font size
-    const onFontscaleChange = useCallback(
-        (fontscale: number) => {
-            setFontscaling(fontscale);
-            setTheme(adjustTheme(isLight, fontscale));
-            localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
-        },
-        [isLight, setFontscaling, setTheme]
-    );
 
     // change theme
     const onThemeChange = useCallback(
@@ -112,8 +105,8 @@ export const Layout = () => {
 
     // language change
     const onLanguageSelectionChanged = useCallback(
-        (e: SelectionEvents, selection: OptionOnSelectData) => {
-            const lang = selection.optionValue || DEFAULTLANG;
+        (nextLanguage: string) => {
+            const lang = nextLanguage || DEFAULTLANG;
             i18n.changeLanguage(lang);
             setLanguage(lang);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
@@ -154,21 +147,25 @@ export const Layout = () => {
                             <div className={styles.headerNavList}>
                                 <div className={styles.headerNavPageLink}>{header}</div>
                             </div>
+                            <div className={styles.headerNavList}>
+                                <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                            </div>
+                            <div className={styles.headerNavList}>
+                                <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                            </div>
+
+                            <div className={styles.headerNavList}>
+                                <a
+                                    href="mailto:itm.kicc@muenchen.de?subject=MUCGPT"
+                                    className={styles.headerNavPageLink}
+                                    style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "inherit" }}
+                                >
+                                    <Mail24Regular className={styles.iconRightMargin} aria-hidden />
+                                    Feedback
+                                </a>
+                            </div>
                             <div className={styles.SettingsDrawer}>
-                                <SettingsDrawer
-                                    defaultlang={language_pref}
-                                    onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                    version={config.version}
-                                    commit={config.commit}
-                                    fontscale={fontscaling}
-                                    setFontscale={onFontscaleChange}
-                                    isLight={isLight}
-                                    setTheme={onThemeChange}
-                                    defaultLLM={llm_pref}
-                                    onLLMSelectionChanged={onLLMSelectionChanged}
-                                    llmOptions={models}
-                                    currentLLM={LLM}
-                                />
+                                <SettingsDrawer defaultLLM={llm_pref} onLLMSelectionChanged={onLLMSelectionChanged} llmOptions={models} currentLLM={LLM} />
                             </div>
                         </div>
                     </header>
@@ -178,6 +175,9 @@ export const Layout = () => {
                         <div>
                             Landeshauptstadt München <br />
                             RIT/it@M KICC <br />
+                        </div>
+                        <div className={styles.faq}>
+                            Version: <Tag shape="circular">{config.version}</Tag> <Tag shape="circular">{config.commit}</Tag>
                         </div>
                         <div className={styles.headerNavRightMargin}>
                             <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>

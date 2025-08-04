@@ -67,30 +67,6 @@ export const QuestionInput = ({
                         // Restore focus and cursor position
                         textarea.focus();
                         textarea.setSelectionRange(selectionStart, selectionEnd);
-
-                        // Scroll the send button into view
-                        if (sendButtonRef.current) {
-                            sendButtonRef.current.scrollIntoView({
-                                behavior: "smooth",
-                                block: "end"
-                            });
-
-                            setTimeout(() => {
-                                window.scrollBy({
-                                    top: 30,
-                                    behavior: "smooth"
-                                });
-                            }, 50);
-                        } else {
-                            // Fallback if button ref isn't available
-                            const container = textarea.closest(`.${styles.questionInputContainer}`);
-                            if (container) {
-                                container.scrollIntoView({
-                                    behavior: "smooth",
-                                    block: "end"
-                                });
-                            }
-                        }
                     });
                 }
             }
@@ -134,16 +110,6 @@ export const QuestionInput = ({
             if (ev.key === "Enter" && !ev.shiftKey) {
                 ev.preventDefault();
                 sendQuestion();
-            } else if (ev.key === "Enter" && ev.shiftKey) {
-                // For shift+enter, scroll to the send button after new line
-                requestAnimationFrame(() => {
-                    if (sendButtonRef.current) {
-                        sendButtonRef.current.scrollIntoView({
-                            behavior: "smooth",
-                            block: "end"
-                        });
-                    }
-                });
             }
         },
         [sendQuestion]

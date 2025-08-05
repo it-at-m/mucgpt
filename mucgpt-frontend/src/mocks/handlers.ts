@@ -1,6 +1,6 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay } from "msw";
-import { ApplicationConfig, AssistantCreateResponse } from "../api";
+import { ApplicationConfig, AssistantCreateResponse, AssistantUpdateInput } from "../api";
 
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
@@ -1135,6 +1135,43 @@ Zum Beispiel:
     }
 ];
 
+// Mock community assistants data
+const MOCK_ASSISTANTS: AssistantCreateResponse[] = [
+    {
+        ...CREATE_ASSISTANT_RESPONSE,
+        id: "assistant-1",
+        latest_version: {
+            ...CREATE_ASSISTANT_RESPONSE.latest_version,
+            id: "version-1",
+            name: "Code Helper",
+            description: "Helps with coding questions and debugging",
+            tags: ["coding", "programming", "debug"]
+        }
+    },
+    {
+        ...CREATE_ASSISTANT_RESPONSE,
+        id: "assistant-2",
+        latest_version: {
+            ...CREATE_ASSISTANT_RESPONSE.latest_version,
+            id: "version-2",
+            name: "Document Analyzer",
+            description: "Analyzes and summarizes documents",
+            tags: ["documents", "analysis", "summary"]
+        }
+    },
+    {
+        ...CREATE_ASSISTANT_RESPONSE,
+        id: "assistant-3",
+        latest_version: {
+            ...CREATE_ASSISTANT_RESPONSE.latest_version,
+            id: "version-3",
+            name: "Email Assistant",
+            description: "Helps with email composition and management",
+            tags: ["email", "communication", "management"]
+        }
+    }
+];
+
 export const handlers = [
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
@@ -1232,5 +1269,123 @@ export const handlers = [
         };
 
         return HttpResponse.json(response);
+    }),
+
+    // Get all community assistants
+    http.get("/api/bot", () => {
+        return HttpResponse.json(MOCK_ASSISTANTS);
+    }),
+
+    // Get specific community assistant
+    http.get("/api/bot/:id", ({ params }) => {
+        const { id } = params;
+        const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
+
+        if (!assistant) {
+            return new HttpResponse(null, { status: 404 });
+        }
+
+        return HttpResponse.json(assistant);
+    }),
+
+    // Update community assistant
+    http.post("/api/bot/:id/update", async ({ params, request }) => {
+        await delay(500);
+        const { id } = params;
+        const body = (await request.json()) as AssistantUpdateInput;
+
+        const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
+
+        if (!assistant) {
+            return new HttpResponse(null, { status: 404 });
+        }
+
+        // Create updated response
+        const updatedAssistant: AssistantCreateResponse = {
+            ...assistant,
+            updated_at: new Date().toISOString(),
+            latest_version: {
+                ...assistant.latest_version,
+                version: body.version || assistant.latest_version.version + 1,
+                name: body.name || assistant.latest_version.name,
+                description: body.description || assistant.latest_version.description,
+                system_prompt: body.system_prompt || assistant.latest_version.system_prompt,
+                hierarchical_access: body.hierarchical_access || assistant.latest_version.hierarchical_access,
+                temperature: body.temperature !== undefined ? body.temperature : assistant.latest_version.temperature,
+                max_output_tokens: body.max_output_tokens || assistant.latest_version.max_output_tokens,
+                tools: body.tools || assistant.latest_version.tools,
+                owner_ids: body.owner_ids || assistant.latest_version.owner_ids,
+                examples: body.examples || assistant.latest_version.examples,
+                quick_prompts: body.quick_prompts || assistant.latest_version.quick_prompts,
+                tags: body.tags || assistant.latest_version.tags,
+                created_at: new Date().toISOString()
+            }
+        };
+
+        // Update the mock data
+        const index = MOCK_ASSISTANTS.findIndex(a => a.id === id);
+        if (index !== -1) {
+            MOCK_ASSISTANTS[index] = updatedAssistant;
+        }
+
+        return HttpResponse.json(updatedAssistant);
+    }),
+
+    // Delete community assistant
+    http.post("/api/bot/:id/delete", async ({ params }) => {
+        await delay(300);
+        const { id } = params;
+        const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
+
+        if (!assistant) {
+            return new HttpResponse(null, { status: 404 });
+        }
+
+        // Remove from mock data
+        const index = MOCK_ASSISTANTS.findIndex(a => a.id === id);
+        if (index !== -1) {
+            MOCK_ASSISTANTS.splice(index, 1);
+        }
+
+        return HttpResponse.json({ message: "Assistant deleted successfully" });
+    }),
+
+    // Get specific version of community assistant
+    http.get("/api/bot/:id/version/:version", ({ params }) => {
+        const { id, version } = params;
+        const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
+
+        if (!assistant) {
+            return new HttpResponse(null, { status: 404 });
+        }
+
+        // For mock purposes, return the latest version regardless of version param
+        // In a real implementation, you'd fetch the specific version
+        const botVersion = {
+            id: assistant.latest_version.id,
+            version: parseInt(version as string) || assistant.latest_version.version,
+            created_at: assistant.latest_version.created_at,
+            name: assistant.latest_version.name,
+            description: assistant.latest_version.description,
+            system_prompt: assistant.latest_version.system_prompt,
+            hierarchical_access: assistant.latest_version.hierarchical_access,
+            temperature: assistant.latest_version.temperature,
+            max_output_tokens: assistant.latest_version.max_output_tokens,
+            tools: assistant.latest_version.tools,
+            owner_ids: assistant.latest_version.owner_ids,
+            examples: assistant.latest_version.examples,
+            quick_prompts: assistant.latest_version.quick_prompts,
+            tags: assistant.latest_version.tags,
+            title: assistant.latest_version.name // Bot interface uses title instead of name
+        };
+
+        return HttpResponse.json(botVersion);
+    }),
+
+    // Get owned community bots
+    http.get("/api/user/bots", () => {
+        // Return only the first two assistants as "owned" by the current user
+        const ownedBots = MOCK_ASSISTANTS.slice(0, 2);
+        return HttpResponse.json(ownedBots);
     })
 ];

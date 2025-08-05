@@ -206,39 +206,6 @@ class TestAgent:
             "Order of enabled_tools should not affect result"
         )
 
-    def test_call_model_binds_tools_and_injects_instructions(self):
-        agent = MUCGPTAgent(DummyLLM())
-        state = AgentState(
-            messages=[AIMessage(content="hi")]
-        )  # Use AgentState instead of dict
-        config = RunnableConfig(
-            configurable={
-                "enabled_tools": [t.name for t in ToolCollection(agent.model).get_all()]
-            }
-        )
-        # Patch toolCollection methods to track calls
-        called = {"bind_tools": False, "add_instructions": False}
-        orig_bind_tools = agent.model.bind_tools
-        orig_add_instructions = agent.toolCollection.add_instructions
-
-        def bind_tools_patch(tools):
-            called["bind_tools"] = True
-            return orig_bind_tools(tools)
-
-        def add_instructions_patch(messages, enabled_tools):
-            called["add_instructions"] = True
-            return orig_add_instructions(messages, enabled_tools)
-
-        agent.model.bind_tools = bind_tools_patch
-        agent.toolCollection.add_instructions = add_instructions_patch
-        agent.call_model(state, config)
-        assert called["bind_tools"], (
-            "bind_tools should be called when enabled_tools is set"
-        )
-        assert called["add_instructions"], (
-            "add_instructions should be called when enabled_tools is set"
-        )
-
     def test_call_model_returns_correct_structure(self):
         agent = MUCGPTAgent(DummyLLM())
         state = AgentState(

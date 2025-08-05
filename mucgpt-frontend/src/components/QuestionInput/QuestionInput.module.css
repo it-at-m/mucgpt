@@ -1,14 +1,29 @@
 .questionInputContainer {
     border-radius: 8px;
     box-shadow:
-        0px 8px 16px var(--colorBrandForeground2),
+        0px 4px 12px rgba(0, 0, 0, 0.08),
         0px 0px 2px var(--colorBrandForeground2);
     height: auto;
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     background: var(--colorNeutralBackground1);
+    transition: all 0.2s ease-in-out;
+}
+
+.questionInputTextArea {
+    min-height: 40px;
+    overflow: hidden;
+    resize: none !important;
+    border: none;
+    transition: height 0.1s ease;
+    padding: 8px;
+    font-size: var(--fontSizeBase200);
+    line-height: 1.5;
+    width: 100%;
+    margin-bottom: 8px; /* Add space before footer */
+    box-sizing: border-box;
 }
 
 .questionInputContainerFooter {
@@ -19,20 +34,24 @@
     align-items: center;
     font-size: var(--fontSizeBase100);
     line-height: var(--lineHeightBase100);
-    margin-top: 12px;
+    margin-top: 16px;
+    border-top: 1px solid var(--colorNeutralStroke1);
+    padding-top: 12px;
+    position: relative; /* Ensure it stays in position */
 }
 
 .errorhint {
     font-style: italic;
-    font-size: var(--fontSizeBase200, 0.95rem);
+    font-size: var(--fontSizeBase100, 0.85rem);
+    color: var(--colorNeutralForeground3);
     margin-top: 2px;
     margin-bottom: 2px;
     letter-spacing: 0.01em;
 }
 
 .errorhintSection {
-    flex-basis: 40%;
-    max-width: 40%;
+    flex-basis: 30%;
+    max-width: 30%;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -43,43 +62,67 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    align-items: flex-start;
-    margin-top: 8px;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
     max-width: 500px;
     width: 100%;
-    margin-left: 16px;
-    margin-right: 16px;
+    padding: 2px 0;
 }
 .toolBadges {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
+    align-items: center;
 }
 .toolBadge {
     margin-left: 0;
-    margin-bottom: 4px;
+    margin-bottom: 0;
     cursor: pointer;
     user-select: none;
     color: #fff;
-    font-weight: 600;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    opacity: 0.85;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.01em;
+}
+.toolBadge:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 .toolBadgeIcon {
-    margin-left: 4px;
+    margin-left: 6px;
     font-weight: 700;
     color: #fff;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 14px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 .toolBadgesSection {
-    flex-basis: 40%;
-    max-width: 40%;
+    flex-basis: 50%;
+    max-width: 50%;
     min-width: 0;
     display: flex;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: center;
     flex-wrap: wrap;
     overflow-x: auto;
+    padding: 4px 6px;
+    gap: 6px;
+    scrollbar-width: thin;
 }
 
 .questionInputButtonsContainer {
@@ -93,37 +136,56 @@
     gap: 8px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .questionInputContainer {
-        padding: 4px;
-        border-radius: 4px;
+        padding: 8px;
+        border-radius: 6px;
     }
     .questionInputTextArea {
         font-size: var(--fontSizeBase200, 1rem);
-        padding: 4px;
+        padding: 6px;
     }
     .questionInputContainerFooter {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
+        padding-top: 6px;
     }
     .errorhintSection,
     .toolBadgesSection,
     .questionInputButtonsContainer {
         flex-basis: 100%;
         max-width: 100%;
+        margin-bottom: 4px;
+    }
+    .toolBadgesSection {
+        order: 1;
+    }
+    .errorhintSection {
+        order: 2;
+    }
+    .questionInputButtonsContainer {
+        order: 3;
+        justify-content: center;
     }
     .toolBadgesWrapper {
         max-width: 100%;
-        gap: 2px;
-        margin-top: 4px;
+        gap: 4px;
+        justify-content: center;
     }
     .toolBadge {
-        font-size: 13px;
-        padding: 2px 8px;
+        font-size: 12px;
+        padding: 3px 6px;
         margin-bottom: 2px;
     }
+
+    .toolBadgeIcon {
+        width: 14px;
+        height: 14px;
+        font-size: 12px;
+        margin-left: 4px;
+    }
     .questionInputButtonsContainer {
-        gap: 4px;
+        gap: 12px;
     }
 }

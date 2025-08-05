@@ -4,12 +4,12 @@ import { Send28Filled, Toolbox24Color } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
 import { ToolListResponse } from "../../api/models";
 
-const TOOL_BADGE_COLOR_LIST = ["#1976d2", "#388e3c", "#d32f2f", "#fbc02d", "#7b1fa2", "#0288d1", "#c2185b", "#ffa000", "#388e3c", "#455a64"];
+const TOOL_BADGE_COLOR_LIST = ["#4285f4", "#34a853", "#ea4335", "#6c5ce7", "#00b894", "#0984e3", "#e84393", "#fdcb6e", "#00cec9", "#636e72"];
 
 interface Props {
     onSend: (question: string) => void;
@@ -42,6 +42,46 @@ export const QuestionInput = ({
     const { LLM } = useContext(LLMContext);
     const [description, setDescription] = useState<string>("0");
     const [toolsSelectorOpen, setToolsSelectorOpen] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const sendButtonRef = useRef<HTMLButtonElement | null>(null);
+
+    // Auto-resize functionality with scrolling to the send button
+    useEffect(() => {
+        const resizeTextarea = () => {
+            const textarea = textareaRef.current;
+            if (textarea) {
+                // Store current cursor position
+                const selectionStart = textarea.selectionStart;
+                const selectionEnd = textarea.selectionEnd;
+                const originalHeight = textarea.offsetHeight;
+
+                // Reset height first to get accurate scrollHeight
+                textarea.style.height = "auto";
+
+                // Add a small offset (4px) to prevent exact overlap
+                const newHeight = textarea.scrollHeight + 4;
+                textarea.style.height = `${newHeight}px`; // Scroll to send button if height increased
+                if (newHeight > originalHeight) {
+                    // Use requestAnimationFrame to ensure DOM has updated
+                    requestAnimationFrame(() => {
+                        // Restore focus and cursor position
+                        textarea.focus();
+                        textarea.setSelectionRange(selectionStart, selectionEnd);
+                    });
+                }
+            }
+        };
+
+        resizeTextarea();
+
+        // Reset height when question is cleared
+        if (question === "") {
+            const textarea = textareaRef.current;
+            if (textarea) {
+                textarea.style.height = "40px";
+            }
+        }
+    }, [question]);
 
     useEffect(() => {
         const actual = countWords(question) + tokens_used;
@@ -51,7 +91,7 @@ export const QuestionInput = ({
             if (actual > LLM.max_input_tokens) text += `${t("components.questioninput.limit")}`;
         } else text = `${actual} ${t("components.questioninput.tokensused")}`;
         setDescription(text);
-    }, [tokens_used, LLM.max_input_tokens]);
+    }, [tokens_used, LLM.max_input_tokens, t, question, token_limit_tracking]);
 
     const sendQuestion = useCallback(() => {
         if (disabled || !question.trim()) {
@@ -79,13 +119,16 @@ export const QuestionInput = ({
         return str.trim().split(/\s+/).length;
     }
 
-    const onQuestionChange = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (!newValue?.value) {
-            setQuestion("");
-        } else {
-            setQuestion(newValue.value);
-        }
-    }, []);
+    const onQuestionChange = useCallback(
+        (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+            if (!newValue?.value) {
+                setQuestion("");
+            } else {
+                setQuestion(newValue.value);
+            }
+        },
+        [setQuestion]
+    );
 
     return (
         <>
@@ -100,15 +143,18 @@ export const QuestionInput = ({
             />
             <Stack horizontal className={styles.questionInputContainer}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                    <Textarea
-                        textarea={styles.questionInputTextArea}
-                        placeholder={placeholder}
-                        resize="vertical"
-                        value={question}
-                        size="large"
-                        onChange={onQuestionChange}
-                        onKeyDown={onEnterPress}
-                    />
+                    <div style={{ position: "relative" }}>
+                        <Textarea
+                            className={styles.questionInputTextArea}
+                            placeholder={placeholder}
+                            resize="none"
+                            value={question}
+                            size="large"
+                            onChange={onQuestionChange}
+                            onKeyDown={onEnterPress}
+                            ref={textareaRef}
+                        />
+                    </div>
                     <div className={styles.questionInputContainerFooter}>
                         <div className={styles.errorhintSection}>
                             {tokens_used == 0 ? <div> </div> : <div>{description}</div>}
@@ -125,7 +171,7 @@ export const QuestionInput = ({
                                         appearance="filled"
                                         className={styles.toolBadge}
                                         style={{ background: color }}
-                                        size="medium"
+                                        size="small"
                                         shape="rounded"
                                         onClick={() => {
                                             if (setSelectedTools) setSelectedTools(selectedTools.filter(t => t !== toolName));
@@ -133,7 +179,7 @@ export const QuestionInput = ({
                                         icon={
                                             setSelectedTools && (
                                                 <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
-                                                    ×
+                                                    ✕
                                                 </span>
                                             )
                                         }
@@ -158,8 +204,9 @@ export const QuestionInput = ({
                             )}
                             <Tooltip content={placeholder || ""} relationship="label">
                                 <Button
+                                    ref={sendButtonRef}
                                     size="large"
-                                    appearance="subtle"
+                                    appearance={question.trim() ? "primary" : "subtle"}
                                     icon={<Send28Filled />}
                                     aria-label={"Send question"}
                                     disabled={disabled || !question.trim()}

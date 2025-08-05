@@ -415,9 +415,12 @@ async def getBot(
     assistant = await assistant_repo.get(id)
 
     if not assistant:
-        raise AssistantNotFoundException(id)
-
-    if not assistant.is_allowed_for_user(user_info.department):
+        raise AssistantNotFoundException(
+            id
+        )  # Check if the user is allowed to access this assistant
+    if not assistant.is_allowed_for_user(
+        user_info.department
+    ) and not await assistant_repo.is_owner(id, user_info.lhm_object_id):
         raise NotAllowedToAccessException(id)
 
     # Get assistant with owners safely
@@ -492,7 +495,9 @@ async def get_assistant_version(
     if not assistant:
         raise AssistantNotFoundException(id)
 
-    if not assistant.is_allowed_for_user(user_info.department):
+    if not assistant.is_allowed_for_user(
+        user_info.department
+    ) and not await assistant_repo.is_owner(id, user_info.lhm_object_id):
         raise NotAllowedToAccessException(id)
 
     assistant_version = await assistant_repo.get_assistant_version(id, version)

@@ -12,7 +12,7 @@ RUN npm ci --verbose
 RUN npm run build
 
 # For documentation see https://github.com/sclorg/nginx-container
-FROM registry.access.redhat.com/ubi9/nginx-124:9.6-1753698567@sha256:227db579eef86549aab1395e012e8f04eb352e8ba6f4b29601c84d1585e2c4e4
+FROM registry.access.redhat.com/ubi9/nginx-124:9.6-1754406834@sha256:5a3130f72a6b50d77cb2642028ebac8acf420647887ddee7ccd1eedc2b02d69b
 
 # Copy built web application
 COPY --from=builder /build/dist ./

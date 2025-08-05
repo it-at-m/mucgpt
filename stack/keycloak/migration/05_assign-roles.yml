@@ -6,3 +6,11 @@ changes:
       user: mucgpt-user
       role: lhm-ab-mucgpt-user
       clientId: mucgpt
+  - assignRole:
+      user: mucgpt-kicc-user
+      role: lhm-ab-mucgpt-user
+      clientId: mucgpt
+  - assignRole:
+      user: mucgpt-hr-user
+      role: lhm-ab-mucgpt-user
+      clientId: mucgpt

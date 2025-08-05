@@ -1,6 +1,6 @@
 // mocks/handlers.js
 import { http, HttpResponse, delay } from "msw";
-import { ApplicationConfig } from "../api";
+import { ApplicationConfig, AssistantCreateResponse } from "../api";
 
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
@@ -61,6 +61,38 @@ const CREATE_BOT_RESPONSE = {
         "Dieser Assistent beantwortet eingehende E-Mails höflich und individuell, indem er die spezifischen Anliegen der Absender versteht und detaillierte, klare Antworten formuliert.",
     system_prompt:
         "Bitte beantworten Sie eingehende E-Mails höflich und individuell, indem Sie auf die spezifischen Anliegen der Absender eingehen.\n\nBerücksichtigen Sie die jeweilige Anfrage und zeigen Sie Verständnis für die Anliegen der Bürger.\n\n# Schritte\n\n- Lesen Sie die E-Mail sorgfältig durch und identifizieren Sie die Hauptanliegen des Absenders.\n- Formulieren Sie eine höfliche Anrede.\n- Beantworten Sie die Anfrage detailliert und individuell, basierend auf dem spezifischen Anliegen.\n- Schließen Sie mit einer freundlichen Grußformel.\n\n# Output Format\n\nDie Antwort sollte in Form einer formellen E-Mail verfasst werden, die klar und strukturiert ist. Verwenden Sie vollständige Sätze und achten Sie darauf, dass die Antwort ein angemessenes Maß an Höflichkeit und Professionalität aufweist.\n\n# Beispiele\n\n**Beispiel 1:**\n*Eingang:*\n„Ich habe eine Frage zu den Öffnungszeiten des Rathauses.“\n\n*Ausgang:*\n„Sehr geehrte/r [Name],  \nvielen Dank für Ihre Anfrage. Die Öffnungszeiten des Rathauses sind von Montag bis Freitag, 8:00 bis 18:00 Uhr. Bei weiteren Fragen stehe ich Ihnen gerne zur Verfügung.   \nMit freundlichen Grüßen,  \n[Ihr Name]“\n\n**Beispiel 2:**\n*Eingang:*\n„Ich benötige Informationen zu einem Bauantrag.“\n\n*Ausgang:*\n„Sehr geehrte/r [Name],  \nich danke Ihnen für Ihre E-Mail. Für Informationen bezüglich Ihres Bauantrags empfehle ich, die Plattform [Link zur Plattform] zu besuchen oder uns direkt zu kontaktieren. Gerne unterstütze ich Sie dabei!  \nMit besten Grüßen,  \n[Ihr Name]“\n\n# Notes\n\nAchten Sie darauf, dass jede Antwort individuell angepasst wird und die Anliegen der Bürger ernst genommen werden."
+};
+
+const CREATE_ASSISTANT_RESPONSE: AssistantCreateResponse = {
+    id: "assistant-mock-123",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    hierarchical_access: ["IT", "IT-KI"],
+    owner_ids: ["user-mock-456"],
+    latest_version: {
+        id: "version-mock-789",
+        version: 1,
+        created_at: new Date().toISOString(),
+        name: "Mock Assistant",
+        description: "This is a mock assistant created for testing purposes",
+        system_prompt: "You are a helpful assistant created for testing. Respond politely and professionally.",
+        hierarchical_access: ["IT", "IT-KI"],
+        temperature: 0.7,
+        max_output_tokens: 4000,
+        tools: [
+            { id: "tool-1", config: { enabled: true } },
+            { id: "tool-2", config: { enabled: false } }
+        ],
+        owner_ids: ["user-mock-456"],
+        examples: [
+            { text: "How can I help you?", value: "I can help you with various tasks including document analysis, summarization, and general assistance." }
+        ],
+        quick_prompts: [
+            { label: "Greeting", prompt: "Hello! How can I assist you today?", tooltip: "Start with a friendly greeting" },
+            { label: "Help", prompt: "I'm here to help. What would you like to know?", tooltip: "Offer general assistance" }
+        ],
+        tags: ["test", "mock", "assistant"]
+    }
 };
 
 const CHAT_STREAM_RESPONSE = [
@@ -1173,5 +1205,32 @@ export const handlers = [
                 { name: "Formular-Fuchs", description: "Füllt Formulare blitzschnell aus und findet jedes versteckte Kästchen – nie wieder Papierkrieg!" }
             ]
         });
+    }),
+    http.get("/api/backend/departements", () => {
+        return HttpResponse.json(["IT", "IT-KI", "IT-KI-AGI", "STAMMTISCH-BREZN-SALZER", "STAMMTISCH"]);
+    }),
+    http.post("/api/bot/create", async ({ request }) => {
+        await delay(1000);
+        const body = (await request.json()) as any;
+
+        // Create a dynamic response based on the input
+        const response: AssistantCreateResponse = {
+            ...CREATE_ASSISTANT_RESPONSE,
+            latest_version: {
+                ...CREATE_ASSISTANT_RESPONSE.latest_version,
+                name: body?.name || "Mock Assistant",
+                description: body?.description || "This is a mock assistant created for testing purposes",
+                system_prompt: body?.system_prompt || "You are a helpful assistant.",
+                temperature: body?.temperature || 0.7,
+                max_output_tokens: body?.max_output_tokens || 4000,
+                hierarchical_access: body?.hierarchical_access || ["IT"],
+                tools: body?.tools || [],
+                examples: body?.examples || [],
+                quick_prompts: body?.quick_prompts || [],
+                tags: body?.tags || []
+            }
+        };
+
+        return HttpResponse.json(response);
     })
 ];

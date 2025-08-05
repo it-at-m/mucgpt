@@ -17,7 +17,7 @@ interface Language {
 const AVAILABLE_LANGUAGES: Language[] = [
     { code: "DE", name: "Deutsch" },
     { code: "EN", name: "Englisch" },
-    { code: "FR", name: "Französich" },
+    { code: "FR", name: "French" },
     { code: "BA", name: "Bairisch" },
     { code: "UK", name: "Ukrainisch" }
 ];

@@ -1,16 +1,18 @@
-import { Delete24Regular, Dismiss24Regular, Edit24Regular, ChatSettings24Regular, Checkmark24Filled, CloudArrowUp24Filled } from "@fluentui/react-icons";
 import {
-    Button,
-    Field,
-    Tooltip,
-    Dialog,
-    DialogActions,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    DialogTrigger
-} from "@fluentui/react-components";
+    Delete24Regular,
+    Dismiss24Regular,
+    Edit24Regular,
+    ChatSettings24Regular,
+    Checkmark24Filled,
+    CloudArrowUp24Filled,
+    ChevronDown20Regular,
+    ChevronRight20Regular,
+    Settings24Regular,
+    ChatAdd24Regular,
+    ChevronDoubleRight20Regular,
+    ChevronDoubleLeft20Regular
+} from "@fluentui/react-icons";
+import { Button, Tooltip, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
 
 import styles from "./BotsettingsDrawer.module.css";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
@@ -25,18 +27,21 @@ import { EditBotDialog } from "../EditBotDialog/EditBotDialog";
 import PublishBotDialog from "../PublishBotDialog/PublishBotDialog";
 import { BotStorageService } from "../../service/botstorage";
 import { BOT_STORE } from "../../constants";
+import { Collapse } from "@fluentui/react-motion-components-preview";
 
 interface Props {
     bot: Bot;
     onBotChange: (bot: Bot) => void;
     onDeleteBot: () => void;
-    actions: ReactNode;
     history: ReactNode;
     minimized: boolean;
+    clearChat: () => void;
+    clearChatDisabled: boolean;
     isOwned?: boolean;
+    onToggleMinimized?: () => void;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, history, minimized, isOwned }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, minimized, isOwned, clearChat, clearChatDisabled, onToggleMinimized }: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(bot.description);
@@ -47,6 +52,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, hist
     const [publishDepartments, setPublishDepartments] = useState<string[]>([]);
     const [invisibleChecked, setInvisibleChecked] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+    const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
 
     const storageService: BotStorageService = new BotStorageService(BOT_STORE);
 
@@ -57,9 +63,14 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, hist
     }, [bot, isOwned]);
 
     // Toggle read-only mode
-    const toggleReadOnly = useCallback(() => {
+    const toggleEditDialog = useCallback(() => {
         setShowEditDialog(!showEditDialog);
     }, [showEditDialog]);
+
+    // Toggle actions section visibility
+    const toggleActionsVisibility = useCallback(() => {
+        setIsActionsExpanded(!isActionsExpanded);
+    }, [isActionsExpanded]);
 
     const saveLocal = useCallback(async () => {
         if (!bot.id) return;
@@ -118,32 +129,21 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, hist
     // actions component
     const actions_component = useMemo(
         () => (
-            <div>
-                <div className={styles.actionRow}> {actions}</div>
-                {!minimized && (
-                    <div className={styles.actionRow}>
-                        {deleteDialog}
-                        <Button
-                            appearance="secondary"
-                            icon={isOwner ? <Edit24Regular className={styles.iconRightMargin} /> : <ChatSettings24Regular className={styles.iconRightMargin} />}
-                            onClick={toggleReadOnly}
-                        >
-                            {isOwner ? t("components.botsettingsdrawer.edit") : t("components.botsettingsdrawer.show_configutations")}
-                        </Button>
-                        <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
-                            <Button
-                                appearance="secondary"
-                                onClick={() => setShowDeleteDialog(true)}
-                                icon={<Delete24Regular className={styles.iconRightMargin} />}
-                            >
-                                {publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.delete")}
-                            </Button>
-                        </Tooltip>
-                    </div>
-                )}
-            </div>
+            <Tooltip
+                content={minimized ? t("components.botsettingsdrawer.expand") : t("components.botsettingsdrawer.collapse")}
+                relationship="description"
+                positioning="below"
+            >
+                <Button
+                    appearance="subtle"
+                    icon={minimized ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
+                    onClick={onToggleMinimized}
+                    className={styles.collapseButton}
+                    aria-label={minimized ? t("components.botsettingsdrawer.expand") : t("components.botsettingsdrawer.collapse")}
+                />
+            </Tooltip>
         ),
-        [actions, isOwner, toggleReadOnly, t, deleteDialog, minimized, publish, setShowDeleteDialog]
+        [minimized, t, onToggleMinimized]
     );
 
     // publish
@@ -217,32 +217,96 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, hist
     // sidebar content
     const content = (
         <>
-            <div className={styles.bodyContainer}>
-                <div>
-                    <Field size="large">
-                        <Markdown
-                            className={styles.markdownDescription}
-                            remarkPlugins={[remarkGfm]}
-                            rehypePlugins={[rehypeRaw]}
-                            components={{
-                                code: CodeBlockRenderer
-                            }}
-                        >
-                            {description}
-                        </Markdown>
-                    </Field>
+            <div className={styles.titleSection}>
+                <h3 className={styles.botTitle}>{bot.title}</h3>
+            </div>
+            <div
+                className={styles.actionsHeader}
+                role="heading"
+                aria-level={4}
+                onClick={clearChat}
+                aria-disabled={clearChatDisabled}
+                tabIndex={0}
+                onKeyDown={e => e.key === "Enter" && clearChat()}
+            >
+                <div className={styles.newChatHeaderContent}>
+                    <ChatAdd24Regular className={styles.actionsIcon} aria-hidden="true" />
+                    <span>New Chat</span>
                 </div>
             </div>
-            {history}
-            {!publish && (
-                <Tooltip content={t("components.botsettingsdrawer.publish")} relationship="description" positioning="below">
-                    <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>
-                        {t("components.botsettingsdrawer.publish")}
-                    </Button>
-                </Tooltip>
-            )}
+
+            <div className={styles.descriptionSection}>
+                <Markdown
+                    className={styles.markdownDescription}
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeRaw]}
+                    components={{
+                        code: CodeBlockRenderer
+                    }}
+                >
+                    {description}
+                </Markdown>
+            </div>
+
+            <div className={styles.buttonSection}>
+                <Button
+                    appearance="primary"
+                    icon={isOwner ? <Edit24Regular /> : <ChatSettings24Regular />}
+                    onClick={toggleEditDialog}
+                    className={styles.actionButton}
+                >
+                    {isOwner ? t("components.botsettingsdrawer.edit") : t("components.botsettingsdrawer.show_configutations")}
+                </Button>
+            </div>
+
+            <div className={styles.historySection}>{history}</div>
+
+            <div className={styles.actionsSection}>
+                <div
+                    className={styles.actionsHeader}
+                    role="heading"
+                    aria-level={4}
+                    onClick={toggleActionsVisibility}
+                    tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && toggleActionsVisibility()}
+                    aria-expanded={isActionsExpanded}
+                >
+                    <div className={styles.actionsHeaderContent}>
+                        <Settings24Regular className={styles.actionsIcon} aria-hidden="true" />
+                        <span>Aktionen</span>
+                        <div className={styles.expandCollapseIcon}>{isActionsExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
+                    </div>
+                </div>
+
+                <Collapse visible={isActionsExpanded}>
+                    <div className={styles.actionsContent}>
+                        <Tooltip content={t("components.botsettingsdrawer.delete")} relationship="description" positioning="below">
+                            <Button
+                                appearance="secondary"
+                                onClick={() => setShowDeleteDialog(true)}
+                                icon={<Delete24Regular />}
+                                className={`${styles.actionButton} ${styles.deleteButton}`}
+                            >
+                                {publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.delete")}
+                            </Button>
+                        </Tooltip>
+
+                        {!publish && (
+                            <Button
+                                icon={<CloudArrowUp24Filled />}
+                                onClick={() => setShowPublishDialog(true)}
+                                appearance="outline"
+                                className={styles.actionButton}
+                            >
+                                {t("components.botsettingsdrawer.publish")}
+                            </Button>
+                        )}
+                    </div>
+                </Collapse>
+            </div>
             {publishDialog}
             {editDialog}
+            {deleteDialog}
         </>
     );
     return <Sidebar actions={actions_component} content={content}></Sidebar>;

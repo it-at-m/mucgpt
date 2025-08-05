@@ -10,6 +10,129 @@
     border-bottom: 1px dotted var(--colorBrandBackground2);
 }
 
+.actionsContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacingHorizontalS);
+}
+
+.titleSection {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.botTitle {
+    margin: 0;
+    font-size: var(--fontSizeBase500);
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground1);
+}
+
+.descriptionSection {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    background-color: var(--colorNeutralBackground1);
+}
+
+.buttonSection {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    display: flex;
+    gap: var(--spacingHorizontalS);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionButton {
+    flex: 1;
+    min-width: 0;
+}
+
+.publishSection {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.publishButton {
+    width: 100%;
+}
+
+.historySection {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.actionsSection {
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionsHeader {
+    margin-bottom: 12px;
+    font-size: var(--fontSizeBase300);
+    font-weight: 600;
+    color: var(--colorNeutralForeground2);
+    margin-top: var(--spacingVerticalM);
+    padding: 12px 16px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    padding-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.actionsHeader:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.actionsHeaderContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.actionsHeaderContent:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.actionsIcon {
+    color: var(--colorBrandForeground1);
+    margin-right: 8px;
+}
+
+.expandCollapseIcon {
+    margin-left: auto;
+    color: var(--colorNeutralForeground3);
+    transition: transform 0.2s ease;
+}
+
+.actionsContent {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS);
+}
+
+.deleteButton {
+    background-color: var(--colorPaletteRedBackground1) !important;
+    color: var(--colorPaletteRedForeground1) !important;
+    border-color: var(--colorPaletteRedBorder1) !important;
+}
+
+.deleteButton:hover {
+    background-color: var(--colorPaletteRedBackground2) !important;
+    color: var(--colorPaletteRedForeground2) !important;
+    border-color: var(--colorPaletteRedBorder2) !important;
+}
+
+.deleteButton:active {
+    background-color: var(--colorPaletteRedBackground3) !important;
+}
+
 .bodyContainer {
     padding-bottom: var(--spacingVerticalS);
     padding-left: var(--spacingVerticalM);
@@ -71,4 +194,50 @@
     z-index: 1000;
     left: 0; /* Optional: Positionierung anpassen */
     top: 100%; /* Optional: direkt unter dem Dropdown */
+}
+
+.collapseButton {
+    padding: var(--spacingVerticalXS) var(--spacingHorizontalXS);
+    min-width: 32px;
+    height: 32px;
+    border-radius: var(--borderRadiusMedium);
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--colorNeutralForeground2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.collapseButton:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+    border-color: var(--colorNeutralStroke2);
+}
+
+.collapseButton:active {
+    background-color: var(--colorNeutralBackground1Pressed);
+    color: var(--colorNeutralForeground1);
+    border-color: var(--colorNeutralStroke3);
+}
+
+.collapseButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
+.newChatHeaderContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 4px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.newChatHeaderContent:hover {
+    background-color: var(--colorNeutralBackground1Hover);
 }

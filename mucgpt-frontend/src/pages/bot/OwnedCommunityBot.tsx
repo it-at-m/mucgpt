@@ -19,7 +19,6 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ClearChatButton } from "../../components/ClearChatButton";
 import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { StorageService } from "../../service/storage";
@@ -29,9 +28,8 @@ import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProv
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { AssistantUpdateInput } from "../../api/models";
-import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 
@@ -74,7 +72,7 @@ const OwnedCommunityBotChat = () => {
     const { setHeader } = useContext(HeaderContext);
 
     const [error, setError] = useState<unknown>();
-    const [sidebarSize] = useState<SidebarSizes>("medium");
+    const [sidebarSize] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
     const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
@@ -122,7 +120,7 @@ const OwnedCommunityBotChat = () => {
                         hierarchical_access: latest.hierarchical_access || [],
                         tools: latest.tools || []
                     };
-                    setHeader(bot.title || DEFAULTHEADER);
+                    setHeader("");
                     setBotConfig(bot);
                     setSelectedTools(bot.tools ? bot.tools.map(tool => tool.id) : []);
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
@@ -337,16 +335,6 @@ const OwnedCommunityBotChat = () => {
         ),
         [allChats, activeChatRef.current, fetchHistory, botChatStorage, t]
     );
-    // Sidebar-Actions component
-    const actions = useMemo(
-        () => (
-            <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
-            </>
-        ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
-    );
     // Sidebar component
     const sidebar = useMemo(
         () => (
@@ -355,14 +343,16 @@ const OwnedCommunityBotChat = () => {
                     bot={botConfig}
                     onBotChange={onBotChanged}
                     onDeleteBot={onDeleteBot}
-                    actions={actions}
                     history={history}
                     minimized={!showSidebar}
                     isOwned={true}
+                    clearChat={clearChat}
+                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onBotChanged, onDeleteBot, actions, history, showSidebar]
+        [botConfig, onBotChanged, onDeleteBot, history, showSidebar]
     );
     // Examples component
     const examplesComponent = useMemo(() => {

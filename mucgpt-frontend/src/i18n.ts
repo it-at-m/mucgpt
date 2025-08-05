@@ -266,6 +266,7 @@ i18n
                             back: "Zurück",
                             save: "Speichern",
                             saved_successfully: "Erfolgreich gespeichert!",
+                            bot_saved_description: "Der Assistent {{botName}} wurde erfolgreich gespeichert.",
                             // Stepper step titles
                             step_title: "Titel",
                             step_description: "Beschreibung",
@@ -568,7 +569,8 @@ i18n
                             close: "Close",
                             back: "Back",
                             save: "Save",
-                            saved_successfully: "Successfully saved!",
+                            saved_successfully: "Succesfully saved!",
+                            bot_saved_description: "The assistant {{botName}} has been successfully saved.",
                             // Stepper step titles
                             step_title: "Title",
                             step_description: "Description",
@@ -872,6 +874,7 @@ i18n
                             back: "Zruck",
                             save: "Speichan",
                             saved_successfully: "Erfolgreich gspeichert!",
+                            bot_saved_description: "Der Assistent {{botName}} is jetzt erfolgreich g'speichert.",
                             // Stepper step titles
                             step_title: "Titel",
                             step_description: "Beschreibung",
@@ -1174,6 +1177,7 @@ i18n
                             back: "Retour",
                             save: "Enregistrer",
                             saved_successfully: "Enregistré avec succès!",
+                            bot_saved_description: "L'assistant {{botName}} a été enregistré avec succès.",
                             // Stepper step titles
                             step_title: "Titre",
                             step_description: "Description",
@@ -1476,6 +1480,7 @@ i18n
                             back: "Назад",
                             save: "Зберегти",
                             saved_successfully: "Успішно збережено!",
+                            bot_saved_description: "Асистент {{botName}} був успішно збережений.",
                             // Stepper step titles
                             step_title: "Заголовок",
                             step_description: "Опис",

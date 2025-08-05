@@ -19,7 +19,13 @@ import {
     Textarea,
     Input,
     TextareaOnChangeData,
-    InfoLabel
+    InfoLabel,
+    useId,
+    useToastController,
+    Toast,
+    ToastTitle,
+    ToastBody,
+    Toaster
 } from "@fluentui/react-components";
 
 import styles from "./EditBotDialog.module.css";
@@ -44,6 +50,10 @@ interface Props {
 }
 
 export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, publishDepartments, setPublishDepartments }: Props) => {
+    // Toast setup
+    const toasterId = useId("edit-bot-save-toast");
+    const { dispatchToast } = useToastController(toasterId);
+
     // Stepper state
     const [currentStep, setCurrentStep] = useState<number>(0);
     const totalSteps = 7;
@@ -57,7 +67,6 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         "components.edit_bot_dialog.step_advanced_settings"
     ];
 
-    const [showSavedMessage, setShowSavedMessage] = useState<boolean>(false);
     const [botId, setBotId] = useState<string | undefined>(bot.id);
     const [title, setTitle] = useState<string>(bot.title);
     const [description, setDescription] = useState<string>(bot.description);
@@ -297,12 +306,32 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         };
         setHeader(title);
         onBotChanged(bot);
-        // Show saved message
-        setShowSavedMessage(true);
+
+        // Show success toast
+        if (isOwner)
+            dispatchToast(
+                <Toast>
+                    <ToastTitle>
+                        <div className={styles.toasterTitle}>
+                            <Checkmark24Filled className={styles.toastIcon} />
+                            <span className={styles.toastTitleText}>{t("components.edit_bot_dialog.saved_successfully")}</span>
+                        </div>
+                    </ToastTitle>
+                    {isOwner && (
+                        <ToastBody className={styles.toasterBody}>{t("components.edit_bot_dialog.bot_saved_description", { botName: title })}</ToastBody>
+                    )}
+                </Toast>,
+                {
+                    intent: "success",
+                    timeout: 3000,
+                    pauseOnHover: true
+                }
+            );
+
+        // Close dialog after a short delay
         setTimeout(() => {
-            setShowSavedMessage(false);
             setShowDialog(false);
-        }, 2000);
+        }, 500);
     }, [
         title,
         description,
@@ -321,14 +350,15 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         publish,
         ownerIds,
         hierarchicalAccess,
-        tags
+        tags,
+        dispatchToast,
+        t
     ]);
 
     // close dialog pressed function
     const closeDialogPressed = useCallback(() => {
         setCloseDialogOpen(false);
         setShowDialog(false);
-        setShowSavedMessage(false);
         setCurrentStep(0);
         setDescription(bot.description);
         setTitle(bot.title);
@@ -343,7 +373,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         setOwnerIds(bot.owner_ids || []);
         setHierarchicalAccess(bot.hierarchical_access || []);
         setTags(bot.tags || []);
-    }, [setShowDialog, setShowSavedMessage, bot]);
+    }, [setShowDialog, bot]);
 
     // close dialog
     const closeDialog = useMemo(() => {
@@ -365,18 +395,6 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         );
     }, [closeDialogOpen, t, closeDialogPressed]);
 
-    // Render saved message
-    const savedMessage = useMemo(
-        () =>
-            showSavedMessage && (
-                <div className={styles.savedMessage}>
-                    <Checkmark24Filled />
-                    {t("components.edit_bot_dialog.saved_successfully")}
-                </div>
-            ),
-        [showSavedMessage, t]
-    );
-
     // Render stepper progress
     const stepperProgress = useMemo(
         () => (
@@ -388,7 +406,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                     <div className={styles.stepTitle}>{t(stepTitles[currentStep])}</div>
                 </div>
                 <div className={styles.progressBar}>
-                    <div className={styles.progressFill} style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }} />
+                    <div className={styles.progressFill} style={{ "--progress-width": `${((currentStep + 1) / totalSteps) * 100}%` } as React.CSSProperties} />
                 </div>
             </div>
         ),
@@ -407,12 +425,12 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                         size="large"
                         onChange={onTitleChanged}
                         maxLength={100}
-                        disabled={!isOwner || showSavedMessage}
+                        disabled={!isOwner}
                     />
                 </Field>
             </DialogContent>
         ),
-        [title, onTitleChanged, isOwner, showSavedMessage, t]
+        [title, onTitleChanged, isOwner, t]
     );
 
     // Step 1: Description
@@ -427,12 +445,12 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                         resize="vertical"
                         size="large"
                         onChange={onDescriptionChanged}
-                        disabled={!isOwner || showSavedMessage}
+                        disabled={!isOwner}
                     />
                 </Field>
             </DialogContent>
         ),
-        [description, onDescriptionChanged, isOwner, showSavedMessage, t]
+        [description, onDescriptionChanged, isOwner, t]
     );
 
     // Step 2: System Prompt
@@ -458,12 +476,12 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                         value={systemPrompt}
                         size="large"
                         onChange={onPromptChanged}
-                        disabled={!isOwner || showSavedMessage}
+                        disabled={!isOwner}
                     />
                 </Field>
             </DialogContent>
         ),
-        [systemPrompt, onPromptChanged, isOwner, showSavedMessage, t]
+        [systemPrompt, onPromptChanged, isOwner, t]
     );
     // Render temperature and token controls
     const { LLM } = useContext(LLMContext);
@@ -737,24 +755,19 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const dialogActions = useMemo(
         () => (
             <>
-                <Button appearance="secondary" size="small" onClick={prevStep} disabled={currentStep === 0 || showSavedMessage}>
+                <Button appearance="secondary" size="small" onClick={prevStep} disabled={currentStep === 0}>
                     <ChevronLeft24Regular /> {t("components.edit_bot_dialog.previous")}
                 </Button>
-                <Button appearance="secondary" size="small" onClick={onSaveButtonClicked} disabled={showSavedMessage}>
+                <Button appearance="secondary" size="small" onClick={onSaveButtonClicked}>
                     {!isOwner ? <Dismiss24Regular /> : <Save24Filled />}{" "}
                     {!isOwner ? t("components.edit_bot_dialog.close") : t("components.edit_bot_dialog.save")}
                 </Button>
-                <Button
-                    appearance="primary"
-                    size="small"
-                    onClick={nextStep}
-                    disabled={!canProceedToNext() || showSavedMessage || currentStep === totalSteps - 1}
-                >
+                <Button appearance="primary" size="small" onClick={nextStep} disabled={!canProceedToNext() || currentStep === totalSteps - 1}>
                     {t("components.edit_bot_dialog.next")} <ChevronRight24Regular />
                 </Button>
             </>
         ),
-        [currentStep, totalSteps, prevStep, nextStep, canProceedToNext, onSaveButtonClicked, isOwner, showSavedMessage, t]
+        [currentStep, totalSteps, prevStep, nextStep, canProceedToNext, onSaveButtonClicked, isOwner, t]
     );
 
     return (
@@ -771,26 +784,22 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                                     setCloseDialogOpen(true);
                                 } else {
                                     setShowDialog(false);
-                                    setShowSavedMessage(false);
                                 }
                             }}
-                            disabled={showSavedMessage}
                             className={styles.closeButton}
                             icon={<Dismiss24Regular />}
                         />
                     </div>
                     <br />
-                    {!showSavedMessage && <div className={styles.stepperFullWidth}>{stepperProgress}</div>}
-                    <DialogBody className={styles.scrollableDialogContent}>
-                        {savedMessage}
-                        {!showSavedMessage && getCurrentStepContent()}
-                    </DialogBody>
+                    <div className={styles.stepperFullWidth}>{stepperProgress}</div>
+                    <DialogBody className={styles.scrollableDialogContent}>{getCurrentStepContent()}</DialogBody>
                     <div className={styles.dialogActionsContainer}>
                         <div className={styles.stepperActions}>{dialogActions}</div>
                     </div>
                 </DialogSurface>
             </Dialog>
             <ToolsSelector open={showToolsSelector} onClose={handleToolsSelected} tools={availableTools} selectedTools={selectedTools} />
+            <Toaster toasterId={toasterId} className={styles.editBotToaster} />
             {closeDialog}
         </div>
     );

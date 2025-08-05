@@ -26,7 +26,10 @@ i18n
                         own_bots: "Lokale Assistenten",
                         community_bots: "Community Assistenten",
                         no_bots: "Keine Assistenten gefunden",
-                        soon: "In Entwicklung..."
+                        soon: "In Entwicklung...",
+                        owned: "Eigene:",
+                        subscribed: "Abonnierte:",
+                        select: "Auswählen"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -306,7 +309,10 @@ i18n
                         own_bots: "Local Assistants", // Englisch
                         community_bots: "Community Assistants",
                         no_bots: "No Assistants found",
-                        soon: "In Development..."
+                        soon: "In Development...",
+                        owned: "Owned:",
+                        subscribed: "Subscribed:",
+                        select: "Select"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -586,7 +592,10 @@ i18n
                         own_bots: "Lokale Assitentn", // Bairisch
                         community_bots: "Community Assistentn",
                         no_bots: "Koane Assitentn gfundn",
-                        soon: "In Entwicklung..."
+                        soon: "In Entwicklung...",
+                        owned: "Eigene:",
+                        subscribed: "Abonnierte:",
+                        select: "Auswähln"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -865,7 +874,10 @@ i18n
                         own_bots: "Assistants Locaux", // French
                         community_bots: "Assistants Communautaires",
                         no_bots: "Aucun Assistant trouvé",
-                        soon: "En Développement..."
+                        soon: "En Développement...",
+                        owned: "Possédés:",
+                        subscribed: "Abonnés:",
+                        select: "Sélectionner"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1144,7 +1156,10 @@ i18n
                         own_bots: "Локальні Асистенти", // Ukrainisch
                         community_bots: "Громадські Асистенти",
                         no_bots: "Асистентів не знайдено",
-                        soon: "В розробці..."
+                        soon: "В розробці...",
+                        owned: "Власні:",
+                        subscribed: "Підписані:",
+                        select: "Вибрати"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",

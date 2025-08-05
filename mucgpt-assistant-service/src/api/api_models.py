@@ -458,6 +458,11 @@ class SubscriptionResponse(BaseModel):
         description="The name/title of the assistant",
         example="Technical Support Bot",
     )
+    description: str = Field(
+        ...,
+        description="A brief description of the assistant's purpose",
+        example="An AI assistant specialized in providing technical support for software issues",
+    )
 
     class Config:
         from_attributes = True

@@ -208,7 +208,7 @@ export async function unsubscribeFromAssistantApi(assistantId: string): Promise<
  * Get all assistants the user is subscribed to (ID and name only).
  * @returns Array of SubscriptionResponse
  */
-export async function getUserSubscriptionsApi(): Promise<{ id: string; name: string }[]> {
+export async function getUserSubscriptionsApi(): Promise<{ id: string; name: string; description: string }[]> {
     const response = await fetch("/api/user/subscriptions", getConfig());
     handleRedirect(response, true);
     const parsedResponse = await handleResponse(response);

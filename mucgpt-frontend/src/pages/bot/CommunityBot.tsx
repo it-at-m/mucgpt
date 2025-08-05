@@ -331,7 +331,7 @@ const CommunityBotChat = () => {
                     onBotChange={() => {}}
                     onDeleteBot={onDeleteBot}
                     actions={actions}
-                    before_content={history}
+                    history={history}
                     minimized={!showSidebar}
                 ></BotsettingsDrawer>
             </>

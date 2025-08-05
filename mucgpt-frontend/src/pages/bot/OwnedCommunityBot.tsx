@@ -434,6 +434,7 @@ const OwnedCommunityBotChat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
+                    onToggleMinimized={() => setShowSidebar(true)}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>

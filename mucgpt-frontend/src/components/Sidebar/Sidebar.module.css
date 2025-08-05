@@ -23,7 +23,7 @@
     overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
-    height: calc(100vh - 195px);
+    height: calc(100vh - 170px);
     margin-bottom: 30px;
     border-bottom: 1px dotted var(--colorBrandBackground2);
 }

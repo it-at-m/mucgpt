@@ -5,6 +5,8 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
+import { Button } from "@fluentui/react-components";
+import { ChevronDoubleRight20Regular } from "@fluentui/react-icons";
 
 export type SidebarSizes = "small" | "medium" | "large" | "full_width" | "none";
 
@@ -18,6 +20,7 @@ interface Props {
     header_as_markdown: boolean;
     messages_description: string;
     size: SidebarSizes;
+    onToggleMinimized?: () => void;
     // LLM Selector props
     llmOptions?: Model[];
     defaultLLM?: string;
@@ -36,14 +39,20 @@ export const ChatLayout = ({
     size,
     llmOptions,
     defaultLLM,
-    onLLMSelectionChange
+    onLLMSelectionChange,
+    onToggleMinimized
 }: Props) => {
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>
+            <aside hidden={size === "none"} className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>
                 {sidebar}
             </aside>
+            <div hidden={size !== "none" || !onToggleMinimized} className={styles.sidebarOpener}>
+                <Button appearance="subtle" onClick={onToggleMinimized}>
+                    <ChevronDoubleRight20Regular />
+                </Button>
+            </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer} style={size == "none" ? { marginLeft: "35px" } : {}}>
                     {showExamples ? (

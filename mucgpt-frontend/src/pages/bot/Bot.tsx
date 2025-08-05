@@ -10,7 +10,6 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ClearChatButton } from "../../components/ClearChatButton";
 import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { StorageService } from "../../service/storage";
@@ -20,8 +19,7 @@ import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProv
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 
@@ -100,7 +98,7 @@ const BotChat = () => {
                 .then(bot => {
                     if (bot) {
                         setBotConfig(bot);
-                        setHeader(bot.title || DEFAULTHEADER);
+                        setHeader("");
                         dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
                         dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
                         dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
@@ -305,16 +303,6 @@ const BotChat = () => {
         ),
         [allChats, activeChatRef.current, fetchHistory, botChatStorage, t]
     );
-    // Sidebar-Actions component
-    const actions = useMemo(
-        () => (
-            <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
-            </>
-        ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
-    );
     // Sidebar component
     const sidebar = useMemo(
         () => (
@@ -323,13 +311,15 @@ const BotChat = () => {
                     bot={botConfig}
                     onBotChange={onBotChanged}
                     onDeleteBot={onDeleteBot}
-                    actions={actions}
                     history={history}
                     minimized={!showSidebar}
+                    clearChat={clearChat}
+                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onBotChanged, onDeleteBot, actions, history, showSidebar]
+        [botConfig, onBotChanged, onDeleteBot, history, showSidebar]
     );
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -411,6 +401,7 @@ const BotChat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
+                    onToggleMinimized={() => setShowSidebar(true)}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>

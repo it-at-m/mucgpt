@@ -20,7 +20,7 @@ import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 const Menu = () => {
     const { t } = useTranslation();
     const [bots, setBots] = useState<Bot[]>([]);
-    const [communityBots, setCommunityBots] = useState<{ id: string; name: string }[]>([]);
+    const [communityBots, setCommunityBots] = useState<{ id: string; name: string; description: string }[]>([]);
     const [ownedCommunityBots, setOwnedCommunityBots] = useState<AssistantResponse[]>([]);
     const [showSearchBot, setShowSearchBot] = useState<boolean>(false);
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
@@ -107,9 +107,13 @@ const Menu = () => {
                 <div className={styles.row}>
                     {bots.map((bot: Bot, key) => (
                         <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
-                            <Link to={`/bot/${bot.id}`} className={styles.box}>
-                                <span>{bot.title}</span>
-                            </Link>
+                            <div className={styles.box}>
+                                <div className={styles.boxHeader}>{bot.title}</div>
+                                <div className={styles.boxDescription}>{bot.description}</div>
+                                <Link to={`/bot/${bot.id}`} className={styles.boxChoose}>
+                                    {t("menu.select")}
+                                </Link>
+                            </div>
                         </Tooltip>
                     ))}
                     {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
@@ -123,24 +127,32 @@ const Menu = () => {
                     takeCommunityBots={getCommunityBots}
                     setTakeCommunityBots={setGetCommunityBots}
                 />
-                <div className={styles.subrowheader}>Eigene:</div>
+                <div className={styles.subrowheader}>{t("menu.owned")}</div>
                 <div className={styles.row}>
                     {ownedCommunityBots.map((bot: AssistantResponse, key) => (
                         <Tooltip key={key} content={bot.latest_version.name} relationship="description" positioning="below">
-                            <Link to={`owned/communitybot/${bot.id}`} className={styles.box}>
-                                {bot.latest_version.name}
-                            </Link>
+                            <div className={styles.box}>
+                                <div className={styles.boxHeader}>{bot.latest_version.name}</div>
+                                <div className={styles.boxDescription}>{bot.latest_version.description}</div>
+                                <Link to={`owned/communitybot/${bot.id}`} className={styles.boxChoose}>
+                                    {t("menu.select")}
+                                </Link>
+                            </div>
                         </Tooltip>
                     ))}
                     {ownedCommunityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
                 </div>
-                <div className={styles.subrowheader}>Abonnierte:</div>
+                <div className={styles.subrowheader}>{t("menu.subscribed")}</div>
                 <div className={styles.row}>
-                    {communityBots.map(({ id, name }, key) => (
+                    {communityBots.map(({ id, name, description }, key) => (
                         <Tooltip key={key} content={name} relationship="description" positioning="below">
-                            <Link to={`communitybot/${id}`} className={styles.box}>
-                                {name}
-                            </Link>
+                            <div className={styles.box}>
+                                <div className={styles.boxHeader}>{name}</div>
+                                <div className={styles.boxDescription}>{description}</div>
+                                <Link to={`communitybot/${id}`} className={styles.boxChoose}>
+                                    {t("menu.select")}
+                                </Link>
+                            </div>
                         </Tooltip>
                     ))}
                     {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}

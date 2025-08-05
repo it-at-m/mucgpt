@@ -31,12 +31,12 @@ interface Props {
     onBotChange: (bot: Bot) => void;
     onDeleteBot: () => void;
     actions: ReactNode;
-    before_content: ReactNode;
+    history: ReactNode;
     minimized: boolean;
     isOwned?: boolean;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, before_content, minimized, isOwned }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, history, minimized, isOwned }: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(bot.description);
@@ -217,7 +217,6 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
     // sidebar content
     const content = (
         <>
-            <>{before_content}</>{" "}
             <div className={styles.bodyContainer}>
                 <div>
                     <Field size="large">
@@ -234,6 +233,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, actions, befo
                     </Field>
                 </div>
             </div>
+            {history}
             {!publish && (
                 <Tooltip content={t("components.botsettingsdrawer.publish")} relationship="description" positioning="below">
                     <Button icon={<CloudArrowUp24Filled />} onClick={() => setShowPublishDialog(true)}>

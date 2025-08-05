@@ -368,7 +368,7 @@ const OwnedCommunityBotChat = () => {
                     onBotChange={onBotChanged}
                     onDeleteBot={onDeleteBot}
                     actions={actions}
-                    before_content={history}
+                    history={history}
                     minimized={!showSidebar}
                     isOwned={true}
                 ></BotsettingsDrawer>

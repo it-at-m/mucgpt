@@ -216,7 +216,7 @@ async def get_user_subscriptions(
     for assistant in assistants:
         latest_version = await assistant_repo.get_latest_version(assistant.id)
         if latest_version:
-            response = SubscriptionResponse(id=assistant.id, name=latest_version.name)
+            response = SubscriptionResponse(id=assistant.id, name=latest_version.name, description=latest_version.description)
             response_list.append(response)
 
     logger.info(

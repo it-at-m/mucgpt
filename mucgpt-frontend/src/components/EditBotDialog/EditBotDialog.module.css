@@ -1,34 +1,35 @@
 .dialog {
-    padding: 5 !important;
-    min-width: 80%;
-    max-width: 80%;
-    min-height: 80%;
-    max-height: 80%;
+    padding: 0 !important;
+    min-width: 90%;
+    max-width: 90%;
+    min-height: 90%;
+    max-height: 90%;
     line-height: 1.5;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }
 
 @media (max-width: 650px) {
     .dialog {
-        width: 95%;
-        height: 90%;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
+        width: 98%;
+        height: 98%;
+        min-width: 98%;
+        max-width: 98%;
+        min-height: 98%;
+        max-height: 98%;
     }
 }
 
 .dialogContent {
     overflow-y: auto;
-    max-height: 90%;
+    max-height: 100%;
     width: 100%;
-    padding: 24px;
+    padding: 32px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex: 1;
 }
 
@@ -38,27 +39,26 @@
     overflow-x: hidden;
     padding: 24px;
     width: 100%;
-    padding-right: 8px;
-    margin-right: -8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 0;
-    max-height: calc(100% - 120px);
 }
 
 .formField {
     margin-bottom: 20px;
-    height: 100%;
     display: flex;
     flex-direction: column;
     width: 100%;
-    overflow-y: auto;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .formLabel {
     font-weight: 600;
+    font-size: var(--fontSizeBase400);
     margin-bottom: 8px;
     display: block;
     color: var(--colorNeutralForeground1);
@@ -80,7 +80,11 @@
 }
 
 .rangeField {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    background-color: var(--colorNeutralBackground1);
 }
 
 .rangeInput {
@@ -91,12 +95,13 @@
 .rangeValue {
     text-align: center;
     font-weight: 600;
+    font-size: var(--fontSizeBase300);
     color: var(--colorBrandForeground1);
-    background-color: var(--colorNeutralBackground3);
-    padding: 4px 8px;
+    background-color: var(--colorBrandBackground2);
+    padding: 6px 12px;
     border-radius: 4px;
     display: inline-block;
-    min-width: 50px;
+    min-width: 60px;
 }
 
 .helpText {
@@ -107,27 +112,32 @@
 }
 
 .dynamicFieldContainer {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     overflow-y: auto;
-    max-height: 55vh;
-    min-height: 0;
+    max-height: 50vh;
+    min-height: 200px;
     width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .dynamicFieldList {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 12px;
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .dynamicFieldItem {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     align-items: flex-start;
     padding: 12px;
     border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 8px;
+    border-radius: 6px;
     background-color: var(--colorNeutralBackground1);
 }
 
@@ -158,10 +168,20 @@
 
 .addFieldButton {
     width: 100%;
-    border: 2px dashed var(--colorNeutralStroke2);
+    border: 1px dashed var(--colorNeutralStroke2);
     background-color: transparent;
     color: var(--colorNeutralForeground2);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: var(--fontSizeBase300);
     transition: all 0.2s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 12px 12px 12px;
+    flex-shrink: 0;
 }
 
 .addFieldButton:hover {
@@ -192,37 +212,34 @@
 
 .exampleList {
     display: grid;
-    gap: 2%;
-    grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
     width: 100%;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .exampleBox {
-    flex: 1 1 30%;
-    text-align: center;
+    text-align: left;
     overflow: hidden;
-    text-overflow: ellipsis;
-    height: 100px;
-    border-radius: 20px;
-    color: var(--colorNeutralBackround1Hover);
+    height: auto;
+    min-height: 80px;
+    border-radius: 6px;
+    color: var(--colorNeutralForeground2);
     text-decoration: none;
-    opacity: 0.75;
-    font-size: var(--fontSizeBase400);
-    background: var(--colorNeutralBackground4);
+    font-size: var(--fontSizeBase300);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    padding: 12px;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .exampleBox:hover {
-    opacity: 1;
-    transform: translateY(-2px);
-    box-shadow:
-        0px 8px 16px rgba(0, 0, 0, 0.14),
-        0px 0px 2px rgba(0, 0, 0, 0.12);
-    outline: 2px solid var(--colorNeutralForeground3Selected);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: var(--colorNeutralStroke1);
 }
 
 .advancedSettingsSection {
@@ -277,11 +294,17 @@
 .noToolsText {
     color: var(--colorNeutralForeground3);
     font-style: italic;
-    padding: 12px;
+    font-size: var(--fontSizeBase300);
+    padding: 32px 16px;
     text-align: center;
     border: 1px dashed var(--colorNeutralStroke2);
-    border-radius: 8px;
+    border-radius: 6px;
     background-color: var(--colorNeutralBackground2);
+    margin: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .savedMessage {
@@ -292,6 +315,7 @@
     justify-content: center;
     gap: 8px;
     width: 100%;
+    max-width: 400px;
     padding: 12px 16px;
     background-color: #d4edda;
     color: #155724;
@@ -299,7 +323,7 @@
     border-radius: 6px;
     margin-bottom: 16px;
     font-weight: 500;
-    animation: fadeIn 0.3s ease-in;
+    animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
@@ -342,36 +366,36 @@
 }
 
 .stepNumber {
-    font-size: 14px;
+    font-size: var(--fontSizeBase300);
     font-weight: 600;
-    color: var(--colorBrandForeground1);
-    background-color: var(--colorBrandBackground2);
-    opacity: 0.75;
-    padding: 4px 12px;
-    border-radius: 12px;
+    color: var(--colorNeutralForegroundOnBrand);
+    background-color: var(--colorBrandBackground);
+    padding: 6px 12px;
+    border-radius: 16px;
 }
 
 .stepTitle {
-    font-size: 16px;
+    font-size: var(--fontSizeBase400);
     font-weight: 600;
     color: var(--colorNeutralForeground1);
     flex: 1;
     text-align: center;
+    margin: 0 20px;
 }
 
 .progressBar {
     width: 100%;
-    height: 8px;
+    height: 6px;
     background-color: var(--colorNeutralBackground4);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
 }
 
 .progressFill {
     height: 100%;
-    background: linear-gradient(90deg, var(--colorBrandBackground) 0%, var(--colorBrandBackground2) 100%);
-    border-radius: 4px;
-    transition: width 0.3s ease-in-out;
+    background-color: var(--colorBrandBackground);
+    border-radius: 3px;
+    transition: width 0.3s ease;
 }
 
 .stepperActions {
@@ -394,31 +418,46 @@
 
 @media (max-width: 650px) {
     .stepperContainer {
-        padding: 12px 16px;
+        padding: 16px 20px;
     }
 
     .stepperHeader {
         flex-direction: column;
-        gap: 8px;
-        margin-bottom: 8px;
+        gap: 12px;
+        margin-bottom: 12px;
     }
 
     .stepTitle {
         text-align: center;
-        font-size: 14px;
+        font-size: var(--fontSizeBase400);
+        margin: 0;
     }
 
     .stepperActions {
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
     }
 
     .stepperActions > button {
         width: 100%;
+        min-height: 44px;
     }
 
     .dialogActionsContainer {
-        padding: 12px 16px;
+        padding: 16px 20px;
+    }
+
+    .scrollableDialogContent {
+        padding: 20px;
+    }
+
+    .dynamicFieldContainer {
+        max-height: 40vh;
+        min-height: 150px;
+    }
+
+    .formField {
+        margin-bottom: 16px;
     }
 }
 
@@ -427,22 +466,33 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    padding-right: 8px;
+    padding: 16px 24px 0 24px;
+    background-color: var(--colorNeutralBackground1);
 }
 
 .closeButton {
     border: none;
     background: transparent;
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
     min-width: 32px;
     min-height: 32px;
+    transition: all 0.2s ease;
+    color: var(--colorNeutralForeground2);
 }
 
 .closeButton:hover {
     background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+}
+
+.helpText {
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground3);
+    margin-top: 4px;
+    font-style: italic;
 }

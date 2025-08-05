@@ -317,7 +317,7 @@ const CommunityBotChat = () => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={() => { }}
+                    onBotChange={() => {}}
                     onDeleteBot={onDeleteBot}
                     actions={actions}
                     history={history}

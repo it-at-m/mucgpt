@@ -144,7 +144,7 @@ export const Layout = () => {
                                         <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
                                     </div>
                                     <div className={styles.headerNavList}>
-                                        <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.settingsdrawer.help")} />
+                                        <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
                                     </div>
                                     <div className={styles.headerNavList}>
                                         <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />

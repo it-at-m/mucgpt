@@ -37,9 +37,9 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
     );
 
     // Get the theme text to display in tooltip
-    const themeText = currentIsLight ? t("components.settingsdrawer.theme_light") : t("components.settingsdrawer.theme_dark");
+    const themeText = currentIsLight ? t("components.theme_selector.theme_light") : t("components.theme_selector.theme_dark");
 
-    const tooltipContent = `${themeText} - ${t("components.settingsdrawer.change_theme")}`;
+    const tooltipContent = `${themeText} - ${t("components.theme_selector.change_theme")}`;
 
     return (
         <Tooltip content={tooltipContent} relationship="description" positioning="below">

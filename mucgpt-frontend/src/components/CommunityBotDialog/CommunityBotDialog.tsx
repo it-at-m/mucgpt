@@ -7,10 +7,6 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
-    Dropdown,
-    Option,
-    OptionOnSelectData,
-    SelectionEvents,
     Tooltip,
     SearchBox,
     Card,
@@ -26,14 +22,7 @@ import {
 import styles from "./CommunityBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
-import {
-    AssistantResponse,
-    Bot,
-    getAllCommunityAssistantsApi,
-    getCommunityAssistantApi,
-    getCommunityAssistantVersionApi,
-    subscribeToAssistantApi
-} from "../../api";
+import { AssistantResponse, Bot, getAllCommunityAssistantsApi, getCommunityAssistantApi, subscribeToAssistantApi } from "../../api";
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -69,10 +58,10 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const [bots, setBot] = useState<any[]>([]);
     const [filteredBots, setFilteredBots] = useState<any[]>([]);
     const [choosenBot, setChoosenBot] = useState<Bot>(mockBot);
-    const [choosenBotAll, setChoosenBotAll] = useState<Bot[]>([mockBot]);
+    const [, setChoosenBotAll] = useState<Bot[]>([mockBot]);
     const [showBotDialog, setShowBotDialog] = useState<boolean>(false);
-    const [allTags, setAllTags] = useState<string[]>([]);
-    const [choosenTag, setChoosenTag] = useState<string>("");
+    const [, setAllTags] = useState<string[]>([]);
+    const [choosenTag] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const communitybotStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
@@ -167,6 +156,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         }
     };
 
+    /**
     const onTagSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
         const tag = selection.optionValue;
         if (tag == undefined) {
@@ -188,6 +178,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             setChoosenBot(bot);
         });
     };
+
     const versionPicker = (
         <Dropdown
             id="version"
@@ -207,6 +198,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             ))}
         </Dropdown>
     );
+    */
 
     const onChooseBot = (bot: Bot) => {
         if (bot.id == undefined) {

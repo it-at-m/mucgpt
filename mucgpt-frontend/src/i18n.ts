@@ -92,6 +92,32 @@ i18n
                             secondgrader: "Grundschüler*innen",
                             retired: "Rentner*innen"
                         },
+                        terms_of_use: {
+                            tooltip: "Nutzungsbedingungen anzeigen",
+                            label: "Nutzungsbedingungen",
+                            accept: "Zustimmen"
+                        },
+                        versioninfo: {
+                            tooltip: "Anwendungs-Version anzeigen",
+                            tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
+                            label: "Version:"
+                        },
+                        feedback: {
+                            tooltip: "Feedback geben",
+                            aria_label: "Feedback per E-Mail senden",
+                            label: "Feedback"
+                        },
+                        helpbutton: {
+                            help: "Hilfe",
+                            label: "Hilfe & FAQ",
+                            tooltip: "Hilfe und häufig gestelle Fragen anzeigen",
+                            aria_label: "Hilfe und FAQ öffnen"
+                        },
+                        theme_selector: {
+                            theme_light: "Helles Thema",
+                            theme_dark: "Dunkles Thema",
+                            change_theme: "Thema wechseln"
+                        },
                         sumlength: {
                             sentences: "Zwei Sätze",
                             bullets: "Fünf Stichpunkte",
@@ -120,26 +146,6 @@ i18n
                             header: "Einzigartige Aspekte/Entitäten:",
                             alternative: "Zusammenfassung",
                             copy: "Zusammenfassung kopieren"
-                        },
-                        settingsdrawer: {
-                            settings_button: "Einstellungen und Feedback",
-                            feedback_button: "Feedback/Fehler melden",
-                            settings_button_close: "Einstellungen und Feedback schließen",
-                            settings: "Einstellungen",
-                            feedback: "Feedback",
-                            about: "Über",
-                            help: "Hilfe",
-                            snow: "Schnee",
-                            snow_checkbox: "Aktiviert",
-                            language: "Sprache",
-                            fontsize: "Schriftgröße",
-                            change_font: "Schriftgröße anpassen",
-                            theme: "Design",
-                            change_theme: "Design wechseln",
-                            theme_light: "Hell",
-                            theme_dark: "Dunkel",
-                            llm: "Sprachmodell",
-                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token verbraucht",
@@ -389,6 +395,32 @@ i18n
                             secondgrader: "Second-Graders",
                             retired: "Pensioners"
                         },
+                        terms_of_use: {
+                            tooltip: "Show terms of use",
+                            label: "Terms of use",
+                            accept: "Accept"
+                        },
+                        versioninfo: {
+                            tooltip: "Show application version",
+                            tooltip_with_commit: "Application version: {{version}}, Commit: {{commit}}",
+                            label: "Version:"
+                        },
+                        feedback: {
+                            tooltip: "Give feedback",
+                            aria_label: "Send feedback via email",
+                            label: "Feedback"
+                        },
+                        helpbutton: {
+                            help: "Help",
+                            label: "Help & FAQ",
+                            tooltip: "Show help and frequently asked questions",
+                            aria_label: "Open help and FAQ"
+                        },
+                        theme_selector: {
+                            theme_light: "Light theme",
+                            theme_dark: "Dark theme",
+                            change_theme: "Change theme"
+                        },
                         sumlength: {
                             sentences: "Two sentences",
                             bullets: "Five bullet points",
@@ -417,26 +449,6 @@ i18n
                             header: "Unique entities/aspects:",
                             alternative: "Summary ",
                             copy: "Copy summary"
-                        },
-                        settingsdrawer: {
-                            settings_button: "Settings and feedback",
-                            feedback_button: "Report Feedback/Fehler",
-                            settings_button_close: "Close settings and feedback",
-                            settings: "Settings",
-                            feedback: "Feedback",
-                            about: "About",
-                            help: "Help",
-                            snow: "Snow",
-                            snow_checkbox: "Enabled",
-                            language: "Language",
-                            fontsize: "Font size",
-                            change_font: "Adjust font size",
-                            theme: "Theme",
-                            change_theme: "Switch theme",
-                            theme_light: "Light",
-                            theme_dark: "Dark",
-                            llm: "language model",
-                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token used",
@@ -686,6 +698,32 @@ i18n
                             secondgrader: "Grundschüla",
                             retired: "Rentna"
                         },
+                        terms_of_use: {
+                            tooltip: "Nutzungsbedingunga zeig'n",
+                            label: "Nutzungsbedingunga",
+                            accept: "Zustimm'n"
+                        },
+                        versioninfo: {
+                            tooltip: "Anwendungs-Version zeig'n",
+                            tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
+                            label: "Version:"
+                        },
+                        feedback: {
+                            tooltip: "Feedback geb'n",
+                            aria_label: "Feedback per E-Mail schick'n",
+                            label: "Feedback"
+                        },
+                        helpbutton: {
+                            help: "Hilfe",
+                            label: "Hilfe & FAQ",
+                            tooltip: "Hilfe und häufige Frog'n zeig'n",
+                            aria_label: "Hilfe und FAQ aufmach'n"
+                        },
+                        theme_selector: {
+                            theme_light: "Helles Thema",
+                            theme_dark: "Dunkles Thema",
+                            change_theme: "Thema wechs'l"
+                        },
                         sumlength: {
                             sentences: "Zwoa Sätzen",
                             bullets: "Fünf Stichpunkten",
@@ -714,26 +752,6 @@ i18n
                             header: "Einzigartige Schwerpunkte:",
                             alternative: "Zsammanfassung ",
                             copy: "Zsammanfassung kopiern"
-                        },
-                        settingsdrawer: {
-                            settings_button: "Eistellunga und Rückmeldung",
-                            settings_button_close: "Eistellunga und Rückmeldung zua macha",
-                            feedback_button: "Ruckmeldung/Fehla meldn",
-                            settings: "Eistellunga",
-                            feedback: "Rückmeldung",
-                            about: "Iba",
-                            help: "Hilf(e)",
-                            snow: "Schnee",
-                            snow_checkbox: "Freigeschaltet",
-                            language: "Sproch",
-                            fontsize: "Schriftgrößn",
-                            change_font: "Schriftgrößn o'passn",
-                            theme: "Design",
-                            change_theme: "Design wechseln",
-                            theme_light: "Hell",
-                            theme_dark: "Dunkel",
-                            llm: "Sprachmodell",
-                            chat_sidebar: "Chat Sidebar"
                         },
                         questioninput: {
                             tokensused: "Token vabrocht",
@@ -982,6 +1000,32 @@ i18n
                             secondgrader: "Élèves de primaire",
                             retired: "Retraité·e·s"
                         },
+                        terms_of_use: {
+                            tooltip: "Afficher les conditions d'utilisation",
+                            label: "Conditions d'utilisation",
+                            accept: "Accepter"
+                        },
+                        versioninfo: {
+                            tooltip: "Afficher la version de l'application",
+                            tooltip_with_commit: "Version de l'application : {{version}}, Commit : {{commit}}",
+                            label: "Version :"
+                        },
+                        feedback: {
+                            tooltip: "Donner un avis",
+                            aria_label: "Envoyer des retours par e-mail",
+                            label: "Feedback"
+                        },
+                        helpbutton: {
+                            help: "Aide",
+                            label: "Aide & FAQ",
+                            tooltip: "Afficher l'aide et les questions fréquentes",
+                            aria_label: "Ouvrir l'aide et la FAQ"
+                        },
+                        theme_selector: {
+                            theme_light: "Thème clair",
+                            theme_dark: "Thème sombre",
+                            change_theme: "Changer de thème"
+                        },
                         sumlength: {
                             sentences: "Deux phrases",
                             bullets: "Cinq points",
@@ -1010,26 +1054,6 @@ i18n
                             header: "Aspects/entités uniques :",
                             alternative: "Résumé",
                             copy: "Copier le résumé"
-                        },
-                        settingsdrawer: {
-                            settings_button: "Paramètres et feedback",
-                            feedback_button: "Retour/Signalement de bug",
-                            settings_button_close: "Fermer les paramètres et le feedback",
-                            settings: "Paramètres",
-                            feedback: "Feedback",
-                            about: "À propos",
-                            help: "Aide",
-                            snow: "Neige",
-                            snow_checkbox: "Activé",
-                            language: "Langue",
-                            fontsize: "Taille de police",
-                            change_font: "Ajuster la taille de police",
-                            theme: "Thème",
-                            change_theme: "Changer de thème",
-                            theme_light: "Clair",
-                            theme_dark: "Sombre",
-                            llm: "Modèle de langage",
-                            chat_sidebar: "Barre latérale de chat"
                         },
                         questioninput: {
                             tokensused: "Jetons utilisés",
@@ -1278,6 +1302,32 @@ i18n
                             secondgrader: "Учні початкової школи",
                             retired: "Пенсіонери"
                         },
+                        terms_of_use: {
+                            tooltip: "Показати умови використання",
+                            label: "Умови використання",
+                            accept: "Прийняти"
+                        },
+                        versioninfo: {
+                            tooltip: "Показати версію програми",
+                            tooltip_with_commit: "Версія програми: {{version}}, Commit: {{commit}}",
+                            label: "Версія:"
+                        },
+                        feedback: {
+                            tooltip: "Залишити відгук",
+                            aria_label: "Надіслати відгук електронною поштою",
+                            label: "Відгук"
+                        },
+                        helpbutton: {
+                            help: "Допомога",
+                            label: "Допомога та FAQ",
+                            tooltip: "Показати допомогу та часто задавані питання",
+                            aria_label: "Відкрити допомогу та FAQ"
+                        },
+                        theme_selector: {
+                            theme_light: "Світла тема",
+                            theme_dark: "Темна тема",
+                            change_theme: "Змінити тему"
+                        },
                         sumlength: {
                             sentences: "Два речення",
                             bullets: "П'ять пунктів",
@@ -1306,26 +1356,6 @@ i18n
                             header: "Унікальні аспекти/сутності:",
                             alternative: "Резюме",
                             copy: "Копіювати резюме"
-                        },
-                        settingsdrawer: {
-                            settings_button: "Налаштування та зворотний зв'язок",
-                            feedback_button: "Зворотній зв'язок/Повідомити про помилку",
-                            settings_button_close: "Закрити налаштування та зворотний зв'язок",
-                            settings: "Налаштування",
-                            feedback: "Зворотний зв'язок",
-                            about: "Про нас",
-                            help: "Допомога",
-                            snow: "Сніг",
-                            snow_checkbox: "Активувати",
-                            language: "Мова",
-                            fontsize: "Розмір шрифту",
-                            change_font: "Налаштувати розмір шрифту",
-                            theme: "Тема",
-                            change_theme: "Змінити тему",
-                            theme_light: "Світла",
-                            theme_dark: "Темна",
-                            llm: "Мовна модель",
-                            chat_sidebar: "Бічна панель чату"
                         },
                         questioninput: {
                             tokensused: "Використано токени",

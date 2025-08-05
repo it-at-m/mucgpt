@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import { chatApi, AskResponse, Bot, ChatResponse, getTools, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api";
+import { chatApi, AskResponse, Bot, ChatResponse, getCommunityAssistantApi, unsubscribeFromAssistantApi } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -21,7 +21,6 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { ToolListResponse } from "../../api/models";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
@@ -72,20 +71,7 @@ const CommunityBotChat = () => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
-
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                const result = await getTools();
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, []);
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -122,8 +108,11 @@ const CommunityBotChat = () => {
                         examples: latest.examples || [],
                         quick_prompts: latest.quick_prompts || [],
                         tags: latest.tags || [],
-                        owner_ids: latest.owner_ids || []
+                        owner_ids: latest.owner_ids || [],
+                        tools: latest.tools || [],
+                        hierarchical_access: latest.hierarchical_access || []
                     };
+                    setSelectedTools(bot.tools?.map(tool => tool.id) || []);
                     setBotConfig(bot);
                     setHeader(bot.title || DEFAULTHEADER);
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
@@ -328,7 +317,7 @@ const CommunityBotChat = () => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={() => {}}
+                    onBotChange={() => { }}
                     onDeleteBot={onDeleteBot}
                     actions={actions}
                     history={history}
@@ -358,11 +347,9 @@ const CommunityBotChat = () => {
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
-                setSelectedTools={setSelectedTools}
-                tools={tools}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question, selectedTools, tools]
+        [isLoadingRef.current, callApi, totalTokens, question, selectedTools]
     );
     // AnswerList component
     const answerList = useMemo(

@@ -6,7 +6,6 @@ import {
     countTokensAPI,
     Bot,
     ChatResponse,
-    getTools,
     getCommunityAssistantApi,
     deleteCommunityAssistantApi,
     updateCommunityAssistantApi
@@ -31,7 +30,7 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { ChatOptions } from "../chat/Chat";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { AssistantUpdateInput, ToolListResponse } from "../../api/models";
+import { AssistantUpdateInput } from "../../api/models";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
@@ -82,20 +81,7 @@ const OwnedCommunityBotChat = () => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
-
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                const result = await getTools();
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, []);
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -133,10 +119,12 @@ const OwnedCommunityBotChat = () => {
                         quick_prompts: latest.quick_prompts,
                         tags: latest.tags,
                         owner_ids: latest.owner_ids,
-                        hirachical_access: latest.hierarchical_access
+                        hierarchical_access: latest.hierarchical_access || [],
+                        tools: latest.tools || []
                     };
                     setHeader(bot.title || DEFAULTHEADER);
                     setBotConfig(bot);
+                    setSelectedTools(bot.tools ? bot.tools.map(tool => tool.id) : []);
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
                     dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
                     dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
@@ -244,10 +232,10 @@ const OwnedCommunityBotChat = () => {
                 name: newBot.title,
                 description: newBot.description,
                 system_prompt: newBot.system_message,
-                hierarchical_access: newBot.hirachical_access,
+                hierarchical_access: newBot.hierarchical_access,
                 temperature: newBot.temperature,
                 max_output_tokens: newBot.max_output_tokens,
-                tools: [],
+                tools: newBot.tools || [],
                 owner_ids: newBot.owner_ids,
                 examples: newBot.examples?.map(e => ({ text: e.text, value: e.value })) || [],
                 quick_prompts: newBot.quick_prompts || [],
@@ -396,11 +384,9 @@ const OwnedCommunityBotChat = () => {
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
-                setSelectedTools={setSelectedTools}
-                tools={tools}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question, selectedTools, tools]
+        [isLoadingRef.current, callApi, totalTokens, question, selectedTools]
     );
     // AnswerList component
     const answerList = useMemo(

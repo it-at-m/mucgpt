@@ -12,13 +12,20 @@ import {
     OptionOnSelectData,
     SelectionEvents,
     Tooltip,
-    Tag
+    SearchBox,
+    Card,
+    CardHeader,
+    CardFooter,
+    Text,
+    Badge,
+    Divider,
+    Spinner,
+    Body1
 } from "@fluentui/react-components";
 
 import styles from "./CommunityBotDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { TextField } from "@fluentui/react";
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
     AssistantResponse,
     Bot,
@@ -53,7 +60,9 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         max_output_tokens: 0,
         version: "0",
         owner_ids: ["owner"],
-        tags: []
+        tags: [],
+        tools: [],
+        hierarchical_access: []
     };
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
@@ -64,6 +73,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const [showBotDialog, setShowBotDialog] = useState<boolean>(false);
     const [allTags, setAllTags] = useState<string[]>([]);
     const [choosenTag, setChoosenTag] = useState<string>("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
     const communitybotStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
 
@@ -82,36 +92,44 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
 
     useEffect(() => {
         if (takeCommunityBots && showSearchDialogInput) {
-            getAllCommunityAssistantsApi().then((bots: AssistantResponse[]) => {
-                const latestBots: Bot[] = [];
+            setIsLoading(true);
+            getAllCommunityAssistantsApi()
+                .then((bots: AssistantResponse[]) => {
+                    const latestBots: Bot[] = [];
 
-                for (const bot of bots) {
-                    const latest = bot.latest_version;
-                    const latest_bot: Bot = {
-                        title: latest.name,
-                        description: latest.description || "",
-                        system_message: latest.system_prompt,
-                        publish: true,
-                        id: bot.id,
-                        temperature: latest.temperature,
-                        max_output_tokens: latest.max_output_tokens,
-                        version: latest.version.toString(),
-                        owner_ids: latest.owner_ids,
-                        tags: latest.tags || []
-                    };
-                    latestBots.push(latest_bot);
-                }
-                setBot(latestBots.sort(compareBotsByTitle));
-                setFilteredBots(latestBots.sort(compareBotsByTitle));
-                let tags: string[] = [];
-                for (const bot of latestBots) {
-                    if (bot.tags) {
-                        const newTags = bot.tags.filter((tag: string) => !tags.includes(tag));
-                        tags = tags.concat(newTags);
+                    for (const bot of bots) {
+                        const latest = bot.latest_version;
+                        const latest_bot: Bot = {
+                            title: latest.name,
+                            description: latest.description || "",
+                            system_message: latest.system_prompt,
+                            publish: true,
+                            id: bot.id,
+                            temperature: latest.temperature,
+                            max_output_tokens: latest.max_output_tokens,
+                            version: latest.version.toString(),
+                            owner_ids: latest.owner_ids,
+                            tags: latest.tags || [],
+                            tools: latest.tools || [],
+                            hierarchical_access: latest.hierarchical_access || []
+                        };
+                        latestBots.push(latest_bot);
                     }
-                }
-                setAllTags(tags);
-            });
+                    setBot(latestBots.sort(compareBotsByTitle));
+                    setFilteredBots(latestBots.sort(compareBotsByTitle));
+                    let tags: string[] = [];
+                    for (const bot of latestBots) {
+                        if (bot.tags) {
+                            const newTags = bot.tags.filter((tag: string) => !tags.includes(tag));
+                            tags = tags.concat(newTags);
+                        }
+                    }
+                    setAllTags(tags);
+                    setIsLoading(false);
+                })
+                .catch(() => {
+                    setIsLoading(false);
+                });
             setTakeCommunityBots(false);
         }
     }, [takeCommunityBots, showSearchDialogInput]);
@@ -124,7 +142,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         window.location.href = "/#/communitybot/" + choosenBot.id;
     };
 
-    const inputHandler = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string | undefined) => {
+    const inputHandler = (event: any, data: any) => {
+        const newValue = data.value;
         if (newValue !== undefined && newValue !== "") {
             const lowerCase = newValue.toLowerCase();
             setInputText(lowerCase);
@@ -132,7 +151,11 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             const filter = bots
                 .filter(bot => {
                     // Return the item which contains the user input
-                    return bot.title.toLowerCase().includes(lowerCase);
+                    return (
+                        bot.title.toLowerCase().includes(lowerCase) ||
+                        bot.description.toLowerCase().includes(lowerCase) ||
+                        (bot.tags && bot.tags.some((tag: string) => tag.toLowerCase().includes(lowerCase)))
+                    );
                 })
                 .sort(compareBotsByTitle);
 
@@ -178,7 +201,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             onOptionSelect={onVersionSelected}
         >
             {choosenBotAll.map((bot: Bot) => (
-                <Option value={String(bot.version)} text={"v" + bot.version.toString()} className={styles.option}>
+                <Option key={bot.version} value={String(bot.version)} text={"v" + bot.version.toString()} className={styles.option}>
                     v{bot.version.toString()}
                 </Option>
             ))}
@@ -204,7 +227,9 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                 max_output_tokens: latest.max_output_tokens,
                 version: latest.version.toString(),
                 owner_ids: latest.owner_ids,
-                tags: latest.tags || []
+                tags: latest.tags || [],
+                tools: latest.tools || [],
+                hierarchical_access: latest.hierarchical_access || []
             };
             setChoosenBotAll([latest_version]); //TODO all Versions
         });
@@ -237,52 +262,123 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                             {t("components.community_bots.title")}
                         </DialogTitle>
                         <DialogContent>
-                            <div className="search">
-                                <TextField id="outlined-basic" label={t("components.community_bots.search")} value={inputText} onChange={inputHandler} />
+                            {/* Search and Filter Section */}
+                            <div className={styles.searchSection}>
+                                <SearchBox
+                                    placeholder={t("components.community_bots.search")}
+                                    value={inputText}
+                                    onChange={inputHandler}
+                                    className={styles.searchBox}
+                                />
+
+                                {/* <div className={styles.filterSection}>
+                                    <Filter24Regular className={styles.filterIcon} />
+                                    <Text size={300} className={styles.filterLabel}>
+                                        {t("components.community_bots.filter_by_tag")}:
+                                    </Text>
+                                    <Dropdown
+                                        id="filter"
+                                        placeholder="Select tag..."
+                                        value={choosenTag}
+                                        selectedOptions={choosenTag ? [choosenTag] : []}
+                                        appearance="outline"
+                                        size="small"
+                                        className={styles.tagDropdown}
+                                        onOptionSelect={onTagSelected}
+                                    >
+                                        <Option value="" text="All tags">All tags</Option>
+                                        {allTags.sort().map((tag: string) => (
+                                            <Option key={tag} value={tag} text={tag}>
+                                                {tag}
+                                            </Option>
+                                        ))}
+                                    </Dropdown>
+                                </div> */}
                             </div>
-                            <br />
-                            {t("components.community_bots.filter_by_tag")}:
-                            <Dropdown
-                                id="filter"
-                                aria-label={t("components.community_bots.filter_by_tag")}
-                                defaultValue=""
-                                value={choosenTag}
-                                selectedOptions={[choosenTag]}
-                                appearance="underline"
-                                size="small"
-                                positioning="below-start"
-                                onOptionSelect={onTagSelected}
-                            >
-                                <Option text="" className={styles.option}></Option>
-                                {allTags.sort().map((tag: string) => (
-                                    <Option text={tag.toLocaleLowerCase()} className={styles.option}>
-                                        {tag}
-                                    </Option>
-                                ))}
-                            </Dropdown>
-                            <br />
-                            <div className={styles.container}>
-                                {filteredBots
-                                    .filter(bot => (choosenTag == "" ? true : bot.tags.includes(choosenTag)))
-                                    .map((bot: Bot) => (
-                                        <Tooltip content={bot.title} relationship="description" positioning="below">
-                                            <Button
-                                                className={styles.box}
-                                                onClick={() => {
-                                                    onChooseBot(bot);
-                                                }}
-                                            >
-                                                <span>{bot.title}</span>
-                                            </Button>
-                                        </Tooltip>
-                                    ))}
-                            </div>
+
+                            <Divider className={styles.divider} />
+
+                            {/* Loading State */}
+                            {isLoading && (
+                                <div className={styles.loadingContainer}>
+                                    <Spinner size="medium" />
+                                    <Text>{t("components.community_bots.loading_assistants")}</Text>
+                                </div>
+                            )}
+
+                            {/* Bot Cards Grid */}
+                            {!isLoading && (
+                                <div className={styles.botsGrid}>
+                                    {filteredBots
+                                        .filter(bot => (choosenTag === "" ? true : bot.tags.includes(choosenTag)))
+                                        .map((bot: Bot) => (
+                                            <Card key={bot.id} className={styles.botCard} onClick={() => onChooseBot(bot)}>
+                                                <CardHeader
+                                                    header={<Body1 className={styles.botTitle}>{bot.title}</Body1>}
+                                                    description={
+                                                        <Text size={200} className={styles.botDescription}>
+                                                            {bot.description.length > 100 ? `${bot.description.substring(0, 100)}...` : bot.description}
+                                                        </Text>
+                                                    }
+                                                />
+                                                <CardFooter>
+                                                    <div className={styles.botCardFooter}>
+                                                        <div className={styles.botCardLeft}>
+                                                            <div className={styles.botTags}>
+                                                                {bot.tags?.slice(0, 2).map((tag: string) => (
+                                                                    <Badge key={tag} size="small" color="brand">
+                                                                        {tag}
+                                                                    </Badge>
+                                                                ))}
+                                                                {bot.tags && bot.tags.length > 2 && (
+                                                                    <Badge size="small" color="subtle">
+                                                                        +{bot.tags.length - 2}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
+                                                            {bot.tools && bot.tools.length > 0 && (
+                                                                <div className={styles.toolsIndicator}>
+                                                                    <Badge size="small" color="informative" appearance="outline">
+                                                                        🔧 {bot.tools.length}{" "}
+                                                                        {bot.tools.length === 1
+                                                                            ? t("components.community_bots.tool_single")
+                                                                            : t("components.community_bots.tools_plural")}
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                            {bot.hierarchical_access && bot.hierarchical_access.length > 0 && (
+                                                                <div className={styles.departmentsIndicator}>
+                                                                    <Badge size="small" color="warning" appearance="outline">
+                                                                        🏢 {bot.hierarchical_access.length}{" "}
+                                                                        {bot.hierarchical_access.length === 1
+                                                                            ? t("components.community_bots.department_single")
+                                                                            : t("components.community_bots.departments_plural")}
+                                                                    </Badge>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <Badge size="small" appearance="outline">
+                                                            v{bot.version}
+                                                        </Badge>
+                                                    </div>
+                                                </CardFooter>
+                                            </Card>
+                                        ))}
+                                </div>
+                            )}
+
+                            {/* No Results State */}
+                            {!isLoading && filteredBots.filter(bot => (choosenTag === "" ? true : bot.tags.includes(choosenTag))).length === 0 && (
+                                <div className={styles.noResults}>
+                                    <Text size={400}>{t("components.community_bots.no_assistants_found")}</Text>
+                                </div>
+                            )}
                         </DialogContent>
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
             <Dialog modalType="modal" defaultOpen={false} open={showBotDialog}>
-                <DialogSurface className={styles.dialog}>
+                <DialogSurface className={styles.detailDialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle
                             action={
@@ -300,29 +396,111 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                 </DialogTrigger>
                             }
                         >
-                            {choosenBot.title} Version: {versionPicker}
+                            <div className={styles.titleSection}>
+                                <Body1 className={styles.botDetailTitle}>{choosenBot.title}</Body1>
+                                {/* <div className={styles.versionSection}>
+                                    <Text size={200}>Version:</Text>
+                                    {versionPicker}
+                                </div> */}
+                                {choosenBot.hierarchical_access && choosenBot.hierarchical_access.length > 0 ? (
+                                    <>
+                                        <Text size={200} className={styles.sectionDescription}>
+                                            {t("components.community_bots.departments_description")}
+                                        </Text>
+                                        <div className={styles.departmentsList}>
+                                            {choosenBot.hierarchical_access.map((department, index) => (
+                                                <Badge key={index} size="medium" color="warning" className={styles.departmentBadge}>
+                                                    {department}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className={styles.publicAccess}>
+                                        <Badge size="medium" color="success" className={styles.publicAccessBadge}>
+                                            🌐 {t("components.community_bots.public_access")}
+                                        </Badge>
+                                    </div>
+                                )}
+                            </div>
                         </DialogTitle>
-                        <DialogContent>
-                            <div className={styles.tags}>{choosenBot.tags ? choosenBot.tags.map((tag: string) => <Tag shape="circular">{tag}</Tag>) : ""}</div>
-                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlockRenderer }}>
-                                {choosenBot.description}
-                            </Markdown>
-                            <strong>{t("components.community_bots.system_message")}: </strong>
-                            <hr />
-                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                {choosenBot.system_message}
-                            </Markdown>
-                            <hr />
+                        <DialogContent className={styles.detailContent}>
+                            {/* Tags Section */}
+                            {choosenBot.tags && choosenBot.tags.length > 0 && (
+                                <div className={styles.detailTags}>
+                                    {choosenBot.tags.map((tag: string) => (
+                                        <Badge key={tag} size="medium" color="brand">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            )}
+
+                            <Divider />
+
+                            {/* Description Section */}
+                            <div className={styles.descriptionSection}>
+                                <Text size={300} weight="semibold" className={styles.sectionTitle}>
+                                    {t("components.community_bots.description")}
+                                </Text>
+                                <div className={styles.markdownContent}>
+                                    <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={{ code: CodeBlockRenderer }}>
+                                        {choosenBot.description}
+                                    </Markdown>
+                                </div>
+                            </div>
+
+                            <Divider />
+
+                            {/* Tools Section */}
+                            {choosenBot.tools && choosenBot.tools.length > 0 && (
+                                <div className={styles.toolsSection}>
+                                    <Text size={300} weight="semibold" className={styles.sectionTitle}>
+                                        {t("components.community_bots.tools")}
+                                    </Text>
+                                    <div className={styles.toolsList}>
+                                        {choosenBot.tools.map(tool => (
+                                            <Badge key={tool.id} size="medium" color="informative" className={styles.toolBadge}>
+                                                {tool.id}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {choosenBot.tools && choosenBot.tools.length > 0 && <Divider />}
+
+                            {/* System Message Section */}
+                            <div className={styles.systemMessageSection}>
+                                <Text size={300} weight="semibold" className={styles.sectionTitle}>
+                                    {t("components.community_bots.system_message")}
+                                </Text>
+                                <div className={styles.systemMessageContent}>
+                                    <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                        {choosenBot.system_message}
+                                    </Markdown>
+                                </div>
+                            </div>
                         </DialogContent>
-                        <DialogActions>
+                        <DialogActions className={styles.detailActions}>
+                            <Button
+                                appearance="subtle"
+                                onClick={() => {
+                                    setChoosenBot(mockBot);
+                                    setShowBotDialog(false);
+                                    setShowSearchDialogInput(true);
+                                }}
+                            >
+                                {t("components.community_bots.back_to_search")}
+                            </Button>
                             <DialogTrigger disableButtonEnhancement>
                                 <Tooltip
-                                    content={botAlreadySaved ? "Assisstent ist bereits gespeichert!" : t("components.community_bots.save")}
+                                    content={botAlreadySaved ? t("components.community_bots.assistant_already_saved") : t("components.community_bots.save")}
                                     relationship="description"
                                     positioning="above"
                                 >
-                                    <Button appearance="secondary" size="small" onClick={onSaveBot} disabled={botAlreadySaved}>
-                                        <Save24Filled /> {t("components.community_bots.save")}
+                                    <Button appearance="primary" onClick={onSaveBot} disabled={botAlreadySaved} icon={<Save24Filled />}>
+                                        {botAlreadySaved ? t("components.community_bots.already_saved") : t("components.community_bots.save")}
                                     </Button>
                                 </Tooltip>
                             </DialogTrigger>

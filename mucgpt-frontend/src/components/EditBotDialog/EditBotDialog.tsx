@@ -70,7 +70,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const [tools, setTools] = useState<ToolBase[]>(bot.tools || []);
     const [publish, setPublish] = useState<boolean>(bot.publish || false);
     const [ownerIds, setOwnerIds] = useState<string[]>(bot.owner_ids || []);
-    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(bot.hirachical_access || []);
+    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(bot.hierarchical_access || []);
     const [tags, setTags] = useState<string[]>(bot.tags || []);
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
     const [hasChanged, setHasChanged] = useState<boolean>(false);
@@ -98,7 +98,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         setTools(bot.tools || []);
         setPublish(bot.publish || false);
         setOwnerIds(bot.owner_ids || []);
-        setHierarchicalAccess(bot.hirachical_access || []);
+        setHierarchicalAccess(bot.hierarchical_access || []);
         setTags(bot.tags || []);
         // Reset to first step when bot changes
         setCurrentStep(0);
@@ -292,7 +292,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             examples: validExamples,
             version: version,
             tools: tools,
-            hirachical_access: hierarchicalAccess,
+            hierarchical_access: hierarchicalAccess,
             tags: tags
         };
         setHeader(title);
@@ -341,7 +341,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         setTools(bot.tools || []);
         setPublish(bot.publish || false);
         setOwnerIds(bot.owner_ids || []);
-        setHierarchicalAccess(bot.hirachical_access || []);
+        setHierarchicalAccess(bot.hierarchical_access || []);
         setTags(bot.tags || []);
     }, [setShowDialog, setShowSavedMessage, bot]);
 

@@ -1,4 +1,4 @@
-import { Checkbox, Card, CardHeader, CardPreview } from "@fluentui/react-components";
+import { Checkbox } from "@fluentui/react-components";
 import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger } from "@fluentui/react-dialog";
 import { useTranslation } from "react-i18next";
 import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
@@ -46,21 +46,15 @@ export const PublishBotDialog = ({
                     </DialogTitle>
 
                     <DialogContent className={styles.content}>
-                        {/* Bot Info Card */}
-                        <Card className={styles.botInfoCard}>
-                            <CardHeader
-                                header={
-                                    <Text size={400} weight="medium">
-                                        {bot.title || "Unbenannter Bot"}
-                                    </Text>
-                                }
-                                description={
-                                    <Text size={300} className={styles.botDescription}>
-                                        {bot.description || "Keine Beschreibung verfügbar"}
-                                    </Text>
-                                }
-                            />
-                        </Card>
+                        {/* Bot Info */}
+                        <div className={styles.botInfoCard}>
+                            <Text size={400} weight="medium">
+                                {bot.title || "Unbenannter Bot"}
+                            </Text>
+                            <Text size={300} className={styles.botDescription}>
+                                {bot.description || "Keine Beschreibung verfügbar"}
+                            </Text>
+                        </div>
 
                         {/* Important Information */}
                         <div className={styles.infoSection}>
@@ -102,8 +96,8 @@ export const PublishBotDialog = ({
                             </div>
 
                             {invisibleChecked && (
-                                <Card className={styles.linkCard}>
-                                    <CardPreview className={styles.linkPreview}>
+                                <div className={styles.linkCard}>
+                                    <div className={styles.linkPreview}>
                                         <div className={styles.linkSection}>
                                             <Label className={styles.linkLabel}>
                                                 <Link24Regular />
@@ -126,8 +120,8 @@ export const PublishBotDialog = ({
                                                 </Tooltip>
                                             </div>
                                         </div>
-                                    </CardPreview>
-                                </Card>
+                                    </div>
+                                </div>
                             )}
 
                             {!invisibleChecked && (

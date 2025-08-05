@@ -11,24 +11,31 @@ interface Props {
     open: boolean;
     setOpen: (open: boolean) => void;
     bot: Bot;
-    onPublishClick: () => void;
+    onBotChanged: (bot: Bot) => void;
     invisibleChecked: boolean;
     setInvisibleChecked: (checked: boolean) => void;
-    publishDepartments: string[];
-    setPublishDepartments: (departments: string[]) => void;
 }
 
-export const PublishBotDialog = ({
-    open,
-    setOpen,
-    bot,
-    onPublishClick,
-    invisibleChecked,
-    setInvisibleChecked,
-    publishDepartments,
-    setPublishDepartments
-}: Props) => {
+export const PublishBotDialog = ({ open, setOpen, bot, onBotChanged, invisibleChecked, setInvisibleChecked }: Props) => {
     const { t } = useTranslation();
+
+    const handleDepartmentsChange = (departments: string[]) => {
+        const updatedBot = {
+            ...bot,
+            hierarchical_access: departments
+        };
+        onBotChanged(updatedBot);
+    };
+
+    const handlePublishClick = () => {
+        const updatedBot = {
+            ...bot,
+            publish: true,
+            hierarchical_access: invisibleChecked ? [] : bot.hierarchical_access || ["*"]
+        };
+        onBotChanged(updatedBot);
+        setOpen(false);
+    };
 
     return (
         <Dialog modalType="alert" open={open}>
@@ -136,7 +143,10 @@ export const PublishBotDialog = ({
                                         Wählen Sie die Abteilungen aus, für die der Bot verfügbar sein soll:
                                     </Text>
                                     <div className={styles.departmentDropdown}>
-                                        <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
+                                        <DepartmentDropdown
+                                            publishDepartments={bot.hierarchical_access || []}
+                                            setPublishDepartments={handleDepartmentsChange}
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -151,7 +161,7 @@ export const PublishBotDialog = ({
                             </Button>
                         </DialogTrigger>
                         <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="primary" size="medium" onClick={onPublishClick} className={styles.publishButton}>
+                            <Button appearance="primary" size="medium" onClick={handlePublishClick} className={styles.publishButton}>
                                 <Checkmark24Filled />
                                 {t("components.botsettingsdrawer.deleteDialog.confirm")}
                             </Button>

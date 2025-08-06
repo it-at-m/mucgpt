@@ -22,12 +22,13 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { Bot, deleteCommunityAssistantApi } from "../../api";
+import { Bot } from "../../api";
 import { EditBotDialog } from "../EditBotDialog/EditBotDialog";
 import PublishBotDialog from "../PublishBotDialog/PublishBotDialog";
 import { BotStorageService } from "../../service/botstorage";
 import { BOT_STORE } from "../../constants";
 import { Collapse } from "@fluentui/react-motion-components-preview";
+import { deleteCommunityAssistantApi } from "../../api/assistant-client";
 
 interface Props {
     bot: Bot;

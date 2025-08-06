@@ -2,7 +2,7 @@ import { MutableRefObject, Dispatch, SetStateAction } from "react";
 import { DBMessage, StorageService } from "../service/storage";
 import { DBObject } from "../service/storage";
 import { ChatMessage, ChatOptions } from "./chat/Chat";
-import { ChatRequest, ChatResponse, ChatTurn, createChatName } from "../api";
+import { ChatRequest, ChatResponse, ChatTurn } from "../api";
 import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
@@ -10,6 +10,7 @@ import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
 import { BotStorageService } from "../service/botstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
+import { createChatName } from "../api/core-client";
 
 /**
  * @fileoverview Chat page helper functions for managing chat state, API requests, and user interactions.

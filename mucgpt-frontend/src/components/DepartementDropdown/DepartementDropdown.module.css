@@ -89,3 +89,30 @@
     background: #e3eaf3;
     color: #1976d2;
 }
+
+.userDepartment {
+    background-color: #f0f7ff;
+    border-left: 3px solid #0078d4;
+}
+
+.userDepartment:hover {
+    background-color: #e3eefa;
+}
+
+.dropdownDivider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 4px 0;
+    list-style: none;
+}
+
+.noMatches {
+    padding: 8px;
+    color: #888;
+}
+
+.userDepartmentLabel {
+    margin-left: 8px;
+    color: #0078d4;
+    font-weight: 500;
+}

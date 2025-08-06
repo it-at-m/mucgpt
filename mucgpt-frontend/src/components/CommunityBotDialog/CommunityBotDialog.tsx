@@ -22,7 +22,7 @@ import {
 import styles from "./CommunityBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
-import { AssistantResponse, Bot, getAllCommunityAssistantsApi, getCommunityAssistantApi, subscribeToAssistantApi } from "../../api";
+import { AssistantResponse, Bot } from "../../api";
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
@@ -30,6 +30,7 @@ import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
+import { getAllCommunityAssistantsApi, getCommunityAssistantApi, subscribeToAssistantApi } from "../../api/assistant-client";
 
 interface Props {
     showSearchDialogInput: boolean;

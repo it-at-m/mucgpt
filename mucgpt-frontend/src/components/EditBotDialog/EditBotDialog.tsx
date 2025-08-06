@@ -17,12 +17,14 @@ import {
 import styles from "./EditBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useState, useMemo, useEffect } from "react";
-import { Bot, ToolBase, ToolInfo, ToolListResponse, getTools } from "../../api";
+import { Bot, ToolBase, ToolInfo, ToolListResponse } from "../../api";
 import { ToolsSelector } from "../ToolsSelector";
 import { StepperProgress } from "./StepperProgress";
 import { EditDialogActions } from "./EditDialogActions";
 import { useBotState } from "./useBotState";
 import { TitleStep, DescriptionStep, SystemPromptStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "./steps";
+
+import { getTools } from "../../api/core-client";
 
 interface Props {
     showDialog: boolean;

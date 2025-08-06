@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { chatApi, AskResponse, Bot, ChatResponse } from "../../api";
+import { AskResponse, Bot, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -21,6 +21,7 @@ import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { BotStrategy } from "./BotStrategy";
+import { chatApi } from "../../api/core-client";
 
 interface UnifiedBotChatProps {
     strategy: BotStrategy;

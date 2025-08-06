@@ -206,3 +206,21 @@ export interface ToolInfo {
 export interface ToolListResponse {
     tools: ToolInfo[];
 }
+
+export interface User {
+    sub?: string;
+    // LHM
+    displayName?: string;
+    surname?: string;
+    telephoneNumber?: string;
+    email?: string;
+    username?: string;
+    givenname?: string;
+    department?: string;
+    lhmObjectID?: string;
+    // LHM_Extended
+    preferred_username?: string;
+    memberof?: string[];
+    user_roles?: string[];
+    authorities?: string[];
+}

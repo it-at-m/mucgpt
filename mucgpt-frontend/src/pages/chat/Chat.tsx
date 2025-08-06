@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, ChatResponse, getTools } from "../../api";
+import { AskResponse, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -24,6 +24,7 @@ import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
+import { getTools, chatApi, countTokensAPI } from "../../api/core-client";
 
 /**
  * Creates a debounced function that delays invoking the provided function

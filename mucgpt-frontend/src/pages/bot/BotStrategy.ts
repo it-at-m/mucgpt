@@ -1,14 +1,8 @@
-import {
-    Bot,
-    getCommunityAssistantApi,
-    unsubscribeFromAssistantApi,
-    deleteCommunityAssistantApi,
-    updateCommunityAssistantApi,
-    countTokensAPI
-} from "../../api";
 import { BotStorageService } from "../../service/botstorage";
-import { AssistantUpdateInput, Model } from "../../api/models";
+import { AssistantUpdateInput, Bot, Model } from "../../api/models";
 import { BOT_STORE } from "../../constants";
+import { countTokensAPI } from "../../api/core-client";
+import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
 
 export interface BotStrategy {
     loadBotConfig(botId: string, botStorageService: BotStorageService): Promise<Bot | undefined>;

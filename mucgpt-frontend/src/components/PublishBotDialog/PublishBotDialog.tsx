@@ -4,9 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
 import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "./PublishBotDialog.module.css";
-import { Bot, createCommunityAssistantApi } from "../../api";
+import { Bot } from "../../api";
 import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
 import { useCallback } from "react";
+import { createCommunityAssistantApi } from "../../api/assistant-client";
 
 interface Props {
     open: boolean;

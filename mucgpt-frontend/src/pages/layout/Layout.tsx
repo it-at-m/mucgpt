@@ -14,6 +14,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
 import { HeaderContext } from "./HeaderContextProvider";
+import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
@@ -118,54 +119,56 @@ export const Layout = () => {
     return (
         <FluentProvider theme={theme}>
             <LightContext.Provider value={isLight}>
-                <div className={styles.layout}>
-                    <header className={styles2.header} role={"banner"}>
-                        <div className={styles.header}>
-                            <Link to="/" className={styles.headerTitleContainer}>
-                                <img
-                                    src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
-                                    alt="MUCGPT logo"
-                                    aria-label="MUCGPT Logo"
-                                    className={styles.logo}
-                                ></img>
-                                <h3 className={styles.headerTitle} aria-description="Umgebung:">
-                                    {config.frontend.labels.env_name}
-                                </h3>
-                            </Link>
-                            <div className={styles.headerNavList}>
-                                <div className={styles.headerNavPageLink}>{header}</div>
-                            </div>
-                            <div className={styles.headerNavList}>
-                                <div className={styles.headerNavRightContainer}>
-                                    <div className={styles.headerNavList}>
-                                        <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
-                                    </div>
-                                    <div className={styles.headerNavList}>
-                                        <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                <UserContextProvider>
+                    <div className={styles.layout}>
+                        <header className={styles2.header} role={"banner"}>
+                            <div className={styles.header}>
+                                <Link to="/" className={styles.headerTitleContainer}>
+                                    <img
+                                        src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
+                                        alt="MUCGPT logo"
+                                        aria-label="MUCGPT Logo"
+                                        className={styles.logo}
+                                    ></img>
+                                    <h3 className={styles.headerTitle} aria-description="Umgebung:">
+                                        {config.frontend.labels.env_name}
+                                    </h3>
+                                </Link>
+                                <div className={styles.headerNavList}>
+                                    <div className={styles.headerNavPageLink}>{header}</div>
+                                </div>
+                                <div className={styles.headerNavList}>
+                                    <div className={styles.headerNavRightContainer}>
+                                        <div className={styles.headerNavList}>
+                                            <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                        </div>
+                                        <div className={styles.headerNavList}>
+                                            <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                        </div>
+                                        <div className={styles.headerNavList}>
+                                            <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                                        </div>
+                                        <div className={styles.headerNavList}>
+                                            <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </header>
-                    <Outlet />
+                        </header>
+                        <Outlet />
 
-                    <footer className={styles.footer} role={"banner"}>
-                        <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
-                            Landeshauptstadt München <br />
-                            RIT/it@M KICC
-                        </div>
-                        <div className={styles.footerSection}>
-                            <VersionInfo version={config.version} commit={config.commit} versionUrl={import.meta.env.BASE_URL + "#/version"} />
-                        </div>
-                        <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
-                    </footer>
-                </div>
+                        <footer className={styles.footer} role={"banner"}>
+                            <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
+                                Landeshauptstadt München <br />
+                                RIT/it@M KICC
+                            </div>
+                            <div className={styles.footerSection}>
+                                <VersionInfo version={config.version} commit={config.commit} versionUrl={import.meta.env.BASE_URL + "#/version"} />
+                            </div>
+                            <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
+                        </footer>
+                    </div>
+                </UserContextProvider>
             </LightContext.Provider>
         </FluentProvider>
     );

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { getDepartements } from "../../api";
+import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./DepartementDropdown.module.css";
+import { useTranslation } from "react-i18next";
 
 // Hilfsfunktion für Präfix-Matching
 function isDepartmentPrefixMatch(a: string, b: string) {
@@ -18,9 +20,11 @@ interface Props {
 }
 
 export const DepartementDropdown = ({ publishDepartments, setPublishDepartments }: Props) => {
+    const { t } = useTranslation();
     const [departments, setDepartments] = useState<string[]>([]);
     const [search, setSearch] = useState("");
     const [show, setShow] = useState(false);
+    const { user, isLoading } = useContext(UserContext);
 
     useEffect(() => {
         if (departments.length > 0) return; // Nur einmal laden, wenn noch keine Daten vorhanden sind
@@ -29,13 +33,34 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
         });
     }, []);
 
-    const filtered = departments
-        .filter(d => d.toLowerCase().includes(search.toLowerCase()) && !publishDepartments.some(sel => isDepartmentPrefixMatch(sel, d)))
-        .sort((a, b) => {
-            if (search && a.toLowerCase() === search.toLowerCase()) return -1;
-            if (search && b.toLowerCase() === search.toLowerCase()) return 1;
-            return a.localeCompare(b);
-        });
+    // Add user's department to publishDepartments if available
+    useEffect(() => {
+        if (!isLoading && user?.department && !publishDepartments.includes(user.department)) {
+            // Only add if user's department is in the list of available departments
+            if (departments.includes(user.department)) {
+                setPublishDepartments([...publishDepartments, user.department]);
+            }
+        }
+    }, [user, departments, publishDepartments, setPublishDepartments, isLoading]);
+
+    // First filter departments based on search and not already selected
+    const filteredDepartments = departments.filter(
+        d => d.toLowerCase().includes(search.toLowerCase()) && !publishDepartments.some(sel => isDepartmentPrefixMatch(sel, d))
+    );
+
+    // Sort with special cases
+    const filtered = filteredDepartments.sort((a, b) => {
+        // If one of the departments is the user's department, it comes first
+        if (a === user?.department) return -1;
+        if (b === user?.department) return 1;
+
+        // Then exact matches to search
+        if (search && a.toLowerCase() === search.toLowerCase()) return -1;
+        if (search && b.toLowerCase() === search.toLowerCase()) return 1;
+
+        // Then standard alphabetical sort
+        return a.localeCompare(b);
+    });
 
     const handleSelect = (d: string) => {
         const newSelected = publishDepartments.filter(sel => !isDepartmentPrefixMatch(sel, d));
@@ -63,7 +88,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
             <input
                 type="text"
                 value={search}
-                placeholder="Suche Abteilung..."
+                placeholder={t("component.department_dropdown.placeholder", "Suche Abteilung...")}
                 onFocus={() => setShow(true)}
                 onBlur={() => setShow(false)}
                 onChange={e => {
@@ -77,12 +102,33 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
                     className={styles.dropdownList}
                     onMouseDown={e => e.preventDefault()} // verhindert, dass onBlur vor handleSelect ausgelöst wird
                 >
-                    {filtered.length === 0 && <li style={{ padding: 8, color: "#888" }}>Keine Treffer</li>}
-                    {filtered.map(d => (
-                        <li key={d} className={styles.dropdownItem} onMouseDown={() => handleSelect(d)}>
-                            {d}
-                        </li>
-                    ))}
+                    {filtered.length === 0 && <li className={styles.noMatches}>{t("component.department_dropdown.no_matches", "Keine Treffer")}</li>}
+
+                    {/* If user department exists and is in filtered list, display a separator */}
+                    {user?.department && filtered.some(d => d === user.department) && (
+                        <>
+                            <li
+                                key={user.department}
+                                className={`${styles.dropdownItem} ${styles.userDepartment}`}
+                                onMouseDown={() => user.department && handleSelect(user.department)}
+                            >
+                                {user.department}
+                                <span className={styles.userDepartmentLabel}>
+                                    {t("components.department_dropdown.own_department_label", "(Ihre Abteilung)")}
+                                </span>
+                            </li>
+                            <li className={styles.dropdownDivider}></li>
+                        </>
+                    )}
+
+                    {/* Display all other departments */}
+                    {filtered
+                        .filter(d => d !== user?.department) // Filter out user department as it's already displayed
+                        .map(d => (
+                            <li key={d} className={styles.dropdownItem} onMouseDown={() => handleSelect(d)}>
+                                {d}
+                            </li>
+                        ))}
                 </ul>
             )}
         </div>

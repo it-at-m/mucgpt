@@ -22,7 +22,7 @@ i18n
                         create_bot: "Assistent erstellen"
                     },
                     menu: {
-                        chat_header: "Hallo, was hast du heute vor?",
+                        chat_header: "Hallo {{user}}, was hast du heute vor?",
                         own_bots: "Lokale Assistenten",
                         community_bots: "Community Assistenten",
                         no_bots: "Keine Assistenten gefunden",
@@ -91,6 +91,11 @@ i18n
                             student: "Student*innen",
                             secondgrader: "Grundschüler*innen",
                             retired: "Rentner*innen"
+                        },
+                        department_dropdown: {
+                            placeholder: "Suche Abteilung...",
+                            no_matches: "Keine Treffer",
+                            own_department_label: "(Ihre Abteilung)"
                         },
                         terms_of_use: {
                             tooltip: "Nutzungsbedingungen anzeigen",
@@ -326,7 +331,7 @@ i18n
                         create_bot: "Create assistant"
                     },
                     menu: {
-                        chat_header: "Hello, what are you planning today?",
+                        chat_header: "Hello {{user}}, what are you planning today?",
                         own_bots: "Local Assistants", // Englisch
                         community_bots: "Community Assistants",
                         no_bots: "No Assistants found",
@@ -395,6 +400,11 @@ i18n
                             student: "University Students",
                             secondgrader: "Second-Graders",
                             retired: "Pensioners"
+                        },
+                        department_dropdown: {
+                            placeholder: "Search department...",
+                            no_matches: "No matches",
+                            own_department_label: "(Your department)"
                         },
                         terms_of_use: {
                             tooltip: "Show terms of use",
@@ -630,7 +640,7 @@ i18n
                         create_bot: "Assistenten erstoin"
                     },
                     menu: {
-                        chat_header: "Griaß di, wos host heid vor?",
+                        chat_header: "Griaß di {{user}}, wos host heid vor?",
                         own_bots: "Lokale Assitentn", // Bairisch
                         community_bots: "Community Assistentn",
                         no_bots: "Koane Assitentn gfundn",
@@ -699,6 +709,11 @@ i18n
                             student: "Studentn",
                             secondgrader: "Grundschüla",
                             retired: "Rentna"
+                        },
+                        department_dropdown: {
+                            placeholder: "Suach Abteilung...",
+                            no_matches: "Koin Treffer",
+                            own_department_label: "(Dei Abteilung)"
                         },
                         terms_of_use: {
                             tooltip: "Nutzungsbedingunga zeig'n",
@@ -933,7 +948,7 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
-                        chat_header: "Bonjour, qu'est-ce que vous prévoyez aujourd'hui ?",
+                        chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
                         own_bots: "Assistants Locaux", // French
                         community_bots: "Assistants Communautaires",
                         no_bots: "Aucun Assistant trouvé",
@@ -1002,6 +1017,11 @@ i18n
                             student: "Étudiant·e·s",
                             secondgrader: "Élèves de primaire",
                             retired: "Retraité·e·s"
+                        },
+                        department_dropdown: {
+                            placeholder: "Search department...",
+                            no_matches: "No matches",
+                            own_department_label: "(Your department)"
                         },
                         terms_of_use: {
                             tooltip: "Afficher les conditions d'utilisation",
@@ -1236,7 +1256,7 @@ i18n
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
-                        chat_header: "Привіт, що ти плануєш сьогодні?",
+                        chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
                         own_bots: "Локальні Асистенти", // Ukrainisch
                         community_bots: "Громадські Асистенти",
                         no_bots: "Асистентів не знайдено",
@@ -1305,6 +1325,11 @@ i18n
                             student: "Студент(к)и",
                             secondgrader: "Учні початкової школи",
                             retired: "Пенсіонери"
+                        },
+                        department_dropdown: {
+                            placeholder: "Пошук відділу...",
+                            no_matches: "Немає збігів",
+                            own_department_label: "(Ваш відділ)"
                         },
                         terms_of_use: {
                             tooltip: "Показати умови використання",

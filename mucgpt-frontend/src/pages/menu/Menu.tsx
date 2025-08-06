@@ -15,6 +15,7 @@ import { SearchCommunityBotButton } from "../../components/SearchCommunityBotBut
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
 import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 
 const Menu = () => {
@@ -27,7 +28,9 @@ const Menu = () => {
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
     const [question, setQuestion] = useState<string>("");
+    const [username, setUserName] = useState<string>("");
     const { setHeader } = useContext(HeaderContext);
+    const { user } = useContext(UserContext);
     setHeader(DEFAULTHEADER);
 
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -69,6 +72,12 @@ const Menu = () => {
         });
     }, []);
 
+    useEffect(() => {
+        if (user) {
+            setUserName(user.displayName || user.username || "User");
+        }
+    }, [user]);
+
     const onAddBot = () => {
         setShowDialogInput(true);
     };
@@ -84,7 +93,7 @@ const Menu = () => {
         <div>
             <div className={styles.chatstartercontainer}>
                 <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
-                <h1 className={styles.heading}>{t("menu.chat_header")}</h1>
+                <h1 className={styles.heading}>{t("menu.chat_header", { user: username })} </h1>
                 <div className={styles.chatstarter}>
                     <QuestionInput
                         onSend={onSendQuestion}

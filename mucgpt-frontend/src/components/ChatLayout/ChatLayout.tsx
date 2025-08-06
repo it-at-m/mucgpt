@@ -6,7 +6,7 @@ import rehypeRaw from "rehype-raw";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
 import { Button } from "@fluentui/react-components";
-import { ChevronDoubleRight20Regular } from "@fluentui/react-icons";
+import { ChatAdd24Regular, ChevronDoubleRight20Regular } from "@fluentui/react-icons";
 
 export type SidebarSizes = "small" | "medium" | "large" | "full_width" | "none";
 
@@ -22,9 +22,11 @@ interface Props {
     size: SidebarSizes;
     onToggleMinimized?: () => void;
     // LLM Selector props
+    onLLMSelectionChange: (nextLLM: string) => void;
+    clearChat: () => void;
+    clearChatDisabled: boolean;
     llmOptions?: Model[];
     defaultLLM?: string;
-    onLLMSelectionChange?: (nextLLM: string) => void;
 }
 
 export const ChatLayout = ({
@@ -40,7 +42,9 @@ export const ChatLayout = ({
     llmOptions,
     defaultLLM,
     onLLMSelectionChange,
-    onToggleMinimized
+    onToggleMinimized,
+    clearChat,
+    clearChatDisabled
 }: Props) => {
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
@@ -48,9 +52,12 @@ export const ChatLayout = ({
             <aside hidden={size === "none"} className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>
                 {sidebar}
             </aside>
-            <div hidden={size !== "none" || !onToggleMinimized} className={styles.sidebarOpener}>
+            <div hidden={size !== "none"} className={styles.sidebarOpener}>
                 <Button appearance="subtle" onClick={onToggleMinimized}>
                     <ChevronDoubleRight20Regular />
+                </Button>
+                <Button disabled={clearChatDisabled} appearance="subtle" onClick={clearChat}>
+                    <ChatAdd24Regular />
                 </Button>
             </div>
             <div className={styles.chatRoot}>

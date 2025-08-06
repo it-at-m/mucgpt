@@ -154,7 +154,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
             system_prompt: bot.system_message,
             temperature: bot.temperature,
             max_output_tokens: bot.max_output_tokens,
-            tools: [],
+            tools: bot.tools || [],
             owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
             examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
             quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
@@ -188,14 +188,12 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                 open={showPublishDialog}
                 setOpen={setShowPublishDialog}
                 bot={bot}
-                onPublishClick={onPublishClick}
                 invisibleChecked={invisibleChecked}
                 setInvisibleChecked={setInvisibleChecked}
-                publishDepartments={publishDepartments}
-                setPublishDepartments={setPublishDepartments}
+                onBotChanged={() => onPublishClick()}
             />
         ),
-        [showPublishDialog, setShowPublishDialog, onPublishClick, bot, invisibleChecked, setInvisibleChecked, publishDepartments, setPublishDepartments]
+        [showPublishDialog, setShowPublishDialog, onPublishClick, bot, invisibleChecked, setInvisibleChecked]
     );
 
     // Edit bot dialog

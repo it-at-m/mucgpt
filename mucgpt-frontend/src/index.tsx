@@ -13,11 +13,11 @@ import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import Menu from "./pages/menu/Menu";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
-import Bot from "./pages/bot/Bot";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
-import OwnedCommunityBotChat from "./pages/bot/OwnedCommunityBot";
-import CommunityBotChat from "./pages/bot/CommunityBot";
 import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
+import LocalBot from "./pages/bot/LocalBot";
+import RefactoredOwnedCommunityBot from "./pages/bot/OwnedCommunityBot";
+import RefactoredCommunityBot from "./pages/bot/CommunityBot";
 initializeIcons();
 
 const router = createHashRouter([
@@ -48,17 +48,17 @@ const router = createHashRouter([
             },
             {
                 path: "bot/:id",
-                element: <Bot />,
+                element: <LocalBot />,
                 errorElement: <div>Fehler</div>
             },
             {
                 path: "owned/communitybot/:id",
-                element: <OwnedCommunityBotChat />,
+                element: <RefactoredOwnedCommunityBot />,
                 errorElement: <div>Fehler</div>
             },
             {
                 path: "communitybot/:id",
-                element: <CommunityBotChat />,
+                element: <RefactoredCommunityBot />,
                 errorElement: <div>Fehler</div>
             },
             /** {

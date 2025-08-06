@@ -13,10 +13,10 @@ import { BOT_STORE } from "../../constants";
 import { migrate_old_bots } from "../../service/migration";
 import { SearchCommunityBotButton } from "../../components/SearchCommunityBotButton/SearchCommunityBotButton";
 import { CommunityBotsDialog } from "../../components/CommunityBotDialog/CommunityBotDialog";
-import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
+import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api/assistant-client";
 
 const Menu = () => {
     const { t } = useTranslation();

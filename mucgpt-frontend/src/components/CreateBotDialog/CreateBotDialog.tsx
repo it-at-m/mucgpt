@@ -17,9 +17,10 @@ import styles from "./CreateBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { Bot, createBotApi } from "../../api";
+import { Bot } from "../../api";
 import { BOT_STORE, CREATE_BOT_EXAMPLE_1, CREATE_BOT_EXAMPLE_2, CREATE_BOT_EXAMPLE_3 } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
+import { createBotApi } from "../../api/core-client";
 
 interface Props {
     showDialogInput: boolean;

@@ -1,8 +1,8 @@
 import { useState, useEffect, useContext } from "react";
-import { getDepartements } from "../../api";
 import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./DepartementDropdown.module.css";
 import { useTranslation } from "react-i18next";
+import { getDepartements } from "../../api/core-client";
 
 // Hilfsfunktion für Präfix-Matching
 function isDepartmentPrefixMatch(a: string, b: string) {

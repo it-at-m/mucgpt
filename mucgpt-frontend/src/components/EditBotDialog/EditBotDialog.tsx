@@ -31,13 +31,14 @@ import {
 import styles from "./EditBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo, useEffect } from "react";
-import { Bot, ToolBase, ToolInfo, ToolListResponse, getTools } from "../../api";
+import { Bot, ToolBase, ToolInfo, ToolListResponse } from "../../api";
 import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
 import { ExampleModel } from "../Example";
 import { ToolsSelector } from "../ToolsSelector";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { HeaderContext } from "../../pages/layout/HeaderContextProvider";
 import DepartementDropdown from "../DepartementDropdown/DepartementDropdown";
+import { getTools } from "../../api/core-client";
 
 interface Props {
     showDialog: boolean;

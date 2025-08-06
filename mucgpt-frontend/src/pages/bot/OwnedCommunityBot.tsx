@@ -1,15 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import {
-    chatApi,
-    AskResponse,
-    countTokensAPI,
-    Bot,
-    ChatResponse,
-    getCommunityAssistantApi,
-    deleteCommunityAssistantApi,
-    updateCommunityAssistantApi
-} from "../../api";
+import { AskResponse, Bot, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -32,6 +23,8 @@ import { AssistantUpdateInput } from "../../api/models";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { deleteCommunityAssistantApi, getCommunityAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
+import { chatApi, countTokensAPI } from "../../api/core-client";
 
 const OwnedCommunityBotChat = () => {
     // useReducer für den Chat-Status

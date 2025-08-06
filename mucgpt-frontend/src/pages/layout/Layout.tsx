@@ -7,7 +7,7 @@ import logo_black from "../../assets/mucgpt_black.png";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi } from "../../api";
+import { ApplicationConfig } from "../../api";
 import { FluentProvider, Theme } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
@@ -20,6 +20,7 @@ import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
 import { VersionInfo } from "../../components/VersionInfo";
 import { HelpButton } from "../../components/HelpButton";
+import { configApi } from "../../api/core-client";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();

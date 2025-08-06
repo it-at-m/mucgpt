@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, Bot, ChatResponse } from "../../api";
+import { AskResponse, Bot, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -22,6 +22,7 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { chatApi, countTokensAPI } from "../../api/core-client";
 
 const BotChat = () => {
     // useReducer für den Chat-Status

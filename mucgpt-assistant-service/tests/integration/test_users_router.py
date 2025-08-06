@@ -1,15 +1,30 @@
 import pytest
+from sqlalchemy import select
 from src.api.api_models import (
     AssistantCreate,
     AssistantResponse,
     StatusResponse,
     SubscriptionResponse,
 )
+from src.config.settings import get_settings
+from src.database.assistant_repo import AssistantRepository
+from src.database.database_models import Subscription
+from src.database.session import create_database_url, get_engine_and_factory
 
 # Headers for authentication
 headers = {
     "Authorization": "Bearer dummy_access_token",
 }
+
+
+# Helper function to create a new database session
+async def create_new_session():
+    """Create a new database session for testing across session boundaries."""
+
+    settings = get_settings()
+    database_url = str(create_database_url(settings))
+    _, factory = get_engine_and_factory(database_url)
+    return factory()
 
 
 @pytest.mark.integration
@@ -339,7 +354,6 @@ def test_get_user_bots_empty_optional_fields(test_client):
 async def test_get_user_bots_access_control_repo(test_client, test_db_session):
     """Test that users can only access bots they own when using repository-created data."""
     # Create assistants using repository directly to control ownership precisely
-    from src.database.assistant_repo import AssistantRepository
 
     assistant_repo = AssistantRepository(test_db_session)
 
@@ -1059,7 +1073,6 @@ async def test_hierarchical_access_subscription_vs_ownership(
     test_client, test_db_session
 ):
     """Test difference between hierarchical access for subscriptions vs ownership."""
-    from src.database.assistant_repo import AssistantRepository
 
     assistant_repo = AssistantRepository(test_db_session)
 
@@ -1123,3 +1136,98 @@ async def test_hierarchical_access_subscription_vs_ownership(
     subscriptions = test_client.get("/user/subscriptions", headers=headers).json()
     assert len(subscriptions) == 1
     assert subscriptions[0]["name"] == "IT Accessible Bot"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_subscription_persists_after_commit(test_client, test_db_session):
+    """Test that subscriptions persist in the database after transaction commit."""
+    # Create an assistant for testing
+    assistant_data = AssistantCreate(
+        name="Subscription Persistence Bot",
+        system_prompt="Testing that subscriptions persist after db commit.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+    # Get subscriptions through API to verify it was created
+    api_subscriptions = test_client.get("/user/subscriptions", headers=headers).json()
+    assert len(api_subscriptions) == 1
+    assert (
+        api_subscriptions[0]["id"] == assistant_id
+    )  # Verify directly in the database that the subscription exists
+
+    # Query the database directly to verify the subscription was committed
+    result = await test_db_session.execute(
+        select(Subscription).filter(
+            Subscription.assistant_id == assistant_id,
+            Subscription.lhmobjektID == "test_user_123",  # Default test user ID
+        )
+    )
+    db_subscription = result.scalars().first()
+
+    # Verify subscription exists in database
+    assert db_subscription is not None
+    assert db_subscription.assistant_id == assistant_id
+    assert db_subscription.lhmobjektID == "test_user_123"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_unsubscription_persists_after_commit(test_client, test_db_session):
+    """Test that unsubscribing correctly removes the subscription from the database."""
+    # Create an assistant for testing
+    assistant_data = AssistantCreate(
+        name="Unsubscribe Commit Test Bot",
+        system_prompt="Testing that unsubscribing persists after db commit.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+    # Check before unsubscribing
+    result_before = await test_db_session.execute(
+        select(Subscription).filter(
+            Subscription.assistant_id == assistant_id,
+            Subscription.lhmobjektID == "test_user_123",
+        )
+    )
+    subscription_before = result_before.scalars().first()
+    assert subscription_before is not None
+
+    # Unsubscribe from the assistant
+    unsubscribe_response = test_client.delete(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert unsubscribe_response.status_code == 200
+
+    # Check after unsubscribing - should be gone from database
+    result_after = await test_db_session.execute(
+        select(Subscription).filter(
+            Subscription.assistant_id == assistant_id,
+            Subscription.lhmobjektID == "test_user_123",
+        )
+    )
+    subscription_after = result_after.scalars().first()
+    assert subscription_after is None

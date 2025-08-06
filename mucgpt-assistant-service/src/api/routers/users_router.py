@@ -146,9 +146,10 @@ async def subscribe_to_assistant(
         raise AlreadySubscribedException(assistant_id)
 
     await assistant_repo.create_subscription(assistant_id, user_info.lhm_object_id)
+    await db.commit()
 
     logger.info(
-        f"User {user_info.lhm_object_id} successfully subscribed to assistant {assistant_id}"
+        f"User {user_info.lhm_object_id} successfully subscribed to assistant {assistant_id} "
     )
     return StatusResponse(message="Successfully subscribed to assistant")
 
@@ -183,6 +184,7 @@ async def unsubscribe_from_assistant(
         raise SubscriptionNotFoundException(assistant_id)
 
     await assistant_repo.remove_subscription(assistant_id, user_info.lhm_object_id)
+    await db.commit()
 
     logger.info(
         f"User {user_info.lhm_object_id} successfully unsubscribed from assistant {assistant_id}"
@@ -216,7 +218,11 @@ async def get_user_subscriptions(
     for assistant in assistants:
         latest_version = await assistant_repo.get_latest_version(assistant.id)
         if latest_version:
-            response = SubscriptionResponse(id=assistant.id, name=latest_version.name, description=latest_version.description)
+            response = SubscriptionResponse(
+                id=assistant.id,
+                name=latest_version.name,
+                description=latest_version.description,
+            )
             response_list.append(response)
 
     logger.info(

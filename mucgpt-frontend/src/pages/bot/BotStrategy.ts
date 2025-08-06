@@ -57,7 +57,7 @@ export class CommunityBotStrategy implements BotStrategy {
             description: latest.description || "",
             system_message: latest.system_prompt,
             publish: true,
-            temperature: latest.temperature || 0.7,
+            temperature: latest.temperature,
             max_output_tokens: latest.max_output_tokens,
             version: latest.version.toString(),
             examples: latest.examples || [],
@@ -87,7 +87,7 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
             description: latest.description || "",
             system_message: latest.system_prompt,
             publish: true,
-            temperature: latest.temperature || 0.7,
+            temperature: latest.temperature,
             max_output_tokens: latest.max_output_tokens,
             version: latest.version.toString(),
             examples: latest.examples,
@@ -126,6 +126,7 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
             const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
             systemPromptTokens = response.count;
         }
+        window.location.reload(); // Reload to ensure the latest version is fetched
 
         return { systemPromptTokens };
     }

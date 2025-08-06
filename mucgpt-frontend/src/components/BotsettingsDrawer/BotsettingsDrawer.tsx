@@ -22,7 +22,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
-import { Bot, createCommunityAssistantApi, deleteCommunityAssistantApi } from "../../api";
+import { Bot, deleteCommunityAssistantApi } from "../../api";
 import { EditBotDialog } from "../EditBotDialog/EditBotDialog";
 import PublishBotDialog from "../PublishBotDialog/PublishBotDialog";
 import { BotStorageService } from "../../service/botstorage";
@@ -146,41 +146,6 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
         [minimized, t, onToggleMinimized]
     );
 
-    // publish
-    const onPublishClick = useCallback(async () => {
-        await createCommunityAssistantApi({
-            name: bot.title,
-            description: bot.description,
-            system_prompt: bot.system_message,
-            temperature: bot.temperature,
-            max_output_tokens: bot.max_output_tokens,
-            tools: bot.tools || [],
-            owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
-            examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
-            quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
-            tags: bot.tags || [],
-            hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
-        }).then(response => {
-            const updatedBot: Bot = {
-                title: response.latest_version.name,
-                description: response.latest_version.description || "",
-                system_message: response.latest_version.system_prompt,
-                publish: true,
-                id: response.id,
-                temperature: response.latest_version.temperature,
-                max_output_tokens: response.latest_version.max_output_tokens,
-                examples: response.latest_version.examples || [],
-                quick_prompts: response.latest_version.quick_prompts || [],
-                version: response.latest_version.version.toString(),
-                owner_ids: response.latest_version.owner_ids ? response.latest_version.owner_ids : undefined,
-                tags: response.latest_version.tags || []
-            };
-            onBotChange(updatedBot);
-            onDeleteBot(); // Remove the old bot
-        });
-        setShowPublishDialog(false);
-    }, [bot, onBotChange, onDeleteBot, invisibleChecked, publishDepartments, createCommunityAssistantApi]);
-
     // Publish dialog
     const publishDialog = useMemo(
         () => (
@@ -190,10 +155,12 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                 bot={bot}
                 invisibleChecked={invisibleChecked}
                 setInvisibleChecked={setInvisibleChecked}
-                onBotChanged={() => onPublishClick()}
+                onDeleteBot={onDeleteBot}
+                publishDepartments={publishDepartments}
+                setPublishDepartments={setPublishDepartments}
             />
         ),
-        [showPublishDialog, setShowPublishDialog, onPublishClick, bot, invisibleChecked, setInvisibleChecked]
+        [showPublishDialog, setShowPublishDialog, bot, invisibleChecked, setInvisibleChecked, onDeleteBot, publishDepartments, setPublishDepartments]
     );
 
     // Edit bot dialog

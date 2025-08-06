@@ -4,38 +4,51 @@ import { useTranslation } from "react-i18next";
 import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
 import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "./PublishBotDialog.module.css";
-import { Bot } from "../../api";
+import { Bot, createCommunityAssistantApi } from "../../api";
 import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
+import { useCallback } from "react";
 
 interface Props {
     open: boolean;
     setOpen: (open: boolean) => void;
     bot: Bot;
-    onBotChanged: (bot: Bot) => void;
     invisibleChecked: boolean;
     setInvisibleChecked: (checked: boolean) => void;
+    onDeleteBot: () => void;
+    publishDepartments: string[];
+    setPublishDepartments: (departments: string[]) => void;
 }
 
-export const PublishBotDialog = ({ open, setOpen, bot, onBotChanged, invisibleChecked, setInvisibleChecked }: Props) => {
+export const PublishBotDialog = ({
+    open,
+    setOpen,
+    bot,
+    invisibleChecked,
+    setInvisibleChecked,
+    publishDepartments,
+    setPublishDepartments,
+    onDeleteBot
+}: Props) => {
     const { t } = useTranslation();
 
-    const handleDepartmentsChange = (departments: string[]) => {
-        const updatedBot = {
-            ...bot,
-            hierarchical_access: departments
-        };
-        onBotChanged(updatedBot);
-    };
-
-    const handlePublishClick = () => {
-        const updatedBot = {
-            ...bot,
-            publish: true,
-            hierarchical_access: invisibleChecked ? [] : bot.hierarchical_access || ["*"]
-        };
-        onBotChanged(updatedBot);
+    const handlePublishClick = useCallback(async () => {
+        await createCommunityAssistantApi({
+            name: bot.title,
+            description: bot.description,
+            system_prompt: bot.system_message,
+            temperature: bot.temperature,
+            max_output_tokens: bot.max_output_tokens,
+            tools: bot.tools || [],
+            owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
+            examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
+            quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
+            tags: bot.tags || [],
+            hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
+        }).then(() => {
+            onDeleteBot();
+        });
         setOpen(false);
-    };
+    }, [bot, invisibleChecked, publishDepartments, onDeleteBot, setOpen]);
 
     return (
         <Dialog modalType="alert" open={open}>
@@ -143,10 +156,7 @@ export const PublishBotDialog = ({ open, setOpen, bot, onBotChanged, invisibleCh
                                         Wählen Sie die Abteilungen aus, für die der Bot verfügbar sein soll:
                                     </Text>
                                     <div className={styles.departmentDropdown}>
-                                        <DepartmentDropdown
-                                            publishDepartments={bot.hierarchical_access || []}
-                                            setPublishDepartments={handleDepartmentsChange}
-                                        />
+                                        <DepartmentDropdown publishDepartments={bot.hierarchical_access || []} setPublishDepartments={setPublishDepartments} />
                                     </div>
                                 </div>
                             )}

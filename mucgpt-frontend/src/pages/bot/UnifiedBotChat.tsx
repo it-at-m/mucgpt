@@ -71,7 +71,6 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
-    const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
 
     // StorageServices
@@ -102,7 +101,6 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                 .then(bot => {
                     if (bot) {
                         setBotConfig(bot);
-                        setSelectedTools(bot.tools ? bot.tools.map(tool => tool.id) : []);
                         setHeader("");
                         dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
                         dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
@@ -169,7 +167,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                     isLoadingRef,
                     fetchHistory,
                     bot_id,
-                    selectedTools,
+                    botConfig.tools ? botConfig.tools.map(tool => tool.id) : [],
                     setToolStatuses
                 );
             } catch (e) {
@@ -190,7 +188,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
             botChatStorage,
             chatMessageStreamEnd,
             fetchHistory,
-            selectedTools
+            botConfig
         ]
     );
 
@@ -218,7 +216,6 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
 
             if (result?.updatedBot) {
                 setBotConfig(result.updatedBot);
-                setSelectedTools(result.updatedBot.tools ? result.updatedBot.tools.map(tool => tool.id) : []);
                 setQuickPrompts(result.updatedBot.quick_prompts || []);
             }
 
@@ -226,7 +223,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                 setSystemPromptTokens(result.systemPromptTokens);
             }
         },
-        [strategy, bot_id, botConfig, LLM]
+        [strategy, bot_id, botConfig, LLM, setQuickPrompts, setSystemPromptTokens]
     );
 
     // Regenerate-Funktion
@@ -318,6 +315,11 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
     );
 
     // Sidebar component
+    const toggleSidebar = useCallback(() => {
+        setShowSidebar(!showSidebar);
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, (!showSidebar).toString());
+    }, [showSidebar]);
+
     const sidebar = useMemo(
         () => (
             <>
@@ -330,7 +332,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                     isOwned={strategy.isOwned}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
-                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
+                    onToggleMinimized={toggleSidebar}
                 ></BotsettingsDrawer>
             </>
         ),
@@ -357,10 +359,10 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                 tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
-                selectedTools={selectedTools}
+                selectedTools={botConfig.tools ? botConfig.tools.map(tool => tool.id) : []}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question, selectedTools]
+        [isLoadingRef.current, callApi, totalTokens, question, t, error, botConfig.tools]
     );
 
     // AnswerList component
@@ -420,7 +422,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setShowSidebar(true)}
+                    onToggleMinimized={toggleSidebar}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />

@@ -195,6 +195,13 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
 
+    // Add a scroll function
+    const scrollToBottom = useCallback(() => {
+        if (chatMessageStreamEnd.current) {
+            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, []);
+
     // useEffect für die Tokenanzahl
     useEffect(() => {
         dispatch({
@@ -308,11 +315,16 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                         dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                         lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
                         dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
+
+                        // Scroll to bottom after a short delay to ensure DOM is updated
+                        setTimeout(() => {
+                            scrollToBottom();
+                        }, 100);
                     }
                 }}
             ></History>
         ),
-        [allChats, activeChatRef.current, fetchHistory, botChatStorage, t]
+        [allChats, activeChatRef.current, fetchHistory, botChatStorage, t, scrollToBottom]
     );
 
     // Sidebar component

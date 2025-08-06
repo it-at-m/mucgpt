@@ -1,11 +1,9 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-
 import { AskResponse, Bot, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
-
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { BotsettingsDrawer } from "../../components/BotsettingsDrawer/BotsettingsDrawer";
@@ -22,9 +20,14 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
-import { chatApi, countTokensAPI } from "../../api/core-client";
+import { BotStrategy } from "./BotStrategy";
+import { chatApi } from "../../api/core-client";
 
-const BotChat = () => {
+interface UnifiedBotChatProps {
+    strategy: BotStrategy;
+}
+
+const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
     // useReducer für den Chat-Status
     const chatReducer = getChatReducer<Bot>();
     // Combined states with useReducer
@@ -94,48 +97,51 @@ const BotChat = () => {
         if (bot_id) {
             if (error) setError(undefined);
             isLoadingRef.current = true;
-            botStorageService
-                .getBotConfig(bot_id)
+
+            strategy
+                .loadBotConfig(bot_id, botStorageService)
                 .then(bot => {
                     if (bot) {
                         setBotConfig(bot);
+                        setSelectedTools(bot.tools ? bot.tools.map(tool => tool.id) : []);
                         setHeader("");
                         dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
                         dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
                         dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
                         setQuickPrompts(bot.quick_prompts || []);
-                        setSelectedTools(bot.tools ? bot.tools.map(tool => tool.id) : []);
+
+                        return botStorageService
+                            .getNewestChatForBot(bot_id)
+                            .then(existingChat => {
+                                if (existingChat) {
+                                    const messages = existingChat.messages;
+                                    dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
+                                    lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                                    dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
+                                }
+                            })
+                            .then(() => fetchHistory());
                     }
-                    return botStorageService
-                        .getNewestChatForBot(bot_id)
-                        .then(existingChat => {
-                            if (existingChat) {
-                                const messages = existingChat.messages;
-                                dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                                lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                                dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
-                            }
-                        })
-                        .then(() => {
-                            return fetchHistory();
-                        });
                 })
                 .finally(() => {
                     isLoadingRef.current = false;
                 });
         }
-    }, []);
+    }, [bot_id, strategy]);
+
     // get History-Funktion
     const fetchHistory = useCallback(() => {
         return botStorageService.getAllChatForBot(bot_id).then(chats => {
             if (chats) dispatch({ type: "SET_ALL_CHATS", payload: chats });
         });
     }, [botStorageService, bot_id]);
+
     // deleteBot-Funktion
     const onDeleteBot = useCallback(async () => {
-        await botStorageService.deleteConfigAndChatsForBot(bot_id);
+        await strategy.deleteBot(bot_id, botStorageService);
         window.location.href = "/";
-    }, [botStorageService, bot_id]);
+    }, [strategy, bot_id, botStorageService]);
+
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string) => {
@@ -190,6 +196,7 @@ const BotChat = () => {
     );
 
     useEffect(() => chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" }), [answers.length]);
+
     // useEffect für die Tokenanzahl
     useEffect(() => {
         dispatch({
@@ -201,21 +208,26 @@ const BotChat = () => {
                     .reduce((prev: any, curr: any) => prev + curr, 0)
         });
     }, [systemPromptTokens, answers]);
+
     // onBotChanged-Funktion
     const onBotChanged = useCallback(
         async (newBot: Bot) => {
+            if (!strategy.canEdit) return;
+
             setError(undefined);
-            await botStorageService.setBotConfig(bot_id, newBot);
-            setBotConfig(newBot);
-            setSelectedTools(newBot.tools ? newBot.tools.map(tool => tool.id) : []);
-            setQuickPrompts(newBot.quick_prompts || []);
-            // count tokens in case of new system message
-            if (newBot.system_message !== botConfig.system_message) {
-                const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
-                setSystemPromptTokens(response.count);
+            const result = await strategy.updateBot?.(bot_id, newBot, botConfig, LLM);
+
+            if (result?.updatedBot) {
+                setBotConfig(result.updatedBot);
+                setSelectedTools(result.updatedBot.tools ? result.updatedBot.tools.map(tool => tool.id) : []);
+                setQuickPrompts(result.updatedBot.quick_prompts || []);
+            }
+
+            if (result?.systemPromptTokens !== undefined) {
+                setSystemPromptTokens(result.systemPromptTokens);
             }
         },
-        [botStorageService, bot_id, LLM, botConfig.system_message]
+        [strategy, bot_id, botConfig, LLM]
     );
 
     // Regenerate-Funktion
@@ -239,6 +251,7 @@ const BotChat = () => {
         }
         dispatch({ type: "CLEAR_ANSWERS" });
     }, [lastQuestionRef.current, error, activeChatRef.current]);
+
     // Rollback-Funktion
     const onRollbackMessage = useCallback(
         (index: number) => {
@@ -304,32 +317,36 @@ const BotChat = () => {
         ),
         [allChats, activeChatRef.current, fetchHistory, botChatStorage, t]
     );
+
     // Sidebar component
     const sidebar = useMemo(
         () => (
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={onBotChanged}
+                    onBotChange={strategy.canEdit ? onBotChanged : () => {}}
                     onDeleteBot={onDeleteBot}
                     history={history}
                     minimized={!showSidebar}
+                    isOwned={strategy.isOwned}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                     onToggleMinimized={() => setShowSidebar(!showSidebar)}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onBotChanged, onDeleteBot, history, showSidebar]
+        [botConfig, onBotChanged, onDeleteBot, history, showSidebar, strategy.canEdit, strategy.isOwned]
     );
+
     // Examples component
     const examplesComponent = useMemo(() => {
         if (botConfig.examples && botConfig.examples.length > 0) {
             return <ExampleList examples={botConfig.examples} onExampleClicked={onExampleClicked} />;
         } else {
-            return <></>;
+            return null;
         }
     }, [botConfig.examples, onExampleClicked]);
+
     // Text-Input component
     const inputComponent = useMemo(
         () => (
@@ -346,6 +363,7 @@ const BotChat = () => {
         ),
         [isLoadingRef.current, callApi, totalTokens, question, selectedTools]
     );
+
     // AnswerList component
     const answerList = useMemo(
         () => (
@@ -386,6 +404,7 @@ const BotChat = () => {
         ),
         [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
     );
+
     const layout = useMemo(
         () => (
             <>
@@ -403,6 +422,8 @@ const BotChat = () => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={() => setShowSidebar(true)}
+                    clearChat={clearChat}
+                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -418,10 +439,14 @@ const BotChat = () => {
             toolStatuses,
             availableLLMs,
             LLM.llm_name,
-            onLLMSelectionChange
+            onLLMSelectionChange,
+            showSidebar,
+            clearChat,
+            isLoadingRef.current
         ]
     );
+
     return layout;
 };
 
-export default BotChat;
+export default UnifiedBotChat;

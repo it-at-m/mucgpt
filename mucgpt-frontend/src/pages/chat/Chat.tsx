@@ -606,6 +606,9 @@ const Chat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
+                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
+                    clearChat={clearChat}
+                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -621,7 +624,9 @@ const Chat = () => {
             toolStatuses,
             availableLLMs,
             LLM.llm_name,
-            onLLMSelectionChange
+            onLLMSelectionChange,
+            clearChat,
+            isLoadingRef.current
         ]
     );
 

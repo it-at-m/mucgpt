@@ -18,6 +18,7 @@ import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
 import LocalBot from "./pages/bot/LocalBot";
 import RefactoredOwnedCommunityBot from "./pages/bot/OwnedCommunityBot";
 import RefactoredCommunityBot from "./pages/bot/CommunityBot";
+import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToastContext";
 initializeIcons();
 
 const router = createHashRouter([
@@ -96,15 +97,17 @@ async function enableMocking() {
 enableMocking().then(() => {
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <React.StrictMode>
-            <LanguageContextProvider>
-                <LLMContextProvider>
-                    <QuickPromptProvider>
-                        <HeaderContextProvider>
-                            <RouterProvider router={router} />
-                        </HeaderContextProvider>
-                    </QuickPromptProvider>
-                </LLMContextProvider>
-            </LanguageContextProvider>
+            <GlobalToastProvider>
+                <LanguageContextProvider>
+                    <LLMContextProvider>
+                        <QuickPromptProvider>
+                            <HeaderContextProvider>
+                                <RouterProvider router={router} />
+                            </HeaderContextProvider>
+                        </QuickPromptProvider>
+                    </LLMContextProvider>
+                </LanguageContextProvider>
+            </GlobalToastProvider>
         </React.StrictMode>
     );
 });

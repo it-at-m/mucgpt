@@ -1,4 +1,4 @@
-import { getConfig, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
+import { getConfig, handleApiRequest, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
 import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Bot } from "./models";
 
 /**
@@ -18,21 +18,19 @@ export async function getUserSubscriptionsApi(): Promise<{ id: string; name: str
  */
 
 export async function unsubscribeFromAssistantApi(assistantId: string): Promise<{ message: string }> {
-    const response = await fetch(`/api/user/subscriptions/${assistantId}`, {
-        method: "DELETE",
-        headers: {
-            ...getConfig().headers
-        }
-    });
-    handleRedirect(response, true);
-    const parsedResponse = await handleResponse(response);
-    return parsedResponse;
+    return handleApiRequest(
+        () =>
+            fetch(`/api/user/subscriptions/${assistantId}`, {
+                method: "DELETE",
+                headers: {
+                    ...getConfig().headers
+                }
+            }),
+        "Failed to unsubscribe from assistant"
+    );
 }
 export async function subscribeToAssistantApi(assistantId: string): Promise<{ message: string }> {
-    const response = await fetch(`/api/user/subscriptions/${assistantId}`, postConfig({}));
-    handleRedirect(response, true);
-    const parsedResponse = await handleResponse(response);
-    return parsedResponse;
+    return handleApiRequest(() => fetch(`/api/user/subscriptions/${assistantId}`, postConfig({})), "Failed to subscribe to assistant");
 }
 export async function getOwnedCommunityBots(): Promise<AssistantResponse[]> {
     const response = await fetch("/api/user/bots", getConfig());

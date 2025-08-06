@@ -118,6 +118,32 @@ export function getHeaders(): Headers {
 }
 
 /**
+ * Handles API request execution with consistent error handling
+ * @param request The fetch request to execute
+ * @param defaultErrorMessage Default error message if none is provided by the API
+ * @returns Promise with the parsed response
+ */
+export async function handleApiRequest<T>(request: () => Promise<Response>, defaultErrorMessage: string): Promise<T> {
+    try {
+        const response = await request();
+        handleRedirect(response, true);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `${defaultErrorMessage}: ${response.statusText}`);
+        }
+
+        const parsedResponse = await handleResponse(response);
+        return parsedResponse;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error(`An unexpected error occurred: ${defaultErrorMessage.toLowerCase()}`);
+    }
+}
+
+/**
  * Returns the XSRF-TOKEN.
  * @returns {string|string}
  */

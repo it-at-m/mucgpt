@@ -1,10 +1,9 @@
-import { getConfig, handleRedirect, handleResponse } from "./fetch-utils";
+import { getConfig, handleApiRequest } from "./fetch-utils";
 import { User } from "./models";
 
 export async function getUser(): Promise<User> {
-    const response = await fetch("/api/sso/userinfo", getConfig());
-    handleRedirect(response, true);
-    const json: Partial<User> = await handleResponse(response);
+    const json: Partial<User> = await handleApiRequest(() => fetch("/api/sso/userinfo", getConfig()), "Failed to get user information");
+
     const u: Partial<User> = {};
     u.sub = json.sub || "";
 

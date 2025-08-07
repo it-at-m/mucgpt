@@ -317,7 +317,11 @@ i18n
                             no_assistants_found: "Keine Assistenten gefunden, die Ihren Kriterien entsprechen.",
                             back_to_search: "Zurück zur Suche",
                             already_saved: "Bereits gespeichert",
-                            assistant_already_saved: "Assistent ist bereits gespeichert!"
+                            assistant_already_saved: "Assistent ist bereits gespeichert!",
+                            subscribe_success_title: "Assistent {{title}} erfolgreich abonniert",
+                            subscribe_success_message: "Du hast den Assistenten erfolgreich abonniert.",
+                            subscribe_failed_title: "Fehler beim Abonnieren des Assistenten {{title}}",
+                            subscribe_failed_default: "Beim Abonnieren des Assistenten ist ein Fehler aufgetreten. Bitte versuche es erneut."
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -595,7 +599,6 @@ i18n
                             save: "Save",
                             saved_successfully: "Succesfully saved!",
                             bot_saved_description: "The assistant {{botName}} has been successfully saved.",
-                            // Stepper step titles
                             step_title: "Title",
                             step_description: "Description",
                             step_system_prompt: "System Prompt",
@@ -603,10 +606,8 @@ i18n
                             step_quick_prompts: "Quick Prompts",
                             step_examples: "Examples",
                             step_advanced_settings: "Advanced Settings",
-                            // Navigation buttons
                             next: "Next",
                             previous: "Previous",
-                            // Close dialog
                             close_dialog_title: "Close Dialog",
                             close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost.",
                             cancel: "Cancel"
@@ -633,7 +634,11 @@ i18n
                             no_assistants_found: "No assistants found matching your criteria.",
                             back_to_search: "Back to Search",
                             already_saved: "Already Saved",
-                            assistant_already_saved: "Assistant is already saved!"
+                            assistant_already_saved: "Assistant is already saved!",
+                            subscribe_success_title: "Assistant {{title}} successfully subscribed",
+                            subscribe_success_message: "You have successfully subscribed to the assistant.",
+                            subscribe_failed_title: "Error subscribing to {{title}}",
+                            subscribe_failed_default: "An error occurred while subscribing to the assistant. Please try again."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -949,7 +954,11 @@ i18n
                             no_assistants_found: "Koane Assistentn gfundn, de zu deine Kriterien passn.",
                             back_to_search: "Zruck zur Such",
                             already_saved: "Scho gspeichert",
-                            assistant_already_saved: "Assistent is scho gspeichert!"
+                            assistant_already_saved: "Assistent is scho gspeichert!",
+                            subscribe_success_title: "Assistent {{title}} erfolgreich abonniert",
+                            subscribe_success_message: "Du host den Assistent erfolgreich abonniert.",
+                            subscribe_failed_title: "Fehler beim Abonnieren vom Assistentn {{title}}",
+                            subscribe_failed_default: "Beim Abonnieren vom Assistentn is a Fehler aufgtretn. Bitte versuch's amoi."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -1246,7 +1255,7 @@ i18n
                             search_bots: "Rechercher des assistants"
                         },
                         community_bots: {
-                            title: "Assistants Communautaires", // French
+                            title: "Assistants Communautaires",
                             search: "Rechercher des assistants",
                             filter_by_tag: "Filtrer par tag",
                             save: "Enregistrer l'assistant",
@@ -1264,7 +1273,11 @@ i18n
                             no_assistants_found: "Aucun assistant trouvé correspondant à vos critères.",
                             back_to_search: "Retour à la recherche",
                             already_saved: "Déjà enregistré",
-                            assistant_already_saved: "L'assistant est déjà enregistré !"
+                            assistant_already_saved: "L'assistant est déjà enregistré !",
+                            subscribe_success_title: "Assistant {{title}} abonné avec succès",
+                            subscribe_success_message: "Vous vous êtes abonné avec succès à l'assistant.",
+                            subscribe_failed_title: "Erreur lors de l'abonnement à {{title}}",
+                            subscribe_failed_default: "Une erreur est survenue lors de l'abonnement à l'assistant. Veuillez réessayer."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -1578,7 +1591,11 @@ i18n
                             no_assistants_found: "Не знайдено асистентів, що відповідають вашим критеріям.",
                             back_to_search: "Повернутися до пошуку",
                             already_saved: "Вже збережено",
-                            assistant_already_saved: "Асистент вже збережено!"
+                            assistant_already_saved: "Асистент вже збережено!",
+                            subscribe_success_title: "Асистент {{title}} успішно підписаний",
+                            subscribe_success_message: "Ви успішно підписалися на асистента.",
+                            subscribe_failed_title: "Помилка при підписці на {{title}}",
+                            subscribe_failed_default: "Під час підписки на асистента сталася помилка. Будь ласка, спробуйте ще раз."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

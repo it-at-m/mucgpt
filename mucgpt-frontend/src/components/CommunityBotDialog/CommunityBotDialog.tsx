@@ -133,13 +133,16 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
 
         try {
             await subscribeToAssistantApi(choosenBot.id);
-            showSuccess(`Successfully subscribed to ${choosenBot.title}`, "You can now start using this assistant in your conversations.");
+            showSuccess(
+                t("components.community_bots.subscribe_success_title", { title: choosenBot.title }),
+                t("components.community_bots.subscribe_success_message")
+            );
             setShowBotDialog(false);
             setShowSearchDialogInput(false);
             window.location.href = "/#/communitybot/" + choosenBot.id;
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-            showError(`Failed to subscribe to ${choosenBot.title}`, errorMessage);
+            const errorMessage = error instanceof Error ? error.message : t("components.community_bots.subscribe_failed_default");
+            showError(t("components.community_bots.subscribe_failed_title", { title: choosenBot.title }), errorMessage);
         }
     };
 

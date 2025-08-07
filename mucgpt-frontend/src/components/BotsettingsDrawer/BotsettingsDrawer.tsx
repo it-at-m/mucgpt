@@ -44,7 +44,18 @@ interface Props {
     strategy: BotStrategy;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, minimized, isOwned, clearChat, clearChatDisabled, onToggleMinimized, strategy }: Props) => {
+export const BotsettingsDrawer = ({
+    bot,
+    onBotChange,
+    onDeleteBot,
+    history,
+    minimized,
+    isOwned,
+    clearChat,
+    clearChatDisabled,
+    onToggleMinimized,
+    strategy
+}: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(bot.description);

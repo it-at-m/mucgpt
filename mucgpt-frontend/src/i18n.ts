@@ -239,7 +239,16 @@ i18n
                             back: "Zurück",
                             save: "Speichern",
                             describe: "Beschreibe die Funktion...",
-                            skip: "Überspringen"
+                            skip: "Überspringen",
+                            bot_saved_success: "Assistent erfolgreich gespeichert!",
+                            bot_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
+                            bot_creation_failed: "Assistent konnte nicht erstellt werden",
+                            save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
+                            bot_save_failed: "Speichern des Assistenten fehlgeschlagen",
+                            save_bot_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
+                            bot_generated_success: "Assistent erfolgreich generiert!",
+                            bot_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
+                            bot_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen"
                         },
                         edit_bot_dialog: {
                             title: "Assistent bearbeiten",
@@ -548,7 +557,16 @@ i18n
                             back: "Back",
                             save: "Save",
                             describe: "Describe the function...",
-                            skip: "Skip"
+                            skip: "Skip",
+                            bot_saved_success: "Assistant saved successfully!",
+                            bot_saved_message: 'Your assistant "{{title}}" has been created and saved.',
+                            bot_creation_failed: "Assistant could not be created",
+                            save_config_failed: "Failed to save assistant configuration",
+                            bot_save_failed: "Failed to save assistant",
+                            save_bot_failed: "Failed to save assistant configuration",
+                            bot_generated_success: "Assistant generated successfully!",
+                            bot_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
+                            bot_generation_failed: "Failed to generate assistant configuration"
                         },
                         edit_bot_dialog: {
                             title: "Edit Assistant",
@@ -857,7 +875,16 @@ i18n
                             back: "Zruck",
                             save: "Speichern",
                             describe: "Beschreib die Funktion...",
-                            skip: "Übaspringa"
+                            skip: "Übaspringa",
+                            bot_saved_success: "Assistent erfolgreich gspeichert!",
+                            bot_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
+                            bot_creation_failed: "Assistent konnt ned erstellt werdn",
+                            save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
+                            bot_save_failed: "Speichern vom Assistenten is fehlgschlogn",
+                            save_bot_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
+                            bot_generated_success: "Assistent erfolgreich generiert!",
+                            bot_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
+                            bot_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn"
                         },
                         edit_bot_dialog: {
                             title: "Assistent bearbeiten",
@@ -1120,7 +1147,7 @@ i18n
                             }
                         },
                         answericon: {
-                            label: "Message de MUCGPT"
+                            label: "MUCGPT message"
                         },
                         usericon: {
                             label: "Votre message"
@@ -1165,7 +1192,16 @@ i18n
                             back: "Retour",
                             save: "Enregistrer",
                             describe: "Décrivez la fonction...",
-                            skip: "Passer"
+                            skip: "Passer",
+                            bot_saved_success: "Assistant enregistré avec succès!",
+                            bot_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
+                            bot_creation_failed: "L'assistant n'a pas pu être créé",
+                            save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
+                            bot_save_failed: "Échec de l'enregistrement de l'assistant",
+                            save_bot_failed: "Échec de l'enregistrement de la configuration de l'assistant",
+                            bot_generated_success: "Assistant généré avec succès!",
+                            bot_generated_message: "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
+                            bot_generation_failed: "Échec de la génération de la configuration de l'assistant"
                         },
                         edit_bot_dialog: {
                             title: "Modifier l'assistant",
@@ -1473,7 +1509,16 @@ i18n
                             back: "Назад",
                             save: "Зберегти",
                             describe: "Опишіть функцію...",
-                            skip: "Пропустити"
+                            skip: "Пропустити",
+                            bot_saved_success: "Асистента успішно збережено!",
+                            bot_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
+                            bot_creation_failed: "Асистента не вдалося створити",
+                            save_config_failed: "Не вдалося зберегти конфігурацію асистента",
+                            bot_save_failed: "Не вдалося зберегти асистента",
+                            save_bot_failed: "Не вдалося зберегти конфігурацію асистента",
+                            bot_generated_success: "Асистента успішно згенеровано!",
+                            bot_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете її переглянути та налаштувати.",
+                            bot_generation_failed: "Не вдалося згенерувати конфігурацію асистента"
                         },
                         edit_bot_dialog: {
                             title: "Редагувати асистента",

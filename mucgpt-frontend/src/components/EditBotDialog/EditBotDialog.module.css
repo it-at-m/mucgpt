@@ -98,16 +98,21 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    --dialog-content-height: calc(90vh - 150px);
+    height: 90vh;
+    position: relative;
 }
 
 @media (max-width: 650px) {
     .dialog {
         width: 98%;
-        height: 98%;
+        height: 98vh;
         min-width: 98%;
         max-width: 98%;
         min-height: 98%;
         max-height: 98%;
+        --dialog-content-height: calc(98vh - 200px);
+        position: relative;
     }
 }
 
@@ -127,7 +132,7 @@
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 24px;
+    padding: 24px 24px 80px 24px; /* Extra bottom padding for fixed actions */
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -144,6 +149,8 @@
     min-height: 0;
     flex: 1;
     overflow: hidden;
+    max-height: var(--dialog-content-height, calc(100vh - 300px));
+    position: relative;
 }
 
 .formLabel {
@@ -152,6 +159,17 @@
     margin-bottom: 8px;
     display: block;
     color: var(--colorNeutralForeground1);
+}
+
+.flexibleTextarea {
+    flex: 1;
+    min-height: 120px;
+    max-height: min(60vh, var(--dialog-content-height, 400px));
+    resize: vertical;
+    overflow-y: auto;
+    height: auto;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .advancedSettingsButton {
@@ -204,7 +222,7 @@
 .dynamicFieldContainer {
     margin-bottom: 20px;
     overflow-y: auto;
-    max-height: 50vh;
+    max-height: calc(100% - 200px);
     min-height: 200px;
     width: 100%;
     flex: 1;
@@ -405,6 +423,8 @@
     background-color: var(--colorNeutralBackground2);
     border-bottom: 1px solid var(--colorNeutralStroke2);
     flex-shrink: 0;
+    position: relative;
+    z-index: 9;
 }
 
 .stepperContainer {
@@ -474,7 +494,11 @@
     border-top: 1px solid var(--colorNeutralStroke2);
     background-color: var(--colorNeutralBackground1);
     flex-shrink: 0;
-    margin-top: auto;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
 }
 
 @media (max-width: 650px) {
@@ -506,10 +530,15 @@
 
     .dialogActionsContainer {
         padding: 16px 20px;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
     }
 
     .scrollableDialogContent {
-        padding: 20px;
+        padding: 20px 20px 100px 20px; /* Extra bottom padding for fixed actions on mobile */
     }
 
     .dynamicFieldContainer {
@@ -519,6 +548,12 @@
 
     .formField {
         margin-bottom: 16px;
+        max-height: calc(100vh - 350px);
+    }
+
+    .flexibleTextarea {
+        min-height: 100px;
+        max-height: min(50vh, var(--dialog-content-height, 300px));
     }
 }
 
@@ -529,6 +564,9 @@
     width: 100%;
     padding: 16px 24px 0 24px;
     background-color: var(--colorNeutralBackground1);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }
 
 .closeButton {

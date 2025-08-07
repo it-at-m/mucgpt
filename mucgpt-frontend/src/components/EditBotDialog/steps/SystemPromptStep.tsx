@@ -42,11 +42,11 @@ export const SystemPromptStep = ({ systemPrompt, isOwner, onSystemPromptChange, 
                 </label>
                 <Textarea
                     placeholder={t("components.edit_bot_dialog.system_prompt")}
-                    resize="vertical"
                     value={systemPrompt}
                     size="large"
                     onChange={onPromptChanged}
                     disabled={!isOwner}
+                    className={styles.flexibleTextarea}
                 />
             </Field>
         </DialogContent>

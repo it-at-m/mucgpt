@@ -36,6 +36,7 @@ export const TitleStep = ({ title, isOwner, onTitleChange, onHasChanged }: Title
                     onChange={onTitleChanged}
                     maxLength={100}
                     disabled={!isOwner}
+                    className={styles.flexibleTextarea}
                 />
             </Field>
         </DialogContent>

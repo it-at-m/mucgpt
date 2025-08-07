@@ -32,10 +32,10 @@ export const DescriptionStep = ({ description, isOwner, onDescriptionChange, onH
                 <Textarea
                     placeholder={t("components.edit_bot_dialog.bot_description")}
                     value={description}
-                    resize="vertical"
                     size="large"
                     onChange={onDescriptionChanged}
                     disabled={!isOwner}
+                    className={styles.flexibleTextarea}
                 />
             </Field>
         </DialogContent>

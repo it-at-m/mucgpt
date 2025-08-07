@@ -20,40 +20,63 @@ interface QuickPromptsStepProps {
 export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, onHasChanged }: QuickPromptsStepProps) => {
     const { t } = useTranslation();
 
-    const addQuickPrompt = () => {
+    const addQuickPrompt = useCallback(() => {
         // Only add if there is no empty quick prompt
         const hasEmpty = quickPrompts.some(ex => !ex.label.trim() || !ex.prompt.trim());
         if (!hasEmpty) {
             onQuickPromptsChange([...quickPrompts, { label: "", prompt: "", tooltip: "" }]);
             onHasChanged(true);
         }
-    };
+    }, [quickPrompts, onQuickPromptsChange, onHasChanged]);
 
     const onChangeQuickPromptLabel = useCallback(
-        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const newValue = e.currentTarget.value;
             const updated = [...quickPrompts];
-            updated[index].label = e.currentTarget.value;
-            updated[index].tooltip = updated[index].label;
+            updated[index] = {
+                ...updated[index],
+                label: newValue
+            };
             onQuickPromptsChange(updated);
             onHasChanged(true);
         },
         [quickPrompts, onQuickPromptsChange, onHasChanged]
+    );
+
+    const onBlurQuickPromptLabel = useCallback(
+        (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const newValue = e.currentTarget.value;
+            const updated = [...quickPrompts];
+            updated[index] = {
+                ...updated[index],
+                tooltip: newValue
+            };
+            onQuickPromptsChange(updated);
+        },
+        [quickPrompts, onQuickPromptsChange]
     );
 
     const onChangeQuickPromptPrompt = useCallback(
-        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const newValue = e.currentTarget.value;
             const updated = [...quickPrompts];
-            updated[index].prompt = e.currentTarget.value;
+            updated[index] = {
+                ...updated[index],
+                prompt: newValue
+            };
             onQuickPromptsChange(updated);
             onHasChanged(true);
         },
         [quickPrompts, onQuickPromptsChange, onHasChanged]
     );
 
-    const removeQuickPrompt = (index: number) => {
-        onQuickPromptsChange(quickPrompts.filter((_, i) => i !== index));
-        onHasChanged(true);
-    };
+    const removeQuickPrompt = useCallback(
+        (index: number) => {
+            onQuickPromptsChange(quickPrompts.filter((_, i) => i !== index));
+            onHasChanged(true);
+        },
+        [quickPrompts, onQuickPromptsChange, onHasChanged]
+    );
 
     return (
         <DialogContent>
@@ -70,7 +93,8 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                                             <Input
                                                 placeholder={t("components.edit_bot_dialog.quick_prompt_label_placeholder")}
                                                 value={qp.label}
-                                                onChange={e => onChangeQuickPromptLabel(e, index)}
+                                                onChange={onChangeQuickPromptLabel(index)}
+                                                onBlur={onBlurQuickPromptLabel(index)}
                                                 disabled={!isOwner}
                                                 className={styles.dynamicFieldInput}
                                             />
@@ -80,7 +104,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                                             <Textarea
                                                 placeholder={t("components.edit_bot_dialog.quick_prompt_text_placeholder")}
                                                 value={qp.prompt}
-                                                onChange={e => onChangeQuickPromptPrompt(e, index)}
+                                                onChange={onChangeQuickPromptPrompt(index)}
                                                 disabled={!isOwner}
                                                 rows={2}
                                                 className={styles.dynamicFieldInput}

@@ -19,19 +19,23 @@ interface ExamplesStepProps {
 export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged }: ExamplesStepProps) => {
     const { t } = useTranslation();
 
-    const addExample = () => {
+    const addExample = useCallback(() => {
         // Only add if there is no empty example
         const hasEmpty = examples.some(ex => !ex.text.trim() || !ex.value.trim());
         if (!hasEmpty) {
             onExamplesChange([...examples, { text: "", value: "" }]);
             onHasChanged(true);
         }
-    };
+    }, [examples, onExamplesChange, onHasChanged]);
 
     const onChangeExampleText = useCallback(
-        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const newValue = e.currentTarget.value;
             const updated = [...examples];
-            updated[index].text = e.currentTarget.value;
+            updated[index] = {
+                ...updated[index],
+                text: newValue
+            };
             onExamplesChange(updated);
             onHasChanged(true);
         },
@@ -39,19 +43,26 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
     );
 
     const onChangeExampleValue = useCallback(
-        (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => {
+        (index: number) => (e: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+            const newValue = e.currentTarget.value;
             const updated = [...examples];
-            updated[index].value = e.currentTarget.value;
+            updated[index] = {
+                ...updated[index],
+                value: newValue
+            };
             onExamplesChange(updated);
             onHasChanged(true);
         },
         [examples, onExamplesChange, onHasChanged]
     );
 
-    const removeExample = (index: number) => {
-        onExamplesChange(examples.filter((_, i) => i !== index));
-        onHasChanged(true);
-    };
+    const removeExample = useCallback(
+        (index: number) => {
+            onExamplesChange(examples.filter((_, i) => i !== index));
+            onHasChanged(true);
+        },
+        [examples, onExamplesChange, onHasChanged]
+    );
 
     return (
         <DialogContent>
@@ -68,7 +79,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                                             <Input
                                                 placeholder={t("components.edit_bot_dialog.example_text_placeholder")}
                                                 value={ex.text}
-                                                onChange={e => onChangeExampleText(e, index)}
+                                                onChange={onChangeExampleText(index)}
                                                 disabled={!isOwner}
                                                 className={styles.dynamicFieldInput}
                                             />
@@ -78,7 +89,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                                             <Textarea
                                                 placeholder={t("components.edit_bot_dialog.example_value_placeholder")}
                                                 value={ex.value}
-                                                onChange={e => onChangeExampleValue(e, index)}
+                                                onChange={onChangeExampleValue(index)}
                                                 disabled={!isOwner}
                                                 rows={2}
                                                 className={styles.dynamicFieldInput}

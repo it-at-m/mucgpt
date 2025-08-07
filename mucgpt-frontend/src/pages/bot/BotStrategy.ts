@@ -63,8 +63,10 @@ export class CommunityBotStrategy implements BotStrategy {
         };
     }
 
-    async deleteBot(botId: string): Promise<void> {
+    async deleteBot(botId: string, botStorageService: BotStorageService): Promise<void> {
         await unsubscribeFromAssistantApi(botId);
+        await botStorageService.deleteChatsForBot(botId);
+        window.location.href = "/";
     }
 }
 

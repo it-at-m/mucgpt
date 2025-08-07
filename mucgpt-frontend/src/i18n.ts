@@ -183,12 +183,14 @@ i18n
                             show_configutations: "Konfigurationen anzeigen",
                             close_configutations: "Konfigurationen schließen",
                             "unpublish-button": "Veröffentlichung aufheben",
+                            "remove-assistant": "Assistent entfernen",
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
                             deleteDialog: {
                                 title: "Bot Löschen",
                                 content: "Wollen Sie den Bot wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
                                 unpublish: "Wollen Sie die Veröffentlichung des Bots wirklich aufheben? Dies macht ihn für andere nicht mehr verfügbar.",
+                                remove: "Wollen Sie den Assistenten wirklich entfernen? Dadurch werden alle Chats mit diesem Assistenten gelöscht.",
                                 confirm: "Ja",
                                 cancel: "Nein"
                             }
@@ -251,6 +253,9 @@ i18n
                             collapse: "Einklappen",
                             temperature: "Temperatur",
                             max_output_tokens: "Maximale Ausgabe-Token",
+                            departments: "Abteilungen",
+                            departments_info:
+                                "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
                             quick_prompts: "Vorgeschlagene Antworten",
                             quick_prompts_placeholder: "Fügen Sie Vorgeschlagene Antworten hinzu, eine pro Zeile (Label|Prompt)",
                             quick_prompt_label_placeholder: "Geben Sie das Label ein...",
@@ -492,12 +497,14 @@ i18n
                             show_configutations: "Show configurations",
                             close_configutations: "Close configurations",
                             "unpublish-button": "Unpublish",
+                            "remove-assistant": "Remove Assistant",
                             publish: "Publish",
                             unpublish: "Unpublish",
                             deleteDialog: {
                                 title: "Delete Bot",
                                 content: "Are you sure you want to delete the bot? This action cannot be undone.",
                                 unpublish: "Are you sure you want to unpublish the bot? This will make it unavailable to others.",
+                                remove: "Are you sure you want to remove the assistant? This will delete all chats with this assistant.",
                                 confirm: "Yes",
                                 cancel: "No"
                             }
@@ -560,6 +567,9 @@ i18n
                             collapse: "Collapse",
                             temperature: "Temperature",
                             max_output_tokens: "Max Output Tokens",
+                            departments: "Departments",
+                            departments_info:
+                                "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
                             quick_prompts: "Quick Prompts",
                             quick_prompts_placeholder: "Add quick prompts, one per line (label|prompt)",
                             quick_prompt_label_placeholder: "Enter the label...",
@@ -801,12 +811,14 @@ i18n
                             show_configutations: "Konfigurationen anzeigen",
                             close_configutations: "Konfigurationen schließen",
                             "unpublish-button": "Veröffentlichung aufheb'n",
+                            "remove-assistant": "Assistent entfern'n",
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
                             deleteDialog: {
                                 title: "Bot Löschn",
                                 content: "Wuißt du den Bot echt löschn? Des ko nimma rückgängig gmocht werdn.",
                                 unpublish: "Wuißt du de Veröffentlichung vom Bot echt aufheb'n? Dann könn'n andere den nimma nutzen.",
+                                remove: "Wuißt du den Assistenten echt entfern'n? Dadurch werdn alle Chats mit dem Assistenten glöscht.",
                                 confirm: "Ja",
                                 cancel: "Na"
                             }
@@ -869,6 +881,9 @@ i18n
                             collapse: "Eiklappn",
                             temperature: "Temperatur",
                             max_output_tokens: "Maximale Ausgabe-Token",
+                            departments: "Abteilungen",
+                            departments_info:
+                                "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
                             quick_prompts: "Vorgeschlagene Antworten",
                             quick_prompts_placeholder: "Füg vorgschlagene Antworn hinzu, oane pro Zeile (Label|Prompt)",
                             quick_prompt_label_placeholder: "Gib des Label ei...",
@@ -1109,12 +1124,14 @@ i18n
                             show_configutations: "Afficher les configurations",
                             close_configutations: "Fermer les configurations",
                             "unpublish-button": "Dépublier",
+                            "remove-assistant": "Retirer l'assistant",
                             publish: "Publier",
                             unpublish: "Dépublier",
                             deleteDialog: {
                                 title: "Supprimer le Bot",
                                 content: "Êtes-vous sûr de vouloir supprimer le bot ? Cette action est irréversible.",
                                 unpublish: "Êtes-vous sûr de vouloir dépublier le bot ? Il ne sera plus disponible pour les autres.",
+                                remove: "Êtes-vous sûr de vouloir retirer l'assistant ? Cela supprimera toutes les conversations avec cet assistant.",
                                 confirm: "Oui",
                                 cancel: "Non"
                             }
@@ -1177,6 +1194,9 @@ i18n
                             collapse: "Réduire",
                             temperature: "Température",
                             max_output_tokens: "Tokens de sortie max",
+                            departments: "Départements",
+                            departments_info:
+                                "Ce sont les départements qui ont accès à l'assistant. Tous les départements dans la hiérarchie sous les départements sélectionnés ont également accès.",
                             quick_prompts: "Prompts rapides",
                             quick_prompts_placeholder: "Ajoutez des prompts rapides, un par ligne (label|prompt)",
                             quick_prompt_label_placeholder: "Entrez le label...",
@@ -1417,12 +1437,14 @@ i18n
                             show_configutations: "Показати конфігурації",
                             close_configutations: "Закрити конфігурації",
                             "unpublish-button": "Скасувати публікацію",
+                            "remove-assistant": "Видалити асистента",
                             publish: "Опублікувати",
                             unpublish: "Скасувати публікацію",
                             deleteDialog: {
                                 title: "Видалити Бота",
                                 content: "Ви впевнені, що хочете видалити бота? Цю дію не можна скасувати.",
                                 unpublish: "Ви впевнені, що хочете скасувати публікацію бота? Він стане недоступним для інших.",
+                                remove: "Ви впевнені, що хочете видалити асистента? Це видалить усі чати з цим асистентом.",
                                 confirm: "Так",
                                 cancel: "Ні"
                             }
@@ -1485,6 +1507,8 @@ i18n
                             collapse: "Згорнути",
                             temperature: "Температура",
                             max_output_tokens: "Макс. токени виводу",
+                            departments: "Відділи",
+                            departments_info: "Це відділи, які мають доступ до асистента. Всі відділи в ієрархії під вибраними відділами також мають доступ.",
                             quick_prompts: "Швидкі запити",
                             quick_prompts_placeholder: "Додайте швидкі запити, по одному на рядок (мітка|запит)",
                             quick_prompt_label_placeholder: "Введіть мітку...",

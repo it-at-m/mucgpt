@@ -17,9 +17,10 @@ function isDepartmentPrefixMatch(a: string, b: string) {
 interface Props {
     publishDepartments: string[];
     setPublishDepartments: (departments: string[]) => void;
+    disabled?: boolean;
 }
 
-export const DepartementDropdown = ({ publishDepartments, setPublishDepartments }: Props) => {
+export const DepartementDropdown = ({ publishDepartments, setPublishDepartments, disabled }: Props) => {
     const { t } = useTranslation();
     const [departments, setDepartments] = useState<string[]>([]);
     const [search, setSearch] = useState("");
@@ -41,7 +42,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
                 setPublishDepartments([...publishDepartments, user.department]);
             }
         }
-    }, [user, departments, publishDepartments, setPublishDepartments, isLoading]);
+    }, [user, departments, publishDepartments, isLoading]);
 
     // First filter departments based on search and not already selected
     const filteredDepartments = departments.filter(
@@ -79,12 +80,20 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
                 {publishDepartments.map(d => (
                     <span key={d} className={styles.selected_item}>
                         {d}
-                        <button onClick={() => handleRemove(d)} className={styles.selected_button} aria-label={`Remove ${d}`} type="button">
+                        <button
+                            onClick={() => handleRemove(d)}
+                            className={styles.selected_button}
+                            aria-label={`Remove ${d}`}
+                            type="button"
+                            disabled={disabled}
+                            hidden={disabled}
+                        >
                             ×
                         </button>
                     </span>
                 ))}
             </div>
+
             <input
                 type="text"
                 value={search}
@@ -96,6 +105,8 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments 
                     setShow(true);
                 }}
                 className={styles.inputField}
+                disabled={disabled}
+                hidden={disabled}
             />
             {show && (
                 <ul

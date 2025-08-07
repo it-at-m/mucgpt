@@ -1,4 +1,4 @@
-import { getConfig, handleApiRequest, postConfig } from "./fetch-utils";
+import { getConfig, handleApiRequest, postConfig, deleteConfig } from "./fetch-utils";
 import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Bot } from "./models";
 
 /**
@@ -15,16 +15,7 @@ export async function getUserSubscriptionsApi(): Promise<{ id: string; name: str
  */
 
 export async function unsubscribeFromAssistantApi(assistantId: string): Promise<{ message: string }> {
-    return handleApiRequest(
-        () =>
-            fetch(`/api/user/subscriptions/${assistantId}`, {
-                method: "DELETE",
-                headers: {
-                    ...getConfig().headers
-                }
-            }),
-        "Failed to unsubscribe from assistant"
-    );
+    return handleApiRequest(() => fetch(`/api/user/subscriptions/${assistantId}`, deleteConfig()), "Failed to unsubscribe from assistant");
 }
 export async function subscribeToAssistantApi(assistantId: string): Promise<{ message: string }> {
     return handleApiRequest(() => fetch(`/api/user/subscriptions/${assistantId}`, postConfig({})), "Failed to subscribe to assistant");

@@ -68,6 +68,21 @@ export function patchConfig(body: any): RequestInit {
     };
 }
 
+/**
+ * Returns a default DELETE-Config for fetch
+ * @param body Optional body to be transferred
+ */
+export function deleteConfig(body?: any): RequestInit {
+    return {
+        method: "DELETE",
+        body: body ? JSON.stringify(body) : undefined,
+        headers: getHeaders(),
+        mode: "cors",
+        credentials: "same-origin",
+        redirect: "manual"
+    };
+}
+
 export function handleRedirect(response: Response, reload = true) {
     if (response.type === "opaqueredirect") {
         if (reload) {

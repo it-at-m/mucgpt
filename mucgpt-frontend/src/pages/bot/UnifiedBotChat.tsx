@@ -22,6 +22,7 @@ import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { BotStrategy } from "./BotStrategy";
 import { chatApi } from "../../api/core-client";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 
 interface UnifiedBotChatProps {
     strategy: BotStrategy;
@@ -40,6 +41,8 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
         allChats: [],
         totalTokens: 0
     });
+
+    const { showError, showSuccess } = useGlobalToastContext();
 
     // Destructuring for easier access
     const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
@@ -118,14 +121,32 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                                     dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
                                 }
                             })
-                            .then(() => fetchHistory());
+                            .then(() => fetchHistory())
+                            .catch(err => {
+                                console.error("Error loading chat history:", err);
+                                showError(t("components.bot_chat.load_chat_failed"), t("components.bot_chat.load_chat_failed_message"));
+                            });
+                    } else {
+                        showError(t("components.bot_chat.load_bot_failed"), t("components.bot_chat.bot_not_found"));
+                        // wait a moment before redirecting to home
+                        setTimeout(() => {
+                            window.location.href = "/";
+                        }, 2000);
                     }
+                })
+                .catch(err => {
+                    console.error("Error loading bot configuration:", err);
+                    showError(t("components.bot_chat.load_bot_failed"), err instanceof Error ? err.message : t("components.bot_chat.load_bot_failed_message"));
+                    // wait a moment before redirecting to home
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 2000);
                 })
                 .finally(() => {
                     isLoadingRef.current = false;
                 });
         }
-    }, [bot_id, strategy]);
+    }, [bot_id, strategy, t, showError]);
 
     // get History-Funktion
     const fetchHistory = useCallback(() => {
@@ -136,9 +157,15 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
 
     // deleteBot-Funktion
     const onDeleteBot = useCallback(async () => {
-        await strategy.deleteBot(bot_id, botStorageService);
-        window.location.href = "/";
-    }, [strategy, bot_id, botStorageService]);
+        try {
+            await strategy.deleteBot(bot_id, botStorageService);
+            showSuccess(t("components.bot_chat.delete_bot_success"), t("components.bot_chat.delete_bot_success_message", { title: botConfig.title }));
+            window.location.href = "/";
+        } catch (err) {
+            console.error("Error deleting bot:", err);
+            showError(t("components.bot_chat.delete_bot_failed"), err instanceof Error ? err.message : t("components.bot_chat.delete_bot_failed_message"));
+        }
+    }, [strategy, bot_id, botStorageService, showError, showSuccess, t, botConfig.title]);
 
     // callApi-Funktion
     const callApi = useCallback(
@@ -220,18 +247,27 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
             if (!strategy.canEdit) return;
 
             setError(undefined);
-            const result = await strategy.updateBot?.(bot_id, newBot, botConfig, LLM);
+            try {
+                const result = await strategy.updateBot?.(bot_id, newBot, botConfig, LLM);
 
-            if (result?.updatedBot) {
-                setBotConfig(result.updatedBot);
-                setQuickPrompts(result.updatedBot.quick_prompts || []);
-            }
+                if (result?.updatedBot) {
+                    setBotConfig(result.updatedBot);
+                    setQuickPrompts(result.updatedBot.quick_prompts || []);
+                    showSuccess(
+                        t("components.bot_chat.update_bot_success"),
+                        t("components.bot_chat.update_bot_success_message", { title: result.updatedBot.title })
+                    );
+                }
 
-            if (result?.systemPromptTokens !== undefined) {
-                setSystemPromptTokens(result.systemPromptTokens);
+                if (result?.systemPromptTokens !== undefined) {
+                    setSystemPromptTokens(result.systemPromptTokens);
+                }
+            } catch (err) {
+                console.error("Error updating bot:", err);
+                showError(t("components.bot_chat.update_bot_failed"), err instanceof Error ? err.message : t("components.bot_chat.update_bot_failed_message"));
             }
         },
-        [strategy, bot_id, botConfig, LLM, setQuickPrompts, setSystemPromptTokens]
+        [strategy, bot_id, botConfig, LLM, setQuickPrompts, setSystemPromptTokens, showError, showSuccess, t]
     );
 
     // Regenerate-Funktion

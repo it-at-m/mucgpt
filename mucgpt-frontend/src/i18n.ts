@@ -80,10 +80,22 @@ i18n
                         create: "Erstellen"
                     },
                     components: {
-                        roles: {
-                            student: "Student*innen",
-                            secondgrader: "Grundschüler*innen",
-                            retired: "Rentner*innen"
+                        bot_chat: {
+                            load_bot_failed: "Bot konnte nicht geladen werden",
+                            bot_not_found: "Bot wurde nicht gefunden",
+                            load_bot_failed_message: "Beim Laden des Bots ist ein Fehler aufgetreten",
+                            load_chat_failed: "Chat konnte nicht geladen werden",
+                            load_chat_failed_message: "Beim Laden des Chat-Verlaufs ist ein Fehler aufgetreten",
+
+                            delete_bot_success: "Bot wurde gelöscht",
+                            delete_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich gelöscht",
+                            delete_bot_failed: "Bot konnte nicht gelöscht werden",
+                            delete_bot_failed_message: "Beim Löschen des Bots ist ein Fehler aufgetreten",
+
+                            update_bot_success: "Bot wurde aktualisiert",
+                            update_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich aktualisiert",
+                            update_bot_failed: "Bot konnte nicht aktualisiert werden",
+                            update_bot_failed_message: "Beim Aktualisieren des Bots ist ein Fehler aufgetreten"
                         },
                         department_dropdown: {
                             placeholder: "Suche Abteilung...",
@@ -400,10 +412,22 @@ i18n
                         create: "Create"
                     },
                     components: {
-                        roles: {
-                            student: "University Students",
-                            secondgrader: "Second-Graders",
-                            retired: "Pensioners"
+                        bot_chat: {
+                            load_bot_failed: "Bot could not be loaded",
+                            bot_not_found: "Bot was not found",
+                            load_bot_failed_message: "An error occurred while loading the bot",
+                            load_chat_failed: "Chat could not be loaded",
+                            load_chat_failed_message: "An error occurred while loading the chat history",
+
+                            delete_bot_success: "Bot has been deleted",
+                            delete_bot_success_message: "The bot '{{title}}' has been successfully deleted",
+                            delete_bot_failed: "Bot could not be deleted",
+                            delete_bot_failed_message: "An error occurred while deleting the bot",
+
+                            update_bot_success: "Bot has been updated",
+                            update_bot_success_message: "The bot '{{title}}' has been successfully updated",
+                            update_bot_failed: "Bot could not be updated",
+                            update_bot_failed_message: "An error occurred while updating the bot"
                         },
                         department_dropdown: {
                             placeholder: "Search department...",
@@ -717,10 +741,22 @@ i18n
                         create: "Erstellen"
                     },
                     components: {
-                        roles: {
-                            student: "Studentn",
-                            secondgrader: "Grundschüla",
-                            retired: "Rentna"
+                        bot_chat: {
+                            load_bot_failed: "Bot konnt ned geladen werd'n",
+                            bot_not_found: "Bot wurde ned g'funden",
+                            load_bot_failed_message: "Beim Laden vom Bot is a Fehler aufgetreten",
+                            load_chat_failed: "Chat konnt ned geladen werd'n",
+                            load_chat_failed_message: "Beim Laden vom Chatverlauf is a Fehler aufgetreten",
+
+                            delete_bot_success: "Bot is g'schufft worden",
+                            delete_bot_success_message: "Da Bot '{{title}}' is erfolgreich g'schufft worden",
+                            delete_bot_failed: "Bot konnt ned g'schufft werd'n",
+                            delete_bot_failed_message: "Beim Löschn vom Bot is a Fehler aufgetreten",
+
+                            update_bot_success: "Bot is aktualisiert worden",
+                            update_bot_success_message: "Da Bot '{{title}}' is erfolgreich aktualisiert worden",
+                            update_bot_failed: "Bot konnt ned aktualisiert werd'n",
+                            update_bot_failed_message: "Beim Aktualisieren vom Bot is a Fehler aufgetreten"
                         },
                         department_dropdown: {
                             placeholder: "Suach Abteilung...",
@@ -1036,10 +1072,22 @@ i18n
                         create: "Créer"
                     },
                     components: {
-                        roles: {
-                            student: "Étudiant·e·s",
-                            secondgrader: "Élèves de primaire",
-                            retired: "Retraité·e·s"
+                        bot_chat: {
+                            load_bot_failed: "Le bot n'a pas pu être chargé",
+                            bot_not_found: "Le bot n'a pas été trouvé",
+                            load_bot_failed_message: "Une erreur s'est produite lors du chargement du bot",
+                            load_chat_failed: "Le chat n'a pas pu être chargé",
+                            load_chat_failed_message: "Une erreur s'est produite lors du chargement de l'historique du chat",
+
+                            delete_bot_success: "Le bot a été supprimé",
+                            delete_bot_success_message: "Le bot '{{title}}' a été supprimé avec succès",
+                            delete_bot_failed: "Le bot n'a pas pu être supprimé",
+                            delete_bot_failed_message: "Une erreur s'est produite lors de la suppression du bot",
+
+                            update_bot_success: "Le bot a été mis à jour",
+                            update_bot_success_message: "Le bot '{{title}}' a été mis à jour avec succès",
+                            update_bot_failed: "Le bot n'a pas pu être mis à jour",
+                            update_bot_failed_message: "Une erreur s'est produite lors de la mise à jour du bot"
                         },
                         department_dropdown: {
                             placeholder: "Search department...",
@@ -1355,10 +1403,22 @@ i18n
                         create: "Створити"
                     },
                     components: {
-                        roles: {
-                            student: "Студент(к)и",
-                            secondgrader: "Учні початкової школи",
-                            retired: "Пенсіонери"
+                        bot_chat: {
+                            load_bot_failed: "Не вдалося завантажити бота",
+                            bot_not_found: "Бота не знайдено",
+                            load_bot_failed_message: "Сталася помилка під час завантаження бота",
+                            load_chat_failed: "Не вдалося завантажити чат",
+                            load_chat_failed_message: "Сталася помилка під час завантаження історії чату",
+
+                            delete_bot_success: "Бота було видалено",
+                            delete_bot_success_message: "Бота '{{title}}' було успішно видалено",
+                            delete_bot_failed: "Не вдалося видалити бота",
+                            delete_bot_failed_message: "Сталася помилка під час видалення бота",
+
+                            update_bot_success: "Бота було оновлено",
+                            update_bot_success_message: "Бота '{{title}}' було успішно оновлено",
+                            update_bot_failed: "Не вдалося оновити бота",
+                            update_bot_failed_message: "Сталася помилка під час оновлення бота"
                         },
                         department_dropdown: {
                             placeholder: "Пошук відділу...",

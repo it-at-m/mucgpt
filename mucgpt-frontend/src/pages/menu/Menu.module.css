@@ -7,7 +7,8 @@
     max-width: 80%;
     margin-right: 10%;
     margin-left: 10%;
-    height: calc(100vh - 140px);
+    min-height: calc(100vh - 140px);
+    max-height: none;
     overflow-y: auto;
 }
 
@@ -23,12 +24,17 @@
 }
 
 .heading {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     font-weight: bold;
     text-align: center;
     margin-bottom: 50px;
     margin-top: 50px;
     color: var(--colorNeutralBackground1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    position: relative;
+    display: inline-block;
 }
 
 .chatstarter {
@@ -58,26 +64,47 @@
 .rowheader {
     flex: 1;
     display: flex;
-    font-size: var(--fontSizeBase500);
+    font-size: var(--fontSizeBase600);
     font-weight: bold;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--colorBrandStroke2);
+    color: var(--colorBrandForeground1);
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.rowheader::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background-color: var(--colorBrandBackground);
 }
 
 .subrowheader {
     flex: 1;
     display: flex;
-    font-size: var(--fontSizeBase400);
+    font-size: var(--fontSizeBase500);
     font-weight: bold;
     align-items: center;
     justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    padding-left: 10px;
+    border-left: 4px solid var(--colorBrandBackground);
+    color: var(--colorNeutralForeground1);
 }
 
 .row {
     padding-top: 10px;
     padding-bottom: 20px;
     width: 100%;
-    height: 33%;
+    min-height: 120px;
     justify-content: center;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));

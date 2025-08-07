@@ -1,4 +1,4 @@
-import { Checkbox } from "@fluentui/react-components";
+import { Checkbox, InfoLabel } from "@fluentui/react-components";
 import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger } from "@fluentui/react-dialog";
 import { useTranslation } from "react-i18next";
 import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
@@ -156,8 +156,11 @@ export const PublishBotDialog = ({
                                     <Text size={300} className={styles.departmentDescription}>
                                         Wählen Sie die Abteilungen aus, für die der Bot verfügbar sein soll:
                                     </Text>
+                                    <InfoLabel info={<div>{t("components.edit_bot_dialog.departments_info")}</div>}>
+                                        {t("components.edit_bot_dialog.departments")}
+                                    </InfoLabel>
                                     <div className={styles.departmentDropdown}>
-                                        <DepartmentDropdown publishDepartments={bot.hierarchical_access || []} setPublishDepartments={setPublishDepartments} />
+                                        <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
                                     </div>
                                 </div>
                             )}

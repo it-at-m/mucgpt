@@ -146,4 +146,13 @@ export class BotStorageService {
             }
         }
     }
+
+    async deleteChatsForBot(bot_id: string) {
+        const results = await this._getAllChatsAndConfigs((id: string) => id.startsWith(BotStorageService.GENERATE_BOT_CHAT_PREFIX(bot_id)));
+        for (let i = 0; i < results.length; i++) {
+            if (results[i].id) {
+                await this.storageService.delete(results[i].id ?? "");
+            }
+        }
+    }
 }

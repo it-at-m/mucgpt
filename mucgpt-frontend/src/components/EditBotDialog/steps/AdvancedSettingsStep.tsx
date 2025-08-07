@@ -101,7 +101,19 @@ export const AdvancedSettingsStep = ({
                 />
                 <div className={styles.rangeValue}>{maxOutputTokens}</div>
             </Field>
-            {isOwner && publish && <DepartementDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />}
+            <Field size="large" className={styles.rangeField} hidden={!publish}>
+                <label className={styles.formLabel}>
+                    <InfoLabel info={<div>{t("components.edit_bot_dialog.departments_info")}</div>}>{t("components.edit_bot_dialog.departments")}</InfoLabel>
+                </label>
+                <DepartementDropdown
+                    publishDepartments={publishDepartments}
+                    setPublishDepartments={departments => {
+                        setPublishDepartments(departments);
+                        onHasChanged(true);
+                    }}
+                    disabled={!isOwner}
+                />
+            </Field>
         </DialogContent>
     );
 };

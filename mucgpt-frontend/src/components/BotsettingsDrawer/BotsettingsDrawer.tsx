@@ -50,7 +50,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
     const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
-    const [publishDepartments, setPublishDepartments] = useState<string[]>([]);
+    const [publishDepartments, setPublishDepartments] = useState<string[]>(bot.hierarchical_access || []);
     const [invisibleChecked, setInvisibleChecked] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
@@ -60,6 +60,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
     useEffect(() => {
         setDescription(bot.description);
         setPublish(bot.publish);
+        setPublishDepartments(bot.hierarchical_access || []);
         setIsOwner(isOwned || !bot.publish);
     }, [bot, isOwned]);
 
@@ -92,10 +93,18 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>
-                            {publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.deleteDialog.title")}
+                            {publish
+                                ? isOwner
+                                    ? t("components.botsettingsdrawer.unpublish-button")
+                                    : t("components.botsettingsdrawer.remove-assistant")
+                                : t("components.botsettingsdrawer.deleteDialog.title")}
                         </DialogTitle>
                         <DialogContent>
-                            {publish ? t("components.botsettingsdrawer.deleteDialog.unpublish") : t("components.botsettingsdrawer.deleteDialog.content")}
+                            {publish
+                                ? isOwner
+                                    ? t("components.botsettingsdrawer.deleteDialog.unpublish")
+                                    : t("components.botsettingsdrawer.deleteDialog.remove")
+                                : t("components.botsettingsdrawer.deleteDialog.content")}
                         </DialogContent>
                         <DialogActions>
                             <DialogTrigger disableButtonEnhancement>
@@ -109,7 +118,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                                     size="small"
                                     onClick={async () => {
                                         setShowDeleteDialog(false);
-                                        if (publish) {
+                                        if (publish && isOwner) {
                                             await saveLocal();
                                         } else {
                                             onDeleteBot();
@@ -253,7 +262,11 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                                 icon={<Delete24Regular />}
                                 className={`${styles.actionButton} ${styles.deleteButton}`}
                             >
-                                {publish ? t("components.botsettingsdrawer.unpublish-button") : t("components.botsettingsdrawer.delete")}
+                                {publish
+                                    ? isOwner
+                                        ? t("components.botsettingsdrawer.unpublish-button")
+                                        : t("components.botsettingsdrawer.remove-assistant")
+                                    : t("components.botsettingsdrawer.delete")}
                             </Button>
                         </Tooltip>
 
@@ -262,7 +275,7 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                                 icon={<CloudArrowUp24Filled />}
                                 onClick={() => setShowPublishDialog(true)}
                                 appearance="outline"
-                                className={styles.actionButton}
+                                className={`${styles.actionButton} ${styles.publishButton}`}
                             >
                                 {t("components.botsettingsdrawer.publish")}
                             </Button>

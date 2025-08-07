@@ -158,10 +158,15 @@
     color: var(--colorNeutralForeground1);
     margin-bottom: 8px;
     line-height: 1.3;
+    height: 2.6em; /* Feste Höhe für 2 Zeilen */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .boxDescription {
-    flex: 1;
     font-size: var(--fontSizeBase300);
     color: var(--colorNeutralForeground2);
     line-height: 1.4;
@@ -171,6 +176,9 @@
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
+    word-break: break-word;
+    max-height: calc(1.4em * 3);
+    flex: 1 1 auto;
 }
 
 .boxChoose {

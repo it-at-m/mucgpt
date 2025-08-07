@@ -13,6 +13,7 @@ import { TitleStep, DescriptionStep, SystemPromptStep, ToolsStep, QuickPromptsSt
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 import { getTools } from "../../api/core-client";
+import { BotStrategy } from "../../pages/bot/BotStrategy";
 
 interface Props {
     showDialog: boolean;
@@ -22,9 +23,10 @@ interface Props {
     isOwner: boolean;
     publishDepartments: string[];
     setPublishDepartments: (departments: string[]) => void;
+    strategy: BotStrategy;
 }
 
-export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, publishDepartments, setPublishDepartments }: Props) => {
+export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, publishDepartments, setPublishDepartments, strategy }: Props) => {
     // Toast setup
     const { showSuccess } = useGlobalToastContext();
 
@@ -124,18 +126,25 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             return;
         }
         const newBot = botState.createBotForSaving();
-        onBotChanged(newBot);
+        await onBotChanged(newBot);
         setCurrentStep(0);
 
         // Show success toast
         if (isOwner)
             showSuccess(t("components.edit_bot_dialog.saved_successfully"), t("components.edit_bot_dialog.bot_saved_description", { botName: newBot.title }));
 
-        // Close dialog after a short delay
-        setTimeout(() => {
-            setShowDialog(false);
-        }, 500);
-    }, [isOwner, botState, onBotChanged, showSuccess, t, setShowDialog]);
+        // For owned community bots, reload the page to ensure latest version is fetched
+        if (strategy.requiresReloadOnSave) {
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            // Close dialog after a short delay for local bots
+            setTimeout(() => {
+                setShowDialog(false);
+            }, 500);
+        }
+    }, [isOwner, botState, onBotChanged, showSuccess, t, setShowDialog, strategy]);
 
     // close dialog pressed function
     const closeDialogPressed = useCallback(() => {

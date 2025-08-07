@@ -29,6 +29,7 @@ import { BotStorageService } from "../../service/botstorage";
 import { BOT_STORE } from "../../constants";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { deleteCommunityAssistantApi } from "../../api/assistant-client";
+import { BotStrategy } from "../../pages/bot/BotStrategy";
 
 interface Props {
     bot: Bot;
@@ -40,9 +41,10 @@ interface Props {
     clearChatDisabled: boolean;
     isOwned?: boolean;
     onToggleMinimized?: () => void;
+    strategy: BotStrategy;
 }
 
-export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, minimized, isOwned, clearChat, clearChatDisabled, onToggleMinimized }: Props) => {
+export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, minimized, isOwned, clearChat, clearChatDisabled, onToggleMinimized, strategy }: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(bot.description);
@@ -184,9 +186,10 @@ export const BotsettingsDrawer = ({ bot, onBotChange, onDeleteBot, history, mini
                 isOwner={isOwner}
                 publishDepartments={publishDepartments}
                 setPublishDepartments={setPublishDepartments}
+                strategy={strategy}
             />
         ),
-        [showEditDialog, bot, onBotChange, isOwner, publishDepartments, setPublishDepartments]
+        [showEditDialog, bot, onBotChange, isOwner, publishDepartments, setPublishDepartments, strategy]
     );
 
     // sidebar content

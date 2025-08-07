@@ -338,7 +338,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={strategy.canEdit ? onBotChanged : () => {}}
+                    onBotChange={strategy.canEdit ? onBotChanged : () => { }}
                     onDeleteBot={onDeleteBot}
                     history={history}
                     minimized={!showSidebar}
@@ -346,10 +346,11 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                     onToggleMinimized={toggleSidebar}
+                    strategy={strategy}
                 ></BotsettingsDrawer>
             </>
         ),
-        [botConfig, onBotChanged, onDeleteBot, history, showSidebar, strategy.canEdit, strategy.isOwned]
+        [botConfig, onBotChanged, onDeleteBot, history, showSidebar, strategy.canEdit, strategy.isOwned, strategy]
     );
 
     // Examples component

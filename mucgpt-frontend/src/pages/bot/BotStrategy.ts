@@ -10,11 +10,13 @@ export interface BotStrategy {
     updateBot?(botId: string, newBot: Bot, botConfig: Bot, LLM: Model): Promise<{ updatedBot?: Bot; systemPromptTokens?: number }>;
     isOwned: boolean;
     canEdit: boolean;
+    requiresReloadOnSave?: boolean; // New flag to indicate if page reload is needed after save
 }
 
 export class LocalBotStrategy implements BotStrategy {
     isOwned = false;
     canEdit = true;
+    requiresReloadOnSave = false;
 
     async loadBotConfig(botId: string, botStorageService: BotStorageService): Promise<Bot | undefined> {
         return await botStorageService.getBotConfig(botId);
@@ -25,7 +27,7 @@ export class LocalBotStrategy implements BotStrategy {
     }
 
     async updateBot(botId: string, newBot: Bot, botConfig: Bot, LLM: Model): Promise<{ updatedBot?: Bot; systemPromptTokens?: number }> {
-        const botStorageService = new BotStorageService(BOT_STORE); // TODO: Pass this properly
+        const botStorageService = new BotStorageService(BOT_STORE);
         await botStorageService.setBotConfig(botId, newBot);
 
         let systemPromptTokens: number | undefined;
@@ -41,6 +43,7 @@ export class LocalBotStrategy implements BotStrategy {
 export class CommunityBotStrategy implements BotStrategy {
     isOwned = false;
     canEdit = false;
+    requiresReloadOnSave = false;
 
     async loadBotConfig(botId: string): Promise<Bot | undefined> {
         const response = await getCommunityAssistantApi(botId);
@@ -73,6 +76,7 @@ export class CommunityBotStrategy implements BotStrategy {
 export class OwnedCommunityBotStrategy implements BotStrategy {
     isOwned = true;
     canEdit = true;
+    requiresReloadOnSave = true;
 
     async loadBotConfig(botId: string): Promise<Bot | undefined> {
         const response = await getCommunityAssistantApi(botId);
@@ -122,7 +126,7 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
             const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
             systemPromptTokens = response.count;
         }
-        window.location.reload(); // Reload to ensure the latest version is fetched
+        // Note: Reload will be handled by the save action in EditBotDialog, not on every change
 
         return { systemPromptTokens };
     }

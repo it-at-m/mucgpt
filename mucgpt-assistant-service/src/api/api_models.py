@@ -148,6 +148,12 @@ class AssistantBase(BaseModel):
         example=["support", "technical", "customer-service"],
     )
 
+    is_visible: Optional[bool] = Field(
+        True,
+        description="Whether this assistant is publicly listed in the UI",
+        example=True,
+    )
+
     tools: Optional[List[ToolBase]] = Field(
         [],
         description="List of toos that this assistant can use",
@@ -316,6 +322,12 @@ class AssistantUpdate(BaseModel):
         example=["support", "technical", "customer-service"],
     )
 
+    is_visible: Optional[bool] = Field(
+        None,
+        description="Whether this assistant is publicly listed in the UI",
+        example=True,
+    )
+
     tools: Optional[List[ToolBase]] = Field(
         None,
         description="List of toos that this assistant can use",
@@ -379,6 +391,11 @@ class AssistantResponse(BaseModel):
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment-underdepartment"],
     )
+    is_visible: bool = Field(
+        True,
+        description="Whether this assistant is publicly listed in the UI",
+        example=True,
+    )
     owner_ids: Optional[List[str]] = Field(
         [],
         description="List of lhmobjektIDs who will own this assistant",
@@ -399,6 +416,7 @@ class AssistantResponse(BaseModel):
                     "department-underdepartment",
                     "anotherdepartment-underdepartment",
                 ],
+                "is_visible": True,
                 "owner_ids": ["12345", "67890"],
                 "latest_version": {
                     "id": 1,

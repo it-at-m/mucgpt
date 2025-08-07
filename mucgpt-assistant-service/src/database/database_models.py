@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional, TypeVar
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Float,
@@ -118,6 +119,9 @@ class Assistant(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     hierarchical_access = Column(JSON, default=list)
+    is_visible = Column(
+        Boolean, default=True, nullable=False
+    )  # Whether this assistant is publicly listed
 
     versions = relationship(
         "AssistantVersion",

@@ -118,11 +118,11 @@ class AssistantRepository(Repository[Assistant]):
 
         This means that a user from the department ITM-KM-DI is allowed to use this assistant.
         But a user from the department ITM-AB-DI is not allowed to use this assistant.
-        """
-
-        # Since SQLite doesn't support ANY(), we need to implement this logic differently
+        """  # Since SQLite doesn't support ANY(), we need to implement this logic differently
         # We'll get all assistants and filter them in Python
-        all_assistants_query = await self.session.execute(select(Assistant))
+        all_assistants_query = await self.session.execute(
+            select(Assistant).where(Assistant.is_visible.is_(True))
+        )
         all_assistants = list(all_assistants_query.scalars().all())
 
         matching_assistants = []
@@ -180,7 +180,10 @@ class AssistantRepository(Repository[Assistant]):
         return result.first() is not None
 
     async def create(
-        self, hierarchical_access: List[str] = None, owner_ids: List[str] = None
+        self,
+        hierarchical_access: List[str] = None,
+        owner_ids: List[str] = None,
+        is_visible: bool = True,
     ) -> Assistant:
         logger.info(f"Creating assistant with owners: {owner_ids}")
         """Create a new assistant with explicit parameters."""
@@ -197,7 +200,9 @@ class AssistantRepository(Repository[Assistant]):
                 ]
 
             assistant = Assistant(
-                id=assistant_id, hierarchical_access=cleaned_hierarchical_access
+                id=assistant_id,
+                hierarchical_access=cleaned_hierarchical_access,
+                is_visible=is_visible,
             )
             self.session.add(assistant)
 
@@ -236,6 +241,7 @@ class AssistantRepository(Repository[Assistant]):
         assistant_id: str,
         hierarchical_access: List[str] = None,
         owner_ids: List[str] = None,
+        is_visible: bool = None,
     ) -> Optional[Assistant]:
         logger.info(f"Updating assistant {assistant_id}")
         """Update an assistant with explicit parameters."""
@@ -250,6 +256,9 @@ class AssistantRepository(Repository[Assistant]):
                         if path is not None and str(path).strip()
                     ]
                     assistant.hierarchical_access = cleaned_hierarchical_access
+
+                if is_visible is not None:
+                    assistant.is_visible = is_visible
 
                 if owner_ids is not None:
                     # Clear existing owners using direct delete

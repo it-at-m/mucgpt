@@ -65,6 +65,7 @@ async def _build_assistant_response_list(
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or [],
+                is_visible=assistant.is_visible,
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
                 latest_version=assistant_version_response,
             )

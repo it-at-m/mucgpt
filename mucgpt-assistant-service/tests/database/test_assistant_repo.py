@@ -10,6 +10,7 @@ def sample_assistant_data():
     return {
         "hierarchical_access": ["ITM-KM"],
         "owner_ids": ["user1", "user2"],
+        "is_visible": True,
     }
 
 
@@ -39,19 +40,18 @@ class TestAssistantRepository:
     ):
         """Test creating an assistant with owners."""
         # Arrange
-        assistant_repo = AssistantRepository(db_session)
-
-        # Act
+        assistant_repo = AssistantRepository(db_session)  # Act
         assistant = await assistant_repo.create(
             hierarchical_access=sample_assistant_data["hierarchical_access"],
             owner_ids=sample_assistant_data["owner_ids"],
+            is_visible=sample_assistant_data["is_visible"],
         )
-        await db_session.commit()  # Assert
-        assert assistant.id is not None
+        await db_session.commit()  # Assert        assert assistant.id is not None
         assert (
             assistant.hierarchical_access
             == sample_assistant_data["hierarchical_access"]
         )
+        assert assistant.is_visible == sample_assistant_data["is_visible"]
         # Use the safe method to check owners
         result = await assistant_repo.get_with_owners(assistant.id)
         assert len(result.owners) == 2
@@ -956,3 +956,194 @@ class TestAssistantRepository:
         assert updated_assistant.id in [a.id for a in result_marketing]
         assert len(result_hr) == 1
         assert updated_assistant.id in [a.id for a in result_hr]
+
+    async def test_create_assistant_with_visibility(self, db_session):
+        """Test creating an assistant with specified visibility."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+
+        # Act - Create assistant with is_visible=False
+        assistant = await assistant_repo.create(
+            hierarchical_access=["ITM-TEST"], is_visible=False
+        )
+        await db_session.commit()
+
+        # Assert
+        assert assistant.id is not None
+        assert assistant.is_visible is False
+
+        # Act - Create another assistant with default visibility (True)
+        assistant_default = await assistant_repo.create(
+            hierarchical_access=["ITM-TEST2"]
+        )
+        await db_session.commit()
+
+        # Assert
+        assert assistant_default.id is not None
+        assert assistant_default.is_visible is True
+
+    async def test_update_assistant_visibility(self, db_session):
+        """Test updating assistant's visibility."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=["ITM-TEST"], is_visible=True
+        )
+        await db_session.commit()
+        assert assistant.is_visible is True
+
+        # Act - Update to hidden
+        updated = await assistant_repo.update(assistant.id, is_visible=False)
+        await db_session.commit()
+
+        # Assert
+        assert updated is not None
+        assert updated.is_visible is False
+
+        # Act - Update back to visible
+        updated_again = await assistant_repo.update(assistant.id, is_visible=True)
+        await db_session.commit()
+
+        # Assert
+        assert updated_again is not None
+        assert updated_again.is_visible is True
+
+    async def test_get_all_possible_assistants_respects_visibility(self, db_session):
+        """Test that get_all_possible_assistants_for_user_with_department filters by visibility."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+
+        # Create visible assistants
+        visible_assistant1 = await assistant_repo.create(
+            hierarchical_access=["ITM-KM"], is_visible=True
+        )
+        visible_assistant2 = await assistant_repo.create(
+            hierarchical_access=[],  # Empty access = available to all departments
+            is_visible=True,
+        )
+
+        # Create hidden assistants
+        hidden_assistant1 = await assistant_repo.create(
+            hierarchical_access=["ITM-KM"], is_visible=False
+        )
+        hidden_assistant2 = await assistant_repo.create(
+            hierarchical_access=[],  # Empty access but hidden
+            is_visible=False,
+        )
+
+        await db_session.commit()
+
+        # Act - Test with department that matches all access patterns
+        result = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "ITM-KM"
+            )
+        )
+
+        # Assert - Only visible assistants should be returned
+        assert len(result) == 2
+        assistant_ids = [a.id for a in result]
+
+        # Visible assistants should be included
+        assert visible_assistant1.id in assistant_ids
+        assert visible_assistant2.id in assistant_ids
+
+        # Hidden assistants should be excluded
+        assert hidden_assistant1.id not in assistant_ids
+        assert hidden_assistant2.id not in assistant_ids
+
+    async def test_update_assistant_multiple_properties_with_visibility(
+        self, db_session
+    ):
+        """Test updating multiple assistant properties including visibility."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=["ITM-OLD"], owner_ids=["owner1"], is_visible=True
+        )
+        await db_session.commit()
+
+        # Act - Update multiple properties
+        updated = await assistant_repo.update(
+            assistant_id=assistant.id,
+            hierarchical_access=["ITM-NEW"],
+            owner_ids=["owner2", "owner3"],
+            is_visible=False,
+        )
+        await db_session.commit()
+
+        # Assert - All properties should be updated
+        assert updated is not None
+        assert updated.hierarchical_access == ["ITM-NEW"]
+        assert updated.is_visible is False
+
+        # Check owners were updated too
+        result = await assistant_repo.get_with_owners(updated.id)
+        owner_ids = [owner.lhmobjektID for owner in result.owners]
+        assert len(owner_ids) == 2
+        assert "owner2" in owner_ids
+        assert "owner3" in owner_ids
+        assert "owner1" not in owner_ids
+
+    async def test_update_assistant_only_visibility(
+        self, db_session, sample_assistant_data
+    ):
+        """Test updating only assistant visibility without changing other properties."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
+            is_visible=True,
+        )
+        await db_session.commit()
+
+        original_access = assistant.hierarchical_access.copy()
+
+        # Get original owners for comparison
+        original_assistant = await assistant_repo.get_with_owners(assistant.id)
+        original_owner_ids = [owner.lhmobjektID for owner in original_assistant.owners]
+
+        # Act - Update only visibility
+        updated = await assistant_repo.update(
+            assistant_id=assistant.id, is_visible=False
+        )
+        await db_session.commit()
+
+        # Assert - Only visibility should change
+        assert updated is not None
+        assert updated.is_visible is False
+        assert updated.hierarchical_access == original_access
+
+        # Check owners remain unchanged
+        updated_assistant = await assistant_repo.get_with_owners(updated.id)
+        updated_owner_ids = [owner.lhmobjektID for owner in updated_assistant.owners]
+        assert sorted(updated_owner_ids) == sorted(original_owner_ids)
+
+    async def test_direct_access_to_hidden_assistant(self, db_session):
+        """Test that hidden assistants can be accessed directly by ID."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        hidden_assistant = await assistant_repo.create(
+            hierarchical_access=["ITM-KM"], is_visible=False
+        )
+        await db_session.commit()
+
+        # Act - Direct access by ID
+        result = await assistant_repo.get(hidden_assistant.id)
+
+        # Act - Access through filtering (should be filtered out)
+        filtered_results = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "ITM-KM"
+            )
+        )
+
+        # Assert
+        # Direct access should work
+        assert result is not None
+        assert result.id == hidden_assistant.id
+        assert result.is_visible is False
+
+        # Filtering should exclude the assistant
+        assert len(filtered_results) == 0

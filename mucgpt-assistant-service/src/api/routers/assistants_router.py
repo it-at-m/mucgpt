@@ -55,12 +55,15 @@ async def createBot(
             db
         )  # Prepare owner_ids: include the creating user if not already present
         owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
-
         if user_info.lhm_object_id not in owner_ids:
             owner_ids.append(user_info.lhm_object_id)
 
         new_assistant = await assistant_repo.create(
-            hierarchical_access=assistant.hierarchical_access or [], owner_ids=owner_ids
+            hierarchical_access=assistant.hierarchical_access or [],
+            owner_ids=owner_ids,
+            is_visible=assistant.is_visible
+            if assistant.is_visible is not None
+            else True,
         )
 
         # Create the first version with the actual assistant data
@@ -118,14 +121,13 @@ async def createBot(
             tags=latest_version.tags or [],
             tools=assistant_repo.get_tools_from_version(latest_version),
             owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
-        )
-
-        # Build AssistantResponse
+        )  # Build AssistantResponse
         response = AssistantResponse(
             id=new_assistant.id,
             created_at=new_assistant.created_at,
             updated_at=new_assistant.updated_at,
             hierarchical_access=new_assistant.hierarchical_access or [],
+            is_visible=new_assistant.is_visible,
             owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
             latest_version=assistant_version_response,
         )
@@ -231,13 +233,14 @@ async def updateBot(
         raise NoVersionException()
 
     if assistant_update.version != latest_version.version:
-        raise VersionConflictException(assistant_update.version, latest_version.version)
-
-    # Handle global properties using the repository update method
+        raise VersionConflictException(
+            assistant_update.version, latest_version.version
+        )  # Handle global properties using the repository update method
     await assistant_repo.update(
         assistant_id=id,
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
+        is_visible=assistant_update.is_visible,
     )
 
     # Create a new version with updated data
@@ -310,6 +313,7 @@ async def updateBot(
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
+        is_visible=assistant.is_visible,
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         latest_version=assistant_version_response,
     )
@@ -378,6 +382,7 @@ async def getAllBots(
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or [],
+                is_visible=assistant.is_visible,
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
                 latest_version=assistant_version_response,
             )
@@ -453,6 +458,7 @@ async def getBot(
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
+        is_visible=assistant.is_visible,
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
         latest_version=assistant_version_response,
     )

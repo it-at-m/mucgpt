@@ -1,4 +1,4 @@
-import { getConfig, handleRedirect, handleResponse, postConfig } from "./fetch-utils";
+import { getConfig, handleApiRequest, postConfig } from "./fetch-utils";
 import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, CreateBotRequest, ToolListResponse } from "./models";
 export const CHAT_NAME_PROMPT =
     "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
@@ -6,10 +6,7 @@ export const CHAT_NAME_PROMPT =
 export const API_BASE = "/api/backend/";
 
 export async function getTools(): Promise<ToolListResponse> {
-    const response = await fetch(API_BASE + "v1/tools", getConfig());
-    handleRedirect(response, true);
-    const parsedResponse: ToolListResponse = await handleResponse(response);
-    return parsedResponse;
+    return handleApiRequest(() => fetch(API_BASE + "v1/tools", getConfig()), "Failed to get tools");
 }
 
 export async function chatApi(options: ChatRequest): Promise<Response> {
@@ -39,32 +36,25 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
 }
 
 export async function configApi(): Promise<ApplicationConfig> {
-    return await fetch(API_BASE + "config", getConfig()).then(async response => {
-        handleRedirect(response, false);
-        const parsedResponse = await handleResponse(response);
-        return parsedResponse;
-    });
+    return handleApiRequest(() => fetch(API_BASE + "config", getConfig()), "Failed to get application config");
 }
 
 export async function countTokensAPI(options: CountTokenRequest): Promise<CountTokenResponse> {
-    const response = await fetch(
-        API_BASE + "counttokens",
-        postConfig({
-            text: options.text,
-            model: options.model.llm_name
-        })
+    return handleApiRequest(
+        () =>
+            fetch(
+                API_BASE + "counttokens",
+                postConfig({
+                    text: options.text,
+                    model: options.model.llm_name
+                })
+            ),
+        "Failed to count tokens"
     );
-
-    handleRedirect(response, true);
-    const parsedResponse: CountTokenResponse = await handleResponse(response);
-    return parsedResponse;
 }
 
 export async function getDepartements(): Promise<string[]> {
-    const response = await fetch(API_BASE + "departements", getConfig());
-    handleRedirect(response, true);
-    const parsedResponse = await handleResponse(response);
-    return parsedResponse;
+    return handleApiRequest(() => fetch(API_BASE + "departements", getConfig()), "Failed to get departments");
 }
 
 export async function createBotApi(options: CreateBotRequest): Promise<Response> {
@@ -105,17 +95,7 @@ export async function createChatName(
         stream: false
     };
 
-    const response = await fetch(url, postConfig(body));
-    handleRedirect(response);
-
-    if (!response.body) {
-        throw Error("No response body");
-    }
-
-    const parsedResponse = await response.json();
-    if (response.status > 299 || !response.ok) {
-        throw Error(parsedResponse.error || "Unknown error");
-    }
+    const parsedResponse: any = await handleApiRequest(() => fetch(url, postConfig(body)), "Failed to create chat name");
 
     // Extract content from ChatCompletion response
     return parsedResponse.choices?.[0]?.message?.content || "New Chat";

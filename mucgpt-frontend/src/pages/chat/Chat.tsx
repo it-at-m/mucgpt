@@ -146,6 +146,13 @@ const Chat = () => {
     // Debounced system prompt
     const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
 
+    // Add a scroll function
+    const scrollToBottom = useCallback(() => {
+        if (chatMessageStreamEnd.current) {
+            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, []);
+
     // Token-Berechnung
     const calculateTotalTokens = useCallback(() => {
         const answerTokens = answers.reduce(
@@ -194,6 +201,12 @@ const Chat = () => {
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+
+                    // Scroll to bottom after a short delay to ensure DOM is updated
+                    setTimeout(() => {
+                        scrollToBottom();
+                    }, 100);
+
                     return true;
                 }
                 return false;
@@ -203,7 +216,7 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, lastQuestionRef.current]
+        [storageService, scrollToBottom]
     );
 
     // Clear chat state

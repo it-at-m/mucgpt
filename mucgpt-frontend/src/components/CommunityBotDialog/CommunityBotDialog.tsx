@@ -31,6 +31,7 @@ import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { BOT_STORE } from "../../constants";
 import { BotStorageService } from "../../service/botstorage";
 import { getAllCommunityAssistantsApi, getCommunityAssistantApi, subscribeToAssistantApi } from "../../api/assistant-client";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 interface Props {
     showSearchDialogInput: boolean;
@@ -40,6 +41,7 @@ interface Props {
 }
 
 export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialogInput, takeCommunityBots, setTakeCommunityBots }: Props) => {
+    const { showSuccess, showError } = useGlobalToastContext();
     const mockBot: Bot = {
         title: "",
         description: "",
@@ -117,19 +119,28 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                     setAllTags(tags);
                     setIsLoading(false);
                 })
-                .catch(() => {
+                .catch(error => {
                     setIsLoading(false);
+                    const errorMessage = error instanceof Error ? error.message : "Failed to load community assistants";
+                    showError("Failed to load assistants", errorMessage);
                 });
             setTakeCommunityBots(false);
         }
-    }, [takeCommunityBots, showSearchDialogInput]);
+    }, [takeCommunityBots, showSearchDialogInput, showError]);
 
     const onSaveBot = async () => {
         if (choosenBot.id == undefined) return;
-        await subscribeToAssistantApi(choosenBot.id);
-        setShowBotDialog(false);
-        setShowSearchDialogInput(false);
-        window.location.href = "/#/communitybot/" + choosenBot.id;
+
+        try {
+            await subscribeToAssistantApi(choosenBot.id);
+            showSuccess(`Successfully subscribed to ${choosenBot.title}`, "You can now start using this assistant in your conversations.");
+            setShowBotDialog(false);
+            setShowSearchDialogInput(false);
+            window.location.href = "/#/communitybot/" + choosenBot.id;
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+            showError(`Failed to subscribe to ${choosenBot.title}`, errorMessage);
+        }
     };
 
     const inputHandler = (event: any, data: any) => {
@@ -208,27 +219,38 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         setChoosenBot(bot);
         setShowBotDialog(true);
         setShowSearchDialogInput(false);
-        getCommunityAssistantApi(bot.id).then(bots => {
-            const latest = bots.latest_version;
-            const latest_version: Bot = {
-                title: latest.name,
-                description: latest.description || "",
-                system_message: latest.system_prompt,
-                publish: true,
-                id: bots.id,
-                temperature: latest.temperature,
-                max_output_tokens: latest.max_output_tokens,
-                version: latest.version.toString(),
-                owner_ids: latest.owner_ids,
-                tags: latest.tags || [],
-                tools: latest.tools || [],
-                hierarchical_access: latest.hierarchical_access || []
-            };
-            setChoosenBotAll([latest_version]); //TODO all Versions
-        });
-        communitybotStorageService.getBotConfig(bot.id).then((bot: Bot | undefined) => {
-            setBotAlreadySaved(bot !== undefined);
-        });
+        getCommunityAssistantApi(bot.id)
+            .then(bots => {
+                const latest = bots.latest_version;
+                const latest_version: Bot = {
+                    title: latest.name,
+                    description: latest.description || "",
+                    system_message: latest.system_prompt,
+                    publish: true,
+                    id: bots.id,
+                    temperature: latest.temperature,
+                    max_output_tokens: latest.max_output_tokens,
+                    version: latest.version.toString(),
+                    owner_ids: latest.owner_ids,
+                    tags: latest.tags || [],
+                    tools: latest.tools || [],
+                    hierarchical_access: latest.hierarchical_access || []
+                };
+                setChoosenBotAll([latest_version]); //TODO all Versions
+            })
+            .catch(error => {
+                const errorMessage = error instanceof Error ? error.message : "Failed to load assistant details";
+                showError("Failed to load assistant details", errorMessage);
+            });
+        communitybotStorageService
+            .getBotConfig(bot.id)
+            .then((bot: Bot | undefined) => {
+                setBotAlreadySaved(bot !== undefined);
+            })
+            .catch(error => {
+                console.warn("Could not check if bot is already saved:", error);
+                // This is not critical, so we don't show an error toast
+            });
     };
 
     return (

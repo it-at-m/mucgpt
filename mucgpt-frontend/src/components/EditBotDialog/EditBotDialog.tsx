@@ -1,18 +1,5 @@
-import { Checkmark24Filled, Dismiss24Regular } from "@fluentui/react-icons";
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogBody,
-    DialogSurface,
-    DialogTitle,
-    useId,
-    useToastController,
-    Toast,
-    ToastTitle,
-    ToastBody,
-    Toaster
-} from "@fluentui/react-components";
+import { Dismiss24Regular } from "@fluentui/react-icons";
+import { Button, Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle } from "@fluentui/react-components";
 
 import styles from "./EditBotDialog.module.css";
 import { useTranslation } from "react-i18next";
@@ -23,6 +10,7 @@ import { StepperProgress } from "./StepperProgress";
 import { EditDialogActions } from "./EditDialogActions";
 import { useBotState } from "./useBotState";
 import { TitleStep, DescriptionStep, SystemPromptStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "./steps";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 import { getTools } from "../../api/core-client";
 
@@ -38,8 +26,7 @@ interface Props {
 
 export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, publishDepartments, setPublishDepartments }: Props) => {
     // Toast setup
-    const toasterId = useId("edit-bot-save-toast");
-    const { dispatchToast } = useToastController(toasterId);
+    const { showSuccess } = useGlobalToastContext();
 
     // Stepper state
     const [currentStep, setCurrentStep] = useState<number>(0);
@@ -142,30 +129,13 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
 
         // Show success toast
         if (isOwner)
-            dispatchToast(
-                <Toast>
-                    <ToastTitle>
-                        <div className={styles.toasterTitle}>
-                            <Checkmark24Filled className={styles.toastIcon} />
-                            <span className={styles.toastTitleText}>{t("components.edit_bot_dialog.saved_successfully")}</span>
-                        </div>
-                    </ToastTitle>
-                    {isOwner && (
-                        <ToastBody className={styles.toasterBody}>{t("components.edit_bot_dialog.bot_saved_description", { botName: newBot.title })}</ToastBody>
-                    )}
-                </Toast>,
-                {
-                    intent: "success",
-                    timeout: 3000,
-                    pauseOnHover: true
-                }
-            );
+            showSuccess(t("components.edit_bot_dialog.saved_successfully"), t("components.edit_bot_dialog.bot_saved_description", { botName: newBot.title }));
 
         // Close dialog after a short delay
         setTimeout(() => {
             setShowDialog(false);
         }, 500);
-    }, [isOwner, botState, onBotChanged, dispatchToast, t, setShowDialog]);
+    }, [isOwner, botState, onBotChanged, showSuccess, t, setShowDialog]);
 
     // close dialog pressed function
     const closeDialogPressed = useCallback(() => {
@@ -302,7 +272,6 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                 </DialogSurface>
             </Dialog>
             <ToolsSelector open={showToolsSelector} onClose={handleToolsSelected} tools={availableTools} selectedTools={selectedTools} />
-            <Toaster toasterId={toasterId} className={styles.editBotToaster} />
             {closeDialog}
         </div>
     );

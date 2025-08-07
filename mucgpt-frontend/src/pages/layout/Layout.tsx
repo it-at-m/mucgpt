@@ -21,6 +21,7 @@ import { FeedbackButton } from "../../components/FeedbackButton";
 import { VersionInfo } from "../../components/VersionInfo";
 import { HelpButton } from "../../components/HelpButton";
 import { configApi } from "../../api/core-client";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -38,6 +39,7 @@ export const Layout = () => {
     const { setLanguage } = useContext(LanguageContext);
     const { setLLM, setAvailableLLMs } = useContext(LLMContext);
     const { header } = useContext(HeaderContext);
+    const { showError } = useGlobalToastContext();
 
     // Use useRef to prevent duplicate API calls
     const configApiCalledRef = useRef(false);
@@ -79,8 +81,8 @@ export const Layout = () => {
         if (configApiCalledRef.current) return;
         configApiCalledRef.current = true;
 
-        configApi().then(
-            result => {
+        configApi()
+            .then(result => {
                 setConfig(result);
                 setModels(result.models);
                 setSimply(result.frontend.enable_simply);
@@ -89,13 +91,14 @@ export const Layout = () => {
                 }
                 setAvailableLLMs(result.models);
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
-            },
-            () => {
-                console.error("Config nicht geladen");
-            }
-        );
+            })
+            .catch(error => {
+                console.error(t("common.errors.config_not_loaded"), error);
+                const errorMessage = error instanceof Error ? error.message : t("common.errors.failed_to_load_config");
+                showError(t("common.errors.configuration_error"), errorMessage);
+            });
         i18n.changeLanguage(language_pref);
-    }, []);
+    }, [showError]);
 
     // terms of use
     const onAcceptTermsOfUse = useCallback(() => {

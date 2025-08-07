@@ -16,7 +16,6 @@ i18n
             Deutsch: {
                 translation: {
                     header: {
-                        sum: "Zusammenfassen",
                         chat: "Chat",
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_bot: "Assistent erstellen"
@@ -54,17 +53,6 @@ i18n
                                 "Formuliere deine letzte Nachricht zu einem neuen informelleren Text, der den ursprünglichen Inhalt in einer lockeren Schreibweise wiedergibt. Dieser Text soll dem Leser ein ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente verwendet."
                         }
                     },
-                    sum: {
-                        header: "Lasse Text zusammenfassen oder probiere ein Beispiel",
-                        prompt: "Diesen Text zusammenfassen oder ein PDF per Drag und Drop hochladen",
-                        rolelabel: "Zusammenfassen für",
-                        lengthlabel: "in",
-                        answer_loading: "Fasse zusammen",
-                        levelofdetail: "Umfang",
-                        short: "Kurz",
-                        medium: "Mittel",
-                        long: "Lang"
-                    },
                     version: {
                         header: "Was gibt's Neues?",
                         added: "Neu",
@@ -78,7 +66,12 @@ i18n
                         messages: "Nachrichten",
                         examples: "Beispiele",
                         sidebar_show: "Sidebar anzeigen",
-                        sidebar_hide: "Sidebar ausblenden"
+                        sidebar_hide: "Sidebar ausblenden",
+                        errors: {
+                            config_not_loaded: "Konfiguration konnte nicht geladen werden.",
+                            failed_to_load_config: "Fehler beim Laden der Konfiguration.",
+                            configuration_error: "Konfigurationsfehler"
+                        }
                     },
                     create_bot: {
                         title: "Titel",
@@ -334,7 +327,6 @@ i18n
             Englisch: {
                 translation: {
                     header: {
-                        sum: "Summarize",
                         chat: "Chat",
                         nutzungsbedingungen: "Terms of use",
                         create_bot: "Create assistant"
@@ -372,17 +364,6 @@ i18n
                                 "Rewrite your last message into a new, more informal text that conveys the original content in a casual writing style. This text should provide the reader with a relaxed reading experience by using easily understandable language and, if appropriate, incorporating humorous elements."
                         }
                     },
-                    sum: {
-                        header: "Summarize text or try an example",
-                        prompt: "Summarize this text or upload a PDF by using drag and drop",
-                        rolelabel: "Summarize for",
-                        lengthlabel: "in",
-                        answer_loading: "Summarize",
-                        levelofdetail: "Scope",
-                        short: "Short",
-                        medium: "Medium",
-                        long: "Long"
-                    },
                     version: {
                         header: "Whats new?",
                         added: "Added",
@@ -396,7 +377,12 @@ i18n
                         messages: "Messages",
                         examples: "Examples",
                         sidebar_show: "Show sidebar",
-                        sidebar_hide: "Hide sidebar"
+                        sidebar_hide: "Hide sidebar",
+                        errors: {
+                            config_not_loaded: "Configuration could not be loaded.",
+                            failed_to_load_config: "Failed to load configuration.",
+                            configuration_error: "Configuration error"
+                        }
                     },
                     create_bot: {
                         title: "Title",
@@ -652,7 +638,6 @@ i18n
             Bairisch: {
                 translation: {
                     header: {
-                        sum: "Zammfassn",
                         chat: "Redn",
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_bot: "Assistenten erstoin"
@@ -690,17 +675,6 @@ i18n
                                 "Formuliere dei letzte Nachricht zu am neuen informelleren Text, der an ursprünglichen Inhalt in a lockeren Schreibweise wiedagibt. Dieser Text soi am Leser a ungezwungenes Leseerlebnis bieten, indem er leicht verständliche Sprache und gegebenenfalls auch humorvolle Elemente benutzt."
                         }
                     },
-                    sum: {
-                        header: "Fassn Text zam oda probier a Beispui",
-                        prompt: "Diesn Text zammfassn oda a PDF per Drag und Drop hoachladn",
-                        rolelabel: "Zammfassn für",
-                        lengthlabel: "in",
-                        answer_loading: "Am zammfassn",
-                        levelofdetail: "Umfang",
-                        short: "Kurz",
-                        medium: "Mittel",
-                        long: "Lang"
-                    },
                     common: {
                         clear_chat: "Neia Chat",
                         settings: "Konfiguration",
@@ -708,7 +682,12 @@ i18n
                         messages: "Nochrichten",
                         examples: "Beispui",
                         sidebar_show: "Sidebar zoagn",
-                        sidebar_hide: "Sidebar ausblenden"
+                        sidebar_hide: "Sidebar ausblenden",
+                        errors: {
+                            config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
+                            failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
+                            configuration_error: "Konfigurationsfehler"
+                        }
                     },
                     version: {
                         header: "Wos gibts neis?",
@@ -970,7 +949,6 @@ i18n
             French: {
                 translation: {
                     header: {
-                        sum: "Résumer",
                         chat: "Chat",
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
@@ -1007,17 +985,6 @@ i18n
                                 "Formulez votre dernier message en un nouveau texte plus informel qui reflète le contenu original dans un style plus décontracté. Ce texte doit offrir au lecteur une expérience de lecture détendue en utilisant un langage facile à comprendre et, le cas échéant, des éléments humoristiques."
                         }
                     },
-                    sum: {
-                        header: "Faites résumer le texte ou essayez un exemple",
-                        prompt: "Résumer ce texte ou faites glisser un PDF ici",
-                        rolelabel: "Résumer pour",
-                        lengthlabel: "en",
-                        answer_loading: "Résumer",
-                        levelofdetail: "Portée",
-                        short: "Court",
-                        medium: "Moyen",
-                        long: "Long"
-                    },
                     version: {
                         header: "Quoi de neuf ?",
                         added: "Nouveau",
@@ -1031,7 +998,12 @@ i18n
                         messages: "Messages",
                         examples: "Exemples",
                         sidebar_show: "Afficher la barre latérale",
-                        sidebar_hide: "Masquer la barre latérale"
+                        sidebar_hide: "Masquer la barre latérale",
+                        errors: {
+                            config_not_loaded: "La configuration n'a pas pu être chargée.",
+                            failed_to_load_config: "Échec du chargement de la configuration.",
+                            configuration_error: "Erreur de configuration"
+                        }
                     },
                     create_bot: {
                         title: "Titre",
@@ -1287,7 +1259,6 @@ i18n
             Ukrainisch: {
                 translation: {
                     header: {
-                        sum: "Резюме",
                         chat: "Чат",
                         nutzungsbedingungen: "Умови використання"
                     },
@@ -1324,17 +1295,6 @@ i18n
                                 "Сформулюйте ваше останнє повідомлення в новий неофіційний текст, який відображає оригінальний зміст у невимушеному стилі. Цей текст має надавати читачеві розслаблений досвід читання за допомогою легкої та зрозумілої мови та, можливо, гумористичних елементів."
                         }
                     },
-                    sum: {
-                        header: "Зробіть резюме тексту або спробуйте приклад",
-                        prompt: "Резюме цього тексту або завантажте PDF перетягуванням",
-                        rolelabel: "Резюме для",
-                        lengthlabel: "в",
-                        answer_loading: "Резюме",
-                        levelofdetail: "Обсяг",
-                        short: "Короткий",
-                        medium: "Середній",
-                        long: "Довгий"
-                    },
                     version: {
                         header: "Що нового?",
                         added: "Нове",
@@ -1348,7 +1308,12 @@ i18n
                         messages: "Повідомлення",
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",
-                        sidebar_hide: "Сховати бічну панель"
+                        sidebar_hide: "Сховати бічну панель",
+                        errors: {
+                            config_not_loaded: "Не вдалося завантажити конфігурацію.",
+                            failed_to_load_config: "Помилка завантаження конфігурації.",
+                            configuration_error: "Помилка конфігурації"
+                        }
                     },
                     create_bot: {
                         title: "Заголовок",

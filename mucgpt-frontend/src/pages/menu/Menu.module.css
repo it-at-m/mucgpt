@@ -181,7 +181,15 @@
     flex: 1 1 auto;
 }
 
+.boxButtons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
 .boxChoose {
+    text-align: center;
+    min-width: 100px;
     align-self: flex-start;
     background: var(--colorBrandBackground);
     color: var(--colorNeutralForegroundOnBrand);

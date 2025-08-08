@@ -34,16 +34,6 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
         });
     }, []);
 
-    // Add user's department to publishDepartments if available
-    useEffect(() => {
-        if (!isLoading && user?.department && !publishDepartments.includes(user.department)) {
-            // Only add if user's department is in the list of available departments
-            if (departments.includes(user.department)) {
-                setPublishDepartments([...publishDepartments, user.department]);
-            }
-        }
-    }, [user, departments, publishDepartments, isLoading]);
-
     // First filter departments based on search and not already selected
     const filteredDepartments = departments.filter(
         d => d.toLowerCase().includes(search.toLowerCase()) && !publishDepartments.some(sel => isDepartmentPrefixMatch(sel, d))

@@ -196,6 +196,7 @@ export interface AssistantResponse {
     id: string;
     created_at: string;
     updated_at: string;
+    subscriptions_count: number;
     hierarchical_access?: string[];
     owner_ids?: string[];
     latest_version: AssistantVersionResponse;

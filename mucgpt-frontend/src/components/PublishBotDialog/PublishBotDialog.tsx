@@ -8,6 +8,7 @@ import { Bot } from "../../api";
 import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
 import { useCallback, useState } from "react";
 import { createCommunityAssistantApi } from "../../api/assistant-client";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 interface Props {
     open: boolean;
@@ -33,6 +34,7 @@ export const PublishBotDialog = ({
     const { t } = useTranslation();
     const [publishedBotId, setPublishedBotId] = useState<string | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
+    const { showSuccess } = useGlobalToastContext();
 
     const handlePublishClick = useCallback(async () => {
         setIsPublishing(true);
@@ -53,7 +55,10 @@ export const PublishBotDialog = ({
             });
 
             setPublishedBotId(response.id);
-
+            showSuccess(
+                        t("components.publish_bot_dialog.publish_bot_success"),
+                        t("components.publish_bot_dialog.publish_bot_success_message", { title: bot.title })
+                    );
             // Wenn der Bot nicht unsichtbar ist, schließe den Dialog sofort
             if (!invisibleChecked) {
                 onDeleteBot();
@@ -123,6 +128,7 @@ export const PublishBotDialog = ({
                                             <span>{invisibleChecked ? "Privat (nur über Link)" : "Öffentlich sichtbar"}</span>
                                         </div>
                                     }
+                                    disabled={isPublishing || publishedBotId !== null}
                                     checked={invisibleChecked}
                                     onChange={(_, data) => setInvisibleChecked(!!data.checked)}
                                 />
@@ -183,12 +189,14 @@ export const PublishBotDialog = ({
                     </DialogContent>
 
                     <DialogActions className={styles.actions}>
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
-                                <Dismiss24Regular />
-                                {t("components.botsettingsdrawer.deleteDialog.cancel")}
-                            </Button>
-                        </DialogTrigger>
+                        {!(publishedBotId && invisibleChecked) && (
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
+                                    <Dismiss24Regular />
+                                    {t("components.botsettingsdrawer.deleteDialog.cancel")}
+                                </Button>
+                            </DialogTrigger>
+                        )}
                         {!publishedBotId && (
                             <DialogTrigger disableButtonEnhancement>
                                 <Button

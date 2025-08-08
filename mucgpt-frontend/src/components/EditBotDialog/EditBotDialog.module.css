@@ -117,7 +117,7 @@
 }
 
 .dialogContent {
-    overflow-y: auto;
+    overflow-y: hidden;
     max-height: 100%;
     width: 100%;
     padding: 32px;
@@ -136,9 +136,13 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: flex-start;
     min-height: 0;
+    height: calc(100% - 200px); /* Adjusted for header and footer */
+    position: relative;
+    box-sizing: border-box;
+    padding-bottom: 200px; /* Extra padding for fixed actions */
 }
 
 .formField {
@@ -222,7 +226,6 @@
 .dynamicFieldContainer {
     margin-bottom: 20px;
     overflow-y: auto;
-    max-height: calc(100% - 200px);
     min-height: 200px;
     width: 100%;
     flex: 1;
@@ -236,7 +239,8 @@
     gap: 12px;
     padding: 12px;
     flex: 1;
-    overflow-y: auto;
+    overflow: scroll;
+    min-height: 200px;
 }
 
 .dynamicFieldItem {

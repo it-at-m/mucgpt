@@ -320,6 +320,10 @@ i18n
                             close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren.",
                             cancel: "Abbrechen"
                         },
+                        publish_bot_dialog: {
+                            publish_bot_success: "Bot erfolgreich veröffentlicht",
+                            publish_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich veröffentlicht"
+                        },
                         search_bot_button: {
                             search_bots: "Assistenten durchsuchen"
                         },
@@ -661,6 +665,10 @@ i18n
                             close_dialog_title: "Close Dialog",
                             close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost.",
                             cancel: "Cancel"
+                        },
+                        publish_bot_dialog: {
+                            publish_bot_success: "Bot published successfully",
+                            publish_bot_success_message: "The bot '{{title}}' has been published successfully"
                         },
                         search_bot_button: {
                             search_bots: "Search assistants"
@@ -1007,6 +1015,10 @@ i18n
                             close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn.",
                             cancel: "Obbrecha"
                         },
+                        publish_bot_dialog: {
+                            publish_bot_success: "Bot erfolgreich veröffentlicht",
+                            publish_bot_success_message: "Da Bot '{{title}}' is erfolgreich veröffentlicht worn"
+                        },
                         search_bot_button: {
                             search_bots: "Assistentn durchschaun"
                         },
@@ -1351,6 +1363,10 @@ i18n
                             close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues.",
                             cancel: "Annuler"
                         },
+                        publish_bot_dialog: {
+                            publish_bot_success: "Bot publié avec succès",
+                            publish_bot_success_message: "Le bot '{{title}}' a été publié avec succès"
+                        },
                         search_bot_button: {
                             search_bots: "Rechercher des assistants"
                         },
@@ -1693,6 +1709,10 @@ i18n
                             close_dialog_title: "Закрити діалог",
                             close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені.",
                             cancel: "Скасувати"
+                        },
+                        publish_bot_dialog: {
+                            publish_bot_success: "Бот успішно опублікований",
+                            publish_bot_success_message: "Бот '{{title}}' було успішно опубліковано"
                         },
                         search_bot_button: {
                             search_bots: "Пошук асистентів"

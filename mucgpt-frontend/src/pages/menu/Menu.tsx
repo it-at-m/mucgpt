@@ -2,7 +2,7 @@ import styles from "./Menu.module.css";
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 import { useContext, useEffect, useState } from "react";
 
 import { AddBotButton } from "../../components/AddBotButton";
@@ -17,6 +17,9 @@ import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api/assistant-client";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
+import { Share24Regular } from "@fluentui/react-icons";
+import { BotStats } from "../../components/BotStats/BotStats";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -25,12 +28,15 @@ const Menu = () => {
     const [ownedCommunityBots, setOwnedCommunityBots] = useState<AssistantResponse[]>([]);
     const [showSearchBot, setShowSearchBot] = useState<boolean>(false);
     const [getCommunityBots, setGetCommunityBots] = useState<boolean>(false);
+    const [hoveredBotId, setHoveredBotId] = useState<string | null>(null);
+    const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
     const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
+    const { showSuccess } = useGlobalToastContext();
     setHeader(DEFAULTHEADER);
 
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -89,6 +95,27 @@ const Menu = () => {
     const onSendQuestion = (question: string) => {
         window.location.href = `#/chat?q=${encodeURIComponent(question)}`;
     };
+
+    const onShareBot = (botId: string) => {
+        navigator.clipboard.writeText(`${window.location.origin}/#/communitybot/${botId}`);
+        showSuccess("Link kopiert", "Der Bot-Link wurde in die Zwischenablage kopiert.");
+    };
+
+    const handleMouseEnter = (botId: string, event: React.MouseEvent) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        setHoverPosition({
+            x: rect.left + scrollX + rect.width / 2,
+            y: rect.bottom + scrollY
+        });
+        setHoveredBotId(botId);
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredBotId(null);
+    };
     return (
         <div>
             <div className={styles.chatstartercontainer}>
@@ -139,15 +166,23 @@ const Menu = () => {
                 <div className={styles.subrowheader}>{t("menu.owned")}</div>
                 <div className={styles.row}>
                     {ownedCommunityBots.map((bot: AssistantResponse, key) => (
-                        <Tooltip key={key} content={bot.latest_version.name} relationship="description" positioning="below">
-                            <div className={styles.box}>
-                                <div className={styles.boxHeader}>{bot.latest_version.name}</div>
-                                <div className={styles.boxDescription}>{bot.latest_version.description}</div>
+                        <div
+                            key={key}
+                            className={styles.box}
+                            onMouseEnter={(e) => handleMouseEnter(bot.id, e)}
+                            onMouseLeave={handleMouseLeave}
+                        >
+                            <div className={styles.boxHeader}>{bot.latest_version.name}</div>
+                            <div className={styles.boxDescription}>{bot.latest_version.description}</div>
+                            <div className={styles.boxButtons}>
                                 <Link to={`owned/communitybot/${bot.id}`} className={styles.boxChoose}>
                                     {t("menu.select")}
                                 </Link>
+                                <Button onClick={() => onShareBot(bot.id)} className={styles.boxChoose} >
+                                    <Share24Regular />  Teilen
+                                </Button>
                             </div>
-                        </Tooltip>
+                        </div>
                     ))}
                     {ownedCommunityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
                 </div>
@@ -168,6 +203,22 @@ const Menu = () => {
                 </div>
                 <div className={styles.rowheader}> </div>
             </div>
+            {hoveredBotId && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: hoverPosition.x - 160, // Center horizontally (assuming 320px width)
+                        top: hoverPosition.y + 10, // Position below the bot box
+                        zIndex: 1000,
+                        padding: '12px',
+                        pointerEvents: 'none'
+                    }}
+                >
+                    {ownedCommunityBots.find(bot => bot.id === hoveredBotId) && (
+                        <BotStats bot={ownedCommunityBots.find(bot => bot.id === hoveredBotId)!} />
+                    )}
+                </div>
+            )}
         </div>
     );
 };

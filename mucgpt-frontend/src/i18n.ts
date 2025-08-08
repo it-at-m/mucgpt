@@ -311,6 +311,7 @@ i18n
                             step_tools: "Werkzeuge",
                             step_quick_prompts: "Schnelle Eingaben",
                             step_examples: "Beispiele",
+                            step_visibility: "Sichtbarkeit",
                             step_advanced_settings: "Erweiterte Einstellungen",
                             // Navigation buttons
                             next: "Weiter",
@@ -659,6 +660,7 @@ i18n
                             step_tools: "Tools",
                             step_quick_prompts: "Quick Prompts",
                             step_examples: "Examples",
+                            step_visibility: "Visibility",
                             step_advanced_settings: "Advanced Settings",
                             next: "Next",
                             previous: "Previous",
@@ -1006,6 +1008,7 @@ i18n
                             step_tools: "Werkzeig",
                             step_quick_prompts: "Vorgeschlagene Antworn",
                             step_examples: "Beispui",
+                            step_visibility: "Sichtbarkeit",
                             step_advanced_settings: "Erweiterte Einstellungen",
                             // Navigation buttons
                             next: "Weiter",
@@ -1354,6 +1357,7 @@ i18n
                             step_tools: "Outils",
                             step_quick_prompts: "Prompts rapides",
                             step_examples: "Exemples",
+                            step_visibility: "Visibilité",
                             step_advanced_settings: "Paramètres avancés",
                             // Navigation buttons
                             next: "Suivant",
@@ -1701,6 +1705,7 @@ i18n
                             step_tools: "Інструменти",
                             step_quick_prompts: "Швидкі запити",
                             step_examples: "Приклади",
+                            step_visibility: "Видимість",
                             step_advanced_settings: "Розширені налаштування",
                             // Navigation buttons
                             next: "Далі",

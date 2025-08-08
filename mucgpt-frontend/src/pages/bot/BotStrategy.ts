@@ -63,7 +63,7 @@ export class CommunityBotStrategy implements BotStrategy {
             owner_ids: latest.owner_ids || [],
             tools: latest.tools || [],
             hierarchical_access: latest.hierarchical_access || [],
-            is_visible: latest.is_visible || true
+            is_visible: latest.is_visible !== undefined ? latest.is_visible : true
         };
     }
 
@@ -97,7 +97,7 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
             owner_ids: latest.owner_ids,
             hierarchical_access: latest.hierarchical_access || [],
             tools: latest.tools || [],
-            is_visible: latest.is_visible || true
+            is_visible: latest.is_visible !== undefined ? latest.is_visible : true
         };
     }
 

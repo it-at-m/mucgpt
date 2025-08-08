@@ -14,6 +14,7 @@ import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext"
 
 import { getTools } from "../../api/core-client";
 import { BotStrategy } from "../../pages/bot/BotStrategy";
+import { VisibilityStep } from "./steps/VisibilityStep";
 
 interface Props {
     showDialog: boolean;
@@ -21,18 +22,16 @@ interface Props {
     bot: Bot;
     onBotChanged: (bot: Bot) => void;
     isOwner: boolean;
-    publishDepartments: string[];
-    setPublishDepartments: (departments: string[]) => void;
     strategy: BotStrategy;
 }
 
-export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, publishDepartments, setPublishDepartments, strategy }: Props) => {
+export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, isOwner, strategy }: Props) => {
     // Toast setup
     const { showSuccess } = useGlobalToastContext();
 
     // Stepper state
     const [currentStep, setCurrentStep] = useState<number>(0);
-    const totalSteps = 7;
+    const totalSteps = 8;
     const stepTitles = [
         "components.edit_bot_dialog.step_title",
         "components.edit_bot_dialog.step_description",
@@ -40,12 +39,17 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         "components.edit_bot_dialog.step_tools",
         "components.edit_bot_dialog.step_quick_prompts",
         "components.edit_bot_dialog.step_examples",
+        "components.edit_bot_dialog.step_visibility",
         "components.edit_bot_dialog.step_advanced_settings"
     ];
 
     const botState = useBotState(bot);
-    const { title, description, systemPrompt, quickPrompts, examples, temperature, maxOutputTokens, tools, publish } = botState;
+    const { title, description, systemPrompt, quickPrompts, examples, temperature, maxOutputTokens, tools, publish, hierarchicalAccess, isVisible } = botState;
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
+
+    useEffect(() => {
+        console.log("Bot visibility changed:", isVisible);
+    }, [isVisible]);
 
     const { t } = useTranslation();
 
@@ -222,15 +226,25 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
                 return <ExamplesStep examples={examples} isOwner={isOwner} onExamplesChange={botState.setExamples} onHasChanged={botState.setHasChanged} />;
             case 6:
                 return (
+                    <VisibilityStep
+                        isOwner={isOwner}
+                        publish={publish}
+                        publishDepartments={hierarchicalAccess}
+                        invisibleChecked={!isVisible}
+                        onHasChanged={botState.setHasChanged}
+                        setPublishDepartments={botState.updateHierarchicalAccess}
+                        setInvisibleChecked={(invisible: boolean) => botState.updateIsVisible(!invisible)}
+                    />
+                );
+
+            case 7:
+                return (
                     <AdvancedSettingsStep
                         temperature={temperature}
                         maxOutputTokens={maxOutputTokens}
                         isOwner={isOwner}
-                        publish={publish}
-                        publishDepartments={publishDepartments}
                         onTemperatureChange={botState.updateTemperature}
                         onMaxTokensChange={botState.updateMaxTokens}
-                        setPublishDepartments={setPublishDepartments}
                         onHasChanged={botState.setHasChanged}
                     />
                 );

@@ -5,7 +5,7 @@ import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-co
 import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "./PublishBotDialog.module.css";
 import { Bot } from "../../api";
-import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
+import DepartmentDropdown from "../DepartmentDropdown/DepartmentDropdown";
 import { useCallback, useState } from "react";
 import { createCommunityAssistantApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
@@ -17,24 +17,14 @@ interface Props {
     invisibleChecked: boolean;
     setInvisibleChecked: (checked: boolean) => void;
     onDeleteBot: () => void;
-    publishDepartments: string[];
-    setPublishDepartments: (departments: string[]) => void;
 }
 
-export const PublishBotDialog = ({
-    open,
-    setOpen,
-    bot,
-    invisibleChecked,
-    setInvisibleChecked,
-    publishDepartments,
-    setPublishDepartments,
-    onDeleteBot
-}: Props) => {
+export const PublishBotDialog = ({ open, setOpen, bot, invisibleChecked, setInvisibleChecked, onDeleteBot }: Props) => {
     const { t } = useTranslation();
     const [publishedBotId, setPublishedBotId] = useState<string | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
     const { showSuccess } = useGlobalToastContext();
+    const [publishDepartments, setPublishDepartments] = useState<string[]>(bot.hierarchical_access || []);
 
     const handlePublishClick = useCallback(async () => {
         setIsPublishing(true);
@@ -56,9 +46,9 @@ export const PublishBotDialog = ({
 
             setPublishedBotId(response.id);
             showSuccess(
-                        t("components.publish_bot_dialog.publish_bot_success"),
-                        t("components.publish_bot_dialog.publish_bot_success_message", { title: bot.title })
-                    );
+                t("components.publish_bot_dialog.publish_bot_success"),
+                t("components.publish_bot_dialog.publish_bot_success_message", { title: bot.title })
+            );
             // Wenn der Bot nicht unsichtbar ist, schließe den Dialog sofort
             if (!invisibleChecked) {
                 onDeleteBot();

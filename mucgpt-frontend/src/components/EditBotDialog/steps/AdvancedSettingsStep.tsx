@@ -2,18 +2,14 @@ import { DialogContent, Field, InfoLabel } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
-import DepartementDropdown from "../../DepartementDropdown/DepartementDropdown";
 import styles from "../EditBotDialog.module.css";
 
 interface AdvancedSettingsStepProps {
     temperature: number;
     maxOutputTokens: number;
     isOwner: boolean;
-    publish: boolean;
-    publishDepartments: string[];
     onTemperatureChange: (temperature: number) => void;
     onMaxTokensChange: (maxTokens: number) => void;
-    setPublishDepartments: (departments: string[]) => void;
     onHasChanged: (hasChanged: boolean) => void;
 }
 
@@ -21,11 +17,8 @@ export const AdvancedSettingsStep = ({
     temperature,
     maxOutputTokens,
     isOwner,
-    publish,
-    publishDepartments,
     onTemperatureChange,
     onMaxTokensChange,
-    setPublishDepartments,
     onHasChanged
 }: AdvancedSettingsStepProps) => {
     const { t } = useTranslation();
@@ -100,19 +93,6 @@ export const AdvancedSettingsStep = ({
                     className={styles.rangeInput}
                 />
                 <div className={styles.rangeValue}>{maxOutputTokens}</div>
-            </Field>
-            <Field size="large" className={styles.rangeField} hidden={!publish}>
-                <label className={styles.formLabel}>
-                    <InfoLabel info={<div>{t("components.edit_bot_dialog.departments_info")}</div>}>{t("components.edit_bot_dialog.departments")}</InfoLabel>
-                </label>
-                <DepartementDropdown
-                    publishDepartments={publishDepartments}
-                    setPublishDepartments={departments => {
-                        setPublishDepartments(departments);
-                        onHasChanged(true);
-                    }}
-                    disabled={!isOwner}
-                />
             </Field>
         </DialogContent>
     );

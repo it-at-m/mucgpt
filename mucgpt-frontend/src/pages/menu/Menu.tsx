@@ -166,20 +166,15 @@ const Menu = () => {
                 <div className={styles.subrowheader}>{t("menu.owned")}</div>
                 <div className={styles.row}>
                     {ownedCommunityBots.map((bot: AssistantResponse, key) => (
-                        <div
-                            key={key}
-                            className={styles.box}
-                            onMouseEnter={(e) => handleMouseEnter(bot.id, e)}
-                            onMouseLeave={handleMouseLeave}
-                        >
+                        <div key={key} className={styles.box} onMouseEnter={e => handleMouseEnter(bot.id, e)} onMouseLeave={handleMouseLeave}>
                             <div className={styles.boxHeader}>{bot.latest_version.name}</div>
                             <div className={styles.boxDescription}>{bot.latest_version.description}</div>
                             <div className={styles.boxButtons}>
                                 <Link to={`owned/communitybot/${bot.id}`} className={styles.boxChoose}>
                                     {t("menu.select")}
                                 </Link>
-                                <Button onClick={() => onShareBot(bot.id)} className={styles.boxChoose} >
-                                    <Share24Regular />  Teilen
+                                <Button onClick={() => onShareBot(bot.id)} className={styles.boxChoose}>
+                                    <Share24Regular /> Teilen
                                 </Button>
                             </div>
                         </div>
@@ -206,17 +201,15 @@ const Menu = () => {
             {hoveredBotId && (
                 <div
                     style={{
-                        position: 'absolute',
+                        position: "absolute",
                         left: hoverPosition.x - 160, // Center horizontally (assuming 320px width)
                         top: hoverPosition.y + 10, // Position below the bot box
                         zIndex: 1000,
-                        padding: '12px',
-                        pointerEvents: 'none'
+                        padding: "12px",
+                        pointerEvents: "none"
                     }}
                 >
-                    {ownedCommunityBots.find(bot => bot.id === hoveredBotId) && (
-                        <BotStats bot={ownedCommunityBots.find(bot => bot.id === hoveredBotId)!} />
-                    )}
+                    {ownedCommunityBots.find(bot => bot.id === hoveredBotId) && <BotStats bot={ownedCommunityBots.find(bot => bot.id === hoveredBotId)!} />}
                 </div>
             )}
         </div>

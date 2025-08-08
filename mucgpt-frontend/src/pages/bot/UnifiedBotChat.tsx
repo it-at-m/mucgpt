@@ -410,7 +410,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={strategy.canEdit ? onBotChanged : () => { }}
+                    onBotChange={strategy.canEdit ? onBotChanged : () => {}}
                     onDeleteBot={onDeleteBot}
                     history={history}
                     minimized={!showSidebar}

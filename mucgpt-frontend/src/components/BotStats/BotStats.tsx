@@ -22,21 +22,19 @@ export const BotStats: React.FC<BotStatsProps> = ({ bot }) => {
         const maxLength = 50; // Maximum characters to display
 
         if (departmentText.length > maxLength) {
-            return departmentText.substring(0, maxLength) + "...";
+            return "Sichtbar für " + hierarchical_access.length + " Abteilungen";
         }
 
         return departmentText;
     };
 
     return (
-        <div className={styles.statsContainer} >
+        <div className={styles.statsContainer}>
             <div className={styles.statsTitle}>Bot-Statistiken</div>
             <div className={styles.statsGrid}>
                 <div className={styles.statItem}>
                     <span className={styles.statLabel}>Sichtbarkeit:</span>
-                    <span className={`${styles.statValue} ${latest_version.is_visible ? styles.visible : styles.invisible}`}>
-                        {visibility}
-                    </span>
+                    <span className={`${styles.statValue} ${latest_version.is_visible ? styles.visible : styles.invisible}`}>{visibility}</span>
                 </div>
                 <div className={styles.statItem}>
                     <span className={styles.statLabel}>Veröffentlichung:</span>

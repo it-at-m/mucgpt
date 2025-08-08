@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../pages/layout/UserContextProvider";
-import styles from "./DepartementDropdown.module.css";
+import styles from "./DepartmentDropdown.module.css";
 import { useTranslation } from "react-i18next";
 import { getDepartements } from "../../api/core-client";
 
@@ -25,7 +25,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
     const [departments, setDepartments] = useState<string[]>([]);
     const [search, setSearch] = useState("");
     const [show, setShow] = useState(false);
-    const { user, isLoading } = useContext(UserContext);
+    const { user } = useContext(UserContext);
 
     useEffect(() => {
         if (departments.length > 0) return; // Nur einmal laden, wenn noch keine Daten vorhanden sind

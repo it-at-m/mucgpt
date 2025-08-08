@@ -20,7 +20,7 @@ export const useBotState = (initialBot: Bot) => {
     const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>(initialBot.hierarchical_access || []);
     const [tags, setTags] = useState<string[]>(initialBot.tags || []);
     const [hasChanged, setHasChanged] = useState<boolean>(false);
-    const [isVisible, setIsVisible] = useState<boolean>(initialBot.is_visible || true);
+    const [isVisible, setIsVisible] = useState<boolean>(initialBot.is_visible !== undefined ? initialBot.is_visible : true);
 
     // Update state when bot prop changes
     useEffect(() => {
@@ -39,7 +39,7 @@ export const useBotState = (initialBot: Bot) => {
         setHierarchicalAccess(initialBot.hierarchical_access || []);
         setTags(initialBot.tags || []);
         setHasChanged(false);
-        setIsVisible(initialBot.is_visible || true);
+        setIsVisible(initialBot.is_visible !== undefined ? initialBot.is_visible : true);
     }, [initialBot]);
 
     // Change handlers
@@ -78,6 +78,11 @@ export const useBotState = (initialBot: Bot) => {
         setHasChanged(true);
     }, []);
 
+    const updateHierarchicalAccess = useCallback((access: string[]) => {
+        setHierarchicalAccess(access);
+        setHasChanged(true);
+    }, []);
+
     // Reset to original values
     const resetToOriginal = useCallback(() => {
         setBotId(initialBot.id);
@@ -95,7 +100,7 @@ export const useBotState = (initialBot: Bot) => {
         setHierarchicalAccess(initialBot.hierarchical_access || []);
         setTags(initialBot.tags || []);
         setHasChanged(false);
-        setIsVisible(initialBot.is_visible || true);
+        setIsVisible(initialBot.is_visible !== undefined ? initialBot.is_visible : true);
     }, [initialBot]);
 
     // Create bot object for saving
@@ -171,6 +176,7 @@ export const useBotState = (initialBot: Bot) => {
         updateMaxTokens,
         updateTools,
         updateIsVisible,
+        updateHierarchicalAccess,
 
         // Utility functions
         resetToOriginal,

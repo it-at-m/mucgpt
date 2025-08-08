@@ -63,7 +63,6 @@ export const BotsettingsDrawer = ({
     const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
-    const [publishDepartments, setPublishDepartments] = useState<string[]>(bot.hierarchical_access || []);
     const [invisibleChecked, setInvisibleChecked] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
@@ -73,7 +72,6 @@ export const BotsettingsDrawer = ({
     useEffect(() => {
         setDescription(bot.description);
         setPublish(bot.publish);
-        setPublishDepartments(bot.hierarchical_access || []);
         setIsOwner(isOwned || !bot.publish);
     }, [bot, isOwned]);
 
@@ -179,11 +177,9 @@ export const BotsettingsDrawer = ({
                 invisibleChecked={invisibleChecked}
                 setInvisibleChecked={setInvisibleChecked}
                 onDeleteBot={onDeleteBot}
-                publishDepartments={publishDepartments}
-                setPublishDepartments={setPublishDepartments}
             />
         ),
-        [showPublishDialog, setShowPublishDialog, bot, invisibleChecked, setInvisibleChecked, onDeleteBot, publishDepartments, setPublishDepartments]
+        [showPublishDialog, setShowPublishDialog, bot, invisibleChecked, setInvisibleChecked, onDeleteBot]
     );
 
     // Edit bot dialog
@@ -195,12 +191,10 @@ export const BotsettingsDrawer = ({
                 bot={bot}
                 onBotChanged={onBotChange}
                 isOwner={isOwner}
-                publishDepartments={publishDepartments}
-                setPublishDepartments={setPublishDepartments}
                 strategy={strategy}
             />
         ),
-        [showEditDialog, bot, onBotChange, isOwner, publishDepartments, setPublishDepartments, strategy]
+        [showEditDialog, bot, onBotChange, isOwner, strategy]
     );
 
     // sidebar content

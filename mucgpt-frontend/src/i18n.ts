@@ -67,6 +67,8 @@ i18n
                         examples: "Beispiele",
                         sidebar_show: "Sidebar anzeigen",
                         sidebar_hide: "Sidebar ausblenden",
+                        cancel: "Abbrechen",
+                        ok: "OK",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -96,6 +98,17 @@ i18n
                             update_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich aktualisiert",
                             update_bot_failed: "Bot konnte nicht aktualisiert werden",
                             update_bot_failed_message: "Beim Aktualisieren des Bots ist ein Fehler aufgetreten"
+                        },
+                        not_subscribed_dialog: {
+                            subscribe_title: "Assistent abonnieren",
+                            subscribe_message: "Sie haben den Assistenten '{{botTitle}}' noch nicht abonniert. Möchten Sie ihn jetzt abonnieren?",
+                            subscribe_info: "Durch das Abonnieren erhalten Sie Zugriff auf alle Funktionen dieses Assistenten.",
+                            subscribe_button: "Abonnieren",
+                            subscribe_success: "Erfolgreich abonniert",
+                            subscribe_success_message: "Sie haben den Assistenten '{{botTitle}}' erfolgreich abonniert",
+                            no_access_title: "Kein Zugriff",
+                            no_access_message: "Sie haben keinen Zugriff auf den Assistenten '{{botTitle}}'.",
+                            no_access_info: "Bitte wenden Sie sich an den Ersteller des Assistenten, um Zugriff zu erhalten."
                         },
                         department_dropdown: {
                             placeholder: "Suche Abteilung...",
@@ -399,6 +412,8 @@ i18n
                         examples: "Examples",
                         sidebar_show: "Show sidebar",
                         sidebar_hide: "Hide sidebar",
+                        cancel: "Cancel",
+                        ok: "OK",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -428,6 +443,17 @@ i18n
                             update_bot_success_message: "The bot '{{title}}' has been successfully updated",
                             update_bot_failed: "Bot could not be updated",
                             update_bot_failed_message: "An error occurred while updating the bot"
+                        },
+                        not_subscribed_dialog: {
+                            subscribe_title: "Subscribe to Assistant",
+                            subscribe_message: "You have not yet subscribed to the assistant '{{botTitle}}'. Would you like to subscribe now?",
+                            subscribe_info: "By subscribing, you gain access to all features of this assistant.",
+                            subscribe_button: "Subscribe",
+                            subscribe_success: "Successfully subscribed",
+                            subscribe_success_message: "You have successfully subscribed to the assistant '{{botTitle}}'",
+                            no_access_title: "No Access",
+                            no_access_message: "You do not have access to the assistant '{{botTitle}}'.",
+                            no_access_info: "Please contact the creator of the assistant to gain access."
                         },
                         department_dropdown: {
                             placeholder: "Search department...",
@@ -722,6 +748,8 @@ i18n
                         examples: "Beispui",
                         sidebar_show: "Sidebar zoagn",
                         sidebar_hide: "Sidebar ausblenden",
+                        cancel: "Abbrechen",
+                        ok: "OK",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -757,6 +785,17 @@ i18n
                             update_bot_success_message: "Da Bot '{{title}}' is erfolgreich aktualisiert worden",
                             update_bot_failed: "Bot konnt ned aktualisiert werd'n",
                             update_bot_failed_message: "Beim Aktualisieren vom Bot is a Fehler aufgetreten"
+                        },
+                        not_subscribed_dialog: {
+                            subscribe_title: "Assistenten abonnieren",
+                            subscribe_message: "Du hosd'n Assistenten '{{botTitle}}' no ned abonniert. Möchst'n jetzt abonnieren?",
+                            subscribe_info: "Durch's Abonnieren kriagst Zugriff auf alle Funktionen von dem Assistenten.",
+                            subscribe_button: "Abonnieren",
+                            subscribe_success: "Erfolgreich abonniert",
+                            subscribe_success_message: "Du hosd'n Assistenten '{{botTitle}}' erfolgreich abonniert",
+                            no_access_title: "Koa Zugriff",
+                            no_access_message: "Du hosd koan Zugriff auf'n Assistenten '{{botTitle}}'.",
+                            no_access_info: "Bitte wend di an'n Ersteller vom Assistenten, damit'd Zugriff kriagst."
                         },
                         department_dropdown: {
                             placeholder: "Suach Abteilung...",
@@ -1059,6 +1098,8 @@ i18n
                         examples: "Exemples",
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale",
+                        cancel: "Annuler",
+                        ok: "OK",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -1088,6 +1129,17 @@ i18n
                             update_bot_success_message: "Le bot '{{title}}' a été mis à jour avec succès",
                             update_bot_failed: "Le bot n'a pas pu être mis à jour",
                             update_bot_failed_message: "Une erreur s'est produite lors de la mise à jour du bot"
+                        },
+                        not_subscribed_dialog: {
+                            subscribe_title: "S'abonner à l'assistant",
+                            subscribe_message: "Vous n'êtes pas encore abonné à l'assistant '{{botTitle}}'. Souhaitez-vous vous abonner maintenant?",
+                            subscribe_info: "En vous abonnant, vous accédez à toutes les fonctionnalités de cet assistant.",
+                            subscribe_button: "S'abonner",
+                            subscribe_success: "Abonnement réussi",
+                            subscribe_success_message: "Vous vous êtes abonné avec succès à l'assistant '{{botTitle}}'",
+                            no_access_title: "Aucun accès",
+                            no_access_message: "Vous n'avez pas accès à l'assistant '{{botTitle}}'.",
+                            no_access_info: "Veuillez contacter le créateur de l'assistant pour obtenir l'accès."
                         },
                         department_dropdown: {
                             placeholder: "Search department...",
@@ -1390,6 +1442,8 @@ i18n
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель",
+                        cancel: "Скасувати",
+                        ok: "OK",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
@@ -1419,6 +1473,17 @@ i18n
                             update_bot_success_message: "Бота '{{title}}' було успішно оновлено",
                             update_bot_failed: "Не вдалося оновити бота",
                             update_bot_failed_message: "Сталася помилка під час оновлення бота"
+                        },
+                        not_subscribed_dialog: {
+                            subscribe_title: "Підписатися на асистента",
+                            subscribe_message: "Ви ще не підписані на асистента '{{botTitle}}'. Бажаєте підписатися зараз?",
+                            subscribe_info: "Підписавшись, ви отримаєте доступ до всіх функцій цього асистента.",
+                            subscribe_button: "Підписатися",
+                            subscribe_success: "Успішно підписано",
+                            subscribe_success_message: "Ви успішно підписалися на асистента '{{botTitle}}'",
+                            no_access_title: "Немає доступу",
+                            no_access_message: "У вас немає доступу до асистента '{{botTitle}}'.",
+                            no_access_info: "Будь ласка, зверніться до створювача асистента, щоб отримати доступ."
                         },
                         department_dropdown: {
                             placeholder: "Пошук відділу...",

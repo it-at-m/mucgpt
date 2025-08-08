@@ -20,9 +20,11 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
-import { BotStrategy } from "./BotStrategy";
+import { BotStrategy, CommunityBotStrategy } from "./BotStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
+import { getOwnedCommunityBots, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
+import { NotSubscribedDialog } from "../../components/NotSubscribedDialog/NotSubscribedDIalog";
 
 interface UnifiedBotChatProps {
     strategy: BotStrategy;
@@ -76,6 +78,8 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
+    const [noAccess, setNoAccess] = useState<boolean>(false);
 
     // StorageServices
     const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
@@ -91,61 +95,93 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
         temperature: 0.7,
         quick_prompts: [],
         examples: [],
-        version: "0"
+        version: "0",
+        is_visible: true
     });
 
     // useEffect to load the bot config and chat history
     useEffect(() => {
-        if (bot_id) {
-            if (error) setError(undefined);
-            isLoadingRef.current = true;
+        const loadData = async () => {
+            if (bot_id) {
+                if (error) setError(undefined);
+                isLoadingRef.current = true;
+                console.log("Strategy:", strategy);
+                console.log(strategy instanceof CommunityBotStrategy);
+                let notSubscribed = false;
+                if (strategy instanceof CommunityBotStrategy) {
+                    const owned = await getOwnedCommunityBots();
+                    const userIsOwner = owned.some(bot => bot.id === bot_id);
 
-            strategy
-                .loadBotConfig(bot_id, botStorageService)
-                .then(bot => {
-                    if (bot) {
-                        setBotConfig(bot);
-                        setHeader("");
-                        dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
-                        dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
-                        dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
-                        setQuickPrompts(bot.quick_prompts || []);
-
-                        return botStorageService
-                            .getNewestChatForBot(bot_id)
-                            .then(existingChat => {
-                                if (existingChat) {
-                                    const messages = existingChat.messages;
-                                    dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
-                                    lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
-                                    dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
-                                }
-                            })
-                            .then(() => fetchHistory())
-                            .catch(err => {
-                                console.error("Error loading chat history:", err);
-                                showError(t("components.bot_chat.load_chat_failed"), t("components.bot_chat.load_chat_failed_message"));
-                            });
+                    if (userIsOwner) {
+                        window.location.href = `/#/owned/communitybot/${bot_id}`;
+                        return;
                     } else {
-                        showError(t("components.bot_chat.load_bot_failed"), t("components.bot_chat.bot_not_found"));
-                        // wait a moment before redirecting to home
-                        setTimeout(() => {
-                            window.location.href = "/";
-                        }, 2000);
+                        const subscriptions = await getUserSubscriptionsApi();
+                        const isSubscribed = subscriptions && subscriptions.length > 0 && subscriptions.some(sub => sub.id === bot_id);
+                        console.log("Is Subscribed:", isSubscribed);
+                        if (!isSubscribed) {
+                            notSubscribed = true;
+                        }
                     }
-                })
-                .catch(err => {
-                    console.error("Error loading bot configuration:", err);
-                    showError(t("components.bot_chat.load_bot_failed"), err instanceof Error ? err.message : t("components.bot_chat.load_bot_failed_message"));
-                    // wait a moment before redirecting to home
-                    setTimeout(() => {
-                        window.location.href = "/";
-                    }, 2000);
-                })
-                .finally(() => {
-                    isLoadingRef.current = false;
-                });
-        }
+                }
+
+                strategy
+                    .loadBotConfig(bot_id, botStorageService)
+                    .then(bot => {
+                        if (bot) {
+                            setBotConfig(bot);
+                            setHeader("");
+                            dispatch({ type: "SET_SYSTEM_PROMPT", payload: bot.system_message });
+                            dispatch({ type: "SET_TEMPERATURE", payload: bot.temperature });
+                            dispatch({ type: "SET_MAX_TOKENS", payload: bot.max_output_tokens });
+                            setQuickPrompts(bot.quick_prompts || []);
+
+                            return botStorageService
+                                .getNewestChatForBot(bot_id)
+                                .then(existingChat => {
+                                    if (existingChat) {
+                                        const messages = existingChat.messages;
+                                        dispatch({ type: "SET_ANSWERS", payload: [...answers.concat(messages)] });
+                                        lastQuestionRef.current = messages.length > 0 ? messages[messages.length - 1].user : "";
+                                        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingChat.id });
+                                    }
+                                })
+                                .then(() => fetchHistory())
+                                .catch(err => {
+                                    console.error("Error loading chat history:", err);
+                                    showError(t("components.bot_chat.load_chat_failed"), t("components.bot_chat.load_chat_failed_message"));
+                                });
+                        } else {
+                            showError(t("components.bot_chat.load_bot_failed"), t("components.bot_chat.bot_not_found"));
+                            // wait a moment before redirecting to home
+                            setTimeout(() => {
+                                window.location.href = "/";
+                            }, 2000);
+                        }
+                    })
+                    .catch(err => {
+                        if (err.response?.status === 403 && notSubscribed) {
+                            setNoAccess(true);
+                        } else {
+                            console.error("Error loading bot configuration:", err);
+                            showError(
+                                t("components.bot_chat.load_bot_failed"),
+                                err instanceof Error ? err.message : t("components.bot_chat.load_bot_failed_message")
+                            );
+                            // wait a moment before redirecting to home
+                            setTimeout(() => {
+                                window.location.href = "/";
+                            }, 2000);
+                        }
+                    })
+                    .finally(() => {
+                        console.log("Not Subscribed:", notSubscribed);
+                        setShowNotSubscribedDialog(notSubscribed);
+                        isLoadingRef.current = false;
+                    });
+            }
+        };
+        loadData();
     }, [bot_id, strategy, t, showError]);
 
     // get History-Funktion
@@ -374,7 +410,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
             <>
                 <BotsettingsDrawer
                     bot={botConfig}
-                    onBotChange={strategy.canEdit ? onBotChanged : () => {}}
+                    onBotChange={strategy.canEdit ? onBotChanged : () => { }}
                     onDeleteBot={onDeleteBot}
                     history={history}
                     minimized={!showSidebar}
@@ -497,7 +533,26 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
         ]
     );
 
-    return layout;
+    return (
+        <>
+            {layout}
+            <NotSubscribedDialog
+                open={showNotSubscribedDialog}
+                onOpenChange={setShowNotSubscribedDialog}
+                hasAccess={!noAccess}
+                botTitle={botConfig.title}
+                onSubscribe={async () => {
+                    await subscribeToAssistantApi(bot_id);
+                    setShowNotSubscribedDialog(false);
+                    setNoAccess(false);
+                    showSuccess(
+                        t("components.not_subscribed_dialog.subscribe_success"),
+                        t("components.not_subscribed_dialog.subscribe_success_message", { botTitle: botConfig.title })
+                    );
+                }}
+            />
+        </>
+    );
 };
 
 export default UnifiedBotChat;

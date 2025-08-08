@@ -54,7 +54,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         owner_ids: ["owner"],
         tags: [],
         tools: [],
-        hierarchical_access: []
+        hierarchical_access: [],
+        is_visible: true
     };
     const { t } = useTranslation();
     const [inputText, setInputText] = useState("");
@@ -103,7 +104,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                             owner_ids: latest.owner_ids,
                             tags: latest.tags || [],
                             tools: latest.tools || [],
-                            hierarchical_access: latest.hierarchical_access || []
+                            hierarchical_access: latest.hierarchical_access || [],
+                            is_visible: latest.is_visible ? latest.is_visible : true // Default to true if not specified
                         };
                         latestBots.push(latest_bot);
                     }
@@ -237,7 +239,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                     owner_ids: latest.owner_ids,
                     tags: latest.tags || [],
                     tools: latest.tools || [],
-                    hierarchical_access: latest.hierarchical_access || []
+                    hierarchical_access: latest.hierarchical_access || [],
+                    is_visible: latest.is_visible ? latest.is_visible : true
                 };
                 setChoosenBotAll([latest_version]); //TODO all Versions
             })

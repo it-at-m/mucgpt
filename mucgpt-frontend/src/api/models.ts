@@ -121,6 +121,7 @@ export type Bot = {
     tags?: string[];
     hierarchical_access?: string[];
     tools?: ToolBase[];
+    is_visible: boolean;
 };
 
 export interface ToolBase {
@@ -145,6 +146,7 @@ export interface AssistantCreateInput {
     examples?: ExampleModelInput[];
     quick_prompts?: QuickPrompt[];
     tags?: string[];
+    is_visible: boolean;
 }
 
 export interface AssistantVersionResponse {
@@ -162,6 +164,7 @@ export interface AssistantVersionResponse {
     examples?: ExampleModelInput[];
     quick_prompts?: QuickPrompt[];
     tags?: string[];
+    is_visible: boolean;
 }
 
 export interface AssistantCreateResponse {
@@ -185,6 +188,7 @@ export interface AssistantUpdateInput {
     examples?: ExampleModelInput[];
     quick_prompts?: QuickPrompt[];
     tags?: string[];
+    is_visible: boolean;
     version: number;
 }
 

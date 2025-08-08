@@ -79,6 +79,7 @@ const CREATE_ASSISTANT_RESPONSE: AssistantCreateResponse = {
         hierarchical_access: ["IT", "IT-KI"],
         temperature: 0.7,
         max_output_tokens: 4000,
+        is_visible: true,
         tools: [
             { id: "tool-1", config: { enabled: true } },
             { id: "tool-2", config: { enabled: false } }

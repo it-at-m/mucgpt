@@ -91,7 +91,12 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
                 max_output_tokens: LLM.max_output_tokens,
                 quick_prompts: [],
                 examples: [],
-                version: "0"
+                version: "0",
+                owner_ids: ["owner"],
+                tags: [],
+                hierarchical_access: [],
+                tools: [],
+                is_visible: true
             };
             const created_id = await storageService.createBotConfig(bot);
             if (created_id) {

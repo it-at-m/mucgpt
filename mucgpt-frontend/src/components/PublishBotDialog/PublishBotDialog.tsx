@@ -6,7 +6,7 @@ import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye2
 import styles from "./PublishBotDialog.module.css";
 import { Bot } from "../../api";
 import DepartmentDropdown from "../DepartementDropdown/DepartementDropdown";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { createCommunityAssistantApi } from "../../api/assistant-client";
 
 interface Props {
@@ -31,24 +31,39 @@ export const PublishBotDialog = ({
     onDeleteBot
 }: Props) => {
     const { t } = useTranslation();
+    const [publishedBotId, setPublishedBotId] = useState<string | null>(null);
+    const [isPublishing, setIsPublishing] = useState(false);
 
     const handlePublishClick = useCallback(async () => {
-        await createCommunityAssistantApi({
-            name: bot.title,
-            description: bot.description,
-            system_prompt: bot.system_message,
-            temperature: bot.temperature,
-            max_output_tokens: bot.max_output_tokens,
-            tools: bot.tools || [],
-            owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
-            examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
-            quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
-            tags: bot.tags || [],
-            hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"] // Default to all departments if none selected
-        }).then(() => {
-            onDeleteBot();
-        });
-        setOpen(false);
+        setIsPublishing(true);
+        try {
+            const response = await createCommunityAssistantApi({
+                name: bot.title,
+                description: bot.description,
+                system_prompt: bot.system_message,
+                temperature: bot.temperature,
+                max_output_tokens: bot.max_output_tokens,
+                tools: bot.tools || [],
+                owner_ids: bot.owner_ids ? bot.owner_ids : ["0"],
+                examples: bot.examples?.map(e => ({ text: e.text, value: e.value })),
+                quick_prompts: bot.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
+                tags: bot.tags || [],
+                hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"], // Default to all departments if none selected
+                is_visible: !invisibleChecked
+            });
+
+            setPublishedBotId(response.id);
+
+            // Wenn der Bot nicht unsichtbar ist, schließe den Dialog sofort
+            if (!invisibleChecked) {
+                onDeleteBot();
+                setOpen(false);
+            }
+        } catch (error) {
+            console.error("Error publishing bot:", error);
+        } finally {
+            setIsPublishing(false);
+        }
     }, [bot, invisibleChecked, publishDepartments, onDeleteBot, setOpen]);
 
     return (
@@ -116,7 +131,7 @@ export const PublishBotDialog = ({
                                 </Text>
                             </div>
 
-                            {invisibleChecked && (
+                            {invisibleChecked && publishedBotId && (
                                 <div className={styles.linkCard}>
                                     <div className={styles.linkPreview}>
                                         <div className={styles.linkSection}>
@@ -126,7 +141,7 @@ export const PublishBotDialog = ({
                                             </Label>
                                             <div className={styles.linkContainer}>
                                                 <Text size={300} className={styles.linkText}>
-                                                    {`${window.location.origin}/bot/${bot.id}`}
+                                                    {`${window.location.origin}/#/communitybot/${publishedBotId}`}
                                                 </Text>
                                                 <Tooltip content="Link in Zwischenablage kopieren" relationship="description">
                                                     <Button
@@ -134,7 +149,7 @@ export const PublishBotDialog = ({
                                                         size="small"
                                                         icon={<Link24Regular />}
                                                         onClick={() => {
-                                                            navigator.clipboard.writeText(`${window.location.origin}/bot/${bot.id}`);
+                                                            navigator.clipboard.writeText(`${window.location.origin}/#/communitybot/${publishedBotId}`);
                                                         }}
                                                         aria-label="Link kopieren"
                                                     />
@@ -174,12 +189,36 @@ export const PublishBotDialog = ({
                                 {t("components.botsettingsdrawer.deleteDialog.cancel")}
                             </Button>
                         </DialogTrigger>
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="primary" size="medium" onClick={handlePublishClick} className={styles.publishButton}>
-                                <Checkmark24Filled />
-                                {t("components.botsettingsdrawer.deleteDialog.confirm")}
-                            </Button>
-                        </DialogTrigger>
+                        {!publishedBotId && (
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="primary"
+                                    size="medium"
+                                    onClick={handlePublishClick}
+                                    className={styles.publishButton}
+                                    disabled={isPublishing}
+                                >
+                                    <Checkmark24Filled />
+                                    {isPublishing ? "Veröffentliche..." : t("components.botsettingsdrawer.deleteDialog.confirm")}
+                                </Button>
+                            </DialogTrigger>
+                        )}
+                        {publishedBotId && invisibleChecked && (
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="primary"
+                                    size="medium"
+                                    onClick={() => {
+                                        onDeleteBot();
+                                        setOpen(false);
+                                    }}
+                                    className={styles.publishButton}
+                                >
+                                    <Checkmark24Filled />
+                                    Fertig
+                                </Button>
+                            </DialogTrigger>
+                        )}
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>

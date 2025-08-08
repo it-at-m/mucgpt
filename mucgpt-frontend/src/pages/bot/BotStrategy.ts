@@ -62,7 +62,8 @@ export class CommunityBotStrategy implements BotStrategy {
             tags: latest.tags || [],
             owner_ids: latest.owner_ids || [],
             tools: latest.tools || [],
-            hierarchical_access: latest.hierarchical_access || []
+            hierarchical_access: latest.hierarchical_access || [],
+            is_visible: latest.is_visible || true
         };
     }
 
@@ -95,7 +96,8 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
             tags: latest.tags,
             owner_ids: latest.owner_ids,
             hierarchical_access: latest.hierarchical_access || [],
-            tools: latest.tools || []
+            tools: latest.tools || [],
+            is_visible: latest.is_visible || true
         };
     }
 
@@ -116,7 +118,8 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
             examples: newBot.examples?.map(e => ({ text: e.text, value: e.value })) || [],
             quick_prompts: newBot.quick_prompts || [],
             tags: newBot.tags || [],
-            version: Number(newBot.version)
+            version: Number(newBot.version),
+            is_visible: newBot.is_visible
         };
 
         await updateCommunityAssistantApi(botId, updateInput);

@@ -45,7 +45,8 @@ export async function migrate_old_bots() {
                 publish: oldbot.publish,
                 temperature: oldbot.temperature,
                 max_output_tokens: oldbot.max_output_tokens,
-                version: "0" // Set a default version for new bots
+                version: "0", // Set a default version for new bots
+                is_visible: true
             };
             //save to new bot storage
             await newStore.createBotConfig(newBot);

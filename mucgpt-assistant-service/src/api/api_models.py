@@ -401,6 +401,11 @@ class AssistantResponse(BaseModel):
         description="List of lhmobjektIDs who will own this assistant",
         example=["12345", "67890"],
     )
+    subscriptions_count: int = Field(
+        0,
+        description="Number of users subscribed to this assistant",
+        example=42,
+    )
     latest_version: AssistantVersionResponse = Field(
         ..., description="The latest version of the assistant"
     )
@@ -418,6 +423,7 @@ class AssistantResponse(BaseModel):
                 ],
                 "is_visible": True,
                 "owner_ids": ["12345", "67890"],
+                "subscriptions_count": 42,
                 "latest_version": {
                     "id": 1,
                     "version": 1,

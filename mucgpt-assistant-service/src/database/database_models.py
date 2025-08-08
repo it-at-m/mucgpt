@@ -122,6 +122,7 @@ class Assistant(Base):
     is_visible = Column(
         Boolean, default=True, nullable=False
     )  # Whether this assistant is publicly listed
+    subscriptions_count = Column(Integer, nullable=False, default=0, server_default="0")
 
     versions = relationship(
         "AssistantVersion",

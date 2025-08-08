@@ -129,6 +129,7 @@ async def createBot(
             hierarchical_access=new_assistant.hierarchical_access or [],
             is_visible=new_assistant.is_visible,
             owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+            subscriptions_count=getattr(new_assistant, "subscriptions_count", 0) or 0,
             latest_version=assistant_version_response,
         )
 
@@ -315,6 +316,7 @@ async def updateBot(
         hierarchical_access=assistant.hierarchical_access or [],
         is_visible=assistant.is_visible,
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
         latest_version=assistant_version_response,
     )
 
@@ -384,6 +386,7 @@ async def getAllBots(
                 hierarchical_access=assistant.hierarchical_access or [],
                 is_visible=assistant.is_visible,
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+                subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
             )
             response_list.append(response)
@@ -450,9 +453,7 @@ async def getBot(
         tags=latest_version.tags or [],
         tools=assistant_repo.get_tools_from_version(latest_version),
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
-    )
-
-    # Build AssistantResponse
+    )  # Build AssistantResponse
     response = AssistantResponse(
         id=assistant.id,
         created_at=assistant.created_at,
@@ -460,6 +461,7 @@ async def getBot(
         hierarchical_access=assistant.hierarchical_access or [],
         is_visible=assistant.is_visible,
         owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
         latest_version=assistant_version_response,
     )
 

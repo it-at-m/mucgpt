@@ -1,13 +1,15 @@
 import uuid
 from typing import List, Optional
 
-from sqlalchemy import delete, func, insert, select
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes, selectinload
 
 from core.logtools import getLogger
 from utils import serialize_list
 
+# Import to register SQLAlchemy event listeners for subscription counting
+from . import subscription_events  # noqa: F401
 from .database_models import (
     Assistant,
     AssistantVersion,
@@ -381,6 +383,21 @@ class AssistantRepository(Repository[Assistant]):
         )
 
         try:
+            # First check if the subscription exists
+            existing_subscription = await self.session.execute(
+                select(Subscription)
+                .where(Subscription.assistant_id == assistant_id)
+                .where(Subscription.lhmobjektID == lhmobjektID)
+            )
+            subscription = existing_subscription.scalars().first()
+
+            if not subscription:
+                logger.info(
+                    f"No subscription found for user {lhmobjektID} to assistant {assistant_id}"
+                )
+                return False
+
+            # Delete the subscription
             result = await self.session.execute(
                 delete(Subscription)
                 .where(Subscription.assistant_id == assistant_id)
@@ -388,6 +405,17 @@ class AssistantRepository(Repository[Assistant]):
             )
 
             rows_deleted = result.rowcount
+
+            # Manually decrement the counter since events might not be reliable
+            if rows_deleted > 0:
+                await self.session.execute(
+                    update(Assistant)
+                    .where(Assistant.id == assistant_id)
+                    .values(
+                        subscriptions_count=Assistant.subscriptions_count - rows_deleted
+                    )
+                )
+
             logger.info(
                 f"Removed {rows_deleted} subscription(s) for user {lhmobjektID} from assistant {assistant_id}"
             )

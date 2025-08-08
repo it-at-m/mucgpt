@@ -1231,3 +1231,258 @@ async def test_unsubscription_persists_after_commit(test_client, test_db_session
     )
     subscription_after = result_after.scalars().first()
     assert subscription_after is None
+
+
+@pytest.mark.integration
+def test_subscription_count_in_assistant_response(test_client):
+    """Test that subscription count is included in assistant responses."""
+    # Create an assistant
+    assistant_data = AssistantCreate(
+        name="Subscription Count Bot",
+        system_prompt="Testing subscription count in responses.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Verify initial count is 0
+    assert "subscriptions_count" in created_bot
+    assert created_bot["subscriptions_count"] == 0
+
+    # Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+    # Get user's bots and verify count is updated
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    assert user_bots_response.status_code == 200
+    user_bots = user_bots_response.json()
+
+    # Find our bot in the response
+    our_bot = None
+    for bot in user_bots:
+        if bot["id"] == assistant_id:
+            our_bot = bot
+            break
+
+    assert our_bot is not None
+    assert "subscriptions_count" in our_bot
+    assert our_bot["subscriptions_count"] == 1
+
+
+@pytest.mark.integration
+def test_subscription_count_decrements_on_unsubscribe(test_client):
+    """Test that subscription count decrements when users unsubscribe."""
+    # Create an assistant
+    assistant_data = AssistantCreate(
+        name="Unsubscribe Count Bot",
+        system_prompt="Testing subscription count decrement.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Subscribe to the assistant
+    subscribe_response = test_client.post(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert subscribe_response.status_code == 200
+
+    # Verify count is 1
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    user_bots = user_bots_response.json()
+    our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
+    assert our_bot["subscriptions_count"] == 1
+
+    # Unsubscribe
+    unsubscribe_response = test_client.delete(
+        f"/user/subscriptions/{assistant_id}", headers=headers
+    )
+    assert unsubscribe_response.status_code == 200
+
+    # Verify count is back to 0
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    user_bots = user_bots_response.json()
+    our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
+    assert our_bot["subscriptions_count"] == 0
+
+
+@pytest.mark.integration
+def test_subscription_count_zero_for_new_assistants(test_client):
+    """Test that new assistants start with zero subscription count."""
+    # Create multiple assistants
+    for i in range(3):
+        assistant_data = AssistantCreate(
+            name=f"New Assistant {i}",
+            system_prompt=f"New assistant number {i}.",
+            hierarchical_access=["IT-Test-Department"],
+        )
+
+        create_response = test_client.post(
+            "/bot/create", json=assistant_data.model_dump(), headers=headers
+        )
+        assert create_response.status_code == 200
+        created_bot = create_response.json()
+
+        # Each new assistant should start with 0 subscriptions
+        assert "subscriptions_count" in created_bot
+        assert created_bot["subscriptions_count"] == 0
+
+    # Verify in user bots list as well
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    user_bots = user_bots_response.json()
+    assert len(user_bots) == 3
+
+    for bot in user_bots:
+        assert bot["subscriptions_count"] == 0
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_subscription_count_with_repository_operations(
+    test_client, test_db_session
+):
+    """Test subscription count accuracy with direct repository operations."""
+    from src.database.assistant_repo import AssistantRepository
+
+    # Create assistant using repository directly
+    assistant_repo = AssistantRepository(test_db_session)
+
+    assistant = await assistant_repo.create(
+        hierarchical_access=["IT-Test-Department"],
+        owner_ids=["test_user_123"],
+    )
+
+    await assistant_repo.create_assistant_version(
+        assistant=assistant,
+        name="Repository Test Bot",
+        system_prompt="Testing with repository operations.",
+        description="Bot for testing subscription count with repository",
+        temperature=0.7,
+        max_output_tokens=1000,
+        examples=[],
+        quick_prompts=[],
+        tags=["test"],
+    )  # Add subscription directly via repository
+    await assistant_repo.create_subscription(
+        assistant_id=assistant.id, lhmobjektID="test_user_123"
+    )
+
+    await test_db_session.commit()
+
+    # Get user's bots via API and verify count
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    assert user_bots_response.status_code == 200
+    user_bots = user_bots_response.json()
+
+    our_bot = next((bot for bot in user_bots if bot["id"] == str(assistant.id)), None)
+    assert our_bot is not None
+    assert (
+        our_bot["subscriptions_count"] == 1
+    )  # Remove subscription directly via repository
+    await assistant_repo.remove_subscription(
+        assistant_id=assistant.id, lhmobjektID="test_user_123"
+    )
+
+    await test_db_session.commit()
+
+    # Verify count is decremented
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    user_bots = user_bots_response.json()
+    our_bot = next((bot for bot in user_bots if bot["id"] == str(assistant.id)), None)
+    assert our_bot["subscriptions_count"] == 0
+
+
+@pytest.mark.integration
+def test_subscription_count_in_complex_bot_response(test_client):
+    """Test that subscription count is included in complex bot responses."""
+    # Create a complex bot
+    complex_assistant_data = AssistantCreate(
+        name="Complex Count Bot",
+        description="A complex bot for testing subscription count",
+        system_prompt="You are a complex assistant with subscription counting.",
+        hierarchical_access=["IT-Test-Department"],
+        temperature=0.8,
+        max_output_tokens=2000,
+        examples=[
+            {"text": "Example 1", "value": "First example value"},
+        ],
+        quick_prompts=[
+            {
+                "label": "Summarize",
+                "prompt": "Please summarize this",
+                "tooltip": "Quick summary",
+            }
+        ],
+        tags=["complex", "counting"],
+        tools=[{"id": "WEB_SEARCH", "config": {"max_results": 10}}],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=complex_assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    created_bot = create_response.json()
+    assistant_id = created_bot["id"]
+
+    # Verify subscription count is present in complex response
+    assert "subscriptions_count" in created_bot
+    assert created_bot["subscriptions_count"] == 0
+
+    # Subscribe and verify count in complex response
+    test_client.post(f"/user/subscriptions/{assistant_id}", headers=headers)
+
+    user_bots_response = test_client.get("/user/bots", headers=headers)
+    user_bots = user_bots_response.json()
+    our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
+
+    # Validate complex response structure with subscription count
+    assistant_response = AssistantResponse.model_validate(our_bot)
+    assert hasattr(assistant_response, "subscriptions_count")
+    assert assistant_response.subscriptions_count == 1
+
+    # Verify other complex fields are still present
+    assert assistant_response.latest_version.temperature == 0.8
+    assert len(assistant_response.latest_version.examples) == 1
+    assert len(assistant_response.latest_version.quick_prompts) == 1
+    assert assistant_response.latest_version.tags == ["complex", "counting"]
+
+
+@pytest.mark.integration
+def test_subscription_count_persists_across_requests(test_client):
+    """Test that subscription count persists across multiple API requests."""
+    # Create an assistant
+    assistant_data = AssistantCreate(
+        name="Persistence Test Bot",
+        system_prompt="Testing subscription count persistence.",
+        hierarchical_access=["IT-Test-Department"],
+    )
+
+    create_response = test_client.post(
+        "/bot/create", json=assistant_data.model_dump(), headers=headers
+    )
+    assert create_response.status_code == 200
+    assistant_id = create_response.json()["id"]
+
+    # Subscribe
+    test_client.post(f"/user/subscriptions/{assistant_id}", headers=headers)
+
+    # Make multiple requests and verify count is consistent
+    for _ in range(3):
+        user_bots_response = test_client.get("/user/bots", headers=headers)
+        user_bots = user_bots_response.json()
+        our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
+        assert our_bot is not None
+        assert our_bot["subscriptions_count"] == 1

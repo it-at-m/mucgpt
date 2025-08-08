@@ -67,6 +67,7 @@ async def _build_assistant_response_list(
                 hierarchical_access=assistant.hierarchical_access or [],
                 is_visible=assistant.is_visible,
                 owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+                subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
             )
             response_list.append(response)

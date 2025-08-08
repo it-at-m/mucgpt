@@ -1147,3 +1147,131 @@ class TestAssistantRepository:
 
         # Filtering should exclude the assistant
         assert len(filtered_results) == 0
+
+    # Subscription count tests
+    async def test_create_subscription_increments_count(self, db_session):
+        """Test creating a subscription increments the subscription count."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "test_user"
+
+        # Verify initial count is 0
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 0
+
+        # Act
+        subscription = await assistant_repo.create_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Assert
+        assert subscription is not None
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 1
+
+    async def test_remove_subscription_decrements_count(self, db_session):
+        """Test removing a subscription decrements the subscription count."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "test_user"
+        await assistant_repo.create_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Verify count is 1
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 1
+
+        # Act
+        removed = await assistant_repo.remove_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        # Assert
+        assert removed is True
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 0
+
+    async def test_multiple_subscriptions_count_correctly(self, db_session):
+        """Test that multiple subscriptions are counted correctly."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        # Act - Add multiple subscriptions
+        await assistant_repo.create_subscription(assistant.id, "user1")
+        await assistant_repo.create_subscription(assistant.id, "user2")
+        await assistant_repo.create_subscription(assistant.id, "user3")
+        await db_session.commit()
+
+        # Assert
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 3
+
+        # Remove one subscription
+        await assistant_repo.remove_subscription(assistant.id, "user2")
+        await db_session.commit()
+
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 2
+
+    async def test_duplicate_subscription_does_not_affect_count(self, db_session):
+        """Test that attempting to create duplicate subscription doesn't affect count."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        user_id = "test_user"
+        await assistant_repo.create_subscription(assistant.id, user_id)
+        await db_session.commit()
+
+        await db_session.refresh(assistant)
+        initial_count = assistant.subscriptions_count
+        assert initial_count == 1
+
+        # Act - Try to create duplicate subscription
+        try:
+            await assistant_repo.create_subscription(assistant.id, user_id)
+            await db_session.commit()
+        except Exception:
+            # Expected to fail due to unique constraint
+            await db_session.rollback()
+
+        # Assert
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 1  # Count should remain unchanged
+
+    async def test_subscription_count_backfill_scenario(self, db_session):
+        """Test scenario that simulates what happens after migration backfill."""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["ITM-TEST"])
+        await db_session.commit()
+
+        # Simulate existing subscriptions (like after migration backfill)
+        from sqlalchemy import insert
+        from src.database.database_models import Subscription
+
+        await db_session.execute(
+            insert(Subscription).values(
+                [
+                    {"assistant_id": assistant.id, "lhmobjektID": "existing_user1"},
+                    {"assistant_id": assistant.id, "lhmobjektID": "existing_user2"},
+                ]
+            )
+        )
+        assistant.subscriptions_count = 2
+        await db_session.commit()
+
+        # Act - Add new subscription (should increment via events)
+        await assistant_repo.create_subscription(assistant.id, "new_user")
+        await db_session.commit()
+
+        # Assert
+        await db_session.refresh(assistant)
+        assert assistant.subscriptions_count == 3

@@ -30,7 +30,7 @@ dependencies = [
     "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",
     "gunicorn",
-    "sqlalchemy==2.0.41",
+    "sqlalchemy==2.0.43",
     "gitpython==3.1.45",
 ]
 

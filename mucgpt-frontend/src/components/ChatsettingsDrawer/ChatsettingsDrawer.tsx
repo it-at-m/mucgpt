@@ -40,43 +40,52 @@ export const ChatsettingsDrawer = ({
     };
 
     // sidebar action and content
-    const sidebar_action = <div className={styles.actionRow}> {actions}</div>;
+    const sidebar_action = <div className={styles.actionRow}>{actions}</div>;
     const sidebar_content = (
         <div className={styles.settingsContent}>
-            {/* Additional content first */}
-            {content}
-
-            {/* Chat Settings Overview Section */}
-            <div
-                className={styles.header}
-                role="heading"
-                aria-level={2}
-                id={overviewID}
-                onClick={e => toggleOverview(e)}
-                tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && toggleOverview(e)}
-                aria-expanded={isOverviewExpanded}
-            >
-                <div className={styles.headerContent}>
+            {/* Title Section */}
+            <div className={styles.titleSection}>
+                <h3 className={styles.settingsTitle}>
                     <Settings24Regular className={styles.icon} aria-hidden="true" />
-                    <span>Chat Einstellungen</span>
-                </div>
-                <div className={styles.expandCollapseIcon}>{isOverviewExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
+                    Chat Einstellungen
+                </h3>
             </div>
 
-            {/* The Collapse component */}
-            {isOverviewExpanded && (
-                <div className={styles.collapseContent}>
-                    <ChatSettingsContent
-                        temperature={temperature}
-                        setTemperature={setTemperature}
-                        max_output_tokens={max_output_tokens}
-                        setMaxTokens={setMaxTokens}
-                        systemPrompt={systemPrompt}
-                        setSystemPrompt={setSystemPrompt}
-                    />
+            {/* Additional content first */}
+            {content && <div className={styles.contentSection}>{content}</div>}
+
+            {/* Chat Settings Overview Section */}
+            <div className={styles.actionSection}>
+                <div
+                    className={styles.header}
+                    role="heading"
+                    aria-level={2}
+                    id={overviewID}
+                    onClick={e => toggleOverview(e)}
+                    tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && toggleOverview(e)}
+                    aria-expanded={isOverviewExpanded}
+                >
+                    <div className={styles.headerContent}>
+                        <span>Erweiterte Einstellungen</span>
+                    </div>
+                    <div className={styles.expandCollapseIcon}>{isOverviewExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
                 </div>
-            )}
+
+                {/* The Collapse component */}
+                {isOverviewExpanded && (
+                    <div className={styles.collapseContent}>
+                        <ChatSettingsContent
+                            temperature={temperature}
+                            setTemperature={setTemperature}
+                            max_output_tokens={max_output_tokens}
+                            setMaxTokens={setMaxTokens}
+                            systemPrompt={systemPrompt}
+                            setSystemPrompt={setSystemPrompt}
+                        />
+                    </div>
+                )}
+            </div>
         </div>
     );
 

@@ -129,7 +129,7 @@ export const Layout = () => {
                             <div className={styles.header}>
                                 <Link to="/" className={styles.headerTitleContainer}>
                                     <img
-                                        src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
+                                        src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo_black : logo}
                                         alt="MUCGPT logo"
                                         aria-label="MUCGPT Logo"
                                         className={styles.logo}

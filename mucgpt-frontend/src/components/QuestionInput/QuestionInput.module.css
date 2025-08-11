@@ -8,7 +8,7 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    background: var(--colorNeutralBackground1);
+    background: var(--colorNeutralBackground1) !important;
     transition: all 0.2s ease-in-out;
 }
 

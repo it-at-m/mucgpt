@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     margin-right: 40px;
-    color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
     text-decoration: none;
     width: 20%;
     left: 1em;
@@ -91,7 +91,7 @@
     position: fixed;
     top: 0;
     width: 100%;
-    background-color: var(--colorBrandBackground2);
+    background-color: var(--colorNeutralBackground2);
     height: 50px;
     z-index: 2;
 }
@@ -106,8 +106,8 @@
     align-items: center;
     margin-top: auto;
     justify-content: space-between;
-    background-color: var(--colorBrandBackground2);
-    color: var(--colorNeutralBackground1);
+    background-color: var(--colorNeutralBackground2);
+    color: var(--colorNeutralForeground1);
     padding: 8px 16px;
     font-size: 14px;
 }

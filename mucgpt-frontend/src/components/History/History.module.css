@@ -198,3 +198,46 @@
 .historyContent::-webkit-scrollbar-thumb:hover {
     background-color: var(--colorNeutralStroke1Hover);
 }
+
+.loadMoreContainer {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0;
+    margin-top: 2px;
+}
+
+.loadMoreButton {
+    font-size: var(--fontSizeBase100);
+    color: var(--colorBrandForeground1);
+    width: 95%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.loadMoreButton:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+}
+
+@media (max-width: 768px) {
+    .historyContainer {
+        width: 100%;
+    }
+
+    .historyContent {
+        max-height: 50vh; /* Better height on mobile */
+    }
+
+    .singlechatcontainer {
+        padding: 1px 4px;
+    }
+
+    .savedChatButton {
+        width: 80%;
+    }
+}

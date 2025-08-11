@@ -265,7 +265,9 @@ i18n
                             save: "Zu Favoriten hinzufügen",
                             unsave: "Aus Favoriten entfernen",
                             error: "Wechsle nicht den Tab, bevor die Antwort fertig generiert wurde!",
-                            saved_in_browser: "Im Browser gespeicherte Chats"
+                            saved_in_browser: "Im Browser gespeicherte Chats",
+                            loadMore: "Mehr laden",
+                            more: "mehr"
                         },
                         add_bot_button: {
                             add_bot: "Erstelle deinen eigenen Assistenten"
@@ -634,7 +636,9 @@ i18n
                             save: "Add to Favourites",
                             unsave: "Remove from Favourites",
                             error: "Do not change the Tab before the Answer is fully generated!",
-                            saved_in_browser: "Chats saved in Browser"
+                            saved_in_browser: "Chats saved in Browser",
+                            loadMore: "Load more",
+                            more: "more"
                         },
                         add_bot_button: {
                             add_bot: "Create your own assistent"
@@ -1001,7 +1005,9 @@ i18n
                             save: "Zu Favoritn hinzufügn",
                             unsave: "Vo Favoritn entfernen",
                             error: "Wechsle de Seiten ned bevor ned de Nachricht komplett generiert wordn is!",
-                            saved_in_browser: "Im Browser gespeichade Chats"
+                            saved_in_browser: "Im Browser gespeichade Chats",
+                            loadMore: "Mehr loden",
+                            more: "mehr"
                         },
                         add_bot_button: {
                             add_bot: "Erstell dein eigenen Assistenten"
@@ -1370,7 +1376,9 @@ i18n
                             save: "Ajouter aux favoris",
                             unsave: "Retirer des favoris",
                             error: "Ne changez pas d'onglet avant que la réponse soit générée !",
-                            saved_in_browser: "Chats sauvegardés dans le navigateur"
+                            saved_in_browser: "Chats sauvegardés dans le navigateur",
+                            loadMore: "Charger plus",
+                            more: "plus"
                         },
                         add_bot_button: {
                             add_bot: "Crée ton propre assistant"
@@ -1739,7 +1747,9 @@ i18n
                             save: "Додати до обраного",
                             unsave: "Видалити з обраного",
                             error: "Не переходьте на іншу вкладку, доки відповідь не буде згенерована!",
-                            saved_in_browser: "Чати, збережені в браузері"
+                            saved_in_browser: "Чати, збережені в браузері",
+                            loadMore: "Завантажити більше",
+                            more: "більше"
                         },
                         add_bot_button: {
                             add_bot: "Створи свого власного асистента"

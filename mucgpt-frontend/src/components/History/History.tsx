@@ -1,10 +1,17 @@
 import { Button, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
-import { MoreHorizontal20Regular, ChatHistory24Regular, Star24Filled, ChevronDown20Regular, ChevronRight20Regular } from "@fluentui/react-icons";
+import {
+    MoreHorizontal20Regular,
+    ChatHistory24Regular,
+    Star24Filled,
+    ChevronDown20Regular,
+    ChevronRight20Regular,
+    MoreCircle24Regular
+} from "@fluentui/react-icons";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { useTranslation } from "react-i18next";
 import styles from "./History.module.css";
 import { DBObject } from "../../service/storage";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 interface Props {
     allChats: DBObject<any, any>[];
@@ -14,10 +21,16 @@ interface Props {
     onFavChange: (id: string, fav: boolean) => void;
     onSelect: (id: string) => void;
 }
+
+const INITIAL_ITEMS_PER_CATEGORY = 5;
+const ITEMS_TO_ADD = 10;
+
 export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNameChange, onFavChange, onSelect }: Props) => {
     const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState<boolean>(true);
+    // Initialize all categories as collapsed by default
     const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+    const [itemsToShow, setItemsToShow] = useState<Record<string, number>>({});
 
     // Toggle main history visibility
     const toggleHistoryVisibility = () => {
@@ -26,10 +39,20 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
 
     // Toggle individual category visibility
     const toggleCategoryVisibility = (category: string) => {
-        setExpandedCategories(prev => ({
-            ...prev,
-            [category]: !prev[category]
-        }));
+        setExpandedCategories(prevExpanded => {
+            const isExpanded = !!prevExpanded[category];
+            const newExpandedState = !isExpanded;
+
+            // If the category is being expanded for the very first time, initialize its items count.
+            if (newExpandedState && itemsToShow[category] === undefined) {
+                setItemsToShow(prevItems => ({
+                    ...prevItems,
+                    [category]: INITIAL_ITEMS_PER_CATEGORY
+                }));
+            }
+
+            return { ...prevExpanded, [category]: newExpandedState };
+        });
     };
 
     // get time category of the chat
@@ -52,22 +75,36 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
     );
 
     // sort chats by last edited date and categorize them
-    const categorizedChats = allChats
-        .filter((chat: DBObject<any, any>) => chat.id)
-        .sort((a: DBObject<any, any>, b: DBObject<any, any>) => {
-            return (b._last_edited as number) - (a._last_edited as number);
-        })
-        .reduce((acc: { [key: string]: DBObject<any, any>[] }, chat: DBObject<any, any>) => {
-            const category = getCategory(chat._last_edited as number, chat.favorite ? chat.favorite : false);
-            if (!acc[category]) acc[category] = [];
-            acc[category].push(chat);
-            return acc;
-        }, {});
-    const sortedChats = Object.entries(categorizedChats).sort(([categoryA], [categoryB]) => {
-        if (categoryA === t("components.history.favourites")) return -1;
-        if (categoryB === t("components.history.favourites")) return 1;
-        return 0;
-    });
+    const sortedChats = useMemo(() => {
+        const categorizedChats = allChats
+            .filter((chat: DBObject<any, any>) => chat.id)
+            .sort((a: DBObject<any, any>, b: DBObject<any, any>) => {
+                return (b._last_edited as number) - (a._last_edited as number);
+            })
+            .reduce((acc: { [key: string]: DBObject<any, any>[] }, chat: DBObject<any, any>) => {
+                const category = getCategory(chat._last_edited as number, chat.favorite ? chat.favorite : false);
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(chat);
+                return acc;
+            }, {});
+
+        return Object.entries(categorizedChats).sort(([categoryA], [categoryB]) => {
+            const fav = t("components.history.favourites");
+            if (categoryA === fav) return -1;
+            if (categoryB === fav) return 1;
+            return 0;
+        });
+    }, [allChats, getCategory, t]);
+
+    // Initialize items to show when categories are accessed for the first time
+    // instead of using a memoized value that re-calculates on each render
+
+    const handleLoadMore = (category: string) => {
+        setItemsToShow(prev => ({
+            ...prev,
+            [category]: (prev[category] || INITIAL_ITEMS_PER_CATEGORY) + ITEMS_TO_ADD
+        }));
+    };
 
     return (
         <div className={styles.historyContainer}>
@@ -100,18 +137,18 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                 onClick={() => toggleCategoryVisibility(category)}
                                 tabIndex={0}
                                 onKeyDown={e => e.key === "Enter" && toggleCategoryVisibility(category)}
-                                aria-expanded={expandedCategories[category] !== false}
+                                aria-expanded={!!expandedCategories[category]}
                             >
                                 <div className={styles.categoryHeaderContent}>
                                     <span>{category}</span>
                                     <div className={styles.expandCollapseIcon}>
-                                        {expandedCategories[category] !== false ? <ChevronDown20Regular /> : <ChevronRight20Regular />}
+                                        {expandedCategories[category] ? <ChevronDown20Regular /> : <ChevronRight20Regular />}
                                     </div>
                                 </div>
                             </li>
-                            <Collapse visible={expandedCategories[category] !== false}>
+                            <Collapse visible={!!expandedCategories[category]}>
                                 <div className={styles.categoryContent}>
-                                    {chats.map((chat: DBObject<any, any>, index: number) => (
+                                    {chats.slice(0, itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY).map((chat: DBObject<any, any>, index: number) => (
                                         <li key={index} className={styles.singlechatcontainer}>
                                             <Tooltip
                                                 content={t("components.history.lastEdited") + new Date(chat._last_edited as number).toLocaleString()}
@@ -162,6 +199,18 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                             </Menu>
                                         </li>
                                     ))}
+                                    {chats.length > (itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY) && (
+                                        <li className={styles.loadMoreContainer}>
+                                            <Button
+                                                onClick={() => handleLoadMore(category)}
+                                                appearance="subtle"
+                                                className={styles.loadMoreButton}
+                                                icon={<MoreCircle24Regular />}
+                                            >
+                                                {t("components.history.loadMore")} ({chats.length - (itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY)})
+                                            </Button>
+                                        </li>
+                                    )}
                                 </div>
                             </Collapse>
                         </ul>

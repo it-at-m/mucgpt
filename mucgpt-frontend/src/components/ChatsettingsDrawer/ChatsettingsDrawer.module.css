@@ -51,6 +51,9 @@
     scroll-behavior: smooth;
     height: 100%;
     background-color: var(--colorNeutralBackground1);
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .settingsContent::-webkit-scrollbar {
@@ -116,10 +119,13 @@
 }
 
 .contentSection {
-    background-color: var(--colorNeutralBackground2);
     border-radius: var(--borderRadiusMedium, 6px);
     margin: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
-    overflow: hidden;
+    overflow: auto;
+    max-height: 60vh;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .actionSection {

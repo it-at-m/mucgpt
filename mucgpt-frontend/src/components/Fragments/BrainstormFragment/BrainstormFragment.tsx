@@ -1,13 +1,14 @@
 import { Transformer } from "markmap-lib";
 import { Markmap } from "markmap-view";
 import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
-import styles from "./Mindmap.module.css";
-import { Stack } from "@fluentui/react";
+import styles from "./BrainstormFragment.module.css";
 import { useTranslation } from "react-i18next";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular } from "@fluentui/react-icons";
 import { IPureNode } from "markmap-common";
-import { LightContext } from "../../pages/layout/LightContext";
+import { LightContext } from "../../../pages/layout/LightContext";
+import { BaseFragment } from "../BaseFragment/BaseFragment";
+import { BaseFragmentProps } from "../types";
 
 // Constants
 const DEBOUNCE_DELAY = 300;
@@ -22,27 +23,29 @@ const TEXT_ATTRIBUTE = "TEXT";
 const FOLDED_ATTRIBUTE = "FOLDED";
 const VERSION_ATTRIBUTE = "version";
 
-interface Props {
-    markdown: string;
+interface Props extends BaseFragmentProps {
+    markdown?: string;
 }
 
-export const Mindmap = ({ markdown }: Props) => {
+export const BrainstormFragment = ({ content, markdown }: Props) => {
+    // Use markdown prop if provided, otherwise use content
+    const markdownContent = markdown || content;
     const { t } = useTranslation();
     const transformer = useMemo(() => new Transformer(), []);
     const svgEl = useRef<SVGSVGElement>(null);
     const [isSourceView, setIsSourceView] = useState(false);
     const [freeplaneXML, setFreeplaneXML] = useState("");
-    const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdown);
+    const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdownContent);
     const isLight = useContext(LightContext);
 
     // Debounce markdown changes - to prevent frequent updates
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedMarkdown(markdown);
+            setDebouncedMarkdown(markdownContent);
         }, DEBOUNCE_DELAY);
 
         return () => clearTimeout(timer);
-    }, [markdown]);
+    }, [markdownContent]);
 
     // parse Nodes
     const parseNodes = useCallback((to_be_parsed: IPureNode, parent: Element, doc: Document): void => {
@@ -147,67 +150,61 @@ export const Mindmap = ({ markdown }: Props) => {
         }
     }, [freeplaneXML]);
 
-    return (
-        <Stack verticalAlign="space-between">
-            <Stack.Item>
-                <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-                    <div className={styles.title}>Brainstorming</div>
-                    <div>
-                        <Tooltip
-                            content={isSourceView ? t("components.mindmap.mindmap") : t("components.mindmap.source")}
-                            relationship="description"
-                            positioning="above"
-                        >
-                            <Button
-                                appearance="subtle"
-                                aria-label={isSourceView ? t("components.mindmap.source") : t("components.mindmap.mindmap")}
-                                icon={<ContentView24Regular className={styles.iconRightMargin} />}
-                                onClick={() => toggleSourceView()}
-                                size="large"
-                            ></Button>
-                        </Tooltip>
-                        {!isSourceView && (
-                            <Tooltip content={t("components.mindmap.reset")} relationship="description" positioning="above">
-                                <Button
-                                    appearance="subtle"
-                                    aria-label={t("components.mindmap.reset")}
-                                    icon={<ScaleFill24Regular className={styles.iconRightMargin} />}
-                                    onClick={() => rescale()}
-                                    size="large"
-                                ></Button>
-                            </Tooltip>
-                        )}
-                        {!isSourceView && (
-                            <Tooltip content={t("components.mindmap.download")} relationship="description" positioning="above">
-                                <Button
-                                    appearance="subtle"
-                                    aria-label={t("components.mindmap.download")}
-                                    icon={<ArrowDownload24Regular className={styles.iconRightMargin} />}
-                                    onClick={() => download()}
-                                    size="large"
-                                ></Button>
-                            </Tooltip>
-                        )}
-                    </div>
-                </Stack>
-            </Stack.Item>
-            {!isSourceView ? (
-                <Stack.Item grow>
-                    <div className={styles.svgContainer}>
-                        <svg
-                            id="markmap"
-                            className={`${styles.svgMark} ${isLight ? "" : styles.darkmindmap}`}
-                            ref={svgEl}
-                            role="img"
-                            aria-label={t("components.mindmap.mindmap")}
-                        />
-                    </div>
-                </Stack.Item>
-            ) : (
-                <Stack.Item grow>
-                    <div className={styles.answerText}>{debouncedMarkdown}</div>
-                </Stack.Item>
+    // Create fragment action buttons
+    const fragmentActions = (
+        <>
+            <Tooltip content={isSourceView ? t("components.mindmap.mindmap") : t("components.mindmap.source")} relationship="description" positioning="above">
+                <Button
+                    appearance="subtle"
+                    aria-label={isSourceView ? t("components.mindmap.source") : t("components.mindmap.mindmap")}
+                    icon={<ContentView24Regular />}
+                    onClick={() => toggleSourceView()}
+                    size="large"
+                />
+            </Tooltip>
+            {!isSourceView && (
+                <Tooltip content={t("components.mindmap.reset")} relationship="description" positioning="above">
+                    <Button
+                        appearance="subtle"
+                        aria-label={t("components.mindmap.reset")}
+                        icon={<ScaleFill24Regular />}
+                        onClick={() => rescale()}
+                        size="large"
+                    />
+                </Tooltip>
             )}
-        </Stack>
+            {!isSourceView && (
+                <Tooltip content={t("components.mindmap.download")} relationship="description" positioning="above">
+                    <Button
+                        appearance="subtle"
+                        aria-label={t("components.mindmap.download")}
+                        icon={<ArrowDownload24Regular />}
+                        onClick={() => download()}
+                        size="large"
+                    />
+                </Tooltip>
+            )}
+        </>
+    );
+
+    // Fragment content based on view mode
+    const fragmentContent = !isSourceView ? (
+        <div className={styles.svgContainer}>
+            <svg
+                id="markmap"
+                className={`${styles.svgMark} ${isLight ? "" : styles.darkmindmap}`}
+                ref={svgEl}
+                role="img"
+                aria-label={t("components.mindmap.mindmap")}
+            />
+        </div>
+    ) : (
+        <div className={styles.answerText}>{debouncedMarkdown}</div>
+    );
+
+    return (
+        <BaseFragment title="Brainstorming" content={debouncedMarkdown} actions={fragmentActions}>
+            {fragmentContent}
+        </BaseFragment>
     );
 };

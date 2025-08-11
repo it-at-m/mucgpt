@@ -5,9 +5,8 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dark, duotoneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 import styles from "./CodeBlockRenderer.module.css";
 import { Mermaid, MermaidProps } from "./Mermaid";
-import { Mindmap } from "../Mindmap/Mindmap";
-import { SimplifiedText } from "../SimplifiedText/SimplifiedText";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
+import { FragmentManager } from "../Fragments/FragmentManager/FragmentManager";
 
 // Constants
 const LANGUAGE_PATTERN = /language-(\w+)/;
@@ -16,9 +15,7 @@ const MERMAID_MIN_TEXT_LENGTH = 30;
 
 const MERMAID_DIAGRAM_TYPES = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"] as const;
 
-const BRAINSTORMING_TOOLS = ["mucgptbrainstorming", "mucgpt-brainstorming"] as const;
-
-const SIMPLIFY_TOOLS = ["mucgptsimplify", "mucgpt-simplify"] as const;
+const FRAGMENT_LANGUAGES = ["mucgptbrainstorming", "mucgpt-brainstorming", "mucgptsimplify", "mucgpt-simplify"] as const;
 
 const COPY_ICONS = {
     DEFAULT: "Copy",
@@ -38,14 +35,9 @@ const getThemePreference = (): boolean => {
     return storedTheme === null ? true : storedTheme === "true";
 };
 
-const isBrainstormingTool = (language: string): boolean => {
+const isFragmentLanguage = (language: string): boolean => {
     const normalizedLanguage = language.toLowerCase();
-    return BRAINSTORMING_TOOLS.some(lang => normalizedLanguage === lang);
-};
-
-const isSimplifyTool = (language: string): boolean => {
-    const normalizedLanguage = language.toLowerCase();
-    return SIMPLIFY_TOOLS.some(lang => normalizedLanguage === lang);
+    return FRAGMENT_LANGUAGES.some(lang => normalizedLanguage === lang);
 };
 
 const isMermaidDiagram = (language: string, text: string): boolean => {
@@ -61,6 +53,11 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
     const text = String(children);
     const lightThemePref = getThemePreference();
 
+    // Debug logging
+    if (language && (language.toLowerCase().includes("mucgpt") || language.toLowerCase().includes("brainstorm"))) {
+        console.log("CodeBlockRenderer debug:", { language, className, isFragment: isFragmentLanguage(language) });
+    }
+
     const onCopy = useCallback(() => {
         navigator.clipboard.writeText(text);
         setIcon(COPY_ICONS.SUCCESS);
@@ -69,22 +66,10 @@ export default function CodeBlockRenderer(props: CodeBlockRendererProps) {
         }, COPY_FEEDBACK_TIMEOUT);
     }, [text]);
 
-    // Check if this is a brainstorming tool result that should be rendered as a mindmap
-    if (isBrainstormingTool(language)) {
-        return (
-            <div className={styles.mindmapContainer}>
-                <Mindmap markdown={text} />
-            </div>
-        );
-    }
-
-    // Check if this is a simplify tool result that should be rendered with special formatting
-    if (isSimplifyTool(language)) {
-        return (
-            <div className={styles.simplifiedTextContainer}>
-                <SimplifiedText content={text} />
-            </div>
-        );
+    // Check if this is a special fragment that should be rendered by FragmentManager
+    if (isFragmentLanguage(language)) {
+        console.log("Fragment detected:", { language, text: text.substring(0, 100) + "..." });
+        return <FragmentManager content={text} fragmentType={language} />;
     }
 
     // Check if this is a Mermaid diagram

@@ -1,9 +1,10 @@
 import { useCallback } from "react";
-import { Stack } from "@fluentui/react";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular } from "@fluentui/react-icons";
 import ReactMarkdown from "react-markdown";
-import styles from "./SimplifiedText.module.css";
+import styles from "./SimplifiedTextFragment.module.css";
+import { BaseFragment } from "../BaseFragment/BaseFragment";
+import { BaseFragmentProps } from "../types";
 
 // Constants
 const SIMPLE_LANGUAGE_TAG_REGEX = /<einfachesprache>([\s\S]*?)<\/einfachesprache>/i;
@@ -12,11 +13,7 @@ const STATUS_REGEX = /(✓|⚠️|ℹ️|✅|❌).*$/gm;
 const DOWNLOAD_FILENAME = "Vereinfachter_Text.txt";
 const MIME_TYPE_TEXT = "text/plain;charset=utf-8";
 
-interface Props {
-    content: string;
-}
-
-export const SimplifiedText = ({ content }: Props) => {
+export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
     // Extract simplified text from the content
     const extractSimplifiedText = useCallback((rawContent: string): string => {
         // First try to match complete tags (opening + closing)
@@ -69,39 +66,39 @@ export const SimplifiedText = ({ content }: Props) => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }, [simplifiedText]);
-    return (
-        <Stack verticalAlign="space-between">
-            <Stack.Item>
-                <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
-                    <div className={styles.title}>Leichte Sprache</div>
-                    <div>
-                        <Tooltip content="Text herunterladen" relationship="description" positioning="above">
-                            <Button
-                                appearance="subtle"
-                                aria-label="Text herunterladen"
-                                icon={<ArrowDownload24Regular className={styles.iconRightMargin} />}
-                                onClick={downloadText}
-                                size="large"
-                            />
-                        </Tooltip>
+
+    // Create download button
+    const downloadAction = (
+        <Tooltip content="Text herunterladen" relationship="description" positioning="above">
+            <Button
+                appearance="subtle"
+                aria-label="Text herunterladen"
+                icon={<ArrowDownload24Regular className={styles.iconRightMargin} />}
+                onClick={downloadText}
+                size="large"
+            />
+        </Tooltip>
+    );
+
+    // Fragment content
+    const fragmentContent = (
+        <div className={styles.simplifiedTextContent}>
+            <ReactMarkdown className={styles.markdownContent}>{simplifiedText}</ReactMarkdown>
+
+            {processingInfo && (
+                <div className={styles.processingInfo}>
+                    <div className={styles.processingTitle}>Verarbeitungsdetails</div>
+                    <div className={styles.processingContent}>
+                        <ReactMarkdown className={styles.processingMarkdown}>{processingInfo}</ReactMarkdown>
                     </div>
-                </Stack>
-            </Stack.Item>
-
-            <Stack.Item grow>
-                <div className={styles.simplifiedTextContent}>
-                    <ReactMarkdown className={styles.markdownContent}>{simplifiedText}</ReactMarkdown>
-
-                    {processingInfo && (
-                        <div className={styles.processingInfo}>
-                            <div className={styles.processingTitle}>Verarbeitungsdetails</div>
-                            <div className={styles.processingContent}>
-                                <ReactMarkdown className={styles.processingMarkdown}>{processingInfo}</ReactMarkdown>
-                            </div>{" "}
-                        </div>
-                    )}
                 </div>
-            </Stack.Item>
-        </Stack>
+            )}
+        </div>
+    );
+
+    return (
+        <BaseFragment title="Leichte Sprache" content={simplifiedText} actions={downloadAction}>
+            {fragmentContent}
+        </BaseFragment>
     );
 };

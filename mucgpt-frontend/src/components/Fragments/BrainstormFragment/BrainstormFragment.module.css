@@ -12,10 +12,6 @@
     flex-direction: column;
 }
 
-.iconRightMargin {
-    margin-right: 5px;
-}
-
 .darkmindmap {
     --markmap-code-bg: #000 !important;
     --markmap-code-color: #fff !important;
@@ -27,6 +23,7 @@
     white-space: pre-wrap;
     font-size: var(--fontSizeBase400);
     max-width: 100%;
+    line-height: 1.6;
 }
 
 @media (max-width: 780px) {
@@ -35,12 +32,4 @@
         max-width: 300px;
         min-height: 0px;
     }
-}
-
-.title {
-    font-size: var(--fontSizeBase400);
-    font-weight: 500;
-    margin-bottom: 6px;
-    color: var(--textColorSecondary);
-    opacity: 0.85;
 }

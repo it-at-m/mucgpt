@@ -183,7 +183,14 @@ i18n
                             download: "Herunterladen",
                             reset: "Ansicht zurücksetzen",
                             source: "Datenansicht",
-                            mindmap: "Mindmap-Ansicht"
+                            mindmap: "Mindmap-Ansicht",
+                            exitFullscreen: "Beenden der Vollbildansicht",
+                            fullscreen: "Vollbildansicht",
+                            loading: "Mindmap wird geladen...",
+                            errors: {
+                                insufficientContent: "Zu wenig Inhalt für eine Mindmap",
+                                transformationError: "Mindmap konnte nicht erstellt werden"
+                            }
                         },
                         sumanswer: {
                             header: "Einzigartige Aspekte/Entitäten:",
@@ -549,7 +556,14 @@ i18n
                             download: "Download",
                             reset: "Reset view",
                             source: "Source view",
-                            mindmap: "Mindmap view"
+                            mindmap: "Mindmap view",
+                            exitFullscreen: "Exit fullscreen view",
+                            fullscreen: "Fullscreen view",
+                            loading: "Loading mindmap...",
+                            errors: {
+                                insufficientContent: "Not enough content for a mindmap",
+                                transformationError: "Mindmap could not be created"
+                            }
                         },
                         mermaid: {
                             download: "Download diagram",
@@ -918,7 +932,14 @@ i18n
                             download: "Obalada",
                             reset: "Oisicht zrucksetzn",
                             source: "Datenoisicht",
-                            mindmap: "Mindmapoisicht"
+                            mindmap: "Mindmapoisicht",
+                            exitFullscreen: "Vollbildmodus verlass'n",
+                            fullscreen: "Vollbildmodus",
+                            loading: "Lade Mindmap...",
+                            errors: {
+                                insufficientContent: "Zu wenig Inhalt für a Mindmap",
+                                transformationError: "Mindmap konnt ned erstellt werd'n"
+                            }
                         },
                         mermaid: {
                             download: "Schau-Buidl obalada",
@@ -1294,7 +1315,14 @@ i18n
                             download: "Télécharger",
                             reset: "Réinitialiser la vue",
                             source: "Vue des données",
-                            mindmap: "Vue de la carte mentale"
+                            mindmap: "Vue de la carte mentale",
+                            exitFullscreen: "Quitter le mode plein écran",
+                            fullscreen: "Mode plein écran",
+                            loading: "Chargement de la carte mentale...",
+                            errors: {
+                                insufficientContent: "Contenu insuffisant pour une carte mentale",
+                                transformationError: "La carte mentale n'a pas pu être créée en raison d'une erreur"
+                            }
                         },
                         sumanswer: {
                             header: "Aspects/entités uniques :",
@@ -1665,7 +1693,14 @@ i18n
                             download: "Завантажити",
                             reset: "Скинути вигляд",
                             source: "Вигляд даних",
-                            mindmap: "Вигляд інтелектуальної карти"
+                            mindmap: "Вигляд інтелектуальної карти",
+                            exitFullscreen: "Вийти з повноекранного режиму",
+                            fullscreen: "Повноекранний режим",
+                            loading: "Завантаження інтелектуальної карти...",
+                            errors: {
+                                insufficientContent: "Недостатньо вмісту для інтелектуальної карти",
+                                transformationError: "Не вдалося створити інтелектуальну карту через помилку"
+                            }
                         },
                         sumanswer: {
                             header: "Унікальні аспекти/сутності:",

@@ -3,17 +3,17 @@ import { Markmap } from "markmap-view";
 import { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState, useEffect } from "react";
 import styles from "./BrainstormFragment.module.css";
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip } from "@fluentui/react-components";
-import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular } from "@fluentui/react-icons";
+import { Button, Tooltip, Spinner, MessageBar } from "@fluentui/react-components";
+import { ArrowDownload24Regular, ContentView24Regular, ScaleFill24Regular, ArrowExpand24Regular } from "@fluentui/react-icons";
 import { IPureNode } from "markmap-common";
 import { LightContext } from "../../../pages/layout/LightContext";
 import { BaseFragment } from "../BaseFragment/BaseFragment";
 import { BaseFragmentProps } from "../types";
 
 // Constants
-const DEBOUNCE_DELAY = 300;
-const MARKMAP_FIT_PADDING = 10;
-const RESCALE_DELAY = 50;
+const DEBOUNCE_DELAY = 500; // Increased for better performance
+const MARKMAP_FIT_PADDING = 20; // Increased for better spacing
+const RESCALE_DELAY = 100; // Slightly increased for smoother transitions
 const FREEPLANE_VERSION = "freeplane 1.11.1";
 const DOWNLOAD_FILENAME = "Idee.mm";
 const MIME_TYPE_FREEMIND = "application/x-freemind;charset=utf-8";
@@ -22,20 +22,26 @@ const MAP_ELEMENT = "map";
 const TEXT_ATTRIBUTE = "TEXT";
 const FOLDED_ATTRIBUTE = "FOLDED";
 const VERSION_ATTRIBUTE = "version";
+const MIN_CONTENT_LENGTH = 10;
 
 interface Props extends BaseFragmentProps {
     markdown?: string;
+    showLineNumbers?: boolean;
 }
 
-export const BrainstormFragment = ({ content, markdown }: Props) => {
+export const BrainstormFragment = ({ content, markdown, showLineNumbers = true }: Props) => {
     // Use markdown prop if provided, otherwise use content
     const markdownContent = markdown || content;
     const { t } = useTranslation();
     const transformer = useMemo(() => new Transformer(), []);
     const svgEl = useRef<SVGSVGElement>(null);
+    const markmapInstance = useRef<Markmap | null>(null);
     const [isSourceView, setIsSourceView] = useState(false);
     const [freeplaneXML, setFreeplaneXML] = useState("");
     const [debouncedMarkdown, setDebouncedMarkdown] = useState(markdownContent);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const isLight = useContext(LightContext);
 
     // Debounce markdown changes - to prevent frequent updates
@@ -77,30 +83,63 @@ export const BrainstormFragment = ({ content, markdown }: Props) => {
             setFreeplaneXML(new XMLSerializer().serializeToString(mapElem));
         },
         [parseNodes]
-    );
-
-    // Transform markdown data - memoized for performance
+    ); // Transform markdown data - memoized for performance
     const transformedData = useMemo(() => {
-        if (!debouncedMarkdown) return null;
-        return transformer.transform(debouncedMarkdown);
-    }, [transformer, debouncedMarkdown]);
+        if (!debouncedMarkdown || debouncedMarkdown.length < MIN_CONTENT_LENGTH) {
+            setError(t("components.mindmap.errors.insufficientContent"));
+            return null;
+        }
 
-    // create mindmap
-    const createMM = useCallback(() => {
+        try {
+            setError(null);
+            return transformer.transform(debouncedMarkdown);
+        } catch (err) {
+            setError(t("components.mindmap.errors.transformationError"));
+            console.error("Mindmap transformation error:", err);
+            return null;
+        }
+    }, [transformer, debouncedMarkdown, t]);
+
+    // create mindmap with improved error handling
+    const createMM = useCallback(async () => {
         if (!svgEl.current || !transformedData) return;
 
-        // Clear the existing SVG content
-        svgEl.current.innerHTML = "";
+        try {
+            setIsLoading(true);
+            setError(null);
 
-        const mm = Markmap.create(svgEl.current as SVGSVGElement, { autoFit: true });
-        if (mm) {
-            const { root } = transformedData;
-            parseXML(root);
+            // Clear the existing SVG content
+            svgEl.current.innerHTML = "";
 
-            mm.setData(root);
-            mm.fit(MARKMAP_FIT_PADDING);
+            const mm = Markmap.create(svgEl.current as SVGSVGElement, {
+                autoFit: true,
+                pan: true,
+                zoom: true,
+                maxWidth: 300,
+                initialExpandLevel: 4,
+                spacingVertical: 10,
+                spacingHorizontal: 80
+            });
+
+            if (mm) {
+                markmapInstance.current = mm;
+                const { root } = transformedData;
+                parseXML(root);
+
+                mm.setData(root);
+
+                // Use requestAnimationFrame for smoother rendering
+                requestAnimationFrame(() => {
+                    mm.fit(MARKMAP_FIT_PADDING);
+                });
+            }
+            svgEl.current?.setAttribute("title", t("components.mindmap.mindmap"));
+        } catch (err) {
+            setError(t("components.mindmap.errors.transformationError"));
+            console.error("Mindmap creation error:", err);
+        } finally {
+            setIsLoading(false);
         }
-        svgEl.current?.setAttribute("title", t("components.mindmap.mindmap"));
     }, [transformedData, parseXML, t]);
 
     useLayoutEffect(() => {
@@ -115,18 +154,32 @@ export const BrainstormFragment = ({ content, markdown }: Props) => {
                 createMM();
             }
         }, RESCALE_DELAY);
-    }, [isSourceView]);
+    }, [isSourceView, createMM]);
 
-    // rescale mindmap
+    // rescale mindmap with improved performance
     const rescale = useCallback(() => {
-        if (!isSourceView && svgEl.current && transformedData) {
-            setTimeout(() => {
-                // Clear and recreate the mindmap
-                svgEl.current!.innerHTML = "";
-                createMM();
-            }, RESCALE_DELAY);
+        if (!isSourceView && svgEl.current && transformedData && markmapInstance.current) {
+            try {
+                markmapInstance.current.fit(MARKMAP_FIT_PADDING);
+            } catch (err) {
+                console.error("Mindmap rescale error:", err);
+                // Fallback to recreation if fit fails
+                setTimeout(() => {
+                    svgEl.current!.innerHTML = "";
+                    createMM();
+                }, RESCALE_DELAY);
+            }
         }
     }, [isSourceView, createMM, transformedData]);
+
+    // Toggle fullscreen mode
+    const toggleFullscreen = useCallback(() => {
+        setIsFullscreen(!isFullscreen);
+        // Rescale after fullscreen change
+        setTimeout(() => {
+            rescale();
+        }, RESCALE_DELAY);
+    }, [isFullscreen, rescale]);
 
     // download mindmap
     const download = useCallback(() => {
@@ -150,7 +203,7 @@ export const BrainstormFragment = ({ content, markdown }: Props) => {
         }
     }, [freeplaneXML]);
 
-    // Create fragment action buttons
+    // Create fragment action buttons with enhanced functionality
     const fragmentActions = (
         <>
             <Tooltip content={isSourceView ? t("components.mindmap.mindmap") : t("components.mindmap.source")} relationship="description" positioning="above">
@@ -160,8 +213,10 @@ export const BrainstormFragment = ({ content, markdown }: Props) => {
                     icon={<ContentView24Regular />}
                     onClick={() => toggleSourceView()}
                     size="large"
+                    disabled={isLoading}
                 />
             </Tooltip>
+
             {!isSourceView && (
                 <Tooltip content={t("components.mindmap.reset")} relationship="description" positioning="above">
                     <Button
@@ -170,9 +225,28 @@ export const BrainstormFragment = ({ content, markdown }: Props) => {
                         icon={<ScaleFill24Regular />}
                         onClick={() => rescale()}
                         size="large"
+                        disabled={isLoading}
                     />
                 </Tooltip>
             )}
+
+            {!isSourceView && (
+                <Tooltip
+                    content={isFullscreen ? t("components.mindmap.exitFullscreen") : t("components.mindmap.fullscreen")}
+                    relationship="description"
+                    positioning="above"
+                >
+                    <Button
+                        appearance="subtle"
+                        aria-label={isFullscreen ? t("components.mindmap.exitFullscreen") : t("components.mindmap.fullscreen")}
+                        icon={<ArrowExpand24Regular />}
+                        onClick={() => toggleFullscreen()}
+                        size="large"
+                        disabled={isLoading}
+                    />
+                </Tooltip>
+            )}
+
             {!isSourceView && (
                 <Tooltip content={t("components.mindmap.download")} relationship="description" positioning="above">
                     <Button
@@ -181,29 +255,75 @@ export const BrainstormFragment = ({ content, markdown }: Props) => {
                         icon={<ArrowDownload24Regular />}
                         onClick={() => download()}
                         size="large"
+                        disabled={isLoading || !freeplaneXML}
                     />
                 </Tooltip>
             )}
         </>
     );
 
-    // Fragment content based on view mode
-    const fragmentContent = !isSourceView ? (
-        <div className={styles.svgContainer}>
-            <svg
-                id="markmap"
-                className={`${styles.svgMark} ${isLight ? "" : styles.darkmindmap}`}
-                ref={svgEl}
-                role="img"
-                aria-label={t("components.mindmap.mindmap")}
-            />
-        </div>
-    ) : (
-        <div className={styles.answerText}>{debouncedMarkdown}</div>
+    // Fragment content based on view mode with loading and error states
+    const fragmentContent = (
+        <>
+            {error && (
+                <MessageBar intent="error" className={styles.errorMessage}>
+                    {error}
+                </MessageBar>
+            )}
+
+            {isLoading && (
+                <div className={styles.loadingContainer}>
+                    <Spinner label={t("components.mindmap.loading")} />
+                </div>
+            )}
+
+            {!isSourceView ? (
+                <div className={`${styles.svgContainer} ${isFullscreen ? styles.fullscreen : ""}`}>
+                    <svg
+                        id="markmap"
+                        className={`${styles.svgMark} ${isLight ? "" : styles.darkmindmap}`}
+                        ref={svgEl}
+                        role="img"
+                        aria-label={t("components.mindmap.mindmap")}
+                        style={{ opacity: isLoading ? 0.5 : 1 }}
+                    />
+                    {isFullscreen && (
+                        <Button
+                            appearance="subtle"
+                            className={styles.fullscreenExit}
+                            onClick={toggleFullscreen}
+                            aria-label={t("components.mindmap.exitFullscreen")}
+                        >
+                            ×
+                        </Button>
+                    )}
+                </div>
+            ) : (
+                <div className={`${styles.answerText} ${showLineNumbers ? styles.withLineNumbers : ""}`}>
+                    {showLineNumbers ? (
+                        <pre>
+                            {debouncedMarkdown.split("\n").map((line, index) => (
+                                <div key={index} className={styles.sourceLine}>
+                                    <span className={styles.lineNumber}>{index + 1}</span>
+                                    <span className={styles.lineContent}>{line}</span>
+                                </div>
+                            ))}
+                        </pre>
+                    ) : (
+                        debouncedMarkdown
+                    )}
+                </div>
+            )}
+        </>
     );
 
     return (
-        <BaseFragment title="Brainstorming" content={debouncedMarkdown} actions={fragmentActions}>
+        <BaseFragment
+            title="Brainstorming"
+            content={debouncedMarkdown}
+            actions={fragmentActions}
+            className={isFullscreen ? styles.fullscreenFragment : undefined}
+        >
             {fragmentContent}
         </BaseFragment>
     );

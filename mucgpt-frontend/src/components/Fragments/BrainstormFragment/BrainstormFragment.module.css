@@ -3,6 +3,7 @@
     width: 100%;
     height: 100%;
     max-width: 100%;
+    transition: opacity 0.2s ease;
 }
 
 .svgContainer {
@@ -10,6 +11,9 @@
     height: 100%;
     display: flex;
     flex-direction: column;
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .darkmindmap {
@@ -24,12 +28,147 @@
     font-size: var(--fontSizeBase400);
     max-width: 100%;
     line-height: 1.6;
+    padding: 16px;
 }
 
+/* Enhanced fullscreen support */
+.fullscreen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999;
+    background-color: var(--colorNeutralBackground1);
+    border-radius: 0 !important;
+}
+
+.fullscreenFragment {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9998;
+    background-color: var(--colorNeutralBackground1);
+}
+
+.fullscreenExit {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background-color: var(--colorNeutralBackground3) !important;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    font-weight: bold;
+    z-index: 10000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading and message states */
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 32px;
+}
+
+.errorMessage {
+    margin-bottom: 16px;
+    border-radius: 8px;
+}
+
+/* Source view enhancements */
+.withLineNumbers {
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    padding: 0;
+}
+
+.sourceLine {
+    display: flex;
+    align-items: flex-start;
+    min-height: 20px;
+}
+
+.lineNumber {
+    display: inline-block;
+    width: 40px;
+    padding: 0 8px;
+    color: var(--colorNeutralForeground3);
+    text-align: right;
+    font-size: var(--fontSizeBase200);
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.lineContent {
+    padding: 0 12px;
+    flex: 1;
+    white-space: pre-wrap;
+}
+
+/* Responsive improvements */
 @media (max-width: 780px) {
     .svgMark {
         min-width: 50px;
         max-width: 300px;
-        min-height: 0px;
+        min-height: 300px;
+    }
+
+    .answerText {
+        font-size: var(--fontSizeBase300);
+        padding: 12px;
+    }
+
+    .fullscreenExit {
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+        top: 12px;
+        right: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .svgMark {
+        min-height: 250px;
+    }
+
+    .lineNumber {
+        width: 30px;
+        font-size: var(--fontSizeBase100);
+    }
+}
+
+/* Print styles */
+@media print {
+    .svgContainer,
+    .answerText {
+        width: 100% !important;
+        height: auto !important;
+        position: static !important;
+        background: white !important;
+        color: black !important;
+    }
+
+    .fullscreenExit {
+        display: none;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .darkmindmap {
+        --markmap-text-color: #ffffff !important;
+        --markmap-circle-open-bg: #000000 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .svgMark {
+        transition: none;
     }
 }

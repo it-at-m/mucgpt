@@ -28,7 +28,17 @@ i18n
                         soon: "In Entwicklung...",
                         owned: "Eigene:",
                         subscribed: "Abonnierte:",
-                        select: "Auswählen"
+                        select: "Auswählen",
+                        navigation_aria: "Chat Navigation",
+                        go_to_chat: "Direkt zum Chat",
+                        go_to_chat_tooltip: "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen",
+                        go_to_chat_aria: "Direkt zum Chat navigieren",
+                        bots_section: "Bot-Verwaltung",
+                        own_bots_list: "Eigene Bots",
+                        owned_bots_list: "Eigene Community Bots",
+                        subscribed_bots_list: "Abonnierte Community Bots",
+                        select_bot_aria: "Bot auswählen: {{title}}",
+                        share_bot_aria: "Bot teilen: {{title}}"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -60,6 +70,14 @@ i18n
                         changed: "Änderungen"
                     },
                     common: {
+                        skip_to_content: "Zum Hauptinhalt springen",
+                        main_navigation: "Hauptnavigation",
+                        home_link: "Zur Startseite",
+                        environment_label: "Umgebung: {{env}}",
+                        page_navigation: "Seitennavigation",
+                        user_settings: "Benutzereinstellungen",
+                        main_content: "Hauptinhalt",
+                        footer_info: "Fußzeileninformationen",
                         clear_chat: "Neuer Chat",
                         settings: "Einstellungen",
                         close: "Schließen",
@@ -378,7 +396,17 @@ i18n
                         soon: "In Development...",
                         owned: "Owned:",
                         subscribed: "Subscribed:",
-                        select: "Select"
+                        select: "Select",
+                        navigation_aria: "Chat navigation",
+                        go_to_chat: "Go to chat",
+                        go_to_chat_tooltip: "Navigate directly to chat page without entering a question",
+                        go_to_chat_aria: "Navigate directly to chat",
+                        bots_section: "Bot management",
+                        own_bots_list: "Your bots",
+                        owned_bots_list: "Your community bots",
+                        subscribed_bots_list: "Subscribed community bots",
+                        select_bot_aria: "Select bot: {{title}}",
+                        share_bot_aria: "Share bot: {{title}}"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -410,6 +438,14 @@ i18n
                         changed: "Changed"
                     },
                     common: {
+                        skip_to_content: "Skip to main content",
+                        main_navigation: "Main navigation",
+                        home_link: "Go to homepage",
+                        environment_label: "Environment: {{env}}",
+                        page_navigation: "Page navigation",
+                        user_settings: "User settings",
+                        main_content: "Main content",
+                        footer_info: "Footer information",
                         clear_chat: "New chat",
                         settings: "Settings",
                         close: "Close",
@@ -725,7 +761,17 @@ i18n
                         soon: "In Entwicklung...",
                         owned: "Eigene:",
                         subscribed: "Abonnierte:",
-                        select: "Auswähln"
+                        select: "Auswähln",
+                        navigation_aria: "Chat-Navigation",
+                        go_to_chat: "Glei zum Chat",
+                        go_to_chat_tooltip: "Glei auf’d Chat-Seit geh, ganz ohne Frog eingeben",
+                        go_to_chat_aria: "Glei zum Chat geh",
+                        bots_section: "Bot-Verwaltung",
+                        own_bots_list: "Deina Bots",
+                        owned_bots_list: "Deina Community-Bots",
+                        subscribed_bots_list: "Abonniert Community-Bots",
+                        select_bot_aria: "Bot aussuacha: {{title}}",
+                        share_bot_aria: "Bot teilen: {{title}}"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -751,6 +797,14 @@ i18n
                         }
                     },
                     common: {
+                        skip_to_content: "Glei zum Hauptinhalt hupfa",
+                        main_navigation: "Haupt-Navigation",
+                        home_link: "Zruck auf d’Startseit",
+                        environment_label: "Umgebung: {{env}}",
+                        page_navigation: "Seitn-Navigation",
+                        user_settings: "Nutzereinstellungen",
+                        main_content: "Hauptinhalt",
+                        footer_info: "Fußzeilen-Info",
                         clear_chat: "Neia Chat",
                         settings: "Konfiguration",
                         close: "Schließen",
@@ -1074,7 +1128,17 @@ i18n
                         soon: "En Développement...",
                         owned: "Possédés:",
                         subscribed: "Abonnés:",
-                        select: "Sélectionner"
+                        select: "Sélectionner",
+                        navigation_aria: "Navigation du chat",
+                        go_to_chat: "Aller au chat",
+                        go_to_chat_tooltip: "Accéder directement à la page du chat sans saisir de question",
+                        go_to_chat_aria: "Accéder directement au chat",
+                        bots_section: "Gestion des bots",
+                        own_bots_list: "Vos bots",
+                        owned_bots_list: "Vos bots communautaires",
+                        subscribed_bots_list: "Bots communautaires abonnés",
+                        select_bot_aria: "Sélectionner le bot : {{title}}",
+                        share_bot_aria: "Partager le bot : {{title}}"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1106,6 +1170,14 @@ i18n
                         changed: "Changements"
                     },
                     common: {
+                        skip_to_content: "Aller directement au contenu principal",
+                        main_navigation: "Navigation principale",
+                        home_link: "Retour à la page d’accueil",
+                        environment_label: "Environnement : {{env}}",
+                        page_navigation: "Navigation de la page",
+                        user_settings: "Paramètres utilisateur",
+                        main_content: "Contenu principal",
+                        footer_info: "Informations du pied de page",
                         clear_chat: "Nouveau chat",
                         settings: "Paramètres",
                         close: "Fermer",
@@ -1423,7 +1495,17 @@ i18n
                         soon: "В розробці...",
                         owned: "Власні:",
                         subscribed: "Підписані:",
-                        select: "Вибрати"
+                        select: "Вибрати",
+                        navigation_aria: "Навігація чату",
+                        go_to_chat: "Перейти до чату",
+                        go_to_chat_tooltip: "Перейти прямо на сторінку чату без введення питання",
+                        go_to_chat_aria: "Перейти прямо до чату",
+                        bots_section: "Управління ботами",
+                        own_bots_list: "Ваші боти",
+                        owned_bots_list: "Ваші боти спільноти",
+                        subscribed_bots_list: "Підписані боти спільноти",
+                        select_bot_aria: "Вибрати бота: {{title}}",
+                        share_bot_aria: "Поділитися ботом: {{title}}"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
@@ -1455,6 +1537,14 @@ i18n
                         changed: "Зміни"
                     },
                     common: {
+                        skip_to_content: "Перейти до основного контенту",
+                        main_navigation: "Головна навігація",
+                        home_link: "Повернутися на головну сторінку",
+                        environment_label: "Середовище: {{env}}",
+                        page_navigation: "Навігація сторінки",
+                        user_settings: "Налаштування користувача",
+                        main_content: "Основний контент",
+                        footer_info: "Інформація у футері",
                         clear_chat: "Новий чат",
                         settings: "Налаштування",
                         close: "Закрити",

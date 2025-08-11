@@ -18,7 +18,6 @@
     align-items: center;
     justify-content: center;
     padding-top: 50px;
-    padding-bottom: 50px;
     width: 100%;
     background: var(--colorBackgroundOverlay);
 }
@@ -59,6 +58,39 @@
     color: #c0c0c0;
     margin-top: 10px;
     font-style: italic;
+}
+
+.chatNavigationContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+.chatNavigationButton {
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: var(--fontSizeBase300);
+    font-weight: 500;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.chatNavigationButton:hover {
+    background: var(--colorBrandBackgroundHover);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .rowheader {
@@ -212,4 +244,17 @@
     top: 45%;
     align-self: center;
     overflow-wrap: break-word;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }

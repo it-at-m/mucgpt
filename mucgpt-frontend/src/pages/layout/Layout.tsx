@@ -125,23 +125,30 @@ export const Layout = () => {
             <LightContext.Provider value={isLight}>
                 <UserContextProvider>
                     <div className={styles.layout}>
-                        <header className={styles2.header} role={"banner"}>
+                        {/* Skip to main content for screen readers */}
+                        <a href="#main-content" className={styles.skipLink}>
+                            {t("common.skip_to_content", "Zum Hauptinhalt springen")}
+                        </a>
+
+                        <header className={styles2.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
                             <div className={styles.header}>
-                                <Link to="/" className={styles.headerTitleContainer}>
+                                <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
                                     <img
                                         src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo_black : logo}
-                                        alt="MUCGPT logo"
-                                        aria-label="MUCGPT Logo"
+                                        alt="MUCGPT"
                                         className={styles.logo}
-                                    ></img>
-                                    <h3 className={styles.headerTitle} aria-description="Umgebung:">
+                                    />
+                                    <h1
+                                        className={styles.headerTitle}
+                                        aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.frontend.labels.env_name })}
+                                    >
                                         {config.frontend.labels.env_name}
-                                    </h3>
+                                    </h1>
                                 </Link>
-                                <div className={styles.headerNavList}>
+                                <nav className={styles.headerNavList} aria-label={t("common.page_navigation", "Seitennavigation")}>
                                     <div className={styles.headerNavPageLink}>{header}</div>
-                                </div>
-                                <div className={styles.headerNavList}>
+                                </nav>
+                                <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
                                     <div className={styles.headerNavRightContainer}>
                                         <div className={styles.headerNavList}>
                                             <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
@@ -156,15 +163,20 @@ export const Layout = () => {
                                             <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
                                         </div>
                                     </div>
-                                </div>
+                                </nav>
                             </div>
                         </header>
-                        <Outlet />
 
-                        <footer className={styles.footer} role={"banner"}>
+                        <main id="main-content" role="main" aria-label={t("common.main_content", "Hauptinhalt")}>
+                            <Outlet />
+                        </main>
+
+                        <footer className={styles.footer} role="contentinfo" aria-label={t("common.footer_info", "Fußzeileninformationen")}>
                             <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
-                                Landeshauptstadt München <br />
-                                RIT/it@M KICC
+                                <address>
+                                    Landeshauptstadt München <br />
+                                    RIT/it@M KICC
+                                </address>
                             </div>
                             <div className={styles.footerSection}>
                                 <VersionInfo version={config.version} commit={config.commit} versionUrl={import.meta.env.BASE_URL + "#/version"} />

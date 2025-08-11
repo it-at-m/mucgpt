@@ -18,7 +18,7 @@ import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { Share24Regular } from "@fluentui/react-icons";
+import { Share24Regular, Chat24Regular } from "@fluentui/react-icons";
 import { BotStats } from "../../components/BotStats/BotStats";
 
 const Menu = () => {
@@ -101,6 +101,18 @@ const Menu = () => {
         showSuccess("Link kopiert", "Der Bot-Link wurde in die Zwischenablage kopiert.");
     };
 
+    const handleFocus = (botId: string, event: React.FocusEvent) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        setHoverPosition({
+            x: rect.left + scrollX + rect.width / 2,
+            y: rect.bottom + scrollY
+        });
+        setHoveredBotId(botId);
+    };
+
     const handleMouseEnter = (botId: string, event: React.MouseEvent) => {
         const rect = event.currentTarget.getBoundingClientRect();
         const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
@@ -117,10 +129,12 @@ const Menu = () => {
         setHoveredBotId(null);
     };
     return (
-        <div>
-            <div className={styles.chatstartercontainer}>
+        <div role="presentation">
+            <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
                 <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
-                <h1 className={styles.heading}>{t("menu.chat_header", { user: username })} </h1>
+                <h1 id="chat-header" className={styles.heading}>
+                    {t("menu.chat_header", { user: username })}{" "}
+                </h1>
                 <div className={styles.chatstarter}>
                     <QuestionInput
                         onSend={onSendQuestion}
@@ -135,26 +149,54 @@ const Menu = () => {
                         question={question}
                     ></QuestionInput>
                 </div>
-            </div>
-            <div className={styles.container}>
-                <div className={styles.rowheader}>
+                <nav className={styles.chatNavigationContainer} aria-label={t("menu.navigation_aria", "Chat Navigation")}>
+                    <Tooltip
+                        content={t("menu.go_to_chat_tooltip", "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen")}
+                        relationship="description"
+                        positioning="below"
+                    >
+                        <Link
+                            to="/chat"
+                            className={styles.chatNavigationButton}
+                            aria-label={t("menu.go_to_chat_aria", "Direkt zum Chat navigieren")}
+                            role="button"
+                        >
+                            <Chat24Regular aria-hidden />
+                            <span>{t("menu.go_to_chat", "Direkt zum Chat")}</span>
+                        </Link>
+                    </Tooltip>
+                </nav>
+            </section>
+            <section className={styles.container} aria-labelledby="bots-section">
+                <h2 id="bots-section" className="sr-only">
+                    {t("menu.bots_section", "Bot-Verwaltung")}
+                </h2>
+                <div className={styles.rowheader} role="heading" aria-level={3}>
                     {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
                 </div>
-                <div className={styles.row}>
+                <div className={styles.row} role="list" aria-label={t("menu.own_bots_list", "Eigene Bots")}>
                     {bots.map((bot: Bot, key) => (
                         <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
-                            <div className={styles.box}>
+                            <div className={styles.box} role="listitem" tabIndex={0}>
                                 <div className={styles.boxHeader}>{bot.title}</div>
                                 <div className={styles.boxDescription}>{bot.description}</div>
-                                <Link to={`/bot/${bot.id}`} className={styles.boxChoose}>
+                                <Link
+                                    to={`/bot/${bot.id}`}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.select_bot_aria", "Bot auswählen: {{title}}", { title: bot.title })}
+                                >
                                     {t("menu.select")}
                                 </Link>
                             </div>
                         </Tooltip>
                     ))}
-                    {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                    {bots.length === 0 && (
+                        <div role="status" aria-live="polite">
+                            {t("menu.no_bots")}
+                        </div>
+                    )}
                 </div>
-                <div className={styles.rowheader}>
+                <div className={styles.rowheader} role="heading" aria-level={3}>
                     {t("menu.community_bots")} <SearchCommunityBotButton onClick={onSearchBot} />
                 </div>
                 <CommunityBotsDialog
@@ -163,41 +205,76 @@ const Menu = () => {
                     takeCommunityBots={getCommunityBots}
                     setTakeCommunityBots={setGetCommunityBots}
                 />
-                <div className={styles.subrowheader}>{t("menu.owned")}</div>
-                <div className={styles.row}>
+                <div className={styles.subrowheader} role="heading" aria-level={4}>
+                    {t("menu.owned")}
+                </div>
+                <div className={styles.row} role="list" aria-label={t("menu.owned_bots_list", "Eigene Community Bots")}>
                     {ownedCommunityBots.map((bot: AssistantResponse, key) => (
-                        <div key={key} className={styles.box} onMouseEnter={e => handleMouseEnter(bot.id, e)} onMouseLeave={handleMouseLeave}>
+                        <div
+                            key={key}
+                            className={styles.box}
+                            role="listitem"
+                            tabIndex={0}
+                            onMouseEnter={e => handleMouseEnter(bot.id, e)}
+                            onMouseLeave={handleMouseLeave}
+                            onFocus={e => handleFocus(bot.id, e)}
+                            onBlur={handleMouseLeave}
+                        >
                             <div className={styles.boxHeader}>{bot.latest_version.name}</div>
                             <div className={styles.boxDescription}>{bot.latest_version.description}</div>
                             <div className={styles.boxButtons}>
-                                <Link to={`owned/communitybot/${bot.id}`} className={styles.boxChoose}>
+                                <Link
+                                    to={`owned/communitybot/${bot.id}`}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.select_bot_aria", "Bot auswählen: {{title}}", { title: bot.latest_version.name })}
+                                >
                                     {t("menu.select")}
                                 </Link>
-                                <Button onClick={() => onShareBot(bot.id)} className={styles.boxChoose}>
-                                    <Share24Regular /> Teilen
+                                <Button
+                                    onClick={() => onShareBot(bot.id)}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.share_bot_aria", "Bot teilen: {{title}}", { title: bot.latest_version.name })}
+                                >
+                                    <Share24Regular aria-hidden /> Teilen
                                 </Button>
                             </div>
                         </div>
                     ))}
-                    {ownedCommunityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                    {ownedCommunityBots.length === 0 && (
+                        <div role="status" aria-live="polite">
+                            {t("menu.no_bots")}
+                        </div>
+                    )}
                 </div>
-                <div className={styles.subrowheader}>{t("menu.subscribed")}</div>
-                <div className={styles.row}>
+                <div className={styles.subrowheader} role="heading" aria-level={4}>
+                    {t("menu.subscribed")}
+                </div>
+                <div className={styles.row} role="list" aria-label={t("menu.subscribed_bots_list", "Abonnierte Community Bots")}>
                     {communityBots.map(({ id, name, description }, key) => (
                         <Tooltip key={key} content={name} relationship="description" positioning="below">
-                            <div className={styles.box}>
+                            <div className={styles.box} role="listitem" tabIndex={0}>
                                 <div className={styles.boxHeader}>{name}</div>
                                 <div className={styles.boxDescription}>{description}</div>
-                                <Link to={`communitybot/${id}`} className={styles.boxChoose}>
+                                <Link
+                                    to={`communitybot/${id}`}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.select_bot_aria", "Bot auswählen: {{title}}", { title: name })}
+                                >
                                     {t("menu.select")}
                                 </Link>
                             </div>
                         </Tooltip>
                     ))}
-                    {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
+                    {communityBots.length === 0 && (
+                        <div role="status" aria-live="polite">
+                            {t("menu.no_bots")}
+                        </div>
+                    )}
                 </div>
-                <div className={styles.rowheader}> </div>
-            </div>
+                <div className={styles.rowheader} aria-hidden="true">
+                    {" "}
+                </div>
+            </section>
             {hoveredBotId && (
                 <div
                     style={{

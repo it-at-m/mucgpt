@@ -70,6 +70,8 @@ i18n
                         changed: "Änderungen"
                     },
                     common: {
+                        open_menu: "Menü öffnen",
+                        close_menu: "Menü schließen",
                         skip_to_content: "Zum Hauptinhalt springen",
                         main_navigation: "Hauptnavigation",
                         home_link: "Zur Startseite",
@@ -438,7 +440,8 @@ i18n
                         changed: "Changed"
                     },
                     common: {
-                        skip_to_content: "Skip to main content",
+                        open_menu: "Open menu",
+                        close_menu: "Close menu",
                         main_navigation: "Main navigation",
                         home_link: "Go to homepage",
                         environment_label: "Environment: {{env}}",
@@ -797,6 +800,8 @@ i18n
                         }
                     },
                     common: {
+                        open_menu: "Menü aufmachn",
+                        close_menu: "Menü zumachn",
                         skip_to_content: "Glei zum Hauptinhalt hupfa",
                         main_navigation: "Haupt-Navigation",
                         home_link: "Zruck auf d’Startseit",
@@ -1170,6 +1175,8 @@ i18n
                         changed: "Changements"
                     },
                     common: {
+                        open_menu: "Ouvrir le menu",
+                        close_menu: "Fermer le menu",
                         skip_to_content: "Aller directement au contenu principal",
                         main_navigation: "Navigation principale",
                         home_link: "Retour à la page d’accueil",
@@ -1537,6 +1544,8 @@ i18n
                         changed: "Зміни"
                     },
                     common: {
+                        open_menu: "Відкрити меню",
+                        close_menu: "Закрити меню",
                         skip_to_content: "Перейти до основного контенту",
                         main_navigation: "Головна навігація",
                         home_link: "Повернутися на головну сторінку",

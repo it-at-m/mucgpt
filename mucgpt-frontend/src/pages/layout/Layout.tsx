@@ -8,7 +8,7 @@ import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig } from "../../api";
-import { FluentProvider, Theme } from "@fluentui/react-components";
+import { FluentProvider, Theme, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
@@ -22,6 +22,7 @@ import { VersionInfo } from "../../components/VersionInfo";
 import { HelpButton } from "../../components/HelpButton";
 import { configApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
+import { Navigation24Regular, DismissRegular, Settings24Regular, ContactCard24Regular } from "@fluentui/react-icons";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -51,6 +52,10 @@ export const Layout = () => {
 
     const [, setSimply] = useState<boolean>(true);
     const [, setModels] = useState(config.models);
+
+    // Mobile menu state
+    const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+    const toggleMobileMenu = useCallback(() => setMobileMenuOpen(prev => !prev), []);
 
     // vars from storage
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
@@ -120,6 +125,21 @@ export const Layout = () => {
         [setLanguage, i18n]
     );
 
+    // Check window size for mobile view
+    const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+            if (window.innerWidth > 768) {
+                setMobileMenuOpen(false);
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
     return (
         <FluentProvider theme={theme}>
             <LightContext.Provider value={isLight}>
@@ -145,29 +165,94 @@ export const Layout = () => {
                                         {config.frontend.labels.env_name}
                                     </h1>
                                 </Link>
-                                <nav className={styles.headerNavList} aria-label={t("common.page_navigation", "Seitennavigation")}>
-                                    <div className={styles.headerNavPageLink}>{header}</div>
-                                </nav>
-                                <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
-                                    <div className={styles.headerNavRightContainer}>
-                                        <div className={styles.headerNavList}>
-                                            <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
-                                        </div>
-                                        <div className={styles.headerNavList}>
-                                            <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
-                                        </div>
-                                        <div className={styles.headerNavList}>
-                                            <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
-                                        </div>
-                                        <div className={styles.headerNavList}>
-                                            <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
-                                        </div>
-                                    </div>
-                                </nav>
+
+                                {isMobile ? (
+                                    <Button
+                                        className={styles.mobileMenuButton}
+                                        icon={
+                                            mobileMenuOpen ? (
+                                                <DismissRegular className={styles.iconSize24} />
+                                            ) : (
+                                                <Navigation24Regular className={styles.iconSize24} />
+                                            )
+                                        }
+                                        onClick={toggleMobileMenu}
+                                        aria-label={mobileMenuOpen ? t("common.close_menu", "Menü schließen") : t("common.open_menu", "Menü öffnen")}
+                                        aria-expanded={mobileMenuOpen}
+                                        size="medium"
+                                    />
+                                ) : (
+                                    <>
+                                        <nav className={styles.headerNavList} aria-label={t("common.page_navigation", "Seitennavigation")}>
+                                            <div className={styles.headerNavPageLink}>{header}</div>
+                                        </nav>
+                                        <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
+                                            <div className={styles.headerNavRightContainer}>
+                                                <div className={styles.headerNavList}>
+                                                    <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                                </div>
+                                            </div>
+                                        </nav>
+                                    </>
+                                )}
                             </div>
+
+                            {isMobile && mobileMenuOpen && (
+                                <div className={styles.mobileMenu}>
+                                    <div className={styles.mobileMenuHeader}>
+                                        <div className={styles.headerNavPageLink}>{header}</div>
+                                    </div>
+                                    <div className={styles.mobileMenuAccordion}>
+                                        <Accordion collapsible>
+                                            <AccordionItem value="settings">
+                                                <AccordionHeader icon={<Settings24Regular />}>{t("common.settings", "Einstellungen")}</AccordionHeader>
+                                                <AccordionPanel className={styles.accordionPanel}>
+                                                    <div className={styles.accordionContent}>
+                                                        <div className={styles.accordionItem}>
+                                                            <span>{t("common.theme", "Farbschema")}:</span>
+                                                            <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                                        </div>
+                                                        <div className={styles.accordionItem}>
+                                                            <span>{t("common.language", "Sprache")}:</span>
+                                                            <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                                        </div>
+                                                    </div>
+                                                </AccordionPanel>
+                                            </AccordionItem>
+                                            <AccordionItem value="help">
+                                                <AccordionHeader icon={<ContactCard24Regular />}>{t("common.support", "Support & Hilfe")}</AccordionHeader>
+                                                <AccordionPanel className={styles.accordionPanel}>
+                                                    <div className={styles.accordionContent}>
+                                                        <div className={styles.accordionItem}>
+                                                            <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                                                        </div>
+                                                        <div className={styles.accordionItem}>
+                                                            <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                                        </div>
+                                                    </div>
+                                                </AccordionPanel>
+                                            </AccordionItem>
+                                        </Accordion>
+                                    </div>
+                                </div>
+                            )}
                         </header>
 
-                        <main id="main-content" role="main" aria-label={t("common.main_content", "Hauptinhalt")}>
+                        <main
+                            id="main-content"
+                            role="main"
+                            aria-label={t("common.main_content", "Hauptinhalt")}
+                            className={isMobile && mobileMenuOpen ? styles.mobileMainContentWithMenu : isMobile ? styles.mobileMainContent : styles.mainContent}
+                        >
                             <Outlet />
                         </main>
 

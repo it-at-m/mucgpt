@@ -16,10 +16,10 @@
 .headerTitleContainer {
     display: flex;
     align-items: center;
-    margin-right: 40px;
+    margin-right: 20px;
     color: var(--colorNeutralForeground1);
     text-decoration: none;
-    width: 20%;
+    width: auto;
     left: 1em;
 }
 
@@ -48,6 +48,9 @@
 .headerNavPageLink {
     color: var(--colorNeutralForegroundInvertedSelected);
     font-size: var(--fontSizeHero800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .headerNavRightContainer {
@@ -55,6 +58,7 @@
     justify-content: flex-end;
     align-items: center;
     width: 100%;
+    gap: 8px;
 }
 
 .headerNavRightMargin {
@@ -72,6 +76,7 @@
     padding: 2px;
     margin-left: 1em;
 }
+
 .SettingsDrawer {
     right: 0;
     margin: auto;
@@ -93,7 +98,103 @@
     width: 100%;
     background-color: var(--colorNeutralBackground2);
     height: 50px;
-    z-index: 2;
+    z-index: 10;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Mobile menu styles */
+.mobileMenu {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    background-color: var(--colorNeutralBackground2);
+    z-index: 9;
+    padding: 8px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mobileMenuHeader {
+    padding: 8px 16px;
+    display: flex;
+    justify-content: center;
+    border-bottom: 1px solid var(--colorNeutralStroke1);
+}
+
+.mobileMenuAccordion {
+    padding: 0 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.accordionPanel {
+    padding: 12px 0;
+}
+
+.accordionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.accordionItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--colorNeutralStroke1);
+}
+
+.mobileMenuButtonContainer {
+    position: absolute;
+    top: 8px;
+    right: 16px;
+    z-index: 20;
+}
+
+.mobileMenuButton {
+    border-radius: 4px;
+    background-color: var(--colorNeutralBackground3);
+    border: 1px solid var(--colorNeutralStroke1);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    position: relative;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px !important;
+}
+
+.iconSize24 {
+    font-size: 24px;
+}
+
+.mobileMenuButton:hover {
+    background-color: var(--colorNeutralBackground4);
+    transform: scale(1.05);
+}
+
+.mobileMenuButton:active {
+    transform: scale(0.95);
+}
+
+/* Main content area */
+.mainContent {
+    flex: 1;
+}
+
+.mobileMainContent {
+    flex: 1;
+    margin: 5px;
+}
+
+.mobileMainContentWithMenu {
+    flex: 1;
 }
 
 .footer {
@@ -155,4 +256,83 @@
 
 .skipLink:focus {
     left: 8px;
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    .header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        min-height: 50px;
+    }
+
+    .headerTitleContainer {
+        width: auto;
+        margin-right: 0;
+        justify-content: flex-start;
+        padding: 8px 0;
+        flex: 1;
+    }
+
+    .headerTitle {
+        font-size: 0.9em;
+        margin-left: 8px;
+    }
+
+    .logo {
+        height: 32px;
+    }
+
+    .headerNavList {
+        width: 100%;
+        justify-content: center;
+        margin: 4px 0;
+    }
+
+    .headerNavPageLink {
+        font-size: var(--fontSizeBase300);
+        text-align: center;
+        width: 100%;
+    }
+
+    .headerNavRightContainer {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .footer {
+        flex-direction: column;
+        text-align: center;
+        padding: 8px;
+        font-size: 12px;
+        gap: 8px;
+    }
+
+    .footerSection {
+        justify-content: center;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .footerCompanyInfo {
+        font-size: 12px;
+    }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+    .headerTitle {
+        display: none;
+    }
+
+    .headerNavRightContainer {
+        gap: 4px;
+    }
+
+    .footerSection {
+        font-size: 11px;
+    }
 }

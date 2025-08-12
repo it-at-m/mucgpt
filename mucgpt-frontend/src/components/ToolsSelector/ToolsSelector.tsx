@@ -17,7 +17,7 @@ export const ToolsSelector: React.FC<ToolsSelectorProps> = ({ open, onClose, too
 
     React.useEffect(() => {
         if (open && selectedTools) {
-            setSelected(new Set(selectedTools.map(t => t.name)));
+            setSelected(new Set(selectedTools.map(t => t.id)));
         } else if (!open) {
             setSelected(new Set());
         }
@@ -26,10 +26,10 @@ export const ToolsSelector: React.FC<ToolsSelectorProps> = ({ open, onClose, too
     const handleToggle = (tool: ToolInfo) => {
         setSelected(prev => {
             const next = new Set(prev);
-            if (next.has(tool.name)) {
-                next.delete(tool.name);
+            if (next.has(tool.id)) {
+                next.delete(tool.id);
             } else {
-                next.add(tool.name);
+                next.add(tool.id);
             }
             return next;
         });
@@ -37,13 +37,13 @@ export const ToolsSelector: React.FC<ToolsSelectorProps> = ({ open, onClose, too
 
     const handleSelectAll = () => {
         if (tools) {
-            setSelected(new Set(tools.tools.map(t => t.name)));
+            setSelected(new Set(tools.tools.map(t => t.id)));
         }
     };
 
     const handleClose = () => {
         if (tools) {
-            const selectedTools = tools.tools.filter(t => selected.has(t.name));
+            const selectedTools = tools.tools.filter(t => selected.has(t.id));
             onClose(selectedTools);
         } else {
             onClose();
@@ -65,13 +65,13 @@ export const ToolsSelector: React.FC<ToolsSelectorProps> = ({ open, onClose, too
                                 </div>
                                 <div className={styles.toolCardsContainer}>
                                     {tools.tools.map((tool: ToolInfo, idx: number) => (
-                                        <div key={tool.name + idx} className={styles.toolCard}>
+                                        <div key={tool.id + idx} className={styles.toolCard}>
                                             <span className={styles.toolCardHeader}>
                                                 <span className={styles.toolName}>{tool.name}</span>
                                                 <span className={styles.toolDescription}>{tool.description}</span>
                                             </span>
                                             <Checkbox
-                                                checked={selected.has(tool.name)}
+                                                checked={selected.has(tool.id)}
                                                 onChange={() => handleToggle(tool)}
                                                 className={styles.toolCardCheckbox}
                                                 aria-label={tool.name}

@@ -157,7 +157,8 @@ class ChatCompletionChunk(BaseModel):
 class ToolInfo(BaseModel):
     """Detailed information about a tool."""
 
-    name: str = Field(..., description="Tool name or id.")
+    id: str = Field(..., description="Tool ID.")
+    name: str = Field(..., description="Tool name.")
     description: str = Field(..., description="Description of the tool.")
     # Optionally, add more fields like parameters if needed
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Toolbox24Regular, CheckmarkCircle24Regular, BrainCircuit24Regular, TextBulletListSquare24Regular } from "@fluentui/react-icons";
 import { Button, Text } from "@fluentui/react-components";
@@ -7,73 +7,108 @@ import { QuestionInput } from "../../../components/QuestionInput/QuestionInput";
 import { ToolListResponse } from "../../../api/models";
 import ToolStatusDisplay from "../../../components/ToolStatusDisplay/ToolStatusDisplay";
 import { ToolStatus, ToolStreamState } from "../../../utils/ToolStreamHandler";
+import { LanguageContext } from "../../../components/LanguageSelector/LanguageContextProvider";
+import { getTools } from "../../../api/core-client";
+import { mapContextToBackendLang } from "../../../utils/language-utils";
 import styles from "./ToolsTutorial.module.css";
 
 // Create a tutorial-specific implementation using the real QuestionInput
 const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {
     const [question, setQuestion] = useState("Welche Ideen gibt es für nachhaltige Mobilität?");
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [tools, setTools] = useState<ToolListResponse>({ tools: [] });
     const { t } = useTranslation();
+    const { language } = useContext(LanguageContext);
 
-    // Create mock tools data structure
-    const mockTools: ToolListResponse = {
-        tools: [
-            {
-                name: "Brainstorming",
-                description:
-                    "Generates a detailed mind map for a given topic in markdown format.\nThe output uses headings for main ideas and subheadings for related subtopics,\nstructured as a markdown code block. This helps visualize and organize concepts,\nsubtopics, and relationships for the specified topic."
-            },
-            {
-                name: "Vereinfachen",
-                description:
-                    "Simplifies complex German text to A2 level using Leichte Sprache (Easy Language) principles.\n\nThis tool transforms difficult texts into simple, accessible language following strict German accessibility standards.\nIt uses short sentences (max 15 words), simple vocabulary, active voice, and clear structure with line breaks.\n\nIMPORTANT: Always pass the COMPLETE text that needs to be simplified in a single tool call.\nDo NOT split long texts into multiple parts - the tool is designed to handle entire documents at once\nand will maintain context and coherence across the full text when simplifying."
+    // Fetch tools in the current language
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                const backendLang = mapContextToBackendLang(language);
+                const result = await getTools(backendLang);
+                setTools(result);
+            } catch (error) {
+                console.error("Failed to fetch tools for tutorial:", error);
+                // Fallback to mock tools if API fails
+                setTools({
+                    tools: [
+                        {
+                            id: "Brainstorming",
+                            name: "Brainstorming",
+                            description: "Generates a detailed mind map for a given topic in markdown format."
+                        },
+                        {
+                            id: "Vereinfachen",
+                            name: "Vereinfachen",
+                            description: "Simplifies complex German text to A2 level using Easy Language principles."
+                        }
+                    ]
+                });
             }
-        ]
-    };
+        };
+        fetchTools();
+    }, [language]);
 
-    const simulateToolExecution = useCallback((toolNames: string[]) => {
-        const now = Date.now();
+    const simulateToolExecution = useCallback(
+        (toolNames: string[]) => {
+            const now = Date.now();
 
-        // Clear any existing statuses
-        setToolStatuses([]);
-
-        // Start all tools
-        const startingStatuses: ToolStatus[] = toolNames.map(name => ({
-            name,
-            state: ToolStreamState.STARTED,
-            timestamp: now,
-            message: name === "Brainstorming" ? "Erstelle strukturierte Mindmap..." : "Vereinfache Text in Leichte Sprache..."
-        }));
-
-        setToolStatuses(startingStatuses);
-
-        // Simulate completion after 2-3 seconds for each tool
-        toolNames.forEach((toolName, index) => {
-            setTimeout(
-                () => {
-                    setToolStatuses(current => {
-                        // Remove the started status and add completed status
-                        const filtered = current.filter(status => !(status.name === toolName && status.state === ToolStreamState.STARTED));
-                        return [
-                            ...filtered,
-                            {
-                                name: toolName,
-                                state: ToolStreamState.ENDED,
-                                timestamp: Date.now(),
-                                message: toolName === "Brainstorming" ? "Mindmap erfolgreich erstellt" : "Text erfolgreich vereinfacht"
-                            }
-                        ];
-                    });
-                },
-                2000 + index * 500
-            ); // Stagger completion times
-        });
-
-        // Clear all statuses after 6 seconds
-        setTimeout(() => {
+            // Clear any existing statuses
             setToolStatuses([]);
-        }, 6000);
-    }, []);
+
+            // Start all tools
+            const startingStatuses: ToolStatus[] = toolNames.map(name => {
+                const tool = tools.tools.find(t => t.id === name);
+                const toolDisplayName = tool?.name || name;
+
+                return {
+                    name: toolDisplayName,
+                    state: ToolStreamState.STARTED,
+                    timestamp: now,
+                    message:
+                        name === "Brainstorming"
+                            ? t("tutorials.tools.simulation.brainstorm_start", "Erstelle strukturierte Mindmap...")
+                            : t("tutorials.tools.simulation.simplify_start", "Vereinfache Text in Leichte Sprache...")
+                };
+            });
+
+            setToolStatuses(startingStatuses);
+
+            // Simulate completion after 2-3 seconds for each tool
+            toolNames.forEach((toolName, index) => {
+                setTimeout(
+                    () => {
+                        setToolStatuses(current => {
+                            const tool = tools.tools.find(t => t.id === toolName);
+                            const toolDisplayName = tool?.name || toolName;
+
+                            // Remove the started status and add completed status
+                            const filtered = current.filter(status => !(status.name === toolDisplayName && status.state === ToolStreamState.STARTED));
+                            return [
+                                ...filtered,
+                                {
+                                    name: toolDisplayName,
+                                    state: ToolStreamState.ENDED,
+                                    timestamp: Date.now(),
+                                    message:
+                                        toolName === "Brainstorming"
+                                            ? t("tutorials.tools.simulation.brainstorm_end", "Mindmap erfolgreich erstellt")
+                                            : t("tutorials.tools.simulation.simplify_end", "Text erfolgreich vereinfacht")
+                                }
+                            ];
+                        });
+                    },
+                    2000 + index * 500
+                ); // Stagger completion times
+            });
+
+            // Clear all statuses after 6 seconds
+            setTimeout(() => {
+                setToolStatuses([]);
+            }, 6000);
+        },
+        [tools, t]
+    );
 
     const handleSend = useCallback(() => {
         // This is just for demo - don't actually send
@@ -97,7 +132,7 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
                 setQuestion={setQuestion}
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
-                tools={mockTools}
+                tools={tools}
             />
             <ToolStatusDisplay activeTools={toolStatuses} />
         </>

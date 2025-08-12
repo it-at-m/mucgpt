@@ -96,7 +96,7 @@ export const BrainstormTutorial = () => {
 
     const tryExample = useCallback(() => {
         const exampleQuestion = "Erstelle eine Mindmap zum Thema 'Nachhaltiger Transport'";
-        const tools = "brainstorm"; // The brainstorm tool
+        const tools = "Brainstorming"; // The brainstorm tool
         let url = `#/chat?q=${encodeURIComponent(exampleQuestion)}`;
         url += `&tools=${encodeURIComponent(tools)}`;
         window.location.href = url;

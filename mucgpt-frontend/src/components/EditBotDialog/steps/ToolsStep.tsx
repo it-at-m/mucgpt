@@ -17,10 +17,10 @@ interface ToolsStepProps {
 export const ToolsStep = ({ tools, selectedTools, isOwner, onToolsChange, onSelectedToolsChange, onShowToolsSelector, onHasChanged }: ToolsStepProps) => {
     const { t } = useTranslation();
 
-    const handleRemoveTool = (toolName: string) => {
-        const newTools = tools.filter(t => t.id !== toolName);
+    const handleRemoveTool = (toolID: string) => {
+        const newTools = tools.filter(t => t.id !== toolID);
         onToolsChange(newTools);
-        const newSelectedTools = selectedTools.filter(t => t.name !== toolName);
+        const newSelectedTools = selectedTools.filter(t => t.id !== toolID);
         onSelectedToolsChange(newSelectedTools);
         onHasChanged(true);
     };
@@ -33,7 +33,7 @@ export const ToolsStep = ({ tools, selectedTools, isOwner, onToolsChange, onSele
                     <div className={styles.dynamicFieldList}>
                         {selectedTools.length > 0 ? (
                             selectedTools.map((tool, index) => (
-                                <div key={tool.name + index} className={styles.dynamicFieldItem}>
+                                <div key={tool.id + index} className={styles.dynamicFieldItem}>
                                     <div className={styles.dynamicFieldInputs}>
                                         <div className={styles.dynamicFieldInputRow}>
                                             <span className={styles.dynamicFieldInputLabel}>{tool.name}:</span>
@@ -42,7 +42,7 @@ export const ToolsStep = ({ tools, selectedTools, isOwner, onToolsChange, onSele
                                     </div>
                                     <button
                                         className={styles.removeFieldButton}
-                                        onClick={() => handleRemoveTool(tool.name)}
+                                        onClick={() => handleRemoveTool(tool.id)}
                                         disabled={!isOwner}
                                         title={t("components.edit_bot_dialog.remove")}
                                     >

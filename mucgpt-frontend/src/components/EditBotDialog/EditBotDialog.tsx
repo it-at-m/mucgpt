@@ -1,9 +1,9 @@
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Button, Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle } from "@fluentui/react-components";
+import { Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle, Button } from "@fluentui/react-components";
 
 import styles from "./EditBotDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo, useEffect, useContext } from "react";
 import { Bot, ToolBase, ToolInfo, ToolListResponse } from "../../api";
 import { ToolsSelector } from "../ToolsSelector";
 import { StepperProgress } from "./StepperProgress";
@@ -15,6 +15,8 @@ import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext"
 import { getTools } from "../../api/core-client";
 import { BotStrategy } from "../../pages/bot/BotStrategy";
 import { VisibilityStep } from "./steps/VisibilityStep";
+import { mapContextToBackendLang } from "../../utils/language-utils";
+import { LanguageContext } from "../LanguageSelector/LanguageContextProvider";
 
 interface Props {
     showDialog: boolean;
@@ -52,6 +54,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     }, [isVisible]);
 
     const { t } = useTranslation();
+    const { language } = useContext(LanguageContext);
 
     // Tools state
     const [availableTools, setAvailableTools] = useState<ToolListResponse | undefined>(undefined);
@@ -63,7 +66,9 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
         if (showDialog && !availableTools) {
             const fetchTools = async () => {
                 try {
-                    const toolsResponse = await getTools();
+                    // Get current language from context and map to backend format
+                    const backendLang = mapContextToBackendLang(language);
+                    const toolsResponse = await getTools(backendLang);
                     setAvailableTools(toolsResponse);
                 } catch (error) {
                     console.error("Failed to fetch tools:", error);
@@ -71,12 +76,12 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
             };
             fetchTools();
         }
-    }, [showDialog, availableTools]);
+    }, [showDialog, availableTools, language]);
 
     // Update selectedTools when tools change
     useEffect(() => {
         if (availableTools && tools.length > 0) {
-            const toolInfos = tools.map(tool => availableTools.tools.find(t => t.name === tool.id)).filter(Boolean) as ToolInfo[];
+            const toolInfos = tools.map(tool => availableTools.tools.find(t => t.id === tool.id)).filter(Boolean) as ToolInfo[];
             setSelectedTools(toolInfos);
         } else {
             setSelectedTools([]);
@@ -113,7 +118,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     const handleToolsSelected = (selectedTools?: ToolInfo[]) => {
         if (selectedTools) {
             const newTools: ToolBase[] = selectedTools.map(tool => ({
-                id: tool.name,
+                id: tool.id,
                 config: {}
             }));
             botState.setTools(newTools);

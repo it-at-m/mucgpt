@@ -136,10 +136,10 @@ export const QuestionInput = ({
                 open={toolsSelectorOpen}
                 onClose={tools => {
                     setToolsSelectorOpen(false);
-                    if (tools && setSelectedTools) setSelectedTools(tools.map(t => t.name));
+                    if (tools && setSelectedTools) setSelectedTools(tools.map(t => t.id));
                 }}
                 tools={tools}
-                selectedTools={tools ? tools.tools.filter(t => selectedTools.includes(t.name)) : []}
+                selectedTools={tools ? tools.tools.filter(t => selectedTools.includes(t.id)) : []}
             />
             <Stack horizontal className={styles.questionInputContainer}>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>

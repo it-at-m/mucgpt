@@ -22,9 +22,12 @@ import { Share24Regular, Chat24Regular, Book24Regular } from "@fluentui/react-ic
 import { BotStats } from "../../components/BotStats/BotStats";
 import { getTools } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
+import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
+import { mapContextToBackendLang } from "../../utils/language-utils";
 
 const Menu = () => {
     const { t } = useTranslation();
+    const { language } = useContext(LanguageContext);
     const [bots, setBots] = useState<Bot[]>([]);
     const [communityBots, setCommunityBots] = useState<{ id: string; name: string; description: string }[]>([]);
     const [ownedCommunityBots, setOwnedCommunityBots] = useState<AssistantResponse[]>([]);
@@ -92,14 +95,16 @@ const Menu = () => {
     useEffect(() => {
         const fetchTools = async () => {
             try {
-                const result = await getTools();
+                // Get current language from context and map to backend format
+                const backendLang = mapContextToBackendLang(language);
+                const result = await getTools(backendLang);
                 setTools(result);
             } catch {
                 setTools({ tools: [] });
             }
         };
         fetchTools();
-    }, []);
+    }, [language]);
 
     const onAddBot = () => {
         setShowDialogInput(true);

@@ -8,7 +8,7 @@ from langgraph.config import get_stream_writer
 from agent.tools.brainstorm import brainstorming
 from agent.tools.simplify import simplify
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
-from agent.tools.weather import weather
+from api.api_models import ToolInfo, ToolListResponse
 from core.logtools import getLogger
 
 TOOL_INSTRUCTIONS_TEMPLATE = """
@@ -73,32 +73,6 @@ and will maintain context and coherence across the full text when simplifying.""
     return simplify_tool
 
 
-def make_weather_tool(logger: logging.Logger = None):
-    @tool(
-        "Wettervorhersage", description="Get the current weather for a given location."
-    )
-    def weather_tool(location: str):
-        writer = get_stream_writer()
-        writer(
-            ToolStreamChunk(
-                state=ToolStreamState.STARTED,
-                content=f"Wetterabfrage für: {location} gestartet",
-                tool_name="Wettervorhersage",
-            ).model_dump_json()
-        )
-        result = weather(location, logger)
-        writer(
-            ToolStreamChunk(
-                state=ToolStreamState.ENDED,
-                content=result,
-                tool_name="Wettervorhersage",
-            ).model_dump_json()
-        )
-        return result
-
-    return weather_tool
-
-
 class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
@@ -107,7 +81,6 @@ class ToolCollection:
         self.logger = logger or getLogger(name="mucgpt-core-tools")
         self._brainstorm_tool = make_brainstorm_tool(self.model, self.logger)
         self._simplify_tool = make_simplify_tool(self.model, self.logger)
-        self._weather_tool = make_weather_tool(self.logger)
 
     @property
     def simplify(self):
@@ -119,11 +92,11 @@ class ToolCollection:
 
     def get_tools(self):
         """Return a list of all tool callables."""
-        return [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
+        return [self._brainstorm_tool, self._simplify_tool]
 
     def get_all(self, enabled_tools: list[str] = None) -> list:
         """Return a list of tools, optionally filtered by enabled_tools."""
-        all_tools = [self._brainstorm_tool, self._simplify_tool, self._weather_tool]
+        all_tools = [self._brainstorm_tool, self._simplify_tool]
         if enabled_tools:
             return self.filter_tools_by_names(enabled_tools)
         return all_tools
@@ -133,8 +106,14 @@ class ToolCollection:
         return [tool for tool in self.get_all() if tool.name in tool_names]
 
     @staticmethod
-    def list_tool_metadata():
-        """Dynamically return metadata for all available tools (name, description) without requiring a model."""
+    def list_tool_metadata(lang: str = "Deutsch") -> ToolListResponse:
+        """
+        Dynamically returns metadata for all available tools, including their name and description, without requiring a model.
+        Args:
+            lang (str, optional): The language for the tool metadata. Defaults to "Deutsch".
+        Returns:
+            ToolListResponse: An object containing a list of ToolInfo instances, each representing a tool's id, name, and description.
+        """
 
         class DummyModel(RunnableSerializable):
             def with_config(self, *args, **kwargs):
@@ -150,12 +129,96 @@ class ToolCollection:
                 return type("DummyResponse", (), {"content": ""})()
 
         dummy_logger = getLogger(name="dummy")
-        tools = [
-            make_brainstorm_tool(DummyModel(), dummy_logger),
-            make_simplify_tool(DummyModel(), dummy_logger),
-            make_weather_tool(dummy_logger),
-        ]
-        return [{"name": t.name, "description": t.description} for t in tools]
+        # Define tool metadata with languages as top-level keys
+        tool_metadata = {
+            "deutsch": {
+                "Brainstorming": {
+                    "name": "Brainstorming",
+                    "description": "Erstellt eine detaillierte Mindmap zu einem Thema im Markdown-Format.",
+                },
+                "Vereinfachen": {
+                    "name": "Vereinfachen",
+                    "description": "Vereinfacht komplexe deutsche Texte auf A2-Niveau nach Prinzipien der Leichten Sprache.",
+                },
+            },
+            "english": {
+                "Brainstorming": {
+                    "name": "Brainstorming",
+                    "description": "Generates a detailed mind map for a given topic in markdown format.",
+                },
+                "Vereinfachen": {
+                    "name": "Simplify",
+                    "description": "Simplifies complex German text to A2 level using Easy Language principles.",
+                },
+            },
+            "français": {
+                "Brainstorming": {
+                    "name": "Remue-méninges",
+                    "description": "Génère une carte mentale détaillée pour un sujet donné au format markdown.",
+                },
+                "Vereinfachen": {
+                    "name": "Simplifier",
+                    "description": "Simplifie les textes allemands complexes au niveau A2 selon les principes du langage facile.",
+                },
+            },
+            "bairisch": {
+                "Brainstorming": {
+                    "name": "Brainstorming",
+                    "description": "Macht a genaue Mindmap zu am Thema im Markdown-Format.",
+                },
+                "Vereinfachen": {
+                    "name": "Eifacher machen",
+                    "description": "Macht schwere deutsche Text eifacher auf A2-Level mit da Leichten Sprach.",
+                },
+            },
+            "ukrainisch": {
+                "Brainstorming": {
+                    "name": "Мозковий штурм",
+                    "description": "Створює детальну ментальну карту для заданої теми у форматі markdown.",
+                },
+                "Vereinfachen": {
+                    "name": "Спростити",
+                    "description": "Спрощує складні німецькі тексти до рівня A2 за принципами простої мови.",
+                },
+            },
+        }
+
+        # Determine language key
+        lang_key = "deutsch"
+        if lang.lower() == "english":
+            lang_key = "english"
+        elif lang.lower() in ["français", "francais", "french"]:
+            lang_key = "français"
+        elif lang.lower() in ["bairisch", "bavarian", "bayerisch"]:
+            lang_key = "bairisch"
+        elif lang.lower() in ["українська", "ukrainisch", "ukrainian"]:
+            lang_key = "ukrainisch"
+
+        # Create tool instances
+        brainstorm_tool = make_brainstorm_tool(DummyModel(), dummy_logger)
+        simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
+
+        # Build the list using actual tool names for lookup
+        tools = []
+        for tool_id in [brainstorm_tool, simplify_tool]:
+            tool_name = tool_id.name
+            meta = tool_metadata.get(lang_key, {}).get(tool_name)
+            if meta:
+                tools.append(
+                    ToolInfo(
+                        id=tool_name,
+                        name=meta.get("name", tool_name),
+                        description=meta.get("description", tool_id.description),
+                    )
+                )
+            else:
+                # fallback to tool's own name/description
+                tools.append(
+                    ToolInfo(
+                        id=tool_name, name=tool_name, description=tool_id.description
+                    )
+                )
+        return ToolListResponse(tools=tools)
 
     def add_instructions(self, messages, enabled_tools):
         """Inject a system message describing available tools and XML tag instructions."""

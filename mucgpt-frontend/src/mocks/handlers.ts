@@ -1228,20 +1228,46 @@ export const handlers = [
             return HttpResponse.json(CHAT_RESPONSE);
         }
     }),
-    http.get("/api/backend/v1/tools", () => {
-        return HttpResponse.json({
-            tools: [
-                { name: "PDF-Entfessler 3000", description: "Zähmt wilde PDFs und extrahiert ihren Text – garantiert ohne Papierstau!" },
-                { name: "Super-Summarizer", description: "Komprimiert lange Texte auf Espresso-Länge. Koffein für Ihre Dokumente!" },
-                { name: "Excel-Exorzist", description: "Vertreibt böse Formelfehler und bannt Geisterzellen – jetzt mit heiligem Wasser in der Cloud!" },
+    http.get("/api/backend/v1/tools", ({ request }) => {
+        const url = new URL(request.url);
+        const lang = url.searchParams.get("lang") || "deutsch";
+
+        // Mock tools in different languages
+        const toolsByLanguage = {
+            deutsch: [
+                { id: "Brainstorming", name: "Brainstorming", description: "Erstellt eine detaillierte Mindmap zu einem Thema im Markdown-Format." },
                 {
-                    name: "Bild-Beschwörer",
-                    description: "Verwandelt kryptische Bilddateien in verständliche Kunstwerke – inklusive moderner Hieroglyphen-Übersetzung!"
-                },
-                { name: "Daten-Dompteur", description: "Zähmt wilde Datensätze und bringt Ordnung ins Zahlenchaos – garantiert ohne Peitsche!" },
-                { name: "Mail-Magier", description: "Sortiert, filtert und zaubert Übersicht in Ihren Posteingang – Spam verschwindet wie von Geisterhand!" },
-                { name: "Formular-Fuchs", description: "Füllt Formulare blitzschnell aus und findet jedes versteckte Kästchen – nie wieder Papierkrieg!" }
+                    id: "Vereinfachen",
+                    name: "Vereinfachen",
+                    description: "Vereinfacht komplexe deutsche Texte auf A2-Niveau nach Prinzipien der Leichten Sprache."
+                }
+            ],
+            english: [
+                { id: "Brainstorming", name: "Brainstorming", description: "Generates a detailed mind map for a given topic in markdown format." },
+                { id: "Vereinfachen", name: "Simplify", description: "Simplifies complex German text to A2 level using Easy Language principles." }
+            ],
+            français: [
+                { id: "Brainstorming", name: "Remue-méninges", description: "Génère une carte mentale détaillée pour un sujet donné au format markdown." },
+                {
+                    id: "Vereinfachen",
+                    name: "Simplifier",
+                    description: "Simplifie les textes allemands complexes au niveau A2 selon les principes du langage facile."
+                }
+            ],
+            bairisch: [
+                { id: "Brainstorming", name: "Hirngspinst", description: "Macht a genaue Mindmap zu am Thema im Markdown-Format." },
+                { id: "Vereinfachen", name: "Eifacher machen", description: "Macht schwere deutsche Text eifacher auf A2-Level mit da Leichten Sprach." }
+            ],
+            українська: [
+                { id: "Brainstorming", name: "Мозковий штурм", description: "Створює детальну ментальну карту для заданої теми у форматі markdown." },
+                { id: "Vereinfachen", name: "Спростити", description: "Спрощує складні німецькі тексти до рівня A2 за принципами простої мови." }
             ]
+        };
+
+        const tools = toolsByLanguage[lang as keyof typeof toolsByLanguage] || toolsByLanguage.deutsch;
+
+        return HttpResponse.json({
+            tools: tools
         });
     }),
     http.get("/api/backend/departements", () => {

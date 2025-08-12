@@ -5,8 +5,9 @@ export const CHAT_NAME_PROMPT =
 
 export const API_BASE = "/api/backend/";
 
-export async function getTools(): Promise<ToolListResponse> {
-    return handleApiRequest(() => fetch(API_BASE + "v1/tools", getConfig()), "Failed to get tools");
+export async function getTools(lang?: string): Promise<ToolListResponse> {
+    const url = lang ? `${API_BASE}v1/tools?lang=${encodeURIComponent(lang)}` : `${API_BASE}v1/tools`;
+    return handleApiRequest(() => fetch(url, getConfig()), "Failed to get tools");
 }
 
 export async function chatApi(options: ChatRequest): Promise<Response> {

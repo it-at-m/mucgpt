@@ -204,6 +204,7 @@ export interface AssistantResponse {
 
 // Tool info and list response for /tools endpoint
 export interface ToolInfo {
+    id: string;
     name: string;
     description: string;
 }

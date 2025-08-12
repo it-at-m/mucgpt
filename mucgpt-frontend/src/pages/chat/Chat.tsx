@@ -18,6 +18,7 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { mapContextToBackendLang } from "../../utils/language-utils";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { ToolListResponse } from "../../api/models";
 import { HeaderContext } from "../layout/HeaderContextProvider";
@@ -105,14 +106,16 @@ const Chat = () => {
     useEffect(() => {
         const fetchTools = async () => {
             try {
-                const result = await getTools();
+                // Get current language from context and map to backend format
+                const backendLang = mapContextToBackendLang(language);
+                const result = await getTools(backendLang);
                 setTools(result);
             } catch {
                 setTools({ tools: [] });
             }
         };
         fetchTools();
-    }, []);
+    }, [language]);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {

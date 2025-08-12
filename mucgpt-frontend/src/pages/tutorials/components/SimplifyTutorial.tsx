@@ -52,7 +52,7 @@ export const SimplifyTutorial = () => {
     const tryExample = useCallback(() => {
         const exampleQuestion =
             "Vereinfache diesen Text in Leichte Sprache: 'Die Digitalisierung verändert fundamentale Strukturen in Organisationen und erfordert eine umfassende strategische Neuausrichtung der Geschäftsprozesse.'";
-        const tools = "simplify"; // The simplify tool
+        const tools = "Vereinfachen"; // The simplify tool
         let url = `#/chat?q=${encodeURIComponent(exampleQuestion)}`;
         url += `&tools=${encodeURIComponent(tools)}`;
         window.location.href = url;

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from agent.tools.tools import ToolCollection
-from api.api_models import ToolInfo, ToolListResponse
+from api.api_models import ToolListResponse
 from config.settings import get_settings
 from core.auth import authenticate_user
 
@@ -17,12 +17,13 @@ settings = get_settings()
     response_model=ToolListResponse,
     responses={200: {"description": "Successful Response"}},
 )
-async def list_tools(user_info=Depends(authenticate_user)) -> ToolListResponse:
+async def list_tools(
+    user_info=Depends(authenticate_user), lang: str = "deutsch"
+) -> ToolListResponse:
     """
     Returns a list of all available tools with details, without requiring model initialization.
+
+    Args:
+        lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
     """
-    tools = [
-        ToolInfo(name=tool["name"], description=tool["description"])
-        for tool in ToolCollection.list_tool_metadata()
-    ]
-    return ToolListResponse(tools=tools)
+    return ToolCollection.list_tool_metadata(lang=lang)

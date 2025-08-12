@@ -360,6 +360,10 @@ const Chat = () => {
         [availableLLMs, setLLM]
     );
 
+    // State to track if initialization is complete
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+
     // Initialisierung beim ersten Laden
     useEffect(() => {
         if (!isFirstRender.current) return;
@@ -394,17 +398,15 @@ const Chat = () => {
         }
 
         if (questionFromUrl) {
-            // If we have a question from URL, start a new chat with this question
-            setQuestion(decodeURIComponent(questionFromUrl));
+            // If we have a question from URL, store it and wait for tools to load
+            const decodedQuestion = decodeURIComponent(questionFromUrl);
+            setQuestion(decodedQuestion);
+            setPendingQuestion(decodedQuestion);
             storageService
                 .getNewestChat()
                 .then(() => {
                     clearChat(); // Clear any existing chat
-                    isLoadingRef.current = false;
-                    // After a small delay, call the API with the question from URL
-                    setTimeout(() => {
-                        callApi(decodeURIComponent(questionFromUrl), systemPrompt);
-                    }, 100);
+                    setIsInitialized(true);
                     return fetchHistory();
                 })
                 .finally(() => {
@@ -424,14 +426,25 @@ const Chat = () => {
 
                         lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
                     }
-                    isLoadingRef.current = false;
+                    setIsInitialized(true);
                     return fetchHistory();
                 })
                 .finally(() => {
                     isLoadingRef.current = false;
                 });
         }
-    }, [fetchHistory, storageService, callApi, systemPrompt, clearChat]);
+    }, [fetchHistory, storageService, clearChat]);
+
+    // Effect to handle pending question after tools are loaded
+    useEffect(() => {
+        if (isInitialized && pendingQuestion && tools !== undefined) {
+            // Wait a bit more to ensure tools are properly set
+            setTimeout(() => {
+                callApi(pendingQuestion, systemPrompt);
+                setPendingQuestion(null);
+            }, 200);
+        }
+    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt]);
 
     // Token-Zählung für System-Prompt
     useEffect(() => {

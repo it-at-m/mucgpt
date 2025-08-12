@@ -366,17 +366,28 @@ const Chat = () => {
 
         // Check URL for question parameter - Handle hash router format
         let questionFromUrl;
+        let toolsFromUrl;
         const hashPart = window.location.hash;
 
-        // For hash router format like #/chat?q=something
+        // For hash router format like #/chat?q=something&tools=tool1,tool2
         if (hashPart && hashPart.includes("?")) {
             const queryPart = hashPart.split("?")[1];
             const hashParams = new URLSearchParams(queryPart);
             questionFromUrl = hashParams.get("q") || hashParams.get("question");
+            toolsFromUrl = hashParams.get("tools");
         } else {
             // Fallback to regular URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             questionFromUrl = urlParams.get("q") || urlParams.get("question");
+            toolsFromUrl = urlParams.get("tools");
+        }
+
+        // Parse tools from URL if present
+        if (toolsFromUrl) {
+            const toolsArray = decodeURIComponent(toolsFromUrl)
+                .split(",")
+                .filter(tool => tool.trim() !== "");
+            setSelectedTools(toolsArray);
         }
 
         if (questionFromUrl) {

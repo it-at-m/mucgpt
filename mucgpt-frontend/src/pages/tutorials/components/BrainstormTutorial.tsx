@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Play24Regular, BrainCircuit24Regular, Target24Regular, DocumentBulletList24Regular } from "@fluentui/react-icons";
+import { Play24Regular, BrainCircuit24Regular, Target24Regular, DocumentBulletList24Regular, Send24Regular } from "@fluentui/react-icons";
 import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
+import styles from "./BrainstormTutorial.module.css";
 
 // Example mindmap content for demonstration
 const EXAMPLE_MINDMAP = `
@@ -93,6 +94,14 @@ export const BrainstormTutorial = () => {
         setShowExample(!showExample);
     }, [showExample]);
 
+    const tryExample = useCallback(() => {
+        const exampleQuestion = "Erstelle eine Mindmap zum Thema 'Nachhaltiger Transport'";
+        const tools = "brainstorm"; // The brainstorm tool
+        let url = `#/chat?q=${encodeURIComponent(exampleQuestion)}`;
+        url += `&tools=${encodeURIComponent(tools)}`;
+        window.location.href = url;
+    }, []);
+
     const features: TutorialFeature[] = [
         {
             icon: <BrainCircuit24Regular />,
@@ -163,7 +172,7 @@ export const BrainstormTutorial = () => {
                 description: t("tutorials.brainstorm.example.description", ""),
                 component: showExample ? (
                     <div>
-                        <div style={{ marginBottom: "24px" }}>
+                        <div className={styles.exampleContainer}>
                             <AnswerList
                                 answers={createBrainstormWorkflowExample()}
                                 regularBotMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
@@ -175,23 +184,20 @@ export const BrainstormTutorial = () => {
                                 lastQuestionRef={lastQuestionRef}
                             />
                         </div>
+                        <div className={styles.buttonsContainer}>
+                            <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
+                                {t("tutorials.buttons.hide_example")}
+                            </button>
+                            <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
+                                <Send24Regular className={styles.tryButtonIcon} />
+                                {t("tutorials.buttons.try_example")}
+                            </button>
+                        </div>
                     </div>
                 ) : (
-                    <div style={{ padding: "20px", textAlign: "center" }}>
-                        <button
-                            onClick={toggleExample}
-                            style={{
-                                padding: "12px 24px",
-                                background: "var(--colorBrandBackground)",
-                                color: "var(--colorNeutralForegroundOnBrand)",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                fontSize: "14px",
-                                fontWeight: "500"
-                            }}
-                        >
-                            {showExample ? "Beispiel ausblenden" : "Live-Beispiel anzeigen"}
+                    <div className={styles.buttonsContainerSingle}>
+                        <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
+                            {t("tutorials.buttons.show_example")}
                         </button>
                     </div>
                 )

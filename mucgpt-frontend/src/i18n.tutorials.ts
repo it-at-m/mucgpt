@@ -79,43 +79,44 @@ export const tutorialsTranslations = {
                 title: "Brainstorming Werkzeug",
                 description: "Lerne, wie du mit dem Brainstorming-Werkzeug kreative Mindmaps erstellen und strukturieren kannst.",
                 intro: {
-                    title: "Brainstorm Einführung",
-                    description: "Beschreibung Brainstorm Einführung"
+                    title: "Was ist das Brainstorming-Tool?",
+                    description:
+                        "Das Brainstorming-Tool generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
                 },
                 features: {
                     ai: {
                         title: "KI-gestütztes Brainstorming",
-                        description: "Nutzt fortschrittliche KI, um kreative und strukturierte Mindmaps zu erstellen"
+                        description: "Nutzt fortschrittliche KI-Modelle, um kreative und strukturierte Ideen zu generieren."
                     },
                     structure: {
-                        title: "Strukturierte Ausgabe",
-                        description: "Organisiert Ideen hierarchisch mit Hauptthemen und Unterpunkten"
+                        title: "Strukturierte Mindmaps",
+                        description: "Organisiert Ideen hierarchisch mit Haupt- und Unterthemen für bessere Übersicht."
                     },
                     interactive: {
-                        title: "Interaktive Mindmaps",
-                        description: "Vollständig interaktive Mindmaps mit Zoom, Pan und Vollbild-Funktionen"
+                        title: "Interaktive Darstellung",
+                        description: "Expandierbare und navigierbare Mindmap-Knoten für intuitive Exploration."
                     },
                     export: {
                         title: "Export-Funktionen",
-                        description: "Mindmaps als Bild oder Daten exportieren für weitere Verwendung"
+                        description: "Mindmaps als Markdown, PDF oder Bild exportieren."
                     }
                 },
                 example: {
-                    title: "Brainstorming-Beispiel",
+                    title: "Brainstorming Beispiel",
                     description: ""
                 },
                 tips: {
                     specific: {
                         title: "Seien Sie spezifisch",
-                        description: "Je spezifischer Ihr Thema, desto detaillierter und nützlicher wird die Mindmap."
+                        description: "Je präziser Ihr Thema, desto gezielter und relevanter werden die generierten Ideen."
                     },
                     context: {
-                        title: "Kontext bereitstellen",
-                        description: "Geben Sie zusätzliche Informationen über den gewünschten Fokus oder Anwendungsbereich."
+                        title: "Kontext hinzufügen",
+                        description: "Fügen Sie zusätzlichen Kontext hinzu, um die KI bei der Ideengenerierung zu unterstützen."
                     },
                     iterate: {
-                        title: "Iterieren Sie",
-                        description: "Bauen Sie auf den Ergebnissen auf und verfeinern Sie Ihre Mindmaps durch weitere Fragen."
+                        title: "Iterativ arbeiten",
+                        description: "Nutzen Sie die Ergebnisse als Ausgangspunkt und verfeinern Sie Ihre Anfragen schrittweise."
                     }
                 }
             },
@@ -177,6 +178,11 @@ export const tutorialsTranslations = {
             },
             tips: {
                 title: "Tipps und Best Practices"
+            },
+            buttons: {
+                show_example: "Live-Beispiel anzeigen",
+                hide_example: "Beispiel ausblenden",
+                try_example: "Beispiel ausprobieren"
             }
         }
     },
@@ -259,25 +265,26 @@ export const tutorialsTranslations = {
                 title: "Brainstorming Tool",
                 description: "Learn how to create and structure creative mindmaps with the brainstorming tool.",
                 intro: {
-                    title: "Brainstorm Introduction",
-                    description: "Description Brainstorm Introduction"
+                    title: "What is the Brainstorming Tool?",
+                    description:
+                        "The Brainstorming Tool generates structured mind maps on any topic. It uses AI to gather, organize and display creative ideas as interactive mind maps."
                 },
                 features: {
                     ai: {
                         title: "AI-powered Brainstorming",
-                        description: "Uses advanced AI to create creative and structured mind maps"
+                        description: "Uses advanced AI models to generate creative and structured ideas."
                     },
                     structure: {
-                        title: "Structured Output",
-                        description: "Organizes ideas hierarchically with main topics and sub-points"
+                        title: "Structured Mind Maps",
+                        description: "Organizes ideas hierarchically with main topics and subtopics for better overview."
                     },
                     interactive: {
-                        title: "Interactive Mind Maps",
-                        description: "Fully interactive mind maps with zoom, pan, and fullscreen functions"
+                        title: "Interactive Display",
+                        description: "Expandable and navigable mind map nodes for intuitive exploration."
                     },
                     export: {
                         title: "Export Functions",
-                        description: "Export mind maps as images or data for further use"
+                        description: "Export mind maps as Markdown, PDF or images."
                     }
                 },
                 example: {
@@ -287,15 +294,15 @@ export const tutorialsTranslations = {
                 tips: {
                     specific: {
                         title: "Be specific",
-                        description: "The more specific your topic, the more detailed and useful the mind map will be."
+                        description: "The more precise your topic, the more targeted and relevant the generated ideas will be."
                     },
                     context: {
-                        title: "Provide context",
-                        description: "Give additional information about the desired focus or area of application."
+                        title: "Add context",
+                        description: "Add additional context to help the AI with idea generation."
                     },
                     iterate: {
-                        title: "Iterate",
-                        description: "Build on the results and refine your mind maps through follow-up questions."
+                        title: "Work iteratively",
+                        description: "Use the results as a starting point and refine your requests step by step."
                     }
                 }
             },
@@ -357,6 +364,11 @@ export const tutorialsTranslations = {
             },
             tips: {
                 title: "Tips and Best Practices"
+            },
+            buttons: {
+                show_example: "Show Live Example",
+                hide_example: "Hide Example",
+                try_example: "Try Example"
             }
         }
     },
@@ -538,6 +550,11 @@ export const tutorialsTranslations = {
             },
             tips: {
                 title: "Tipps und Best Practices"
+            },
+            buttons: {
+                show_example: "Live-Beispiel anzeigen",
+                hide_example: "Beispiel ausblenden",
+                try_example: "Beispiel ausprobieren"
             }
         }
     },
@@ -720,6 +737,11 @@ export const tutorialsTranslations = {
             },
             tips: {
                 title: "Conseils et Meilleures Pratiques"
+            },
+            buttons: {
+                show_example: "Afficher l'exemple en direct",
+                hide_example: "Masquer l'exemple",
+                try_example: "Essayer l'exemple"
             }
         }
     },
@@ -901,6 +923,11 @@ export const tutorialsTranslations = {
             },
             tips: {
                 title: "Поради та Найкращі Практики"
+            },
+            buttons: {
+                show_example: "Показати живий приклад",
+                hide_example: "Приховати приклад",
+                try_example: "Спробувати приклад"
             }
         }
     }

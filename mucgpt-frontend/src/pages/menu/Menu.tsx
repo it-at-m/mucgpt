@@ -20,6 +20,8 @@ import { getOwnedCommunityBots, getUserSubscriptionsApi } from "../../api/assist
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { Share24Regular, Chat24Regular, Book24Regular } from "@fluentui/react-icons";
 import { BotStats } from "../../components/BotStats/BotStats";
+import { getTools } from "../../api/core-client";
+import { ToolListResponse } from "../../api/models";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -34,6 +36,9 @@ const Menu = () => {
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+
     const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
     const { showSuccess } = useGlobalToastContext();
@@ -84,6 +89,18 @@ const Menu = () => {
         }
     }, [user]);
 
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                const result = await getTools();
+                setTools(result);
+            } catch {
+                setTools({ tools: [] });
+            }
+        };
+        fetchTools();
+    }, []);
+
     const onAddBot = () => {
         setShowDialogInput(true);
     };
@@ -93,7 +110,11 @@ const Menu = () => {
     };
 
     const onSendQuestion = (question: string) => {
-        window.location.href = `#/chat?q=${encodeURIComponent(question)}`;
+        let url = `#/chat?q=${encodeURIComponent(question)}`;
+        if (selectedTools.length > 0) {
+            url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
+        }
+        window.location.href = url;
     };
 
     const onShareBot = (botId: string) => {
@@ -145,7 +166,9 @@ const Menu = () => {
                         setQuestion={question => {
                             setQuestion(question);
                         }}
-                        selectedTools={[]}
+                        selectedTools={selectedTools}
+                        setSelectedTools={setSelectedTools}
+                        tools={tools}
                         question={question}
                     ></QuestionInput>
                 </div>

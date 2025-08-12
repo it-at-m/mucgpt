@@ -1,11 +1,12 @@
 import { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { TextBulletListSquare24Regular, CheckmarkCircle24Regular, Edit24Regular, ArrowDownload24Regular } from "@fluentui/react-icons";
+import { TextBulletListSquare24Regular, CheckmarkCircle24Regular, Edit24Regular, ArrowDownload24Regular, Send24Regular } from "@fluentui/react-icons";
 
 import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
+import styles from "./SimplifyTutorial.module.css";
 
 // Create a realistic simplify workflow example
 const createSimplifyWorkflowExample = (): ChatMessage[] => {
@@ -47,6 +48,15 @@ export const SimplifyTutorial = () => {
     const toggleExample = useCallback(() => {
         setShowExample(!showExample);
     }, [showExample]);
+
+    const tryExample = useCallback(() => {
+        const exampleQuestion =
+            "Vereinfache diesen Text in Leichte Sprache: 'Die Digitalisierung verändert fundamentale Strukturen in Organisationen und erfordert eine umfassende strategische Neuausrichtung der Geschäftsprozesse.'";
+        const tools = "simplify"; // The simplify tool
+        let url = `#/chat?q=${encodeURIComponent(exampleQuestion)}`;
+        url += `&tools=${encodeURIComponent(tools)}`;
+        window.location.href = url;
+    }, []);
 
     const features: TutorialFeature[] = [
         {
@@ -111,7 +121,7 @@ export const SimplifyTutorial = () => {
                 description: t("tutorials.simplify.example.description", ""),
                 component: showExample ? (
                     <div>
-                        <div style={{ marginBottom: "24px" }}>
+                        <div className={styles.exampleContainer}>
                             <AnswerList
                                 answers={createSimplifyWorkflowExample()}
                                 regularBotMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
@@ -123,23 +133,20 @@ export const SimplifyTutorial = () => {
                                 lastQuestionRef={lastQuestionRef}
                             />
                         </div>
+                        <div className={styles.buttonsContainer}>
+                            <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
+                                {t("tutorials.buttons.hide_example")}
+                            </button>
+                            <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
+                                <Send24Regular className={styles.tryButtonIcon} />
+                                {t("tutorials.buttons.try_example")}
+                            </button>
+                        </div>
                     </div>
                 ) : (
-                    <div style={{ padding: "20px", textAlign: "center" }}>
-                        <button
-                            onClick={toggleExample}
-                            style={{
-                                padding: "12px 24px",
-                                background: "var(--colorBrandBackground)",
-                                color: "var(--colorNeutralForegroundOnBrand)",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                fontSize: "14px",
-                                fontWeight: "500"
-                            }}
-                        >
-                            {showExample ? "Beispiel ausblenden" : "Live-Beispiel anzeigen"}
+                    <div className={styles.buttonsContainerSingle}>
+                        <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
+                            {t("tutorials.buttons.show_example")}
                         </button>
                     </div>
                 )

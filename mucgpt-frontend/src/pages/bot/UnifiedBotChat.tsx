@@ -40,14 +40,13 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
         max_output_tokens: 4000,
         systemPrompt: "",
         active_chat: undefined,
-        allChats: [],
-        totalTokens: 0
+        allChats: []
     });
 
     const { showError, showSuccess } = useGlobalToastContext();
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats } = chatState;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -73,7 +72,6 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
     const [error, setError] = useState<unknown>();
     const [sidebarSize] = useState<SidebarSizes>("large");
     const [question, setQuestion] = useState<string>("");
-    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
@@ -265,18 +263,6 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
         }
     }, []);
 
-    // useEffect für die Tokenanzahl
-    useEffect(() => {
-        dispatch({
-            type: "SET_TOTAL_TOKENS",
-            payload:
-                systemPromptTokens +
-                answers
-                    .map((answ: { response: { user_tokens: any; tokens: any } }) => (answ.response.user_tokens || 0) + (answ.response.tokens || 0))
-                    .reduce((prev: any, curr: any) => prev + curr, 0)
-        });
-    }, [systemPromptTokens, answers]);
-
     // onBotChanged-Funktion
     const onBotChanged = useCallback(
         async (newBot: Bot) => {
@@ -284,7 +270,7 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
 
             setError(undefined);
             try {
-                const result = await strategy.updateBot?.(bot_id, newBot, botConfig, LLM);
+                const result = await strategy.updateBot?.(bot_id, newBot);
 
                 if (result?.updatedBot) {
                     setBotConfig(result.updatedBot);
@@ -294,16 +280,12 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                         t("components.bot_chat.update_bot_success_message", { title: result.updatedBot.title })
                     );
                 }
-
-                if (result?.systemPromptTokens !== undefined) {
-                    setSystemPromptTokens(result.systemPromptTokens);
-                }
             } catch (err) {
                 console.error("Error updating bot:", err);
                 showError(t("components.bot_chat.update_bot_failed"), err instanceof Error ? err.message : t("components.bot_chat.update_bot_failed_message"));
             }
         },
-        [strategy, bot_id, botConfig, LLM, setQuickPrompts, setSystemPromptTokens, showError, showSuccess, t]
+        [strategy, bot_id, botConfig, LLM, setQuickPrompts, showError, showSuccess, t]
     );
 
     // Regenerate-Funktion
@@ -442,13 +424,12 @@ const UnifiedBotChat = ({ strategy }: UnifiedBotChatProps) => {
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={question => callApi(question)}
-                tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={botConfig.tools ? botConfig.tools.map(tool => tool.id) : []}
             />
         ),
-        [isLoadingRef.current, callApi, totalTokens, question, t, error, botConfig.tools]
+        [isLoadingRef.current, callApi, question, t, error, botConfig.tools]
     );
 
     // AnswerList component

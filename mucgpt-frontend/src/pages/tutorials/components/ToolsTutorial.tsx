@@ -127,7 +127,6 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
                 disabled={false}
                 placeholder={t("components.questioninput.placeholder", "Stellen Sie Ihre Frage...")}
                 clearOnSend={false}
-                tokens_used={15}
                 question={question}
                 setQuestion={setQuestion}
                 selectedTools={selectedTools}

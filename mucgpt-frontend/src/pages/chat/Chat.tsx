@@ -9,7 +9,6 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
-import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE } from "../../constants";
@@ -25,7 +24,7 @@ import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
-import { getTools, chatApi, countTokensAPI } from "../../api/core-client";
+import { getTools, chatApi } from "../../api/core-client";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -95,7 +94,6 @@ const Chat = () => {
     // Independent states
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
-    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
@@ -124,12 +122,11 @@ const Chat = () => {
         max_output_tokens: 4000,
         systemPrompt: "",
         active_chat: undefined,
-        allChats: [],
-        totalTokens: 0
+        allChats: []
     });
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -146,24 +143,12 @@ const Chat = () => {
     // Storage Service mit useMemo
     const storageService = useStorageService(activeChatRef.current);
 
-    // Debounced system prompt
-    const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
-
     // Add a scroll function
     const scrollToBottom = useCallback(() => {
         if (chatMessageStreamEnd.current) {
             chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
         }
     }, []);
-
-    // Token-Berechnung
-    const calculateTotalTokens = useCallback(() => {
-        const answerTokens = answers.reduce(
-            (sum: any, msg: { response: { user_tokens: any; tokens: any } }) => sum + (msg.response.user_tokens || 0) + (msg.response.tokens || 0),
-            0
-        );
-        return systemPromptTokens + answerTokens;
-    }, [answers, systemPromptTokens]);
 
     // Debounced Storage-Update
     const debouncedStorageUpdate = useMemo(
@@ -446,34 +431,6 @@ const Chat = () => {
         }
     }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt]);
 
-    // Token-Zählung für System-Prompt
-    useEffect(() => {
-        const countTokens = async () => {
-            if (debouncedSystemPrompt) {
-                try {
-                    const response = await countTokensAPI({
-                        text: debouncedSystemPrompt,
-                        model: LLM
-                    });
-                    setSystemPromptTokens(response.count);
-                } catch (e) {
-                    console.error("Failed to count tokens:", e);
-                    setSystemPromptTokens(0);
-                }
-            } else {
-                setSystemPromptTokens(0);
-            }
-        };
-
-        countTokens();
-    }, [debouncedSystemPrompt, LLM]);
-
-    // Update total tokens when answers or system prompt changes
-    useEffect(() => {
-        const newTotalTokens = calculateTotalTokens();
-        dispatch({ type: "SET_TOTAL_TOKENS", payload: newTotalTokens });
-    }, [calculateTotalTokens]);
-
     // Update max tokens if LLM changes
     useEffect(() => {
         if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens !== 0) {
@@ -566,7 +523,6 @@ const Chat = () => {
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={question => callApi(question, systemPrompt)}
-                tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
@@ -574,7 +530,7 @@ const Chat = () => {
                 tools={tools}
             />
         ),
-        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current, selectedTools, tools]
+        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools]
     );
 
     const sidebar_actions = useMemo(

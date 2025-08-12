@@ -4,8 +4,7 @@ import { Send28Filled, Toolbox24Color } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { LLMContext } from "../LLMSelector/LLMContextProvider";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolsSelector } from "../ToolsSelector/ToolsSelector";
 import { ToolListResponse } from "../../api/models";
 
@@ -16,8 +15,6 @@ interface Props {
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
-    tokens_used: number;
-    token_limit_tracking?: boolean;
     question: string;
     setQuestion: (question: string) => void;
     selectedTools: string[];
@@ -25,22 +22,8 @@ interface Props {
     tools?: ToolListResponse;
 }
 
-export const QuestionInput = ({
-    onSend,
-    disabled,
-    placeholder,
-    clearOnSend,
-    tokens_used,
-    token_limit_tracking = true,
-    question,
-    setQuestion,
-    selectedTools,
-    setSelectedTools,
-    tools
-}: Props) => {
+export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, question, setQuestion, selectedTools, setSelectedTools, tools }: Props) => {
     const { t } = useTranslation();
-    const { LLM } = useContext(LLMContext);
-    const [description, setDescription] = useState<string>("0");
     const [toolsSelectorOpen, setToolsSelectorOpen] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -83,16 +66,6 @@ export const QuestionInput = ({
         }
     }, [question]);
 
-    useEffect(() => {
-        const actual = countWords(question) + tokens_used;
-        let text;
-        if (token_limit_tracking) {
-            text = `${actual}/ ${LLM.max_input_tokens} ${t("components.questioninput.tokensused")}`;
-            if (actual > LLM.max_input_tokens) text += `${t("components.questioninput.limit")}`;
-        } else text = `${actual} ${t("components.questioninput.tokensused")}`;
-        setDescription(text);
-    }, [tokens_used, LLM.max_input_tokens, t, question, token_limit_tracking]);
-
     const sendQuestion = useCallback(() => {
         if (disabled || !question.trim()) {
             return;
@@ -114,10 +87,6 @@ export const QuestionInput = ({
         },
         [sendQuestion]
     );
-
-    function countWords(str: string) {
-        return str.trim().split(/\s+/).length;
-    }
 
     const onQuestionChange = useCallback(
         (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
@@ -157,7 +126,6 @@ export const QuestionInput = ({
                     </div>
                     <div className={styles.questionInputContainerFooter}>
                         <div className={styles.errorhintSection}>
-                            {tokens_used == 0 ? <div> </div> : <div>{description}</div>}
                             <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                         </div>
                         <div className={styles.toolBadgesSection}>

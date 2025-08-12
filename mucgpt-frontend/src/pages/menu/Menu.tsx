@@ -166,8 +166,6 @@ const Menu = () => {
                         onSend={onSendQuestion}
                         disabled={false}
                         placeholder={t("chat.prompt")}
-                        tokens_used={0}
-                        token_limit_tracking={false}
                         setQuestion={question => {
                             setQuestion(question);
                         }}

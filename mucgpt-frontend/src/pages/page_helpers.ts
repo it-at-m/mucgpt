@@ -456,8 +456,6 @@ export type ChatState<A> = {
     active_chat: string | undefined;
     /** Array of all chat conversations stored in the application */
     allChats: DBObject<ChatResponse, A>[];
-    /** Total number of tokens used across all conversations */
-    totalTokens: number;
 };
 
 /**
@@ -475,8 +473,7 @@ export type ChatAction<A> =
     | { type: "SET_MAX_TOKENS"; payload: number }
     | { type: "SET_SYSTEM_PROMPT"; payload: string }
     | { type: "SET_ACTIVE_CHAT"; payload: string | undefined }
-    | { type: "SET_ALL_CHATS"; payload: DBObject<ChatResponse, A>[] }
-    | { type: "SET_TOTAL_TOKENS"; payload: number };
+    | { type: "SET_ALL_CHATS"; payload: DBObject<ChatResponse, A>[] };
 
 /**
  * Factory function that creates a reducer for managing chat state.
@@ -519,9 +516,6 @@ export function getChatReducer<A>() {
             case "SET_ALL_CHATS":
                 // Update the entire list of chat conversations
                 return { ...state, allChats: action.payload };
-            case "SET_TOTAL_TOKENS":
-                // Update the total token usage counter
-                return { ...state, totalTokens: action.payload };
             default:
                 // Return unchanged state for unknown action types
                 return state;

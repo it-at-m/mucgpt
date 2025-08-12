@@ -1181,9 +1181,6 @@ export const handlers = [
         await delay(1000);
         return HttpResponse.json(SIMPLY_RESPONSE);
     }),
-    http.post("/api/backend/counttokens", () => {
-        return HttpResponse.json({ count: 100 });
-    }),
     http.post("api/backend/create_bot", async () => {
         await delay(1000);
         return HttpResponse.json(CREATE_BOT_RESPONSE);

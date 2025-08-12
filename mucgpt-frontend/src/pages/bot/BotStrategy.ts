@@ -1,13 +1,12 @@
 import { BotStorageService } from "../../service/botstorage";
-import { AssistantUpdateInput, Bot, Model } from "../../api/models";
+import { AssistantUpdateInput, Bot } from "../../api/models";
 import { BOT_STORE } from "../../constants";
-import { countTokensAPI } from "../../api/core-client";
 import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
 
 export interface BotStrategy {
     loadBotConfig(botId: string, botStorageService: BotStorageService): Promise<Bot | undefined>;
     deleteBot(botId: string, botStorageService: BotStorageService): Promise<void>;
-    updateBot?(botId: string, newBot: Bot, botConfig: Bot, LLM: Model): Promise<{ updatedBot?: Bot; systemPromptTokens?: number }>;
+    updateBot?(botId: string, newBot: Bot): Promise<{ updatedBot?: Bot }>;
     isOwned: boolean;
     canEdit: boolean;
     requiresReloadOnSave?: boolean; // New flag to indicate if page reload is needed after save
@@ -26,17 +25,11 @@ export class LocalBotStrategy implements BotStrategy {
         await botStorageService.deleteConfigAndChatsForBot(botId);
     }
 
-    async updateBot(botId: string, newBot: Bot, botConfig: Bot, LLM: Model): Promise<{ updatedBot?: Bot; systemPromptTokens?: number }> {
+    async updateBot(botId: string, newBot: Bot): Promise<{ updatedBot?: Bot }> {
         const botStorageService = new BotStorageService(BOT_STORE);
         await botStorageService.setBotConfig(botId, newBot);
 
-        let systemPromptTokens: number | undefined;
-        if (newBot.system_message !== botConfig.system_message) {
-            const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
-            systemPromptTokens = response.count;
-        }
-
-        return { updatedBot: newBot, systemPromptTokens };
+        return { updatedBot: newBot };
     }
 }
 
@@ -105,7 +98,7 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
         await deleteCommunityAssistantApi(botId);
     }
 
-    async updateBot(botId: string, newBot: Bot, botConfig: Bot, LLM: Model): Promise<{ systemPromptTokens?: number }> {
+    async updateBot(botId: string, newBot: Bot): Promise<any> {
         const updateInput: AssistantUpdateInput = {
             name: newBot.title,
             description: newBot.description,
@@ -124,13 +117,6 @@ export class OwnedCommunityBotStrategy implements BotStrategy {
 
         await updateCommunityAssistantApi(botId, updateInput);
 
-        let systemPromptTokens: number | undefined;
-        if (newBot.system_message !== botConfig.system_message) {
-            const response = await countTokensAPI({ text: newBot.system_message, model: LLM });
-            systemPromptTokens = response.count;
-        }
-        // Note: Reload will be handled by the save action in EditBotDialog, not on every change
-
-        return { systemPromptTokens };
+        return {};
     }
 }

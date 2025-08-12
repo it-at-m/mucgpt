@@ -12,8 +12,6 @@ from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    CountResult,
-    CountTokenRequest,
     Usage,
 )
 
@@ -212,29 +210,6 @@ class TestChatRouter:
                 f"Combined content was: {content_buffer}"
             )
 
-    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
-    def test_count_tokens(self, mock_num_tokens, test_client: TestClient):
-        """Test the token counting endpoint."""
-        mock_num_tokens.return_value = 12
-
-        # Create payload using proper model
-        payload_model = CountTokenRequest(
-            text="Hello, this is a test message for token counting.",
-            model="gpt-4o-mini",
-        )
-        payload = payload_model.model_dump()
-
-        response = test_client.post("/v1/counttokens", json=payload)
-
-        assert response.status_code == 200, (
-            f"Request failed with status {response.status_code}: {response.text}"
-        )
-
-        # Parse response into model
-        result = CountResult.model_validate(response.json())
-        assert isinstance(result.count, int), "Token count should be an integer"
-        assert result.count > 0, "Token count should be greater than 0"
-
     @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_invalid_model(
         self, mock_chat_service, test_client: TestClient
@@ -337,60 +312,6 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         # Should either work with 0 tokens or return error
         assert resp.status_code in [200, 422, 500]
-
-    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
-    def test_count_tokens_empty_text(self, mock_num_tokens, test_client: TestClient):
-        """Test token counting with empty text."""
-        mock_num_tokens.return_value = 0
-
-        # Create payload using proper model
-        payload_model = CountTokenRequest(text="", model="gpt-4o-mini")
-        payload = payload_model.model_dump()
-        response = test_client.post("/v1/counttokens", json=payload)
-        assert response.status_code == 200
-
-        # Parse response into model
-        result = CountResult.model_validate(response.json())
-        assert result.count >= 0
-
-    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
-    def test_count_tokens_long_text(self, mock_num_tokens, test_client: TestClient):
-        """Test token counting with very long text."""
-        mock_num_tokens.return_value = 2500
-
-        long_text = "Hello world! " * 1000
-        # Create payload using proper model
-        payload_model = CountTokenRequest(text=long_text, model="gpt-4o-mini")
-        payload = payload_model.model_dump()
-        response = test_client.post("/v1/counttokens", json=payload)
-        assert response.status_code == 200
-
-        # Parse response into model
-        result = CountResult.model_validate(response.json())
-        assert result.count > 1000
-
-    @patch("api.routers.chat_router.token_counter.num_tokens_from_messages")
-    def test_count_tokens_invalid_model(self, mock_num_tokens, test_client: TestClient):
-        """Test token counting with invalid model."""
-        mock_num_tokens.side_effect = NotImplementedError("Invalid model")
-
-        # Create payload using proper model
-        payload_model = CountTokenRequest(text="Hello world", model="invalid-model")
-        payload = payload_model.model_dump()
-        response = test_client.post("/v1/counttokens", json=payload)
-        assert response.status_code == 422
-
-    def test_count_tokens_missing_text(self, test_client: TestClient):
-        """Test token counting with missing text field."""
-        payload = {"model": "gpt-4o-mini"}
-        response = test_client.post("/v1/counttokens", json=payload)
-        assert response.status_code == 422
-
-    def test_count_tokens_missing_model(self, test_client: TestClient):
-        """Test token counting with missing model field."""
-        payload = {"text": "Hello world"}
-        response = test_client.post("/v1/counttokens", json=payload)
-        assert response.status_code == 422
 
     @patch("api.routers.chat_router.agent_executor")
     def test_chat_completion_service_exception(

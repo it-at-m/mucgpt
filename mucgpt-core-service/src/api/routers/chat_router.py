@@ -3,14 +3,11 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from langchain_core.messages.human import HumanMessage
 
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    CountResult,
-    CountTokenRequest,
     CreateBotRequest,
     CreateBotResult,
 )
@@ -18,18 +15,11 @@ from api.exception import llm_exception_handler
 from config.settings import get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
-from core.token_counter import (
-    TokenCounter,
-    TokenCounterError,
-    UnsupportedMessageTypeError,
-    UnsupportedModelError,
-)
 from init_app import init_agent
 
 logger = getLogger()
 settings = get_settings()
 agent_executor = init_agent(settings)
-token_counter = TokenCounter(logger)  # Create an instance with the application logger
 router = APIRouter(prefix="/v1")
 
 
@@ -162,44 +152,3 @@ async def create_bot(
         logger.exception("Exception in /create_bot")
         msg = llm_exception_handler(ex=e, logger=logger)
         raise HTTPException(status_code=500, detail=msg)
-
-
-@router.post(
-    "/counttokens",
-    summary="Count tokens in a text",
-    description="This endpoint receives a text and a model and returns the number of tokens.",
-    response_model=CountResult,
-    responses={
-        200: {"description": "Successful Response"},
-        401: {"description": "Unauthorized"},
-        422: {"description": "Validation Error"},
-        500: {"description": "Internal Server Error"},
-    },
-)
-async def counttokens(
-    request: CountTokenRequest, user_info=Depends(authenticate_user)
-) -> CountResult:
-    """
-    This endpoint receives a text and a model and returns the number of tokens.
-    """
-    global token_counter
-    try:
-        counted_tokens = token_counter.num_tokens_from_messages(
-            [HumanMessage(content=request.text)], request.model
-        )
-        return CountResult(count=counted_tokens)
-    except UnsupportedModelError as e:
-        logger.warning(f"Unsupported model in token counting: {str(e)}")
-        raise HTTPException(status_code=422, detail=str(e))
-    except UnsupportedMessageTypeError as e:
-        logger.warning(f"Unsupported message type in token counting: {str(e)}")
-        raise HTTPException(status_code=422, detail=str(e))
-    except TokenCounterError as e:
-        logger.error(f"Token counting error: {str(e)}")
-        raise HTTPException(status_code=422, detail=str(e))
-    except NotImplementedError as e:
-        logger.warning(f"Not implemented error in token counting: {str(e)}")
-        raise HTTPException(status_code=422, detail=str(e))
-    except Exception as e:
-        logger.exception(f"Unexpected error in token counting: {str(e)}")
-        raise HTTPException(status_code=500, detail="Counttokens failed!")

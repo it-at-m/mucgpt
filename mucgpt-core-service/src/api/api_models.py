@@ -34,19 +34,6 @@ class ChatResult(BaseModel):
     content: str = Field(..., description="The content of the chat response.")
 
 
-class CountResult(BaseModel):
-    """Result model for a count operation."""
-
-    count: int = Field(..., description="The result of the count operation.")
-
-
-class CountTokenRequest(BaseModel):
-    """Request model for counting tokens."""
-
-    text: str = Field(..., description="The text to count tokens for.")
-    model: str = Field(..., description="The model to use for token counting.")
-
-
 class SummarizeResult(BaseModel):
     """Result model for the summarize endpoint."""
 

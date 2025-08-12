@@ -90,6 +90,9 @@ class ChatCompletionRequest(BaseModel):
     enabled_tools: Optional[List[str]] = Field(
         None, description="List of enabled tool IDs for this completion request"
     )
+    bot_id: Optional[str] = Field(
+        None, description="ID of the bot to use for this completion request"
+    )
 
 
 class ChatCompletionChoice(BaseModel):

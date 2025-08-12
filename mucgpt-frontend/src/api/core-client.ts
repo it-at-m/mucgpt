@@ -33,6 +33,9 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     if (options.enabled_tools) {
         body.enabled_tools = options.enabled_tools;
     }
+    if (options.bot_id) {
+        body.bot_id = options.bot_id;
+    }
     return await fetch(url, postConfig(body));
 }
 

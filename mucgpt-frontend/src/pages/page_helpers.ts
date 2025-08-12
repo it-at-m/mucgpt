@@ -243,7 +243,8 @@ export const makeApiRequest = async (
         system_message: options.system ?? "",
         max_output_tokens: options.maxTokens,
         model: LLM.llm_name,
-        enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined
+        enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
+        bot_id: bot_id
     };
 
     // Make the API call

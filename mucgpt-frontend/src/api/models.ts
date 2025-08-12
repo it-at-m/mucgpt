@@ -34,6 +34,7 @@ export type ChatRequest = {
     shouldStream?: boolean;
     model?: string;
     enabled_tools?: string[];
+    bot_id?: string;
 };
 
 export type CreateBotRequest = {

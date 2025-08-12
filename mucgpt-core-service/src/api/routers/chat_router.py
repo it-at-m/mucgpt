@@ -63,6 +63,7 @@ async def chat_completions(
                 model=request.model,
                 department=user_info.department,
                 enabled_tools=enabled_tools,
+                bot_id=request.bot_id,
             )
 
             async def sse_generator():

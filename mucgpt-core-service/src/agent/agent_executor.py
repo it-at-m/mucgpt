@@ -118,6 +118,7 @@ class MUCGPTAgentExecutor:
         model: str,
         department: Optional[str],
         enabled_tools: Optional[List[str]] = None,
+        bot_id: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
         logger.info(
             "Chat streaming started with temperature %s, model %s, max_tokens %s",
@@ -141,6 +142,9 @@ class MUCGPTAgentExecutor:
                 },
             ),
         )
+        if bot_id is not None:
+            config["metadata"]["langfuse_tags"] = [f"bot-{bot_id}"]
+
         if enabled_tools:
             logger.debug("Enabled tools for this request: %s", ", ".join(enabled_tools))
         try:

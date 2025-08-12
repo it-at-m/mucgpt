@@ -46,10 +46,9 @@
 }
 
 .headerNavPageLink {
-    color: var(--colorNeutralForegroundInvertedSelected);
-    font-size: var(--fontSizeHero800);
+    color: var(--colorNeutralForeground1);
+    font-size: var(--fontSizeHero700);
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
 }
 

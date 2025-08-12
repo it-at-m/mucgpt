@@ -12,6 +12,7 @@ import { LanguageContextProvider } from "./components/LanguageSelector/LanguageC
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import Menu from "./pages/menu/Menu";
+import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
 import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
@@ -40,6 +41,31 @@ const router = createHashRouter([
             {
                 path: "faq",
                 element: <Faq />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/tools",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/brainstorm",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/simplify",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/tips",
+                element: <Tutorials />,
                 errorElement: <div>Fehler</div>
             },
             {

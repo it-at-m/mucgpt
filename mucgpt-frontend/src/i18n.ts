@@ -1,5 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import { tutorialsTranslations } from "./i18n.tutorials";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -389,7 +390,8 @@ i18n
                             apply: "Übernehmen",
                             cancel: "Abbrechen"
                         }
-                    }
+                    },
+                    ...tutorialsTranslations.Deutsch
                 }
             },
             Englisch: {
@@ -764,7 +766,8 @@ i18n
                             apply: "Apply",
                             cancel: "Cancel"
                         }
-                    }
+                    },
+                    ...tutorialsTranslations.Englisch
                 }
             },
             Bairisch: {
@@ -1143,7 +1146,8 @@ i18n
                             apply: "Ibernemma",
                             cancel: "Obbrecha"
                         }
-                    }
+                    },
+                    ...tutorialsTranslations.Bayrisch
                 }
             },
             French: {
@@ -1273,9 +1277,9 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip: "Afficher la version de l'application",
-                            tooltip_with_commit: "Version de l'application : {{version}}, Commit : {{commit}}",
-                            label: "Version :"
+                            tooltip: "Pоказати версію програми",
+                            tooltip_with_commit: "Версія програми: {{version}}, Commit: {{commit}}",
+                            label: "Версія:"
                         },
                         feedback: {
                             tooltip: "Donner un avis",
@@ -1302,9 +1306,9 @@ i18n
                             retry: "Réessayer"
                         },
                         answer: {
-                            regenerate: "Regénérer la réponse",
-                            copy: "Copier la réponse",
-                            unformat: "Réponse non formatée"
+                            regenerate: "Регенерувати відповідь",
+                            copy: "Копіювати відповідь",
+                            unformat: "Неформатована відповідь"
                         },
                         mermaid: {
                             download: "Télécharger le diagramme",
@@ -1365,7 +1369,7 @@ i18n
                             unpublish: "Dépublier",
                             deleteDialog: {
                                 title: "Supprimer le Bot",
-                                content: "Êtes-vous sûr de vouloir supprimer le bot ? Cette action est irréversible.",
+                                content: "Êtes-vous sûr de vouloir supprimer le bot ? Cette action ne peut pas être annulée.",
                                 unpublish: "Êtes-vous sûr de vouloir dépublier le bot ? Il ne sera plus disponible pour les autres.",
                                 remove: "Êtes-vous sûr de vouloir retirer l'assistant ? Cela supprimera toutes les conversations avec cet assistant.",
                                 confirm: "Oui",
@@ -1521,7 +1525,8 @@ i18n
                             apply: "Appliquer",
                             cancel: "Annuler"
                         }
-                    }
+                    },
+                    ...tutorialsTranslations.French
                 }
             },
             Ukrainisch: {
@@ -1898,7 +1903,8 @@ i18n
                             apply: "Застосувати",
                             cancel: "Скасувати"
                         }
-                    }
+                    },
+                    ...tutorialsTranslations.Ukrainisch
                 }
             }
         }

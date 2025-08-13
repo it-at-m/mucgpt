@@ -62,7 +62,7 @@ export const PublishBotDialog = ({ open, setOpen, bot, invisibleChecked, setInvi
     }, [bot, invisibleChecked, publishDepartments, onDeleteBot, setOpen]);
 
     return (
-        <Dialog modalType="alert" open={open}>
+        <Dialog modalType="alert" open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
             <DialogSurface className={styles.dialog}>
                 <DialogBody className={styles.dialogContent}>
                     <DialogTitle className={styles.title}>

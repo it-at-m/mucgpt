@@ -166,7 +166,7 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
     // close dialog
     const closeDialog = useMemo(() => {
         return (
-            <Dialog modalType="alert" open={closeDialogOpen}>
+            <Dialog modalType="alert" open={closeDialogOpen} onOpenChange={(_event, data) => setCloseDialogOpen(data.open)}>
                 <DialogSurface>
                     <DialogTitle>{t("components.edit_bot_dialog.close_dialog_title")}</DialogTitle>
                     <DialogBody>{t("components.edit_bot_dialog.close_dialog_message")}</DialogBody>
@@ -260,7 +260,20 @@ export const EditBotDialog = ({ showDialog, setShowDialog, bot, onBotChanged, is
 
     return (
         <div>
-            <Dialog modalType="alert" open={showDialog}>
+            <Dialog
+                modalType="alert"
+                open={showDialog}
+                onOpenChange={(event, data) => {
+                    if (botState.hasChanged) {
+                        setCloseDialogOpen(true);
+                    } else {
+                        setShowDialog(data.open);
+                        if (!data.open) {
+                            setCurrentStep(0);
+                        }
+                    }
+                }}
+            >
                 <DialogSurface className={styles.dialog}>
                     <div className={styles.dialogHeader}>
                         <DialogTitle>{t("components.edit_bot_dialog.title")}</DialogTitle>

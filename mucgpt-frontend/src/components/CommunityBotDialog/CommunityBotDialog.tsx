@@ -261,7 +261,17 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
 
     return (
         <div>
-            <Dialog modalType="modal" defaultOpen={false} open={showSearchDialogInput}>
+            <Dialog
+                modalType="modal"
+                open={showSearchDialogInput}
+                onOpenChange={(_event, data) => {
+                    if (!data.open) {
+                        setInputText("");
+                        setFilteredBots(bots);
+                        setShowSearchDialogInput(false);
+                    }
+                }}
+            >
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle
@@ -398,7 +408,17 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                     </DialogBody>
                 </DialogSurface>
             </Dialog>
-            <Dialog modalType="modal" defaultOpen={false} open={showBotDialog}>
+            <Dialog
+                modalType="modal"
+                open={showBotDialog}
+                onOpenChange={(_event, data) => {
+                    if (!data.open) {
+                        setChoosenBot(mockBot);
+                        setShowBotDialog(false);
+                        setShowSearchDialogInput(true);
+                    }
+                }}
+            >
                 <DialogSurface className={styles.detailDialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle

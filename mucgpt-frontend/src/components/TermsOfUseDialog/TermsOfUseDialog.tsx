@@ -1,6 +1,7 @@
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link, Tooltip } from "@fluentui/react-components";
 import { Checkmark24Filled, TextBulletList24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 
 import styles from "./TermsOfUseDialog.module.css";
 
@@ -11,9 +12,11 @@ interface TermsOfUseDialogProps {
 
 export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProps) => {
     const { t } = useTranslation();
+    const [open, setOpen] = useState<boolean>(defaultOpen);
+
     return (
         <div className={styles.container}>
-            <Dialog modalType="alert" defaultOpen={defaultOpen}>
+            <Dialog modalType="alert" open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
                         <div className={styles.triggerContainer}>
@@ -113,7 +116,15 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                         </DialogContent>
                         <DialogActions className={styles.dialogActions}>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="primary" size="medium" onClick={onAccept} className={styles.acceptButton}>
+                                <Button
+                                    appearance="primary"
+                                    size="medium"
+                                    onClick={() => {
+                                        onAccept();
+                                        setOpen(false);
+                                    }}
+                                    className={styles.acceptButton}
+                                >
                                     <Checkmark24Filled className={styles.checkIcon} />
                                     {t("components.terms_of_use.accept", "Zustimmen")}
                                 </Button>

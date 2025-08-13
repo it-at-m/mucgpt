@@ -231,7 +231,7 @@ export const CreateBotDialog = ({ showDialogInput, setShowDialogInput }: Props) 
 
     return (
         <div>
-            <Dialog modalType={"non-modal"} open={showDialogInput}>
+            <Dialog modalType={"non-modal"} open={showDialogInput} onOpenChange={(_event, data) => setShowDialogInput(data.open)}>
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>{showOutputView ? renderOutputView() : renderInputView()}</DialogBody>
                 </DialogSurface>

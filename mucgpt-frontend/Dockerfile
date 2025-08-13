@@ -30,6 +30,22 @@ FROM registry.access.redhat.com/ubi9/nginx-124:9.6-1753698567@sha256:227db579eef
 # Copy built web application
 COPY --from=builder /build/dist ./
 
+ARG IMAGE_CREATED="unknown"
+ARG IMAGE_REVISION="unknown"
+ARG IMAGE_VERSION="unknown"
+LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@muenchen.de>' \
+    org.opencontainers.image.vendor='Landeshauptstadt München' \
+    org.opencontainers.image.created="$IMAGE_CREATED" \
+    org.opencontainers.image.revision="$IMAGE_REVISION" \
+    org.opencontainers.image.version="$IMAGE_VERSION" \
+    org.opencontainers.image.url='https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt-frontend' \
+    org.opencontainers.image.documentation='https://github.com/it-at-m/mucgpt/blob/main/README.md' \
+    org.opencontainers.image.source='https://github.com/it-at-m/mucgpt' \
+    org.opencontainers.image.licenses='MIT' \
+    org.opencontainers.image.title='mucgpt-frontend' \
+    org.opencontainers.image.description="The frontend for MUCGPT. Provides a web interface for interacting with the MUCGPT backend services."
+
+
 # Copy custom nginx configurations
 COPY docker/nginx/*.conf "${NGINX_DEFAULT_CONF_PATH}"
 

@@ -1,27 +1,26 @@
 export const tutorialsTranslations = {
     Deutsch: {
         tutorials: {
-            header: "Tutorials",
             back_to_overview: "Zurück zur Übersicht",
-            title: "Anleitungen",
-            subtitle: "Lerne, wie MUCGPT funktioniert",
+            title: "Lerne",
+            subtitle: "wie MUCGPT funktioniert",
             sections: {
                 ki_background: {
-                    title: "KI Background",
+                    title: "Hintergrundwissen",
                     description: "Grundlagen und Hintergründe zu Künstlicher Intelligenz"
                 },
                 tools: {
                     title: "Werkzeuge",
-                    description: "Praktische Anleitungen für die verschiedenen MUCGPT-Werkzeuge"
+                    description: "Was sind Werkzeuge im Kontext MUCGPT?"
                 },
                 general_tips: {
-                    title: "Allgemeine Tipps",
+                    title: "Anwendungstipps",
                     description: "Tipps und Best Practices für die optimale Nutzung von MUCGPT"
                 }
             },
             ki_basics: {
                 title: "KI-Grundlagen",
-                description: "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme."
+                description: "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner KI-Systeme."
             },
             badges: {
                 in_construction: "Im Aufbau",
@@ -34,37 +33,37 @@ export const tutorialsTranslations = {
             },
             ai_agents: {
                 title: "KI-Agenten",
-                description: "Verstehe, wie KI-Agenten funktionieren und interagieren. Lerne die Grundlagen autonomer KI-Systeme."
+                description: "Verstehe, wie KI Agenten funktionieren, und was das mit MUCGPT zu tun hat."
             },
             ai_limitations: {
-                title: "KI-Limitierungen",
-                description: "Erkenne die Grenzen von KI-Systemen und lerne, wie du realistische Erwartungen setzt."
+                title: "Limitierungen von MUCGPT",
+                description: "Was kann MUCGPT nicht?"
             },
             ai_applications: {
-                title: "KI-Anwendungsgebiete",
-                description: "Entdecke die vielfältigen Einsatzmöglichkeiten von KI in verschiedenen Bereichen."
+                title: "Einsatzmöglicheiten von MUCGPT",
+                description: "Zuvor haben wir erfahren was MUCGPT nicht kann, jetzt schauen wir uns an, was MUCGPT kann."
             },
             tools: {
-                title: "KI-Werkzeuge Übersicht",
-                description: "Erfahre, wie du verschiedene KI-Werkzeuge effektiv einsetzt und kombinierst.",
+                title: "Übersicht",
+                description: "Erfahre, was Werkzeuge im Kontext von MUCGPT sind und wie du sie effektiv nutzen kannst.",
                 intro: {
-                    title: "Was sind KI-Werkzeuge?",
+                    title: "Was sind Werkzeuge?",
                     description:
-                        "KI-Werkzeuge sind spezialisierte Funktionen, die Sie der KI hinzufügen können, um spezifische Aufgaben zu erledigen. Von Vereinfachung über Brainstorming- wählen Sie die Werkzeuge aus, die Sie für Ihre Aufgabe benötigen."
+                        "Werkzeuge sind spezialisierte Funktionen, die schwierige Aufgaben erledigen. MUCGPT kann sich entscheiden diese zu benutzen, um zu besseren Ergebnissen zu kommen. Beispiele sind die Beschaffung von Informationen, die nicht in den Trainingsdaten enthalten ist (z.B. über Websuche oder die Anbindung von unserer KI Suche im Dienstleistungsfinder."
                 },
                 features: {
                     selector: {
-                        title: "Werkzeug-Auswahl",
-                        description: "Wählen Sie spezifische KI-Werkzeuge aus, die für Ihre Aufgabe am besten geeignet sind."
+                        title: "Erweiterbarkeit",
+                        description: "Mittels Werkzeugen kannst du MUCGPT um spezifische Funktionen erweitern, die für deine Aufgaben relevant sind."
                     },
                     efficiency: {
-                        title: "Effiziente Arbeitsweise",
+                        title: "Effizienz",
                         description:
-                            "KI Werkzeig sind spezialisierte Funktionen, die bestimmte Aufgaben effizient erledigen, wie Web-Recherche, Code-Ausführung oder mathematische Berechnungen."
+                            "Werkzeuge können MUCGPT helfen, spezifische Aufgaben effizient zu erledigen. Insebsondere für komplexe Aufgaben, für die ein Sprachmodell nicht direkt geeignet ist. Beispiele wären z.B. ein Taschenrechner Werkzeug was zwei zahlen zusammenzählt, oder ein Werkzeug, das eine Webseite besucht und Informationen extrahiert."
                     }
                 },
                 example: {
-                    title: "So wählen Sie ein Werkzeug aus:",
+                    title: "So funktioniert die Werkzeug-Auswahl:",
                     description: ""
                 },
                 tips: {
@@ -79,9 +78,9 @@ export const tutorialsTranslations = {
                 title: "Brainstorming Werkzeug",
                 description: "Lerne, wie du mit dem Brainstorming-Werkzeug kreative Mindmaps erstellen und strukturieren kannst.",
                 intro: {
-                    title: "Was ist das Brainstorming-Tool?",
+                    title: "Was ist das Brainstorming Werkzeug?",
                     description:
-                        "Das Brainstorming-Tool generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
+                        "Das Brainstorming-Werkzeug generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
                 },
                 features: {
                     ai: {
@@ -98,7 +97,7 @@ export const tutorialsTranslations = {
                     },
                     export: {
                         title: "Export-Funktionen",
-                        description: "Mindmaps als Markdown, PDF oder Bild exportieren."
+                        description: "Mindmaps können exportiert werden und in 'Freeplane' weiterverwendet werden."
                     }
                 },
                 example: {
@@ -147,7 +146,7 @@ export const tutorialsTranslations = {
                     }
                 },
                 example: {
-                    title: "Text Vereinfachung Beispiel",
+                    title: "Beispiel Text-Vereinfachung",
                     description: ""
                 },
                 tips: {
@@ -160,7 +159,7 @@ export const tutorialsTranslations = {
                         description: "Lesen Sie den vereinfachten Text durch und prüfen Sie, ob alle wichtigen Informationen enthalten sind."
                     },
                     target: {
-                        title: "Zielgruppe denken",
+                        title: "Zielgruppe",
                         description: "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
                     }
                 }
@@ -174,35 +173,34 @@ export const tutorialsTranslations = {
                 description: "Steigere deine Produktivität mit cleveren Tricks und Shortcuts."
             },
             features: {
-                title: "Hauptfunktionen"
+                title: "Funktionen"
             },
             tips: {
-                title: "Tipps und Best Practices"
+                title: "Tipps und Tricks"
             },
             buttons: {
-                show_example: "Live-Beispiel anzeigen",
+                show_example: "Beispiel anzeigen",
                 hide_example: "Beispiel ausblenden",
-                try_example: "Beispiel ausprobieren"
+                try_example: "Beispiel im Chat ausprobieren"
             }
         }
     },
     Englisch: {
         tutorials: {
-            header: "Tutorials",
             back_to_overview: "Back to overview",
-            title: "Tutorials & Guides",
-            subtitle: "Learn how MUCGPT works",
+            title: "Learn",
+            subtitle: "how MUCGPT works",
             sections: {
                 ki_background: {
-                    title: "AI Background",
-                    description: "Fundamentals and background information about Artificial Intelligence"
+                    title: "Background Knowledge",
+                    description: "Basics and backgrounds of Artificial Intelligence"
                 },
                 tools: {
                     title: "Tools",
-                    description: "Practical guides for the various MUCGPT tools"
+                    description: "What are tools in the context of MUCGPT?"
                 },
                 general_tips: {
-                    title: "General Tips",
+                    title: "Application Tips",
                     description: "Tips and best practices for optimal use of MUCGPT"
                 }
             },
@@ -211,7 +209,7 @@ export const tutorialsTranslations = {
                 description: "What is AI and how does it work? Understand the fundamentals of modern AI systems."
             },
             badges: {
-                in_construction: "In construction",
+                in_construction: "In Construction",
                 popular: "Popular",
                 new: "New"
             },
@@ -221,70 +219,71 @@ export const tutorialsTranslations = {
             },
             ai_agents: {
                 title: "AI Agents",
-                description: "Understand how AI agents work and interact. Learn the basics of autonomous AI systems."
+                description: "Understand how AI agents work and what that has to do with MUCGPT."
             },
             ai_limitations: {
-                title: "AI Limitations",
-                description: "Recognize the limits of AI systems and learn to set realistic expectations."
+                title: "Limitations of MUCGPT",
+                description: "What can MUCGPT not do?"
             },
             ai_applications: {
-                title: "AI Applications",
-                description: "Discover the diverse applications of AI in various fields."
+                title: "Application Possibilities of MUCGPT",
+                description: "Previously we learned what MUCGPT cannot do, now let's look at what MUCGPT can do."
             },
             tools: {
-                title: "AI Tools Overview",
-                description: "Learn how to effectively use and combine various AI tools.",
+                title: "Overview",
+                description: "Learn what tools are in the context of MUCGPT and how you can use them effectively.",
                 intro: {
-                    title: "What are AI Tools?",
+                    title: "What are Tools?",
                     description:
-                        "AI tools are specialized functions you can add to the AI to perform specific tasks. From brainstorming to translation into simple language - choose the tools you need for your task."
+                        "Tools are specialized functions that perform difficult tasks. MUCGPT may choose to use these to achieve better results. Examples include obtaining information not contained in the training data (e.g., through web searches or connecting from our AI search in the service finder)."
                 },
                 features: {
                     selector: {
-                        title: "Tool Selection",
-                        description: "Select specific AI tools that are best suited for your task."
+                        title: "Extensibility",
+                        description: "With tools, you can extend MUCGPT with specific functions that are relevant to your tasks."
                     },
                     efficiency: {
-                        title: "Efficient Work",
+                        title: "Efficiency",
                         description:
-                            "AI tools are specialized functions that efficiently handle specific tasks like web research, code execution, or mathematical calculations."
+                            "Tools can help MUCGPT perform specific tasks efficiently. Especially for complex tasks for which a language model is not directly suitable. Examples include a calculator tool that adds two numbers together or a tool that visits a webpage and extracts information."
                     }
                 },
                 example: {
-                    title: "How to select tools:",
+                    title: "This is how the tool selection works:",
                     description: ""
                 },
                 tips: {
                     relevant: {
                         title: "Select only relevant tools",
-                        description: "Only select the tools you actually need right now. Too many tools can slow down the response or lead to poor results."
+                        description:
+                            "Only choose the tools that you actually need at the moment. Too many tools can slow down the response or lead to poor results."
                     }
                 }
             },
             brainstorm: {
                 title: "Brainstorming Tool",
-                description: "Learn how to create and structure creative mindmaps with the brainstorming tool.",
+                description: "Learn how to create and structure creative mind maps with the brainstorming tool.",
                 intro: {
                     title: "What is the Brainstorming Tool?",
                     description:
-                        "The Brainstorming Tool generates structured mind maps on any topic. It uses AI to gather, organize and display creative ideas as interactive mind maps."
+                        "The brainstorming tool generates structured mind maps on any topic. It uses AI to collect, organize, and present creative ideas as an interactive mind map."
                 },
                 features: {
                     ai: {
-                        title: "AI-powered Brainstorming",
+                        title: "AI-Powered Brainstorming",
                         description: "Uses advanced AI models to generate creative and structured ideas."
                     },
                     structure: {
                         title: "Structured Mind Maps",
-                        description: "Organizes ideas hierarchically with main topics and subtopics for better overview."
+                        description: "Organizes ideas hierarchically with main and subtopics for better clarity."
                     },
                     interactive: {
-                        title: "Interactive Display",
+                        title: "Interactive Representation",
                         description: "Expandable and navigable mind map nodes for intuitive exploration."
                     },
                     export: {
-                        title: "Export Functions",
-                        description: "Export mind maps as Markdown, PDF or images."
+                        title: "Export Features",
+                        description: "Mind maps can be exported and reused in 'Freeplane'."
                     }
                 },
                 example: {
@@ -293,39 +292,39 @@ export const tutorialsTranslations = {
                 },
                 tips: {
                     specific: {
-                        title: "Be specific",
+                        title: "Be Specific",
                         description: "The more precise your topic, the more targeted and relevant the generated ideas will be."
                     },
                     context: {
-                        title: "Add context",
-                        description: "Add additional context to help the AI with idea generation."
+                        title: "Add Context",
+                        description: "Add additional context to support the AI in idea generation."
                     },
                     iterate: {
-                        title: "Work iteratively",
-                        description: "Use the results as a starting point and refine your requests step by step."
+                        title: "Work Iteratively",
+                        description: "Use the results as a starting point and gradually refine your requests."
                     }
                 }
             },
             simplify: {
                 title: "Text Simplification Tool",
-                description: "Learn how to translate complex texts into understandable plain language.",
+                description: "Learn how to translate complex texts into understandable easy language.",
                 intro: {
                     title: "What is the Text Simplification Tool?",
                     description:
-                        "The text simplification tool translates complex texts into Easy Language according to A2 standard. It uses AI with automatic quality checking to make texts more understandable and accessible."
+                        "The text simplification tool translates complex texts into easy language according to A2 standards. It uses AI with automatic quality checks to make texts more understandable and accessible."
                 },
                 features: {
                     easy: {
                         title: "Easy Language A2",
-                        description: "Converts complex texts into understandable Easy Language according to A2 standard."
+                        description: "Transforms complex texts into understandable easy language according to A2 standards."
                     },
                     reflective: {
                         title: "Reflective Improvement",
-                        description: "Automatic quality checking and iterative improvement of simplification."
+                        description: "Automatic quality checking and iterative improvement of the simplification."
                     },
                     rules: {
-                        title: "Rule Compliant",
-                        description: "Follows all rules for Easy Language: short sentences, simple words, clear structure."
+                        title: "Rule-Compliant",
+                        description: "Follows all rules for easy language: short sentences, simple words, clear structure."
                     },
                     download: {
                         title: "Download Function",
@@ -333,21 +332,21 @@ export const tutorialsTranslations = {
                     }
                 },
                 example: {
-                    title: "Text Simplification Example",
+                    title: "Example Text Simplification",
                     description: ""
                 },
                 tips: {
                     length: {
-                        title: "Consider text length",
-                        description: "Split very long texts into smaller sections for better results."
+                        title: "Consider Text Length",
+                        description: "Divide very long texts into smaller sections for better results."
                     },
                     review: {
-                        title: "Review results",
-                        description: "Read through the simplified text and check if all important information is included."
+                        title: "Check Results",
+                        description: "Read through the simplified text and check that all important information is included."
                     },
                     target: {
-                        title: "Think about target audience",
-                        description: "Easy Language helps people with learning difficulties, language learners, and everyone who prefers simple texts."
+                        title: "Target Audience",
+                        description: "Easy language helps people with learning difficulties, language learners and anyone who prefers simple texts."
                     }
                 }
             },
@@ -357,148 +356,148 @@ export const tutorialsTranslations = {
             },
             productivity_tips: {
                 title: "Productivity Tips",
-                description: "Boost your productivity with clever tricks and shortcuts."
+                description: "Increase your productivity with clever tricks and shortcuts."
             },
             features: {
-                title: "Key Features"
+                title: "Features"
             },
             tips: {
-                title: "Tips and Best Practices"
+                title: "Tips and Tricks"
             },
             buttons: {
-                show_example: "Show Live Example",
+                show_example: "Show Example",
                 hide_example: "Hide Example",
-                try_example: "Try Example"
+                try_example: "Try Example in Chat"
             }
         }
     },
     Bayrisch: {
         tutorials: {
-            header: "Tutorials",
-            back_to_overview: "Zruck zur Übersicht",
-            title: "Oaleitungen",
-            subtitle: "Lern, wia MUCGPT funktioniert",
+            back_to_overview: "Zürück zur Übersicht",
+            title: "Lern",
+            subtitle: "wia MUCGPT funktioniert",
             sections: {
                 ki_background: {
-                    title: "KI Hintergrund",
-                    description: "Grundlagen und Hintergründe zur Künstlichn Intelligenz"
+                    title: "Hintergrundwissen",
+                    description: "Grundlagen und Hintergründe zur Künstlichen Intelligenz"
                 },
                 tools: {
-                    title: "Werkzeig",
-                    description: "Praktische Oaleitungen für die verschiedenen MUCGPT-Werkzeig"
+                    title: "Werkzeuge",
+                    description: "Was san Werkzeuge im Kontext vo MUCGPT?"
                 },
                 general_tips: {
-                    title: "Allgemeine Tipps",
-                    description: "Tipps und Best Practices für die optimale Nutzung von MUCGPT"
+                    title: "Anwendunsgtipps",
+                    description: "Tipps und Best Practices für die optimale Nutzung vo MUCGPT"
                 }
             },
             ki_basics: {
                 title: "KI-Grundlagen",
-                description: "Was is KI und wia funktioniert's? Versteh die Grundlagen moderner AI-Systeme."
+                description: "Was is KI und wia funktioniert's? Versteh die Grundlagen moderner KI-Systeme."
             },
             badges: {
                 in_construction: "Im Aufbau",
                 popular: "Beliebt",
-                new: "Nei"
+                new: "Neu"
             },
             prompt_engineering: {
                 title: "Prompt Engineering",
-                description: "Lern, wia du effektive Prompts schreibst für bessere KI-Antworten."
+                description: "Lern, wia de effektive Prompts schreibst für bessere KI-Antworten."
             },
             ai_agents: {
                 title: "KI-Agenten",
-                description: "Versteh, wia KI-Agenten funktionieren und interagieren. Lern die Grundlagen autonomer KI-Systeme."
+                description: "Versteh, wia KI-Agenten funktionieren und was des mit MUCGPT zu tun hat."
             },
             ai_limitations: {
-                title: "KI-Limitierungen",
-                description: "Erkenn die Grenzen von KI-Systemen und lern, wia du realistische Erwartungen setzt."
+                title: "Limitierungen von MUCGPT",
+                description: "Was kann MUCGPT ned?"
             },
             ai_applications: {
-                title: "KI-Anwendungsgebiete",
-                description: "Entdeck die vielfältigen Einsatzmöglichkeiten von KI in verschiedenen Bereichen."
+                title: "Einsatzmöglichkeiten von MUCGPT",
+                description: "Vorher hamma glernt, was MUCGPT ned kann, jetz schau ma uns an, was MUCGPT kann."
             },
             tools: {
-                title: "KI-Werkzeig Übersicht",
-                description: "Erfahr, wia du verschiedene AI-Werkzeig effektiv einsetzt und kombinierst.",
+                title: "Übersicht",
+                description: "Lern, was Werkzeuge im Kontext von MUCGPT san und wia du sie effektiv nutzen kannst.",
                 intro: {
-                    title: "Was san KI-Werkzeig?",
+                    title: "Was sind Werkzeuge?",
                     description:
-                        "AI-Werkzeig san spezialisierte Funktionen, die du der KI hinzufügen kannst, um spezifische Aufgaben z'erledigen. Von Web-Recherche über mathematische Berechnungen bis hin zur Code-Ausführung - wähl die Tools aus, die du für deine Aufgab brauchst."
+                        "Werkzeuge san spezialisierte Funktionen, die schwierige Aufgaben erledigen. MUCGPT kann sich entscheiden, diese zu benutzen, um bessere Ergebnisse zu kriegen. Beispiele san die Beschaffung von Informationen, die ned in den Trainingsdaten enthalten san (z.B. über Websuche oder die Anbindung von unserer KI-Suche im Dienstleistungsfinder)."
                 },
                 features: {
                     selector: {
-                        title: "Werkzeig-Auswahl",
-                        description: "Wähl spezifische KI-Werkzeig aus, die für deine Aufgab am besten geeignet san."
+                        title: "Erweiterbarkeit",
+                        description: "Mit Werkzeugen kannst du MUCGPT um spezifische Funktionen erweitern, die für deine Aufgaben wichtig san."
                     },
                     efficiency: {
-                        title: "Effiziente Arbeitsweise",
+                        title: "Effizienz",
                         description:
-                            "KI Werkzeig san spezialisierte Funktionen, die bestimmte Aufgaben effizient erledigen, wia einfache Sprache oder Brainstorming."
+                            "Werkzeuge können MUCGPT helfen, spezifische Aufgaben effizient zu erledigen. Besonders für komplexe Aufgaben, wo a Sprachmodell ned direkt geeignet is. Beispiele wären z.B. a Taschenrechner-Werkzeug, das zwei Zahlen zusammenzählt, oder ein Werkzeug, das a Webseite besucht und Informationen extrahiert."
                     }
                 },
                 example: {
-                    title: "So wählst du a Werkzeig aus:",
+                    title: "So funktioniert die Werkzeug-Auswahl:",
                     description: ""
                 },
                 tips: {
                     relevant: {
-                        title: "Nur relevante Werkzeig wählen",
+                        title: "Nur relevante Werkzeuge wählen",
                         description:
-                            "Wähl nur die Werkzeig aus, die du grad wirklich brauchst. Zu viele Werkzeig können die Antwort verlangsamen oder zu schlechten Ergebnissen führen."
+                            "Wähl nur die Werkzeuge aus, die du grad wirklich brauchst. Zu viele Werkzeuge können die Antwort verlangsamen oder zu schlechten Ergebnissen führen."
                     }
                 }
             },
             brainstorm: {
-                title: "Brainstorming Werkzeig",
-                description: "Lern, wia du mit dem Brainstorming-Tool kreative Mindmaps erstellen und strukturieren kannst.",
+                title: "Brainstorming Werkzeug",
+                description: "Lern, wia du mit dem Brainstorming-Werkzeug kreative Mindmaps erstellen und strukturieren kannst.",
                 intro: {
-                    title: "Brainstorm Einführung",
-                    description: "Beschreibung Brainstorm Einführung"
+                    title: "Was ist das Brainstorming Werkzeug?",
+                    description:
+                        "Das Brainstorming-Werkzeug generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
                 },
                 features: {
                     ai: {
                         title: "KI-gestütztes Brainstorming",
-                        description: "Nutzt fortschrittliche KI, um kreative und strukturierte Mindmaps z'erstellen"
+                        description: "Nutzt fortschrittliche KI-Modelle, um kreative und strukturierte Ideen zu generieren."
                     },
                     structure: {
-                        title: "Strukturierte Ausgab",
-                        description: "Organisiert Ideen hierarchisch mit Hauptthemen und Unterpunkten"
+                        title: "Strukturierte Mindmaps",
+                        description: "Organisiert Ideen hierarchisch mit Haupt- und Unterthemen für bessere Übersicht."
                     },
                     interactive: {
-                        title: "Interaktive Mindmaps",
-                        description: "Vollständig interaktive Mindmaps mit Zoom, Pan und Vollbild-Funktionen"
+                        title: "Interaktive Darstellung",
+                        description: "Expandierbare und navigierbare Mindmap-Knoten für intuitive Erkundung."
                     },
                     export: {
                         title: "Export-Funktionen",
-                        description: "Mindmaps als Bild oder Daten exportieren für weitere Verwendung"
+                        description: "Mindmaps können exportiert werden und in 'Freeplane' weiterverwendet werden."
                     }
                 },
                 example: {
-                    title: "Brainstorming-Beispiel",
+                    title: "Brainstorming Beispiel",
                     description: ""
                 },
                 tips: {
                     specific: {
                         title: "Sei spezifisch",
-                        description: "Je spezifischer dei Thema, desto detaillierter und nützlicher wird die Mindmap."
+                        description: "Je präziser dein Thema, desto gezielter und relevanter werden die generierten Ideen."
                     },
                     context: {
-                        title: "Kontext bereitstellen",
-                        description: "Gib zusätzliche Informationen über den gewünschten Fokus oder Anwendungsbereich."
+                        title: "Kontext hinzufügen",
+                        description: "Füg zusätzlichen Kontext hinzu, um die KI bei der Ideengenerierung zu unterstützen."
                     },
                     iterate: {
-                        title: "Iterier",
-                        description: "Bau auf den Ergebnissen auf und verfeinere deine Mindmaps durch weitere Fragen."
+                        title: "Iterativ arbeiten",
+                        description: "Nutze die Ergebnisse als Ausgangspunkt und verfeinere deine Anfragen schrittweise."
                     }
                 }
             },
             simplify: {
-                title: "Text-Vereinfachung Werkzeig",
-                description: "Erfahr, wia du komplexe Texte in verständliche Leichte Sprache übersetzt.",
+                title: "Text-Vereinfachung Werkzeug",
+                description: "Erfahre, wia du komplexe Texte in verständliche Leichte Sprache übersetzt.",
                 intro: {
-                    title: "Was is des Text-Vereinfachungs-Tool?",
+                    title: "Was ist das Text-Vereinfachungs-Werkzeug?",
                     description:
-                        "Des Text-Vereinfachungs-Tool übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier z'machen."
+                        "Das Text-Vereinfachungs-Werkzeug übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
                 },
                 features: {
                     easy: {
@@ -519,7 +518,7 @@ export const tutorialsTranslations = {
                     }
                 },
                 example: {
-                    title: "Text Vereinfachung Beispiel",
+                    title: "Beispiel Text-Vereinfachung",
                     description: ""
                 },
                 tips: {
@@ -529,58 +528,57 @@ export const tutorialsTranslations = {
                     },
                     review: {
                         title: "Ergebnis prüfen",
-                        description: "Lies den vereinfachten Text durch und prüf, ob alle wichtigen Informationen enthalten san."
+                        description: "Les den vereinfachten Text durch und schau, ob alle wichtigen Informationen enthalten san."
                     },
                     target: {
-                        title: "Zielgruppe denken",
+                        title: "Zielgruppe",
                         description: "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
                     }
                 }
             },
             best_practices: {
                 title: "Best Practices",
-                description: "Bewährte Methoden für eine effektive Nutzung der KI-Assistenten."
+                description: "Bewährte Methoden für a effektive Nutzung der KI-Assistenten."
             },
             productivity_tips: {
                 title: "Produktivitäts-Tipps",
-                description: "Steiger deine Produktivität mit cleveren Tricks und Shortcuts."
+                description: "Steigert deine Produktivität mit cleveren Tricks und Shortcuts."
             },
             features: {
-                title: "Hauptfunktionen"
+                title: "Funktionen"
             },
             tips: {
-                title: "Tipps und Best Practices"
+                title: "Tipps und Tricks"
             },
             buttons: {
-                show_example: "Live-Beispiel anzeigen",
+                show_example: "Beispiel anzeigen",
                 hide_example: "Beispiel ausblenden",
-                try_example: "Beispiel ausprobieren"
+                try_example: "Beispiel im Chat ausprobieren"
             }
         }
     },
     French: {
         tutorials: {
-            header: "Tutoriels",
             back_to_overview: "Retour à l'aperçu",
-            title: "Guides et Tutoriels",
-            subtitle: "Apprenez comment MUCGPT fonctionne",
+            title: "Apprendre",
+            subtitle: "comment fonctionne MUCGPT",
             sections: {
                 ki_background: {
-                    title: "Contexte IA",
-                    description: "Fondamentaux et informations de base sur l'Intelligence Artificielle"
+                    title: "Connaissances de base",
+                    description: "Fondamentaux et contextes de l'intelligence artificielle"
                 },
                 tools: {
                     title: "Outils",
-                    description: "Guides pratiques pour les différents outils MUCGPT"
+                    description: "Quels sont les outils dans le contexte de MUCGPT ?"
                 },
                 general_tips: {
-                    title: "Conseils Généraux",
+                    title: "Conseils d'application",
                     description: "Conseils et meilleures pratiques pour une utilisation optimale de MUCGPT"
                 }
             },
             ki_basics: {
                 title: "Bases de l'IA",
-                description: "Qu'est-ce que l'IA et comment fonctionne-t-elle ? Comprenez les fondamentaux des systèmes IA modernes."
+                description: "Qu'est-ce que l'IA et comment ça fonctionne ? Comprendre les fondements des systèmes d'IA modernes."
             },
             badges: {
                 in_construction: "En construction",
@@ -588,346 +586,348 @@ export const tutorialsTranslations = {
                 new: "Nouveau"
             },
             prompt_engineering: {
-                title: "Ingénierie de Prompt",
-                description: "Apprenez à écrire des prompts efficaces pour de meilleures réponses IA."
+                title: "Ingénierie des prompts",
+                description: "Apprenez à écrire des prompts efficaces pour de meilleures réponses de l'IA."
             },
             ai_agents: {
                 title: "Agents IA",
-                description: "Comprenez comment les agents IA fonctionnent et interagissent. Apprenez les bases des systèmes IA autonomes."
+                description: "Comprenez comment fonctionnent les agents IA et ce que cela a à voir avec MUCGPT."
             },
             ai_limitations: {
-                title: "Limitations de l'IA",
-                description: "Reconnaissez les limites des systèmes IA et apprenez à établir des attentes réalistes."
+                title: "Limitations de MUCGPT",
+                description: "Que ne peut pas faire MUCGPT ?"
             },
             ai_applications: {
-                title: "Applications IA",
-                description: "Découvrez les diverses possibilités d'utilisation de l'IA dans différents domaines."
+                title: "Possibilités d'utilisation de MUCGPT",
+                description: "Auparavant, nous avons appris ce que MUCGPT ne peut pas faire, maintenant voyons ce que MUCGPT peut faire."
             },
             tools: {
-                title: "Aperçu des Outils IA",
-                description: "Apprenez à utiliser et combiner efficacement différents outils IA.",
+                title: "Aperçu",
+                description: "Découvrez quels sont les outils dans le contexte de MUCGPT et comment vous pouvez les utiliser efficacement.",
                 intro: {
-                    title: "Que sont les outils IA ?",
+                    title: "Que sont les outils ?",
                     description:
-                        "Les outils IA sont des fonctions spécialisées que vous pouvez ajouter à l'IA pour accomplir des tâches spécifiques. De la recherche web aux calculs mathématiques en passant par l'exécution de code - choisissez les outils dont vous avez besoin pour votre tâche."
+                        "Les outils sont des fonctions spécialisées qui accomplissent des tâches difficiles. MUCGPT peut choisir de les utiliser pour obtenir de meilleurs résultats. Des exemples incluent l'obtention d'informations qui ne figurent pas dans les données d'entraînement (par exemple, via une recherche sur le web ou la connexion de notre recherche IA dans le moteur de recherche de services)."
                 },
                 features: {
                     selector: {
-                        title: "Sélection d'outils",
-                        description: "Sélectionnez des outils IA spécifiques qui sont les mieux adaptés à votre tâche."
+                        title: "Extensibilité",
+                        description: "Avec les outils, vous pouvez étendre MUCGPT avec des fonctions spécifiques qui sont pertinentes pour vos tâches."
                     },
                     efficiency: {
-                        title: "Travail efficace",
+                        title: "Efficacité",
                         description:
-                            "Les outils IA sont des fonctions spécialisées qui gèrent efficacement des tâches spécifiques comme la recherche web, l'exécution de code ou les calculs mathématiques."
+                            "Les outils peuvent aider MUCGPT à accomplir des tâches spécifiques de manière efficace. En particulier pour des tâches complexes pour lesquelles un modèle linguistique n'est pas directement adapté. Des exemples incluent un outil de calculateur qui additionne deux nombres ou un outil qui visite un site web et extrait des informations."
                     }
                 },
                 example: {
-                    title: "Comment sélectionner des outils :",
+                    title: "Voici comment fonctionne la sélection d'outils :",
                     description: ""
                 },
                 tips: {
                     relevant: {
-                        title: "Sélectionner uniquement les outils pertinents",
+                        title: "Sélectionnez uniquement les outils pertinents",
                         description:
-                            "Sélectionnez uniquement les outils dont vous avez réellement besoin maintenant. Trop d'outils peuvent ralentir la réponse ou conduire à de mauvais résultats."
+                            "Choisissez uniquement les outils dont vous avez réellement besoin. Trop d'outils peuvent ralentir la réponse ou conduire à de mauvais résultats."
                     }
                 }
             },
             brainstorm: {
-                title: "Outil de Brainstorming",
-                description: "Apprenez à créer et structurer des cartes mentales créatives avec l'outil de brainstorming.",
+                title: "Outil de brainstorming",
+                description: "Apprenez comment créer et structurer des cartes mentales créatives avec l'outil de brainstorming.",
                 intro: {
-                    title: "Introduction au Brainstorming",
-                    description: "Description Introduction au Brainstorming"
+                    title: "Qu'est-ce que l'outil de brainstorming ?",
+                    description:
+                        "L'outil de brainstorming génère des cartes mentales structurées sur n'importe quel sujet. Il utilise l'IA pour collecter, organiser et présenter des idées créatives sous forme de carte mentale interactive."
                 },
                 features: {
                     ai: {
                         title: "Brainstorming assisté par IA",
-                        description: "Utilise une IA avancée pour créer des cartes mentales créatives et structurées"
+                        description: "Utilise des modèles avancés d'IA pour générer des idées créatives et structurées."
                     },
                     structure: {
-                        title: "Sortie structurée",
-                        description: "Organise les idées hiérarchiquement avec des sujets principaux et des sous-points"
+                        title: "Cartes mentales structurées",
+                        description: "Organise les idées de manière hiérarchique avec des thèmes principaux et secondaires pour une meilleure clarté."
                     },
                     interactive: {
-                        title: "Cartes mentales interactives",
-                        description: "Cartes mentales entièrement interactives avec fonctions de zoom, panoramique et plein écran"
+                        title: "Représentation interactive",
+                        description: "Nœuds de carte mentale extensibles et navigables pour une exploration intuitive."
                     },
                     export: {
-                        title: "Fonctions d'export",
-                        description: "Exporter les cartes mentales comme images ou données pour une utilisation ultérieure"
+                        title: "Fonctions d'exportation",
+                        description: "Les cartes mentales peuvent être exportées et réutilisées dans 'Freeplane'."
                     }
                 },
                 example: {
-                    title: "Exemple de Brainstorming",
+                    title: "Exemple de brainstorming",
                     description: ""
                 },
                 tips: {
                     specific: {
                         title: "Soyez spécifique",
-                        description: "Plus votre sujet est spécifique, plus la carte mentale sera détaillée et utile."
+                        description: "Plus votre sujet est précis, plus les idées générées seront ciblées et pertinentes."
                     },
                     context: {
-                        title: "Fournir du contexte",
-                        description: "Donnez des informations supplémentaires sur le focus désiré ou le domaine d'application."
+                        title: "Ajoutez du contexte",
+                        description: "Ajoutez un contexte supplémentaire pour aider l'IA dans la génération d'idées."
                     },
                     iterate: {
-                        title: "Itérer",
-                        description: "Construisez sur les résultats et affinez vos cartes mentales avec des questions de suivi."
+                        title: "Travaillez de manière itérative",
+                        description: "Utilisez les résultats comme point de départ et affinez progressivement vos demandes."
                     }
                 }
             },
             simplify: {
-                title: "Outil de Simplification de Texte",
-                description: "Apprenez à traduire des textes complexes en langage simple et compréhensible.",
+                title: "Outil de simplification de texte",
+                description: "Apprenez comment traduire des textes complexes en langage simple et compréhensible.",
                 intro: {
                     title: "Qu'est-ce que l'outil de simplification de texte ?",
                     description:
-                        "L'outil de simplification de texte traduit les textes complexes en Langage Facile selon le standard A2. Il utilise l'IA avec vérification automatique de qualité pour rendre les textes plus compréhensibles et accessibles."
+                        "L'outil de simplification de texte traduit des textes complexes en langage simple selon les normes A2. Il utilise l'IA avec un contrôle automatique de la qualité pour rendre les textes plus compréhensibles et accessibles."
                 },
                 features: {
                     easy: {
-                        title: "Langage Facile A2",
-                        description: "Convertit les textes complexes en Langage Facile compréhensible selon le standard A2."
+                        title: "Langage simple A2",
+                        description: "Transforme des textes complexes en langage simple et compréhensible selon les normes A2."
                     },
                     reflective: {
-                        title: "Amélioration réflexive",
-                        description: "Vérification automatique de qualité et amélioration itérative de la simplification."
+                        title: "Amélioration réfléchie",
+                        description: "Contrôle de qualité automatique et amélioration itérative de la simplification."
                     },
                     rules: {
                         title: "Conforme aux règles",
-                        description: "Suit toutes les règles du Langage Facile : phrases courtes, mots simples, structure claire."
+                        description: "Respecte toutes les règles du langage simple : phrases courtes, mots simples, structure claire."
                     },
                     download: {
                         title: "Fonction de téléchargement",
-                        description: "Télécharger les textes simplifiés comme fichiers texte pour une utilisation ultérieure."
+                        description: "Téléchargez des textes simplifiés en tant que fichiers texte pour une utilisation ultérieure."
                     }
                 },
                 example: {
-                    title: "Exemple de Simplification de Texte",
+                    title: "Exemple de simplification de texte",
                     description: ""
                 },
                 tips: {
                     length: {
-                        title: "Considérer la longueur du texte",
-                        description: "Diviser les très longs textes en sections plus petites pour de meilleurs résultats."
+                        title: "Faire attention à la longueur du texte",
+                        description: "Divisez les textes très longs en sections plus petites pour de meilleurs résultats."
                     },
                     review: {
-                        title: "Réviser les résultats",
+                        title: "Vérifiez le résultat",
                         description: "Lisez le texte simplifié et vérifiez si toutes les informations importantes sont incluses."
                     },
                     target: {
-                        title: "Penser au public cible",
+                        title: "Public cible",
                         description:
-                            "Le Langage Facile aide les personnes avec des difficultés d'apprentissage, les apprenants de langue et tous ceux qui préfèrent les textes simples."
+                            "Le langage simple aide les personnes ayant des difficultés d'apprentissage, les apprenants de langues et tous ceux qui préfèrent des textes simples."
                     }
                 }
             },
             best_practices: {
-                title: "Meilleures Pratiques",
+                title: "Meilleures pratiques",
                 description: "Méthodes éprouvées pour une utilisation efficace des assistants IA."
             },
             productivity_tips: {
-                title: "Conseils de Productivité",
-                description: "Augmentez votre productivité avec des astuces et raccourcis intelligents."
+                title: "Conseils de productivité",
+                description: "Augmentez votre productivité avec des astuces et des raccourcis intelligents."
             },
             features: {
-                title: "Fonctionnalités Principales"
+                title: "Fonctionnalités"
             },
             tips: {
-                title: "Conseils et Meilleures Pratiques"
+                title: "Conseils et astuces"
             },
             buttons: {
-                show_example: "Afficher l'exemple en direct",
+                show_example: "Afficher l'exemple",
                 hide_example: "Masquer l'exemple",
-                try_example: "Essayer l'exemple"
+                try_example: "Essayer l'exemple dans le chat"
             }
         }
     },
     Ukrainisch: {
         tutorials: {
-            header: "Навчальні матеріали",
             back_to_overview: "Повернутися до огляду",
-            title: "Посібники та Навчальні матеріали",
-            subtitle: "Дізнайтеся, як працює MUCGPT",
+            title: "Навчитися",
+            subtitle: "як працює MUCGPT",
             sections: {
                 ki_background: {
-                    title: "Основи ШІ",
-                    description: "Фундаментальні знання та інформація про Штучний Інтелект"
+                    title: "Базові знання",
+                    description: "Основи та фон штучного інтелекту"
                 },
                 tools: {
                     title: "Інструменти",
-                    description: "Практичні посібники для різних інструментів MUCGPT"
+                    description: "Що таке інструменти в контексті MUCGPT?"
                 },
                 general_tips: {
-                    title: "Загальні Поради",
+                    title: "Поради щодо застосування",
                     description: "Поради та найкращі практики для оптимального використання MUCGPT"
                 }
             },
             ki_basics: {
                 title: "Основи ШІ",
-                description: "Що таке ШІ і як він працює? Зрозумійте основи сучасних систем ШІ."
+                description: "Що таке ШІ і як це працює? Зрозумійте основи сучасних систем ШІ."
             },
             badges: {
-                in_construction: "У розробці",
+                in_construction: "В розробці",
                 popular: "Популярний",
                 new: "Новий"
             },
             prompt_engineering: {
-                title: "Інженерія Промптів",
-                description: "Навчіться писати ефективні промпти для кращих відповідей ШІ."
+                title: "Інженерія запитів",
+                description: "Навчіться писати ефективні запити для кращих відповідей ШІ."
             },
             ai_agents: {
-                title: "ШІ-Агенти",
-                description: "Зрозумійте, як працюють ШІ-агенти та взаємодіють. Вивчіть основи автономних систем ШІ."
+                title: "Агенти ШІ",
+                description: "Зрозумійте, як працюють агенти ШІ і що це має спільного з MUCGPT."
             },
             ai_limitations: {
-                title: "Обмеження ШІ",
-                description: "Розпізнайте межі систем ШІ та навчіться встановлювати реалістичні очікування."
+                title: "Обмеження MUCGPT",
+                description: "Що MUCGPT не може?"
             },
             ai_applications: {
-                title: "Застосування ШІ",
-                description: "Відкрийте різноманітні можливості використання ШІ в різних сферах."
+                title: "Можливості використання MUCGPT",
+                description: "Раніше ми дізналися, що MUCGPT не може, тепер давайте подивимось, що MUCGPT може."
             },
             tools: {
-                title: "Огляд Інструментів ШІ",
-                description: "Дізнайтеся, як ефективно використовувати та поєднувати різні інструменти ШІ.",
+                title: "Огляд",
+                description: "Дізнайтеся, що таке інструменти в контексті MUCGPT і як їх можна використовувати ефективно.",
                 intro: {
-                    title: "Що таке інструменти ШІ?",
+                    title: "Що таке інструменти?",
                     description:
-                        "Інструменти ШІ - це спеціалізовані функції, які ви можете додати до ШІ для виконання конкретних завдань. Від веб-пошуку до математичних обчислень та виконання коду - виберіть інструменти, які вам потрібні для вашого завдання."
+                        "Інструменти - це спеціалізовані функції, які виконують складні завдання. MUCGPT може вибрати їх для досягнення кращих результатів. Прикладами є отримання інформації, яка не входить до навчальних даних (наприклад, через веб-пошук або підключення з нашого ШІ-пошуку в пошуковику послуг)."
                 },
                 features: {
                     selector: {
-                        title: "Вибір інструментів",
-                        description: "Виберіть конкретні інструменти ШІ, які найкраще підходять для вашого завдання."
+                        title: "Розширюваність",
+                        description: "За допомогою інструментів ви можете розширити MUCGPT спеціальними функціями, які важливі для ваших завдань."
                     },
                     efficiency: {
-                        title: "Ефективна робота",
+                        title: "Ефективність",
                         description:
-                            "Інструменти ШІ - це спеціалізовані функції, які ефективно виконують конкретні завдання, такі як веб-пошук, виконання коду або математичні обчислення."
+                            "Інструменти можуть допомогти MUCGPT виконувати конкретні завдання ефективно. Особливо для складних завдань, для яких мовна модель не підходить безпосередньо. Прикладами можуть бути інструмент калькулятора, який складає два числа, або інструмент, який відвідує веб-сайт і витягує інформацію."
                     }
                 },
                 example: {
-                    title: "Як вибрати інструменти:",
+                    title: "Ось як працює вибір інструментів:",
                     description: ""
                 },
                 tips: {
                     relevant: {
                         title: "Вибирайте лише релевантні інструменти",
                         description:
-                            "Вибирайте лише ті інструменти, які вам дійсно потрібні зараз. Занадто багато інструментів може сповільнити відповідь або призвести до поганих результатів."
+                            "Оберіть лише ті інструменти, які вам дійсно потрібні. Занадто багато інструментів можуть сповільнити відповідь або призвести до поганих результатів."
                     }
                 }
             },
             brainstorm: {
-                title: "Інструмент Мозкового Штурму",
-                description: "Навчіться створювати та структурувати креативні ментальні карти за допомогою інструменту мозкового штурму.",
+                title: "Інструмент для мозкового штурму",
+                description: "Дізнайтеся, як створювати та структурувати креативні мапи мислення за допомогою інструмента для мозкового штурму.",
                 intro: {
-                    title: "Вступ до Мозкового Штурму",
-                    description: "Опис Вступу до Мозкового Штурму"
+                    title: "Що таке інструмент для мозкового штурму?",
+                    description:
+                        "Інструмент для мозкового штурму генерує структуровані мапи мислення на будь-яку тему. Він використовує ШІ для збору, організації та представлення креативних ідей у вигляді інтерактивної мапи мислення."
                 },
                 features: {
                     ai: {
                         title: "Мозковий штурм на основі ШІ",
-                        description: "Використовує передову технологію ШІ для створення креативних та структурованих ментальних карт"
+                        description: "Використовує передові моделі ШІ для генерації креативних і структурованих ідей."
                     },
                     structure: {
-                        title: "Структурований вивід",
-                        description: "Організовує ідеї ієрархічно з головними темами та підпунктами"
+                        title: "Структуровані мапи мислення",
+                        description: "Організовує ідеї ієрархічно з основними та підтемами для кращої ясності."
                     },
                     interactive: {
-                        title: "Інтерактивні ментальні карти",
-                        description: "Повністю інтерактивні ментальні карти з функціями масштабування, панорамування та повноекранного режиму"
+                        title: "Інтерактивне представлення",
+                        description: "Розширювані та навігаційні вузли мапи мислення для інтуїтивного дослідження."
                     },
                     export: {
                         title: "Функції експорту",
-                        description: "Експортуйте ментальні карти як зображення або дані для подальшого використання"
+                        description: "Мапи мислення можуть бути експортовані та повторно використані в 'Freeplane'."
                     }
                 },
                 example: {
-                    title: "Приклад Мозкового Штурму",
+                    title: "Приклад мозкового штурму",
                     description: ""
                 },
                 tips: {
                     specific: {
-                        title: "Будьте конкретними",
-                        description: "Чим конкретніша ваша тема, тим детальнішою та кориснішою буде ментальна карта."
+                        title: "Будьте специфічними",
+                        description: "Чим точніше ваша тема, тим орієнтованішими та релевантнішими будуть згенеровані ідеї."
                     },
                     context: {
-                        title: "Надавайте контекст",
-                        description: "Дайте додаткову інформацію про бажаний фокус або область застосування."
+                        title: "Додайте контекст",
+                        description: "Додайте додатковий контекст, щоб підтримати ШІ в генерації ідей."
                     },
                     iterate: {
-                        title: "Ітеруйте",
-                        description: "Розвивайте результати та вдосконалюйте ваші ментальні карти через подальші запитання."
+                        title: "Працюйте ітеративно",
+                        description: "Використовуйте результати як вихідну точку та поступово вдосконалюйте свої запити."
                     }
                 }
             },
             simplify: {
-                title: "Інструмент Спрощення Тексту",
-                description: "Навчіться перекладати складні тексти на зрозумілу просту мову.",
+                title: "Інструмент спрощення тексту",
+                description: "Дізнайтеся, як переводити складні тексти на зрозумілу просту мову.",
                 intro: {
                     title: "Що таке інструмент спрощення тексту?",
                     description:
-                        "Інструмент спрощення тексту перекладає складні тексти на Просту Мову згідно зі стандартом A2. Він використовує ШІ з автоматичною перевіркою якості, щоб зробити тексти більш зрозумілими та доступними."
+                        "Інструмент спрощення тексту переводить складні тексти на просту мову згідно стандарту A2. Він використовує ШІ з автоматичною перевіркою якості для того, щоб зробити тексти більш зрозумілими та доступними."
                 },
                 features: {
                     easy: {
-                        title: "Проста Мова A2",
-                        description: "Перетворює складні тексти на зрозумілу Просту Мову згідно зі стандартом A2."
+                        title: "Проста мова A2",
+                        description: "Перетворює складні тексти на зрозумілу просту мову згідно стандарту A2."
                     },
                     reflective: {
-                        title: "Рефлексивне покращення",
+                        title: "Рефлективне покращення",
                         description: "Автоматична перевірка якості та ітеративне покращення спрощення."
                     },
                     rules: {
                         title: "Відповідність правилам",
-                        description: "Дотримується всіх правил Простої Мови: короткі речення, прості слова, чітка структура."
+                        description: "Дотримується всіх правил простої мови: короткі речення, прості слова, чітка структура."
                     },
                     download: {
                         title: "Функція завантаження",
-                        description: "Завантажуйте спрощені тексти як текстові файли для подальшого використання."
+                        description: "Завантажте спрощені тексти у вигляді текстового файлу для подальшого використання."
                     }
                 },
                 example: {
-                    title: "Приклад Спрощення Тексту",
+                    title: "Приклад спрощення тексту",
                     description: ""
                 },
                 tips: {
                     length: {
-                        title: "Враховуйте довжину тексту",
-                        description: "Розділяйте дуже довгі тексти на менші розділи для кращих результатів."
+                        title: "Звертайте увагу на довжину тексту",
+                        description: "Діліть дуже довгі тексти на менші частини для кращих результатів."
                     },
                     review: {
-                        title: "Перевіряйте результати",
-                        description: "Прочитайте спрощений текст та перевірте, чи включена вся важлива інформація."
+                        title: "Перевірте результати",
+                        description: "Перегляньте спрощений текст і перевірте, чи міститься вся важлива інформація."
                     },
                     target: {
-                        title: "Думайте про цільову аудиторію",
-                        description: "Проста Мова допомагає людям з труднощами в навчанні, тим, хто вивчає мову, та всім, хто віддає перевагу простим текстам."
+                        title: "Цільова аудиторія",
+                        description:
+                            "Проста мова допомагає людям з проблемами навчання, тим, хто вивчає мову, а також усім, хто віддає перевагу простим текстам."
                     }
                 }
             },
             best_practices: {
-                title: "Найкращі Практики",
-                description: "Перевірені методи ефективного використання ШІ-асистентів."
+                title: "Найкращі практики",
+                description: "Перевірені методи ефективного використання асистентів ШІ."
             },
             productivity_tips: {
-                title: "Поради з Продуктивності",
-                description: "Підвищте свою продуктивність за допомогою розумних трюків та ярликів."
+                title: "Поради щодо продуктивності",
+                description: "Підвищте свою продуктивність з розумними хитрощами та гарячими клавішами."
             },
             features: {
-                title: "Основні Функції"
+                title: "Функції"
             },
             tips: {
-                title: "Поради та Найкращі Практики"
+                title: "Поради та хитрощі"
             },
             buttons: {
-                show_example: "Показати живий приклад",
-                hide_example: "Приховати приклад",
-                try_example: "Спробувати приклад"
+                show_example: "Показати приклад",
+                hide_example: "Сховати приклад",
+                try_example: "Спробувати приклад в чаті"
             }
         }
     }

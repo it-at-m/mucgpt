@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tooltip, Card, CardHeader, Text, Badge, Divider } from "@fluentui/react-components";
@@ -16,7 +16,6 @@ import {
     Apps24Regular
 } from "@fluentui/react-icons";
 import styles from "./Tutorials.module.css";
-import { HeaderContext } from "../layout/HeaderContextProvider";
 import { BrainstormTutorial } from "./components/BrainstormTutorial";
 import { SimplifyTutorial } from "./components/SimplifyTutorial";
 import { ToolsTutorial } from "./components/ToolsTutorial";
@@ -40,13 +39,9 @@ export const Tutorials = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const { setHeader } = useContext(HeaderContext);
 
     // Get current tutorial from URL path
     const currentTutorial = location.pathname.includes("/tutorials/") ? location.pathname.split("/tutorials/")[1] : null;
-
-    // Set header on mount
-    setHeader(t("tutorials.header", "Tutorials & Anleitungen"));
 
     const onClose = useCallback(() => {
         navigate("/");

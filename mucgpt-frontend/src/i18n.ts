@@ -22,6 +22,9 @@ i18n
                         create_bot: "Assistent erstellen"
                     },
                     menu: {
+                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu MUCGPT anzeigen",
+                        go_to_tutorials: "Lerne MUCGPT kennen",
+                        go_to_tutorials_aria: "Tutorials und Anleitungen zu MUCGPT",
                         chat_header: "Hallo {{user}}, was hast du heute vor?",
                         own_bots: "Lokale Assistenten",
                         community_bots: "Community Assistenten",
@@ -223,6 +226,8 @@ i18n
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmten Format oder beachtet andere Einschränkungen."
                         },
                         botsettingsdrawer: {
+                            expand: "Ansicht erweitern",
+                            collapse: "Ansicht einklappen",
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
                             finish_edit: "Bearbeitung abschließen",
@@ -402,6 +407,9 @@ i18n
                         create_bot: "Create assistant"
                     },
                     menu: {
+                        go_to_tutorials_tooltip: "Show tutorials and guides for MUCGPT",
+                        go_to_tutorials: "Get to know MUCGPT",
+                        go_to_tutorials_aria: "Tutorials and guides for MUCGPT",
                         chat_header: "Hello {{user}}, what are you planning today?",
                         own_bots: "Local Assistants", // Englisch
                         community_bots: "Community Assistants",
@@ -602,6 +610,8 @@ i18n
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
                         botsettingsdrawer: {
+                            expand: "Expand view",
+                            collapse: "Collapse view",
                             delete: "Delete assistant",
                             edit: "Edit Assistant",
                             finish_edit: "Finish Edit",
@@ -778,6 +788,10 @@ i18n
                         create_bot: "Assistenten erstoin"
                     },
                     menu: {
+                        go_to_tutorials_tooltip: "Zeig Tutorials und Anleitungen für MUCGPT",
+                        go_to_tutorials: "Lerne MUCGPT lernen",
+
+                        go_to_tutorials_aria: "Tutorials und Anleitungen für MUCGPT",
                         chat_header: "Griaß di {{user}}, wos host heid vor?",
                         own_bots: "Lokale Assitentn", // Bairisch
                         community_bots: "Community Assistentn",
@@ -979,6 +993,8 @@ i18n
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
                         },
                         botsettingsdrawer: {
+                            expand: "Ansicht erweitern",
+                            collapse: "Ansicht einklapp'n",
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
                             finish_edit: "Bearbeitung abschließ'n",
@@ -1157,6 +1173,9 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
+                        go_to_tutorials_tooltip: "Afficher les tutoriels et guides pour MUCGPT",
+                        go_to_tutorials: "Découvrez MUCGPT",
+                        go_to_tutorials_aria: "Tutoriels et guides pour MUCGPT",
                         chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
                         own_bots: "Assistants Locaux", // French
                         community_bots: "Assistants Communautaires",
@@ -1358,6 +1377,8 @@ i18n
                                 "sont des requêtes ou des instructions prédéfinies destinées à rendre les réponses de MUCGPT plus ciblées et contrôlées. L'IA prend souvent un rôle spécifique, répond dans un format particulier ou respecte d'autres contraintes."
                         },
                         botsettingsdrawer: {
+                            expand: "Développer la vue",
+                            collapse: "Réduire la vue",
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
                             finish_edit: "Terminer la modification",
@@ -1536,6 +1557,9 @@ i18n
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
+                        go_to_tutorials_tooltip: "Показати посібники та інструкції для MUCGPT",
+                        go_to_tutorials: "Познайомтеся з MUCGPT",
+                        go_to_tutorials_aria: "Посібники та інструкції для MUCGPT",
                         chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
                         own_bots: "Локальні Асистенти", // Ukrainisch
                         community_bots: "Громадські Асистенти",
@@ -1737,6 +1761,8 @@ i18n
                                 "це передвизначені запити або вказівки, які спрямовані на точне та контрольоване створення відповідей від MUCGPT. ШІ часто бере на себе певну роль, відповідає в певному форматі або дотримується інших обмежень."
                         },
                         botsettingsdrawer: {
+                            expand: "Розгорнути вигляд",
+                            collapse: "Згорнути вигляд",
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
                             finish_edit: "Завершити редагування",

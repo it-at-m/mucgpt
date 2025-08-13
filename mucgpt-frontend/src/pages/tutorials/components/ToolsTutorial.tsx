@@ -311,7 +311,9 @@ export const ToolsTutorial = ({ onNavigateToTutorial }: { onNavigateToTutorial?:
                 ) : (
                     <div className={styles.exampleToggleContainer}>
                         <button onClick={toggleExample} className={styles.exampleToggleButton}>
-                            {showExample ? "Beispiel ausblenden" : "Live-Beispiel anzeigen"}
+                            {showExample
+                                ? t("tutorials.tools.buttons.hide_example", "Beispiel ausblenden")
+                                : t("tutorials.tools.buttons.show_example", "Beispiel anzeigen")}
                         </button>
                     </div>
                 )

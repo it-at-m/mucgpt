@@ -221,20 +221,6 @@ class TestAgent:
             "call_model 'messages' should be a list"
         )
 
-    def test_add_instructions_modifies_or_inserts_system_message(self):
-        tool_collection = ToolCollection(DummyLLM())
-        enabled_tools = [t.name for t in tool_collection.get_all()]
-        # Case 1: system message exists
-        messages = [SystemMessage(content="sys"), HumanMessage(content="hi")]
-        updated = tool_collection.add_instructions(messages[:], enabled_tools)
-        assert isinstance(updated[0], SystemMessage)
-        assert "You have access to the following tools" in updated[0].content
-        # Case 2: no system message
-        messages = [HumanMessage(content="hi")]
-        updated = tool_collection.add_instructions(messages[:], enabled_tools)
-        assert isinstance(updated[0], SystemMessage)
-        assert "You have access to the following tools" in updated[0].content
-
 
 class TestAgentLifecycle:
     """

@@ -18,7 +18,7 @@ maintainers = [
 dev-dependencies = [
     "ipykernel==6.30.0",
     "pre-commit==4.2.0",
-    "ruff==0.12.5",
+    "ruff==0.12.9",
 ]
 
 [[tool.uv.index]]

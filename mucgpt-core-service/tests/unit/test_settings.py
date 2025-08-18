@@ -60,7 +60,6 @@ class TestSettings:
 
             assert settings.frontend.labels.env_name == "MUCGPT"
             assert settings.frontend.alternative_logo is False
-            assert settings.frontend.enable_simply is True
 
     def test_backend_config_defaults(self):
         """Test backend configuration defaults."""

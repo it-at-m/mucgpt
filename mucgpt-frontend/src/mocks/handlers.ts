@@ -21,8 +21,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         labels: {
             env_name: "MUCGPT"
         },
-        alternative_logo: false,
-        enable_simply: true
+        alternative_logo: false
     },
     version: "FRONTEND DEMO 1.0.0",
     commit: "152b175"

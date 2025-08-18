@@ -18,5 +18,10 @@
     "search.exclude": {
         "**/node_modules": true,
         "static": true
-    }
+    },
+    "python.testing.pytestArgs": [
+        "mucgpt-core-service"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

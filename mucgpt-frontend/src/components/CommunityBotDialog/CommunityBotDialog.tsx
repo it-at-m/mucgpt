@@ -16,14 +16,16 @@ import {
     Badge,
     Divider,
     Spinner,
-    Body1
+    Body1,
+    Dropdown,
+    Option
 } from "@fluentui/react-components";
 
 import styles from "./CommunityBotDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { AssistantResponse, Bot } from "../../api";
-import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
+import { Dismiss24Regular, Save24Filled, ArrowSort24Regular } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
@@ -67,12 +69,13 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const [, setAllTags] = useState<string[]>([]);
     const [choosenTag] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [sortMethod, setSortMethod] = useState<string>(t("components.community_bots.sort_subscriptions"));
     const communitybotStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
 
-    function compareBotsByTitle(a: Bot, b: Bot) {
-        const titleA = a.title.toLowerCase();
-        const titleB = b.title.toLowerCase();
+    function compareBotsByTitle(a: { bot: Bot, updated: string, subscriptions: number }, b: { bot: Bot, updated: string, subscriptions: number }) {
+        const titleA = a.bot.title.toLowerCase();
+        const titleB = b.bot.title.toLowerCase();
 
         if (titleA < titleB) {
             return -1;
@@ -83,14 +86,37 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         return 0;
     }
 
+    function compareBotsByUpdated(a: { bot: Bot, updated: string, subscriptions: number }, b: { bot: Bot, updated: string, subscriptions: number }) {
+        const updatedA = new Date(a.updated).getTime();
+        const updatedB = new Date(b.updated).getTime();
+        return updatedB - updatedA; // Descending order (newest first)
+    }
+
+    function compareBotsBySubscriptions(a: { bot: Bot, updated: string, subscriptions: number }, b: { bot: Bot, updated: string, subscriptions: number }) {
+        return b.subscriptions - a.subscriptions; // Descending order (most subscriptions first)
+    }
+
+    function getSortFunction() {
+        switch (sortMethod) {
+            case t("components.community_bots.sort_title"):
+                return compareBotsByTitle;
+            case t("components.community_bots.sort_updated"):
+                return compareBotsByUpdated;
+            case t("components.community_bots.sort_subscriptions"):
+                return compareBotsBySubscriptions;
+            default:
+                return compareBotsByTitle;
+        }
+    }
+
     useEffect(() => {
         if (takeCommunityBots && showSearchDialogInput) {
             setIsLoading(true);
             getAllCommunityAssistantsApi()
                 .then((bots: AssistantResponse[]) => {
-                    const latestBots: Bot[] = [];
-
+                    const latestBots: { bot: Bot, updated: string, subscriptions: number }[] = [];
                     for (const bot of bots) {
+
                         const latest = bot.latest_version;
                         const latest_bot: Bot = {
                             title: latest.name,
@@ -107,14 +133,14 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                             hierarchical_access: latest.hierarchical_access || [],
                             is_visible: latest.is_visible ? latest.is_visible : true // Default to true if not specified
                         };
-                        latestBots.push(latest_bot);
+                        latestBots.push({ bot: latest_bot, updated: bot.updated_at, subscriptions: bot.subscriptions_count });
                     }
-                    setBot(latestBots.sort(compareBotsByTitle));
-                    setFilteredBots(latestBots.sort(compareBotsByTitle));
+                    setBot(latestBots.sort(getSortFunction()));
+                    setFilteredBots(latestBots.sort(getSortFunction()));
                     let tags: string[] = [];
                     for (const bot of latestBots) {
-                        if (bot.tags) {
-                            const newTags = bot.tags.filter((tag: string) => !tags.includes(tag));
+                        if (bot.bot.tags) {
+                            const newTags = bot.bot.tags.filter((tag: string) => !tags.includes(tag));
                             tags = tags.concat(newTags);
                         }
                     }
@@ -163,7 +189,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                         (bot.tags && bot.tags.some((tag: string) => tag.toLowerCase().includes(lowerCase)))
                     );
                 })
-                .sort(compareBotsByTitle);
+                .sort(getSortFunction());
 
             setFilteredBots(filter);
         } else {
@@ -172,6 +198,23 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             setInputText("");
         }
     };
+
+    const onSortMethodChange = (event: any, data: any) => {
+        const newSortMethod = data.optionValue;
+        if (newSortMethod !== undefined) {
+            setSortMethod(newSortMethod);
+        }
+    };
+
+    // Effect to re-sort bots when sort method changes
+    useEffect(() => {
+        if (bots.length > 0) {
+            const sortedBots = [...bots].sort(getSortFunction());
+            const sortedFilteredBots = [...filteredBots].sort(getSortFunction());
+            setBot(sortedBots);
+            setFilteredBots(sortedFilteredBots);
+        }
+    }, [sortMethod]);
 
     /**
     const onTagSelected = (e: SelectionEvents, selection: OptionOnSelectData) => {
@@ -302,6 +345,32 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                     className={styles.searchBox}
                                 />
 
+                                <div className={styles.sortSection}>
+                                    <ArrowSort24Regular className={styles.sortIcon} />
+                                    <Text size={300} className={styles.sortLabel}>
+                                        {t("components.community_bots.sort_by")}:
+                                    </Text>
+                                    <Dropdown
+                                        id="sort"
+                                        value={sortMethod}
+                                        selectedOptions={[sortMethod]}
+                                        appearance="outline"
+                                        size="small"
+                                        className={styles.sortDropdown}
+                                        onOptionSelect={onSortMethodChange}
+                                    >
+                                        <Option value={t("components.community_bots.sort_title")} text={t("components.community_bots.sort_title")}>
+                                            {t("components.community_bots.sort_title")}
+                                        </Option>
+                                        <Option value={t("components.community_bots.sort_updated")} text={t("components.community_bots.sort_updated")}>
+                                            {t("components.community_bots.sort_updated")}
+                                        </Option>
+                                        <Option value={t("components.community_bots.sort_subscriptions")} text={t("components.community_bots.sort_subscriptions")}>
+                                            {t("components.community_bots.sort_subscriptions")}
+                                        </Option>
+                                    </Dropdown>
+                                </div>
+
                                 {/* <div className={styles.filterSection}>
                                     <Filter24Regular className={styles.filterIcon} />
                                     <Text size={300} className={styles.filterLabel}>
@@ -341,7 +410,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                             {!isLoading && (
                                 <div className={styles.botsGrid}>
                                     {filteredBots
-                                        .filter(bot => (choosenTag === "" ? true : bot.tags.includes(choosenTag)))
+                                        .filter(botObj => (choosenTag === "" ? true : botObj.bot.tags.includes(choosenTag)))
+                                        .map(botObj => botObj.bot)
                                         .map((bot: Bot) => (
                                             <Card key={bot.id} className={styles.botCard} onClick={() => onChooseBot(bot)}>
                                                 <CardHeader

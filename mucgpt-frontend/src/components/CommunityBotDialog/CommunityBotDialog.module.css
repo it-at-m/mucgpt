@@ -36,6 +36,26 @@
     width: 100%;
 }
 
+.sortSection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sortIcon {
+    color: var(--colorNeutralForeground2);
+}
+
+.sortLabel {
+    color: var(--colorNeutralForeground2);
+    white-space: nowrap;
+}
+
+.sortDropdown {
+    min-width: 150px;
+}
+
 .filterSection {
     display: flex;
     align-items: center;

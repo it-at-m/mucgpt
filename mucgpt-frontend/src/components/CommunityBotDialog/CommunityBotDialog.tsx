@@ -73,7 +73,7 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
     const communitybotStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const [botAlreadySaved, setBotAlreadySaved] = useState<boolean>(false);
 
-    function compareBotsByTitle(a: { bot: Bot, updated: string, subscriptions: number }, b: { bot: Bot, updated: string, subscriptions: number }) {
+    function compareBotsByTitle(a: { bot: Bot; updated: string; subscriptions: number }, b: { bot: Bot; updated: string; subscriptions: number }) {
         const titleA = a.bot.title.toLowerCase();
         const titleB = b.bot.title.toLowerCase();
 
@@ -86,13 +86,13 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
         return 0;
     }
 
-    function compareBotsByUpdated(a: { bot: Bot, updated: string, subscriptions: number }, b: { bot: Bot, updated: string, subscriptions: number }) {
+    function compareBotsByUpdated(a: { bot: Bot; updated: string; subscriptions: number }, b: { bot: Bot; updated: string; subscriptions: number }) {
         const updatedA = new Date(a.updated).getTime();
         const updatedB = new Date(b.updated).getTime();
         return updatedB - updatedA; // Descending order (newest first)
     }
 
-    function compareBotsBySubscriptions(a: { bot: Bot, updated: string, subscriptions: number }, b: { bot: Bot, updated: string, subscriptions: number }) {
+    function compareBotsBySubscriptions(a: { bot: Bot; updated: string; subscriptions: number }, b: { bot: Bot; updated: string; subscriptions: number }) {
         return b.subscriptions - a.subscriptions; // Descending order (most subscriptions first)
     }
 
@@ -114,9 +114,8 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
             setIsLoading(true);
             getAllCommunityAssistantsApi()
                 .then((bots: AssistantResponse[]) => {
-                    const latestBots: { bot: Bot, updated: string, subscriptions: number }[] = [];
+                    const latestBots: { bot: Bot; updated: string; subscriptions: number }[] = [];
                     for (const bot of bots) {
-
                         const latest = bot.latest_version;
                         const latest_bot: Bot = {
                             title: latest.name,
@@ -365,7 +364,10 @@ export const CommunityBotsDialog = ({ showSearchDialogInput, setShowSearchDialog
                                         <Option value={t("components.community_bots.sort_updated")} text={t("components.community_bots.sort_updated")}>
                                             {t("components.community_bots.sort_updated")}
                                         </Option>
-                                        <Option value={t("components.community_bots.sort_subscriptions")} text={t("components.community_bots.sort_subscriptions")}>
+                                        <Option
+                                            value={t("components.community_bots.sort_subscriptions")}
+                                            text={t("components.community_bots.sort_subscriptions")}
+                                        >
                                             {t("components.community_bots.sort_subscriptions")}
                                         </Option>
                                     </Dropdown>

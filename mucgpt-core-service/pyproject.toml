@@ -31,6 +31,9 @@ dependencies = [
     "langgraph>=0.5.1",
     "truststore>=0.10.1",
     "langfuse>=3.2.1",
+    # Diagram related dependencies
+    "graphviz>=0.20.1",     # For Graphviz diagram validation
+    "mermaid-py>=0.8.0",    # For Mermaid diagram validation
 ]
 
 [tool.uv]

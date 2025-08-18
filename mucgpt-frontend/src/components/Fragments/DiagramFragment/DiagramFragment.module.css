@@ -1,0 +1,54 @@
+.diagramContainer {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.diagramRenderArea {
+    width: 100%;
+    min-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--colorNeutralBackground1);
+}
+
+.codeView {
+    font-family: "Consolas", "Monaco", monospace;
+    font-size: var(--fontSizeBase300);
+    line-height: 1.4;
+    white-space: pre;
+    overflow-x: auto;
+    padding: 12px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 6px;
+}
+
+.toolbarSpacer {
+    flex: 1;
+}
+
+.fullscreenWrapper {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10000;
+    background: var(--colorNeutralBackground1);
+    padding: 20px;
+    overflow: auto;
+}
+
+.statusInfo {
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground3);
+}
+
+.graphvizContainer svg {
+    max-width: 100%;
+}

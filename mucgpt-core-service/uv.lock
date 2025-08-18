@@ -798,6 +798,15 @@ wheels = [
 ]
 
 [[package]]
+name = "graphviz"
+version = "0.21"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/b3/3ac91e9be6b761a4b30d66ff165e54439dcd48b83f4e20d644867215f6ca/graphviz-0.21.tar.gz", hash = "sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78", size = 200434, upload-time = "2025-06-15T09:35:05.824Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/4c/e0ce1ef95d4000ebc1c11801f9b944fa5910ecc15b5e351865763d8657f8/graphviz-0.21-py3-none-any.whl", hash = "sha256:54f33de9f4f911d7e84e4191749cac8cc5653f815b06738c54db9a15ab8b1e42", size = 47300, upload-time = "2025-06-15T09:35:04.433Z" },
+]
+
+[[package]]
 name = "greenlet"
 version = "3.2.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1549,6 +1558,18 @@ wheels = [
 ]
 
 [[package]]
+name = "mermaid-py"
+version = "0.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/b6/b5973f5b4b726f8b09e6558f459f0d6b70ee00206aacd873c8ed972a16cf/mermaid_py-0.8.0.tar.gz", hash = "sha256:8ba7853f88c09ebf9c2d355c0ebd1e272e877c9568c10612ae9d0f57245608ef", size = 21229, upload-time = "2025-05-12T14:42:26.354Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/86/0e/fbcc38fef8ff71e5df09d9d629e8b620fe974709664b81da2774b6debfe2/mermaid_py-0.8.0-py3-none-any.whl", hash = "sha256:dab0463ffe67fb3f13f0058cf5c0c2fa2685136cdc7e4ae3067d8b9d9c9e378a", size = 31741, upload-time = "2025-05-12T14:42:25.04Z" },
+]
+
+[[package]]
 name = "mucgpt-core-service"
 version = "1.2.5"
 source = { virtual = "." }
@@ -1556,6 +1577,7 @@ dependencies = [
     { name = "asgi-correlation-id" },
     { name = "fastapi", extra = ["standard"] },
     { name = "gitpython" },
+    { name = "graphviz" },
     { name = "joserfc" },
     { name = "langchain" },
     { name = "langchain-community" },
@@ -1564,6 +1586,7 @@ dependencies = [
     { name = "langfuse" },
     { name = "langgraph" },
     { name = "langsmith" },
+    { name = "mermaid-py" },
     { name = "openai" },
     { name = "pydantic-settings" },
     { name = "pypdf" },
@@ -1590,6 +1613,7 @@ requires-dist = [
     { name = "asgi-correlation-id", specifier = "==4.3.4" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.116.1" },
     { name = "gitpython", specifier = "==3.1.45" },
+    { name = "graphviz", specifier = ">=0.20.1" },
     { name = "joserfc" },
     { name = "langchain", specifier = "==0.3.27" },
     { name = "langchain-community", specifier = "==0.3.27" },
@@ -1598,6 +1622,7 @@ requires-dist = [
     { name = "langfuse", specifier = ">=3.2.1" },
     { name = "langgraph", specifier = ">=0.5.1" },
     { name = "langsmith", specifier = "==0.4.8" },
+    { name = "mermaid-py", specifier = ">=0.8.0" },
     { name = "openai", specifier = "==1.97.1" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = "==5.9.0" },

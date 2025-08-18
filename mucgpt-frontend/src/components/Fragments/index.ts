@@ -2,6 +2,7 @@ export { BaseFragment } from "./BaseFragment/BaseFragment";
 export type { FragmentProps } from "./BaseFragment/BaseFragment";
 export { BrainstormFragment } from "./BrainstormFragment/BrainstormFragment";
 export { SimplifiedTextFragment } from "./SimplifiedTextFragment/SimplifiedTextFragment";
+export { DiagramFragment } from "./DiagramFragment/DiagramFragment";
 export { FragmentManager } from "./FragmentManager/FragmentManager";
 export type { FragmentManagerProps } from "./FragmentManager/FragmentManager";
 export { FragmentRegistry } from "./FragmentRegistry";

@@ -15,7 +15,8 @@ const MERMAID_MIN_TEXT_LENGTH = 30;
 
 const MERMAID_DIAGRAM_TYPES = ["flowchart", "classDiagram", "sequenceDiagram", "stateDiagram", "pie", "mindmap", "journey", "erDiagram", "gantt"] as const;
 
-const FRAGMENT_LANGUAGES = ["mucgptbrainstorming", "mucgpt-brainstorming", "mucgptsimplify", "mucgpt-simplify"] as const;
+// Added diagram fragment identifiers
+const FRAGMENT_LANGUAGES = ["mucgptbrainstorming", "mucgpt-brainstorming", "mucgptsimplify", "mucgpt-simplify", "mucgptdiagram", "mucgpt-diagram"] as const;
 
 const COPY_ICONS = {
     DEFAULT: "Copy",

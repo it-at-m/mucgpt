@@ -1,6 +1,10 @@
-# small ubi10 image
-FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
+# small ubi9 image (graphviz not yet in ubi10 repos)
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 
+# Install system dependencies for diagram generation
+RUN microdnf update -y && \
+    microdnf install -y graphviz fontconfig dejavu-sans-fonts && \
+    microdnf clean all
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 

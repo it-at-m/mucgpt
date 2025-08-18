@@ -19,6 +19,15 @@ __pycache__/
 *.log
 *.md
 
+# Never copy secrets into the build context
+.env
+.env.*
+*.env
+secrets/
+*.secrets
+*.pem
+*.key
+.git/
 # Ignore Docker-related files (except Dockerfile itself)
 !Dockerfile
 

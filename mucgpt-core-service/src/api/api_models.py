@@ -13,7 +13,9 @@ class ChatTurn(BaseModel):
 class ChatRequest(BaseModel):
     """Request model for the chat endpoint."""
 
-    history: List[ChatTurn] = Field([], description="The chat history.")
+    history: List[ChatTurn] = Field(
+        default_factory=list, description="The chat history."
+    )
     temperature: Optional[float] = Field(
         0.7, description="The temperature for the model."
     )

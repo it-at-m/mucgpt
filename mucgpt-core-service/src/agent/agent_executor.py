@@ -185,9 +185,7 @@ class MUCGPTAgentExecutor:
                             chunk_obj, id_, created
                         ).model_dump()
                     except Exception:
-                        logger.debug(
-                            "Non-ToolStreamChunk custom chunk: %s", message_chunk
-                        )
+                        logger.debug("Non-ToolStreamChunk custom chunk: %s", item[1])
                 else:
                     logger.error(
                         "Unexpected item type in streaming response: %s", type(item)
@@ -244,7 +242,7 @@ class MUCGPTAgentExecutor:
                 "llm_max_tokens": max_output_tokens,
                 "llm_temperature": temperature,
                 "llm": model,
-                "llm_streaming": True,
+                "llm_streaming": False,
                 "enabled_tools": enabled_tools,
             }
         )

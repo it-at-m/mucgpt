@@ -121,7 +121,7 @@ async def createBot(
             tags=latest_version.tags or [],
             tools=assistant_repo.get_tools_from_version(latest_version),
             owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
-            is_visible=assistant.is_visible,
+            is_visible=new_assistant.is_visible,
         )  # Build AssistantResponse
         response = AssistantResponse(
             id=new_assistant.id,

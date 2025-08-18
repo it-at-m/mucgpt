@@ -470,7 +470,7 @@ class StatusResponse(BaseModel):
 
 
 class SubscriptionResponse(BaseModel):
-    """Simple response model for subscribed assistants containing only ID and name."""
+    """Simple response model for subscribed assistants containing only ID, name and description."""
 
     id: str = Field(
         ...,

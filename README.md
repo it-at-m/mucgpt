@@ -50,19 +50,21 @@ MUCGPT is a system that enables users to interact with a large language model (L
 
 Roles and rights management is facilitated by access to an OpenID Connect provider.
 
-Users can create their own assistants and share them within the organisation.  A personal assistant is a configuration of the MUCGPT agent, particularly the activated tools and system prompts.
+Users can create their own assistants and share them within the organisation. A personal assistant is a configuration of the MUCGPT agent, particularly the activated tools and system prompts.
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
 ## Table of contents
 
-- [Built With](#🛠️-built-with)
-- [Getting Started](#🏃‍♂️‍➡️-getting-started)
-- [Roadmap](#🛤️-roadmap)
-- [Documentation](#📃-documentation)
-- [Contributing](#🖊️-contributing)
-- [License](#📝-license)
-- [Contact](#📬-contact)
+- [Built With](#built-with)
+- [Getting Started](#getting-started)
+- [Roadmap](#roadmap)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+<a id="built-with"></a>
 
 ## 🛠️ Built With
 
@@ -86,12 +88,13 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 - [uv](https://github.com/astral-sh/uv)
 - Docker
 
+<a id="getting-started"></a>
+
 ## 🏃‍♂️‍➡️ Getting started
 
 - Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
   - [Using UV during development](/docs/DEVELOPMENT.md)
 - Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
-
 
 ### ⚙️ Configure
 
@@ -126,7 +129,10 @@ Once all services are running, you can access:
 
 Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
 
+<a id="roadmap"></a>
+
 ## 🛤️ Roadmap
+
 ```mermaid
 %%{init:
 {
@@ -167,6 +173,8 @@ timeline
     2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
 ```
 
+<a id="documentation"></a>
+
 ## 📃 Documentation
 
 <picture>
@@ -190,6 +198,8 @@ For more details on customizing authentication or extending user management, ref
 
 For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
 
+<a id="contributing"></a>
+
 ## 🖊️ Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -206,9 +216,13 @@ Don't forget to give the project a star! Thanks again!
 
 More about this in the [CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md) file.
 
+<a id="license"></a>
+
 ## 📝 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) file for more information.
+
+<a id="contact"></a>
 
 ## 📬 Contact
 

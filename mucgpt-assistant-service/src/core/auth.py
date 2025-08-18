@@ -8,7 +8,7 @@ from core.logtools import getLogger
 logger = getLogger("mucgpt-assistant-service")
 
 
-ACCESS_DENIED_MESSAGE = "Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2."
+ACCESS_DENIED_MESSAGE = "Sie haben noch keinen Zugang zu MUCGPT freigeschaltet. Wie das geht, erfahren Sie im folgenden WILMA-Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2."
 ROLE_PREFIX = "ROLE_"
 
 

@@ -46,8 +46,8 @@ LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@mu
     org.opencontainers.image.documentation='https://github.com/it-at-m/mucgpt/blob/main/README.md' \
     org.opencontainers.image.source='https://github.com/it-at-m/mucgpt' \
     org.opencontainers.image.licenses='MIT' \
-    org.opencontainers.image.title='mucgpt-assistant-service' \
-    org.opencontainers.image.description="The core backend for MUCGPT. Handles agent state, tools and the underlying communction with the LLM."
+    org.opencontainers.image.title='mucgpt-core-service' \
+    org.opencontainers.image.description="The core backend for MUCGPT. Handles agent state, tools and the underlying communiction with the LLM."
 
 # Give permissions to all so random UID can write
 # This should be compatible with OpenShift and plain K8s

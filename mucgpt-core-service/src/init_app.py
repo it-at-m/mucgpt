@@ -1,3 +1,4 @@
+import inspect
 import json
 import os
 from typing import Any, Optional, Type
@@ -45,7 +46,6 @@ def init_service(
     if not isinstance(max_tokens, int) or max_tokens <= 0:
         raise ValueError(f"Max tokens must be a positive integer, got {max_tokens}")
 
-    if not callable(getattr(service_class, "__call__", None)):
     if not inspect.isclass(service_class):
         raise TypeError(f"Service class {service_class} is not a class")
 

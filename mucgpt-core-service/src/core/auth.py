@@ -39,8 +39,6 @@ class AuthenticationHelper:
             else f"Bearer {accesstoken}"
         )
 
-        logger.debug(f"Using authorization header: {auth_header[:15]}...")
-
         try:
             resp = requests.get(
                 url=self.userinfo_url,
@@ -50,7 +48,6 @@ class AuthenticationHelper:
             )
 
             logger.debug(f"User info response status: {resp.status_code}")
-            logger.debug(f"User info response headers: {resp.headers}")
 
             if resp.status_code in [301, 302, 303, 307, 308]:
                 logger.error(
@@ -173,7 +170,7 @@ def authenticate_user(
             lhm_object_id="guest",
             department="guest",
             name="Guest User",
-            roles=[settings.SSO_ROLE],
+            roles=[settings.backend.sso_config.role],
         )
     auth_helper = AuthenticationHelper(
         userinfo_url=settings.backend.sso_config.sso_userinfo_url,

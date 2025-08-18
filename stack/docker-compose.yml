@@ -143,6 +143,10 @@ services:
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
+    environment:
+      - SSL_CERT_FILE=${SSL_CERT_FILE:-}
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
 
   assistant-migrations:
     build:

@@ -1,6 +1,8 @@
 name: Assistant service test
 
 on: [push, workflow_dispatch]
+permissions:
+  contents: read
 
 jobs:
   test_package:

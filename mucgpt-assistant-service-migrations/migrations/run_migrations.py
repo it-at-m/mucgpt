@@ -59,7 +59,11 @@ def run_migrations(revision="head"):
 
     # Set SQLAlchemy URL
     db_url = get_database_url()
-    logger.info(f"Using database: {db_url.split('@')[-1] if '@' in db_url else db_url}")
+    # Log only non-sensitive database details
+    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
+    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
+    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
+    logger.info(f"Using database host: {db_host}, port: {db_port}, name: {db_name}")
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
 
     # Run the migration

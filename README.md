@@ -115,7 +115,7 @@ This command launches the following components:
 
 - **Frontend**: A modern web interface built with React, providing users with an intuitive and responsive experience directly in their browser.
 - **Core-Service**: Manages the agent to call LLMs. Also orchestrates tool usage.
-- **Assistant-Service**: Manages assistants. An Assistant is an configuratoin for an MUCGPT-Agent.
+- **Assistant-Service**: Manages assistants. An assistant is a configuration for an MUCGPT agent.
 - **Assistant-Service-Migration**: Does database migrations on startup.
 - **API Gateway**: Serves as the unified entry point for all client requests, efficiently routing traffic to backend services while managing authentication and security.
 - **Keycloak**: A robust, open-source identity and access management system responsible for authentication, authorization, and user administration.

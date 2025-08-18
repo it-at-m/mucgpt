@@ -123,6 +123,17 @@ i18n
                             update_bot_failed: "Bot konnte nicht aktualisiert werden",
                             update_bot_failed_message: "Beim Aktualisieren des Bots ist ein Fehler aufgetreten"
                         },
+                        bot_stats: {
+                            title: "Bot-Statistiken",
+                            visibility_label: "Sichtbarkeit:",
+                            visibility_visible: "Sichtbar",
+                            visibility_invisible: "Unsichtbar",
+                            publication_label: "Veröffentlichung:",
+                            publication_public: "Öffentlich",
+                            publication_departments: "Sichtbar für {{count}} Abteilungen",
+                            subscriptions_label: "Abonnements:",
+                            version_label: "Version:"
+                        },
                         not_subscribed_dialog: {
                             subscribe_title: "Assistent abonnieren",
                             subscribe_message: "Sie haben den Assistenten '{{botTitle}}' noch nicht abonniert. Möchten Sie ihn jetzt abonnieren?",
@@ -511,6 +522,17 @@ i18n
                             update_bot_failed: "Bot could not be updated",
                             update_bot_failed_message: "An error occurred while updating the bot"
                         },
+                        bot_stats: {
+                            title: "Bot Statistics",
+                            visibility_label: "Visibility:",
+                            visibility_visible: "Visible",
+                            visibility_invisible: "Invisible",
+                            publication_label: "Publication:",
+                            publication_public: "Public",
+                            publication_departments: "Visible to {{count}} departments",
+                            subscriptions_label: "Subscriptions:",
+                            version_label: "Version:"
+                        },
                         not_subscribed_dialog: {
                             subscribe_title: "Subscribe to Assistant",
                             subscribe_message: "You have not yet subscribed to the assistant '{{botTitle}}'. Would you like to subscribe now?",
@@ -897,6 +919,17 @@ i18n
                             update_bot_success_message: "Da Bot '{{title}}' is erfolgreich aktualisiert worden",
                             update_bot_failed: "Bot konnt ned aktualisiert werd'n",
                             update_bot_failed_message: "Beim Aktualisieren vom Bot is a Fehler aufgetreten"
+                        },
+                        bot_stats: {
+                            title: "Bot-Statistikn",
+                            visibility_label: "Sichtbarkeit:",
+                            visibility_visible: "Sichtbar",
+                            visibility_invisible: "Unsichtbar",
+                            publication_label: "Veröffentlichung:",
+                            publication_public: "Öffentlich",
+                            publication_departments: "Sichtbar für {{count}} Abteilungen",
+                            subscriptions_label: "Abonnements:",
+                            version_label: "Version:"
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "Assistenten abonnieren",
@@ -1286,6 +1319,17 @@ i18n
                             update_bot_failed: "Le bot n'a pas pu être mis à jour",
                             update_bot_failed_message: "Une erreur s'est produite lors de la mise à jour du bot"
                         },
+                        bot_stats: {
+                            title: "Statistiques du Bot",
+                            visibility_label: "Visibilité:",
+                            visibility_visible: "Visible",
+                            visibility_invisible: "Invisible",
+                            publication_label: "Publication:",
+                            publication_public: "Public",
+                            publication_departments: "Visible pour {{count}} départements",
+                            subscriptions_label: "Abonnements:",
+                            version_label: "Version:"
+                        },
                         not_subscribed_dialog: {
                             subscribe_title: "S'abonner à l'assistant",
                             subscribe_message: "Vous n'êtes pas encore abonné à l'assistant '{{botTitle}}'. Souhaitez-vous vous abonner maintenant?",
@@ -1673,6 +1717,17 @@ i18n
                             update_bot_success_message: "Бота '{{title}}' було успішно оновлено",
                             update_bot_failed: "Не вдалося оновити бота",
                             update_bot_failed_message: "Сталася помилка під час оновлення бота"
+                        },
+                        bot_stats: {
+                            title: "Статистика Бота",
+                            visibility_label: "Видимість:",
+                            visibility_visible: "Видимий",
+                            visibility_invisible: "Невидимий",
+                            publication_label: "Публікація:",
+                            publication_public: "Публічний",
+                            publication_departments: "Видимий для {{count}} відділів",
+                            subscriptions_label: "Підписки:",
+                            version_label: "Версія:"
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "Підписатися на асистента",

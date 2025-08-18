@@ -46,7 +46,8 @@ def init_service(
         raise ValueError(f"Max tokens must be a positive integer, got {max_tokens}")
 
     if not callable(getattr(service_class, "__call__", None)):
-        raise TypeError(f"Service class {service_class} is not callable")
+    if not inspect.isclass(service_class):
+        raise TypeError(f"Service class {service_class} is not a class")
 
     try:
         if custom_model is None:

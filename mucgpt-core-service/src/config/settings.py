@@ -32,15 +32,18 @@ class ModelsDTO(BaseModel):
     description: str
 
 
-class SSOConfig(BaseModel):
-    sso_userinfo_url: str = ""
+class SSOSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="MUCGPT_SSO_",
+        extra="ignore",
+    )
+
+    userinfo_url: str = ""
     role: str = "lhm-ab-mucgpt-user"
 
 
 class BackendConfig(BaseModel):
-    enable_auth: bool = False
     unauthorized_user_redirect_url: str = ""
-    sso_config: SSOConfig = Field(default_factory=SSOConfig)
     models: List[ModelsConfig] = []
     models_json: str = "[]"
     langfuse_public_key: str | None = None
@@ -96,3 +99,10 @@ def get_settings() -> Settings:
     """Return cached Settings instance."""
     settings = Settings()
     return settings
+
+
+@lru_cache
+def get_sso_settings() -> SSOSettings:
+    """Return cached SSO Settings instance."""
+    sso_settings = SSOSettings()
+    return sso_settings

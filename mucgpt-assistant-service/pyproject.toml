@@ -73,7 +73,6 @@ env = [
     "MUCGPT_ASSISTANT_DB_NAME=test-db",
     "MUCGPT_ASSISTANT_DB_USER=test-user",
     "MUCGPT_ASSISTANT_DB_PASSWORD=test-password",
-    "MUCGPT_ASSISTANT_ENABLE_AUTH=False",
 ]
 
 [tool.coverage.paths]

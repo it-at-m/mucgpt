@@ -96,9 +96,40 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
   - [Using UV during development](/docs/DEVELOPMENT.md)
 - Install [Node.js 20+](https://nodejs.org/en/download/package-manager)
 
-### ⚙️ Configure
+### ⚙️ Configure the environment
 
-Configure your environment. For that, copy the content of the empty config from [/config/.env.empty](/config/.env.empty) to the stack directory [stack/.env](stack/.env). Add at least one model by providing one OpenAI compatible endpoint.
+Configuration can be found in form of an .env file
+
+```bash
+cd stack
+cp .env.example .env
+```
+Below is an example of how to configure the `MUCGPT_CORE_BACKEND__MODELS` environment variable in your `.env` file. This variable defines the available LLM models for the core backend as a JSON array. Each object in the array specifies the model type, name, endpoint, API key, token limits, and a description.
+
+```env
+MUCGPT_CORE_BACKEND__MODELS='[
+  {
+    "type": "OPENAI",
+    "llm_name": "<your-llm-name>",
+    "endpoint": "<your-endpoint>",
+    "api_key": "<your-sk>",
+    "max_output_tokens": "<number>",
+    "max_input_tokens": "<number>",
+    "description": "<description>"
+  }
+]'
+```
+
+**Field descriptions:**
+- `type`: The provider type (e.g., `OPENAI`).
+- `llm_name`: The name or identifier of your LLM model.
+- `endpoint`: The API endpoint URL for the model.
+- `api_key`: The API key or secret for authentication.
+- `max_output_tokens`: Maximum number of tokens the model can generate in a response.
+- `max_input_tokens`: Maximum number of tokens accepted as input.
+- `description`: A human-readable description of the model.
+
+Replace the placeholder values with your actual model configuration.
 
 ### 🐋 Run with Docker
 

@@ -65,9 +65,6 @@ class TestSettings:
         """Test backend configuration defaults."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
-
-            assert settings.backend.enable_auth is False
-            assert settings.backend.sso_config.role == "lhm-ab-mucgpt-user"
             assert len(settings.backend.models) == 0
 
     def test_nested_env_variables(self):
@@ -77,7 +74,6 @@ class TestSettings:
             {
                 "MUCGPT_CORE_FRONTEND__LABELS__ENV_NAME": "TEST_ENV",
                 "MUCGPT_CORE_FRONTEND__ALTERNATIVE_LOGO": "true",
-                "MUCGPT_CORE_BACKEND__ENABLE_AUTH": "true",
                 "MUCGPT_CORE_BACKEND__SSO_CONFIG__ROLE": "test-role",
             },
         ):
@@ -85,8 +81,6 @@ class TestSettings:
 
             assert settings.frontend.labels.env_name == "TEST_ENV"
             assert settings.frontend.alternative_logo is True
-            assert settings.backend.enable_auth is True
-            assert settings.backend.sso_config.role == "test-role"
 
     def test_model_configuration_from_env(self):
         """Test model configuration from environment variables."""

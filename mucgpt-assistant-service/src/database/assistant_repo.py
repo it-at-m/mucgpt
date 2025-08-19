@@ -1,6 +1,7 @@
 from __future__ import annotations  # Enable forward references in annotations
 
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -300,6 +301,8 @@ class AssistantRepository(Repository[Assistant]):
                         )
                         await self.session.execute(stmt)
 
+                # Always bump the updated_at so API clients see a change even if only owners or related tables changed
+                assistant.updated_at = datetime.now(timezone.utc)
                 await self.session.flush()
                 await self.session.refresh(assistant)
                 logger.info(f"Updated assistant {assistant_id}")
@@ -425,7 +428,9 @@ class AssistantRepository(Repository[Assistant]):
                     update(Assistant)
                     .where(Assistant.id == assistant_id)
                     .values(
-                        subscriptions_count=Assistant.subscriptions_count - rows_deleted
+                        subscriptions_count=Assistant.subscriptions_count
+                        - rows_deleted,
+                        updated_at=datetime.now(timezone.utc),
                     )
                 )
 

@@ -1,5 +1,7 @@
 """Unit tests for the AssistantRepository class."""
 
+import asyncio
+
 import pytest
 from src.database.assistant_repo import AssistantRepository
 
@@ -123,6 +125,42 @@ class TestAssistantRepository:
         assert "new_user1" in owner_ids
         assert "new_user2" in owner_ids
         assert "new_user3" in owner_ids
+
+    async def test_update_assistant_updates_timestamp_on_owner_change(
+        self, db_session, sample_assistant_data
+    ):
+        """Ensure updated_at is bumped when only owners change (no direct column writes)."""
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(
+            hierarchical_access=sample_assistant_data["hierarchical_access"],
+            owner_ids=sample_assistant_data["owner_ids"],
+            is_visible=True,
+        )
+        await db_session.commit()
+
+        # Capture original timestamp
+        original_updated_at = assistant.updated_at
+        assert original_updated_at is not None
+
+        # Small sleep to ensure clock tick difference (especially on fast systems)
+        await asyncio.sleep(0.01)
+
+        # Update only owners
+        await assistant_repo.update(
+            assistant_id=assistant.id,
+            owner_ids=["new_owner_a", "new_owner_b"],
+        )
+        await db_session.commit()
+
+        # Refresh and compare
+        refreshed = await assistant_repo.get(assistant.id)
+        assert refreshed.updated_at > original_updated_at, (
+            f"updated_at not incremented. Before={original_updated_at}, After={refreshed.updated_at}"
+        )
+        # Sanity: ensure owners actually changed
+        owners = await assistant_repo.get_with_owners(assistant.id)
+        owner_ids = sorted([o.lhmobjektID for o in owners.owners])
+        assert owner_ids == ["new_owner_a", "new_owner_b"]
 
     async def test_update_assistant_clear_owners(
         self, db_session, sample_assistant_data

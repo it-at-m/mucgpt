@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
 
 
 class ExampleModel(BaseModel):
@@ -17,13 +17,15 @@ class ExampleModel(BaseModel):
         example="How can I reset my password?",
     )
 
-    class Config:
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "text": "Reset password",
                 "value": "How can I reset my password?",
             }
         }
+    )
 
 
 class QuickPrompt(BaseModel):
@@ -43,14 +45,16 @@ class QuickPrompt(BaseModel):
         example="Use this prompt to quickly get help with network issues",
     )
 
-    class Config:
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "label": "Troubleshoot Connection",
                 "prompt": "Help me troubleshoot a network connection issue",
                 "tooltip": "Use this prompt to quickly get help with network issues",
             }
         }
+    )
 
 
 class ToolBase(BaseModel):
@@ -68,14 +72,16 @@ class ToolBase(BaseModel):
         example={"url": "muenchen.de", "max_results": 5},
     )
 
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "id": "WEB_SEARCH",
                 "config": {"url": "muenchen.de", "max_results": 5},
             }
-        }
+        },
+    )
 
 
 class AssistantBase(BaseModel):
@@ -167,8 +173,9 @@ class AssistantBase(BaseModel):
         example=["12345", "67890"],
     )
 
-    class Config:
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "Technical Support Assistant",
                 "description": "An AI assistant specialized in providing technical support for software issues",
@@ -203,6 +210,7 @@ class AssistantBase(BaseModel):
                 "tags": ["support", "technical", "customer-service"],
             }
         }
+    )
 
 
 class AssistantCreate(AssistantBase):
@@ -212,8 +220,9 @@ class AssistantCreate(AssistantBase):
     during assistant creation.
     """
 
-    class Config:
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "Customer Service Assistant",
                 "description": "AI assistant for handling customer inquiries",
@@ -244,6 +253,7 @@ class AssistantCreate(AssistantBase):
                 "tags": ["customer-service", "support"],
             }
         }
+    )
 
 
 class AssistantUpdate(BaseModel):
@@ -345,6 +355,9 @@ class AssistantUpdate(BaseModel):
 class AssistantVersionResponse(AssistantBase):
     """Response model for a specific version of an AI assistant."""
 
+    # added model_config for from_attributes
+    model_config = ConfigDict(from_attributes=True)
+
     id: int = Field(
         ...,
         description="Unique identifier for the assistant version",
@@ -410,9 +423,10 @@ class AssistantResponse(BaseModel):
         ..., description="The latest version of the assistant"
     )
 
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "created_at": "2025-06-18T10:30:00Z",
@@ -460,7 +474,8 @@ class AssistantResponse(BaseModel):
                     "tags": ["support", "technical", "customer-service"],
                 },
             }
-        }
+        },
+    )
 
 
 class StatusResponse(BaseModel):
@@ -488,11 +503,13 @@ class SubscriptionResponse(BaseModel):
         example="An AI assistant specialized in providing technical support for software issues",
     )
 
-    class Config:
-        from_attributes = True
-        json_schema_extra = {
+    # replaced inner Config with model_config
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
                 "name": "Technical Support Assistant",
             }
-        }
+        },
+    )

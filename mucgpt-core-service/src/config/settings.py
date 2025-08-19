@@ -94,14 +94,14 @@ class Settings(BaseSettings):
             self.commit = VersionInfo.get_commit()
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return cached Settings instance."""
     settings = Settings()
     return settings
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def get_sso_settings() -> SSOSettings:
     """Return cached SSO Settings instance."""
     sso_settings = SSOSettings()

@@ -75,7 +75,7 @@ async def _build_assistant_response_list(
 
 
 @router.get(
-    "/user/bots",
+    "/user/assistants",
     response_model=List[AssistantResponse],
     summary="Get assistants owned by a specific user",
     description="""
@@ -88,7 +88,7 @@ async def _build_assistant_response_list(
     },
     tags=["Assistants", "Users"],
 )
-async def getUserBots(
+async def getUserAssistants(
     db: AsyncSession = Depends(get_db_session),
     user_info=Depends(authenticate_user),
 ):

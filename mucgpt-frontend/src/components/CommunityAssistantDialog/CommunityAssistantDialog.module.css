@@ -1,0 +1,354 @@
+.dialog {
+    padding: 0 !important;
+    min-width: 80%;
+    max-width: 90%;
+    line-height: 1.5;
+}
+
+.detailDialog {
+    padding: 0 !important;
+    min-width: 70%;
+    max-width: 80%;
+    line-height: 1.5;
+}
+
+@media (max-width: 650px) {
+    .dialog,
+    .detailDialog {
+        min-width: 95%;
+        max-width: 95%;
+    }
+}
+
+.dialogContent {
+    padding: 24px;
+}
+
+/* Search Section */
+.searchSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.searchBox {
+    width: 100%;
+}
+
+.sortSection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.sortIcon {
+    color: var(--colorNeutralForeground2);
+}
+
+.sortLabel {
+    color: var(--colorNeutralForeground2);
+    white-space: nowrap;
+}
+
+.sortDropdown {
+    min-width: 150px;
+}
+
+.filterSection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.filterIcon {
+    color: var(--colorNeutralForeground2);
+}
+
+.filterLabel {
+    color: var(--colorNeutralForeground2);
+    white-space: nowrap;
+}
+
+.tagDropdown {
+    min-width: 200px;
+}
+
+.divider {
+    margin: 16px 0;
+}
+
+/* Loading State */
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px;
+}
+
+/* Assistant Cards Grid */
+.assistantsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    padding: 16px 0;
+}
+
+.assistantCard {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--colorNeutralStroke2);
+    min-height: 140px;
+}
+
+.assistantCard:hover {
+    border-color: var(--colorBrandStroke1);
+    box-shadow: var(--shadow4);
+    transform: translateY(-2px);
+}
+
+.assistantTitle {
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+    margin-bottom: 8px;
+}
+
+.assistantDescription {
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
+}
+
+.assistantCardFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.assistantCardLeft {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.assistantTags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.toolsIndicator {
+    display: flex;
+    gap: 4px;
+}
+
+.departmentsIndicator {
+    display: flex;
+    gap: 4px;
+}
+
+/* No Results */
+.noResults {
+    text-align: center;
+    padding: 40px;
+    color: var(--colorNeutralForeground2);
+}
+
+/* Detail Dialog Styles */
+.titleSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.assistantDetailTitle {
+    font-size: var(--fontSizeBase800);
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.versionSection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detailContent {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.detailTags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.toolsSection {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+}
+
+.toolsList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.toolBadge {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase200);
+    padding: 6px 12px;
+    border-radius: var(--borderRadiusSmall);
+}
+
+.departmentsSection {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--colorPaletteYellowBackground1);
+    border: 1px solid var(--colorPaletteYellowBorder1);
+    border-radius: var(--borderRadiusMedium);
+}
+
+.departmentsList {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.departmentBadge {
+    font-size: var(--fontSizeBase200);
+    padding: 4px 8px;
+    border-radius: var(--borderRadiusSmall);
+}
+
+.sectionDescription {
+    color: var(--colorNeutralForeground2);
+    margin-top: 4px;
+}
+
+.publicAccess {
+    margin-top: 8px;
+}
+
+.publicAccessBadge {
+    font-size: var(--fontSizeBase200);
+    padding: 6px 12px;
+    border-radius: var(--borderRadiusSmall);
+}
+
+.sectionTitle {
+    color: var(--colorNeutralForeground1);
+    margin-bottom: 12px;
+    display: block;
+}
+
+.descriptionSection,
+.systemMessageSection {
+    display: flex;
+    flex-direction: column;
+}
+
+.markdownContent,
+.systemMessageContent {
+    background: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: var(--borderRadiusMedium);
+    padding: 16px;
+    overflow-x: auto;
+}
+
+.systemMessageContent {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase200);
+}
+
+.detailActions {
+    padding-top: 16px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+/* Legacy styles (keeping for backward compatibility) */
+
+/* Legacy styles (keeping for backward compatibility) */
+.container {
+    padding-top: 10px;
+    padding-bottom: 20px;
+    width: 100%;
+    height: 33%;
+    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 10px;
+    font-size: var(--fontSizeBase400);
+}
+
+.box {
+    flex: 1 1 250px;
+    text-align: center;
+    margin-top: 0px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 100px;
+    border-radius: 20px;
+    margin-right: 10px;
+    margin-left: 10px;
+    color: var(--colorNeutralBackround1Hover);
+    text-decoration: none;
+    opacity: 0.75;
+    font-size: var(--fontSizeBase400);
+    background: var(--colorNeutralBackground4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.tags {
+    display: flex;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.box span {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.box:hover {
+    opacity: 1;
+    box-shadow:
+        0px 8px 16px rgba(0, 0, 0, 0.14),
+        0px 0px 2px rgba(0, 0, 0, 0.12);
+    outline: 2px solid var(--colorNeutralForeground3Selected);
+}
+
+.btnText {
+    margin: 0;
+    top: 45%;
+    align-self: center;
+    overflow-wrap: break-word;
+}
+
+.close_button {
+    top: 10px;
+}

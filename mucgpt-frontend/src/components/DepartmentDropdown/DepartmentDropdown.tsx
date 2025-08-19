@@ -87,7 +87,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
             <input
                 type="text"
                 value={search}
-                placeholder={t("component.department_dropdown.placeholder", "Suche Abteilung...")}
+                placeholder={t("components.department_dropdown.placeholder", "Suche Abteilung...")}
                 onFocus={() => setShow(true)}
                 onBlur={() => setShow(false)}
                 onChange={e => {
@@ -103,7 +103,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
                     className={styles.dropdownList}
                     onMouseDown={e => e.preventDefault()} // verhindert, dass onBlur vor handleSelect ausgelöst wird
                 >
-                    {filtered.length === 0 && <li className={styles.noMatches}>{t("component.department_dropdown.no_matches", "Keine Treffer")}</li>}
+                    {filtered.length === 0 && <li className={styles.noMatches}>{t("components.department_dropdown.no_matches", "Keine Treffer")}</li>}
 
                     {/* If user department exists and is in filtered list, display a separator */}
                     {user?.department && filtered.some(d => d === user.department) && (

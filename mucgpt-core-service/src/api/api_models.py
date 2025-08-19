@@ -4,10 +4,10 @@ from pydantic import BaseModel, Field
 
 
 class ChatTurn(BaseModel):
-    """A single turn in a chat, containing a user message and an optional bot response."""
+    """A single turn in a chat, containing a user message and an optional assistant response."""
 
     user: str = Field(..., description="The user's message.")
-    bot: Optional[str] = Field(None, description="The bot's response.")
+    assistant: Optional[str] = Field(None, description="The assistant's response.")
 
 
 class ChatRequest(BaseModel):
@@ -79,8 +79,8 @@ class ChatCompletionRequest(BaseModel):
     enabled_tools: Optional[List[str]] = Field(
         None, description="List of enabled tool IDs for this completion request"
     )
-    bot_id: Optional[str] = Field(
-        None, description="ID of the bot to use for this completion request"
+    assistant_id: Optional[str] = Field(
+        None, description="ID of the assistant to use for this completion request"
     )
 
 
@@ -163,19 +163,21 @@ class ToolListResponse(BaseModel):
     )
 
 
-class CreateBotRequest(BaseModel):
-    """Request model for creating a bot."""
+class CreateAssistantRequest(BaseModel):
+    """Request model for creating a assistant."""
 
-    input: str = Field(..., description="The input to create the bot.")
-    model: str = Field("gpt-4o-mini", description="The model to use for bot creation.")
+    input: str = Field(..., description="The input to create the assistant.")
+    model: str = Field(
+        "gpt-4o-mini", description="The model to use for assistant creation."
+    )
     max_tokens: int = Field(
-        4096, description="The maximum number of output tokens for the bot."
+        4096, description="The maximum number of output tokens for the assistant."
     )
 
 
-class CreateBotResult(BaseModel):
-    """Result model for creating a bot."""
+class CreateAssistantResult(BaseModel):
+    """Result model for creating a assistant."""
 
-    system_prompt: str = Field(..., description="The system prompt for the bot.")
-    description: str = Field(..., description="The description of the bot.")
-    title: str = Field(..., description="The title of the bot.")
+    system_prompt: str = Field(..., description="The system prompt for the assistant.")
+    description: str = Field(..., description="The description of the assistant.")
+    title: str = Field(..., description="The title of the assistant.")

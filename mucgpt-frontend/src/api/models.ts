@@ -22,7 +22,7 @@ export type ChatResponse = {
 
 export type ChatTurn = {
     user: string;
-    bot?: string;
+    assistant?: string;
 };
 
 export type ChatRequest = {
@@ -34,10 +34,10 @@ export type ChatRequest = {
     shouldStream?: boolean;
     model?: string;
     enabled_tools?: string[];
-    bot_id?: string;
+    assistant_id?: string;
 };
 
-export type CreateBotRequest = {
+export type CreateAssistantRequest = {
     input: string;
     max_output_tokens: number;
     model?: string;
@@ -107,7 +107,7 @@ export type DepartementsResponse = {
     departments: string[];
 };
 
-export type Bot = {
+export type Assistant = {
     title: string;
     description: string;
     system_message: string;

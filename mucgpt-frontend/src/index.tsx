@@ -16,9 +16,9 @@ import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
 import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
-import LocalBot from "./pages/bot/LocalBot";
-import RefactoredOwnedCommunityBot from "./pages/bot/OwnedCommunityBot";
-import RefactoredCommunityBot from "./pages/bot/CommunityBot";
+import LocalAssistant from "./pages/assistant/LocalAssistant";
+import RefactoredOwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
+import RefactoredCommunityAssistant from "./pages/assistant/CommunityAssistant";
 import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToastContext";
 initializeIcons();
 
@@ -74,18 +74,18 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "bot/:id",
-                element: <LocalBot />,
+                path: "assistant/:id",
+                element: <LocalAssistant />,
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "owned/communitybot/:id",
-                element: <RefactoredOwnedCommunityBot />,
+                path: "owned/communityassistant/:id",
+                element: <RefactoredOwnedCommunityAssistant />,
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "communitybot/:id",
-                element: <RefactoredCommunityBot />,
+                path: "communityassistant/:id",
+                element: <RefactoredCommunityAssistant />,
                 errorElement: <div>Fehler</div>
             },
             /** {

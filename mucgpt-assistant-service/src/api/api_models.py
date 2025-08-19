@@ -88,7 +88,7 @@ class AssistantBase(BaseModel):
     name: str = Field(
         ...,
         description="The name/title of the assistant",
-        example="Technical Support Bot",
+        example="Technical Support Assistant",
     )
 
     description: Optional[str] = Field(
@@ -170,7 +170,7 @@ class AssistantBase(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "name": "Technical Support Bot",
+                "name": "Technical Support Assistant",
                 "description": "An AI assistant specialized in providing technical support for software issues",
                 "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
                 "hierarchical_access": [
@@ -215,7 +215,7 @@ class AssistantCreate(AssistantBase):
     class Config:
         json_schema_extra = {
             "example": {
-                "name": "Customer Service Bot",
+                "name": "Customer Service Assistant",
                 "description": "AI assistant for handling customer inquiries",
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
                 "temperature": 0.5,
@@ -262,7 +262,7 @@ class AssistantUpdate(BaseModel):
     name: Optional[str] = Field(
         None,
         description="The name/title of the assistant",
-        example="Technical Support Bot",
+        example="Technical Support Assistant",
     )
 
     description: Optional[str] = Field(
@@ -428,7 +428,7 @@ class AssistantResponse(BaseModel):
                     "id": 1,
                     "version": 1,
                     "created_at": "2025-06-18T10:30:00Z",
-                    "name": "Technical Support Bot",
+                    "name": "Technical Support Assistant",
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
                     "temperature": 0.7,
@@ -480,7 +480,7 @@ class SubscriptionResponse(BaseModel):
     name: str = Field(
         ...,
         description="The name/title of the assistant",
-        example="Technical Support Bot",
+        example="Technical Support Assistant",
     )
     description: str = Field(
         ...,
@@ -493,6 +493,6 @@ class SubscriptionResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
-                "name": "Technical Support Bot",
+                "name": "Technical Support Assistant",
             }
         }

@@ -19,16 +19,16 @@ i18n
                     header: {
                         chat: "Chat",
                         nutzungsbedingungen: "Nutzungsbedingungen",
-                        create_bot: "Assistent erstellen"
+                        create_assistant: "Assistent erstellen"
                     },
                     menu: {
                         go_to_tutorials_tooltip: "Tutorials und Anleitungen zu MUCGPT anzeigen",
                         go_to_tutorials: "Lerne MUCGPT kennen",
                         go_to_tutorials_aria: "Tutorials und Anleitungen zu MUCGPT",
                         chat_header: "Hallo {{user}}, was hast du heute vor?",
-                        own_bots: "Lokale Assistenten",
-                        community_bots: "Community Assistenten",
-                        no_bots: "Keine Assistenten gefunden",
+                        own_assistants: "Lokale Assistenten",
+                        community_assistants: "Community Assistenten",
+                        no_assistants: "Keine Assistenten gefunden",
                         soon: "In Entwicklung...",
                         owned: "Eigene:",
                         subscribed: "Abonnierte:",
@@ -37,12 +37,12 @@ i18n
                         go_to_chat: "Direkt zum Chat",
                         go_to_chat_tooltip: "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen",
                         go_to_chat_aria: "Direkt zum Chat navigieren",
-                        bots_section: "Bot-Verwaltung",
-                        own_bots_list: "Eigene Bots",
-                        owned_bots_list: "Eigene Community Bots",
-                        subscribed_bots_list: "Abonnierte Community Bots",
-                        select_bot_aria: "Bot auswählen: {{title}}",
-                        share_bot_aria: "Bot teilen: {{title}}"
+                        assistants_section: "Assistenten-Verwaltung",
+                        own_assistants_list: "Eigene Assistenten",
+                        owned_assistants_list: "Eigene Community Assistenten",
+                        subscribed_assistants_list: "Abonnierte Community Assistenten",
+                        select_assistant_aria: "Assistent auswählen: {{title}}",
+                        share_assistant_aria: "Assistent teilen: {{title}}"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -99,32 +99,32 @@ i18n
                             configuration_error: "Konfigurationsfehler"
                         }
                     },
-                    create_bot: {
+                    create_assistant: {
                         title: "Titel",
                         description: "Beschreibung",
                         prompt: "System-Prompt",
                         create: "Erstellen"
                     },
                     components: {
-                        bot_chat: {
-                            load_bot_failed: "Bot konnte nicht geladen werden",
-                            bot_not_found: "Bot wurde nicht gefunden",
-                            load_bot_failed_message: "Beim Laden des Bots ist ein Fehler aufgetreten",
+                        assistant_chat: {
+                            load_assistant_failed: "Assistent konnte nicht geladen werden",
+                            assistant_not_found: "Assistent wurde nicht gefunden",
+                            load_assistant_failed_message: "Beim Laden des Assistenten ist ein Fehler aufgetreten",
                             load_chat_failed: "Chat konnte nicht geladen werden",
                             load_chat_failed_message: "Beim Laden des Chat-Verlaufs ist ein Fehler aufgetreten",
 
-                            delete_bot_success: "Bot wurde gelöscht",
-                            delete_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich gelöscht",
-                            delete_bot_failed: "Bot konnte nicht gelöscht werden",
-                            delete_bot_failed_message: "Beim Löschen des Bots ist ein Fehler aufgetreten",
+                            delete_assistant_success: "Assistent wurde gelöscht",
+                            delete_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich gelöscht",
+                            delete_assistant_failed: "Assistent konnte nicht gelöscht werden",
+                            delete_assistant_failed_message: "Beim Löschen des Assistenten ist ein Fehler aufgetreten",
 
-                            update_bot_success: "Bot wurde aktualisiert",
-                            update_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich aktualisiert",
-                            update_bot_failed: "Bot konnte nicht aktualisiert werden",
-                            update_bot_failed_message: "Beim Aktualisieren des Bots ist ein Fehler aufgetreten"
+                            update_assistant_success: "Assistent wurde aktualisiert",
+                            update_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich aktualisiert",
+                            update_assistant_failed: "Assistent konnte nicht aktualisiert werden",
+                            update_assistant_failed_message: "Beim Aktualisieren des Assistenten ist ein Fehler aufgetreten"
                         },
-                        bot_stats: {
-                            title: "Bot-Statistiken",
+                        assistant_stats: {
+                            title: "Assistenten-Statistiken",
                             visibility_label: "Sichtbarkeit:",
                             visibility_visible: "Sichtbar",
                             visibility_invisible: "Unsichtbar",
@@ -136,13 +136,13 @@ i18n
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "Assistent abonnieren",
-                            subscribe_message: "Sie haben den Assistenten '{{botTitle}}' noch nicht abonniert. Möchten Sie ihn jetzt abonnieren?",
+                            subscribe_message: "Sie haben den Assistenten '{{assistantTitle}}' noch nicht abonniert. Möchten Sie ihn jetzt abonnieren?",
                             subscribe_info: "Durch das Abonnieren erhalten Sie Zugriff auf alle Funktionen dieses Assistenten.",
                             subscribe_button: "Abonnieren",
                             subscribe_success: "Erfolgreich abonniert",
-                            subscribe_success_message: "Sie haben den Assistenten '{{botTitle}}' erfolgreich abonniert",
+                            subscribe_success_message: "Sie haben den Assistenten '{{assistantTitle}}' erfolgreich abonniert",
                             no_access_title: "Kein Zugriff",
-                            no_access_message: "Sie haben keinen Zugriff auf den Assistenten '{{botTitle}}'.",
+                            no_access_message: "Sie haben keinen Zugriff auf den Assistenten '{{assistantTitle}}'.",
                             no_access_info: "Bitte wenden Sie sich an den Ersteller des Assistenten, um Zugriff zu erhalten."
                         },
                         department_dropdown: {
@@ -236,7 +236,7 @@ i18n
                             system_prompt_info:
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmten Format oder beachtet andere Einschränkungen."
                         },
-                        botsettingsdrawer: {
+                        assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
                             collapse: "Ansicht einklappen",
                             delete: "Assistent löschen",
@@ -249,9 +249,9 @@ i18n
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
                             deleteDialog: {
-                                title: "Bot Löschen",
-                                content: "Wollen Sie den Bot wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
-                                unpublish: "Wollen Sie die Veröffentlichung des Bots wirklich aufheben? Dies macht ihn für andere nicht mehr verfügbar.",
+                                title: "Assistent Löschen",
+                                content: "Wollen Sie den Assistenten wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
+                                unpublish: "Wollen Sie die Veröffentlichung des Assistenten wirklich aufheben? Dies macht ihn für andere nicht mehr verfügbar.",
                                 remove: "Wollen Sie den Assistenten wirklich entfernen? Dadurch werden alle Chats mit diesem Assistenten gelöscht.",
                                 confirm: "Ja",
                                 cancel: "Nein"
@@ -293,10 +293,10 @@ i18n
                             loadMore: "Mehr laden",
                             more: "mehr"
                         },
-                        add_bot_button: {
-                            add_bot: "Erstelle deinen eigenen Assistenten"
+                        add_assistant_button: {
+                            add_assistant: "Erstelle deinen eigenen Assistenten"
                         },
-                        create_bot_dialog: {
+                        create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
                             generating_prompt: "Generiere Prompt...",
                             dismiss: "Abbrechen",
@@ -306,20 +306,20 @@ i18n
                             save: "Speichern",
                             describe: "Beschreibe die Funktion...",
                             skip: "Überspringen",
-                            bot_saved_success: "Assistent erfolgreich gespeichert!",
-                            bot_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
-                            bot_creation_failed: "Assistent konnte nicht erstellt werden",
+                            assistant_saved_success: "Assistent erfolgreich gespeichert!",
+                            assistant_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
+                            assistant_creation_failed: "Assistent konnte nicht erstellt werden",
                             save_config_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
-                            bot_save_failed: "Speichern des Assistenten fehlgeschlagen",
-                            save_bot_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
-                            bot_generated_success: "Assistent erfolgreich generiert!",
-                            bot_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
-                            bot_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen"
+                            assistant_save_failed: "Speichern des Assistenten fehlgeschlagen",
+                            save_assistant_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
+                            assistant_generated_success: "Assistent erfolgreich generiert!",
+                            assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
+                            assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen"
                         },
-                        edit_bot_dialog: {
+                        edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
-                            bot_title: "Titel",
-                            bot_description: "Beschreibung",
+                            assistant_title: "Titel",
+                            assistant_description: "Beschreibung",
                             system_prompt: "System-Prompt",
                             advanced_settings: "Erweiterte Einstellungen",
                             hide_advanced_settings: "Erweiterte Einstellungen ausblenden",
@@ -349,7 +349,7 @@ i18n
                             back: "Zurück",
                             save: "Speichern",
                             saved_successfully: "Erfolgreich gespeichert!",
-                            bot_saved_description: "Der Assistent {{botName}} wurde erfolgreich gespeichert.",
+                            assistant_saved_description: "Der Assistent {{assistantName}} wurde erfolgreich gespeichert.",
                             // Stepper step titles
                             step_title: "Titel",
                             step_description: "Beschreibung",
@@ -367,14 +367,14 @@ i18n
                             close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren.",
                             cancel: "Abbrechen"
                         },
-                        publish_bot_dialog: {
-                            publish_bot_success: "Bot erfolgreich veröffentlicht",
-                            publish_bot_success_message: "Der Bot '{{title}}' wurde erfolgreich veröffentlicht"
+                        publish_assistant_dialog: {
+                            publish_assistant_success: "Assistent erfolgreich veröffentlicht",
+                            publish_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich veröffentlicht"
                         },
-                        search_bot_button: {
-                            search_bots: "Assistenten durchsuchen"
+                        search_assistant_button: {
+                            search_assistants: "Assistenten durchsuchen"
                         },
-                        community_bots: {
+                        community_assistants: {
                             title: "Community Assistenten", // Deutsch
                             search: "Assistenten durchsuchen",
                             filter_by_tag: "Nach Tag filtern",
@@ -419,16 +419,16 @@ i18n
                     header: {
                         chat: "Chat",
                         nutzungsbedingungen: "Terms of use",
-                        create_bot: "Create assistant"
+                        create_assistant: "Create assistant"
                     },
                     menu: {
                         go_to_tutorials_tooltip: "Show tutorials and guides for MUCGPT",
                         go_to_tutorials: "Get to know MUCGPT",
                         go_to_tutorials_aria: "Tutorials and guides for MUCGPT",
                         chat_header: "Hello {{user}}, what are you planning today?",
-                        own_bots: "Local Assistants", // Englisch
-                        community_bots: "Community Assistants",
-                        no_bots: "No Assistants found",
+                        own_assistants: "Local Assistants", // Englisch
+                        community_assistants: "Community Assistants",
+                        no_assistants: "No Assistants found",
                         soon: "In Development...",
                         owned: "Owned:",
                         subscribed: "Subscribed:",
@@ -437,12 +437,12 @@ i18n
                         go_to_chat: "Go to chat",
                         go_to_chat_tooltip: "Navigate directly to chat page without entering a question",
                         go_to_chat_aria: "Navigate directly to chat",
-                        bots_section: "Bot management",
-                        own_bots_list: "Your bots",
-                        owned_bots_list: "Your community bots",
-                        subscribed_bots_list: "Subscribed community bots",
-                        select_bot_aria: "Select bot: {{title}}",
-                        share_bot_aria: "Share bot: {{title}}"
+                        assistants_section: "Assistant management",
+                        own_assistants_list: "Your assistants",
+                        owned_assistants_list: "Your community assistants",
+                        subscribed_assistants_list: "Subscribed community assistants",
+                        select_assistant_aria: "Select assistant: {{title}}",
+                        share_assistant_aria: "Share assistant: {{title}}"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -498,32 +498,32 @@ i18n
                             configuration_error: "Configuration error"
                         }
                     },
-                    create_bot: {
+                    create_assistant: {
                         title: "Title",
                         description: "Description",
                         prompt: "System prompt",
                         create: "Create"
                     },
                     components: {
-                        bot_chat: {
-                            load_bot_failed: "Bot could not be loaded",
-                            bot_not_found: "Bot was not found",
-                            load_bot_failed_message: "An error occurred while loading the bot",
+                        assistant_chat: {
+                            load_assistant_failed: "Assistant could not be loaded",
+                            assistant_not_found: "Assistant was not found",
+                            load_assistant_failed_message: "An error occurred while loading the assistant",
                             load_chat_failed: "Chat could not be loaded",
                             load_chat_failed_message: "An error occurred while loading the chat history",
 
-                            delete_bot_success: "Bot has been deleted",
-                            delete_bot_success_message: "The bot '{{title}}' has been successfully deleted",
-                            delete_bot_failed: "Bot could not be deleted",
-                            delete_bot_failed_message: "An error occurred while deleting the bot",
+                            delete_assistant_success: "Assistant has been deleted",
+                            delete_assistant_success_message: "The assistant '{{title}}' has been successfully deleted",
+                            delete_assistant_failed: "Assistant could not be deleted",
+                            delete_assistant_failed_message: "An error occurred while deleting the assistant",
 
-                            update_bot_success: "Bot has been updated",
-                            update_bot_success_message: "The bot '{{title}}' has been successfully updated",
-                            update_bot_failed: "Bot could not be updated",
-                            update_bot_failed_message: "An error occurred while updating the bot"
+                            update_assistant_success: "Assistant has been updated",
+                            update_assistant_success_message: "The assistant '{{title}}' has been successfully updated",
+                            update_assistant_failed: "Assistant could not be updated",
+                            update_assistant_failed_message: "An error occurred while updating the assistant"
                         },
-                        bot_stats: {
-                            title: "Bot Statistics",
+                        assistant_stats: {
+                            title: "Assistant Statistics",
                             visibility_label: "Visibility:",
                             visibility_visible: "Visible",
                             visibility_invisible: "Invisible",
@@ -535,13 +535,13 @@ i18n
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "Subscribe to Assistant",
-                            subscribe_message: "You have not yet subscribed to the assistant '{{botTitle}}'. Would you like to subscribe now?",
+                            subscribe_message: "You have not yet subscribed to the assistant '{{assistantTitle}}'. Would you like to subscribe now?",
                             subscribe_info: "By subscribing, you gain access to all features of this assistant.",
                             subscribe_button: "Subscribe",
                             subscribe_success: "Successfully subscribed",
-                            subscribe_success_message: "You have successfully subscribed to the assistant '{{botTitle}}'",
+                            subscribe_success_message: "You have successfully subscribed to the assistant '{{assistantTitle}}'",
                             no_access_title: "No Access",
-                            no_access_message: "You do not have access to the assistant '{{botTitle}}'.",
+                            no_access_message: "You do not have access to the assistant '{{assistantTitle}}'.",
                             no_access_info: "Please contact the creator of the assistant to gain access."
                         },
                         department_dropdown: {
@@ -635,7 +635,7 @@ i18n
                             system_prompt_info:
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
-                        botsettingsdrawer: {
+                        assistantsettingsdrawer: {
                             expand: "Expand view",
                             collapse: "Collapse view",
                             delete: "Delete assistant",
@@ -648,9 +648,9 @@ i18n
                             publish: "Publish",
                             unpublish: "Unpublish",
                             deleteDialog: {
-                                title: "Delete Bot",
-                                content: "Are you sure you want to delete the bot? This action cannot be undone.",
-                                unpublish: "Are you sure you want to unpublish the bot? This will make it unavailable to others.",
+                                title: "Delete Assistant",
+                                content: "Are you sure you want to delete the assistant? This action cannot be undone.",
+                                unpublish: "Are you sure you want to unpublish the assistant? This will make it unavailable to others.",
                                 remove: "Are you sure you want to remove the assistant? This will delete all chats with this assistant.",
                                 confirm: "Yes",
                                 cancel: "No"
@@ -692,10 +692,10 @@ i18n
                             loadMore: "Load more",
                             more: "more"
                         },
-                        add_bot_button: {
-                            add_bot: "Create your own assistent"
+                        add_assistant_button: {
+                            add_assistant: "Create your own assistant"
                         },
-                        create_bot_dialog: {
+                        create_assistant_dialog: {
                             what_function: "What should your assistant be able to do?",
                             generating_prompt: "Generating prompt...",
                             dismiss: "Cancel",
@@ -705,20 +705,20 @@ i18n
                             save: "Save",
                             describe: "Describe the function...",
                             skip: "Skip",
-                            bot_saved_success: "Assistant saved successfully!",
-                            bot_saved_message: 'Your assistant "{{title}}" has been created and saved.',
-                            bot_creation_failed: "Assistant could not be created",
+                            assistant_saved_success: "Assistant saved successfully!",
+                            assistant_saved_message: 'Your assistant "{{title}}" has been created and saved.',
+                            assistant_creation_failed: "Assistant could not be created",
                             save_config_failed: "Failed to save assistant configuration",
-                            bot_save_failed: "Failed to save assistant",
-                            save_bot_failed: "Failed to save assistant configuration",
-                            bot_generated_success: "Assistant generated successfully!",
-                            bot_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
-                            bot_generation_failed: "Failed to generate assistant configuration"
+                            assistant_save_failed: "Failed to save assistant",
+                            save_assistant_failed: "Failed to save assistant configuration",
+                            assistant_generated_success: "Assistant generated successfully!",
+                            assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
+                            assistant_generation_failed: "Failed to generate assistant configuration"
                         },
-                        edit_bot_dialog: {
+                        edit_assistant_dialog: {
                             title: "Edit Assistant",
-                            bot_title: "Title",
-                            bot_description: "Description",
+                            assistant_title: "Title",
+                            assistant_description: "Description",
                             system_prompt: "System Prompt",
                             advanced_settings: "Advanced Settings",
                             hide_advanced_settings: "Hide Advanced Settings",
@@ -748,7 +748,7 @@ i18n
                             back: "Back",
                             save: "Save",
                             saved_successfully: "Succesfully saved!",
-                            bot_saved_description: "The assistant {{botName}} has been successfully saved.",
+                            assistant_saved_description: "The assistant {{assistantName}} has been successfully saved.",
                             step_title: "Title",
                             step_description: "Description",
                             step_system_prompt: "System Prompt",
@@ -763,14 +763,14 @@ i18n
                             close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost.",
                             cancel: "Cancel"
                         },
-                        publish_bot_dialog: {
-                            publish_bot_success: "Bot published successfully",
-                            publish_bot_success_message: "The bot '{{title}}' has been published successfully"
+                        publish_assistant_dialog: {
+                            publish_assistant_success: "Assistant published successfully",
+                            publish_assistant_success_message: "The assistant '{{title}}' has been published successfully"
                         },
-                        search_bot_button: {
-                            search_bots: "Search assistants"
+                        search_assistant_button: {
+                            search_assistants: "Search assistants"
                         },
-                        community_bots: {
+                        community_assistants: {
                             title: "Community Assistants", // Englisch
                             search: "Search assistants",
                             filter_by_tag: "Filter by tag",
@@ -815,7 +815,7 @@ i18n
                     header: {
                         chat: "Redn",
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
-                        create_bot: "Assistenten erstoin"
+                        create_assistant: "Assistenten erstoin"
                     },
                     menu: {
                         go_to_tutorials_tooltip: "Zeig Tutorials und Anleitungen für MUCGPT",
@@ -823,9 +823,9 @@ i18n
 
                         go_to_tutorials_aria: "Tutorials und Anleitungen für MUCGPT",
                         chat_header: "Griaß di {{user}}, wos host heid vor?",
-                        own_bots: "Lokale Assitentn", // Bairisch
-                        community_bots: "Community Assistentn",
-                        no_bots: "Koane Assitentn gfundn",
+                        own_assistants: "Lokale Assitentn", // Bairisch
+                        community_assistants: "Community Assistentn",
+                        no_assistants: "Koane Assitentn gfundn",
                         soon: "In Entwicklung...",
                         owned: "Eigene:",
                         subscribed: "Abonnierte:",
@@ -834,12 +834,12 @@ i18n
                         go_to_chat: "Glei zum Chat",
                         go_to_chat_tooltip: "Glei auf’d Chat-Seit geh, ganz ohne Frog eingeben",
                         go_to_chat_aria: "Glei zum Chat geh",
-                        bots_section: "Bot-Verwaltung",
-                        own_bots_list: "Deina Bots",
-                        owned_bots_list: "Deina Community-Bots",
-                        subscribed_bots_list: "Abonniert Community-Bots",
-                        select_bot_aria: "Bot aussuacha: {{title}}",
-                        share_bot_aria: "Bot teilen: {{title}}"
+                        assistants_section: "Assistenten-Verwaltung",
+                        own_assistants_list: "Deina Assistentn",
+                        owned_assistants_list: "Deina Community-Assistentn",
+                        subscribed_assistants_list: "Abonniert Community-Assistentn",
+                        select_assistant_aria: "Assistent aussuacha: {{title}}",
+                        share_assistant_aria: "Assistent teilen: {{title}}"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -896,32 +896,32 @@ i18n
                         fixed: "Fehla beseitigt",
                         changed: "Änderunga"
                     },
-                    create_bot: {
+                    create_assistant: {
                         title: "Titel",
                         description: "Beschreibung",
                         prompt: "System Prompt",
                         create: "Erstellen"
                     },
                     components: {
-                        bot_chat: {
-                            load_bot_failed: "Bot konnt ned geladen werd'n",
-                            bot_not_found: "Bot wurde ned g'funden",
-                            load_bot_failed_message: "Beim Laden vom Bot is a Fehler aufgetreten",
+                        assistant_chat: {
+                            load_assistant_failed: "Assistent konnt ned geladen werd'n",
+                            assistant_not_found: "Assistent wurde ned g'funden",
+                            load_assistant_failed_message: "Beim Laden vom Assistenten is a Fehler aufgetreten",
                             load_chat_failed: "Chat konnt ned geladen werd'n",
                             load_chat_failed_message: "Beim Laden vom Chatverlauf is a Fehler aufgetreten",
 
-                            delete_bot_success: "Bot is g'schufft worden",
-                            delete_bot_success_message: "Da Bot '{{title}}' is erfolgreich g'schufft worden",
-                            delete_bot_failed: "Bot konnt ned g'schufft werd'n",
-                            delete_bot_failed_message: "Beim Löschn vom Bot is a Fehler aufgetreten",
+                            delete_assistant_success: "Assistent is g'schufft worden",
+                            delete_assistant_success_message: "Da Assistent '{{title}}' is erfolgreich g'schufft worden",
+                            delete_assistant_failed: "Assistent konnt ned g'schufft werd'n",
+                            delete_assistant_failed_message: "Beim Löschn vom Assistenten is a Fehler aufgetreten",
 
-                            update_bot_success: "Bot is aktualisiert worden",
-                            update_bot_success_message: "Da Bot '{{title}}' is erfolgreich aktualisiert worden",
-                            update_bot_failed: "Bot konnt ned aktualisiert werd'n",
-                            update_bot_failed_message: "Beim Aktualisieren vom Bot is a Fehler aufgetreten"
+                            update_assistant_success: "Assistent is aktualisiert worden",
+                            update_assistant_success_message: "Da Assistent '{{title}}' is erfolgreich aktualisiert worden",
+                            update_assistant_failed: "Assistent konnt ned aktualisiert werd'n",
+                            update_assistant_failed_message: "Beim Aktualisieren vom Assistenten is a Fehler aufgetreten"
                         },
-                        bot_stats: {
-                            title: "Bot-Statistikn",
+                        assistant_stats: {
+                            title: "Assistenten-Statistikn",
                             visibility_label: "Sichtbarkeit:",
                             visibility_visible: "Sichtbar",
                             visibility_invisible: "Unsichtbar",
@@ -933,13 +933,13 @@ i18n
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "Assistenten abonnieren",
-                            subscribe_message: "Du hosd'n Assistenten '{{botTitle}}' no ned abonniert. Möchst'n jetzt abonnieren?",
+                            subscribe_message: "Du hosd'n Assistenten '{{assistantTitle}}' no ned abonniert. Möchst'n jetzt abonnieren?",
                             subscribe_info: "Durch's Abonnieren kriagst Zugriff auf alle Funktionen von dem Assistenten.",
                             subscribe_button: "Abonnieren",
                             subscribe_success: "Erfolgreich abonniert",
-                            subscribe_success_message: "Du hosd'n Assistenten '{{botTitle}}' erfolgreich abonniert",
+                            subscribe_success_message: "Du hosd'n Assistenten '{{assistantTitle}}' erfolgreich abonniert",
                             no_access_title: "Koa Zugriff",
-                            no_access_message: "Du hosd koan Zugriff auf'n Assistenten '{{botTitle}}'.",
+                            no_access_message: "Du hosd koan Zugriff auf'n Assistenten '{{assistantTitle}}'.",
                             no_access_info: "Bitte wend di an'n Ersteller vom Assistenten, damit'd Zugriff kriagst."
                         },
                         department_dropdown: {
@@ -1033,7 +1033,7 @@ i18n
                             system_prompt_info:
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
                         },
-                        botsettingsdrawer: {
+                        assistantsettingsdrawer: {
                             expand: "Ansicht erweitern",
                             collapse: "Ansicht einklapp'n",
                             delete: "Assistent löschn",
@@ -1046,9 +1046,9 @@ i18n
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
                             deleteDialog: {
-                                title: "Bot Löschn",
-                                content: "Wuißt du den Bot echt löschn? Des ko nimma rückgängig gmocht werdn.",
-                                unpublish: "Wuißt du de Veröffentlichung vom Bot echt aufheb'n? Dann könn'n andere den nimma nutzen.",
+                                title: "Assistent Löschn",
+                                content: "Wuißt du den Assistenten echt löschn? Des ko nimma rückgängig gmocht werdn.",
+                                unpublish: "Wuißt du de Veröffentlichung vom Assistenten echt aufheb'n? Dann könn'n andere den nimma nutzen.",
                                 remove: "Wuißt du den Assistenten echt entfern'n? Dadurch werdn alle Chats mit dem Assistenten glöscht.",
                                 confirm: "Ja",
                                 cancel: "Na"
@@ -1090,10 +1090,10 @@ i18n
                             loadMore: "Mehr loden",
                             more: "mehr"
                         },
-                        add_bot_button: {
-                            add_bot: "Erstell dein eigenen Assistenten"
+                        add_assistant_button: {
+                            add_assistant: "Erstell dein eigenen Assistenten"
                         },
-                        create_bot_dialog: {
+                        create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
                             generating_prompt: "Prompt wird erstellt...",
                             dismiss: "Abbrechen",
@@ -1103,20 +1103,20 @@ i18n
                             save: "Speichern",
                             describe: "Beschreib die Funktion...",
                             skip: "Übaspringa",
-                            bot_saved_success: "Assistent erfolgreich gspeichert!",
-                            bot_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
-                            bot_creation_failed: "Assistent konnt ned erstellt werdn",
+                            assistant_saved_success: "Assistent erfolgreich gspeichert!",
+                            assistant_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
+                            assistant_creation_failed: "Assistent konnt ned erstellt werdn",
                             save_config_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
-                            bot_save_failed: "Speichern vom Assistenten is fehlgschlogn",
-                            save_bot_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
-                            bot_generated_success: "Assistent erfolgreich generiert!",
-                            bot_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
-                            bot_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn"
+                            assistant_save_failed: "Speichern vom Assistenten is fehlgschlogn",
+                            save_assistant_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
+                            assistant_generated_success: "Assistent erfolgreich generiert!",
+                            assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
+                            assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn"
                         },
-                        edit_bot_dialog: {
+                        edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
-                            bot_title: "Titel",
-                            bot_description: "Beschreibung",
+                            assistant_title: "Titel",
+                            assistant_description: "Beschreibung",
                             system_prompt: "System-Prompt",
                             advanced_settings: "Erweiterte Einstellungen",
                             hide_advanced_settings: "Erweiterte Einstellungen vaberg",
@@ -1146,7 +1146,7 @@ i18n
                             back: "Zruck",
                             save: "Speichan",
                             saved_successfully: "Erfolgreich gspeichert!",
-                            bot_saved_description: "Der Assistent {{botName}} is jetzt erfolgreich g'speichert.",
+                            assistant_saved_description: "Der Assistent {{assistantName}} is jetzt erfolgreich g'speichert.",
                             // Stepper step titles
                             step_title: "Titel",
                             step_description: "Beschreibung",
@@ -1164,14 +1164,14 @@ i18n
                             close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn.",
                             cancel: "Obbrecha"
                         },
-                        publish_bot_dialog: {
-                            publish_bot_success: "Bot erfolgreich veröffentlicht",
-                            publish_bot_success_message: "Da Bot '{{title}}' is erfolgreich veröffentlicht worn"
+                        publish_assistant_dialog: {
+                            publish_assistant_success: "Assistent erfolgreich veröffentlicht",
+                            publish_assistant_success_message: "Da Assistent '{{title}}' is erfolgreich veröffentlicht worn"
                         },
-                        search_bot_button: {
-                            search_bots: "Assistentn durchschaun"
+                        search_assistant_button: {
+                            search_assistants: "Assistentn durchschaun"
                         },
-                        community_bots: {
+                        community_assistants: {
                             title: "Community Assistentn", // Bairisch
                             search: "Assistentn durchschaun",
                             filter_by_tag: "Noch Tag filtern",
@@ -1222,9 +1222,9 @@ i18n
                         go_to_tutorials: "Découvrez MUCGPT",
                         go_to_tutorials_aria: "Tutoriels et guides pour MUCGPT",
                         chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
-                        own_bots: "Assistants Locaux", // French
-                        community_bots: "Assistants Communautaires",
-                        no_bots: "Aucun Assistant trouvé",
+                        own_assistants: "Assistants Locaux", // French
+                        community_assistants: "Assistants Communautaires",
+                        no_assistants: "Aucun Assistant trouvé",
                         soon: "En Développement...",
                         owned: "Possédés:",
                         subscribed: "Abonnés:",
@@ -1233,12 +1233,12 @@ i18n
                         go_to_chat: "Aller au chat",
                         go_to_chat_tooltip: "Accéder directement à la page du chat sans saisir de question",
                         go_to_chat_aria: "Accéder directement au chat",
-                        bots_section: "Gestion des bots",
-                        own_bots_list: "Vos bots",
-                        owned_bots_list: "Vos bots communautaires",
-                        subscribed_bots_list: "Bots communautaires abonnés",
-                        select_bot_aria: "Sélectionner le bot : {{title}}",
-                        share_bot_aria: "Partager le bot : {{title}}"
+                        assistants_section: "Gestion des assistants",
+                        own_assistants_list: "Vos assistants",
+                        owned_assistants_list: "Vos assistants communautaires",
+                        subscribed_assistants_list: "Assistants communautaires abonnés",
+                        select_assistant_aria: "Sélectionner l'assistant : {{title}}",
+                        share_assistant_aria: "Partager l'assistant : {{title}}"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1295,32 +1295,32 @@ i18n
                             configuration_error: "Erreur de configuration"
                         }
                     },
-                    create_bot: {
+                    create_assistant: {
                         title: "Titre",
                         description: "Description",
                         prompt: "System prompt",
                         create: "Créer"
                     },
                     components: {
-                        bot_chat: {
-                            load_bot_failed: "Le bot n'a pas pu être chargé",
-                            bot_not_found: "Le bot n'a pas été trouvé",
-                            load_bot_failed_message: "Une erreur s'est produite lors du chargement du bot",
+                        assistant_chat: {
+                            load_assistant_failed: "L'assistant n'a pas pu être chargé",
+                            assistant_not_found: "L'assistant n'a pas été trouvé",
+                            load_assistant_failed_message: "Une erreur s'est produite lors du chargement de l'assistant",
                             load_chat_failed: "Le chat n'a pas pu être chargé",
                             load_chat_failed_message: "Une erreur s'est produite lors du chargement de l'historique du chat",
 
-                            delete_bot_success: "Le bot a été supprimé",
-                            delete_bot_success_message: "Le bot '{{title}}' a été supprimé avec succès",
-                            delete_bot_failed: "Le bot n'a pas pu être supprimé",
-                            delete_bot_failed_message: "Une erreur s'est produite lors de la suppression du bot",
+                            delete_assistant_success: "L'assistant a été supprimé",
+                            delete_assistant_success_message: "L'assistant '{{title}}' a été supprimé avec succès",
+                            delete_assistant_failed: "L'assistant n'a pas pu être supprimé",
+                            delete_assistant_failed_message: "Une erreur s'est produite lors de la suppression de l'assistant",
 
-                            update_bot_success: "Le bot a été mis à jour",
-                            update_bot_success_message: "Le bot '{{title}}' a été mis à jour avec succès",
-                            update_bot_failed: "Le bot n'a pas pu être mis à jour",
-                            update_bot_failed_message: "Une erreur s'est produite lors de la mise à jour du bot"
+                            update_assistant_success: "L'assistant a été mis à jour",
+                            update_assistant_success_message: "L'assistant '{{title}}' a été mis à jour avec succès",
+                            update_assistant_failed: "L'assistant n'a pas pu être mis à jour",
+                            update_assistant_failed_message: "Une erreur s'est produite lors de la mise à jour de l'assistant"
                         },
-                        bot_stats: {
-                            title: "Statistiques du Bot",
+                        assistant_stats: {
+                            title: "Statistiques de l'Assistant",
                             visibility_label: "Visibilité:",
                             visibility_visible: "Visible",
                             visibility_invisible: "Invisible",
@@ -1332,13 +1332,13 @@ i18n
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "S'abonner à l'assistant",
-                            subscribe_message: "Vous n'êtes pas encore abonné à l'assistant '{{botTitle}}'. Souhaitez-vous vous abonner maintenant?",
+                            subscribe_message: "Vous n'êtes pas encore abonné à l'assistant '{{assistantTitle}}'. Souhaitez-vous vous abonner maintenant?",
                             subscribe_info: "En vous abonnant, vous accédez à toutes les fonctionnalités de cet assistant.",
                             subscribe_button: "S'abonner",
                             subscribe_success: "Abonnement réussi",
-                            subscribe_success_message: "Vous vous êtes abonné avec succès à l'assistant '{{botTitle}}'",
+                            subscribe_success_message: "Vous vous êtes abonné avec succès à l'assistant '{{assistantTitle}}'",
                             no_access_title: "Aucun accès",
-                            no_access_message: "Vous n'avez pas accès à l'assistant '{{botTitle}}'.",
+                            no_access_message: "Vous n'avez pas accès à l'assistant '{{assistantTitle}}'.",
                             no_access_info: "Veuillez contacter le créateur de l'assistant pour obtenir l'accès."
                         },
                         department_dropdown: {
@@ -1432,7 +1432,7 @@ i18n
                             system_prompt_info:
                                 "sont des requêtes ou des instructions prédéfinies destinées à rendre les réponses de MUCGPT plus ciblées et contrôlées. L'IA prend souvent un rôle spécifique, répond dans un format particulier ou respecte d'autres contraintes."
                         },
-                        botsettingsdrawer: {
+                        assistantsettingsdrawer: {
                             expand: "Développer la vue",
                             collapse: "Réduire la vue",
                             delete: "Supprimer l'assistant",
@@ -1445,9 +1445,9 @@ i18n
                             publish: "Publier",
                             unpublish: "Dépublier",
                             deleteDialog: {
-                                title: "Supprimer le Bot",
-                                content: "Êtes-vous sûr de vouloir supprimer le bot ? Cette action ne peut pas être annulée.",
-                                unpublish: "Êtes-vous sûr de vouloir dépublier le bot ? Il ne sera plus disponible pour les autres.",
+                                title: "Supprimer l'Assistant",
+                                content: "Êtes-vous sûr de vouloir supprimer l'assistant ? Cette action ne peut pas être annulée.",
+                                unpublish: "Êtes-vous sûr de vouloir dépublier l'assistant ? Il ne sera plus disponible pour les autres.",
                                 remove: "Êtes-vous sûr de vouloir retirer l'assistant ? Cela supprimera toutes les conversations avec cet assistant.",
                                 confirm: "Oui",
                                 cancel: "Non"
@@ -1489,10 +1489,10 @@ i18n
                             loadMore: "Charger plus",
                             more: "plus"
                         },
-                        add_bot_button: {
-                            add_bot: "Crée ton propre assistant"
+                        add_assistant_button: {
+                            add_assistant: "Crée ton propre assistant"
                         },
-                        create_bot_dialog: {
+                        create_assistant_dialog: {
                             what_function: "Que doit pouvoir faire votre assistant?",
                             generating_prompt: "Génération du prompt...",
                             dismiss: "Annuler",
@@ -1502,20 +1502,21 @@ i18n
                             save: "Enregistrer",
                             describe: "Décrivez la fonction...",
                             skip: "Passer",
-                            bot_saved_success: "Assistant enregistré avec succès!",
-                            bot_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
-                            bot_creation_failed: "L'assistant n'a pas pu être créé",
+                            assistant_saved_success: "Assistant enregistré avec succès!",
+                            assistant_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
+                            assistant_creation_failed: "L'assistant n'a pas pu être créé",
                             save_config_failed: "Échec de l'enregistrement de la configuration de l'assistant",
-                            bot_save_failed: "Échec de l'enregistrement de l'assistant",
-                            save_bot_failed: "Échec de l'enregistrement de la configuration de l'assistant",
-                            bot_generated_success: "Assistant généré avec succès!",
-                            bot_generated_message: "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
-                            bot_generation_failed: "Échec de la génération de la configuration de l'assistant"
+                            assistant_save_failed: "Échec de l'enregistrement de l'assistant",
+                            save_assistant_failed: "Échec de l'enregistrement de la configuration de l'assistant",
+                            assistant_generated_success: "Assistant généré avec succès!",
+                            assistant_generated_message:
+                                "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
+                            assistant_generation_failed: "Échec de la génération de la configuration de l'assistant"
                         },
-                        edit_bot_dialog: {
+                        edit_assistant_dialog: {
                             title: "Modifier l'assistant",
-                            bot_title: "Titre",
-                            bot_description: "Description",
+                            assistant_title: "Titre",
+                            assistant_description: "Description",
                             system_prompt: "Prompt système",
                             advanced_settings: "Paramètres avancés",
                             hide_advanced_settings: "Masquer les paramètres avancés",
@@ -1545,7 +1546,7 @@ i18n
                             back: "Retour",
                             save: "Enregistrer",
                             saved_successfully: "Enregistré avec succès!",
-                            bot_saved_description: "L'assistant {{botName}} a été enregistré avec succès.",
+                            assistant_saved_description: "L'assistant {{assistantName}} a été enregistré avec succès.",
                             // Stepper step titles
                             step_title: "Titre",
                             step_description: "Description",
@@ -1563,14 +1564,14 @@ i18n
                             close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues.",
                             cancel: "Annuler"
                         },
-                        publish_bot_dialog: {
-                            publish_bot_success: "Bot publié avec succès",
-                            publish_bot_success_message: "Le bot '{{title}}' a été publié avec succès"
+                        publish_assistant_dialog: {
+                            publish_assistant_success: "Assistant publié avec succès",
+                            publish_assistant_success_message: "L'assistant '{{title}}' a été publié avec succès"
                         },
-                        search_bot_button: {
-                            search_bots: "Rechercher des assistants"
+                        search_assistant_button: {
+                            search_assistants: "Rechercher des assistants"
                         },
-                        community_bots: {
+                        community_assistants: {
                             title: "Assistants Communautaires",
                             search: "Rechercher des assistants",
                             filter_by_tag: "Filtrer par tag",
@@ -1621,9 +1622,9 @@ i18n
                         go_to_tutorials: "Познайомтеся з MUCGPT",
                         go_to_tutorials_aria: "Посібники та інструкції для MUCGPT",
                         chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
-                        own_bots: "Локальні Асистенти", // Ukrainisch
-                        community_bots: "Громадські Асистенти",
-                        no_bots: "Асистентів не знайдено",
+                        own_assistants: "Локальні Асистенти", // Ukrainisch
+                        community_assistants: "Громадські Асистенти",
+                        no_assistants: "Асистентів не знайдено",
                         soon: "В розробці...",
                         owned: "Власні:",
                         subscribed: "Підписані:",
@@ -1632,12 +1633,12 @@ i18n
                         go_to_chat: "Перейти до чату",
                         go_to_chat_tooltip: "Перейти прямо на сторінку чату без введення питання",
                         go_to_chat_aria: "Перейти прямо до чату",
-                        bots_section: "Управління ботами",
-                        own_bots_list: "Ваші боти",
-                        owned_bots_list: "Ваші боти спільноти",
-                        subscribed_bots_list: "Підписані боти спільноти",
-                        select_bot_aria: "Вибрати бота: {{title}}",
-                        share_bot_aria: "Поділитися ботом: {{title}}"
+                        assistants_section: "Управління асистентами",
+                        own_assistants_list: "Ваші асистенти",
+                        owned_assistants_list: "Ваші асистенти спільноти",
+                        subscribed_assistants_list: "Підписані асистенти спільноти",
+                        select_assistant_aria: "Вибрати асистента: {{title}}",
+                        share_assistant_aria: "Поділитися асистентом: {{title}}"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
@@ -1694,31 +1695,31 @@ i18n
                             configuration_error: "Помилка конфігурації"
                         }
                     },
-                    create_bot: {
+                    create_assistant: {
                         title: "Заголовок",
                         description: "Опис",
                         prompt: "Системний запит",
                         create: "Створити"
                     },
                     components: {
-                        bot_chat: {
-                            load_bot_failed: "Не вдалося завантажити бота",
-                            bot_not_found: "Бота не знайдено",
-                            load_bot_failed_message: "Сталася помилка під час завантаження бота",
+                        assistant_chat: {
+                            load_assistant_failed: "Не вдалося завантажити асистента",
+                            assistant_not_found: "Асистента не знайдено",
+                            load_assistant_failed_message: "Сталася помилка під час завантаження асистента",
                             load_chat_failed: "Не вдалося завантажити чат",
                             load_chat_failed_message: "Сталася помилка під час завантаження історії чату",
 
-                            delete_bot_success: "Бота було видалено",
-                            delete_bot_success_message: "Бота '{{title}}' було успішно видалено",
-                            delete_bot_failed: "Не вдалося видалити бота",
-                            delete_bot_failed_message: "Сталася помилка під час видалення бота",
+                            delete_assistant_success: "Асистента було видалено",
+                            delete_assistant_success_message: "Асистента '{{title}}' було успішно видалено",
+                            delete_assistant_failed: "Не вдалося видалити асистента",
+                            delete_assistant_failed_message: "Сталася помилка під час видалення асистента",
 
-                            update_bot_success: "Бота було оновлено",
-                            update_bot_success_message: "Бота '{{title}}' було успішно оновлено",
-                            update_bot_failed: "Не вдалося оновити бота",
-                            update_bot_failed_message: "Сталася помилка під час оновлення бота"
+                            update_assistant_success: "Асистента було оновлено",
+                            update_assistant_success_message: "Асистента '{{title}}' було успішно оновлено",
+                            update_assistant_failed: "Не вдалося оновити асистента",
+                            update_assistant_failed_message: "Сталася помилка під час оновлення асистента"
                         },
-                        bot_stats: {
+                        assistant_stats: {
                             title: "Статистика Бота",
                             visibility_label: "Видимість:",
                             visibility_visible: "Видимий",
@@ -1731,13 +1732,13 @@ i18n
                         },
                         not_subscribed_dialog: {
                             subscribe_title: "Підписатися на асистента",
-                            subscribe_message: "Ви ще не підписані на асистента '{{botTitle}}'. Бажаєте підписатися зараз?",
+                            subscribe_message: "Ви ще не підписані на асистента '{{assistantTitle}}'. Бажаєте підписатися зараз?",
                             subscribe_info: "Підписавшись, ви отримаєте доступ до всіх функцій цього асистента.",
                             subscribe_button: "Підписатися",
                             subscribe_success: "Успішно підписано",
-                            subscribe_success_message: "Ви успішно підписалися на асистента '{{botTitle}}'",
+                            subscribe_success_message: "Ви успішно підписалися на асистента '{{assistantTitle}}'",
                             no_access_title: "Немає доступу",
-                            no_access_message: "У вас немає доступу до асистента '{{botTitle}}'.",
+                            no_access_message: "У вас немає доступу до асистента '{{assistantTitle}}'.",
                             no_access_info: "Будь ласка, зверніться до створювача асистента, щоб отримати доступ."
                         },
                         department_dropdown: {
@@ -1831,7 +1832,7 @@ i18n
                             system_prompt_info:
                                 "це передвизначені запити або вказівки, які спрямовані на точне та контрольоване створення відповідей від MUCGPT. ШІ часто бере на себе певну роль, відповідає в певному форматі або дотримується інших обмежень."
                         },
-                        botsettingsdrawer: {
+                        assistantsettingsdrawer: {
                             expand: "Розгорнути вигляд",
                             collapse: "Згорнути вигляд",
                             delete: "Видалити асистента",
@@ -1888,10 +1889,10 @@ i18n
                             loadMore: "Завантажити більше",
                             more: "більше"
                         },
-                        add_bot_button: {
-                            add_bot: "Створи свого власного асистента"
+                        add_assistant_button: {
+                            add_assistant: "Створи свого власного асистента"
                         },
-                        create_bot_dialog: {
+                        create_assistant_dialog: {
                             what_function: "Що має вміти ваш асистент?",
                             generating_prompt: "Генерація запиту...",
                             dismiss: "Скасувати",
@@ -1901,20 +1902,20 @@ i18n
                             save: "Зберегти",
                             describe: "Опишіть функцію...",
                             skip: "Пропустити",
-                            bot_saved_success: "Асистента успішно збережено!",
-                            bot_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
-                            bot_creation_failed: "Асистента не вдалося створити",
+                            assistant_saved_success: "Асистента успішно збережено!",
+                            assistant_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
+                            assistant_creation_failed: "Асистента не вдалося створити",
                             save_config_failed: "Не вдалося зберегти конфігурацію асистента",
-                            bot_save_failed: "Не вдалося зберегти асистента",
-                            save_bot_failed: "Не вдалося зберегти конфігурацію асистента",
-                            bot_generated_success: "Асистента успішно згенеровано!",
-                            bot_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете її переглянути та налаштувати.",
-                            bot_generation_failed: "Не вдалося згенерувати конфігурацію асистента"
+                            assistant_save_failed: "Не вдалося зберегти асистента",
+                            save_assistant_failed: "Не вдалося зберегти конфігурацію асистента",
+                            assistant_generated_success: "Асистента успішно згенеровано!",
+                            assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете її переглянути та налаштувати.",
+                            assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента"
                         },
-                        edit_bot_dialog: {
+                        edit_assistant_dialog: {
                             title: "Редагувати асистента",
-                            bot_title: "Заголовок",
-                            bot_description: "Опис",
+                            assistant_title: "Заголовок",
+                            assistant_description: "Опис",
                             system_prompt: "Системний запит",
                             advanced_settings: "Розширені налаштування",
                             hide_advanced_settings: "Приховати розширені налаштування",
@@ -1943,7 +1944,7 @@ i18n
                             back: "Назад",
                             save: "Зберегти",
                             saved_successfully: "Успішно збережено!",
-                            bot_saved_description: "Асистент {{botName}} був успішно збережений.",
+                            assistant_saved_description: "Асистент {{assistantName}} був успішно збережений.",
                             // Stepper step titles
                             step_title: "Заголовок",
                             step_description: "Опис",
@@ -1961,14 +1962,14 @@ i18n
                             close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені.",
                             cancel: "Скасувати"
                         },
-                        publish_bot_dialog: {
-                            publish_bot_success: "Бот успішно опублікований",
-                            publish_bot_success_message: "Бот '{{title}}' було успішно опубліковано"
+                        publish_assistant_dialog: {
+                            publish_assistant_success: "Бот успішно опублікований",
+                            publish_assistant_success_message: "Бот '{{title}}' було успішно опубліковано"
                         },
-                        search_bot_button: {
-                            search_bots: "Пошук асистентів"
+                        search_assistant_button: {
+                            search_assistants: "Пошук асистентів"
                         },
-                        community_bots: {
+                        community_assistants: {
                             title: "Громадські Асистенти", // Ukrainisch
                             search: "Пошук асистентів",
                             filter_by_tag: "Фільтрувати за тегом",

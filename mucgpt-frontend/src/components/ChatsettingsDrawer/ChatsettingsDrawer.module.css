@@ -101,7 +101,7 @@
     font-size: var(--fontSizeBase400);
 }
 
-/* Enhanced section organization similar to BotsettingsDrawer */
+/* Enhanced section organization similar to AssistantsettingsDrawer */
 .titleSection {
     padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
@@ -139,7 +139,7 @@
     gap: var(--spacingVerticalS, 8px);
 }
 
-/* Enhanced collapse animation similar to BotsettingsDrawer */
+/* Enhanced collapse animation similar to AssistantsettingsDrawer */
 .collapseContent {
     padding: 0 var(--spacingHorizontalL, 16px) var(--spacingVerticalM, 12px);
     animation: slideDown 0.25s ease-out;
@@ -226,7 +226,7 @@
     margin-bottom: var(--spacingVerticalM, 12px);
 }
 
-/* Enhanced button styling inspired by BotsettingsDrawer */
+/* Enhanced button styling inspired by AssistantsettingsDrawer */
 .actionButton {
     flex: 1;
     min-width: 0;
@@ -267,7 +267,7 @@
     padding-bottom: var(--spacingVerticalL, 16px);
 }
 
-/* Better collapse button styling similar to BotsettingsDrawer */
+/* Better collapse button styling similar to AssistantsettingsDrawer */
 .collapseButton {
     padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalXS, 4px);
     min-width: 32px;

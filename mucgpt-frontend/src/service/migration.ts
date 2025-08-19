@@ -1,8 +1,8 @@
 import { IDBPDatabase, IDBPTransaction } from "idb";
 import { ChatResponse } from "../api";
-import { BOT_STORE, CHAT_STORE, LEGACY_BOT_STORE } from "../constants";
+import { ASSISTANT_STORE, CHAT_STORE, LEGACY_ASSISTANT_STORE } from "../constants";
 import { ChatOptions } from "../pages/chat/Chat";
-import { BotStorageService } from "./botstorage";
+import { AssistantStorageService } from "./assistantstorage";
 import { DBObject, StorageService } from "./storage";
 
 interface LegacyChatObject {
@@ -20,7 +20,7 @@ interface LegacyChatObject {
     };
 }
 
-export interface LegacyBot {
+export interface LegacyAssistant {
     title: string;
     description: string;
     system_message: string;
@@ -29,27 +29,27 @@ export interface LegacyBot {
     temperature: number;
     max_output_tokens: number;
 }
-export async function migrate_old_bots() {
-    const legacy_store = new StorageService<any, any>(LEGACY_BOT_STORE);
+export async function migrate_old_assistants() {
+    const legacy_store = new StorageService<any, any>(LEGACY_ASSISTANT_STORE);
     const db = await legacy_store.connectToDB();
-    const newStore = new BotStorageService(BOT_STORE);
-    if (db.objectStoreNames.contains(LEGACY_BOT_STORE.objectStore_name)) {
-        const oldbots: LegacyBot[] = (await db.getAll(LEGACY_BOT_STORE.objectStore_name)) as LegacyBot[];
-        await db.clear(LEGACY_BOT_STORE.objectStore_name);
-        for (const oldbot of oldbots) {
-            if (oldbot.id == 0 || oldbot.id == 1) continue; //skip the default bots
-            const newBot = {
-                title: oldbot.title,
-                description: oldbot.description,
-                system_message: oldbot.system_message,
-                publish: oldbot.publish,
-                temperature: oldbot.temperature,
-                max_output_tokens: oldbot.max_output_tokens,
-                version: "0", // Set a default version for new bots
+    const newStore = new AssistantStorageService(ASSISTANT_STORE);
+    if (db.objectStoreNames.contains(LEGACY_ASSISTANT_STORE.objectStore_name)) {
+        const oldassistants: LegacyAssistant[] = (await db.getAll(LEGACY_ASSISTANT_STORE.objectStore_name)) as LegacyAssistant[];
+        await db.clear(LEGACY_ASSISTANT_STORE.objectStore_name);
+        for (const oldassistant of oldassistants) {
+            if (oldassistant.id == 0 || oldassistant.id == 1) continue; //skip the default assistants
+            const newAssistant = {
+                title: oldassistant.title,
+                description: oldassistant.description,
+                system_message: oldassistant.system_message,
+                publish: oldassistant.publish,
+                temperature: oldassistant.temperature,
+                max_output_tokens: oldassistant.max_output_tokens,
+                version: "0", // Set a default version for new assistants
                 is_visible: true
             };
-            //save to new bot storage
-            await newStore.createBotConfig(newBot);
+            //save to new assistant storage
+            await newStore.createAssistantConfig(newAssistant);
         }
     }
 }

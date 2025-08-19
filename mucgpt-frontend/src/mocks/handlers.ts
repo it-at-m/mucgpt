@@ -1180,7 +1180,7 @@ export const handlers = [
         await delay(1000);
         return HttpResponse.json(SIMPLY_RESPONSE);
     }),
-    http.post("api/backend/create_bot", async () => {
+    http.post("api/backend/create_assistant", async () => {
         await delay(1000);
         return HttpResponse.json(CREATE_BOT_RESPONSE);
     }),
@@ -1269,7 +1269,7 @@ export const handlers = [
     http.get("/api/backend/departements", () => {
         return HttpResponse.json(["IT", "IT-KI", "IT-KI-AGI", "STAMMTISCH-BREZN-SALZER", "STAMMTISCH"]);
     }),
-    http.post("/api/bot/create", async ({ request }) => {
+    http.post("/api/assistant/create", async ({ request }) => {
         await delay(1000);
         const body = (await request.json()) as any;
 
@@ -1295,12 +1295,12 @@ export const handlers = [
     }),
 
     // Get all community assistants
-    http.get("/api/bot", () => {
+    http.get("/api/assistant", () => {
         return HttpResponse.json(MOCK_ASSISTANTS);
     }),
 
     // Get specific community assistant
-    http.get("/api/bot/:id", ({ params }) => {
+    http.get("/api/assistant/:id", ({ params }) => {
         const { id } = params;
         const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
 
@@ -1312,7 +1312,7 @@ export const handlers = [
     }),
 
     // Update community assistant
-    http.post("/api/bot/:id/update", async ({ params, request }) => {
+    http.post("/api/assistant/:id/update", async ({ params, request }) => {
         await delay(500);
         const { id } = params;
         const body = (await request.json()) as AssistantUpdateInput;
@@ -1355,7 +1355,7 @@ export const handlers = [
     }),
 
     // Delete community assistant
-    http.post("/api/bot/:id/delete", async ({ params }) => {
+    http.post("/api/assistant/:id/delete", async ({ params }) => {
         await delay(300);
         const { id } = params;
         const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
@@ -1374,7 +1374,7 @@ export const handlers = [
     }),
 
     // Get specific version of community assistant
-    http.get("/api/bot/:id/version/:version", ({ params }) => {
+    http.get("/api/assistant/:id/version/:version", ({ params }) => {
         const { id, version } = params;
         const assistant = MOCK_ASSISTANTS.find(a => a.id === id);
 
@@ -1384,7 +1384,7 @@ export const handlers = [
 
         // For mock purposes, return the latest version regardless of version param
         // In a real implementation, you'd fetch the specific version
-        const botVersion = {
+        const assistantVersion = {
             id: assistant.latest_version.id,
             version: parseInt(version as string) || assistant.latest_version.version,
             created_at: assistant.latest_version.created_at,
@@ -1399,17 +1399,17 @@ export const handlers = [
             examples: assistant.latest_version.examples,
             quick_prompts: assistant.latest_version.quick_prompts,
             tags: assistant.latest_version.tags,
-            title: assistant.latest_version.name // Bot interface uses title instead of name
+            title: assistant.latest_version.name // Assistant interface uses title instead of name
         };
 
-        return HttpResponse.json(botVersion);
+        return HttpResponse.json(assistantVersion);
     }),
 
-    // Get owned community bots
-    http.get("/api/user/bots", () => {
+    // Get owned community assistants
+    http.get("/api/user/assistants", () => {
         // Return only the first two assistants as "owned" by the current user
-        const ownedBots = MOCK_ASSISTANTS.slice(0, 2);
-        return HttpResponse.json(ownedBots);
+        const ownedAssistants = MOCK_ASSISTANTS.slice(0, 2);
+        return HttpResponse.json(ownedAssistants);
     }),
 
     http.get("/api/sso/userinfo", () => {

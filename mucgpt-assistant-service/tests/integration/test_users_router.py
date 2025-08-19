@@ -28,9 +28,9 @@ async def create_new_session():
 
 
 @pytest.mark.integration
-def test_get_user_bots_empty(test_client):
-    """Test getting bots for a user when they have none."""
-    response = test_client.get("/user/bots", headers=headers)
+def test_get_user_assistants_empty(test_client):
+    """Test getting assistants for a user when they have none."""
+    response = test_client.get("/user/assistants", headers=headers)
     assert response.status_code == 200
 
     # Validate response structure
@@ -40,108 +40,120 @@ def test_get_user_bots_empty(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_success(test_client):
-    """Test successfully getting bots owned by the authenticated user."""
-    # Create a bot owned by the default test user "test_user_123"
+def test_get_user_assistants_success(test_client):
+    """Test successfully getting assistants owned by the authenticated user."""
+    # Create a assistant owned by the default test user "test_user_123"
     assistant_data = AssistantCreate(
-        name="My Test Bot",
-        system_prompt="A bot for testing.",
+        name="My Test Assistant",
+        system_prompt="A assistant for testing.",
         owner_ids=["test_user_123"],
     )
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = (
+    created_assistant = (
         create_response.json()
-    )  # Create another bot not owned by the test user
+    )  # Create another assistant not owned by the test user
     other_assistant_data = AssistantCreate(
-        name="Other User's Bot",
-        system_prompt="This bot is not mine.",
+        name="Other User's Assistant",
+        system_prompt="This assistant is not mine.",
         owner_ids=["other_user_456"],  # test_user_123 will be auto-added as owner
     )
     create_response_other = test_client.post(
-        "/bot/create", json=other_assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=other_assistant_data.model_dump(), headers=headers
     )
     assert create_response_other.status_code == 200
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
     # Validate response structure
-    assert isinstance(user_bots, list)
+    assert isinstance(user_assistants, list)
 
-    # Both bots should be returned since test_user_123 is auto-added as owner to all bots
-    assert len(user_bots) == 2
+    # Both assistants should be returned since test_user_123 is auto-added as owner to all assistants
+    assert len(user_assistants) == 2
 
-    # Find the specific bot we're testing
-    my_test_bot = None
-    for bot in user_bots:
-        if bot["latest_version"]["name"] == "My Test Bot":
-            my_test_bot = bot
+    # Find the specific assistant we're testing
+    my_test_assistant = None
+    for assistant in user_assistants:
+        if assistant["latest_version"]["name"] == "My Test Assistant":
+            my_test_assistant = assistant
             break
 
-    assert my_test_bot is not None, "Could not find 'My Test Bot' in response"
+    assert my_test_assistant is not None, (
+        "Could not find 'My Test Assistant' in response"
+    )
 
     # Validate using Pydantic models
-    assistant_response = AssistantResponse.model_validate(my_test_bot)
-    assert assistant_response.id == created_bot["id"]
-    assert assistant_response.latest_version.name == "My Test Bot"
+    assistant_response = AssistantResponse.model_validate(my_test_assistant)
+    assert assistant_response.id == created_assistant["id"]
+    assert assistant_response.latest_version.name == "My Test Assistant"
     assert "test_user_123" in assistant_response.owner_ids
 
 
 @pytest.mark.integration
-def test_get_user_bots_multiple_owned(test_client):
-    """Test getting multiple bots owned by the same user."""
-    # Create two bots for the same user
-    bot1_data = AssistantCreate(
-        name="Bot One", system_prompt="First bot.", owner_ids=["test_user_123"]
+def test_get_user_assistants_multiple_owned(test_client):
+    """Test getting multiple assistants owned by the same user."""
+    # Create two assistants for the same user
+    assistant1_data = AssistantCreate(
+        name="Assistant One",
+        system_prompt="First assistant.",
+        owner_ids=["test_user_123"],
     )
-    bot2_data = AssistantCreate(
-        name="Bot Two", system_prompt="Second bot.", owner_ids=["test_user_123"]
+    assistant2_data = AssistantCreate(
+        name="Assistant Two",
+        system_prompt="Second assistant.",
+        owner_ids=["test_user_123"],
     )
 
-    test_client.post("/bot/create", json=bot1_data.model_dump(), headers=headers)
-    test_client.post("/bot/create", json=bot2_data.model_dump(), headers=headers)
+    test_client.post(
+        "/assistant/create", json=assistant1_data.model_dump(), headers=headers
+    )
+    test_client.post(
+        "/assistant/create", json=assistant2_data.model_dump(), headers=headers
+    )
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
     # Validate response structure
-    assert isinstance(user_bots, list)
-    assert len(user_bots) == 2
+    assert isinstance(user_assistants, list)
+    assert len(user_assistants) == 2
 
-    # Validate each bot using Pydantic models
-    for bot in user_bots:
-        assistant_response = AssistantResponse.model_validate(bot)
+    # Validate each assistant using Pydantic models
+    for assistant in user_assistants:
+        assistant_response = AssistantResponse.model_validate(assistant)
         assert assistant_response.id is not None
         assert assistant_response.latest_version is not None
         assert "test_user_123" in assistant_response.owner_ids
 
-    bot_names = {bot["latest_version"]["name"] for bot in user_bots}
-    assert {"Bot One", "Bot Two"} == bot_names
+    assistant_names = {
+        assistant["latest_version"]["name"] for assistant in user_assistants
+    }
+    assert {"Assistant One", "Assistant Two"} == assistant_names
 
 
 @pytest.mark.integration
-def test_get_user_bots_owner_filter_is_strict(test_client):
-    """Test that users get bots where they are owners (including auto-added ownership)."""  # Create assistant with hierarchical access that matches the test user's department
+def test_get_user_assistants_owner_filter_is_strict(test_client):
+    """Test that users get assistants where they are owners (including auto-added ownership)."""  # Create assistant with hierarchical access that matches the test user's department
     assistant_data = AssistantCreate(
-        name="Hierarchical Bot",
-        system_prompt="A bot accessible hierarchically.",
+        name="Hierarchical Assistant",
+        system_prompt="A assistant accessible hierarchically.",
         owner_ids=["another_user"],
         hierarchical_access=["IT-Test-Department"],  # test_user_123 has this role
     )
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
 
-    # User should get this bot because test_user_123 is auto-added as owner during creation
-    response = test_client.get("user/bots", headers=headers)
+    # User should get this assistant because test_user_123 is auto-added as owner during creation
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
 
     # Validate response structure
@@ -149,7 +161,7 @@ def test_get_user_bots_owner_filter_is_strict(test_client):
     assert isinstance(response_data, list)
     assert (
         len(response_data) == 1
-    )  # Should contain the bot because test_user_123 is auto-added as owner
+    )  # Should contain the assistant because test_user_123 is auto-added as owner
 
     # Validate that test_user_123 is indeed an owner
     assistant_response = AssistantResponse.model_validate(response_data[0])
@@ -158,12 +170,12 @@ def test_get_user_bots_owner_filter_is_strict(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_with_complex_data(test_client):
-    """Test getting user bots with complex data structures."""
-    # Create a bot with complex data (tools, examples, quick prompts, etc.)
+def test_get_user_assistants_with_complex_data(test_client):
+    """Test getting user assistants with complex data structures."""
+    # Create a assistant with complex data (tools, examples, quick prompts, etc.)
     complex_assistant_data = AssistantCreate(
-        name="Complex User Bot",
-        description="A complex bot with various features",
+        name="Complex User Assistant",
+        description="A complex assistant with various features",
         system_prompt="You are a complex assistant.",
         owner_ids=["test_user_123"],
         hierarchical_access=["IT", "MANAGEMENT"],
@@ -185,23 +197,23 @@ def test_get_user_bots_with_complex_data(test_client):
     )
 
     create_response = test_client.post(
-        "/bot/create", json=complex_assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=complex_assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
-    assert len(user_bots) == 1
+    assert len(user_assistants) == 1
 
     # Validate complex data using Pydantic models
-    assistant_response = AssistantResponse.model_validate(user_bots[0])
-    assert assistant_response.latest_version.name == "Complex User Bot"
+    assistant_response = AssistantResponse.model_validate(user_assistants[0])
+    assert assistant_response.latest_version.name == "Complex User Assistant"
     assert (
         assistant_response.latest_version.description
-        == "A complex bot with various features"
+        == "A complex assistant with various features"
     )
     assert assistant_response.latest_version.temperature == 0.8
     assert assistant_response.latest_version.max_output_tokens == 2000
@@ -212,19 +224,21 @@ def test_get_user_bots_with_complex_data(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_response_format(test_client):
+def test_get_user_assistants_response_format(test_client):
     """Test that the response format is correct."""
-    # Create a bot for testing
+    # Create a assistant for testing
     assistant_data = AssistantCreate(
-        name="Format Test Bot",
-        system_prompt="You are a format test bot.",
+        name="Format Test Assistant",
+        system_prompt="You are a format test assistant.",
         owner_ids=["test_user_123"],
     )
 
-    test_client.post("bot/create", json=assistant_data.model_dump(), headers=headers)
+    test_client.post(
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
+    )
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
 
     # Validate response structure
@@ -232,9 +246,9 @@ def test_get_user_bots_response_format(test_client):
     assert isinstance(response_data, list)
     assert len(response_data) == 1
 
-    # Validate each bot structure
-    bot = response_data[0]
-    assistant_response = AssistantResponse.model_validate(bot)
+    # Validate each assistant structure
+    assistant = response_data[0]
+    assistant_response = AssistantResponse.model_validate(assistant)
 
     # Check that all required fields are present
     assert assistant_response.id is not None
@@ -258,30 +272,32 @@ def test_get_user_bots_response_format(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_with_unicode_content(test_client):
-    """Test getting user bots with unicode characters."""
+def test_get_user_assistants_with_unicode_content(test_client):
+    """Test getting user assistants with unicode characters."""
     assistant_data = AssistantCreate(
-        name="Unicode Bot 🤖",
-        description="Bot with émojis and spëcial characters: 中文",
+        name="Unicode Assistant 🤖",
+        description="Assistant with émojis and spëcial characters: 中文",
         system_prompt="You are a helpful assistant. Vous êtes très utile! 您好!",
         owner_ids=["test_user_123"],
     )
 
-    test_client.post("bot/create", json=assistant_data.model_dump(), headers=headers)
+    test_client.post(
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
+    )
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
-    assert len(user_bots) == 1
+    assert len(user_assistants) == 1
 
     # Validate unicode content
-    assistant_response = AssistantResponse.model_validate(user_bots[0])
-    assert assistant_response.latest_version.name == "Unicode Bot 🤖"
+    assistant_response = AssistantResponse.model_validate(user_assistants[0])
+    assert assistant_response.latest_version.name == "Unicode Assistant 🤖"
     assert (
         assistant_response.latest_version.description
-        == "Bot with émojis and spëcial characters: 中文"
+        == "Assistant with émojis and spëcial characters: 中文"
     )
     assert (
         assistant_response.latest_version.system_prompt
@@ -290,26 +306,28 @@ def test_get_user_bots_with_unicode_content(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_multiple_owners(test_client):
-    """Test getting bots where user is one of multiple owners."""
-    # Create a bot with multiple owners including the test user
+def test_get_user_assistants_multiple_owners(test_client):
+    """Test getting assistants where user is one of multiple owners."""
+    # Create a assistant with multiple owners including the test user
     assistant_data = AssistantCreate(
-        name="Multi-Owner Bot",
-        system_prompt="You are a multi-owner bot.",
+        name="Multi-Owner Assistant",
+        system_prompt="You are a multi-owner assistant.",
         owner_ids=["test_user_123", "other_user_456", "third_user_789"],
     )
 
-    test_client.post("bot/create", json=assistant_data.model_dump(), headers=headers)
+    test_client.post(
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
+    )
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
-    assert len(user_bots) == 1
+    assert len(user_assistants) == 1
 
     # Validate ownership
-    assistant_response = AssistantResponse.model_validate(user_bots[0])
+    assistant_response = AssistantResponse.model_validate(user_assistants[0])
     assert "test_user_123" in assistant_response.owner_ids
     assert "other_user_456" in assistant_response.owner_ids
     assert "third_user_789" in assistant_response.owner_ids
@@ -317,11 +335,11 @@ def test_get_user_bots_multiple_owners(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_empty_optional_fields(test_client):
-    """Test getting bots with empty optional fields."""
+def test_get_user_assistants_empty_optional_fields(test_client):
+    """Test getting assistants with empty optional fields."""
     assistant_data = AssistantCreate(
-        name="Minimal Bot",
-        system_prompt="You are a minimal bot.",
+        name="Minimal Assistant",
+        system_prompt="You are a minimal assistant.",
         owner_ids=["test_user_123"],
         description="",
         examples=[],
@@ -331,17 +349,19 @@ def test_get_user_bots_empty_optional_fields(test_client):
         hierarchical_access=[],
     )
 
-    test_client.post("bot/create", json=assistant_data.model_dump(), headers=headers)
+    test_client.post(
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
+    )
 
-    # Get user's bots
-    response = test_client.get("user/bots", headers=headers)
+    # Get user's assistants
+    response = test_client.get("user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
-    assert len(user_bots) == 1
+    assert len(user_assistants) == 1
 
     # Validate empty fields
-    assistant_response = AssistantResponse.model_validate(user_bots[0])
+    assistant_response = AssistantResponse.model_validate(user_assistants[0])
     assert assistant_response.latest_version.description == ""
     assert assistant_response.latest_version.examples == []
     assert assistant_response.latest_version.quick_prompts == []
@@ -351,8 +371,8 @@ def test_get_user_bots_empty_optional_fields(test_client):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_user_bots_access_control_repo(test_client, test_db_session):
-    """Test that users can only access bots they own when using repository-created data."""
+async def test_get_user_assistants_access_control_repo(test_client, test_db_session):
+    """Test that users can only access assistants they own when using repository-created data."""
     # Create assistants using repository directly to control ownership precisely
 
     assistant_repo = AssistantRepository(test_db_session)
@@ -367,7 +387,7 @@ async def test_get_user_bots_access_control_repo(test_client, test_db_session):
         assistant=assistant_owned,
         name="My Owned Assistant",
         system_prompt="You are my owned assistant.",
-        description="This bot is owned by test_user_123",
+        description="This assistant is owned by test_user_123",
         temperature=0.7,
         max_output_tokens=1000,
         examples=[],
@@ -385,7 +405,7 @@ async def test_get_user_bots_access_control_repo(test_client, test_db_session):
         assistant=assistant_not_owned,
         name="Not My Assistant",
         system_prompt="You are not my assistant.",
-        description="This bot is owned by other_user_456",
+        description="This assistant is owned by other_user_456",
         temperature=0.8,
         max_output_tokens=1500,
         examples=[],
@@ -403,7 +423,7 @@ async def test_get_user_bots_access_control_repo(test_client, test_db_session):
         assistant=assistant_co_owned,
         name="Co-Owned Assistant",
         system_prompt="You are a co-owned assistant.",
-        description="This bot has multiple owners including test_user_123",
+        description="This assistant has multiple owners including test_user_123",
         temperature=0.5,
         max_output_tokens=800,
         examples=[],
@@ -421,7 +441,7 @@ async def test_get_user_bots_access_control_repo(test_client, test_db_session):
         assistant=assistant_no_owners,
         name="Orphaned Assistant",
         system_prompt="You are an orphaned assistant.",
-        description="This bot has no owners",
+        description="This assistant has no owners",
         temperature=0.6,
         max_output_tokens=900,
         examples=[],
@@ -431,29 +451,31 @@ async def test_get_user_bots_access_control_repo(test_client, test_db_session):
 
     await test_db_session.commit()
 
-    # Get user's bots - should only return bots where test_user_123 is an owner
-    response = test_client.get("/user/bots", headers=headers)
+    # Get user's assistants - should only return assistants where test_user_123 is an owner
+    response = test_client.get("/user/assistants", headers=headers)
     assert response.status_code == 200
 
-    user_bots = response.json()
-    assert isinstance(user_bots, list)
+    user_assistants = response.json()
+    assert isinstance(user_assistants, list)
 
-    # Should return exactly 2 bots: assistant_owned and assistant_co_owned
-    assert len(user_bots) == 2
+    # Should return exactly 2 assistants: assistant_owned and assistant_co_owned
+    assert len(user_assistants) == 2
 
-    # Validate the returned bots
-    returned_names = {bot["latest_version"]["name"] for bot in user_bots}
+    # Validate the returned assistants
+    returned_names = {
+        assistant["latest_version"]["name"] for assistant in user_assistants
+    }
     assert "My Owned Assistant" in returned_names
     assert "Co-Owned Assistant" in returned_names
     assert "Not My Assistant" not in returned_names
     assert "Orphaned Assistant" not in returned_names
 
-    # Verify ownership for each returned bot
-    for bot in user_bots:
-        assistant_response = AssistantResponse.model_validate(bot)
+    # Verify ownership for each returned assistant
+    for assistant in user_assistants:
+        assistant_response = AssistantResponse.model_validate(assistant)
         assert "test_user_123" in assistant_response.owner_ids
 
-        # Verify specific bots
+        # Verify specific assistants
         if assistant_response.latest_version.name == "My Owned Assistant":
             assert assistant_response.owner_ids == ["test_user_123"]
         elif assistant_response.latest_version.name == "Co-Owned Assistant":
@@ -468,18 +490,18 @@ def test_subscribe_to_assistant_success(test_client):
     """Test successfully subscribing to an assistant."""
     # Create an assistant with hierarchical access that matches the test user's department
     assistant_data = AssistantCreate(
-        name="Subscribe Test Bot",
-        system_prompt="A bot for testing subscriptions.",
+        name="Subscribe Test Assistant",
+        system_prompt="A assistant for testing subscriptions.",
         owner_ids=["other_user_456"],  # Not owned by test_user_123
         hierarchical_access=["IT-Test-Department"],  # test_user_123 has this department
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Subscribe to the assistant
     subscribe_response = test_client.post(
@@ -501,7 +523,7 @@ def test_subscribe_to_assistant_success(test_client):
     # Validate using SubscriptionResponse model
     subscription_response = SubscriptionResponse.model_validate(subscriptions[0])
     assert subscription_response.id == assistant_id
-    assert subscription_response.name == "Subscribe Test Bot"
+    assert subscription_response.name == "Subscribe Test Assistant"
 
 
 @pytest.mark.integration
@@ -509,17 +531,17 @@ def test_subscribe_to_assistant_already_subscribed(test_client):
     """Test subscribing to an assistant that the user is already subscribed to."""
     # Create an assistant
     assistant_data = AssistantCreate(
-        name="Already Subscribed Bot",
+        name="Already Subscribed Assistant",
         system_prompt="Testing already subscribed scenario.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Subscribe to the assistant
     first_subscribe = test_client.post(
@@ -555,18 +577,18 @@ def test_subscribe_to_nonexistent_assistant(test_client):
 def test_subscribe_to_assistant_no_access(test_client):
     """Test subscribing to an assistant that the user doesn't have access to."""  # Create an assistant with hierarchical access that doesn't match test user's department
     assistant_data = AssistantCreate(
-        name="No Access Bot",
-        system_prompt="A bot user can't access.",
+        name="No Access Assistant",
+        system_prompt="A assistant user can't access.",
         owner_ids=["other_user_456"],
         hierarchical_access=["HR-Test"],  # test_user_123 doesn't have this department
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Try to subscribe to the assistant
     subscribe_response = test_client.post(
@@ -583,17 +605,17 @@ def test_unsubscribe_from_assistant_success(test_client):
     """Test successfully unsubscribing from an assistant."""
     # Create an assistant
     assistant_data = AssistantCreate(
-        name="Unsubscribe Test Bot",
-        system_prompt="A bot for testing unsubscribing.",
+        name="Unsubscribe Test Assistant",
+        system_prompt="A assistant for testing unsubscribing.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Subscribe to the assistant
     subscribe_response = test_client.post(
@@ -608,7 +630,7 @@ def test_unsubscribe_from_assistant_success(test_client):
     # Validate using SubscriptionResponse model
     subscription_response = SubscriptionResponse.model_validate(subscriptions_before[0])
     assert subscription_response.id == assistant_id
-    assert subscription_response.name == "Unsubscribe Test Bot"
+    assert subscription_response.name == "Unsubscribe Test Assistant"
 
     # Unsubscribe from the assistant
     unsubscribe_response = test_client.delete(
@@ -630,17 +652,17 @@ def test_unsubscribe_from_nonexistent_subscription(test_client):
     """Test unsubscribing from an assistant that the user isn't subscribed to."""
     # Create an assistant but don't subscribe
     assistant_data = AssistantCreate(
-        name="Not Subscribed Bot",
-        system_prompt="A bot user isn't subscribed to.",
+        name="Not Subscribed Assistant",
+        system_prompt="A assistant user isn't subscribed to.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Try to unsubscribe
     unsubscribe_response = test_client.delete(
@@ -666,18 +688,22 @@ def test_get_user_subscriptions_empty(test_client):
 @pytest.mark.integration
 def test_get_user_subscriptions_multiple(test_client):
     """Test getting multiple subscriptions."""  # Create multiple assistants
-    assistant_names = ["Subscription Bot 1", "Subscription Bot 2", "Subscription Bot 3"]
+    assistant_names = [
+        "Subscription Assistant 1",
+        "Subscription Assistant 2",
+        "Subscription Assistant 3",
+    ]
     assistant_ids = []
 
     for name in assistant_names:
         assistant_data = AssistantCreate(
             name=name,
-            system_prompt=f"A bot for testing multiple subscriptions: {name}",
+            system_prompt=f"A assistant for testing multiple subscriptions: {name}",
             hierarchical_access=["IT-Test-Department"],
         )
 
         create_response = test_client.post(
-            "/bot/create", json=assistant_data.model_dump(), headers=headers
+            "/assistant/create", json=assistant_data.model_dump(), headers=headers
         )
         assert create_response.status_code == 200
         assistant_ids.append(create_response.json()["id"])
@@ -696,18 +722,18 @@ def test_get_user_subscriptions_multiple(test_client):
 
     # Check that we have the correct assistants with simplified structure
     subscription_names = [sub["name"] for sub in subscriptions]
-    assert "Subscription Bot 1" in subscription_names
-    assert "Subscription Bot 2" not in subscription_names
+    assert "Subscription Assistant 1" in subscription_names
+    assert "Subscription Assistant 2" not in subscription_names
     assert (
-        "Subscription Bot 3" in subscription_names
+        "Subscription Assistant 3" in subscription_names
     )  # Validate subscription objects using Pydantic model
     for subscription in subscriptions:
         # Parse with SubscriptionResponse model to ensure structure is correct
         subscription_response = SubscriptionResponse.model_validate(subscription)
         assert subscription_response.id in [assistant_ids[0], assistant_ids[2]]
         assert subscription_response.name in [
-            "Subscription Bot 1",
-            "Subscription Bot 3",
+            "Subscription Assistant 1",
+            "Subscription Assistant 3",
         ]
 
         # Also validate that only expected fields are present
@@ -724,13 +750,13 @@ def test_get_user_subscriptions_multiple(test_client):
 async def test_subscription_lifecycle(test_client, test_db_session):
     """Test the full subscription lifecycle: create, subscribe, list, unsubscribe."""  # Create an assistant
     assistant_data = AssistantCreate(
-        name="Lifecycle Test Bot",
+        name="Lifecycle Test Assistant",
         system_prompt="Testing the subscription lifecycle.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -750,7 +776,7 @@ async def test_subscription_lifecycle(test_client, test_db_session):
     # Validate using SubscriptionResponse model
     subscription_response = SubscriptionResponse.model_validate(after_subscribe[0])
     assert subscription_response.id == assistant_id
-    assert subscription_response.name == "Lifecycle Test Bot"
+    assert subscription_response.name == "Lifecycle Test Assistant"
 
     # Also validate that only expected fields are present
     assert "latest_version" not in after_subscribe[0]
@@ -779,17 +805,17 @@ async def test_subscription_lifecycle(test_client, test_db_session):
 
 @pytest.mark.integration
 def test_hierarchical_access_exact_match(test_client):
-    """Test that user can access bot with exact department match."""
+    """Test that user can access assistant with exact department match."""
     # Create assistant with exact department match
     assistant_data = AssistantCreate(
-        name="Exact Match Bot",
-        system_prompt="Bot with exact department match.",
+        name="Exact Match Assistant",
+        system_prompt="Assistant with exact department match.",
         owner_ids=["other_user"],
         hierarchical_access=["IT-Test-Department"],  # Exact match
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -803,17 +829,17 @@ def test_hierarchical_access_exact_match(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_parent_department(test_client):
-    """Test that user can access bot with parent department access."""
+    """Test that user can access assistant with parent department access."""
     # Create assistant with parent department access
     assistant_data = AssistantCreate(
-        name="Parent Department Bot",
-        system_prompt="Bot with parent department access.",
+        name="Parent Department Assistant",
+        system_prompt="Assistant with parent department access.",
         owner_ids=["other_user"],
         hierarchical_access=["IT-Test"],  # Parent of IT-Test-Department
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -827,17 +853,17 @@ def test_hierarchical_access_parent_department(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_root_department(test_client):
-    """Test that user can access bot with root department access."""
+    """Test that user can access assistant with root department access."""
     # Create assistant with root department access
     assistant_data = AssistantCreate(
-        name="Root Department Bot",
-        system_prompt="Bot with root department access.",
+        name="Root Department Assistant",
+        system_prompt="Assistant with root department access.",
         owner_ids=["other_user"],
         hierarchical_access=["IT"],  # Root of IT hierarchy
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -851,17 +877,17 @@ def test_hierarchical_access_root_department(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_empty_access(test_client):
-    """Test that user can access bot with empty hierarchical access (public)."""
+    """Test that user can access assistant with empty hierarchical access (public)."""
     # Create assistant with empty hierarchical access (public)
     assistant_data = AssistantCreate(
-        name="Public Bot",
-        system_prompt="Bot with public access.",
+        name="Public Assistant",
+        system_prompt="Assistant with public access.",
         owner_ids=["other_user"],
         hierarchical_access=[""],  # Empty string means public access
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -875,17 +901,17 @@ def test_hierarchical_access_empty_access(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_no_access_different_root(test_client):
-    """Test that user cannot access bot from different root department."""
+    """Test that user cannot access assistant from different root department."""
     # Create assistant with different root department
     assistant_data = AssistantCreate(
-        name="HR Bot",
-        system_prompt="Bot from HR department.",
+        name="HR Assistant",
+        system_prompt="Assistant from HR department.",
         owner_ids=["other_user"],
         hierarchical_access=["HR"],  # Different root department
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -899,17 +925,17 @@ def test_hierarchical_access_no_access_different_root(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_no_access_different_branch(test_client):
-    """Test that user cannot access bot from different branch of IT."""
+    """Test that user cannot access assistant from different branch of IT."""
     # Create assistant with different IT branch
     assistant_data = AssistantCreate(
-        name="IT Support Bot",
-        system_prompt="Bot from IT Support branch.",
+        name="IT Support Assistant",
+        system_prompt="Assistant from IT Support branch.",
         owner_ids=["other_user"],
         hierarchical_access=["IT-Support"],  # Different branch under IT
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -923,11 +949,11 @@ def test_hierarchical_access_no_access_different_branch(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_no_access_child_department(test_client):
-    """Test that user cannot access bot from child department they don't belong to."""
+    """Test that user cannot access assistant from child department they don't belong to."""
     # Create assistant with child department (more specific than user's department)
     assistant_data = AssistantCreate(
-        name="Child Department Bot",
-        system_prompt="Bot from child department.",
+        name="Child Department Assistant",
+        system_prompt="Assistant from child department.",
         owner_ids=["other_user"],
         hierarchical_access=[
             "IT-Test-Department-SubTeam"
@@ -935,7 +961,7 @@ def test_hierarchical_access_no_access_child_department(test_client):
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -949,17 +975,17 @@ def test_hierarchical_access_no_access_child_department(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_multiple_departments(test_client):
-    """Test bot with multiple hierarchical access departments."""
+    """Test assistant with multiple hierarchical access departments."""
     # Create assistant with multiple departments, one accessible, one not
     assistant_data = AssistantCreate(
-        name="Multi Department Bot",
-        system_prompt="Bot with multiple department access.",
+        name="Multi Department Assistant",
+        system_prompt="Assistant with multiple department access.",
         owner_ids=["other_user"],
         hierarchical_access=["HR", "IT-Test"],  # HR not accessible, IT-Test accessible
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -973,11 +999,11 @@ def test_hierarchical_access_multiple_departments(test_client):
 
 @pytest.mark.integration
 def test_hierarchical_access_mixed_valid_invalid(test_client):
-    """Test bot with mix of valid and invalid hierarchical access paths."""
+    """Test assistant with mix of valid and invalid hierarchical access paths."""
     # Create assistant with mixed access paths
     assistant_data = AssistantCreate(
-        name="Mixed Access Bot",
-        system_prompt="Bot with mixed access paths.",
+        name="Mixed Access Assistant",
+        system_prompt="Assistant with mixed access paths.",
         owner_ids=["other_user"],
         hierarchical_access=[
             "Finance",
@@ -987,7 +1013,7 @@ def test_hierarchical_access_mixed_valid_invalid(test_client):
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -1004,14 +1030,14 @@ def test_hierarchical_access_case_sensitivity(test_client):
     """Test that hierarchical access is case sensitive."""
     # Create assistant with different case
     assistant_data = AssistantCreate(
-        name="Case Sensitive Bot",
-        system_prompt="Bot testing case sensitivity.",
+        name="Case Sensitive Assistant",
+        system_prompt="Assistant testing case sensitivity.",
         owner_ids=["other_user"],
         hierarchical_access=["it-test-department"],  # Different case
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -1024,46 +1050,46 @@ def test_hierarchical_access_case_sensitivity(test_client):
 
 
 @pytest.mark.integration
-def test_get_user_bots_hierarchical_access_filtering(test_client):
-    """Test that get user bots respects hierarchical access when user is not owner."""
-    # Create bots with different hierarchical access levels
-    accessible_bot = AssistantCreate(
-        name="Accessible Bot",
-        system_prompt="Bot user can access.",
+def test_get_user_assistants_hierarchical_access_filtering(test_client):
+    """Test that get user assistants respects hierarchical access when user is not owner."""
+    # Create assistants with different hierarchical access levels
+    accessible_assistant = AssistantCreate(
+        name="Accessible Assistant",
+        system_prompt="Assistant user can access.",
         owner_ids=["other_user"],
         hierarchical_access=["IT"],  # User has access
     )
 
-    inaccessible_bot = AssistantCreate(
-        name="Inaccessible Bot",
-        system_prompt="Bot user cannot access.",
+    inaccessible_assistant = AssistantCreate(
+        name="Inaccessible Assistant",
+        system_prompt="Assistant user cannot access.",
         owner_ids=["other_user"],
         hierarchical_access=["HR"],  # User has no access
     )
 
-    # Create both bots
+    # Create assistanth assistants
     accessible_response = test_client.post(
-        "/bot/create", json=accessible_bot.model_dump(), headers=headers
+        "/assistant/create", json=accessible_assistant.model_dump(), headers=headers
     )
     assert accessible_response.status_code == 200
 
     inaccessible_response = test_client.post(
-        "/bot/create", json=inaccessible_bot.model_dump(), headers=headers
+        "/assistant/create", json=inaccessible_assistant.model_dump(), headers=headers
     )
     assert inaccessible_response.status_code == 200
 
-    # Get user's bots - should only return accessible bot (due to auto-ownership)
-    response = test_client.get("/user/bots", headers=headers)
+    # Get user's assistants - should only return accessible assistant (due to auto-ownership)
+    response = test_client.get("/user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
+    user_assistants = response.json()
 
-    # Both bots should be returned since test_user_123 is auto-added as owner
+    # Both assistants should be returned since test_user_123 is auto-added as owner
     # regardless of hierarchical access
-    assert len(user_bots) == 2
+    assert len(user_assistants) == 2
 
-    # Verify both bots are owned by test_user_123
-    for bot in user_bots:
-        assistant_response = AssistantResponse.model_validate(bot)
+    # Verify both assistants are owned by test_user_123
+    for assistant in user_assistants:
+        assistant_response = AssistantResponse.model_validate(assistant)
         assert "test_user_123" in assistant_response.owner_ids
 
 
@@ -1084,9 +1110,9 @@ async def test_hierarchical_access_subscription_vs_ownership(
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_hr,
-        name="HR Only Bot",
-        system_prompt="Bot only for HR.",
-        description="This bot is only for HR department",
+        name="HR Only Assistant",
+        system_prompt="Assistant only for HR.",
+        description="This assistant is only for HR department",
         temperature=0.7,
         max_output_tokens=1000,
         examples=[],
@@ -1102,9 +1128,9 @@ async def test_hierarchical_access_subscription_vs_ownership(
 
     await assistant_repo.create_assistant_version(
         assistant=assistant_it,
-        name="IT Accessible Bot",
-        system_prompt="Bot accessible to IT.",
-        description="This bot is accessible to IT department",
+        name="IT Accessible Assistant",
+        system_prompt="Assistant accessible to IT.",
+        description="This assistant is accessible to IT department",
         temperature=0.7,
         max_output_tokens=1000,
         examples=[],
@@ -1114,19 +1140,19 @@ async def test_hierarchical_access_subscription_vs_ownership(
 
     await test_db_session.commit()
 
-    # Get user's bots - should NOT return either bot (user is not owner)
-    response = test_client.get("/user/bots", headers=headers)
+    # Get user's assistants - should NOT return either assistant (user is not owner)
+    response = test_client.get("/user/assistants", headers=headers)
     assert response.status_code == 200
-    user_bots = response.json()
-    assert len(user_bots) == 0  # User is not owner of either bot
+    user_assistants = response.json()
+    assert len(user_assistants) == 0  # User is not owner of either assistant
 
-    # Try to subscribe to HR bot - should fail (no hierarchical access)
+    # Try to subscribe to HR assistant - should fail (no hierarchical access)
     subscribe_hr_response = test_client.post(
         f"/user/subscriptions/{assistant_hr.id}", headers=headers
     )
     assert subscribe_hr_response.status_code == 403
 
-    # Try to subscribe to IT bot - should succeed (has hierarchical access)
+    # Try to subscribe to IT assistant - should succeed (has hierarchical access)
     subscribe_it_response = test_client.post(
         f"/user/subscriptions/{assistant_it.id}", headers=headers
     )
@@ -1135,7 +1161,7 @@ async def test_hierarchical_access_subscription_vs_ownership(
     # Verify subscription was created
     subscriptions = test_client.get("/user/subscriptions", headers=headers).json()
     assert len(subscriptions) == 1
-    assert subscriptions[0]["name"] == "IT Accessible Bot"
+    assert subscriptions[0]["name"] == "IT Accessible Assistant"
 
 
 @pytest.mark.integration
@@ -1144,13 +1170,13 @@ async def test_subscription_persists_after_commit(test_client, test_db_session):
     """Test that subscriptions persist in the database after transaction commit."""
     # Create an assistant for testing
     assistant_data = AssistantCreate(
-        name="Subscription Persistence Bot",
+        name="Subscription Persistence Assistant",
         system_prompt="Testing that subscriptions persist after db commit.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -1189,13 +1215,13 @@ async def test_unsubscription_persists_after_commit(test_client, test_db_session
     """Test that unsubscribing correctly removes the subscription from the database."""
     # Create an assistant for testing
     assistant_data = AssistantCreate(
-        name="Unsubscribe Commit Test Bot",
+        name="Unsubscribe Commit Test Assistant",
         system_prompt="Testing that unsubscribing persists after db commit.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -1238,21 +1264,21 @@ def test_subscription_count_in_assistant_response(test_client):
     """Test that subscription count is included in assistant responses."""
     # Create an assistant
     assistant_data = AssistantCreate(
-        name="Subscription Count Bot",
+        name="Subscription Count Assistant",
         system_prompt="Testing subscription count in responses.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Verify initial count is 0
-    assert "subscriptions_count" in created_bot
-    assert created_bot["subscriptions_count"] == 0
+    assert "subscriptions_count" in created_assistant
+    assert created_assistant["subscriptions_count"] == 0
 
     # Subscribe to the assistant
     subscribe_response = test_client.post(
@@ -1260,21 +1286,21 @@ def test_subscription_count_in_assistant_response(test_client):
     )
     assert subscribe_response.status_code == 200
 
-    # Get user's bots and verify count is updated
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    assert user_bots_response.status_code == 200
-    user_bots = user_bots_response.json()
+    # Get user's assistants and verify count is updated
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    assert user_assistants_response.status_code == 200
+    user_assistants = user_assistants_response.json()
 
-    # Find our bot in the response
-    our_bot = None
-    for bot in user_bots:
-        if bot["id"] == assistant_id:
-            our_bot = bot
+    # Find our assistant in the response
+    our_assistant = None
+    for assistant in user_assistants:
+        if assistant["id"] == assistant_id:
+            our_assistant = assistant
             break
 
-    assert our_bot is not None
-    assert "subscriptions_count" in our_bot
-    assert our_bot["subscriptions_count"] == 1
+    assert our_assistant is not None
+    assert "subscriptions_count" in our_assistant
+    assert our_assistant["subscriptions_count"] == 1
 
 
 @pytest.mark.integration
@@ -1282,17 +1308,17 @@ def test_subscription_count_decrements_on_unsubscribe(test_client):
     """Test that subscription count decrements when users unsubscribe."""
     # Create an assistant
     assistant_data = AssistantCreate(
-        name="Unsubscribe Count Bot",
+        name="Unsubscribe Count Assistant",
         system_prompt="Testing subscription count decrement.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Subscribe to the assistant
     subscribe_response = test_client.post(
@@ -1301,10 +1327,13 @@ def test_subscription_count_decrements_on_unsubscribe(test_client):
     assert subscribe_response.status_code == 200
 
     # Verify count is 1
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    user_bots = user_bots_response.json()
-    our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
-    assert our_bot["subscriptions_count"] == 1
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    user_assistants = user_assistants_response.json()
+    our_assistant = next(
+        (assistant for assistant in user_assistants if assistant["id"] == assistant_id),
+        None,
+    )
+    assert our_assistant["subscriptions_count"] == 1
 
     # Unsubscribe
     unsubscribe_response = test_client.delete(
@@ -1313,10 +1342,13 @@ def test_subscription_count_decrements_on_unsubscribe(test_client):
     assert unsubscribe_response.status_code == 200
 
     # Verify count is back to 0
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    user_bots = user_bots_response.json()
-    our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
-    assert our_bot["subscriptions_count"] == 0
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    user_assistants = user_assistants_response.json()
+    our_assistant = next(
+        (assistant for assistant in user_assistants if assistant["id"] == assistant_id),
+        None,
+    )
+    assert our_assistant["subscriptions_count"] == 0
 
 
 @pytest.mark.integration
@@ -1331,22 +1363,22 @@ def test_subscription_count_zero_for_new_assistants(test_client):
         )
 
         create_response = test_client.post(
-            "/bot/create", json=assistant_data.model_dump(), headers=headers
+            "/assistant/create", json=assistant_data.model_dump(), headers=headers
         )
         assert create_response.status_code == 200
-        created_bot = create_response.json()
+        created_assistant = create_response.json()
 
         # Each new assistant should start with 0 subscriptions
-        assert "subscriptions_count" in created_bot
-        assert created_bot["subscriptions_count"] == 0
+        assert "subscriptions_count" in created_assistant
+        assert created_assistant["subscriptions_count"] == 0
 
-    # Verify in user bots list as well
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    user_bots = user_bots_response.json()
-    assert len(user_bots) == 3
+    # Verify in user assistants list as well
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    user_assistants = user_assistants_response.json()
+    assert len(user_assistants) == 3
 
-    for bot in user_bots:
-        assert bot["subscriptions_count"] == 0
+    for assistant in user_assistants:
+        assert assistant["subscriptions_count"] == 0
 
 
 @pytest.mark.integration
@@ -1367,9 +1399,9 @@ async def test_subscription_count_with_repository_operations(
 
     await assistant_repo.create_assistant_version(
         assistant=assistant,
-        name="Repository Test Bot",
+        name="Repository Test Assistant",
         system_prompt="Testing with repository operations.",
-        description="Bot for testing subscription count with repository",
+        description="Assistant for testing subscription count with repository",
         temperature=0.7,
         max_output_tokens=1000,
         examples=[],
@@ -1382,15 +1414,22 @@ async def test_subscription_count_with_repository_operations(
 
     await test_db_session.commit()
 
-    # Get user's bots via API and verify count
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    assert user_bots_response.status_code == 200
-    user_bots = user_bots_response.json()
+    # Get user's assistants via API and verify count
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    assert user_assistants_response.status_code == 200
+    user_assistants = user_assistants_response.json()
 
-    our_bot = next((bot for bot in user_bots if bot["id"] == str(assistant.id)), None)
-    assert our_bot is not None
+    our_assistant = next(
+        (
+            assistant
+            for assistant in user_assistants
+            if assistant["id"] == str(assistant.id)
+        ),
+        None,
+    )
+    assert our_assistant is not None
     assert (
-        our_bot["subscriptions_count"] == 1
+        our_assistant["subscriptions_count"] == 1
     )  # Remove subscription directly via repository
     await assistant_repo.remove_subscription(
         assistant_id=assistant.id, lhmobjektID="test_user_123"
@@ -1399,19 +1438,26 @@ async def test_subscription_count_with_repository_operations(
     await test_db_session.commit()
 
     # Verify count is decremented
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    user_bots = user_bots_response.json()
-    our_bot = next((bot for bot in user_bots if bot["id"] == str(assistant.id)), None)
-    assert our_bot["subscriptions_count"] == 0
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    user_assistants = user_assistants_response.json()
+    our_assistant = next(
+        (
+            assistant
+            for assistant in user_assistants
+            if assistant["id"] == str(assistant.id)
+        ),
+        None,
+    )
+    assert our_assistant["subscriptions_count"] == 0
 
 
 @pytest.mark.integration
-def test_subscription_count_in_complex_bot_response(test_client):
-    """Test that subscription count is included in complex bot responses."""
-    # Create a complex bot
+def test_subscription_count_in_complex_assistant_response(test_client):
+    """Test that subscription count is included in complex assistant responses."""
+    # Create a complex assistant
     complex_assistant_data = AssistantCreate(
-        name="Complex Count Bot",
-        description="A complex bot for testing subscription count",
+        name="Complex Count Assistant",
+        description="A complex assistant for testing subscription count",
         system_prompt="You are a complex assistant with subscription counting.",
         hierarchical_access=["IT-Test-Department"],
         temperature=0.8,
@@ -1431,25 +1477,28 @@ def test_subscription_count_in_complex_bot_response(test_client):
     )
 
     create_response = test_client.post(
-        "/bot/create", json=complex_assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=complex_assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
-    created_bot = create_response.json()
-    assistant_id = created_bot["id"]
+    created_assistant = create_response.json()
+    assistant_id = created_assistant["id"]
 
     # Verify subscription count is present in complex response
-    assert "subscriptions_count" in created_bot
-    assert created_bot["subscriptions_count"] == 0
+    assert "subscriptions_count" in created_assistant
+    assert created_assistant["subscriptions_count"] == 0
 
     # Subscribe and verify count in complex response
     test_client.post(f"/user/subscriptions/{assistant_id}", headers=headers)
 
-    user_bots_response = test_client.get("/user/bots", headers=headers)
-    user_bots = user_bots_response.json()
-    our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
+    user_assistants_response = test_client.get("/user/assistants", headers=headers)
+    user_assistants = user_assistants_response.json()
+    our_assistant = next(
+        (assistant for assistant in user_assistants if assistant["id"] == assistant_id),
+        None,
+    )
 
     # Validate complex response structure with subscription count
-    assistant_response = AssistantResponse.model_validate(our_bot)
+    assistant_response = AssistantResponse.model_validate(our_assistant)
     assert hasattr(assistant_response, "subscriptions_count")
     assert assistant_response.subscriptions_count == 1
 
@@ -1465,13 +1514,13 @@ def test_subscription_count_persists_across_requests(test_client):
     """Test that subscription count persists across multiple API requests."""
     # Create an assistant
     assistant_data = AssistantCreate(
-        name="Persistence Test Bot",
+        name="Persistence Test Assistant",
         system_prompt="Testing subscription count persistence.",
         hierarchical_access=["IT-Test-Department"],
     )
 
     create_response = test_client.post(
-        "/bot/create", json=assistant_data.model_dump(), headers=headers
+        "/assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_id = create_response.json()["id"]
@@ -1481,8 +1530,15 @@ def test_subscription_count_persists_across_requests(test_client):
 
     # Make multiple requests and verify count is consistent
     for _ in range(3):
-        user_bots_response = test_client.get("/user/bots", headers=headers)
-        user_bots = user_bots_response.json()
-        our_bot = next((bot for bot in user_bots if bot["id"] == assistant_id), None)
-        assert our_bot is not None
-        assert our_bot["subscriptions_count"] == 1
+        user_assistants_response = test_client.get("/user/assistants", headers=headers)
+        user_assistants = user_assistants_response.json()
+        our_assistant = next(
+            (
+                assistant
+                for assistant in user_assistants
+                if assistant["id"] == assistant_id
+            ),
+            None,
+        )
+        assert our_assistant is not None
+        assert our_assistant["subscriptions_count"] == 1

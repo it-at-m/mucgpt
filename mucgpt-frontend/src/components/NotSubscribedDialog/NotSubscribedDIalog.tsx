@@ -7,11 +7,11 @@ interface NotSubscribedDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     hasAccess: boolean;
-    botTitle?: string;
+    assistantTitle?: string;
     onSubscribe?: () => void;
 }
 
-export const NotSubscribedDialog = ({ open, onOpenChange, hasAccess, botTitle = "Assistent", onSubscribe }: NotSubscribedDialogProps) => {
+export const NotSubscribedDialog = ({ open, onOpenChange, hasAccess, assistantTitle = "Assistent", onSubscribe }: NotSubscribedDialogProps) => {
     const { t } = useTranslation();
 
     const handleSubscribe = () => {
@@ -46,7 +46,7 @@ export const NotSubscribedDialog = ({ open, onOpenChange, hasAccess, botTitle = 
                     <DialogContent>
                         {hasAccess ? (
                             <div className={styles.content}>
-                                <Text>{t("components.not_subscribed_dialog.subscribe_message", { botTitle })}</Text>
+                                <Text>{t("components.not_subscribed_dialog.subscribe_message", { assistantTitle })}</Text>
                                 <div className={styles.infoSection}>
                                     <Info24Regular className={styles.infoIcon} />
                                     <Text size={200} className={styles.infoText}>
@@ -56,7 +56,7 @@ export const NotSubscribedDialog = ({ open, onOpenChange, hasAccess, botTitle = 
                             </div>
                         ) : (
                             <div className={styles.content}>
-                                <Text>{t("components.not_subscribed_dialog.no_access_message", { botTitle })}</Text>
+                                <Text>{t("components.not_subscribed_dialog.no_access_message", { assistantTitle })}</Text>
                                 <div className={styles.infoSection}>
                                     <Info24Regular className={styles.infoIcon} />
                                     <Text size={200} className={styles.infoText}>

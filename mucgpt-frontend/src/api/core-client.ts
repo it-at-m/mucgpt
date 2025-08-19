@@ -1,5 +1,5 @@
 import { getConfig, handleApiRequest, postConfig } from "./fetch-utils";
-import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, CreateBotRequest, ToolListResponse } from "./models";
+import { ApplicationConfig, ChatRequest, CountTokenRequest, CountTokenResponse, CreateAssistantRequest, ToolListResponse } from "./models";
 export const CHAT_NAME_PROMPT =
     "Gebe dem bisherigen Chatverlauf einen passenden und aussagekräftigen Namen, bestehend aus maximal 5 Wörtern. Über diesen Namen soll klar ersichtlich sein, welches Thema der Chat behandelt. Antworte nur mit dem vollständigen Namen und keinem weiteren Text, damit deine Antwort direkt weiterverwendet werden kann. Benutze keine Sonderzeichen sondern lediglich Zahlen und Buchstaben. Antworte in keinem Fall mit etwas anderem als dem Chat namen. Antworte immer nur mit dem namen des Chats";
 
@@ -19,8 +19,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     }
     for (const turn of options.history) {
         messages.push({ role: "user", content: turn.user });
-        if (turn.bot !== undefined) {
-            messages.push({ role: "assistant", content: turn.bot });
+        if (turn.assistant !== undefined) {
+            messages.push({ role: "assistant", content: turn.assistant });
         }
     }
     const body: any = {
@@ -33,8 +33,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     if (options.enabled_tools) {
         body.enabled_tools = options.enabled_tools;
     }
-    if (options.bot_id) {
-        body.bot_id = options.bot_id;
+    if (options.assistant_id) {
+        body.assistant_id = options.assistant_id;
     }
     return await fetch(url, postConfig(body));
 }
@@ -61,7 +61,7 @@ export async function getDepartements(): Promise<string[]> {
     return handleApiRequest(() => fetch(API_BASE + "departements", getConfig()), "Failed to get departments");
 }
 
-export async function createBotApi(options: CreateBotRequest): Promise<Response> {
+export async function createAssistantApi(options: CreateAssistantRequest): Promise<Response> {
     return await fetch(
         API_BASE + "v1/generate/assistant",
         postConfig({

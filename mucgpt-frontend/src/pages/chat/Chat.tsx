@@ -477,7 +477,7 @@ const Chat = () => {
         () => (
             <AnswerList
                 answers={answers}
-                regularBotMsg={(answer, index) => {
+                regularAssistantMsg={(answer, index) => {
                     return (
                         <>
                             {index === answers.length - 1 && (

@@ -31,7 +31,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/bot/create",
+    "/assistant/create",
     response_model=AssistantResponse,
     summary="Create a new AI assistant",
     description="""
@@ -44,7 +44,7 @@ router = APIRouter()
     },
     tags=["Assistants"],
 )
-async def createBot(
+async def createAssistant(
     assistant: AssistantCreate,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
@@ -143,7 +143,7 @@ async def createBot(
 
 
 @router.post(
-    "/bot/{id}/delete",
+    "/assistant/{id}/delete",
     response_model=dict,
     summary="Delete an AI assistant",
     description="""
@@ -165,7 +165,7 @@ async def createBot(
         500: {"description": "Failed to delete the assistant"},
     },
 )
-async def deleteBot(
+async def deleteAssistant(
     id: str,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
@@ -191,7 +191,7 @@ async def deleteBot(
 
 
 @router.post(
-    "/bot/{id}/update",
+    "/assistant/{id}/update",
     response_model=AssistantResponse,
     summary="Update an AI assistant",
     description="""
@@ -213,7 +213,7 @@ async def deleteBot(
         500: {"description": "Assistant has no versions and cannot be updated"},
     },
 )
-async def updateBot(
+async def updateAssistant(
     id: str,
     assistant_update: AssistantUpdate,
     db: AsyncSession = Depends(get_db_session),
@@ -327,7 +327,7 @@ async def updateBot(
 
 
 @router.get(
-    "/bot",
+    "/assistant",
     response_model=List[AssistantResponse],
     summary="Get all accessible assistants",
     description="""
@@ -341,7 +341,7 @@ async def updateBot(
     },
     tags=["Assistants"],
 )
-async def getAllBots(
+async def getAllAssistants(
     db: AsyncSession = Depends(get_db_session), user_info=Depends(authenticate_user)
 ):
     logger.info(
@@ -401,7 +401,7 @@ async def getAllBots(
 
 
 @router.get(
-    "/bot/{id}",
+    "/assistant/{id}",
     response_model=AssistantResponse,
     summary="Get a specific assistant",
     description="""
@@ -416,7 +416,7 @@ async def getAllBots(
         404: {"description": "Assistant not found"},
     },
 )
-async def getBot(
+async def getAssistant(
     id: str,
     db: AsyncSession = Depends(get_db_session),
     user_info=Depends(authenticate_user),
@@ -474,7 +474,7 @@ async def getBot(
 
 
 @router.get(
-    "/bot/{id}/version/{version}",
+    "/assistant/{id}/version/{version}",
     response_model=AssistantVersionResponse,
     summary="Get a specific version of an AI assistant",
     description="""

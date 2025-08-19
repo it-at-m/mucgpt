@@ -7,7 +7,7 @@ import { ChatCompletionChunk, ChatCompletionChunkChoice } from "../api/models";
 import { ToolStreamHandler, ToolStatus } from "../utils/ToolStreamHandler";
 
 import language from "react-syntax-highlighter/dist/esm/languages/hljs/1c";
-import { BotStorageService } from "../service/botstorage";
+import { AssistantStorageService } from "../service/assistantstorage";
 import { v4 as uuid } from "uuid";
 import { handleRedirect } from "../api/fetch-utils";
 import { createChatName } from "../api/core-client";
@@ -210,7 +210,7 @@ export async function handleRegenerate(
  * @param chatMessageStreamEnd - Reference to DOM element for auto-scrolling
  * @param isLoadingRef - Reference to track loading state
  * @param fetchHistory - Optional function to refresh the chat history list
- * @param bot_id - Optional bot ID for bot-specific chat storage
+ * @param assistant_id - Optional assistant ID for assistant-specific chat storage
  * @param enabled_tools - Optional array of enabled tool names
  * @param onToolStatusUpdate - Optional callback for tool status updates
  */
@@ -227,16 +227,16 @@ export const makeApiRequest = async (
     chatMessageStreamEnd: MutableRefObject<HTMLDivElement | null>,
     isLoadingRef: MutableRefObject<boolean>,
     fetchHistory?: () => void,
-    bot_id?: string,
+    assistant_id?: string,
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void
 ) => {
     // Create conversation history for the API request
-    const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, bot: a.response.answer }));
+    const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
 
     // Build the API request object
     const request: ChatRequest = {
-        history: [...history, { user: question, bot: undefined }],
+        history: [...history, { user: question, assistant: undefined }],
         shouldStream: true, // Enable streaming for real-time responses
         language: language,
         temperature: options.temperature,
@@ -244,7 +244,7 @@ export const makeApiRequest = async (
         max_output_tokens: options.maxTokens,
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
-        bot_id: bot_id
+        assistant_id: assistant_id
     };
 
     // Make the API call
@@ -426,9 +426,9 @@ export const makeApiRequest = async (
             LLM.llm_name
         );
 
-        // Create chat with bot-specific ID if bot_id is provided, otherwise use regular UUID
-        const id = bot_id
-            ? await storageService.create([finalMessage], options, BotStorageService.GENERATE_BOT_CHAT_ID(bot_id, uuid()), chatname, false)
+        // Create chat with assistant-specific ID if assistant_id is provided, otherwise use regular UUID
+        const id = assistant_id
+            ? await storageService.create([finalMessage], options, AssistantStorageService.GENERATE_BOT_CHAT_ID(assistant_id, uuid()), chatname, false)
             : await storageService.create([finalMessage], options, uuid(), chatname, false);
 
         // Set the new chat as active and refresh history

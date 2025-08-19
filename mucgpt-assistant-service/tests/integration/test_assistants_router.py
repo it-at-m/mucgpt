@@ -57,12 +57,12 @@ def sample_assistant_update():
 
 
 @pytest.mark.integration
-def test_create_bot_success(sample_assistant_create, test_client):
+def test_create_assistant_success(sample_assistant_create, test_client):
     """Test successful assistant creation."""
 
     # Authentication is already handled by the test_client fixture
     response = test_client.post(
-        "bot/create", json=sample_assistant_create.model_dump(), headers=headers
+        "assistant/create", json=sample_assistant_create.model_dump(), headers=headers
     )
 
     assert response.status_code == 200  # Parse the response into the API model
@@ -142,14 +142,14 @@ def test_create_bot_success(sample_assistant_create, test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_minimal_data(test_client):
+def test_create_assistant_minimal_data(test_client):
     """Test creating assistant with minimal required data."""
     minimal_assistant = AssistantCreate(
         name="Minimal Assistant", system_prompt="You are a minimal assistant."
     )
 
     response = test_client.post(
-        "bot/create", json=minimal_assistant.model_dump(), headers=headers
+        "assistant/create", json=minimal_assistant.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -169,7 +169,7 @@ def test_create_bot_minimal_data(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_empty_optional_fields(test_client):
+def test_create_assistant_with_empty_optional_fields(test_client):
     """Test creating assistant with explicitly empty optional fields."""
     assistant_data = AssistantCreate(
         name="Empty Fields Assistant",
@@ -184,7 +184,7 @@ def test_create_bot_with_empty_optional_fields(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -199,7 +199,7 @@ def test_create_bot_with_empty_optional_fields(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_multiple_tools(test_client):
+def test_create_assistant_with_multiple_tools(test_client):
     """Test creating assistant with multiple tools."""
     assistant_data = AssistantCreate(
         name="Multi-Tool Assistant",
@@ -212,7 +212,7 @@ def test_create_bot_with_multiple_tools(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -229,7 +229,7 @@ def test_create_bot_with_multiple_tools(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_multiple_examples(test_client):
+def test_create_assistant_with_multiple_examples(test_client):
     """Test creating assistant with multiple examples."""
     assistant_data = AssistantCreate(
         name="Example-Rich Assistant",
@@ -242,7 +242,7 @@ def test_create_bot_with_multiple_examples(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -259,7 +259,7 @@ def test_create_bot_with_multiple_examples(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_multiple_quick_prompts(test_client):
+def test_create_assistant_with_multiple_quick_prompts(test_client):
     """Test creating assistant with multiple quick prompts."""
     assistant_data = AssistantCreate(
         name="Quick Prompt Assistant",
@@ -284,7 +284,7 @@ def test_create_bot_with_multiple_quick_prompts(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -302,7 +302,7 @@ def test_create_bot_with_multiple_quick_prompts(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_boundary_values(test_client):
+def test_create_assistant_with_boundary_values(test_client):
     """Test creating assistant with boundary values for numeric fields."""
     assistant_data = AssistantCreate(
         name="Boundary Values Assistant",
@@ -312,7 +312,7 @@ def test_create_bot_with_boundary_values(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -324,7 +324,7 @@ def test_create_bot_with_boundary_values(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_long_strings(test_client):
+def test_create_assistant_with_long_strings(test_client):
     """Test creating assistant with long string values."""
     long_description = "A" * 1000  # Very long description
     long_system_prompt = "You are " + "very " * 100 + "helpful assistant."
@@ -336,7 +336,7 @@ def test_create_bot_with_long_strings(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -348,10 +348,10 @@ def test_create_bot_with_long_strings(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_with_invalid_json(test_client):
+def test_create_assistant_with_invalid_json(test_client):
     """Test creating assistant with invalid JSON."""
     response = test_client.post(
-        "bot/create",
+        "assistant/create",
         data="invalid json",  # Invalid JSON
         headers={**headers, "Content-Type": "application/json"},
     )
@@ -360,7 +360,7 @@ def test_create_bot_with_invalid_json(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_missing_required_fields(test_client):
+def test_create_assistant_missing_required_fields(test_client):
     """Test creating assistant with missing required fields."""
     # Missing required 'name' field
     incomplete_data = {
@@ -368,13 +368,15 @@ def test_create_bot_missing_required_fields(test_client):
         # Missing 'name' field
     }
 
-    response = test_client.post("bot/create", json=incomplete_data, headers=headers)
+    response = test_client.post(
+        "assistant/create", json=incomplete_data, headers=headers
+    )
 
     assert response.status_code == 422  # Validation error
 
 
 @pytest.mark.integration
-def test_create_bot_with_unicode_characters(test_client):
+def test_create_assistant_with_unicode_characters(test_client):
     """Test creating assistant with unicode characters."""
     assistant_data = AssistantCreate(
         name="Unicode Assistant 🤖",
@@ -383,7 +385,7 @@ def test_create_bot_with_unicode_characters(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -398,7 +400,7 @@ def test_create_bot_with_unicode_characters(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_hierarchical_access_inheritance(test_client):
+def test_create_assistant_hierarchical_access_inheritance(test_client):
     """Test that created assistant properly handles hierarchical access."""
     assistant_data = AssistantCreate(
         name="Hierarchical Assistant",
@@ -407,7 +409,7 @@ def test_create_bot_hierarchical_access_inheritance(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -423,7 +425,7 @@ def test_create_bot_hierarchical_access_inheritance(test_client):
 
 
 @pytest.mark.integration
-def test_create_bot_owner_auto_inclusion(test_client):
+def test_create_assistant_owner_auto_inclusion(test_client):
     """Test that the creating user is automatically included as an owner."""
     assistant_data = AssistantCreate(
         name="Owner Test Assistant",
@@ -432,7 +434,7 @@ def test_create_bot_owner_auto_inclusion(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -454,7 +456,7 @@ def created_assistant_id(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -464,15 +466,15 @@ def created_assistant_id(test_client):
     return assistant_response.id
 
 
-# ===== DELETE BOT TESTS =====
+# ===== DELETE ASSISTANT TESTS =====
 
 
 @pytest.mark.integration
-def test_delete_bot_success(created_assistant_id, test_client):
+def test_delete_assistant_success(created_assistant_id, test_client):
     """Test successful deletion of an assistant by its owner."""
     assistant_id = created_assistant_id
 
-    response = test_client.post(f"bot/{assistant_id}/delete", headers=headers)
+    response = test_client.post(f"assistant/{assistant_id}/delete", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -482,33 +484,33 @@ def test_delete_bot_success(created_assistant_id, test_client):
     assert "successfully deleted" in response_data["message"]
 
     # Verify the assistant is actually deleted by trying to get it
-    get_response = test_client.get(f"bot/{assistant_id}", headers=headers)
+    get_response = test_client.get(f"assistant/{assistant_id}", headers=headers)
     assert get_response.status_code == 404
 
 
 @pytest.mark.integration
-def test_delete_bot_not_found(test_client):
+def test_delete_assistant_not_found(test_client):
     """Test deleting a non-existent assistant."""
     non_existent_id = "00000000-0000-4000-8000-000000000000"
 
-    response = test_client.post(f"bot/{non_existent_id}/delete", headers=headers)
+    response = test_client.post(f"assistant/{non_existent_id}/delete", headers=headers)
 
     assert response.status_code == 404
 
 
 @pytest.mark.integration
-def test_delete_bot_invalid_uuid(test_client):
+def test_delete_assistant_invalid_uuid(test_client):
     """Test deleting with an invalid UUID format."""
     invalid_id = "invalid-uuid-format"
 
-    response = test_client.post(f"bot/{invalid_id}/delete", headers=headers)
+    response = test_client.post(f"assistant/{invalid_id}/delete", headers=headers)
 
     # This might return 404 or 422 depending on FastAPI's UUID validation
     assert response.status_code in [404, 422]
 
 
 @pytest.mark.integration
-def test_delete_bot_not_owner(test_client):
+def test_delete_assistant_not_owner(test_client):
     """Test deleting an assistant when user is not the owner."""
     # This test is complex to implement properly because:
     # 1. The current user is automatically added as owner during creation
@@ -523,50 +525,56 @@ def test_delete_bot_not_owner(test_client):
 
     # Test with a non-existent ID instead (which is safer)
     non_existent_id = "00000000-0000-4000-8000-000000000000"
-    delete_response = test_client.post(f"bot/{non_existent_id}/delete", headers=headers)
+    delete_response = test_client.post(
+        f"assistant/{non_existent_id}/delete", headers=headers
+    )
     assert delete_response.status_code == 404
 
 
 @pytest.mark.integration
-def test_delete_bot_twice(created_assistant_id, test_client):
+def test_delete_assistant_twice(created_assistant_id, test_client):
     """Test deleting the same assistant twice."""
     assistant_id = created_assistant_id
 
     # First deletion should succeed
-    first_response = test_client.post(f"bot/{assistant_id}/delete", headers=headers)
+    first_response = test_client.post(
+        f"assistant/{assistant_id}/delete", headers=headers
+    )
     assert first_response.status_code == 200
 
     # Second deletion should fail with 404
-    second_response = test_client.post(f"bot/{assistant_id}/delete", headers=headers)
+    second_response = test_client.post(
+        f"assistant/{assistant_id}/delete", headers=headers
+    )
     assert second_response.status_code == 404
 
 
 @pytest.mark.integration
-def test_delete_bot_with_empty_id(test_client):
+def test_delete_assistant_with_empty_id(test_client):
     """Test deleting with empty ID."""
-    response = test_client.post("bot//delete", headers=headers)
+    response = test_client.post("assistant//delete", headers=headers)
 
     # This should return 404 or 405 depending on routing
     assert response.status_code in [404, 405]
 
 
 @pytest.mark.integration
-def test_delete_bot_with_special_characters_in_id(test_client):
+def test_delete_assistant_with_special_characters_in_id(test_client):
     """Test deleting with special characters in ID."""
     special_id = "test@#$%^&*()"
 
-    response = test_client.post(f"bot/{special_id}/delete", headers=headers)
+    response = test_client.post(f"assistant/{special_id}/delete", headers=headers)
 
     # Should return 404, 405, or 422 for invalid format
     assert response.status_code in [404, 405, 422]
 
 
 @pytest.mark.integration
-def test_delete_bot_response_format(created_assistant_id, test_client):
+def test_delete_assistant_response_format(created_assistant_id, test_client):
     """Test that delete response has the correct format."""
     assistant_id = created_assistant_id
 
-    response = test_client.post(f"bot/{assistant_id}/delete", headers=headers)
+    response = test_client.post(f"assistant/{assistant_id}/delete", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -587,7 +595,7 @@ def test_delete_bot_response_format(created_assistant_id, test_client):
 
 
 @pytest.mark.integration
-def test_delete_bot_database_consistency(test_client):
+def test_delete_assistant_database_consistency(test_client):
     """Test that deletion maintains database consistency."""
     # Create an assistant with tools, examples, etc.
     complex_assistant = AssistantCreate(
@@ -601,7 +609,7 @@ def test_delete_bot_database_consistency(test_client):
     )
 
     create_response = test_client.post(
-        "bot/create", json=complex_assistant.model_dump(), headers=headers
+        "assistant/create", json=complex_assistant.model_dump(), headers=headers
     )
 
     assert create_response.status_code == 200
@@ -610,15 +618,17 @@ def test_delete_bot_database_consistency(test_client):
     assistant_id = assistant_response.id
 
     # Delete the assistant
-    delete_response = test_client.post(f"bot/{assistant_id}/delete", headers=headers)
+    delete_response = test_client.post(
+        f"assistant/{assistant_id}/delete", headers=headers
+    )
     assert delete_response.status_code == 200
 
     # Verify it's completely gone
-    get_response = test_client.get(f"bot/{assistant_id}", headers=headers)
+    get_response = test_client.get(f"assistant/{assistant_id}", headers=headers)
     assert get_response.status_code == 404
 
     # Verify it doesn't appear in the list
-    list_response = test_client.get("bot", headers=headers)
+    list_response = test_client.get("assistant", headers=headers)
     assert list_response.status_code == 200
     assistants = list_response.json()
 
@@ -628,7 +638,7 @@ def test_delete_bot_database_consistency(test_client):
 
 
 @pytest.mark.integration
-def test_delete_bot_concurrency(test_client):
+def test_delete_assistant_concurrency(test_client):
     """Test concurrent deletion attempts."""
     # Create an assistant
     assistant_data = AssistantCreate(
@@ -637,7 +647,7 @@ def test_delete_bot_concurrency(test_client):
     )
 
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert create_response.status_code == 200
@@ -649,7 +659,7 @@ def test_delete_bot_concurrency(test_client):
     # In a real scenario, this would be done with threading or async
     responses = []
     for _ in range(3):
-        response = test_client.post(f"bot/{assistant_id}/delete", headers=headers)
+        response = test_client.post(f"assistant/{assistant_id}/delete", headers=headers)
         responses.append(response)
 
     # Only one should succeed (200), others should fail (404)
@@ -663,7 +673,7 @@ def test_delete_bot_concurrency(test_client):
         assert not_found_count == 2
 
 
-# ===== UPDATE BOT TESTS =====
+# ===== UPDATE ASSISTANT TESTS =====
 
 
 @pytest.fixture
@@ -689,7 +699,7 @@ def created_assistant_for_update(test_client):
     )
 
     response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
 
     assert response.status_code == 200
@@ -700,7 +710,7 @@ def created_assistant_for_update(test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_success(created_assistant_for_update, test_client):
+def test_update_assistant_success(created_assistant_for_update, test_client):
     """Test successful update of an assistant."""
     assistant = created_assistant_for_update
 
@@ -713,7 +723,9 @@ def test_update_bot_success(created_assistant_for_update, test_client):
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -729,7 +741,7 @@ def test_update_bot_success(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_partial_update(created_assistant_for_update, test_client):
+def test_update_assistant_partial_update(created_assistant_for_update, test_client):
     """Test partial update - only updating some fields."""
     assistant = created_assistant_for_update
 
@@ -740,7 +752,9 @@ def test_update_bot_partial_update(created_assistant_for_update, test_client):
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -757,21 +771,23 @@ def test_update_bot_partial_update(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_not_found(test_client):
+def test_update_assistant_not_found(test_client):
     """Test updating a non-existent assistant."""
     non_existent_id = "00000000-0000-4000-8000-000000000000"
 
     update_data = AssistantUpdate(version=1, name="Updated Name")
 
     response = test_client.post(
-        f"bot/{non_existent_id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{non_existent_id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 404
 
 
 @pytest.mark.integration
-def test_update_bot_version_conflict(created_assistant_for_update, test_client):
+def test_update_assistant_version_conflict(created_assistant_for_update, test_client):
     """Test updating with wrong version number (version conflict)."""
     assistant = created_assistant_for_update
 
@@ -781,14 +797,16 @@ def test_update_bot_version_conflict(created_assistant_for_update, test_client):
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 409  # Version conflict
 
 
 @pytest.mark.integration
-def test_update_bot_with_tools(created_assistant_for_update, test_client):
+def test_update_assistant_with_tools(created_assistant_for_update, test_client):
     """Test updating assistant with new tools."""
     assistant = created_assistant_for_update
 
@@ -802,7 +820,9 @@ def test_update_bot_with_tools(created_assistant_for_update, test_client):
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -817,7 +837,7 @@ def test_update_bot_with_tools(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_with_examples(created_assistant_for_update, test_client):
+def test_update_assistant_with_examples(created_assistant_for_update, test_client):
     """Test updating assistant with new examples."""
     assistant = created_assistant_for_update
 
@@ -829,7 +849,9 @@ def test_update_bot_with_examples(created_assistant_for_update, test_client):
     update_data = AssistantUpdate(version=1, examples=new_examples)
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -843,7 +865,7 @@ def test_update_bot_with_examples(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_with_quick_prompts(created_assistant_for_update, test_client):
+def test_update_assistant_with_quick_prompts(created_assistant_for_update, test_client):
     """Test updating assistant with new quick prompts."""
     assistant = created_assistant_for_update
 
@@ -863,7 +885,9 @@ def test_update_bot_with_quick_prompts(created_assistant_for_update, test_client
     update_data = AssistantUpdate(version=1, quick_prompts=new_quick_prompts)
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -877,7 +901,9 @@ def test_update_bot_with_quick_prompts(created_assistant_for_update, test_client
 
 
 @pytest.mark.integration
-def test_update_bot_hierarchical_access(created_assistant_for_update, test_client):
+def test_update_assistant_hierarchical_access(
+    created_assistant_for_update, test_client
+):
     """Test updating assistant hierarchical access."""
     assistant = created_assistant_for_update
 
@@ -886,7 +912,9 @@ def test_update_bot_hierarchical_access(created_assistant_for_update, test_clien
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -903,7 +931,7 @@ def test_update_bot_hierarchical_access(created_assistant_for_update, test_clien
 
 
 @pytest.mark.integration
-def test_update_bot_owner_ids(created_assistant_for_update, test_client):
+def test_update_assistant_owner_ids(created_assistant_for_update, test_client):
     """Test updating assistant owner IDs."""
     assistant = created_assistant_for_update
 
@@ -912,7 +940,9 @@ def test_update_bot_owner_ids(created_assistant_for_update, test_client):
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -925,7 +955,7 @@ def test_update_bot_owner_ids(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_boundary_values(created_assistant_for_update, test_client):
+def test_update_assistant_boundary_values(created_assistant_for_update, test_client):
     """Test updating with boundary values."""
     assistant = created_assistant_for_update
 
@@ -936,7 +966,9 @@ def test_update_bot_boundary_values(created_assistant_for_update, test_client):
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -948,7 +980,9 @@ def test_update_bot_boundary_values(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_max_boundary_values(created_assistant_for_update, test_client):
+def test_update_assistant_max_boundary_values(
+    created_assistant_for_update, test_client
+):
     """Test updating with maximum boundary values."""
     assistant = created_assistant_for_update
 
@@ -959,7 +993,9 @@ def test_update_bot_max_boundary_values(created_assistant_for_update, test_clien
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -971,12 +1007,12 @@ def test_update_bot_max_boundary_values(created_assistant_for_update, test_clien
 
 
 @pytest.mark.integration
-def test_update_bot_invalid_json(created_assistant_for_update, test_client):
+def test_update_assistant_invalid_json(created_assistant_for_update, test_client):
     """Test updating with invalid JSON."""
     assistant = created_assistant_for_update
 
     response = test_client.post(
-        f"bot/{assistant.id}/update",
+        f"assistant/{assistant.id}/update",
         data="invalid json",
         headers={**headers, "Content-Type": "application/json"},
     )
@@ -985,7 +1021,7 @@ def test_update_bot_invalid_json(created_assistant_for_update, test_client):
 
 
 @pytest.mark.integration
-def test_update_bot_missing_version(created_assistant_for_update, test_client):
+def test_update_assistant_missing_version(created_assistant_for_update, test_client):
     """Test updating without version field."""
     assistant = created_assistant_for_update
 
@@ -996,14 +1032,16 @@ def test_update_bot_missing_version(created_assistant_for_update, test_client):
     }
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=incomplete_data, headers=headers
+        f"assistant/{assistant.id}/update", json=incomplete_data, headers=headers
     )
 
     assert response.status_code == 422  # Validation error
 
 
 @pytest.mark.integration
-def test_update_bot_with_unicode_characters(created_assistant_for_update, test_client):
+def test_update_assistant_with_unicode_characters(
+    created_assistant_for_update, test_client
+):
     """Test updating with unicode characters."""
     assistant = created_assistant_for_update
 
@@ -1015,7 +1053,9 @@ def test_update_bot_with_unicode_characters(created_assistant_for_update, test_c
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -1028,7 +1068,7 @@ def test_update_bot_with_unicode_characters(created_assistant_for_update, test_c
 
 
 @pytest.mark.integration
-def test_update_bot_multiple_consecutive_updates(
+def test_update_assistant_multiple_consecutive_updates(
     created_assistant_for_update, test_client
 ):
     """Test multiple consecutive updates to ensure version tracking works."""
@@ -1038,7 +1078,9 @@ def test_update_bot_multiple_consecutive_updates(
     update_data_1 = AssistantUpdate(version=1, name="First Update")
 
     response_1 = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data_1.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data_1.model_dump(),
+        headers=headers,
     )
 
     assert response_1.status_code == 200
@@ -1053,7 +1095,9 @@ def test_update_bot_multiple_consecutive_updates(
     )
 
     response_2 = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data_2.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data_2.model_dump(),
+        headers=headers,
     )
 
     assert response_2.status_code == 200
@@ -1064,7 +1108,9 @@ def test_update_bot_multiple_consecutive_updates(
 
 
 @pytest.mark.integration
-def test_update_bot_clear_optional_fields(created_assistant_for_update, test_client):
+def test_update_assistant_clear_optional_fields(
+    created_assistant_for_update, test_client
+):
     """Test updating to clear optional fields."""
     assistant = created_assistant_for_update
 
@@ -1078,7 +1124,9 @@ def test_update_bot_clear_optional_fields(created_assistant_for_update, test_cli
     )
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -1093,14 +1141,16 @@ def test_update_bot_clear_optional_fields(created_assistant_for_update, test_cli
 
 
 @pytest.mark.integration
-def test_update_bot_response_format(created_assistant_for_update, test_client):
+def test_update_assistant_response_format(created_assistant_for_update, test_client):
     """Test that update response has the correct format."""
     assistant = created_assistant_for_update
 
     update_data = AssistantUpdate(version=1, name="Format Test")
 
     response = test_client.post(
-        f"bot/{assistant.id}/update", json=update_data.model_dump(), headers=headers
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -1120,7 +1170,7 @@ def test_update_bot_response_format(created_assistant_for_update, test_client):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_update_bot_not_owner_exception(test_client, test_db_session):
+async def test_update_assistant_not_owner_exception(test_client, test_db_session):
     """Test that updating an assistant by a non-owner raises NotOwnerException."""
     # Create assistant using repository directly with a specific owner
     assistant_repo = AssistantRepository(test_db_session)
@@ -1153,7 +1203,7 @@ async def test_update_bot_not_owner_exception(test_client, test_db_session):
     )
     # Try to update the assistant as a different user (test_client has "test_user_123")
     update_response = test_client.post(
-        f"bot/{assistant.id}/update",
+        f"assistant/{assistant.id}/update",
         json=update_data.model_dump(),
         headers=headers,
     )
@@ -1166,7 +1216,7 @@ async def test_update_bot_not_owner_exception(test_client, test_db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_update_bot_modify_owners(test_client, test_db_session):
+async def test_update_assistant_modify_owners(test_client, test_db_session):
     """Test updating assistant's owner list - adding and removing owners."""
     # Create assistant using repository directly
     assistant_repo = AssistantRepository(test_db_session)
@@ -1212,7 +1262,7 @@ async def test_update_bot_modify_owners(test_client, test_db_session):
 
     # Update as owner (test_user_123)
     update_response = test_client.post(
-        f"bot/{assistant.id}/update",
+        f"assistant/{assistant.id}/update",
         json=update_data.model_dump(),
         headers=headers,
     )
@@ -1232,7 +1282,9 @@ async def test_update_bot_modify_owners(test_client, test_db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_update_bot_multiple_owners_can_update(test_client, test_db_session):
+async def test_update_assistant_multiple_owners_can_update(
+    test_client, test_db_session
+):
     """Test that multiple owners can update the same assistant."""
     # Create assistant using repository directly with multiple owners
     assistant_repo = AssistantRepository(test_db_session)
@@ -1273,7 +1325,7 @@ async def test_update_bot_multiple_owners_can_update(test_client, test_db_sessio
     )
 
     update_response_1 = test_client.post(
-        f"bot/{assistant.id}/update",
+        f"assistant/{assistant.id}/update",
         json=update_data_1.model_dump(),
         headers=headers,
     )
@@ -1302,7 +1354,7 @@ async def test_update_bot_multiple_owners_can_update(test_client, test_db_sessio
     )
 
     update_response_2 = test_client.post(
-        f"bot/{assistant.id}/update",
+        f"assistant/{assistant.id}/update",
         json=update_data_2.model_dump(),
         headers=headers,
     )
@@ -1318,14 +1370,14 @@ async def test_update_bot_multiple_owners_can_update(test_client, test_db_sessio
     assert updated_response_2.latest_version.version == 3
 
 
-# ===== GET ALL BOTS TESTS =====
+# ===== GET ALL ASSISTANTS TESTS =====
 
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_empty_list(test_client, test_db_session):
-    """Test getting all bots when no bots exist."""
-    response = test_client.get("bot", headers=headers)
+async def test_get_all_assistants_empty_list(test_client, test_db_session):
+    """Test getting all assistants when no assistants exist."""
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1335,8 +1387,8 @@ async def test_get_all_bots_empty_list(test_client, test_db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_single_bot(test_client, test_db_session):
-    """Test getting all bots with a single bot."""
+async def test_get_all_assistants_single_assistant(test_client, test_db_session):
+    """Test getting all assistants with a single assistant."""
     # Create an assistant using repository directly
     assistant_repo = AssistantRepository(test_db_session)
 
@@ -1361,8 +1413,8 @@ async def test_get_all_bots_single_bot(test_client, test_db_session):
     )
     await test_db_session.commit()
 
-    # Get all bots
-    response = test_client.get("bot", headers=headers)
+    # Get all assistants
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1379,8 +1431,8 @@ async def test_get_all_bots_single_bot(test_client, test_db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_multiple_bots(test_client, test_db_session):
-    """Test getting all bots with multiple bots."""
+async def test_get_all_assistants_multiple_assistants(test_client, test_db_session):
+    """Test getting all assistants with multiple assistants."""
     assistant_repo = AssistantRepository(test_db_session)
 
     # Create multiple assistants
@@ -1438,8 +1490,8 @@ async def test_get_all_bots_multiple_bots(test_client, test_db_session):
 
     await test_db_session.commit()
 
-    # Get all bots
-    response = test_client.get("bot", headers=headers)
+    # Get all assistants
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1457,7 +1509,9 @@ async def test_get_all_bots_multiple_bots(test_client, test_db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_hierarchical_access_filtering(test_client, test_db_session):
+async def test_get_all_assistants_hierarchical_access_filtering(
+    test_client, test_db_session
+):
     """Test that hierarchical access filtering works correctly."""
     assistant_repo = AssistantRepository(test_db_session)
 
@@ -1539,8 +1593,8 @@ async def test_get_all_bots_hierarchical_access_filtering(test_client, test_db_s
 
     await test_db_session.commit()
 
-    # Get all bots
-    response = test_client.get("bot", headers=headers)
+    # Get all assistants
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1559,8 +1613,8 @@ async def test_get_all_bots_hierarchical_access_filtering(test_client, test_db_s
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_with_complex_data(test_client, test_db_session):
-    """Test getting all bots with complex data structures (tools, examples, etc.)."""
+async def test_get_all_assistants_with_complex_data(test_client, test_db_session):
+    """Test getting all assistants with complex data structures (tools, examples, etc.)."""
     assistant_repo = AssistantRepository(test_db_session)
 
     # Create assistant with complex data
@@ -1617,8 +1671,8 @@ async def test_get_all_bots_with_complex_data(test_client, test_db_session):
     assert retrieved_version is not None
     assert len(retrieved_version.tool_associations) == 2
 
-    # Get all bots
-    response = test_client.get("bot", headers=headers)
+    # Get all assistants
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1660,8 +1714,8 @@ async def test_get_all_bots_with_complex_data(test_client, test_db_session):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_with_multiple_versions(test_client, test_db_session):
-    """Test that getAllBots returns only the latest version of each assistant."""
+async def test_get_all_assistants_with_multiple_versions(test_client, test_db_session):
+    """Test that getAllAssistants returns only the latest version of each assistant."""
     assistant_repo = AssistantRepository(test_db_session)
 
     # Create assistant
@@ -1705,8 +1759,8 @@ async def test_get_all_bots_with_multiple_versions(test_client, test_db_session)
 
     await test_db_session.commit()
 
-    # Get all bots
-    response = test_client.get("bot", headers=headers)
+    # Get all assistants
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1722,9 +1776,9 @@ async def test_get_all_bots_with_multiple_versions(test_client, test_db_session)
 
 
 @pytest.mark.integration
-def test_get_all_bots_response_format(test_client):
-    """Test that getAllBots returns the correct response format even when empty."""
-    response = test_client.get("bot", headers=headers)
+def test_get_all_assistants_response_format(test_client):
+    """Test that getAllAssistants returns the correct response format even when empty."""
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1738,10 +1792,10 @@ def test_get_all_bots_response_format(test_client):
 
 @pytest.mark.integration
 @pytest.mark.asyncio
-async def test_get_all_bots_performance_with_many_assistants(
+async def test_get_all_assistants_performance_with_many_assistants(
     test_client, test_db_session
 ):
-    """Test getAllBots performance with a larger number of assistants."""
+    """Test getAllAssistants performance with a larger number of assistants."""
     assistant_repo = AssistantRepository(test_db_session)
 
     # Create many assistants
@@ -1768,8 +1822,8 @@ async def test_get_all_bots_performance_with_many_assistants(
 
     await test_db_session.commit()
 
-    # Get all bots - should handle many assistants efficiently
-    response = test_client.get("bot", headers=headers)
+    # Get all assistants - should handle many assistants efficiently
+    response = test_client.get("assistant", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1791,11 +1845,11 @@ async def test_get_all_bots_performance_with_many_assistants(
         assert assistant_response.latest_version is not None
 
 
-# ===== GET SPECIFIC BOT TESTS =====
+# ===== GET SPECIFIC ASSISTANT TESTS =====
 
 
 @pytest.mark.integration
-def test_get_bot_success(test_client):
+def test_get_assistant_success(test_client):
     """Test successful retrieval of a specific assistant."""
     # Create assistant via API first
     assistant_data = AssistantCreate(
@@ -1814,13 +1868,13 @@ def test_get_bot_success(test_client):
     )
 
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     created_assistant = AssistantResponse.model_validate(create_response.json())
 
     # Now get the assistant
-    response = test_client.get(f"bot/{created_assistant.id}", headers=headers)
+    response = test_client.get(f"assistant/{created_assistant.id}", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1855,11 +1909,11 @@ def test_get_bot_success(test_client):
 
 
 @pytest.mark.integration
-def test_get_bot_not_found(test_client):
+def test_get_assistant_not_found(test_client):
     """Test retrieving a non-existent assistant."""
     non_existent_id = "00000000-0000-4000-8000-000000000000"
 
-    response = test_client.get(f"bot/{non_existent_id}", headers=headers)
+    response = test_client.get(f"assistant/{non_existent_id}", headers=headers)
 
     assert response.status_code == 404
     error_data = response.json()
@@ -1868,11 +1922,11 @@ def test_get_bot_not_found(test_client):
 
 
 @pytest.mark.integration
-def test_get_bot_invalid_uuid(test_client):
+def test_get_assistant_invalid_uuid(test_client):
     """Test retrieving with invalid UUID format."""
     invalid_id = "invalid-uuid-format"
 
-    response = test_client.get(f"bot/{invalid_id}", headers=headers)
+    response = test_client.get(f"assistant/{invalid_id}", headers=headers)
 
     # This might return 404 or 422 depending on FastAPI's UUID validation
     assert response.status_code in [404, 422]
@@ -1880,7 +1934,7 @@ def test_get_bot_invalid_uuid(test_client):
 
 # @pytest.mark.integration
 # @pytest.mark.asyncio
-# async def test_get_bot_access_control(test_db_session, test_client):
+# async def test_get_assistant_access_control(test_db_session, test_client):
 #     """Test access control for retrieving assistants."""
 #     # This test is commented out because it requires complex setup to create
 #     # an assistant with different owners, which is not easily achievable via the API
@@ -1888,7 +1942,7 @@ def test_get_bot_invalid_uuid(test_client):
 
 
 @pytest.mark.integration
-def test_get_bot_with_unicode_content(test_client):
+def test_get_assistant_with_unicode_content(test_client):
     """Test retrieving an assistant with Unicode content."""
     # Create assistant with Unicode content via API
     assistant_data = AssistantCreate(
@@ -1906,13 +1960,13 @@ def test_get_bot_with_unicode_content(test_client):
     )
 
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     created_assistant = AssistantResponse.model_validate(create_response.json())
 
     # Retrieve the assistant
-    response = test_client.get(f"bot/{created_assistant.id}", headers=headers)
+    response = test_client.get(f"assistant/{created_assistant.id}", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1933,7 +1987,7 @@ def test_get_bot_with_unicode_content(test_client):
 
 
 @pytest.mark.integration
-def test_get_bot_empty_fields(test_client):
+def test_get_assistant_empty_fields(test_client):
     """Test retrieving an assistant with empty optional fields."""
     # Create assistant with empty optional fields via API
     assistant_data = AssistantCreate(
@@ -1949,13 +2003,13 @@ def test_get_bot_empty_fields(test_client):
     )
 
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     created_assistant = AssistantResponse.model_validate(create_response.json())
 
     # Retrieve the assistant
-    response = test_client.get(f"bot/{created_assistant.id}", headers=headers)
+    response = test_client.get(f"assistant/{created_assistant.id}", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -1971,7 +2025,7 @@ def test_get_bot_empty_fields(test_client):
 
 
 @pytest.mark.integration
-def test_get_bot_hierarchical_access(test_client):
+def test_get_assistant_hierarchical_access(test_client):
     """Test hierarchical access control for retrieving assistants."""
     # Create assistants with different access configurations via API
 
@@ -1984,7 +2038,7 @@ def test_get_bot_hierarchical_access(test_client):
     )
 
     create_response1 = test_client.post(
-        "bot/create", json=assistant1_data.model_dump(), headers=headers
+        "assistant/create", json=assistant1_data.model_dump(), headers=headers
     )
     assert create_response1.status_code == 200
     assistant1 = AssistantResponse.model_validate(create_response1.json())
@@ -2000,7 +2054,7 @@ def test_get_bot_hierarchical_access(test_client):
     )
 
     create_response2 = test_client.post(
-        "bot/create", json=assistant2_data.model_dump(), headers=headers
+        "assistant/create", json=assistant2_data.model_dump(), headers=headers
     )
     assert create_response2.status_code == 200
     assistant2 = AssistantResponse.model_validate(create_response2.json())
@@ -2014,21 +2068,21 @@ def test_get_bot_hierarchical_access(test_client):
     )
 
     create_response3 = test_client.post(
-        "bot/create", json=assistant3_data.model_dump(), headers=headers
+        "assistant/create", json=assistant3_data.model_dump(), headers=headers
     )
     assert create_response3.status_code == 200
     assistant3 = AssistantResponse.model_validate(create_response3.json())
 
     # Test access to parent department assistant (should be allowed)
-    response1 = test_client.get(f"bot/{assistant1.id}", headers=headers)
+    response1 = test_client.get(f"assistant/{assistant1.id}", headers=headers)
     assert response1.status_code == 200
 
     # Test access to child department assistant (should be allowed - as owner)
-    response2 = test_client.get(f"bot/{assistant2.id}", headers=headers)
+    response2 = test_client.get(f"assistant/{assistant2.id}", headers=headers)
     assert response2.status_code == 200  # Should be accessible as owner
 
     # Test access to different department path (should be allowed - as owner)
-    response3 = test_client.get(f"bot/{assistant3.id}", headers=headers)
+    response3 = test_client.get(f"assistant/{assistant3.id}", headers=headers)
     assert response3.status_code == 200  # Should be accessible as owner
 
 
@@ -2060,7 +2114,7 @@ def assistant_with_multiple_versions(test_client):
 
     # Create assistant via API to get proper structure
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     assistant_response = AssistantResponse.model_validate(create_response.json())
@@ -2077,7 +2131,9 @@ def assistant_with_multiple_versions(test_client):
     )
 
     update_response = test_client.post(
-        f"bot/{assistant_id}/update", json=update_data_v2.model_dump(), headers=headers
+        f"assistant/{assistant_id}/update",
+        json=update_data_v2.model_dump(),
+        headers=headers,
     )
     assert update_response.status_code == 200
 
@@ -2113,7 +2169,9 @@ def assistant_with_multiple_versions(test_client):
     )
 
     update_response_v3 = test_client.post(
-        f"bot/{assistant_id}/update", json=update_data_v3.model_dump(), headers=headers
+        f"assistant/{assistant_id}/update",
+        json=update_data_v3.model_dump(),
+        headers=headers,
     )
     assert update_response_v3.status_code == 200
 
@@ -2126,7 +2184,7 @@ def test_get_assistant_version_success(assistant_with_multiple_versions, test_cl
     assistant_id = assistant_with_multiple_versions
 
     # Test getting version 1
-    response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+    response = test_client.get(f"assistant/{assistant_id}/version/1", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -2154,7 +2212,9 @@ def test_get_assistant_version_specific_versions(
     assistant_id = assistant_with_multiple_versions
 
     # Test version 2
-    response_v2 = test_client.get(f"bot/{assistant_id}/version/2", headers=headers)
+    response_v2 = test_client.get(
+        f"assistant/{assistant_id}/version/2", headers=headers
+    )
     assert response_v2.status_code == 200
     version_v2 = AssistantVersionResponse.model_validate(response_v2.json())
 
@@ -2166,7 +2226,9 @@ def test_get_assistant_version_specific_versions(
     assert version_v2.tags == ["v2", "updated"]
 
     # Test version 3
-    response_v3 = test_client.get(f"bot/{assistant_id}/version/3", headers=headers)
+    response_v3 = test_client.get(
+        f"assistant/{assistant_id}/version/3", headers=headers
+    )
     assert response_v3.status_code == 200
     version_v3 = AssistantVersionResponse.model_validate(response_v3.json())
 
@@ -2187,7 +2249,9 @@ def test_get_assistant_version_not_found_assistant(test_client):
     """Test getting version of non-existent assistant."""
     non_existent_id = "00000000-0000-4000-8000-000000000000"
 
-    response = test_client.get(f"bot/{non_existent_id}/version/1", headers=headers)
+    response = test_client.get(
+        f"assistant/{non_existent_id}/version/1", headers=headers
+    )
 
     assert response.status_code == 404
 
@@ -2200,7 +2264,7 @@ def test_get_assistant_version_not_found_version(
     assistant_id = assistant_with_multiple_versions
 
     # Try to get version 99 (doesn't exist)
-    response = test_client.get(f"bot/{assistant_id}/version/99", headers=headers)
+    response = test_client.get(f"assistant/{assistant_id}/version/99", headers=headers)
 
     assert response.status_code == 404
 
@@ -2210,7 +2274,7 @@ def test_get_assistant_version_invalid_uuid(test_client):
     """Test getting version with invalid UUID format."""
     invalid_id = "invalid-uuid-format"
 
-    response = test_client.get(f"bot/{invalid_id}/version/1", headers=headers)
+    response = test_client.get(f"assistant/{invalid_id}/version/1", headers=headers)
 
     # Should return 404 or 422 depending on FastAPI's UUID validation
     assert response.status_code in [404, 422]
@@ -2225,18 +2289,20 @@ def test_get_assistant_version_invalid_version_format(
 
     # Test with non-numeric version
     response_invalid = test_client.get(
-        f"bot/{assistant_id}/version/invalid", headers=headers
+        f"assistant/{assistant_id}/version/invalid", headers=headers
     )
     assert response_invalid.status_code == 422
 
     # Test with negative version
     response_negative = test_client.get(
-        f"bot/{assistant_id}/version/-1", headers=headers
+        f"assistant/{assistant_id}/version/-1", headers=headers
     )
     assert response_negative.status_code == 404
 
     # Test with zero version
-    response_zero = test_client.get(f"bot/{assistant_id}/version/0", headers=headers)
+    response_zero = test_client.get(
+        f"assistant/{assistant_id}/version/0", headers=headers
+    )
     assert response_zero.status_code == 404
 
 
@@ -2271,7 +2337,7 @@ async def test_get_assistant_version_access_control(test_client, test_db_session
 
     # Try to access version of restricted assistant
     response = test_client.get(
-        f"bot/{restricted_assistant.id}/version/1", headers=headers
+        f"assistant/{restricted_assistant.id}/version/1", headers=headers
     )
 
     assert response.status_code == 403
@@ -2285,7 +2351,7 @@ def test_get_assistant_version_with_tools(
     assistant_id = assistant_with_multiple_versions
 
     # Get version 3 which has multiple tools
-    response = test_client.get(f"bot/{assistant_id}/version/3", headers=headers)
+    response = test_client.get(f"assistant/{assistant_id}/version/3", headers=headers)
 
     assert response.status_code == 200
     version_response = AssistantVersionResponse.model_validate(
@@ -2318,7 +2384,7 @@ def test_get_assistant_version_with_examples_and_prompts(
     assistant_id = assistant_with_multiple_versions
 
     # Get version 3 which has multiple examples and quick prompts
-    response = test_client.get(f"bot/{assistant_id}/version/3", headers=headers)
+    response = test_client.get(f"assistant/{assistant_id}/version/3", headers=headers)
 
     assert response.status_code == 200
     version_response = AssistantVersionResponse.model_validate(
@@ -2347,7 +2413,7 @@ def test_get_assistant_version_owner_information(
     """Test that version response includes correct owner information."""
     assistant_id = assistant_with_multiple_versions
 
-    response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+    response = test_client.get(f"assistant/{assistant_id}/version/1", headers=headers)
 
     assert response.status_code == 200
     version_response = AssistantVersionResponse.model_validate(response.json())
@@ -2365,7 +2431,7 @@ def test_get_assistant_version_hierarchical_access(
     """Test that version response includes correct hierarchical access information."""
     assistant_id = assistant_with_multiple_versions
 
-    response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+    response = test_client.get(f"assistant/{assistant_id}/version/1", headers=headers)
 
     assert response.status_code == 200
     version_response = AssistantVersionResponse.model_validate(response.json())
@@ -2402,7 +2468,9 @@ async def test_get_assistant_version_with_empty_fields(test_client, test_db_sess
     await test_db_session.commit()
 
     # Get the version
-    response = test_client.get(f"bot/{minimal_assistant.id}/version/1", headers=headers)
+    response = test_client.get(
+        f"assistant/{minimal_assistant.id}/version/1", headers=headers
+    )
 
     assert response.status_code == 200
     version_response = AssistantVersionResponse.model_validate(response.json())
@@ -2425,7 +2493,9 @@ def test_get_assistant_version_concurrent_access(
     # Simulate concurrent requests to the same version
     responses = []
     for _ in range(5):
-        response = test_client.get(f"bot/{assistant_id}/version/1", headers=headers)
+        response = test_client.get(
+            f"assistant/{assistant_id}/version/1", headers=headers
+        )
         responses.append(response)
 
     # All requests should succeed
@@ -2445,13 +2515,13 @@ def test_get_assistant_version_versus_latest(
 
     # Get specific version 1
     version_1_response = test_client.get(
-        f"bot/{assistant_id}/version/1", headers=headers
+        f"assistant/{assistant_id}/version/1", headers=headers
     )
     assert version_1_response.status_code == 200
     version_1 = AssistantVersionResponse.model_validate(version_1_response.json())
 
-    # Get latest version via main bot endpoint
-    latest_response = test_client.get(f"bot/{assistant_id}", headers=headers)
+    # Get latest version via main assistant endpoint
+    latest_response = test_client.get(f"assistant/{assistant_id}", headers=headers)
     assert latest_response.status_code == 200
     latest_assistant = AssistantResponse.model_validate(latest_response.json())
 
@@ -2467,17 +2537,19 @@ def test_get_assistant_version_edge_cases(test_client):
     """Test edge cases for version endpoint."""
     # Test with valid UUID but non-existent assistant
     valid_uuid = "12345678-1234-4000-8000-123456789012"
-    response = test_client.get(f"bot/{valid_uuid}/version/1", headers=headers)
+    response = test_client.get(f"assistant/{valid_uuid}/version/1", headers=headers)
     assert response.status_code == 404
 
     # Test with extremely large version number
     assistant_id = "12345678-1234-4000-8000-123456789012"  # Non-existent but valid UUID
-    response = test_client.get(f"bot/{assistant_id}/version/999999999", headers=headers)
+    response = test_client.get(
+        f"assistant/{assistant_id}/version/999999999", headers=headers
+    )
     assert response.status_code == 404
 
 
 @pytest.mark.integration
-def test_get_bot_owner_access_without_hierarchical_permission(test_client):
+def test_get_assistant_owner_access_without_hierarchical_permission(test_client):
     """Test that an owner can access their assistant even without hierarchical access."""
     # Create an assistant with hierarchical access that the test user doesn't have
     # The test user is in "IT-Test-Department", so we'll use a different department
@@ -2504,14 +2576,14 @@ def test_get_bot_owner_access_without_hierarchical_permission(test_client):
 
     # Create the assistant via API - the test user will automatically become an owner
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     created_assistant = AssistantResponse.model_validate(create_response.json())
 
     # Now try to access the assistant - should succeed because user is an owner
     # even though they don't have hierarchical access to HR-Department
-    response = test_client.get(f"bot/{created_assistant.id}", headers=headers)
+    response = test_client.get(f"assistant/{created_assistant.id}", headers=headers)
 
     assert response.status_code == 200
     response_data = response.json()
@@ -2543,7 +2615,9 @@ def test_get_bot_owner_access_without_hierarchical_permission(test_client):
 
 
 @pytest.mark.integration
-def test_get_bot_version_owner_access_without_hierarchical_permission(test_client):
+def test_get_assistant_version_owner_access_without_hierarchical_permission(
+    test_client,
+):
     """Test that an owner can access specific versions of their assistant even without hierarchical access."""
     # Create an assistant with hierarchical access that the test user doesn't have
     assistant_data = AssistantCreate(
@@ -2559,7 +2633,7 @@ def test_get_bot_version_owner_access_without_hierarchical_permission(test_clien
 
     # Create the assistant
     create_response = test_client.post(
-        "bot/create", json=assistant_data.model_dump(), headers=headers
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
     )
     assert create_response.status_code == 200
     created_assistant = AssistantResponse.model_validate(create_response.json())
@@ -2573,7 +2647,7 @@ def test_get_bot_version_owner_access_without_hierarchical_permission(test_clien
     )
 
     update_response = test_client.post(
-        f"bot/{created_assistant.id}/update",
+        f"assistant/{created_assistant.id}/update",
         json=update_data.model_dump(),
         headers=headers,
     )
@@ -2581,7 +2655,7 @@ def test_get_bot_version_owner_access_without_hierarchical_permission(test_clien
 
     # Now try to access version 1 specifically - should succeed because user is an owner
     version_response = test_client.get(
-        f"bot/{created_assistant.id}/version/1", headers=headers
+        f"assistant/{created_assistant.id}/version/1", headers=headers
     )
 
     assert version_response.status_code == 200
@@ -2600,7 +2674,7 @@ def test_get_bot_version_owner_access_without_hierarchical_permission(test_clien
 
     # Also test access to version 2
     version2_response = test_client.get(
-        f"bot/{created_assistant.id}/version/2", headers=headers
+        f"assistant/{created_assistant.id}/version/2", headers=headers
     )
 
     assert version2_response.status_code == 200

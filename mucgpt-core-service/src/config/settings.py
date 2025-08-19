@@ -55,7 +55,6 @@ class LabelsConfig(BaseModel):
 class FrontendConfig(BaseModel):
     labels: LabelsConfig = Field(default_factory=LabelsConfig)
     alternative_logo: bool = False
-    enable_simply: bool = True
 
 
 class ConfigResponse(BaseModel):

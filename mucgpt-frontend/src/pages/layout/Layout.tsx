@@ -50,7 +50,6 @@ export const Layout = () => {
 
     const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
 
-    const [, setSimply] = useState<boolean>(true);
     const [, setModels] = useState(config.models);
 
     // Mobile menu state
@@ -90,7 +89,6 @@ export const Layout = () => {
             .then(result => {
                 setConfig(result);
                 setModels(result.models);
-                setSimply(result.frontend.enable_simply);
                 if (result.models.length === 0) {
                     console.error("Keine Modelle vorhanden");
                 }

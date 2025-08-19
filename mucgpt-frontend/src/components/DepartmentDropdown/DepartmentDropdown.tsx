@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./DepartmentDropdown.module.css";
 import { useTranslation } from "react-i18next";
@@ -26,6 +26,8 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
     const [search, setSearch] = useState("");
     const [show, setShow] = useState(false);
     const { user } = useContext(UserContext);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const dropdownRef = useRef<HTMLUListElement>(null);
 
     useEffect(() => {
         if (departments.length > 0) return; // Nur einmal laden, wenn noch keine Daten vorhanden sind
@@ -33,6 +35,19 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
             setDepartments(data || []);
         });
     }, []);
+
+    // Scroll to dropdown when it opens
+    useEffect(() => {
+        if (show && dropdownRef.current) {
+            setTimeout(() => {
+                dropdownRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'nearest'
+                });
+            }, 50); // Small delay to ensure the dropdown is rendered
+        }
+    }, [show]);
 
     // First filter departments based on search and not already selected
     const filteredDepartments = departments.filter(
@@ -58,6 +73,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
         setPublishDepartments([...newSelected, d]);
         setSearch("");
         setShow(false);
+        inputRef.current?.blur();
     };
 
     const handleRemove = (d: string) => {
@@ -85,6 +101,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
             </div>
 
             <input
+                ref={inputRef}
                 type="text"
                 value={search}
                 placeholder={t("components.department_dropdown.placeholder", "Suche Abteilung...")}
@@ -100,6 +117,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
             />
             {show && (
                 <ul
+                    ref={dropdownRef}
                     className={styles.dropdownList}
                     onMouseDown={e => e.preventDefault()} // verhindert, dass onBlur vor handleSelect ausgelöst wird
                 >

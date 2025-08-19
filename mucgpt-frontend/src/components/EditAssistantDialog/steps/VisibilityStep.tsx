@@ -7,7 +7,6 @@ import DepartmentDropdown from "../../DepartmentDropdown/DepartmentDropdown";
 
 interface VisibilityStepProps {
     isOwner: boolean;
-    publish: boolean;
     publishDepartments: string[];
     invisibleChecked: boolean;
     setPublishDepartments: (departments: string[]) => void;
@@ -17,7 +16,6 @@ interface VisibilityStepProps {
 
 export const VisibilityStep = ({
     isOwner,
-    publish,
     publishDepartments,
     invisibleChecked,
     setPublishDepartments,
@@ -41,7 +39,6 @@ export const VisibilityStep = ({
             <Field
                 size="large"
                 className={styles.rangeField}
-                hidden={!publish}
                 label={
                     <Text size={400} weight="medium">
                         Sichtbarkeit
@@ -65,7 +62,7 @@ export const VisibilityStep = ({
             </Field>
 
             {/* Department Selection - only show when publishing and not invisible */}
-            {publish && !invisibleChecked && (
+            {!invisibleChecked && (
                 <Field size="large" className={styles.rangeField}>
                     <label className={styles.formLabel}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>

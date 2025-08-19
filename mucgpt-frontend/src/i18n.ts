@@ -368,6 +368,30 @@ i18n
                             cancel: "Abbrechen"
                         },
                         publish_assistant_dialog: {
+                            title: "Assistent veröffentlichen",
+                            version: "Version",
+                            assistant_info_title: "Unbenannter Assistent",
+                            assistant_info_description: "Keine Beschreibung verfügbar",
+                            important_info_title: "Wichtige Hinweise",
+                            important_info_items: {
+                                item1: "Der Assistent wird entsprechend Ihrer Auswahl verfügbar gemacht",
+                                item2: "Veröffentlichte Assistenten können von den berechtigten Nutzern verwendet werden",
+                                item3: "Die Veröffentlichung kann später geändert oder zurückgenommen werden"
+                            },
+                            publication_options_title: "Veröffentlichungsoptionen",
+                            visibility_public: "Öffentlich sichtbar",
+                            visibility_private: "Privat (nur über Link)",
+                            visibility_public_description: "Assistent erscheint in der öffentlichen Assistent-Liste",
+                            visibility_private_description: "Assistent ist nur über den direkten Link erreichbar",
+                            direct_link_label: "Direkter Assistent-Link:",
+                            copy_link_tooltip: "Link in Zwischenablage kopieren",
+                            copy_link_aria: "Link kopieren",
+                            departments_title: "Veröffentlichen für Abteilungen",
+                            departments_description: "Wählen Sie die Abteilungen aus, für die der Assistent verfügbar sein soll:",
+                            cancel: "Abbrechen",
+                            confirm: "Bestätigen",
+                            publishing: "Veröffentliche...",
+                            done: "Fertig",
                             publish_assistant_success: "Assistent erfolgreich veröffentlicht",
                             publish_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich veröffentlicht"
                         },
@@ -388,7 +412,7 @@ i18n
                             departments_description: "Dieser Assistent ist für folgende Organisationseinheiten freigegeben:",
                             department_single: "Bereich",
                             departments_plural: "Bereiche",
-                            public_access: "Öffentlich zugänglich",
+                            public_access: "Öffentlich",
                             description: "Beschreibung",
                             tools: "Werkzeuge",
                             tool_single: "Werkzeug",
@@ -401,7 +425,8 @@ i18n
                             subscribe_success_title: "Assistent {{title}} erfolgreich abonniert",
                             subscribe_success_message: "Du hast den Assistenten erfolgreich abonniert.",
                             subscribe_failed_title: "Fehler beim Abonnieren des Assistenten {{title}}",
-                            subscribe_failed_default: "Beim Abonnieren des Assistenten ist ein Fehler aufgetreten. Bitte versuche es erneut."
+                            subscribe_failed_default: "Beim Abonnieren des Assistenten ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+                            times_subscribed: "mal abonniert"
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -764,6 +789,30 @@ i18n
                             cancel: "Cancel"
                         },
                         publish_assistant_dialog: {
+                            title: "Publish Assistant",
+                            version: "Version",
+                            assistant_info_title: "Unnamed Assistant",
+                            assistant_info_description: "No description available",
+                            important_info_title: "Important Information",
+                            important_info_items: {
+                                item1: "The assistant will be made available according to your selection",
+                                item2: "Published assistants can be used by authorized users",
+                                item3: "Publication can be changed or withdrawn later"
+                            },
+                            publication_options_title: "Publication Options",
+                            visibility_public: "Publicly visible",
+                            visibility_private: "Private (link only)",
+                            visibility_public_description: "Assistant appears in the public assistant list",
+                            visibility_private_description: "Assistant is only accessible via direct link",
+                            direct_link_label: "Direct assistant link:",
+                            copy_link_tooltip: "Copy link to clipboard",
+                            copy_link_aria: "Copy link",
+                            departments_title: "Publish for departments",
+                            departments_description: "Select the departments for which the assistant should be available:",
+                            cancel: "Cancel",
+                            confirm: "Confirm",
+                            publishing: "Publishing...",
+                            done: "Done",
                             publish_assistant_success: "Assistant published successfully",
                             publish_assistant_success_message: "The assistant '{{title}}' has been published successfully"
                         },
@@ -784,7 +833,7 @@ i18n
                             departments_description: "This assistant is authorized for the following organizational units:",
                             department_single: "Department",
                             departments_plural: "Departments",
-                            public_access: "Publicly accessible",
+                            public_access: "Public",
                             description: "Description",
                             tools: "Tools",
                             tool_single: "Tool",
@@ -797,7 +846,8 @@ i18n
                             subscribe_success_title: "Assistant {{title}} successfully subscribed",
                             subscribe_success_message: "You have successfully subscribed to the assistant.",
                             subscribe_failed_title: "Error subscribing to {{title}}",
-                            subscribe_failed_default: "An error occurred while subscribing to the assistant. Please try again."
+                            subscribe_failed_default: "An error occurred while subscribing to the assistant. Please try again.",
+                            times_subscribed: "times subscribed"
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1165,6 +1215,30 @@ i18n
                             cancel: "Obbrecha"
                         },
                         publish_assistant_dialog: {
+                            title: "Assistent veröffentlcha",
+                            version: "Version",
+                            assistant_info_title: "Unbenannter Assistent",
+                            assistant_info_description: "Koa Beschreibung verfügbar",
+                            important_info_title: "Wichtige Hinweise",
+                            important_info_items: {
+                                item1: "Da Assistent wird entsprechend vo deiner Auswahl verfügbar gmacht",
+                                item2: "Veröffentlichte Assistentn können vo de berechtigten Nutzer verwendet werdn",
+                                item3: "De Veröffentlichung ko später geändert oder zruckgnomma werdn"
+                            },
+                            publication_options_title: "Veröffentlichungsoptionen",
+                            visibility_public: "Öffentlich sichtbar",
+                            visibility_private: "Privat (nur üba Link)",
+                            visibility_public_description: "Assistent erscheint in da öffentlichen Assistent-Liste",
+                            visibility_private_description: "Assistent is nur üba'n direkten Link erreichbar",
+                            direct_link_label: "Direkter Assistent-Link:",
+                            copy_link_tooltip: "Link in Zwischenablage kopiern",
+                            copy_link_aria: "Link kopiern",
+                            departments_title: "Veröffentlcha für Abteilungen",
+                            departments_description: "Such de Abteilungen aus, für de da Assistent verfügbar sei soll:",
+                            cancel: "Obbrecha",
+                            confirm: "Bestätigen",
+                            publishing: "Veröffentlche...",
+                            done: "Fertig",
                             publish_assistant_success: "Assistent erfolgreich veröffentlicht",
                             publish_assistant_success_message: "Da Assistent '{{title}}' is erfolgreich veröffentlicht worn"
                         },
@@ -1185,7 +1259,7 @@ i18n
                             departments_description: "Der Assistent is für de foigenden Organisationseinheitn freigem:",
                             department_single: "Bereich",
                             departments_plural: "Bereiche",
-                            public_access: "Öffentlich zugänglich",
+                            public_access: "Öffentlich",
                             description: "Beschreibung",
                             tools: "Werkzeig",
                             tool_single: "Werkzeig",
@@ -1198,7 +1272,8 @@ i18n
                             subscribe_success_title: "Assistent {{title}} erfolgreich abonniert",
                             subscribe_success_message: "Du host den Assistent erfolgreich abonniert.",
                             subscribe_failed_title: "Fehler beim Abonnieren vom Assistentn {{title}}",
-                            subscribe_failed_default: "Beim Abonnieren vom Assistentn is a Fehler aufgtretn. Bitte versuch's amoi."
+                            subscribe_failed_default: "Beim Abonnieren vom Assistentn is a Fehler aufgtretn. Bitte versuch's amoi.",
+                            times_subscribed: "moi abonniert"
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -1565,6 +1640,30 @@ i18n
                             cancel: "Annuler"
                         },
                         publish_assistant_dialog: {
+                            title: "Publier l'assistant",
+                            version: "Version",
+                            assistant_info_title: "Assistant sans nom",
+                            assistant_info_description: "Aucune description disponible",
+                            important_info_title: "Informations importantes",
+                            important_info_items: {
+                                item1: "L'assistant sera rendu disponible selon votre sélection",
+                                item2: "Les assistants publiés peuvent être utilisés par les utilisateurs autorisés",
+                                item3: "La publication peut être modifiée ou retirée plus tard"
+                            },
+                            publication_options_title: "Options de publication",
+                            visibility_public: "Publiquement visible",
+                            visibility_private: "Privé (uniquement via lien)",
+                            visibility_public_description: "L'assistant apparaît dans la liste publique des assistants",
+                            visibility_private_description: "L'assistant n'est accessible que via le lien direct",
+                            direct_link_label: "Lien direct de l'assistant :",
+                            copy_link_tooltip: "Copier le lien dans le presse-papiers",
+                            copy_link_aria: "Copier le lien",
+                            departments_title: "Publier pour les départements",
+                            departments_description: "Sélectionnez les départements pour lesquels l'assistant doit être disponible :",
+                            cancel: "Annuler",
+                            confirm: "Confirmer",
+                            publishing: "Publication...",
+                            done: "Terminé",
                             publish_assistant_success: "Assistant publié avec succès",
                             publish_assistant_success_message: "L'assistant '{{title}}' a été publié avec succès"
                         },
@@ -1585,7 +1684,7 @@ i18n
                             departments_description: "Cet assistant est autorisé pour les unités organisationnelles suivantes :",
                             department_single: "Département",
                             departments_plural: "Départements",
-                            public_access: "Accessible publiquement",
+                            public_access: "publique",
                             description: "Description",
                             tools: "Outils",
                             tool_single: "Outil",
@@ -1598,7 +1697,8 @@ i18n
                             subscribe_success_title: "Assistant {{title}} abonné avec succès",
                             subscribe_success_message: "Vous vous êtes abonné avec succès à l'assistant.",
                             subscribe_failed_title: "Erreur lors de l'abonnement à {{title}}",
-                            subscribe_failed_default: "Une erreur est survenue lors de l'abonnement à l'assistant. Veuillez réessayer."
+                            subscribe_failed_default: "Une erreur est survenue lors de l'abonnement à l'assistant. Veuillez réessayer.",
+                            times_subscribed: "fois abonné"
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -1963,6 +2063,30 @@ i18n
                             cancel: "Скасувати"
                         },
                         publish_assistant_dialog: {
+                            title: "Опублікувати асистента",
+                            version: "Версія",
+                            assistant_info_title: "Безіменний асистент",
+                            assistant_info_description: "Опис відсутній",
+                            important_info_title: "Важлива інформація",
+                            important_info_items: {
+                                item1: "Асистент буде доступний відповідно до вашого вибору",
+                                item2: "Опубліковані асистенти можуть використовуватися авторизованими користувачами",
+                                item3: "Публікацію можна змінити або скасувати пізніше"
+                            },
+                            publication_options_title: "Параметри публікації",
+                            visibility_public: "Публічно видимий",
+                            visibility_private: "Приватний (тільки за посиланням)",
+                            visibility_public_description: "Асистент з'являється в публічному списку асистентів",
+                            visibility_private_description: "Асистент доступний тільки за прямим посиланням",
+                            direct_link_label: "Пряме посилання на асистента:",
+                            copy_link_tooltip: "Скопіювати посилання в буфер обміну",
+                            copy_link_aria: "Скопіювати посилання",
+                            departments_title: "Опублікувати для відділів",
+                            departments_description: "Виберіть відділи, для яких асистент має бути доступним:",
+                            cancel: "Скасувати",
+                            confirm: "Підтвердити",
+                            publishing: "Публікація...",
+                            done: "Готово",
                             publish_assistant_success: "Бот успішно опублікований",
                             publish_assistant_success_message: "Бот '{{title}}' було успішно опубліковано"
                         },
@@ -1983,7 +2107,7 @@ i18n
                             departments_description: "Цей асистент авторизований для наступних організаційних підрозділів:",
                             department_single: "Відділ",
                             departments_plural: "Відділи",
-                            public_access: "Публічний доступ",
+                            public_access: "Публічний",
                             description: "Опис",
                             tools: "Інструменти",
                             tool_single: "Інструмент",
@@ -1996,7 +2120,8 @@ i18n
                             subscribe_success_title: "Асистент {{title}} успішно підписаний",
                             subscribe_success_message: "Ви успішно підписалися на асистента.",
                             subscribe_failed_title: "Помилка при підписці на {{title}}",
-                            subscribe_failed_default: "Під час підписки на асистента сталася помилка. Будь ласка, спробуйте ще раз."
+                            subscribe_failed_default: "Під час підписки на асистента сталася помилка. Будь ласка, спробуйте ще раз.",
+                            times_subscribed: "разів підписано"
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

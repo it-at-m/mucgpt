@@ -49,6 +49,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 t("components.publish_assistant_dialog.publish_assistant_success"),
                 t("components.publish_assistant_dialog.publish_assistant_success_message", { title: assistant.title })
             );
+            console.log(invisibleChecked);
             // Wenn der Assistant nicht unsichtbar ist, schließe den Dialog sofort
             if (!invisibleChecked) {
                 onDeleteAssistant();
@@ -62,16 +63,16 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
     }, [assistant, invisibleChecked, publishDepartments, onDeleteAssistant, setOpen]);
 
     return (
-        <Dialog modalType="alert" open={open} onOpenChange={(_event, data) => setOpen(data.open)}>
+        <Dialog modalType="alert" open={open}>
             <DialogSurface className={styles.dialog}>
                 <DialogBody className={styles.dialogContent}>
                     <DialogTitle className={styles.title}>
                         <div className={styles.titleContainer}>
                             <Text size={600} weight="semibold">
-                                Assistant veröffentlichen
+                                {t("components.publish_assistant_dialog.title")}
                             </Text>
                             <Badge appearance="outline" color="informative" size="small">
-                                Version {assistant.version}
+                                {t("components.publish_assistant_dialog.version")} {assistant.version}
                             </Badge>
                         </div>
                     </DialogTitle>
@@ -80,11 +81,11 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                         {/* Assistant Info */}
                         <div className={styles.assistantInfoCard}>
                             <Text size={400} weight="medium">
-                                {assistant.title || "Unbenannter Assistant"}
+                                {assistant.title || t("components.publish_assistant_dialog.assistant_info_title")}
                             </Text>
                             <br />
                             <Text size={300} className={styles.assistantDescription}>
-                                {assistant.description || "Keine Beschreibung verfügbar"}
+                                {assistant.description || t("components.publish_assistant_dialog.assistant_info_description")}
                             </Text>
                         </div>
 
@@ -93,13 +94,13 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                             <div className={styles.infoHeader}>
                                 <Info16Regular className={styles.infoIcon} />
                                 <Text size={400} weight="medium">
-                                    Wichtige Hinweise
+                                    {t("components.publish_assistant_dialog.important_info_title")}
                                 </Text>
                             </div>
                             <ul className={styles.infoList}>
-                                <li>Der Assistant wird entsprechend Ihrer Auswahl verfügbar gemacht</li>
-                                <li>Veröffentlichte Assistants können von den berechtigten Nutzern verwendet werden</li>
-                                <li>Die Veröffentlichung kann später geändert oder zurückgenommen werden</li>
+                                <li>{t("components.publish_assistant_dialog.important_info_items.item1")}</li>
+                                <li>{t("components.publish_assistant_dialog.important_info_items.item2")}</li>
+                                <li>{t("components.publish_assistant_dialog.important_info_items.item3")}</li>
                             </ul>
                         </div>
 
@@ -108,7 +109,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                         {/* Publication Options */}
                         <div className={styles.optionsSection}>
                             <Text size={400} weight="medium" className={styles.sectionTitle}>
-                                Veröffentlichungsoptionen
+                                {t("components.publish_assistant_dialog.publication_options_title")}
                             </Text>
 
                             <div className={styles.visibilityOption}>
@@ -116,7 +117,11 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                     label={
                                         <div className={styles.checkboxLabel}>
                                             {invisibleChecked ? <EyeOff24Regular /> : <Eye24Regular />}
-                                            <span>{invisibleChecked ? "Privat (nur über Link)" : "Öffentlich sichtbar"}</span>
+                                            <span>
+                                                {invisibleChecked
+                                                    ? t("components.publish_assistant_dialog.visibility_private")
+                                                    : t("components.publish_assistant_dialog.visibility_public")}
+                                            </span>
                                         </div>
                                     }
                                     disabled={isPublishing || publishedAssistantId !== null}
@@ -125,8 +130,8 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                 />
                                 <Text size={300} className={styles.optionDescription}>
                                     {invisibleChecked
-                                        ? "Assistant ist nur über den direkten Link erreichbar"
-                                        : "Assistant erscheint in der öffentlichen Assistant-Liste"}
+                                        ? t("components.publish_assistant_dialog.visibility_private_description")
+                                        : t("components.publish_assistant_dialog.visibility_public_description")}
                                 </Text>
                             </div>
 
@@ -136,13 +141,13 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                         <div className={styles.linkSection}>
                                             <Label className={styles.linkLabel}>
                                                 <Link24Regular />
-                                                Direkter Assistant-Link:
+                                                {t("components.publish_assistant_dialog.direct_link_label")}
                                             </Label>
                                             <div className={styles.linkContainer}>
                                                 <Text size={300} className={styles.linkText}>
                                                     {`${window.location.origin}/#/communityassistant/${publishedAssistantId}`}
                                                 </Text>
-                                                <Tooltip content="Link in Zwischenablage kopieren" relationship="description">
+                                                <Tooltip content={t("components.publish_assistant_dialog.copy_link_tooltip")} relationship="description">
                                                     <Button
                                                         appearance="subtle"
                                                         size="small"
@@ -152,7 +157,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                                                 `${window.location.origin}/#/communityassistant/${publishedAssistantId}`
                                                             );
                                                         }}
-                                                        aria-label="Link kopieren"
+                                                        aria-label={t("components.publish_assistant_dialog.copy_link_aria")}
                                                     />
                                                 </Tooltip>
                                             </div>
@@ -166,11 +171,11 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                     <div className={styles.departmentHeader}>
                                         <People24Regular />
                                         <Text size={400} weight="medium">
-                                            Veröffentlichen für Abteilungen
+                                            {t("components.publish_assistant_dialog.departments_title")}
                                         </Text>
                                     </div>
                                     <Text size={300} className={styles.departmentDescription}>
-                                        Wählen Sie die Abteilungen aus, für die der Assistant verfügbar sein soll:
+                                        {t("components.publish_assistant_dialog.departments_description")}
                                     </Text>
                                     <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
                                         {t("components.edit_assistant_dialog.departments")}
@@ -188,7 +193,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
                                     <Dismiss24Regular />
-                                    {t("components.assistantsettingsdrawer.deleteDialog.cancel")}
+                                    {t("components.publish_assistant_dialog.cancel")}
                                 </Button>
                             </DialogTrigger>
                         )}
@@ -202,7 +207,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                     disabled={isPublishing}
                                 >
                                     <Checkmark24Filled />
-                                    {isPublishing ? "Veröffentliche..." : t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+                                    {isPublishing ? t("components.publish_assistant_dialog.publishing") : t("components.publish_assistant_dialog.confirm")}
                                 </Button>
                             </DialogTrigger>
                         )}
@@ -218,7 +223,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                     className={styles.publishButton}
                                 >
                                     <Checkmark24Filled />
-                                    Fertig
+                                    {t("components.publish_assistant_dialog.done")}
                                 </Button>
                             </DialogTrigger>
                         )}

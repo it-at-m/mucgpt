@@ -26,7 +26,7 @@ api_app = FastAPI(
     license_info={
         "name": "MIT",
     },
-    tags_metadata=[
+    openapi_tags=[
         {
             "name": "Assistants",
             "description": "Operations for managing AI assistants including creation, updates, and retrieval",
@@ -42,6 +42,10 @@ api_app = FastAPI(
         {
             "name": "System",
             "description": "System health and monitoring endpoints",
+        },
+        {
+            "name": "Subscriptions",
+            "description": "Operations for managing subscriptions to AI assistants",
         },
     ],
 )

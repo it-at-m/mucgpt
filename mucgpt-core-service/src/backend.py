@@ -28,16 +28,34 @@ api_app = FastAPI(
     title="MUCGPT-API",
     description="MUCCGPT core API for AI services",
     version=settings.version,
+    openapi_tags=[
+        {
+            "name": "Chat",
+            "description": "Operations for managing chat interactions with AI models",
+        },
+        {
+            "name": "Summarize",
+            "description": "Operations for summarizing text or documents using AI models",
+        },
+        {
+            "name": "System",
+            "description": "System health and monitoring endpoints",
+        },
+        {
+            "name": "Tools",
+            "description": "Operations for managing tools that can be used by assistants",
+        },
+    ],
 )
 backend.mount("/api/", api_app)
 
 api_app.add_middleware(CorrelationIdMiddleware)
 
 
-api_app.include_router(chat_router.router, prefix="", tags=["chat"])
-api_app.include_router(summarize_router.router, prefix="", tags=["summarize"])
-api_app.include_router(system_router.router, prefix="", tags=["system"])
-api_app.include_router(tools_router.router, prefix="", tags=["tools"])
+api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
+api_app.include_router(summarize_router.router, prefix="", tags=["Summarize"])
+api_app.include_router(system_router.router, prefix="", tags=["System"])
+api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 
 
 @api_app.exception_handler(AuthError)

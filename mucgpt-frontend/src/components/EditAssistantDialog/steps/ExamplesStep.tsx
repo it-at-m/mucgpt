@@ -1,7 +1,7 @@
 import { DialogContent, Field, Button, Input, Textarea } from "@fluentui/react-components";
 import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import styles from "../EditAssistantDialog.module.css";
 
 interface Example {
@@ -18,6 +18,7 @@ interface ExamplesStepProps {
 
 export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged }: ExamplesStepProps) => {
     const { t } = useTranslation();
+    const buttonRef = useRef<HTMLDivElement>(null);
 
     const addExample = useCallback(() => {
         // Only add if there is no empty example
@@ -25,6 +26,14 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
         if (!hasEmpty) {
             onExamplesChange([...examples, { text: "", value: "" }]);
             onHasChanged(true);
+            // Scroll to bottom after adding
+            setTimeout(() => {
+                buttonRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            }, 50);
         }
     }, [examples, onExamplesChange, onHasChanged]);
 
@@ -113,9 +122,11 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                         )}
                     </div>
                     {isOwner && (
-                        <Button appearance="subtle" onClick={addExample} disabled={!isOwner} className={styles.addFieldButton}>
-                            <Add24Regular /> {t("components.edit_assistant_dialog.add_example")}
-                        </Button>
+                        <div ref={buttonRef}>
+                            <Button appearance="subtle" onClick={addExample} disabled={!isOwner} className={styles.addFieldButton}>
+                                <Add24Regular /> {t("components.edit_assistant_dialog.add_example")}
+                            </Button>
+                        </div>
                     )}
                 </div>
             </Field>

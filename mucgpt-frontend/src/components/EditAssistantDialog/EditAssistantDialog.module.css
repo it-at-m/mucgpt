@@ -111,7 +111,7 @@
         max-width: 98%;
         min-height: 98%;
         max-height: 98%;
-        --dialog-content-height: calc(98vh - 200px);
+        --dialog-content-height: calc(98vh - 300px);
         position: relative;
     }
 }
@@ -130,8 +130,7 @@
 
 .scrollableDialogContent {
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     padding: 24px 24px 80px 24px; /* Extra bottom padding for fixed actions */
     width: 100%;
     display: flex;
@@ -152,8 +151,8 @@
     width: 100%;
     min-height: 0;
     flex: 1;
-    overflow: hidden;
-    max-height: var(--dialog-content-height, calc(100vh - 300px));
+    overflow-y: visible;
+    max-height: var(--dialog-content-height, calc(100% - 300px));
     position: relative;
 }
 
@@ -225,12 +224,12 @@
 
 .dynamicFieldContainer {
     margin-bottom: 20px;
-    overflow-y: auto;
     min-height: 200px;
     width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 .dynamicFieldList {
@@ -239,8 +238,8 @@
     gap: 12px;
     padding: 12px;
     flex: 1;
-    overflow: scroll;
     min-height: 200px;
+    overflow: visible;
 }
 
 .dynamicFieldItem {

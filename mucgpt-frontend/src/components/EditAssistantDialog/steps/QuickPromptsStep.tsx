@@ -1,7 +1,7 @@
 import { DialogContent, Field, Button, Input, Textarea } from "@fluentui/react-components";
 import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import styles from "../EditAssistantDialog.module.css";
 
 interface QuickPrompt {
@@ -19,6 +19,7 @@ interface QuickPromptsStepProps {
 
 export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, onHasChanged }: QuickPromptsStepProps) => {
     const { t } = useTranslation();
+    const buttonRef = useRef<HTMLDivElement>(null);
 
     const addQuickPrompt = useCallback(() => {
         // Only add if there is no empty quick prompt
@@ -26,6 +27,14 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
         if (!hasEmpty) {
             onQuickPromptsChange([...quickPrompts, { label: "", prompt: "", tooltip: "" }]);
             onHasChanged(true);
+            // Scroll to bottom after adding
+            setTimeout(() => {
+                buttonRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
+                });
+            }, 50);
         }
     }, [quickPrompts, onQuickPromptsChange, onHasChanged]);
 
@@ -128,9 +137,11 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                         )}
                     </div>
                     {isOwner && (
-                        <Button appearance="subtle" onClick={addQuickPrompt} disabled={!isOwner} className={styles.addFieldButton}>
-                            <Add24Regular /> {t("components.edit_assistant_dialog.add_quick_prompt")}
-                        </Button>
+                        <div ref={buttonRef}>
+                            <Button appearance="subtle" onClick={addQuickPrompt} disabled={!isOwner} className={styles.addFieldButton}>
+                                <Add24Regular /> {t("components.edit_assistant_dialog.add_quick_prompt")}
+                            </Button>
+                        </div>
                     )}
                 </div>
             </Field>

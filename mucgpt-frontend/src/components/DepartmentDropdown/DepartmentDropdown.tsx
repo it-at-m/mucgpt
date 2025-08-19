@@ -41,9 +41,9 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
         if (show && dropdownRef.current) {
             setTimeout(() => {
                 dropdownRef.current?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                    inline: 'nearest'
+                    behavior: "smooth",
+                    block: "nearest",
+                    inline: "nearest"
                 });
             }, 50); // Small delay to ensure the dropdown is rendered
         }

@@ -32,10 +32,6 @@ if not config.get_main_option("script_location"):
     script_location = os.getenv("MUCGPT_ASSISTANT_ALEMBIC_CONFIG_PATH", "./migrations")
     print(f"Setting script_location to: {script_location}", file=sys.stderr)
     config.set_main_option("script_location", script_location)
-if not config.get_main_option("script_location"):
-    script_location = os.getenv("MUCGPT_ASSISTANT_ALEMBIC_CONFIG_PATH", "./migrations")
-    print(f"Setting script_location to: {script_location}", file=sys.stderr)
-    config.set_main_option("script_location", script_location)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

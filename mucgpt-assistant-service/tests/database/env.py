@@ -7,6 +7,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+from database.database_models import Base
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -28,8 +30,6 @@ try:
     src_dir = root_dir / "src"
     if str(src_dir) not in sys.path:
         sys.path.insert(0, str(src_dir))
-
-    from database.database_models import Base
 
     target_metadata = Base.metadata
 except ImportError:

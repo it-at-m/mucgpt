@@ -135,7 +135,7 @@ class MUCGPTAgent:
         model = self.model
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
-        response = model.with_config(configurable=config).invoke(messages)
+        response = model.with_config(config).invoke(messages)
         return AgentState(
             messages=messages + [response],
             is_valid=True,

@@ -22,9 +22,9 @@ services:
     networks:
       - keycloak
 
-    # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
+  # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.6.0@sha256:2c7d73e13bd6c30b1d53e4c25d0d6d81adbd0799c4f4d6a09efc5d68fca5d16d
+    image: dpage/pgadmin4:9.0.0@sha256:1b2f1ecb93ed2c20530703f77acdfa0da8c2470a4e17044504057cea2d6b4fac
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -143,19 +143,14 @@ services:
       - "39146:8000"
     networks:
       - keycloak
-    environment:
-      - MUCGPT_CORE_FRONTEND__LABELS__ENV_NAME=MUCGPT-LOKAL
-      - MUCGPT_CORE_FRONTEND__ALTERNATIVE_LOGO=false
-      - MUCGPT_CORE_FRONTEND__ENABLE_SIMPLY=true
-      - MUCGPT_CORE_BACKEND__ENABLE_AUTH=true
-      - MUCGPT_CORE_BACKEND__UNAUTHORIZED_USER_REDIRECT_URL=""
-      - MUCGPT_CORE_BACKEND__SSO_CONFIG__SSO_USERINFO_URL=http://keycloak:8100/auth/realms/local_realm/protocol/openid-connect/userinfo
-      - MUCGPT_CORE_BACKEND__SSO_CONFIG__ROLE=lhm-ab-mucgpt-user
-      - MUCGPT_CORE_VERSION=#{CORE_VERSION}
-      - MUCGPT_CORE_COMMIT=#{COMMIT_HASH}
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
+    environment:
+      - SSL_CERT_FILE=${SSL_CERT_FILE:-}
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
+
   assistant-migrations:
     build:
       context: ../mucgpt-assistant-service-migrations
@@ -165,12 +160,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      - MUCGPT_ASSISTANT_DB_HOST=postgres
-      - MUCGPT_ASSISTANT_DB_PORT=5432
-      - MUCGPT_ASSISTANT_DB_NAME=postgres
-      - MUCGPT_ASSISTANT_DB_USER=admin
-      - MUCGPT_ASSISTANT_DB_PASSWORD=admin
+    env_file:
+      - ./.env
     networks:
       - keycloak
     restart: "no" # Run once and exit
@@ -184,15 +175,8 @@ services:
     depends_on:
       assistant-migrations:
         condition: service_completed_successfully
-    environment:
-      - MUCGPT_ASSISTANT_SSO_USERINFO_URL=http://keycloak:8100/auth/realms/local_realm/protocol/openid-connect/userinfo
-      - MUCGPT_ASSISTANT_SSO_ROLE=lhm-ab-mucgpt-user
-      - MUCGPT_ASSISTANT_DB_HOST=postgres
-      - MUCGPT_ASSISTANT_DB_PORT=5432
-      - MUCGPT_ASSISTANT_DB_NAME=postgres
-      - MUCGPT_ASSISTANT_DB_USER=admin
-      - MUCGPT_ASSISTANT_DB_PASSWORD=admin
-
+    env_file:
+      - ./.env
     ports:
       - "39147:8084"
     networks:

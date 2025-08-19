@@ -1,7 +1,7 @@
 import requests
 from fastapi import Depends, Header, HTTPException
 
-from config.settings import Settings, get_settings
+from config.settings import SSOSettings, get_sso_settings
 from core.auth_models import AuthenticationResult, AuthError
 from core.logtools import getLogger
 
@@ -160,21 +160,13 @@ class AuthenticationHelper:
 # Authentication dependency for FastAPI
 def authenticate_user(
     authorization: str = Header(...),
-    settings: Settings = Depends(get_settings),
+    sso_settings: SSOSettings = Depends(get_sso_settings),
 ) -> AuthenticationResult:
     """Dependency to authenticate users based on access token."""  # Load configuration
     logger.debug("Loading configuration for authentication")
-    if not settings.backend.enable_auth:
-        logger.info("Authentication disabled, using guest account")
-        return AuthenticationResult(
-            lhm_object_id="guest",
-            department="guest",
-            name="Guest User",
-            roles=[settings.backend.sso_config.role],
-        )
     auth_helper = AuthenticationHelper(
-        userinfo_url=settings.backend.sso_config.sso_userinfo_url,
-        role=settings.backend.sso_config.role,
+        userinfo_url=sso_settings.userinfo_url,
+        role=sso_settings.role,
     )
 
     try:

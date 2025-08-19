@@ -40,13 +40,12 @@ class JsonFormatter(logging.Formatter):
         Returns:
         str: The log record as a JSON string.
         """
-        #
         log_data = {
             "time": datetime.fromtimestamp(record.created).strftime(
                 "%Y-%m-%d %H:%M:%S"
             ),
             "level": record.levelname,
-            "id": record.correlation_id,
+            "id": getattr(record, "correlation_id", None),
             "message": record.getMessage(),
             "name": record.name,
         }
@@ -58,8 +57,31 @@ class JsonFormatter(logging.Formatter):
                 traceback.format_exception(*record.exc_info)
             )
 
-        # Add extra fields if needed
-        if hasattr(record, "extra"):
-            log_data.update(record.extra)
+        # Add extra fields (all custom attributes merged via logging's `extra=`
+        reserved = {
+            "name",
+            "msg",
+            "args",
+            "levelname",
+            "levelno",
+            "pathname",
+            "filename",
+            "module",
+            "exc_info",
+            "exc_text",
+            "stack_info",
+            "lineno",
+            "funcName",
+            "created",
+            "msecs",
+            "relativeCreated",
+            "thread",
+            "threadName",
+            "processName",
+            "process",
+        }
+        for k, v in record.__dict__.items():
+            if k not in log_data and k not in reserved:
+                log_data[k] = v
 
-        return json.dumps(log_data)
+        return json.dumps(log_data, default=str)

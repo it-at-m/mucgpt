@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,8 +27,8 @@ router = APIRouter()
 
 
 async def _build_assistant_response_list(
-    assistants: List[Assistant], assistant_repo: AssistantRepository
-) -> List[AssistantResponse]:
+    assistants: list[Assistant], assistant_repo: AssistantRepository
+) -> list[AssistantResponse]:
     """
     Helper function to build a list of AssistantResponse objects from a list of Assistants.
     This centralizes the logic and avoids code duplication.
@@ -76,7 +76,7 @@ async def _build_assistant_response_list(
 
 @router.get(
     "/user/assistants",
-    response_model=List[AssistantResponse],
+    response_model=list[AssistantResponse],
     summary="Get assistants owned by a specific user",
     description="""
     Retrieve all AI assistants where the specified lhmobjektID is listed as an owner.
@@ -196,7 +196,7 @@ async def unsubscribe_from_assistant(
 
 @router.get(
     "/user/subscriptions",
-    response_model=List[SubscriptionResponse],
+    response_model=list[SubscriptionResponse],
     summary="Get user's subscribed assistants",
     description="Retrieve all assistants the user has subscribed to with simplified information (ID and name only).",
     responses={

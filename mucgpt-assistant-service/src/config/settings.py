@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Optional
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class SSOSettings(BaseSettings):
-    USERINFO_URL: Optional[str] = None
-    ROLE: Optional[str] = None
+    USERINFO_URL: str | None = None
+    ROLE: str | None = None
 
     model_config = SettingsConfigDict(
         case_sensitive=False,

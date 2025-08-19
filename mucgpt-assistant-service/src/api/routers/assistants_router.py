@@ -1,4 +1,4 @@
-from typing import List
+from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -328,7 +328,7 @@ async def updateAssistant(
 
 @router.get(
     "/assistant",
-    response_model=List[AssistantResponse],
+    response_model=list[AssistantResponse],
     summary="Get all accessible assistants",
     description="""
     Retrieve all AI assistants that the current user has access to based on their department

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
-from typing import Optional, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 from sqlalchemy import (
     Boolean,
@@ -156,7 +158,7 @@ class Assistant(Base):
         return False
 
     @property
-    def latest_version(self) -> Optional["AssistantVersion"]:
+    def latest_version(self) -> AssistantVersion | None:
         return self.versions[0] if self.versions else None
 
     def __repr__(self):
@@ -194,3 +196,49 @@ class Subscription(Base):
 
     def __repr__(self):
         return f"<Subscription(assistant_id='{self.assistant_id}', lhmobjektID='{self.lhmobjektID}')>"
+
+
+# Type definitions for the JSON fields in the database models
+
+
+class ExampleDict(TypedDict, total=False):
+    """Example for assistant training."""
+
+    user_message: str
+    assistant_response: str
+    id: str
+    title: str | None
+    metadata: dict[str, Any] | None
+
+
+class QuickPromptDict(TypedDict, total=False):
+    """Quick prompt template for assistant."""
+
+    id: str
+    title: str
+    prompt: str
+    description: str | None
+    category: str | None
+    icon: str | None
+
+
+class ToolConfigDict(TypedDict, total=False):
+    """Configuration for a tool associated with an assistant."""
+
+    parameters: dict[str, Any]
+    options: dict[str, Any]
+    enabled: bool
+
+
+class ToolAssociationDict(TypedDict):
+    """Represents a tool associated with an assistant version."""
+
+    id: str
+    config: ToolConfigDict | None
+
+
+# Type aliases for better readability in function signatures
+Example = ExampleDict
+QuickPrompt = QuickPromptDict
+ToolAssociation = ToolAssociationDict
+ToolDict = ToolAssociationDict

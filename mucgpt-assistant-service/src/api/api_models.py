@@ -1,6 +1,8 @@
 # Pydantic models for request/response validation
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
 
@@ -66,7 +68,7 @@ class ToolBase(BaseModel):
     id: str = Field(
         ..., description="Unique identifier for the tool", example="WEB_SEARCH"
     )
-    config: Optional[Dict[str, Any]] = Field(
+    config: dict[str, Any] | None = Field(
         None,
         description="Tool-specific configuration settings",
         example={"url": "muenchen.de", "max_results": 5},
@@ -97,7 +99,7 @@ class AssistantBase(BaseModel):
         example="Technical Support Assistant",
     )
 
-    description: Optional[str] = Field(
+    description: str | None = Field(
         "",
         description="A detailed description of the assistant's purpose and capabilities",
         example="An AI assistant specialized in providing technical support for software issues",
@@ -108,7 +110,7 @@ class AssistantBase(BaseModel):
         description="The system prompt that defines the assistant's personality and behavior",
         example="You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
     )
-    hierarchical_access: Optional[List[str]] = Field(
+    hierarchical_access: list[str] | None = Field(
         [],
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment"],
@@ -126,7 +128,7 @@ class AssistantBase(BaseModel):
         gt=0,
         example=1000,
     )
-    examples: Optional[List[ExampleModel]] = Field(
+    examples: list[ExampleModel] | None = Field(
         [],
         description="Example conversations starters",
         example=[
@@ -137,7 +139,7 @@ class AssistantBase(BaseModel):
             },
         ],
     )
-    quick_prompts: Optional[List[QuickPrompt]] = Field(
+    quick_prompts: list[QuickPrompt] | None = Field(
         [],
         description="Pre-defined quick prompts/actions for the assistant",
         example=[
@@ -148,26 +150,26 @@ class AssistantBase(BaseModel):
             }
         ],
     )
-    tags: Optional[List[str]] = Field(
+    tags: list[str] | None = Field(
         [],
         description="Tags for categorizing and filtering assistants",
         example=["support", "technical", "customer-service"],
     )
 
-    is_visible: Optional[bool] = Field(
+    is_visible: bool | None = Field(
         True,
         description="Whether this assistant is publicly listed in the UI",
         example=True,
     )
 
-    tools: Optional[List[ToolBase]] = Field(
+    tools: list[ToolBase] | None = Field(
         [],
         description="List of toos that this assistant can use",
         example=[
             {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
         ],
     )
-    owner_ids: Optional[List[str]] = Field(
+    owner_ids: list[str] | None = Field(
         [],
         description="List of lhmobjektIDs who will own this assistant",
         example=["12345", "67890"],
@@ -269,42 +271,42 @@ class AssistantUpdate(BaseModel):
         example=1,
     )
 
-    name: Optional[str] = Field(
+    name: str | None = Field(
         None,
         description="The name/title of the assistant",
         example="Technical Support Assistant",
     )
 
-    description: Optional[str] = Field(
+    description: str | None = Field(
         None,
         description="A detailed description of the assistant's purpose and capabilities",
         example="An AI assistant specialized in providing technical support for software issues",
     )
 
-    system_prompt: Optional[str] = Field(
+    system_prompt: str | None = Field(
         None,
         description="The system prompt that defines the assistant's personality and behavior",
         example="You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
     )
-    hierarchical_access: Optional[List[str]] = Field(
+    hierarchical_access: list[str] | None = Field(
         None,
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment"],
     )
-    temperature: Optional[float] = Field(
+    temperature: float | None = Field(
         None,
         description="Controls randomness in AI responses (0.0 = deterministic, 1.0 = very random)",
         ge=0.0,
         le=2.0,
         example=0.7,
     )
-    max_output_tokens: Optional[int] = Field(
+    max_output_tokens: int | None = Field(
         None,
         description="Maximum number of tokens the assistant can generate in a single response",
         gt=0,
         example=1000,
     )
-    examples: Optional[List[ExampleModel]] = Field(
+    examples: list[ExampleModel] | None = Field(
         None,
         description="Example conversations starters",
         example=[
@@ -315,7 +317,7 @@ class AssistantUpdate(BaseModel):
             },
         ],
     )
-    quick_prompts: Optional[List[QuickPrompt]] = Field(
+    quick_prompts: list[QuickPrompt] | None = Field(
         None,
         description="Pre-defined quick prompts/actions for the assistant",
         example=[
@@ -326,26 +328,26 @@ class AssistantUpdate(BaseModel):
             }
         ],
     )
-    tags: Optional[List[str]] = Field(
+    tags: list[str] | None = Field(
         None,
         description="Tags for categorizing and filtering assistants",
         example=["support", "technical", "customer-service"],
     )
 
-    is_visible: Optional[bool] = Field(
+    is_visible: bool | None = Field(
         None,
         description="Whether this assistant is publicly listed in the UI",
         example=True,
     )
 
-    tools: Optional[List[ToolBase]] = Field(
+    tools: list[ToolBase] | None = Field(
         None,
         description="List of toos that this assistant can use",
         example=[
             {"id": "WEB_SEARCH", "config": {"url": "muenchen.de", "max_results": 5}}
         ],
     )
-    owner_ids: Optional[List[str]] = Field(
+    owner_ids: list[str] | None = Field(
         None,
         description="List of lhmobjektIDs who will own this assistant",
         example=["12345", "67890"],
@@ -399,7 +401,7 @@ class AssistantResponse(BaseModel):
         description="Timestamp when the assistant was last updated",
         example="2025-06-18T15:45:00Z",
     )
-    hierarchical_access: Optional[List[str]] = Field(
+    hierarchical_access: list[str] | None = Field(
         [],
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment-underdepartment"],
@@ -409,7 +411,7 @@ class AssistantResponse(BaseModel):
         description="Whether this assistant is publicly listed in the UI",
         example=True,
     )
-    owner_ids: Optional[List[str]] = Field(
+    owner_ids: list[str] | None = Field(
         [],
         description="List of lhmobjektIDs who will own this assistant",
         example=["12345", "67890"],

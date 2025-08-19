@@ -6,45 +6,70 @@
 </div>
 <br />
 
-<!-- ABOUT THE PROJECT -->
+<div align="center">
+
+<!-- Project / Meta -->
+### Project Information
 
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
 [![Gitmoij][gitmoij-shield]][gitmoij]
 [![GitHub license][license-shield]][license]
 [![GitHub release version][github-release-shield]][releases]
+[![Demo-Frontend][pages-shield]][pages]
+
+<!-- Tech Stack -->
+### Technology Stack
+
 ![Supported python versions][python-versions-shield]
 ![Supported npm versions][npm-versions-shield]
 [![uv][uv-shield]][uv]
 [![FastAPI][fastapi-shield]][fastapi]
-[![React][react-shield]][fastapi]
+[![React][react-shield]][react]
 [![Postgres][postgres-shield]][postgres]
 [![LangGraph][langgraph-shield]][langgraph]
-[![Demo-Frontend][pages-shield]][pages]
 
-[![Assistant-service tests](https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg)](https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml)
-[![Core service tests](https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml/badge.svg)](https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml)
+<!-- CI -->
+### Build Status
 
-[made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-yellow?style=for-the-badge
-[license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge
-[github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge&color=orange
+[![Assistant-service tests][assistant-service-tests-shield]][assistant-service-tests]
+[![Core service tests][core-service-tests-shield]][core-service-tests]
+
+<!-- Container Images -->
+### Container Images
+
+[![Frontend version][frontend-version-shield]][frontend-container]
+[![Core service version][core-service-version-shield]][core-service-container]
+[![Assistant service version][assistant-service-version-shield]][assistant-service-container]
+[![Migrations service version][migrations-service-version-shield]][migrations-service-container]
+
+</div>
+
+<!-- ABOUT THE PROJECT -->
+
+[made-with-love-shield]: https://img.shields.io/badge/made%20with%20%E2%9D%A4%20by-it%40M-blue?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/it-at-m/itm-prettier-codeformat?style=for-the-badge&color=blue
+[github-release-shield]: https://img.shields.io/github/v/release/it-at-m/mucgpt?style=for-the-badge&color=blue
 [python-versions-shield]: https://img.shields.io/badge/python-3.10|%203.11%20|%203.12-blue?style=for-the-badge
-[gitmoij-shield]: https://img.shields.io/badge/gitmoij-😜😍-yellow?style=for-the-badge
+[gitmoij-shield]: https://img.shields.io/badge/gitmoij-😜😍-blue?style=for-the-badge
 [npm-versions-shield]: https://img.shields.io/badge/node-20+-blue?style=for-the-badge
-[uv-shield]: https://img.shields.io/badge/⚡-uv-lightblue?style=for-the-badge
-[fastapi-shield]: https://img.shields.io/badge/fastapi-lightblue?style=for-the-badge&logo=fastapi&logoColor=white
-[react-shield]: https://shields.io/badge/react-lightblue?logo=react&style=for-the-badge&logoColor=white
-[postgres-shield]: https://img.shields.io/badge/postgres-lightblue?&style=for-the-badge&logo=postgresql&logoColor=white
-[langgraph-shield]: https://img.shields.io/badge/LangGraph-lightblue?&style=for-the-badge&logo=langgraph&logoColor=white
-[pages-shield]: https://img.shields.io/badge/Demo-121013?logo=github&logoColor=white&style=for-the-badge
-[itm-opensource]: https://opensource.muenchen.de/
-[license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
-[releases]: https://github.com/it-at-m/mucgpt/releases
-[gitmoij]: https://gitmoji.dev/
-[uv]: https://github.com/astral-sh/uv
-[fastapi]: https://fastapi.tiangolo.com/
-[postgres]: https://www.postgresql.org/
-[langgraph]: https://langchain-ai.github.io/langgraph/
-[pages]: https://it-at-m.github.io/mucgpt/
+[uv-shield]: https://img.shields.io/badge/⚡-uv-blue?style=for-the-badge
+[fastapi-shield]: https://img.shields.io/badge/fastapi-blue?style=for-the-badge&logo=fastapi&logoColor=white
+[react-shield]: https://shields.io/badge/react-blue?logo=react&style=for-the-badge&logoColor=white
+[postgres-shield]: https://img.shields.io/badge/postgres-blue?&style=for-the-badge&logo=postgresql&logoColor=white
+[langgraph-shield]: https://img.shields.io/badge/LangGraph-blue?&style=for-the-badge&logo=langgraph&logoColor=white
+[pages-shield]: https://img.shields.io/badge/Demo-blue?logo=github&logoColor=white&style=for-the-badge
+[frontend-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-frontend-*&label=frontend&style=for-the-badge&color=blue
+[core-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-core-*&label=core-service&style=for-the-badge&color=blue
+[assistant-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-0*&label=assistant-service&style=for-the-badge&color=blue
+[migrations-service-version-shield]: https://img.shields.io/github/v/tag/it-at-m/mucgpt?filter=mucgpt-assistant-migrations-*&label=migrations&style=for-the-badge&color=blue
+[assistant-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml/badge.svg
+[core-service-tests-shield]: https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml/badge.svg
+[assistant-service-tests]: https://github.com/it-at-m/mucgpt/actions/workflows/test-assistant-service.yaml
+[core-service-tests]: https://github.com/it-at-m/mucgpt/actions/workflows/test-core-service.yaml
+[frontend-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend
+[core-service-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core
+[assistant-service-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant
+[migrations-service-container]: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations
 
 MUCGPT is a system that enables users to interact with a large language model (LLM) through a web interface. This interaction is facilitated by an agentic system that can access several tools. To get a feel for it, take a look at our [demo frontend](https://it-at-m.github.io/mucgpt/).
 
@@ -56,17 +81,26 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 ## Table of contents
 
-- [Built With](#built-with)
+- [Built With](#️built-with)
 - [Getting Started](#getting-started)
-- [Roadmap](#roadmap)
+- [Roadmap](#%EF%B8%8F-roadmap)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
-<a id="built-with"></a>
+[itm-opensource]: https://opensource.muenchen.de/
+[license]: https://github.com/it-at-m/mucgpt/blob/main/LICENSE
+[releases]: https://github.com/it-at-m/mucgpt/releases
+[gitmoij]: https://gitmoji.dev/
+[uv]: https://github.com/astral-sh/uv
+[fastapi]: https://fastapi.tiangolo.com/
+[postgres]: https://www.postgresql.org/
+[langgraph]: https://langchain-ai.github.io/langgraph/
+[pages]: https://it-at-m.github.io/mucgpt/
+[react]: https://react.dev/
 
-## 🛠️ Built With
+## ⚒️ Built With
 
 ### Backend
 
@@ -88,8 +122,6 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 - [uv](https://github.com/astral-sh/uv)
 - Docker
 
-<a id="getting-started"></a>
-
 ## 🏃‍♂️‍➡️ Getting started
 
 - Install uv: <https://docs.astral.sh/uv/getting-started/installation/>
@@ -104,6 +136,7 @@ Configuration can be found in form of an .env file
 cd stack
 cp .env.example .env
 ```
+
 Below is an example of how to configure the `MUCGPT_CORE_BACKEND__MODELS` environment variable in your `.env` file. This variable defines the available LLM models for the core backend as a JSON array. Each object in the array specifies the model type, name, endpoint, API key, token limits, and a description.
 
 ```env
@@ -121,6 +154,7 @@ MUCGPT_CORE_BACKEND__MODELS='[
 ```
 
 **Field descriptions:**
+
 - `type`: The provider type (e.g., `OPENAI`).
 - `llm_name`: The name or identifier of your LLM model.
 - `endpoint`: The API endpoint URL for the model.
@@ -130,6 +164,7 @@ MUCGPT_CORE_BACKEND__MODELS='[
 - `description`: A human-readable description of the model.
 
 Replace the placeholder values with your actual model configuration.
+
 
 ### 🐋 Run with Docker
 
@@ -159,8 +194,6 @@ Once all services are running, you can access:
 - The PGAdmin panel at `localhost:5050` (Username: `admin`, Password: `admin`)
 
 Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
-
-<a id="roadmap"></a>
 
 ## 🛤️ Roadmap
 
@@ -204,32 +237,46 @@ timeline
     2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
 ```
 
-<a id="documentation"></a>
-
 ## 📃 Documentation
 
+## Architecture Overview
+
+MUCGPT uses a modern microservices architecture optimized for scalability and maintainability:
+
+- **Frontend**: User interface layer built with React
+- **API Gateway**: Entry point for all client requests
+- **Core Service**: LLM agent orchestration and tool integration
+- **Assistant Service**: Configuration management for assistants
+- **PostgreSQL**: Database for persistence
+- **Keycloak**: Authentication and user management
+
+<!-- HTML for dark mode compatibility - ignore MD033 warning -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
   <img alt="MUCGPT Architecture Diagram" src="docs/architecture.png">
 </picture>
 
-The architecture of MUCGPT is structured into three primary components: the frontend, the core service for handling tools and the communication with the llm, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
+The architecture of MUCGPT is structured into these primary components: the frontend, the core service for handling tools and the communication with the LLM, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 
 The frontend is based on a template from [Microsoft Azure](https://github.com/Azure-Samples/azure-search-openai-demo) and is implemented using React, Typescript and Javascript.
 
 The framework used to implement the backends (the core- and the assistant service) of MUCGPT is called [FastAPI](https://fastapi.tiangolo.com/). It is a modern, fast (high-performance), web framework for building APIs with Python based on standard Python type hints. The `core service` uses LangGraph to connect to LLMs.
-TODO more about the services.
+Each service provides specialized functionality:
 
-The API Gateway is developed in Java based on the [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway), providing robust routing, security, and scalability for all services. [IT@M](https://github.com/it-at-m) distributes the gateway as a container image: `ghcr.io/it-at-m/refarch/refarch-gateway`. For detailed documentation, see [here](https://refarch.oss.muenchen.de/gateway.html).
+- **Core Service**: Manages LLM interactions and orchestrates tools. It uses LangGraph to create an agent architecture that can process user requests, call appropriate tools, and generate responses.
+
+- **Assistant Service**: Manages the creation, modification, and sharing of assistant configurations. These configurations define which tools are available to an agent and what system prompts guide their behavior.
+
+- **Migration Service**: Handles database migrations for the Assistant Service, ensuring schema updates are applied consistently.
+
+The API Gateway is developed in Java based on the [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway), providing robust routing, security, and scalability for all services. [IT@M](https://github.com/it-at-m) distributes the gateway as a container image: `ghcr.io/it-at-m/refarch/refarch-gateway`. For detailed documentation, see the [gateway documentation](https://refarch.oss.muenchen.de/gateway.html).
 
 Authentication is managed using [Keycloak](https://www.keycloak.org/), a robust open-source identity and access management solution. Keycloak handles user authentication, authorization, and user management for the MUCGPT platform, enabling secure Single Sign-On (SSO) across all services.
 For more details on customizing authentication or extending user management, refer to the [Keycloak Migration Framework documentation](https://mayope.github.io/keycloakmigration/).
 
 [Langfuse](https://langfuse.com/) is an open-source LLM observability platform that supports agent tracing and prompt management. It is optional in MUCGPT.
 
-For more information about all the features of MUCGPT click [here](/docs/FEATURES.md).
-
-<a id="contributing"></a>
+For more information, see the [MUCGPT Features documentation](/docs/FEATURES.md).
 
 ## 🖊️ Contributing
 
@@ -247,13 +294,9 @@ Don't forget to give the project a star! Thanks again!
 
 More about this in the [CODE_OF_CONDUCT](/CODE_OF_CONDUCT.md) file.
 
-<a id="license"></a>
-
 ## 📝 License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) file for more information.
-
-<a id="contact"></a>
 
 ## 📬 Contact
 

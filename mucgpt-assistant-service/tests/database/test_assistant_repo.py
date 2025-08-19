@@ -57,7 +57,7 @@ class TestAssistantRepository:
         # Use the safe method to check owners
         result = await assistant_repo.get_with_owners(assistant.id)
         assert len(result.owners) == 2
-        owner_ids = [owner.lhmobjektID for owner in result.owners]
+        owner_ids = [owner.user_id for owner in result.owners]
         assert "user1" in owner_ids
         assert "user2" in owner_ids
 
@@ -76,7 +76,7 @@ class TestAssistantRepository:
         await db_session.commit()  # Assert
         result = await assistant_repo.get_with_owners(assistant.id)
         assert len(result.owners) == 2
-        owner_ids = [owner.lhmobjektID for owner in result.owners]
+        owner_ids = [owner.user_id for owner in result.owners]
         assert "existing_user" in owner_ids
         assert "new_user" in owner_ids
 
@@ -121,7 +121,7 @@ class TestAssistantRepository:
         assert updated is not None
         result = await assistant_repo.get_with_owners(updated.id)
         assert len(result.owners) == 3
-        owner_ids = [owner.lhmobjektID for owner in result.owners]
+        owner_ids = [owner.user_id for owner in result.owners]
         assert "new_user1" in owner_ids
         assert "new_user2" in owner_ids
         assert "new_user3" in owner_ids
@@ -159,7 +159,7 @@ class TestAssistantRepository:
         )
         # Sanity: ensure owners actually changed
         owners = await assistant_repo.get_with_owners(assistant.id)
-        owner_ids = sorted([o.lhmobjektID for o in owners.owners])
+        owner_ids = sorted([o.user_id for o in owners.owners])
         assert owner_ids == ["new_owner_a", "new_owner_b"]
 
     async def test_update_assistant_clear_owners(
@@ -748,7 +748,7 @@ class TestAssistantRepository:
         # Assert
         assert subscription is not None
         assert subscription.assistant_id == assistant.id
-        assert subscription.lhmobjektID == user_id
+        assert subscription.user_id == user_id
 
         # Verify using is_user_subscribed
         is_subscribed = await assistant_repo.is_user_subscribed(assistant.id, user_id)
@@ -1117,7 +1117,7 @@ class TestAssistantRepository:
 
         # Check owners were updated too
         result = await assistant_repo.get_with_owners(updated.id)
-        owner_ids = [owner.lhmobjektID for owner in result.owners]
+        owner_ids = [owner.user_id for owner in result.owners]
         assert len(owner_ids) == 2
         assert "owner2" in owner_ids
         assert "owner3" in owner_ids
@@ -1140,7 +1140,7 @@ class TestAssistantRepository:
 
         # Get original owners for comparison
         original_assistant = await assistant_repo.get_with_owners(assistant.id)
-        original_owner_ids = [owner.lhmobjektID for owner in original_assistant.owners]
+        original_owner_ids = [owner.user_id for owner in original_assistant.owners]
 
         # Act - Update only visibility
         updated = await assistant_repo.update(
@@ -1155,7 +1155,7 @@ class TestAssistantRepository:
 
         # Check owners remain unchanged
         updated_assistant = await assistant_repo.get_with_owners(updated.id)
-        updated_owner_ids = [owner.lhmobjektID for owner in updated_assistant.owners]
+        updated_owner_ids = [owner.user_id for owner in updated_assistant.owners]
         assert sorted(updated_owner_ids) == sorted(original_owner_ids)
 
     async def test_direct_access_to_hidden_assistant(self, db_session):
@@ -1298,8 +1298,8 @@ class TestAssistantRepository:
         await db_session.execute(
             insert(Subscription).values(
                 [
-                    {"assistant_id": assistant.id, "lhmobjektID": "existing_user1"},
-                    {"assistant_id": assistant.id, "lhmobjektID": "existing_user2"},
+                    {"assistant_id": assistant.id, "user_id": "existing_user1"},
+                    {"assistant_id": assistant.id, "user_id": "existing_user2"},
                 ]
             )
         )

@@ -27,7 +27,7 @@ def mock_assistant():
 
     # Mock owners relationship
     owner_mock = MagicMock()
-    owner_mock.lhmobjektID = "test_user_123"
+    owner_mock.user_id = "test_user_123"
     assistant.owners = [owner_mock]
 
     return assistant
@@ -120,7 +120,7 @@ def override_authenticate_user():
 
     async def _get_test_user():
         return AuthenticationResult(
-            lhm_object_id="test_user_123",
+            user_id="test_user_123",
             name="Test User",
             email="test@example.com",
             department="IT-Test-Department",

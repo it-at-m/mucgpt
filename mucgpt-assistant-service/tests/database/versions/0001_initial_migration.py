@@ -24,8 +24,8 @@ def upgrade() -> None:
     # Create owners table
     op.create_table(
         "owners",
-        sa.Column("lhmobjektID", sa.String(), nullable=False),
-        sa.PrimaryKeyConstraint("lhmobjektID"),
+        sa.Column("user_id", sa.String(), nullable=False),
+        sa.PrimaryKeyConstraint("user_id"),
     )
 
     # Create assistants table
@@ -64,15 +64,13 @@ def upgrade() -> None:
     op.create_table(
         "assistant_owners",
         sa.Column("assistant_id", sa.String(), nullable=False),
-        sa.Column("lhmobjektID", sa.String(), nullable=False),
+        sa.Column("user_id", sa.String(), nullable=False),
         sa.ForeignKeyConstraint(
             ["assistant_id"], ["assistants.id"], ondelete="CASCADE"
         ),
-        sa.ForeignKeyConstraint(
-            ["lhmobjektID"], ["owners.lhmobjektID"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint("assistant_id", "lhmobjektID"),
-        sa.UniqueConstraint("assistant_id", "lhmobjektID", name="uq_assistant_owner"),
+        sa.ForeignKeyConstraint(["user_id"], ["owners.user_id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("assistant_id", "user_id"),
+        sa.UniqueConstraint("assistant_id", "user_id", name="uq_assistant_owner"),
     )
 
     # Create assistant_tools table

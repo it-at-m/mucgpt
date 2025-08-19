@@ -1243,7 +1243,7 @@ async def test_update_assistant_modify_owners(test_client, test_db_session):
 
     # Verify initial owners
     initial_owners = await assistant_repo.get_with_owners(assistant.id)
-    initial_owner_ids = [owner.lhmobjektID for owner in initial_owners.owners]
+    initial_owner_ids = [owner.user_id for owner in initial_owners.owners]
     assert "test_user_123" in initial_owner_ids
     assert "initial_owner_1" in initial_owner_ids
     assert "initial_owner_2" in initial_owner_ids

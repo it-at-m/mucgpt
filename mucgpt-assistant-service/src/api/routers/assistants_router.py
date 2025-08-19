@@ -49,14 +49,14 @@ async def createAssistant(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):  # Create a new assistant using the repository
-    logger.info(f"Creating assistant for user {user_info.lhm_object_id}")
+    logger.info(f"Creating assistant for user {user_info.user_id}")
     try:
         assistant_repo = AssistantRepository(
             db
         )  # Prepare owner_ids: include the creating user if not already present
         owner_ids = list(assistant.owner_ids) if assistant.owner_ids else []
-        if user_info.lhm_object_id not in owner_ids:
-            owner_ids.append(user_info.lhm_object_id)
+        if user_info.user_id not in owner_ids:
+            owner_ids.append(user_info.user_id)
 
         new_assistant = await assistant_repo.create(
             hierarchical_access=assistant.hierarchical_access or [],
@@ -120,7 +120,7 @@ async def createAssistant(
             quick_prompts=latest_version.quick_prompts or [],
             tags=latest_version.tags or [],
             tools=assistant_repo.get_tools_from_version(latest_version),
-            owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+            owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
             is_visible=new_assistant.is_visible,
         )  # Build AssistantResponse
         response = AssistantResponse(
@@ -129,7 +129,7 @@ async def createAssistant(
             updated_at=new_assistant.updated_at,
             hierarchical_access=new_assistant.hierarchical_access or [],
             is_visible=new_assistant.is_visible,
-            owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+            owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
             subscriptions_count=getattr(new_assistant, "subscriptions_count", 0) or 0,
             latest_version=assistant_version_response,
         )
@@ -170,14 +170,14 @@ async def deleteAssistant(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    logger.info(f"Deleting assistant with ID: {id} by user {user_info.lhm_object_id}")
+    logger.info(f"Deleting assistant with ID: {id} by user {user_info.user_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
 
-    if not await assistant_repo.is_owner(id, user_info.lhm_object_id):
+    if not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotOwnerException()
 
     success = await assistant_repo.delete(id)
@@ -219,14 +219,14 @@ async def updateAssistant(
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    logger.info(f"Updating assistant with ID: {id} by user {user_info.lhm_object_id}")
+    logger.info(f"Updating assistant with ID: {id} by user {user_info.user_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
     if not assistant:
         raise AssistantNotFoundException(id)
 
-    if not await assistant_repo.is_owner(id, user_info.lhm_object_id):
+    if not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotOwnerException()
 
     # Get latest version safely
@@ -306,7 +306,7 @@ async def updateAssistant(
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
         tools=assistant_repo.get_tools_from_version(latest_version),
-        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
         is_visible=assistant.is_visible,
     )
 
@@ -317,7 +317,7 @@ async def updateAssistant(
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
         is_visible=assistant.is_visible,
-        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
         latest_version=assistant_version_response,
     )
@@ -342,11 +342,10 @@ async def updateAssistant(
     tags=["Assistants"],
 )
 async def getAllAssistants(
-    db: AsyncSession = Depends(get_db_session), user_info=Depends(authenticate_user)
+    db: AsyncSession = Depends(get_db_session),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    logger.info(
-        f"Fetching all accessible assistants for user {user_info.lhm_object_id}"
-    )
+    logger.info(f"Fetching all accessible assistants for user {user_info.user_id}")
     assistant_repo = AssistantRepository(db)
     assistants = (
         await assistant_repo.get_all_possible_assistants_for_user_with_department(
@@ -377,7 +376,7 @@ async def getAllAssistants(
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
                 tools=assistant_repo.get_tools_from_version(latest_version),
-                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+                owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
                 is_visible=assistant.is_visible,
             )
 
@@ -388,14 +387,14 @@ async def getAllAssistants(
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or [],
                 is_visible=assistant.is_visible,
-                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+                owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
             )
             response_list.append(response)
 
     logger.info(
-        f"Returning {len(response_list)} accessible assistants for user {user_info.lhm_object_id}"
+        f"Returning {len(response_list)} accessible assistants for user {user_info.user_id}"
     )
     return response_list
 
@@ -419,9 +418,9 @@ async def getAllAssistants(
 async def getAssistant(
     id: str,
     db: AsyncSession = Depends(get_db_session),
-    user_info=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    logger.info(f"Fetching assistant with ID: {id} for user {user_info.lhm_object_id}")
+    logger.info(f"Fetching assistant with ID: {id} for user {user_info.user_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
 
@@ -431,7 +430,7 @@ async def getAssistant(
         )  # Check if the user is allowed to access this assistant
     if not assistant.is_allowed_for_user(
         user_info.department
-    ) and not await assistant_repo.is_owner(id, user_info.lhm_object_id):
+    ) and not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotAllowedToAccessException(id)
 
     # Get assistant with owners safely
@@ -455,7 +454,7 @@ async def getAssistant(
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
         tools=assistant_repo.get_tools_from_version(latest_version),
-        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
         is_visible=assistant.is_visible,
     )  # Build AssistantResponse
     response = AssistantResponse(
@@ -464,7 +463,7 @@ async def getAssistant(
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
         is_visible=assistant.is_visible,
-        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
         latest_version=assistant_version_response,
     )
@@ -499,7 +498,7 @@ async def get_assistant_version(
     user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     logger.info(
-        f"Fetching version {version} of assistant {id} for user {user_info.lhm_object_id}"
+        f"Fetching version {version} of assistant {id} for user {user_info.user_id}"
     )
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
@@ -509,7 +508,7 @@ async def get_assistant_version(
 
     if not assistant.is_allowed_for_user(
         user_info.department
-    ) and not await assistant_repo.is_owner(id, user_info.lhm_object_id):
+    ) and not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotAllowedToAccessException(id)
 
     assistant_version = await assistant_repo.get_assistant_version(id, version)
@@ -535,7 +534,7 @@ async def get_assistant_version(
         quick_prompts=assistant_version.quick_prompts or [],
         tags=assistant_version.tags or [],
         tools=assistant_repo.get_tools_from_version(assistant_version),
-        owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+        owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
     )
 
     logger.info(f"Returning version {version} of assistant {id}")

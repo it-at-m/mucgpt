@@ -1198,7 +1198,7 @@ async def test_subscription_persists_after_commit(test_client, test_db_session):
     result = await test_db_session.execute(
         select(Subscription).filter(
             Subscription.assistant_id == assistant_id,
-            Subscription.lhmobjektID == "test_user_123",  # Default test user ID
+            Subscription.user_id == "test_user_123",  # Default test user ID
         )
     )
     db_subscription = result.scalars().first()
@@ -1206,7 +1206,7 @@ async def test_subscription_persists_after_commit(test_client, test_db_session):
     # Verify subscription exists in database
     assert db_subscription is not None
     assert db_subscription.assistant_id == assistant_id
-    assert db_subscription.lhmobjektID == "test_user_123"
+    assert db_subscription.user_id == "test_user_123"
 
 
 @pytest.mark.integration
@@ -1236,7 +1236,7 @@ async def test_unsubscription_persists_after_commit(test_client, test_db_session
     result_before = await test_db_session.execute(
         select(Subscription).filter(
             Subscription.assistant_id == assistant_id,
-            Subscription.lhmobjektID == "test_user_123",
+            Subscription.user_id == "test_user_123",
         )
     )
     subscription_before = result_before.scalars().first()
@@ -1252,7 +1252,7 @@ async def test_unsubscription_persists_after_commit(test_client, test_db_session
     result_after = await test_db_session.execute(
         select(Subscription).filter(
             Subscription.assistant_id == assistant_id,
-            Subscription.lhmobjektID == "test_user_123",
+            Subscription.user_id == "test_user_123",
         )
     )
     subscription_after = result_after.scalars().first()
@@ -1409,7 +1409,7 @@ async def test_subscription_count_with_repository_operations(
         tags=["test"],
     )  # Add subscription directly via repository
     await assistant_repo.create_subscription(
-        assistant_id=assistant.id, lhmobjektID="test_user_123"
+        assistant_id=assistant.id, user_id="test_user_123"
     )
 
     await test_db_session.commit()
@@ -1432,7 +1432,7 @@ async def test_subscription_count_with_repository_operations(
         our_assistant["subscriptions_count"] == 1
     )  # Remove subscription directly via repository
     await assistant_repo.remove_subscription(
-        assistant_id=assistant.id, lhmobjektID="test_user_123"
+        assistant_id=assistant.id, user_id="test_user_123"
     )
 
     await test_db_session.commit()

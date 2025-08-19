@@ -171,7 +171,7 @@ class AssistantBase(BaseModel):
     )
     owner_ids: list[str] | None = Field(
         [],
-        description="List of lhmobjektIDs who will own this assistant",
+        description="List of ids who will own this assistant",
         example=["12345", "67890"],
     )
 
@@ -349,7 +349,7 @@ class AssistantUpdate(BaseModel):
     )
     owner_ids: list[str] | None = Field(
         None,
-        description="List of lhmobjektIDs who will own this assistant",
+        description="List of ids who will own this assistant",
         example=["12345", "67890"],
     )
 
@@ -413,7 +413,7 @@ class AssistantResponse(BaseModel):
     )
     owner_ids: list[str] | None = Field(
         [],
-        description="List of lhmobjektIDs who will own this assistant",
+        description="List of ids who will own this assistant",
         example=["12345", "67890"],
     )
     subscriptions_count: int = Field(

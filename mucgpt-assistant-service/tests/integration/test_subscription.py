@@ -15,21 +15,21 @@ async def test_create_subscription(test_db_session):
     # Arrange
     repo = AssistantRepository(test_db_session)
     assistant = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
-    lhmobjektID = "user1"
+    user_id = "user1"
 
     # Act
-    subscription = await repo.create_subscription(assistant.id, lhmobjektID)
+    subscription = await repo.create_subscription(assistant.id, user_id)
 
     # Assert
     assert subscription is not None
     assert subscription.assistant_id == assistant.id
-    assert subscription.lhmobjektID == lhmobjektID
+    assert subscription.user_id == user_id
 
     # Verify in database
     result = await test_db_session.execute(
         select(Subscription).filter(
             Subscription.assistant_id == assistant.id,
-            Subscription.lhmobjektID == lhmobjektID,
+            Subscription.user_id == user_id,
         )
     )
     db_subscription = result.scalars().first()
@@ -42,11 +42,11 @@ async def test_is_user_subscribed(test_db_session):
     # Arrange
     repo = AssistantRepository(test_db_session)
     assistant = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
-    lhmobjektID = "user1"
-    await repo.create_subscription(assistant.id, lhmobjektID)
+    user_id = "user1"
+    await repo.create_subscription(assistant.id, user_id)
 
     # Act
-    is_subscribed = await repo.is_user_subscribed(assistant.id, lhmobjektID)
+    is_subscribed = await repo.is_user_subscribed(assistant.id, user_id)
     is_other_subscribed = await repo.is_user_subscribed(assistant.id, "other_user")
 
     # Assert
@@ -60,15 +60,15 @@ async def test_remove_subscription(test_db_session):
     # Arrange
     repo = AssistantRepository(test_db_session)
     assistant = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
-    lhmobjektID = "user1"
-    await repo.create_subscription(assistant.id, lhmobjektID)
+    user_id = "user1"
+    await repo.create_subscription(assistant.id, user_id)
 
     # Act
-    removed = await repo.remove_subscription(assistant.id, lhmobjektID)
+    removed = await repo.remove_subscription(assistant.id, user_id)
 
     # Assert
     assert removed is True
-    is_subscribed = await repo.is_user_subscribed(assistant.id, lhmobjektID)
+    is_subscribed = await repo.is_user_subscribed(assistant.id, user_id)
     assert is_subscribed is False
 
 
@@ -79,13 +79,13 @@ async def test_get_user_subscriptions(test_db_session):
     repo = AssistantRepository(test_db_session)
     assistant1 = await repo.create(hierarchical_access=[], owner_ids=["owner1"])
     assistant2 = await repo.create(hierarchical_access=[], owner_ids=["owner2"])
-    lhmobjektID = "user1"
+    user_id = "user1"
 
-    await repo.create_subscription(assistant1.id, lhmobjektID)
-    await repo.create_subscription(assistant2.id, lhmobjektID)
+    await repo.create_subscription(assistant1.id, user_id)
+    await repo.create_subscription(assistant2.id, user_id)
 
     # Act
-    subscribed_assistants = await repo.get_user_subscriptions(lhmobjektID)
+    subscribed_assistants = await repo.get_user_subscriptions(user_id)
 
     # Assert
     assert len(subscribed_assistants) == 2

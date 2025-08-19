@@ -16,6 +16,7 @@ from api.exceptions import (
     SubscriptionNotFoundException,
 )
 from core.auth import authenticate_user
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from database.assistant_repo import AssistantRepository
 from database.database_models import Assistant
@@ -58,7 +59,7 @@ async def _build_assistant_response_list(
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
                 tools=assistant_repo.get_tools_from_version(latest_version),
-                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+                owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
             )
             response = AssistantResponse(
                 id=assistant.id,
@@ -66,7 +67,7 @@ async def _build_assistant_response_list(
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or [],
                 is_visible=assistant.is_visible,
-                owner_ids=[owner.lhmobjektID for owner in assistant_with_owners.owners],
+                owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
             )
@@ -79,7 +80,7 @@ async def _build_assistant_response_list(
     response_model=list[AssistantResponse],
     summary="Get assistants owned by a specific user",
     description="""
-    Retrieve all AI assistants where the specified lhmobjektID is listed as an owner.
+    Retrieve all AI assistants where the specified user_id is listed as an owner.
 
     """,
     responses={
@@ -90,19 +91,19 @@ async def _build_assistant_response_list(
 )
 async def getUserAssistants(
     db: AsyncSession = Depends(get_db_session),
-    user_info=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
-    """Get all assistants where the specified lhmobjektID is an owner."""
-    logger.info(f"Fetching assistants for user {user_info.lhm_object_id}")
-    # Get all assistants where this lhmobjektID is an owner
+    """Get all assistants where the specified user_id is an owner."""
+    logger.info(f"Fetching assistants for user {user_info.user_id}")
+    # Get all assistants where this user_id is an owner
     assistant_repo = AssistantRepository(db)
     assistants = await assistant_repo.get_assistants_by_owner(
-        user_info.lhm_object_id
+        user_info.user_id
     )  # Create explicit response models
     response_list = await _build_assistant_response_list(assistants, assistant_repo)
 
     logger.info(
-        f"Returning {len(response_list)} assistants for user {user_info.lhm_object_id}"
+        f"Returning {len(response_list)} assistants for user {user_info.user_id}"
     )
     return response_list
 
@@ -127,11 +128,11 @@ async def getUserAssistants(
 async def subscribe_to_assistant(
     assistant_id: str,
     db: AsyncSession = Depends(get_db_session),
-    user_info=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     """Subscribe to an assistant if user has access permissions."""
     logger.info(
-        f"User {user_info.lhm_object_id} attempting to subscribe to assistant {assistant_id}"
+        f"User {user_info.user_id} attempting to subscribe to assistant {assistant_id}"
     )
 
     assistant_repo = AssistantRepository(db)
@@ -142,16 +143,16 @@ async def subscribe_to_assistant(
         raise NotAllowedToAccessException(assistant_id)
 
     is_subscribed = await assistant_repo.is_user_subscribed(
-        assistant_id, user_info.lhm_object_id
+        assistant_id, user_info.user_id
     )
     if is_subscribed:
         raise AlreadySubscribedException(assistant_id)
 
-    await assistant_repo.create_subscription(assistant_id, user_info.lhm_object_id)
+    await assistant_repo.create_subscription(assistant_id, user_info.user_id)
     await db.commit()
 
     logger.info(
-        f"User {user_info.lhm_object_id} successfully subscribed to assistant {assistant_id} "
+        f"User {user_info.user_id} successfully subscribed to assistant {assistant_id} "
     )
     return StatusResponse(message="Successfully subscribed to assistant")
 
@@ -171,25 +172,25 @@ async def subscribe_to_assistant(
 async def unsubscribe_from_assistant(
     assistant_id: str,
     db: AsyncSession = Depends(get_db_session),
-    user_info=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     """Unsubscribe from an assistant."""
     logger.info(
-        f"User {user_info.lhm_object_id} attempting to unsubscribe from assistant {assistant_id}"
+        f"User {user_info.user_id} attempting to unsubscribe from assistant {assistant_id}"
     )
 
     assistant_repo = AssistantRepository(db)
     is_subscribed = await assistant_repo.is_user_subscribed(
-        assistant_id, user_info.lhm_object_id
+        assistant_id, user_info.user_id
     )
     if not is_subscribed:
         raise SubscriptionNotFoundException(assistant_id)
 
-    await assistant_repo.remove_subscription(assistant_id, user_info.lhm_object_id)
+    await assistant_repo.remove_subscription(assistant_id, user_info.user_id)
     await db.commit()
 
     logger.info(
-        f"User {user_info.lhm_object_id} successfully unsubscribed from assistant {assistant_id}"
+        f"User {user_info.user_id} successfully unsubscribed from assistant {assistant_id}"
     )
     return StatusResponse(message="Successfully unsubscribed from assistant")
 
@@ -207,13 +208,13 @@ async def unsubscribe_from_assistant(
 )
 async def get_user_subscriptions(
     db: AsyncSession = Depends(get_db_session),
-    user_info=Depends(authenticate_user),
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ):
     """Get all assistants the user has subscribed to."""
-    logger.info(f"Fetching subscriptions for user {user_info.lhm_object_id}")
+    logger.info(f"Fetching subscriptions for user {user_info.user_id}")
 
     assistant_repo = AssistantRepository(db)
-    assistants = await assistant_repo.get_user_subscriptions(user_info.lhm_object_id)
+    assistants = await assistant_repo.get_user_subscriptions(user_info.user_id)
 
     # Build simplified response with only ID and name
     response_list = []
@@ -228,6 +229,6 @@ async def get_user_subscriptions(
             response_list.append(response)
 
     logger.info(
-        f"Returning {len(response_list)} subscribed assistants for user {user_info.lhm_object_id}"
+        f"Returning {len(response_list)} subscribed assistants for user {user_info.user_id}"
     )
     return response_list

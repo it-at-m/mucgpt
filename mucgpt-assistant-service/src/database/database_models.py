@@ -32,12 +32,12 @@ assistant_owners = Table(
         primary_key=True,
     ),
     Column(
-        "lhmobjektID",
+        "user_id",
         String(255),
-        ForeignKey("owners.lhmobjektID", ondelete="CASCADE"),
+        ForeignKey("owners.user_id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    UniqueConstraint("assistant_id", "lhmobjektID", name="uq_assistant_owner"),
+    UniqueConstraint("assistant_id", "user_id", name="uq_assistant_owner"),
 )
 
 
@@ -136,9 +136,9 @@ class Assistant(Base):
         "Owner", secondary=assistant_owners, back_populates="assistants"
     )
 
-    def is_owner(self, lhmobjektID: str) -> bool:
-        """Check if the given lhmobjektID is an owner of this assistant."""
-        return any(owner.lhmobjektID == lhmobjektID for owner in self.owners)
+    def is_owner(self, user_id: str) -> bool:
+        """Check if the given user_id is an owner of this assistant."""
+        return any(owner.user_id == user_id for owner in self.owners)
 
     def is_allowed_for_user(self, department: str) -> bool:
         """Check if a user with a given department is allowed to use this assistant."""
@@ -168,14 +168,14 @@ class Assistant(Base):
 class Owner(Base):
     __tablename__ = "owners"
 
-    lhmobjektID = Column(String(255), primary_key=True)
+    user_id = Column(String(255), primary_key=True)
 
     assistants = relationship(
         "Assistant", secondary=assistant_owners, back_populates="owners"
     )
 
     def __repr__(self):
-        return f"<Owner(lhmobjektID='{self.lhmobjektID}')>"
+        return f"<Owner(user_id='{self.user_id}')>"
 
 
 class Subscription(Base):
@@ -185,17 +185,17 @@ class Subscription(Base):
     assistant_id = Column(
         String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
     )
-    lhmobjektID = Column(String(255), nullable=False)
+    user_id = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     assistant = relationship("Assistant")
 
     __table_args__ = (
-        UniqueConstraint("assistant_id", "lhmobjektID", name="uq_subscription"),
+        UniqueConstraint("assistant_id", "user_id", name="uq_subscription"),
     )
 
     def __repr__(self):
-        return f"<Subscription(assistant_id='{self.assistant_id}', lhmobjektID='{self.lhmobjektID}')>"
+        return f"<Subscription(assistant_id='{self.assistant_id}', user_id='{self.user_id}')>"
 
 
 # Type definitions for the JSON fields in the database models

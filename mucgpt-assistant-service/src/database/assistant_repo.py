@@ -169,27 +169,27 @@ class AssistantRepository(Repository[Assistant]):
         )
         return matching_assistants
 
-    async def get_assistants_by_owner(self, lhmobjektID: str) -> list[Assistant]:
-        logger.info(f"Fetching assistants for owner: {lhmobjektID}")
-        """Get all assistants where the given lhmobjektID is an owner."""
+    async def get_assistants_by_owner(self, user_id: str) -> list[Assistant]:
+        logger.info(f"Fetching assistants for owner: {user_id}")
+        """Get all assistants where the given user_id is an owner."""
         stmt = (
             select(Assistant)
             .join(assistant_owners, Assistant.id == assistant_owners.c.assistant_id)
-            .where(assistant_owners.c.lhmobjektID == lhmobjektID)
+            .where(assistant_owners.c.user_id == user_id)
         )
 
         result = await self.session.execute(stmt)
         assistants = result.scalars().all()
-        logger.info(f"Returning {len(assistants)} assistants for owner: {lhmobjektID}")
+        logger.info(f"Returning {len(assistants)} assistants for owner: {user_id}")
         return list(assistants)
 
-    async def is_owner(self, assistant_id: str, lhmobjektID: str) -> bool:
-        logger.debug(f"Checking if {lhmobjektID} is owner of assistant {assistant_id}")
-        """Check if the given lhmobjektID is an owner of the specified assistant."""
+    async def is_owner(self, assistant_id: str, user_id: str) -> bool:
+        logger.debug(f"Checking if {user_id} is owner of assistant {assistant_id}")
+        """Check if the given user_id is an owner of the specified assistant."""
         stmt = (
             select(assistant_owners)
             .where(assistant_owners.c.assistant_id == assistant_id)
-            .where(assistant_owners.c.lhmobjektID == lhmobjektID)
+            .where(assistant_owners.c.user_id == user_id)
         )
 
         result = await self.session.execute(stmt)
@@ -231,15 +231,15 @@ class AssistantRepository(Repository[Assistant]):
                 for owner_id in owner_ids:
                     # Get or create the Owner
                     result = await self.session.execute(
-                        select(Owner).filter(Owner.lhmobjektID == owner_id)
+                        select(Owner).filter(Owner.user_id == owner_id)
                     )
                     owner = result.scalars().first()
                     if not owner:
-                        owner = Owner(lhmobjektID=owner_id)
+                        owner = Owner(user_id=owner_id)
                         self.session.add(owner)
                         await self.session.flush()  # Ensure owner is persisted                    # Create association directly using insert
                     stmt = insert(assistant_owners).values(
-                        assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
+                        assistant_id=assistant.id, user_id=owner.user_id
                     )
                     await self.session.execute(stmt)
 
@@ -287,17 +287,17 @@ class AssistantRepository(Repository[Assistant]):
                     for owner_id in owner_ids:
                         # Get or create the Owner
                         result = await self.session.execute(
-                            select(Owner).filter(Owner.lhmobjektID == owner_id)
+                            select(Owner).filter(Owner.user_id == owner_id)
                         )
                         owner = result.scalars().first()
                         if not owner:
-                            owner = Owner(lhmobjektID=owner_id)
+                            owner = Owner(user_id=owner_id)
                             self.session.add(owner)
                             await self.session.flush()  # Ensure owner is persisted
 
                         # Create association directly using insert
                         stmt = insert(assistant_owners).values(
-                            assistant_id=assistant.id, lhmobjektID=owner.lhmobjektID
+                            assistant_id=assistant.id, user_id=owner.user_id
                         )
                         await self.session.execute(stmt)
 
@@ -327,7 +327,7 @@ class AssistantRepository(Repository[Assistant]):
         logger.debug(f"Getting owners count for assistant {assistant_id}")
         """Get the count of owners for an assistant."""
         result = await self.session.execute(
-            select(func.count(assistant_owners.c.lhmobjektID)).where(
+            select(func.count(assistant_owners.c.user_id)).where(
                 assistant_owners.c.assistant_id == assistant_id
             )
         )
@@ -352,39 +352,37 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-    async def is_user_subscribed(self, assistant_id: str, lhmobjektID: str) -> bool:
+    async def is_user_subscribed(self, assistant_id: str, user_id: str) -> bool:
         """Check if a user is subscribed to an assistant."""
         logger.debug(
-            f"Checking if user {lhmobjektID} is subscribed to assistant {assistant_id}"
+            f"Checking if user {user_id} is subscribed to assistant {assistant_id}"
         )
 
         result = await self.session.execute(
             select(Subscription)
             .filter(Subscription.assistant_id == assistant_id)
-            .filter(Subscription.lhmobjektID == lhmobjektID)
+            .filter(Subscription.user_id == user_id)
         )
         subscription = result.scalars().first()
 
         return subscription is not None
 
     async def create_subscription(
-        self, assistant_id: str, lhmobjektID: str
+        self, assistant_id: str, user_id: str
     ) -> Subscription:
         """Create a subscription for a user to an assistant."""
         logger.info(
-            f"Creating subscription for user {lhmobjektID} to assistant {assistant_id}"
+            f"Creating subscription for user {user_id} to assistant {assistant_id}"
         )
 
         try:
-            subscription = Subscription(
-                assistant_id=assistant_id, lhmobjektID=lhmobjektID
-            )
+            subscription = Subscription(assistant_id=assistant_id, user_id=user_id)
             self.session.add(subscription)
             await self.session.flush()
             await self.session.refresh(subscription)
 
             logger.info(
-                f"Created subscription for user {lhmobjektID} to assistant {assistant_id}"
+                f"Created subscription for user {user_id} to assistant {assistant_id}"
             )
             return subscription
         except Exception as e:
@@ -392,10 +390,10 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-    async def remove_subscription(self, assistant_id: str, lhmobjektID: str) -> bool:
+    async def remove_subscription(self, assistant_id: str, user_id: str) -> bool:
         """Remove a user's subscription to an assistant."""
         logger.info(
-            f"Removing subscription for user {lhmobjektID} from assistant {assistant_id}"
+            f"Removing subscription for user {user_id} from assistant {assistant_id}"
         )
 
         try:
@@ -403,13 +401,13 @@ class AssistantRepository(Repository[Assistant]):
             existing_subscription = await self.session.execute(
                 select(Subscription)
                 .where(Subscription.assistant_id == assistant_id)
-                .where(Subscription.lhmobjektID == lhmobjektID)
+                .where(Subscription.user_id == user_id)
             )
             subscription = existing_subscription.scalars().first()
 
             if not subscription:
                 logger.info(
-                    f"No subscription found for user {lhmobjektID} to assistant {assistant_id}"
+                    f"No subscription found for user {user_id} to assistant {assistant_id}"
                 )
                 return False
 
@@ -417,7 +415,7 @@ class AssistantRepository(Repository[Assistant]):
             result = await self.session.execute(
                 delete(Subscription)
                 .where(Subscription.assistant_id == assistant_id)
-                .where(Subscription.lhmobjektID == lhmobjektID)
+                .where(Subscription.user_id == user_id)
             )
 
             rows_deleted = result.rowcount
@@ -435,7 +433,7 @@ class AssistantRepository(Repository[Assistant]):
                 )
 
             logger.info(
-                f"Removed {rows_deleted} subscription(s) for user {lhmobjektID} from assistant {assistant_id}"
+                f"Removed {rows_deleted} subscription(s) for user {user_id} from assistant {assistant_id}"
             )
             return rows_deleted > 0
         except Exception as e:
@@ -443,20 +441,20 @@ class AssistantRepository(Repository[Assistant]):
             await self.session.rollback()
             raise
 
-    async def get_user_subscriptions(self, lhmobjektID: str) -> list[Assistant]:
+    async def get_user_subscriptions(self, user_id: str) -> list[Assistant]:
         """Get all assistants a user has subscribed to."""
-        logger.info(f"Fetching subscriptions for user {lhmobjektID}")
+        logger.info(f"Fetching subscriptions for user {user_id}")
 
         try:
             # Join Subscription with Assistant to get all subscribed assistants
             result = await self.session.execute(
                 select(Assistant)
                 .join(Subscription, Assistant.id == Subscription.assistant_id)
-                .where(Subscription.lhmobjektID == lhmobjektID)
+                .where(Subscription.user_id == user_id)
             )
 
             assistants = list(result.scalars().all())
-            logger.info(f"Found {len(assistants)} subscriptions for user {lhmobjektID}")
+            logger.info(f"Found {len(assistants)} subscriptions for user {user_id}")
             return assistants
         except Exception as e:
             logger.error(f"Error fetching user subscriptions: {e}")

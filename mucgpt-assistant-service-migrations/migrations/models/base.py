@@ -34,12 +34,12 @@ assistant_owners = Table(
         primary_key=True,
     ),
     Column(
-        "lhmobjektID",
+        "user_id",
         String(255),
-        ForeignKey("owners.lhmobjektID", ondelete="CASCADE"),
+        ForeignKey("owners.user_id", ondelete="CASCADE"),
         primary_key=True,
     ),
-    UniqueConstraint("assistant_id", "lhmobjektID", name="uq_assistant_owner"),
+    UniqueConstraint("assistant_id", "user_id", name="uq_assistant_owner"),
 )
 
 
@@ -100,7 +100,7 @@ class Owner(Base):
 
     __tablename__ = "owners"
 
-    lhmobjektID = Column(String(255), primary_key=True)
+    user_id = Column(String(255), primary_key=True)
 
 
 class Subscription(Base):
@@ -110,5 +110,5 @@ class Subscription(Base):
     assistant_id = Column(
         String(36), ForeignKey("assistants.id", ondelete="CASCADE"), nullable=False
     )
-    lhmobjektID = Column(String(255), nullable=False)
+    user_id = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)

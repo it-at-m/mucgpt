@@ -128,7 +128,7 @@ class AuthenticationHelper:
             )
 
         return AuthenticationResult(
-            lhm_object_id=self.getLHMObjectID(user_info),
+            user_id=self.getLHMObjectID(user_info),
             department=self.getDepartment(user_info),
             name=self.getName(user_info),
             roles=roles,

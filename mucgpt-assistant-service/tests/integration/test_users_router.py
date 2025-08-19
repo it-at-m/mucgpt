@@ -1421,9 +1421,9 @@ async def test_subscription_count_with_repository_operations(
 
     our_assistant = next(
         (
-            assistant
-            for assistant in user_assistants
-            if assistant["id"] == str(assistant.id)
+            user_assistant
+            for user_assistant in user_assistants
+            if user_assistant["id"] == str(assistant.id)
         ),
         None,
     )
@@ -1442,9 +1442,9 @@ async def test_subscription_count_with_repository_operations(
     user_assistants = user_assistants_response.json()
     our_assistant = next(
         (
-            assistant
-            for assistant in user_assistants
-            if assistant["id"] == str(assistant.id)
+            user_assistant
+            for user_assistant in user_assistants
+            if user_assistant["id"] == str(assistant.id)
         ),
         None,
     )

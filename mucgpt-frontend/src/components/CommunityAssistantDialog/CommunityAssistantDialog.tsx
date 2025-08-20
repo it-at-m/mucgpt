@@ -43,7 +43,7 @@ const createMockAssistant = (): Assistant => ({
     temperature: 0.0,
     max_output_tokens: 0,
     version: "0",
-    owner_ids: ["owner"],
+    owner_ids: [],
     tags: [],
     tools: [],
     hierarchical_access: [],

@@ -92,7 +92,7 @@ export const AssistantsettingsDrawer = ({
             publish: false
         };
         await deleteCommunityAssistantApi(assistant.id);
-        await storageService.createAssistantConfig(updatedAssistant);
+        await storageService.createAssistantConfig(updatedAssistant, assistant.id);
         window.location.href = "/#/";
         window.location.reload();
     }, [assistant, storageService, assistant.id]);

@@ -360,10 +360,10 @@ class AssistantVersionResponse(AssistantBase):
     # added model_config for from_attributes
     model_config = ConfigDict(from_attributes=True)
 
-    id: int = Field(
+    id: str = Field(
         ...,
         description="Unique identifier for the assistant version",
-        example=1,
+        example="123e4567-e89b-12d3-a456-426614174000",
     )
     version: int = Field(
         ...,

@@ -58,14 +58,16 @@ async def createAssistant(
         if user_info.user_id not in owner_ids:
             owner_ids.append(user_info.user_id)
 
+        is_visible: bool = (
+            assistant.is_visible if assistant.is_visible is not None else True
+        )
+
         new_assistant = await assistant_repo.create(
             hierarchical_access=assistant.hierarchical_access or [],
             owner_ids=owner_ids,
-            is_visible=assistant.is_visible
-            if assistant.is_visible is not None
-            else True,
+            is_visible=is_visible,
         )
-
+        assistant_id: str = str(new_assistant.id)
         # Create the first version with the actual assistant data
         first_version = await assistant_repo.create_assistant_version(
             new_assistant,
@@ -102,12 +104,12 @@ async def createAssistant(
         # first_version is already committed and refreshed by create_assistant_version
 
         # Get assistant with owners and latest version safely
-        assistant_with_owners = await assistant_repo.get_with_owners(new_assistant.id)
-        latest_version = await assistant_repo.get_latest_version(new_assistant.id)
+        assistant_with_owners = await assistant_repo.get_with_owners(assistant_id)
+        latest_version = await assistant_repo.get_latest_version(assistant_id)
 
         # Create explicit response model        # Build AssistantVersionResponse
         assistant_version_response = AssistantVersionResponse(
-            id=latest_version.id,
+            id=assistant_id,
             version=latest_version.version,
             created_at=latest_version.created_at,
             name=latest_version.name,
@@ -121,14 +123,14 @@ async def createAssistant(
             tags=latest_version.tags or [],
             tools=assistant_repo.get_tools_from_version(latest_version),
             owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
-            is_visible=new_assistant.is_visible,
+            is_visible=is_visible,
         )  # Build AssistantResponse
         response = AssistantResponse(
-            id=new_assistant.id,
+            id=assistant_id,
             created_at=new_assistant.created_at,
             updated_at=new_assistant.updated_at,
             hierarchical_access=new_assistant.hierarchical_access or [],
-            is_visible=new_assistant.is_visible,
+            is_visible=is_visible,
             owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
             subscriptions_count=getattr(new_assistant, "subscriptions_count", 0) or 0,
             latest_version=assistant_version_response,
@@ -218,7 +220,7 @@ async def updateAssistant(
     assistant_update: AssistantUpdate,
     db: AsyncSession = Depends(get_db_session),
     user_info: AuthenticationResult = Depends(authenticate_user),
-):
+) -> AssistantResponse:
     logger.info(f"Updating assistant with ID: {id} by user {user_info.user_id}")
     assistant_repo = AssistantRepository(db)
     assistant = await assistant_repo.get(id)
@@ -229,6 +231,9 @@ async def updateAssistant(
     if not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotOwnerException()
 
+    is_visible: bool = (
+        assistant_update.is_visible if assistant_update.is_visible is not None else True
+    )
     # Get latest version safely
     latest_version = await assistant_repo.get_latest_version(id)
     if not latest_version:
@@ -242,7 +247,7 @@ async def updateAssistant(
         assistant_id=id,
         hierarchical_access=assistant_update.hierarchical_access,
         owner_ids=assistant_update.owner_ids,
-        is_visible=assistant_update.is_visible,
+        is_visible=is_visible,
     )
 
     # Create a new version with updated data
@@ -293,7 +298,7 @@ async def updateAssistant(
     # Create explicit response model
     # Build AssistantVersionResponse
     assistant_version_response = AssistantVersionResponse(
-        id=latest_version.id,
+        id=id,
         version=latest_version.version,
         created_at=latest_version.created_at,
         name=latest_version.name,
@@ -307,16 +312,16 @@ async def updateAssistant(
         tags=latest_version.tags or [],
         tools=assistant_repo.get_tools_from_version(latest_version),
         owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
-        is_visible=assistant.is_visible,
+        is_visible=is_visible,
     )
 
     # Build AssistantResponse
     response = AssistantResponse(
-        id=assistant.id,
+        id=id,
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
-        is_visible=assistant.is_visible,
+        is_visible=is_visible,
         owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
         latest_version=assistant_version_response,
@@ -359,11 +364,14 @@ async def getAllAssistants(
         assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
         # Use safe method to access latest version through repository
         latest_version = await assistant_repo.get_latest_version(assistant.id)
-
         if latest_version:
+            is_visible = (
+                assistant.is_visible if assistant.is_visible is not None else True
+            )
+            assistant_id = str(assistant.id)
             # Build AssistantVersionResponse
             assistant_version_response = AssistantVersionResponse(
-                id=latest_version.id,
+                id=assistant_id,
                 version=latest_version.version,
                 created_at=latest_version.created_at,
                 name=latest_version.name,
@@ -377,16 +385,16 @@ async def getAllAssistants(
                 tags=latest_version.tags or [],
                 tools=assistant_repo.get_tools_from_version(latest_version),
                 owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
-                is_visible=assistant.is_visible,
+                is_visible=is_visible,
             )
 
             # Build AssistantResponse
             response = AssistantResponse(
-                id=assistant.id,
+                id=assistant_id,
                 created_at=assistant.created_at,
                 updated_at=assistant.updated_at,
                 hierarchical_access=assistant.hierarchical_access or [],
-                is_visible=assistant.is_visible,
+                is_visible=is_visible,
                 owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
@@ -438,10 +446,14 @@ async def getAssistant(
     # Get latest version safely
     latest_version = await assistant_repo.get_latest_version(id)
 
+    is_visible: bool = (
+        bool(assistant.is_visible) if assistant.is_visible is not None else True
+    )
+
     # Create explicit response model
     # Build AssistantVersionResponse
     assistant_version_response = AssistantVersionResponse(
-        id=latest_version.id,
+        id=id,
         version=latest_version.version,
         created_at=latest_version.created_at,
         name=latest_version.name,
@@ -455,14 +467,14 @@ async def getAssistant(
         tags=latest_version.tags or [],
         tools=assistant_repo.get_tools_from_version(latest_version),
         owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
-        is_visible=assistant.is_visible,
+        is_visible=is_visible,
     )  # Build AssistantResponse
     response = AssistantResponse(
-        id=assistant.id,
+        id=id,
         created_at=assistant.created_at,
         updated_at=assistant.updated_at,
         hierarchical_access=assistant.hierarchical_access or [],
-        is_visible=assistant.is_visible,
+        is_visible=is_visible,
         owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
         subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
         latest_version=assistant_version_response,
@@ -521,7 +533,7 @@ async def get_assistant_version(
 
     # Create explicit response model
     response = AssistantVersionResponse(
-        id=assistant_version.id,
+        id=id,
         version=assistant_version.version,
         created_at=assistant_version.created_at,
         name=assistant_version.name,
@@ -535,6 +547,7 @@ async def get_assistant_version(
         tags=assistant_version.tags or [],
         tools=assistant_repo.get_tools_from_version(assistant_version),
         owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
+        is_visible=assistant.is_visible,
     )
 
     logger.info(f"Returning version {version} of assistant {id}")

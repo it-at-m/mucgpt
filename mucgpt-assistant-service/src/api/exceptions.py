@@ -7,7 +7,7 @@ class AuthenticationException(HTTPException):
 
 
 class AssistantNotFoundException(HTTPException):
-    def __init__(self, assistant_id: int):
+    def __init__(self, assistant_id: str):
         super().__init__(
             status_code=404, detail=f"Assistant with ID {assistant_id} not found"
         )
@@ -22,7 +22,7 @@ class NotOwnerException(HTTPException):
 
 
 class VersionConflictException(HTTPException):
-    def __init__(self, provided_version: int, latest_version: int):
+    def __init__(self, provided_version: int, latest_version: str):
         super().__init__(
             status_code=409,
             detail=f"Version conflict: You are trying to update version {provided_version}, but the latest version is {latest_version}.",
@@ -37,7 +37,7 @@ class NoVersionException(HTTPException):
 
 
 class VersionNotFoundException(HTTPException):
-    def __init__(self, assistant_id: int, version: int):
+    def __init__(self, assistant_id: str, version: int):
         super().__init__(
             status_code=404,
             detail=f"Version {version} not found for assistant with ID {assistant_id}",
@@ -45,14 +45,14 @@ class VersionNotFoundException(HTTPException):
 
 
 class DeleteFailedException(HTTPException):
-    def __init__(self, assistant_id: int):
+    def __init__(self, assistant_id: str):
         super().__init__(
             status_code=500, detail=f"Failed to delete assistant with ID {assistant_id}"
         )
 
 
 class NotAllowedToAccessException(HTTPException):
-    def __init__(self, assistant_id: int):
+    def __init__(self, assistant_id: str):
         super().__init__(
             status_code=403,
             detail=f"You are not allowed to access assistant with ID {assistant_id}",

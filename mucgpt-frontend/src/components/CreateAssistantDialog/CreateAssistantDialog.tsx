@@ -92,7 +92,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 quick_prompts: [],
                 examples: [],
                 version: "0",
-                owner_ids: ["owner"],
+                owner_ids: [],
                 tags: [],
                 hierarchical_access: [],
                 tools: [],

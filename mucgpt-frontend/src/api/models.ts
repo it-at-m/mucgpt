@@ -200,6 +200,7 @@ export interface AssistantResponse {
     hierarchical_access?: string[];
     owner_ids?: string[];
     latest_version: AssistantVersionResponse;
+    is_visible: boolean;
 }
 
 // Tool info and list response for /tools endpoint

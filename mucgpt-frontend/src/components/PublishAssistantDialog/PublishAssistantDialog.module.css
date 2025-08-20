@@ -121,10 +121,7 @@
 .linkCard {
     margin-top: 16px;
     border: 1px solid var(--colorCompoundBrandStroke);
-    background: linear-gradient(135deg, var(--colorBrandBackground2) 0%, var(--colorNeutralBackground1) 100%);
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: all 0.2s ease-in-out;
 }
 
 .linkCard:hover {

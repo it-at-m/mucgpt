@@ -49,7 +49,6 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 t("components.publish_assistant_dialog.publish_assistant_success"),
                 t("components.publish_assistant_dialog.publish_assistant_success_message", { title: assistant.title })
             );
-            console.log(invisibleChecked);
             // Wenn der Assistant nicht unsichtbar ist, schließe den Dialog sofort
             if (!invisibleChecked) {
                 onDeleteAssistant();

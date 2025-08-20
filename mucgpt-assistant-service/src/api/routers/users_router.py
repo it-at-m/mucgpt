@@ -37,36 +37,42 @@ async def _build_assistant_response_list(
     # In a production environment, the repository methods should be optimized
     # to fetch all necessary data (latest versions, owners) in a more efficient way
     # (e.g., using SQLAlchemy joined loads) to avoid the N+1 query problem.
-    response_list = []
+    response_list: list[AssistantResponse] = []
     for assistant in assistants:
         # These calls are inefficient in a loop (N+1 problem).
         # Consider refactoring the repository to fetch this data more efficiently.
-        assistant_with_owners = await assistant_repo.get_with_owners(assistant.id)
-        latest_version = await assistant_repo.get_latest_version(assistant.id)
-
+        assistant_id = str(assistant.id)
+        assistant_with_owners = await assistant_repo.get_with_owners(assistant_id)
+        latest_version = await assistant_repo.get_latest_version(assistant_id)
+        is_visible = (
+            bool(assistant.is_visible) if assistant.is_visible is not None else True
+        )
         if latest_version and assistant_with_owners:
             assistant_version_response = AssistantVersionResponse(
-                id=latest_version.id,
-                version=latest_version.version,
-                created_at=latest_version.created_at,
-                name=latest_version.name,
-                description=latest_version.description or "",
-                system_prompt=latest_version.system_prompt,
-                hierarchical_access=assistant.hierarchical_access or [],
-                temperature=latest_version.temperature,
-                max_output_tokens=latest_version.max_output_tokens,
+                id=assistant_id,
+                version=getattr(latest_version, "version", 0),
+                created_at=getattr(latest_version, "created_at"),
+                name=getattr(latest_version, "name", ""),
+                description=getattr(latest_version, "description", ""),
+                system_prompt=getattr(latest_version, "system_prompt", ""),
+                hierarchical_access=assistant.hierarchical_access
+                if isinstance(assistant.hierarchical_access, list)
+                else [],
+                temperature=getattr(latest_version, "temperature", 0.0),
+                max_output_tokens=getattr(latest_version, "max_output_tokens", 1024),
                 examples=latest_version.examples or [],
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
                 tools=assistant_repo.get_tools_from_version(latest_version),
                 owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
+                is_visible=is_visible,
             )
             response = AssistantResponse(
-                id=assistant.id,
-                created_at=assistant.created_at,
-                updated_at=assistant.updated_at,
+                id=assistant_id,
+                created_at=getattr(assistant, "created_at"),
+                updated_at=getattr(assistant, "updated_at"),
                 hierarchical_access=assistant.hierarchical_access or [],
-                is_visible=assistant.is_visible,
+                is_visible=is_visible,
                 owner_ids=[owner.user_id for owner in assistant_with_owners.owners],
                 subscriptions_count=getattr(assistant, "subscriptions_count", 0) or 0,
                 latest_version=assistant_version_response,
@@ -219,12 +225,13 @@ async def get_user_subscriptions(
     # Build simplified response with only ID and name
     response_list = []
     for assistant in assistants:
-        latest_version = await assistant_repo.get_latest_version(assistant.id)
+        assistant_id = str(assistant.id)
+        latest_version = await assistant_repo.get_latest_version(assistant_id)
         if latest_version:
             response = SubscriptionResponse(
-                id=assistant.id,
-                name=latest_version.name,
-                description=latest_version.description,
+                id=assistant_id,
+                name=getattr(latest_version, "name", ""),
+                description=getattr(latest_version, "description", ""),
             )
             response_list.append(response)
 

@@ -24,9 +24,14 @@ export const AssistantCard = ({ assistant, subscriptions, isOwned, isSubscribed,
                 header={
                     <div className={styles.cardHeader}>
                         <Body1 className={styles.assistantTitle}>{assistant.title}</Body1>
-                        {(isOwned || isSubscribed) && (
+                        {(isOwned) && (
                             <Badge size="small" appearance="outline" color="success">
-                                Abboniert
+                                {t("components.community_assistants.owned_assistant")}
+                            </Badge>
+                        )}
+                        {(isSubscribed) && (
+                            <Badge size="small" appearance="outline" color="success">
+                                {t("components.community_assistants.subscribed_assistant")}
                             </Badge>
                         )}
                     </div>

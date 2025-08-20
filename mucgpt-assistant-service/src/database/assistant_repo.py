@@ -302,7 +302,7 @@ class AssistantRepository(Repository[Assistant]):
                         await self.session.execute(stmt)
 
                 # Always bump the updated_at so API clients see a change even if only owners or related tables changed
-                assistant.updated_at = datetime.now(timezone.utc)
+                assistant.updated_at = datetime.now()
                 await self.session.flush()
                 await self.session.refresh(assistant)
                 logger.info(f"Updated assistant {assistant_id}")

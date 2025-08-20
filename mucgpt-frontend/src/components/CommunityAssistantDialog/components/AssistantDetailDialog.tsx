@@ -35,7 +35,8 @@ interface AssistantDetailDialogProps {
 export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subscribedAssistants, onClose, onBack, onSave }: AssistantDetailDialogProps) => {
     const { t } = useTranslation();
 
-    const isAlreadySaved = ownedAssistants.includes(assistant.id ?? "") || subscribedAssistants.includes(assistant.id ?? "");
+    const isAlreadySaved = subscribedAssistants.includes(assistant.id ?? "");
+    const isOwned = ownedAssistants.includes(assistant.id ?? "");
 
     const handleSave = async () => {
         await onSave(assistant);
@@ -152,13 +153,13 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                         <DialogTrigger disableButtonEnhancement>
                             <Tooltip
                                 content={
-                                    isAlreadySaved ? t("components.community_assistants.assistant_already_saved") : t("components.community_assistants.save")
+                                    isOwned ? t("components.community_assistants.owned_assistant") : (isAlreadySaved ? t("components.community_assistants.assistant_already_saved") : t("components.community_assistants.save"))
                                 }
                                 relationship="description"
                                 positioning="above"
                             >
-                                <Button appearance="primary" onClick={handleSave} disabled={isAlreadySaved} icon={<Save24Filled />}>
-                                    {isAlreadySaved ? t("components.community_assistants.already_saved") : t("components.community_assistants.save")}
+                                <Button appearance="primary" onClick={handleSave} disabled={isAlreadySaved || isOwned} icon={<Save24Filled />}>
+                                    {t("components.community_assistants.save")}
                                 </Button>
                             </Tooltip>
                         </DialogTrigger>

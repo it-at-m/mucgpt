@@ -426,7 +426,9 @@ i18n
                             subscribe_success_message: "Du hast den Assistenten erfolgreich abonniert.",
                             subscribe_failed_title: "Fehler beim Abonnieren des Assistenten {{title}}",
                             subscribe_failed_default: "Beim Abonnieren des Assistenten ist ein Fehler aufgetreten. Bitte versuche es erneut.",
-                            times_subscribed: "mal abonniert"
+                            times_subscribed: "mal abonniert",
+                            owned_assistant: "Eigener Assistent",
+                            subscribed_assistant: "Abonniert"
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -847,7 +849,9 @@ i18n
                             subscribe_success_message: "You have successfully subscribed to the assistant.",
                             subscribe_failed_title: "Error subscribing to {{title}}",
                             subscribe_failed_default: "An error occurred while subscribing to the assistant. Please try again.",
-                            times_subscribed: "times subscribed"
+                            times_subscribed: "times subscribed",
+                            owned_assistant: "Own Assistant",
+                            subscribed_assistant: "Subscribed"
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1273,7 +1277,9 @@ i18n
                             subscribe_success_message: "Du host den Assistent erfolgreich abonniert.",
                             subscribe_failed_title: "Fehler beim Abonnieren vom Assistentn {{title}}",
                             subscribe_failed_default: "Beim Abonnieren vom Assistentn is a Fehler aufgtretn. Bitte versuch's amoi.",
-                            times_subscribed: "moi abonniert"
+                            times_subscribed: "moi abonniert",
+                            owned_assistant: "Eigener Assistent",
+                            subscribed_assistant: "Abonniert"
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -1698,7 +1704,9 @@ i18n
                             subscribe_success_message: "Vous vous êtes abonné avec succès à l'assistant.",
                             subscribe_failed_title: "Erreur lors de l'abonnement à {{title}}",
                             subscribe_failed_default: "Une erreur est survenue lors de l'abonnement à l'assistant. Veuillez réessayer.",
-                            times_subscribed: "fois abonné"
+                            times_subscribed: "fois abonné",
+                            owned_assistant: "Assistant Propre",
+                            subscribed_assistant: "Abonné"
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -2121,7 +2129,9 @@ i18n
                             subscribe_success_message: "Ви успішно підписалися на асистента.",
                             subscribe_failed_title: "Помилка при підписці на {{title}}",
                             subscribe_failed_default: "Під час підписки на асистента сталася помилка. Будь ласка, спробуйте ще раз.",
-                            times_subscribed: "разів підписано"
+                            times_subscribed: "разів підписано",
+                            owned_assistant: "Власний Асистент",
+                            subscribed_assistant: "Підписаний"
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

@@ -245,7 +245,7 @@ const Menu = () => {
                     setShowSearchDialogInput={setShowSearchAssistant}
                     takeCommunityAssistants={getCommunityAssistants}
                     setTakeCommunityAssistants={setGetCommunityAssistants}
-                    ownedAssistants={ownedCommunityAssistants.map(a => a.latest_version.id)}
+                    ownedAssistants={ownedCommunityAssistants.map(a => a.id)}
                     subscribedAssistants={communityAssistants.map(a => a.id)}
                 />
                 <div className={styles.subrowheader} role="heading" aria-level={4}>

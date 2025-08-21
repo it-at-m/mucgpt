@@ -12,14 +12,15 @@ from api.api_models import (
     CreateAssistantResult,
 )
 from api.exception import llm_exception_handler
-from config.settings import get_settings
+from config.settings import get_langfuse_settings, get_settings
 from core.auth import authenticate_user
 from core.logtools import getLogger
 from init_app import init_agent
 
 logger = getLogger()
 settings = get_settings()
-agent_executor = init_agent(settings)
+langfuse_settings = get_langfuse_settings()
+agent_executor = init_agent(cfg=settings, langfuse_cfg=langfuse_settings)
 router = APIRouter(prefix="/v1")
 
 

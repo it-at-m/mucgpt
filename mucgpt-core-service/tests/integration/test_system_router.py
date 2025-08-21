@@ -11,7 +11,6 @@ def test_config_endpoint(test_client):
     response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert "frontend" in data
     assert "version" in data
     assert "commit" in data
     assert "models" in data

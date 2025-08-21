@@ -25,12 +25,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             description: "A young model that has to earn it's name, but with a lot of potential."
         }
     ],
-    frontend: {
-        labels: {
-            env_name: "MUCGPT"
-        },
-        alternative_logo: false
-    },
+    env_name: "MUCGPT",
+    alternative_logo: false,
     version: "FRONTEND DEMO 1.0.0",
     commit: "152b175"
 };

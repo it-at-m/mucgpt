@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from config.settings import ConfigResponse, ModelsDTO, get_settings
+from api.api_models import ConfigResponse, ModelsDTO
+from config.settings import get_settings
 from core.auth import authenticate_user
 from init_app import init_departments
 
@@ -21,12 +22,13 @@ departments = init_departments()
 )
 async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
     response = ConfigResponse(
-        frontend=settings.frontend,
-        version=settings.version,
-        commit=settings.commit,
+        env_name=settings.ENV_NAME,
+        alternative_logo=settings.ALTERNATIVE_LOGO,
+        version=settings.VERSION,
+        commit=settings.COMMIT,
     )
 
-    models = settings.backend.models
+    models = settings.MODELS
     for model in models:
         dto = ModelsDTO(
             llm_name=model.llm_name,

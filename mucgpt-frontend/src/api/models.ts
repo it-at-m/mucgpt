@@ -45,14 +45,10 @@ export type CreateAssistantRequest = {
 
 export interface ApplicationConfig {
     models: Model[];
-    frontend: Frontend;
+    alternative_logo: boolean;
+    env_name: string;
     version: string;
     commit: string;
-}
-
-export interface Frontend {
-    alternative_logo: boolean;
-    labels: Labels;
 }
 
 export interface Model {

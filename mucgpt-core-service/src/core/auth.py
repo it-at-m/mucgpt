@@ -165,8 +165,8 @@ def authenticate_user(
     """Dependency to authenticate users based on access token."""  # Load configuration
     logger.debug("Loading configuration for authentication")
     auth_helper = AuthenticationHelper(
-        userinfo_url=sso_settings.userinfo_url,
-        role=sso_settings.role,
+        userinfo_url=sso_settings.USERINFO_URL,
+        role=sso_settings.ROLE,
     )
 
     try:

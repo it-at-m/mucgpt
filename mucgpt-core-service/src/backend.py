@@ -8,7 +8,6 @@ from fastapi.responses import (
 
 from api.routers import (
     chat_router,
-    summarize_router,
     system_router,
     tools_router,
 )
@@ -22,20 +21,16 @@ logger = getLogger()
 settings = get_settings()
 
 # serves static files and the api
-backend = FastAPI(title="MUCGPT", version=settings.version)
+backend = FastAPI(title="MUCGPT", version=settings.VERSION)
 # serves the api
 api_app = FastAPI(
     title="MUCGPT-API",
     description="MUCCGPT core API for AI services",
-    version=settings.version,
+    version=settings.VERSION,
     openapi_tags=[
         {
             "name": "Chat",
             "description": "Operations for managing chat interactions with AI models",
-        },
-        {
-            "name": "Summarize",
-            "description": "Operations for summarizing text or documents using AI models",
         },
         {
             "name": "System",
@@ -53,7 +48,6 @@ api_app.add_middleware(CorrelationIdMiddleware)
 
 
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
-api_app.include_router(summarize_router.router, prefix="", tags=["Summarize"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
 
@@ -66,7 +60,7 @@ async def handleAuthError(request, exc: AuthError):
     """
     # return error.error, error.status_code
     return RedirectResponse(
-        url=settings.backend.unauthorized_user_redirect_url, status_code=302
+        url=settings.UNAUTHORIZED_USER_REDIRECT_URL, status_code=302
     )
 
 

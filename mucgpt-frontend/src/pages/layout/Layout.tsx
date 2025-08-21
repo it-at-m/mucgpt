@@ -151,16 +151,12 @@ export const Layout = () => {
                         <header className={styles2.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
                             <div className={styles.header}>
                                 <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
-                                    <img
-                                        src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo_black : logo}
-                                        alt="MUCGPT"
-                                        className={styles.logo}
-                                    />
+                                    <img src={config.alternative_logo ? alternative_logo : isLight ? logo_black : logo} alt="MUCGPT" className={styles.logo} />
                                     <h1
                                         className={styles.headerTitle}
-                                        aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.frontend.labels.env_name })}
+                                        aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name })}
                                     >
-                                        {config.frontend.labels.env_name}
+                                        {config.env_name}
                                     </h1>
                                 </Link>
 

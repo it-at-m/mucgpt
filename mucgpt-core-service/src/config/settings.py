@@ -25,73 +25,64 @@ class ModelsConfig(BaseModel):
         return value
 
 
-class ModelsDTO(BaseModel):
-    llm_name: str
-    max_output_tokens: PositiveInt
-    max_input_tokens: PositiveInt
-    description: str
-
-
 class SSOSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_SSO_",
         extra="ignore",
     )
+    URL: str
+    REALM: str = "intap"
+    ROLE: str = "lhm-ab-mucgpt-user"
 
-    userinfo_url: str = ""
-    role: str = "lhm-ab-mucgpt-user"
-
-
-class BackendConfig(BaseModel):
-    unauthorized_user_redirect_url: str = ""
-    models: List[ModelsConfig] = []
-    models_json: str = "[]"
-    langfuse_public_key: str | None = None
-    langfuse_secret_key: str | None = None
-    langfuse_host: str | None = None
+    @property
+    def USERINFO_URL(self) -> str:
+        return f"{self.URL}/auth/realms/{self.REALM}/protocol/openid-connect/userinfo"
 
 
-class LabelsConfig(BaseModel):
-    env_name: str = "MUCGPT"
-
-
-class FrontendConfig(BaseModel):
-    labels: LabelsConfig = Field(default_factory=LabelsConfig)
-    alternative_logo: bool = False
-
-
-class ConfigResponse(BaseModel):
-    frontend: FrontendConfig
-    models: List[ModelsDTO] = []
-    version: str
-    commit: str
+class LangfuseSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="MUCGPT_LANGFUSE_",
+        extra="ignore",
+        case_sensitive=False,
+    )
+    PUBLIC_KEY: str | None = None
+    SECRET_KEY: str | None = None
+    HOST: str | None = None
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_CORE_",
-        env_nested_delimiter="__",
         extra="ignore",
+        case_sensitive=False,
     )
-
     # General settings
-    version: str = Field(default="")
-    commit: str = Field(default="")
-    log_config: str = "logconf.yaml"
+    VERSION: str = Field(default="")
+    COMMIT: str = Field(default="")
+    LOG_CONFIG: str = "logconf.yaml"
 
     # Frontend settings
-    frontend: FrontendConfig = Field(default_factory=FrontendConfig)
+    ENV_NAME: str = "MUCGPT"
+    ALTERNATIVE_LOGO: bool = False
 
     # Backend settings
-    backend: BackendConfig = Field(default_factory=BackendConfig)
+    UNAUTHORIZED_USER_REDIRECT_URL: str = ""
+    MODELS: List[ModelsConfig] = []
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # Set version and commit if not provided via environment
-        if not self.version:
-            self.version = VersionInfo.get_version()
-        if not self.commit:
-            self.commit = VersionInfo.get_commit()
+        if not self.VERSION:
+            self.VERSION = VersionInfo.get_version()
+        if not self.COMMIT:
+            self.COMMIT = VersionInfo.get_commit()
+
+
+@lru_cache(maxsize=1)
+def get_langfuse_settings() -> LangfuseSettings:
+    """Return cached Langfuse Settings instance."""
+    langfuse_settings = LangfuseSettings()
+    return langfuse_settings
 
 
 @lru_cache(maxsize=1)

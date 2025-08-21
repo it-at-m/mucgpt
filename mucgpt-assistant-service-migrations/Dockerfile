@@ -9,30 +9,28 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
+# Set cache directory to a location we have permissions to write to
+ENV UV_CACHE_DIR=/app/.cache/uv
+
 WORKDIR /app
 
 # Leverage layer cache
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/app/.cache/uv \
     uv sync --no-dev --locked --no-install-project
 
 # copy only the required directories for migrations
 COPY /migrations /app/migrations
 
 # Install the project
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/app/.cache/uv \
     uv sync --no-dev --locked
 
 # Make sure migrations directory is in the path
 ENV PYTHONPATH="/app/migrations:${PYTHONPATH}"
 
-# Add version information
-ARG COMMIT
-ARG VERSION
-ENV MUCGPT_MIGRATIONS_VERSION=${VERSION}
-ENV MUCGPT_MIGRATIONS_COMMIT=${COMMIT}
 
 # Metadata for the image
 ARG IMAGE_CREATED="unknown"

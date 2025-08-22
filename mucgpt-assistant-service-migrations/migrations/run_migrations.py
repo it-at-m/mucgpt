@@ -108,7 +108,7 @@ def run_migrations(revision="head"):
     alembic_cfg = Config()
     alembic_cfg.set_main_option("script_location", dir_path)
 
-    # Set SQLAlchemy URL
+    # Set SQLAlchemy URL (env.py will override with async URL for engine)
     db_url = get_database_url()
     # Add timeout parameter to the connection URL if using PostgreSQL
     if db_url.startswith("postgresql") and "connect_timeout" not in db_url:
@@ -125,10 +125,9 @@ def run_migrations(revision="head"):
     logger.info(f"Using alembic script location: {dir_path}")
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
 
-    # Also set connect_args with timeout for SQLAlchemy
-    alembic_cfg.set_section_option(
-        "alembic", "sqlalchemy.connect_args", f"{{'connect_timeout': {db_timeout}}}"
-    )  # Run the migration with retries
+    # Note: connect_args are configured in migrations/env.py for the async engine
+
+    # Run the migration with retries
     attempt = 0
     last_error = None
 

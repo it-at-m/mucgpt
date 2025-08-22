@@ -103,8 +103,8 @@ async def run_async_migrations() -> None:
         "command_timeout": db_timeout,
     }
 
-    # Set the connect_args in the configuration
-    configuration["sqlalchemy.connect_args"] = str(connect_args)
+    # Set the connect_args in the configuration (must be a dict, not string)
+    configuration["sqlalchemy.connect_args"] = connect_args
 
     connectable = async_engine_from_config(
         configuration,

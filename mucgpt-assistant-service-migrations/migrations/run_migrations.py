@@ -204,7 +204,7 @@ def validate_database_config():
     db_url = get_database_url()
     if not db_url.startswith("postgresql+psycopg2://"):
         logger.warning(
-            f"Database URL does not use postgresql+psycopg2:// scheme: {db_url.split('://', 1)[0]}://***"
+            "Database URL does not use the expected postgresql+psycopg2 scheme."
         )
         issues_found = True
 

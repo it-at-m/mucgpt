@@ -9,11 +9,15 @@ Environment variables:
     MIGRATION_LOG_LEVEL: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     MIGRATION_CHECK_ONLY: If set to 'true', only check configuration without running migrations
     MIGRATION_SHOW_SQL: If set to 'true', show SQL statements during migration
+    MIGRATION_DB_TIMEOUT: Database connection timeout in seconds (default: 30)
+    MIGRATION_DB_RETRIES: Number of connection retry attempts (default: 1)
+    MIGRATION_DB_RETRY_DELAY: Delay between retry attempts in seconds (default: 5)
 """
 
 import logging
 import os
 import sys
+import time
 import traceback
 
 import sqlalchemy
@@ -89,6 +93,14 @@ def run_migrations(revision="head"):
     """Run migrations to specified revision."""
     logger = setup_logging()
 
+    # Get connection timeout and retry settings
+    db_timeout = int(os.getenv("MIGRATION_DB_TIMEOUT", "30"))
+    db_retries = int(os.getenv("MIGRATION_DB_RETRIES", "1"))
+    db_retry_delay = int(os.getenv("MIGRATION_DB_RETRY_DELAY", "5"))
+
+    logger.info(f"Database connection timeout: {db_timeout}s")
+    logger.info(f"Connection retry attempts: {db_retries}")
+
     # Get script directory
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -98,6 +110,13 @@ def run_migrations(revision="head"):
 
     # Set SQLAlchemy URL
     db_url = get_database_url()
+    # Add timeout parameter to the connection URL if using PostgreSQL
+    if db_url.startswith("postgresql") and "connect_timeout" not in db_url:
+        if "?" in db_url:
+            db_url += f"&connect_timeout={db_timeout}"
+        else:
+            db_url += f"?connect_timeout={db_timeout}"
+
     # Log only non-sensitive database details
     db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
     db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
@@ -106,53 +125,75 @@ def run_migrations(revision="head"):
     logger.info(f"Using alembic script location: {dir_path}")
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
 
-    # Run the migration
-    try:
-        logger.info(f"Starting migration to revision: {revision}")
-        command.upgrade(alembic_cfg, revision)
-        logger.info(f"Successfully migrated database to {revision}")
-    except Exception as e:
-        logger.error(f"Migration failed: {str(e)}")
-        logger.error("Detailed error information:")
-        logger.error(traceback.format_exc())  # Log alembic configuration for debugging
+    # Also set connect_args with timeout for SQLAlchemy
+    alembic_cfg.set_section_option(
+        "alembic", "sqlalchemy.connect_args", f"{{'connect_timeout': {db_timeout}}}"
+    )
+
+    # Run the migration with retries
+    attempt = 0
+    last_error = None
+
+    while attempt < db_retries:
+        attempt += 1
         try:
-            # Log all config options available in alembic
-            config_options = alembic_cfg.get_main_option_names()
-            logger.debug(f"Alembic config options: {config_options}")
-
-            # Check if sqlalchemy.url is properly set
-            db_url_configured = alembic_cfg.get_main_option("sqlalchemy.url")
-            if db_url_configured:
-                logger.info("Database URL is properly configured in Alembic")
+            logger.info(
+                f"Starting migration to revision: {revision} (attempt {attempt}/{db_retries})"
+            )
+            command.upgrade(alembic_cfg, revision)
+            logger.info(f"Successfully migrated database to {revision}")
+            return  # Success, exit the retry loop
+        except Exception as e:
+            last_error = e
+            logger.error(f"Migration attempt {attempt} failed: {str(e)}")
+            if attempt < db_retries:
+                logger.info(f"Waiting {db_retry_delay} seconds before retrying...")
+                time.sleep(db_retry_delay)
             else:
-                logger.warning("Database URL appears to be missing from Alembic config")
+                logger.error("All migration attempts failed.")
 
-            # Check if script_location is properly set
-            script_loc = alembic_cfg.get_main_option("script_location")
-            logger.info(f"Alembic script_location: {script_loc}")
-            # Check if alembic paths exist
-            if script_loc:
-                if os.path.exists(script_loc):
-                    logger.info(f"Script location directory exists: {script_loc}")
-                    # List migration files for debugging
-                    versions_path = os.path.join(script_loc, "versions")
-                    if os.path.exists(versions_path):
-                        migration_files = os.listdir(versions_path)
-                        logger.info(
-                            f"Found {len(migration_files)} migration files in {versions_path}"
-                        )
-                        logger.debug(f"Migration files: {migration_files}")
-                    else:
-                        logger.warning(
-                            f"Versions directory does not exist: {versions_path}"
-                        )
-                else:
-                    logger.error(
-                        f"Script location directory does not exist: {script_loc}"
+    # If we get here, all attempts failed
+    logger.error("Migration failed after all retry attempts")
+    logger.error("Detailed error information:")
+    logger.error(
+        traceback.format_exc(last_error)
+    )  # Log alembic configuration for debugging
+    try:
+        # Log all config options available in alembic
+        config_options = alembic_cfg.get_main_option_names()
+        logger.debug(f"Alembic config options: {config_options}")
+
+        # Check if sqlalchemy.url is properly set
+        db_url_configured = alembic_cfg.get_main_option("sqlalchemy.url")
+        if db_url_configured:
+            logger.info("Database URL is properly configured in Alembic")
+        else:
+            logger.warning("Database URL appears to be missing from Alembic config")
+
+        # Check if script_location is properly set
+        script_loc = alembic_cfg.get_main_option("script_location")
+        logger.info(f"Alembic script_location: {script_loc}")
+        # Check if alembic paths exist
+        if script_loc:
+            if os.path.exists(script_loc):
+                logger.info(f"Script location directory exists: {script_loc}")
+                # List migration files for debugging
+                versions_path = os.path.join(script_loc, "versions")
+                if os.path.exists(versions_path):
+                    migration_files = os.listdir(versions_path)
+                    logger.info(
+                        f"Found {len(migration_files)} migration files in {versions_path}"
                     )
-        except Exception as config_error:
-            logger.warning(f"Could not log alembic config: {str(config_error)}")
-        sys.exit(1)
+                    logger.debug(f"Migration files: {migration_files}")
+                else:
+                    logger.warning(
+                        f"Versions directory does not exist: {versions_path}"
+                    )
+            else:
+                logger.error(f"Script location directory does not exist: {script_loc}")
+    except Exception as config_error:
+        logger.warning(f"Could not log alembic config: {str(config_error)}")
+    sys.exit(1)
 
 
 def validate_database_config():

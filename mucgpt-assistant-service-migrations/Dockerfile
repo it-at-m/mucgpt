@@ -23,6 +23,7 @@ RUN --mount=type=cache,target=/app/.cache/uv \
 
 # copy only the required directories for migrations
 COPY /migrations /app/migrations
+COPY /test_db_connection.py /app/
 
 # Install the project
 RUN --mount=type=cache,target=/app/.cache/uv \

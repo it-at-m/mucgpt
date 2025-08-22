@@ -156,5 +156,4 @@ config/local.json
 .vscode/
 .env*
 stack/ca-bundle.crt
-departements.json
 .gitignore

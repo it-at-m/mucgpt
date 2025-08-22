@@ -150,14 +150,13 @@ def run_migrations(revision="head"):
                 logger.info(f"Waiting {db_retry_delay} seconds before retrying...")
                 time.sleep(db_retry_delay)
             else:
-                logger.error("All migration attempts failed.")
-
-    # If we get here, all attempts failed
+                logger.error(
+                    "All migration attempts failed."
+                )  # If we get here, all attempts failed
     logger.error("Migration failed after all retry attempts")
     logger.error("Detailed error information:")
-    logger.error(
-        traceback.format_exc(last_error)
-    )  # Log alembic configuration for debugging
+    logger.error(traceback.format_exc())  # Log the current exception information
+    logger.error(f"Error: {str(last_error)}")  # Log alembic configuration for debugging
     try:
         # Log all config options available in alembic
         config_options = alembic_cfg.get_main_option_names()

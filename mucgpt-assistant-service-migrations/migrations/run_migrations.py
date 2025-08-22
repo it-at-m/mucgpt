@@ -128,9 +128,7 @@ def run_migrations(revision="head"):
     # Also set connect_args with timeout for SQLAlchemy
     alembic_cfg.set_section_option(
         "alembic", "sqlalchemy.connect_args", f"{{'connect_timeout': {db_timeout}}}"
-    )
-
-    # Run the migration with retries
+    )  # Run the migration with retries
     attempt = 0
     last_error = None
 
@@ -146,6 +144,8 @@ def run_migrations(revision="head"):
         except Exception as e:
             last_error = e
             logger.error(f"Migration attempt {attempt} failed: {str(e)}")
+            logger.error(f"Traceback for attempt {attempt}:")
+            logger.error(traceback.format_exc())  # Log traceback for each attempt
             if attempt < db_retries:
                 logger.info(f"Waiting {db_retry_delay} seconds before retrying...")
                 time.sleep(db_retry_delay)

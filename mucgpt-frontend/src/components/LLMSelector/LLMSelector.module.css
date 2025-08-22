@@ -1,0 +1,61 @@
+.container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.iconRightMargin {
+    margin-right: 4px;
+}
+
+.buttonContainer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.buttonContainer:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+}
+
+.modelName {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+    min-width: 28px;
+    text-align: center;
+}
+
+.container {
+    position: relative;
+}
+
+.modelOptions {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    min-width: 180px;
+    max-height: 300px;
+    overflow-y: auto;
+    margin-top: 4px;
+}
+
+.modelOption {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.modelOption:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+}

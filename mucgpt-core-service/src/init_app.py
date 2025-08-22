@@ -1,99 +1,139 @@
-from typing import Tuple
+import inspect
+import json
+import os
+from typing import Any, Dict, Optional, Type, Union
 
-from brainstorm.brainstorm import Brainstorm
-from chat.chat import Chat
-from core.authentification import AuthentificationHelper
-from core.confighelper import ConfigHelper
-from core.datahelper import Base, Repository
-from core.llmhelper import getModel
+from agent.agent import MUCGPTAgent
+from agent.agent_executor import MUCGPTAgentExecutor
+from config.model_provider import get_model
+from config.settings import LangfuseSettings, Settings
 from core.logtools import getLogger
-from core.types.AppConfig import AppConfig
-from core.types.Config import BackendConfig, DatabaseConfig
-from simply.simply import Simply
-from summarize.summarize import Summarize
 
 logger = getLogger()
 
 
-def initApproaches(
-    cfg: BackendConfig, repoHelper: Repository
-) -> Tuple[Chat, Brainstorm, Summarize]:
-    """init different approaches
+class ModelOptions:
+    """Helper class for model initialization options."""
+
+    def __init__(
+        self,
+        streaming: bool = True,
+        temperature: float = 0.7,
+        max_tokens: int = 4000,
+        custom_model: Optional[Any] = None,
+    ):
+        """Initialize model options with validation.
+
+        Args:
+            streaming: Whether to enable streaming responses
+            temperature: Model temperature (0-1)
+            max_tokens: Maximum number of output tokens
+            custom_model: Optional pre-configured model (for testing)
+        """
+        # Validate parameters
+        if not isinstance(temperature, (int, float)) or not 0 <= temperature <= 1:
+            raise ValueError(f"Temperature must be between 0 and 1, got {temperature}")
+
+        if not isinstance(max_tokens, int) or max_tokens <= 0:
+            raise ValueError(f"Max tokens must be a positive integer, got {max_tokens}")
+
+        self.streaming = streaming
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.custom_model = custom_model
+
+
+def init_service(
+    service_class: Type,
+    cfg: Settings,
+    options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
+) -> Any:
+    """Initialize a service with a configured model.
 
     Args:
-        cfg (BackendConfig): the config for the backend
-        repoHelper (Repository): the repository to save request statistics
+        service_class: The service class to instantiate
+        cfg: Backend configuration
+        options: Model options as ModelOptions object or dict
 
     Returns:
-        Tuple[Chat, Brainstorm, Summarize]: the implementation behind chat, brainstorm and summarize
+        Initialized service instance
+
+    Raises:
+        TypeError: If the service_class is not a valid type
+        Exception: For any other initialization errors
     """
-    logger.info("Init approaches")
-    logger.info("%s llms configured", len(cfg.models))
-    for model in cfg.models:
-        logger.info("Model: %s", model.llm_name)
-    brainstormllm = getModel(
-        models=cfg.models, max_output_tokens=4000, n=1, streaming=False, temperature=0.9
-    )
-    sumllm = getModel(
-        models=cfg.models, max_output_tokens=2000, n=1, streaming=False, temperature=0
-    )
-    chatllm = getModel(
-        models=cfg.models, max_output_tokens=4000, n=1, streaming=True, temperature=0.7
-    )
-    simplyllm = getModel(
-        models=cfg.models, max_output_tokens=4000, n=1, streaming=True, temperature=0
-    )
-    chat_approaches = Chat(llm=chatllm, config=cfg.chat, repo=repoHelper)
-    brainstorm_approaches = Brainstorm(
-        llm=brainstormllm, config=cfg.brainstorm, repo=repoHelper
-    )
-    sum_approaches = Summarize(llm=sumllm, config=cfg.sum, repo=repoHelper)
-    simply_approaches = Simply(llm=simplyllm, config=cfg.simply, repo=repoHelper)
-    return (chat_approaches, brainstorm_approaches, sum_approaches, simply_approaches)
+    if not inspect.isclass(service_class):
+        raise TypeError(f"Service class {service_class} is not a class")
+
+    # Convert dict to ModelOptions if needed
+    if isinstance(options, dict):
+        options = ModelOptions(**options)
+    # Use default options if none provided
+    elif options is None:
+        options = ModelOptions()
+
+    try:
+        if options.custom_model is None:
+            logger.debug(
+                "Initializing %s with model from config", service_class.__name__
+            )
+            model = get_model(
+                models=cfg.MODELS,
+                max_output_tokens=options.max_tokens,
+                n=1,
+                streaming=options.streaming,
+                temperature=options.temperature,
+                logger=logger,
+            )
+        else:
+            logger.debug("Initializing %s with custom model", service_class.__name__)
+            model = options.custom_model
+
+        return service_class(llm=model)
+    except Exception as e:
+        logger.error("Failed to initialize %s: %s", service_class.__name__, e)
+        raise
 
 
-def initApp() -> AppConfig:
-    """inits the app
+def init_agent(
+    cfg: Settings,
+    langfuse_cfg: LangfuseSettings,
+    options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
+) -> MUCGPTAgentExecutor:
+    """Initialize a MUCGPTAgentExecutor with configuration.
+
+    Args:
+        cfg: Application settings
+        langfuse_cfg: Langfuse configuration settings
+        options: Model options as ModelOptions object or dict
 
     Returns:
-        AppConfig: contains the configuration for the webservice
+        Configured MUCGPTAgentExecutor
     """
-    logger.info("Init app")
-    config_helper = ConfigHelper()
-    cfg = config_helper.loadData()
-    # Set up authentication helper
-    logger.info("Authentification enabled?:  " + str(cfg.backend.enable_auth))
-    auth_helper = AuthentificationHelper(
-        issuer=cfg.backend.sso_config.sso_issuer, role=cfg.backend.sso_config.role
-    )
-    # set up repositorty
-    if cfg.backend.enable_database:
-        logger.info("Setting up database connection: " + cfg.backend.db_config.db_host)
-        db_config: DatabaseConfig = cfg.backend.db_config
-        repoHelper = Repository(
-            username=db_config.db_user,
-            host=db_config.db_host,
-            database=db_config.db_name,
-            password=db_config.db_password,
-        )
-        repoHelper.setup_schema(base=Base)
-    else:
-        logger.info("No database provided")
-        repoHelper = None
-
-    (chat_approaches, brainstorm_approaches, sum_approaches, simply_approaches) = (
-        initApproaches(cfg=cfg.backend, repoHelper=repoHelper)
+    return MUCGPTAgentExecutor(
+        version=cfg.VERSION,
+        agent=init_service(
+            MUCGPTAgent,
+            cfg=cfg,
+            options=options,
+        ),
+        langfuse_cfg=langfuse_cfg,
     )
 
-    logger.info("finished init App")
 
-    return AppConfig(
-        authentification_client=auth_helper,
-        configuration_features=cfg,
-        chat_approaches=chat_approaches,
-        brainstorm_approaches=brainstorm_approaches,
-        simply_approaches=simply_approaches,
-        sum_approaches=sum_approaches,
-        repository=repoHelper,
-        backend_config=cfg.backend,
-    )
+def init_departments() -> list:
+    """Initialize departments from the json file.
+
+    Returns:
+        list: The departments
+    """
+    departments_path = os.path.join(os.path.dirname(__file__), "departements.json")
+    try:
+        with open(departments_path, encoding="utf-8") as f:
+            data = json.load(f)
+            departments = data.get("departements", [])
+        logger.info("Loaded %d departments from departements.json", len(departments))
+    except Exception as e:
+        logger.error("Failed to load departements.json: %s", e)
+        departments = []
+    return departments

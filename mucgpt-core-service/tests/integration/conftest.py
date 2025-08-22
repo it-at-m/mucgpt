@@ -1,40 +1,37 @@
-import openai
 import pytest
+from fastapi.testclient import TestClient
+
+from backend import api_app
+from core.auth import authenticate_user
+from core.auth_models import AuthenticationResult
 
 
 @pytest.fixture
-def mock_openai_chatcompletion(monkeypatch):
-    class AsyncChatCompletionIterator:
-        def __init__(self, answer):
-            self.num = 1
-            self.answer = answer
+def override_authenticate_user():
+    """Override the authentication dependency."""
 
-        def __aiter__(self):
-            return self
+    async def _get_test_user():
+        return AuthenticationResult(
+            user_id="test_user_123",
+            name="Test User",
+            email="test@example.com",
+            department="IT-Test-Department",
+            is_authenticated=True,
+        )
 
-        async def __anext__(self):
-            if self.num == 1:
-                self.num = 0
-                return openai.util.convert_to_openai_object(
-                    {"choices": [{"delta": {"content": self.answer}}]}
-                )
-            else:
-                raise StopAsyncIteration
+    return _get_test_user
 
-    async def mock_acreate(*args, **kwargs):
-        messages = kwargs["messages"]
-        if (
-            messages[-1]["content"]
-            == "Generate search query for: What is the capital of France?"
-        ):
-            answer = "capital of France"
-        else:
-            answer = "The capital of France is Paris."
-        if "stream" in kwargs and kwargs["stream"] is True:
-            return AsyncChatCompletionIterator(answer)
-        else:
-            return openai.util.convert_to_openai_object(
-                {"choices": [{"message": {"content": answer}}]}
-            )
 
-    monkeypatch.setattr(openai.ChatCompletion, "acreate", mock_acreate)
+@pytest.fixture
+def test_client(override_authenticate_user):
+    """Create a test client with authentication and database overrides."""
+    # Apply dependency overrides to the API app where authentication is used
+    api_app.dependency_overrides[authenticate_user] = override_authenticate_user
+
+    # Create test client using the backend which has the API mounted at /api/
+    client = TestClient(api_app)
+
+    yield client
+
+    # Clear overrides after test
+    api_app.dependency_overrides.clear()

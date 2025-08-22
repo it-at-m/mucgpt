@@ -4,7 +4,7 @@
     margin-top: var(--spacingVerticalS);
     display: flex;
     flex-direction: row;
-    justify-content: start;
+    justify-content: flex-end;
     padding-bottom: var(--spacingHorizontalS);
     margin-bottom: var(--spacingHorizontalS);
     border-bottom: 1px dotted var(--colorBrandBackground2);
@@ -23,7 +23,7 @@
     overflow-y: auto;
     overflow-x: auto;
     scrollbar-width: thin;
-    height: calc(100vh - 195px);
+    height: calc(100vh - 170px);
     margin-bottom: 30px;
     border-bottom: 1px dotted var(--colorBrandBackground2);
 }

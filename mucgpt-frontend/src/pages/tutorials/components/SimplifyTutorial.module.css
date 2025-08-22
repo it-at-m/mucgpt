@@ -1,0 +1,101 @@
+.exampleContainer {
+    margin-bottom: 24px;
+}
+
+.buttonsContainer {
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.buttonsContainerSingle {
+    padding: 20px;
+    text-align: center;
+}
+
+.button {
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+.hideButton {
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke1);
+}
+
+.hideButton:hover {
+    background: var(--colorNeutralBackground2);
+    border-color: var(--colorNeutralStroke2);
+}
+
+.showButton {
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    border: none;
+}
+
+.showButton:hover {
+    background: var(--colorBrandBackgroundHover);
+}
+
+.tryButton {
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tryButton:hover {
+    background: var(--colorBrandBackgroundHover);
+}
+
+.tryButtonIcon {
+    font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .buttonsContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button {
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .buttonsContainer,
+    .buttonsContainerSingle {
+        padding: 16px;
+    }
+
+    .button {
+        padding: 14px 20px;
+        font-size: 16px;
+    }
+
+    .tryButtonIcon {
+        font-size: 18px;
+    }
+}

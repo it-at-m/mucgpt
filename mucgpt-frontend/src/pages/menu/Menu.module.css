@@ -3,26 +3,140 @@
     display: flex;
     flex-direction: column;
     margin-top: 60px;
-    margin-bottom: 20px;
+    margin-bottom: 60px;
     max-width: 80%;
     margin-right: 10%;
     margin-left: 10%;
-    height: 100%;
+    min-height: calc(100vh - 140px);
+    max-height: none;
+    overflow-y: auto;
 }
+
+.chatstartercontainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 50px;
+    width: 100%;
+    background: var(--colorBackgroundOverlay);
+}
+
+.heading {
+    font-size: 2.8rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 50px;
+    margin-top: 50px;
+    color: var(--colorNeutralForeground1);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    position: relative;
+    display: inline-block;
+}
+
+.chatstarter {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    padding: 0 20px;
+}
+
+.chatstarter > div {
+    width: 100%;
+    max-width: 700px;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.disclaimerText {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #c0c0c0;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.chatNavigationContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+.chatNavigationButton {
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: var(--fontSizeBase300);
+    font-weight: 500;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.chatNavigationButton:hover {
+    background: var(--colorBrandBackgroundHover);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .rowheader {
+    flex: 1;
+    display: flex;
+    font-size: var(--fontSizeBase600);
+    font-weight: bold;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--colorBrandStroke2);
+    color: var(--colorBrandForeground1);
+    letter-spacing: 0.5px;
+    position: relative;
+}
+
+.rowheader::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background-color: var(--colorBrandBackground);
+}
+
+.subrowheader {
     flex: 1;
     display: flex;
     font-size: var(--fontSizeBase500);
     font-weight: bold;
     align-items: center;
     justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 12px;
+    padding-left: 10px;
+    border-left: 4px solid var(--colorBrandBackground);
+    color: var(--colorNeutralForeground1);
 }
 
 .row {
     padding-top: 10px;
     padding-bottom: 20px;
     width: 100%;
-    height: 33%;
+    min-height: 120px;
     justify-content: center;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -31,24 +145,25 @@
 }
 .box {
     flex: 1 1 250px;
-    text-align: center;
+    text-align: left;
     margin-top: 0px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    height: 100px;
-    border-radius: 20px;
+    height: auto;
+    min-height: 120px;
+    border-radius: 8px;
     margin-right: 10px;
     margin-left: 10px;
     color: var(--colorNeutralBackround1Hover);
     text-decoration: none;
-    opacity: 0.75;
+    opacity: 0.9;
     font-size: var(--fontSizeBase400);
-    background: var(--colorNeutralBackground4);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap; /* Verhindert Zeilenumbruch */
-    overflow: hidden; /* Versteckt den überlaufenden Text */
+    flex-direction: column;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 /* Optional: Ein zusätzlicher Stil für den Text */
@@ -66,10 +181,80 @@
         0px 8px 16px rgba(0, 0, 0, 0.14),
         0px 0px 2px rgba(0, 0, 0, 0.12);
     outline: 2px solid var(--colorNeutralForeground3Selected);
+    transform: translateY(-2px);
+}
+
+.boxHeader {
+    font-weight: 600;
+    font-size: var(--fontSizeBase500);
+    color: var(--colorNeutralForeground1);
+    margin-bottom: 8px;
+    line-height: 1.3;
+    height: 2.6em; /* Feste Höhe für 2 Zeilen */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.boxDescription {
+    font-size: var(--fontSizeBase300);
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
+    margin-bottom: 12px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    word-break: break-word;
+    max-height: calc(1.4em * 3);
+    flex: 1 1 auto;
+}
+
+.boxButtons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.boxChoose {
+    text-align: center;
+    min-width: 100px;
+    align-self: flex-start;
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: var(--fontSizeBase200);
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.boxChoose:hover {
+    background: var(--colorBrandBackgroundHover);
+    text-decoration: none;
 }
 .btnText {
     margin: 0;
     top: 45%;
     align-self: center;
     overflow-wrap: break-word;
+}
+
+/* Screen reader only content */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }

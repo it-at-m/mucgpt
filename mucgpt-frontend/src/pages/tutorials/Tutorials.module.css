@@ -1,0 +1,249 @@
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 80px;
+    margin-bottom: 40px;
+    padding: 0 6vw;
+    max-width: 1400px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+.headerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.titleSection {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.pageIcon {
+    color: var(--colorBrandForeground1);
+    margin-top: 4px;
+    font-size: 32px;
+    background: var(--colorBrandBackground2);
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.subtitle {
+    color: var(--colorNeutralForeground2);
+    margin-top: 12px;
+    margin-left: 6px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.content {
+    flex: 1;
+}
+
+/* Tutorial Sections */
+.tutorialSections {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.tutorialSection {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.sectionHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.sectionDescription {
+    color: var(--colorNeutralForeground2);
+    line-height: 1.6;
+}
+
+/* Tutorial Grid */
+.tutorialGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.tutorialCard {
+    cursor: pointer;
+    background: var(--colorNeutralBackground1);
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.tutorialCard:hover {
+    border-color: var(--colorBrandStroke1);
+}
+
+.tutorialCard:focus-visible {
+    outline: 2px solid var(--colorBrandForeground1);
+    outline-offset: 2px;
+}
+
+.disabledCard {
+    pointer-events: none;
+}
+
+.tutorialIcon {
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    border-radius: 6px;
+    background: var(--colorBrandBackground2);
+    color: var(--colorBrandForeground1);
+    margin-bottom: 12px;
+}
+
+.tutorialHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.tutorialDescription {
+    color: var(--colorNeutralForeground2);
+    line-height: 1.6;
+    margin-top: 8px;
+}
+
+/* Selected Tutorial Content */
+.tutorialBreadcrumb {
+    margin-bottom: 24px;
+}
+
+.tutorialTitleContainer {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.tutorialSubtitle {
+    color: var(--colorNeutralForeground2);
+    margin-top: 8px;
+    margin-left: 6px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.tutorialBody {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border-radius: 6px;
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 4vw;
+        margin-top: 40px;
+    }
+
+    .headerContainer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 32px;
+    }
+
+    .titleSection {
+        gap: 16px;
+    }
+
+    .pageIcon {
+        font-size: 32px;
+        padding: 10px;
+    }
+
+    .tutorialGrid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .tutorialTitleContainer {
+        gap: 16px;
+    }
+
+    .tutorialIcon {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+
+    .tutorialBody {
+        padding: 20px;
+        margin-top: 24px;
+    }
+
+    .tutorialSections {
+        gap: 40px;
+    }
+
+    .tutorialSection {
+        gap: 20px;
+    }
+
+    .sectionHeader {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 20px;
+        margin-top: 20px;
+    }
+
+    .titleSection {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .tutorialTitleContainer {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pageIcon {
+        font-size: 28px;
+        padding: 8px;
+    }
+
+    .tutorialBody {
+        padding: 16px;
+    }
+
+    .tutorialSections {
+        gap: 32px;
+    }
+
+    .tutorialSection {
+        gap: 16px;
+    }
+}

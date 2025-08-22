@@ -1,22 +1,28 @@
-import { Outlet, NavLink, Link, useNavigate, useParams } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import logo from "../../assets/mucgpt_logo.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_black.png";
-import { SelectionEvents, OptionOnSelectData } from "@fluentui/react-combobox";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
-import { ApplicationConfig, configApi } from "../../api";
-import { SettingsDrawer } from "../../components/SettingsDrawer";
-import { FluentProvider, Theme } from "@fluentui/react-components";
+import { ApplicationConfig } from "../../api";
+import { FluentProvider, Theme, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel } from "@fluentui/react-components";
 import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
-import { DEFAULTLLM, LLMContext } from "../../components/LLMSelector/LLMContextProvider";
+import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
-import { BOT_STORE, CHAT_STORE, DEFAULT_APP_CONFIG } from "../../constants";
-import { BotStorageService } from "../../service/botstorage";
-import { StorageService } from "../../service/storage";
+import { DEFAULT_APP_CONFIG } from "../../constants";
+import { HeaderContext } from "./HeaderContextProvider";
+import { UserContextProvider } from "./UserContextProvider";
+import { LanguageSelector } from "../../components/LanguageSelector";
+import { ThemeSelector } from "../../components/ThemeSelector";
+import { FeedbackButton } from "../../components/FeedbackButton";
+import { VersionInfo } from "../../components/VersionInfo";
+import { HelpButton } from "../../components/HelpButton";
+import { configApi } from "../../api/core-client";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
+import { Navigation24Regular, DismissRegular, Settings24Regular, ContactCard24Regular } from "@fluentui/react-icons";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -24,9 +30,6 @@ const formatDate = (date: Date) => {
 };
 
 export const Layout = () => {
-    // params
-    const { id } = useParams();
-
     //style
     const styles2 = useStyles();
 
@@ -35,7 +38,9 @@ export const Layout = () => {
 
     // Contexts
     const { setLanguage } = useContext(LanguageContext);
-    const { LLM, setLLM } = useContext(LLMContext);
+    const { setLLM, setAvailableLLMs } = useContext(LLMContext);
+    const { header } = useContext(HeaderContext);
+    const { showError } = useGlobalToastContext();
 
     // Use useRef to prevent duplicate API calls
     const configApiCalledRef = useRef(false);
@@ -45,35 +50,25 @@ export const Layout = () => {
 
     const [config, setConfig] = useState<ApplicationConfig>(DEFAULT_APP_CONFIG);
 
-    const [simply, setSimply] = useState<boolean>(true);
-    const [models, setModels] = useState(config.models);
+    const [, setModels] = useState(config.models);
 
-    const [title, setTitle] = useState<[string, string]>(["0", ""]);
+    // Mobile menu state
+    const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+    const toggleMobileMenu = useCallback(() => setMobileMenuOpen(prev => !prev), []);
 
     // vars from storage
-    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
     const termsofuseread = localStorage.getItem(STORAGE_KEYS.TERMS_OF_USE_READ) === formatDate(new Date());
     const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
     const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
 
     const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const [fontscaling, setFontscaling] = useState<number>(font_scaling_pref);
+    const [fontscaling] = useState<number>(font_scaling_pref);
 
     const ligth_theme_pref =
         localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
 
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
-
-    // scale font size
-    const onFontscaleChange = useCallback(
-        (fontscale: number) => {
-            setFontscaling(fontscale);
-            setTheme(adjustTheme(isLight, fontscale));
-            localStorage.setItem(STORAGE_KEYS.SETTINGS_FONT_SCALING, fontscale.toString());
-        },
-        [isLight, setFontscaling, setTheme]
-    );
 
     // change theme
     const onThemeChange = useCallback(
@@ -85,48 +80,28 @@ export const Layout = () => {
         [fontscaling, setLight, setTheme]
     );
 
-    //do migrations for chat
-    useEffect(() => {
-        new StorageService<any, any>(CHAT_STORE).connectToDB();
-        if (id) {
-            botStorageService.getBotConfig(id).then(bot => {
-                if (bot) setTitle([bot.id as string, bot.title]);
-            });
-        }
-    }, [id]);
-
     useEffect(() => {
         // Skip if the API has already been called
         if (configApiCalledRef.current) return;
         configApiCalledRef.current = true;
 
-        configApi().then(
-            result => {
+        configApi()
+            .then(result => {
                 setConfig(result);
                 setModels(result.models);
-                setSimply(result.frontend.enable_simply);
                 if (result.models.length === 0) {
                     console.error("Keine Modelle vorhanden");
                 }
+                setAvailableLLMs(result.models);
                 setLLM(result.models.find(model => model.llm_name == llm_pref) || result.models[0]);
-                for (const bot of result.frontend.community_assistants) {
-                    bot.system_message = bot.system_message.replace(/\\n/g, "\n");
-                    if (bot.system_message.startsWith('"') && bot.system_message.endsWith('"')) {
-                        bot.system_message = bot.system_message.slice(1, -1);
-                    }
-                    bot.description = bot.description.replace(/\\n/g, "\n").replace(/ {2}/g, "  \n");
-                    if (bot.description.startsWith('"') && bot.description.endsWith('"')) {
-                        bot.description = bot.description.slice(1, -1);
-                    }
-                    botStorageService.createBotConfig(bot, bot.id);
-                }
-            },
-            () => {
-                console.error("Config nicht geladen");
-            }
-        );
+            })
+            .catch(error => {
+                console.error(t("common.errors.config_not_loaded"), error);
+                const errorMessage = error instanceof Error ? error.message : t("common.errors.failed_to_load_config");
+                showError(t("common.errors.configuration_error"), errorMessage);
+            });
         i18n.changeLanguage(language_pref);
-    }, []);
+    }, [showError]);
 
     // terms of use
     const onAcceptTermsOfUse = useCallback(() => {
@@ -139,8 +114,8 @@ export const Layout = () => {
 
     // language change
     const onLanguageSelectionChanged = useCallback(
-        (e: SelectionEvents, selection: OptionOnSelectData) => {
-            const lang = selection.optionValue || DEFAULTLANG;
+        (nextLanguage: string) => {
+            const lang = nextLanguage || DEFAULTLANG;
             i18n.changeLanguage(lang);
             setLanguage(lang);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_LANGUAGE, lang);
@@ -148,113 +123,147 @@ export const Layout = () => {
         [setLanguage, i18n]
     );
 
-    // llm change
-    const onLLMSelectionChanged = useCallback(
-        (e: SelectionEvents, selection: OptionOnSelectData) => {
-            const llm = selection.optionValue || DEFAULTLLM;
-            const found_llm = models.find(model => model.llm_name == llm);
-            if (found_llm) {
-                setLLM(found_llm);
-                localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, llm);
+    // Check window size for mobile view
+    const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+            if (window.innerWidth > 768) {
+                setMobileMenuOpen(false);
             }
-        },
-        [models, setLLM]
-    );
+        };
+
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     return (
         <FluentProvider theme={theme}>
             <LightContext.Provider value={isLight}>
-                <div className={styles.layout}>
-                    <header className={styles2.header} role={"banner"}>
-                        <div className={styles.header}>
-                            <Link to="/" className={styles.headerTitleContainer}>
-                                <img
-                                    src={config.frontend.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
-                                    alt="MUCGPT logo"
-                                    aria-label="MUCGPT Logo"
-                                    className={styles.logo}
-                                ></img>
-                                <h3 className={styles.headerTitle} aria-description="Umgebung:">
-                                    {config.frontend.labels.env_name}
-                                </h3>
-                            </Link>
-                            <div className={styles.headerNavList}>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        MUCGPT
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink to="/chat" className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}>
-                                        {t("header.chat")}
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to="/sum"
-                                        state={{ from: "This is my props" }}
-                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                    >
-                                        {t("header.sum")}
-                                    </NavLink>
-                                </div>
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to="/brainstorm"
-                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                    >
-                                        {t("header.brainstorm")}
-                                    </NavLink>
-                                </div>
-                                {simply && (
-                                    <div className={styles.headerNavLeftMargin}>
-                                        <NavLink
-                                            to="/simply"
-                                            className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                        >
-                                            {t("header.simply")}
-                                        </NavLink>
-                                    </div>
-                                )}
-                                <div className={styles.headerNavLeftMargin}>
-                                    <NavLink
-                                        to={"/bot/" + title[0]}
-                                        className={({ isActive }) => (isActive ? styles.headerNavPageLinkActive : styles.headerNavPageLink)}
-                                    >
-                                        {title[1]}
-                                    </NavLink>
-                                </div>
-                            </div>
-                            <div className={styles.SettingsDrawer}>
-                                <SettingsDrawer
-                                    defaultlang={language_pref}
-                                    onLanguageSelectionChanged={onLanguageSelectionChanged}
-                                    version={config.version}
-                                    commit={config.commit}
-                                    fontscale={fontscaling}
-                                    setFontscale={onFontscaleChange}
-                                    isLight={isLight}
-                                    setTheme={onThemeChange}
-                                    defaultLLM={llm_pref}
-                                    onLLMSelectionChanged={onLLMSelectionChanged}
-                                    llmOptions={models}
-                                    currentLLM={LLM}
-                                />
-                            </div>
-                        </div>
-                    </header>
-                    <Outlet />
+                <UserContextProvider>
+                    <div className={styles.layout}>
+                        {/* Skip to main content for screen readers */}
+                        <a href="#main-content" className={styles.skipLink}>
+                            {t("common.skip_to_content", "Zum Hauptinhalt springen")}
+                        </a>
 
-                    <footer className={styles.footer} role={"banner"}>
-                        <div>
-                            Landeshauptstadt München <br />
-                            RIT/it@M KICC <br />
-                        </div>
-                        <div className={styles.headerNavRightMargin}>
-                            <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse}></TermsOfUseDialog>
-                        </div>
-                    </footer>
-                </div>
+                        <header className={styles2.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
+                            <div className={styles.header}>
+                                <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
+                                    <img src={config.alternative_logo ? alternative_logo : isLight ? logo_black : logo} alt="MUCGPT" className={styles.logo} />
+                                    <h1
+                                        className={styles.headerTitle}
+                                        aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name })}
+                                    >
+                                        {config.env_name}
+                                    </h1>
+                                </Link>
+
+                                {isMobile ? (
+                                    <Button
+                                        className={styles.mobileMenuButton}
+                                        icon={
+                                            mobileMenuOpen ? (
+                                                <DismissRegular className={styles.iconSize24} />
+                                            ) : (
+                                                <Navigation24Regular className={styles.iconSize24} />
+                                            )
+                                        }
+                                        onClick={toggleMobileMenu}
+                                        aria-label={mobileMenuOpen ? t("common.close_menu", "Menü schließen") : t("common.open_menu", "Menü öffnen")}
+                                        aria-expanded={mobileMenuOpen}
+                                        size="medium"
+                                    />
+                                ) : (
+                                    <>
+                                        <nav className={styles.headerNavList} aria-label={t("common.page_navigation", "Seitennavigation")}>
+                                            <div className={styles.headerNavPageLink}>{header}</div>
+                                        </nav>
+                                        <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
+                                            <div className={styles.headerNavRightContainer}>
+                                                <div className={styles.headerNavList}>
+                                                    <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                                </div>
+                                            </div>
+                                        </nav>
+                                    </>
+                                )}
+                            </div>
+
+                            {isMobile && mobileMenuOpen && (
+                                <div className={styles.mobileMenu}>
+                                    <div className={styles.mobileMenuHeader}>
+                                        <div className={styles.headerNavPageLink}>{header}</div>
+                                    </div>
+                                    <div className={styles.mobileMenuAccordion}>
+                                        <Accordion collapsible>
+                                            <AccordionItem value="settings">
+                                                <AccordionHeader icon={<Settings24Regular />}>{t("common.settings", "Einstellungen")}</AccordionHeader>
+                                                <AccordionPanel className={styles.accordionPanel}>
+                                                    <div className={styles.accordionContent}>
+                                                        <div className={styles.accordionItem}>
+                                                            <span>{t("common.theme", "Farbschema")}:</span>
+                                                            <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                                        </div>
+                                                        <div className={styles.accordionItem}>
+                                                            <span>{t("common.language", "Sprache")}:</span>
+                                                            <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                                        </div>
+                                                    </div>
+                                                </AccordionPanel>
+                                            </AccordionItem>
+                                            <AccordionItem value="help">
+                                                <AccordionHeader icon={<ContactCard24Regular />}>{t("common.support", "Support & Hilfe")}</AccordionHeader>
+                                                <AccordionPanel className={styles.accordionPanel}>
+                                                    <div className={styles.accordionContent}>
+                                                        <div className={styles.accordionItem}>
+                                                            <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                                                        </div>
+                                                        <div className={styles.accordionItem}>
+                                                            <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                                        </div>
+                                                    </div>
+                                                </AccordionPanel>
+                                            </AccordionItem>
+                                        </Accordion>
+                                    </div>
+                                </div>
+                            )}
+                        </header>
+
+                        <main
+                            id="main-content"
+                            role="main"
+                            aria-label={t("common.main_content", "Hauptinhalt")}
+                            className={isMobile && mobileMenuOpen ? styles.mobileMainContentWithMenu : isMobile ? styles.mobileMainContent : styles.mainContent}
+                        >
+                            <Outlet />
+                        </main>
+
+                        <footer className={styles.footer} role="contentinfo" aria-label={t("common.footer_info", "Fußzeileninformationen")}>
+                            <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
+                                <address>
+                                    Landeshauptstadt München <br />
+                                    RIT/it@M KICC
+                                </address>
+                            </div>
+                            <div className={styles.footerSection}>
+                                <VersionInfo version={config.version} commit={config.commit} versionUrl={import.meta.env.BASE_URL + "#/version"} />
+                            </div>
+                            <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
+                        </footer>
+                    </div>
+                </UserContextProvider>
             </LightContext.Provider>
         </FluentProvider>
     );

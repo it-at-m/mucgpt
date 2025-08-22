@@ -1,0 +1,302 @@
+.tutorial {
+    max-width: 100%;
+}
+
+.introSection,
+.featuresSection,
+.stepsSection,
+.exampleSection,
+.tipsSection {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+}
+
+.sectionTitle {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    color: var(--colorNeutralForeground1);
+    font-weight: 600;
+}
+
+.sectionIcon {
+    color: var(--colorBrandForeground1);
+    font-size: 20px;
+    background: var(--colorBrandBackground2);
+    padding: 6px;
+    border-radius: 4px;
+}
+
+.description {
+    color: var(--colorNeutralForeground2);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    margin-left: 16px;
+}
+
+/* Features Section */
+.featureGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.featureCard {
+    text-align: left;
+    overflow: hidden;
+    height: auto;
+    min-height: 120px;
+    border-radius: 8px;
+    color: var(--colorNeutralBackround1Hover);
+    text-decoration: none;
+    opacity: 0.9;
+    background: var(--colorNeutralBackground4);
+    border: 1px solid var(--colorNeutralStroke2);
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: default;
+}
+
+.featureCard:hover {
+    opacity: 1;
+    box-shadow:
+        0px 8px 16px rgba(0, 0, 0, 0.14),
+        0px 0px 2px rgba(0, 0, 0, 0.12);
+    outline: 2px solid var(--colorNeutralForeground3Selected);
+    transform: translateY(-2px);
+}
+
+.featureIcon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--colorBrandBackground2);
+    color: var(--colorBrandForeground1);
+    margin-bottom: 12px;
+}
+
+/* Steps Section */
+.stepNavigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px 0;
+    padding: 16px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    background: var(--colorNeutralBackground1);
+}
+
+.stepContent {
+    margin: 20px 0;
+}
+
+.stepCard {
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+}
+
+.stepNumber {
+    width: 32px;
+    height: 32px;
+    color: var(--colorNeutralBackground1);
+    background: var(--colorBrandBackground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    border-radius: 4px;
+}
+
+.stepDescription {
+    margin-top: 16px;
+}
+
+.examplePrompt {
+    background: var(--colorNeutralBackground2);
+    padding: 12px;
+    border-radius: 6px;
+    font-family: var(--fontFamilyMonospace);
+    margin: 16px 0;
+    border-left: 4px solid var(--colorBrandBackground);
+    font-weight: 500;
+}
+
+.stepList {
+    margin: 16px 0;
+    padding-left: 20px;
+}
+
+.stepList li {
+    margin: 8px 0;
+    color: var(--colorNeutralForeground2);
+    line-height: 1.6;
+}
+
+.featureList {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.featureItem {
+    padding: 12px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 6px;
+    border-left: 4px solid var(--colorBrandBackground);
+}
+
+.exportOptions {
+    display: grid;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.exportOption {
+    padding: 12px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 6px;
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+/* Example Section */
+.exampleContainer {
+    margin: 24px 0;
+    overflow: hidden;
+}
+
+/* Technical Details */
+.accordionHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.technicalContent {
+    padding: 16px 0;
+}
+
+.subsectionTitle {
+    margin-top: 20px;
+    margin-bottom: 12px;
+}
+
+.markdownFeatures {
+    margin: 16px 0;
+    padding-left: 20px;
+}
+
+.markdownFeatures li {
+    margin: 8px 0;
+    color: var(--colorNeutralForeground2);
+    line-height: 1.6;
+}
+
+.markdownDescription {
+    margin: 16px 0;
+}
+
+.markdownDescription pre {
+    background: var(--colorNeutralBackground2);
+    border-radius: 6px;
+    padding: 12px;
+    overflow-x: auto;
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+.markdownDescription code {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase300);
+}
+
+/* Tips Section */
+.tipsGrid {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.tutorialIcon {
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+    border-radius: 6px;
+    background: var(--colorBrandBackground2);
+    color: var(--colorBrandForeground1);
+    margin-bottom: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .featureGrid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .stepNavigation {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .stepNavigation > div:first-child,
+    .stepNavigation > div:last-child {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .stepCard {
+        padding: 16px;
+    }
+
+    .sectionTitle {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .accordionHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tutorial {
+        padding: 0;
+    }
+
+    .stepNavigation {
+        padding: 12px;
+    }
+
+    .featureIcon {
+        font-size: 20px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .stepNumber {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
+}

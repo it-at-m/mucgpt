@@ -1,33 +1,92 @@
 .header {
-    margin-bottom: 5px;
-    font-size: var(--fontSizeBase400);
-    margin-top: var(--spacingVerticalS);
+    font-size: var(--fontSizeBase300);
+    font-weight: 600;
+    color: var(--colorNeutralForeground2);
+    margin-top: var(--spacingVerticalM, 12px);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px) var(--spacingVerticalS, 8px);
     display: flex;
     flex-direction: row;
-    justify-content: start;
-    padding-bottom: var(--spacingHorizontalS);
-    margin-bottom: var(--spacingHorizontalS);
-    border-bottom: 1px dotted var(--colorBrandBackground2);
+    justify-content: space-between;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    border-radius: var(--borderRadiusMedium, 6px);
 }
 
-.bodyContainer {
-    padding-bottom: var(--spacingVerticalS);
-    padding-left: var(--spacingVerticalM);
+.header:hover {
+    background-color: var(--colorNeutralBackground1Hover);
 }
 
-.iconRightMargin {
-    margin-right: 5px;
+.header:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    width: 100%;
+}
+
+.icon {
+    color: var(--colorBrandForeground1);
+}
+
+.expandCollapseIcon {
+    margin-left: auto;
+    color: var(--colorNeutralForeground3);
+    transition: transform 0.2s ease;
+}
+
+.settingsContent {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    height: 100%;
+    background-color: var(--colorNeutralBackground1);
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.settingsContent::-webkit-scrollbar {
+    width: 8px;
+}
+
+.settingsContent::-webkit-scrollbar-track {
+    background: var(--colorNeutralBackground3);
+    border-radius: var(--borderRadiusMedium, 6px);
+}
+
+.settingsContent::-webkit-scrollbar-thumb {
+    background-color: var(--colorNeutralStroke1);
+    border-radius: var(--borderRadiusMedium, 6px);
+    border: 2px solid var(--colorNeutralBackground3);
+}
+
+.settingsContent::-webkit-scrollbar-thumb:hover {
+    background-color: var(--colorNeutralStroke1Hover);
 }
 
 .temperatureLabel {
-    margin-right: 10px;
+    margin-right: var(--spacingHorizontalM, 12px);
+    white-space: nowrap;
 }
 
 .verticalContainer {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
+    gap: var(--spacingHorizontalS, 8px);
+    flex-wrap: wrap;
 }
 
 .systemPromptHeadingContainer {
@@ -42,17 +101,359 @@
     font-size: var(--fontSizeBase400);
 }
 
+/* Enhanced section organization similar to AssistantsettingsDrawer */
+.titleSection {
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    background-color: var(--colorNeutralBackground1);
+}
+
+.settingsTitle {
+    margin: 0;
+    font-size: var(--fontSizeBase500);
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground1);
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+}
+
+.contentSection {
+    border-radius: var(--borderRadiusMedium, 6px);
+    margin: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
+    overflow: auto;
+    max-height: 60vh;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.actionSection {
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionSectionContent {
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
+}
+
+/* Enhanced collapse animation similar to AssistantsettingsDrawer */
+.collapseContent {
+    padding: 0 var(--spacingHorizontalL, 16px) var(--spacingVerticalM, 12px);
+    animation: slideDown 0.25s ease-out;
+    overflow: hidden;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+    }
+}
+
 .systempromptContainer {
-    margin-right: var(--spacingVerticalL);
+    margin-right: 0;
+    width: 100%;
 }
 
 .iconRightMargin {
-    margin-right: 5px;
+    margin-right: var(--spacingHorizontalXS, 4px);
 }
 
 .actionRow {
     display: flex;
     flex-direction: row;
-    justify-content: start;
-    align-items: start;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+    background-color: var(--colorNeutralBackground1);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionRow:last-child {
+    border-bottom: none;
+    padding-bottom: var(--spacingVerticalL, 16px);
+}
+
+/* Section spacing and organization */
+.sectionContainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
+    margin-bottom: var(--spacingVerticalL, 16px);
+}
+
+.sectionContainer:last-child {
+    margin-bottom: 0;
+}
+
+/* Slider container improvements */
+.sliderContainer {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    width: 100%;
+    min-height: 32px;
+}
+
+.sliderWrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.valueLabel {
+    font-variant-numeric: tabular-nums;
+    min-width: fit-content;
+    text-align: right;
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase200);
+}
+
+/* System prompt specific styling */
+.systemPromptSection {
+    background: var(--colorNeutralBackground2);
+    border-radius: var(--borderRadiusMedium, 6px);
+    padding: var(--spacingVerticalM, 12px);
+    margin-bottom: var(--spacingVerticalM, 12px);
+}
+
+/* Enhanced button styling inspired by AssistantsettingsDrawer */
+.actionButton {
+    flex: 1;
+    min-width: 0;
+    transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.actionButton:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.systemPromptContainer:focus-within {
+    border-color: var(--colorBrandStroke1);
+    box-shadow:
+        0 0 0 2px var(--colorBrandStroke1),
+        0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced action row styling */
+.actionRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+    background-color: var(--colorNeutralBackground1);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionRow:last-child {
+    border-bottom: none;
+    padding-bottom: var(--spacingVerticalL, 16px);
+}
+
+/* Better collapse button styling similar to AssistantsettingsDrawer */
+.collapseButton {
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalXS, 4px);
+    min-width: 32px;
+    height: 32px;
+    border-radius: var(--borderRadiusMedium, 6px);
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--colorNeutralForeground2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.collapseButton:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+    border-color: var(--colorNeutralStroke2);
+}
+
+.collapseButton:active {
+    background-color: var(--colorNeutralBackground1Pressed);
+    color: var(--colorNeutralForeground1);
+    border-color: var(--colorNeutralStroke3);
+}
+
+.collapseButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
+/* Enhanced visual hierarchy and polish */
+.settingsTitle .icon {
+    color: var(--colorBrandForeground1);
+}
+
+.headerContent .icon {
+    color: var(--colorBrandForeground1);
+}
+
+/* Improved hover effects for interactive elements */
+.header:hover .expandCollapseIcon {
+    color: var(--colorNeutralForeground1);
+    transform: scale(1.1);
+}
+
+/* Enhanced section dividers */
+.sectionContainer:not(:last-child)::after {
+    content: "";
+    display: block;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--colorNeutralStroke2), transparent);
+    margin: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+}
+
+/* Better focus management */
+.header:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+/* Improved slider styling */
+.sliderWrapper [role="slider"] {
+    transition: all 0.2s ease;
+}
+
+.sliderWrapper [role="slider"]:focus-visible {
+    box-shadow: 0 0 0 2px var(--colorBrandStroke1);
+}
+
+/* Better responsive behavior */
+@media (max-width: 480px) {
+    .sliderContainer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: var(--spacingVerticalXS, 4px);
+    }
+
+    .temperatureLabel {
+        margin-right: 0;
+        text-align: left;
+    }
+
+    .valueLabel {
+        text-align: left;
+    }
+}
+
+/* Range input styling similar to AdvancedSettingsStep */
+.rangeField {
+    margin-bottom: var(--spacingVerticalM, 12px);
+    padding: var(--spacingVerticalM, 12px);
+    background-color: var(--colorNeutralBackground1);
+    transition: all 0.2s ease;
+}
+
+.rangeField:focus-within {
+    border-color: var(--colorBrandStroke1);
+    box-shadow: 0 0 0 1px var(--colorBrandStroke1);
+}
+
+.rangeInput {
+    width: 100%;
+    margin-bottom: var(--spacingVerticalS, 8px);
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: var(--colorNeutralBackground4);
+    border-radius: 3px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.rangeInput::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--colorBrandBackground);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.rangeInput::-webkit-slider-thumb:hover {
+    background: var(--colorBrandBackgroundHover);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.rangeInput::-webkit-slider-thumb:active {
+    transform: scale(1.2);
+}
+
+.rangeInput::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--colorBrandBackground);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.rangeInput::-moz-range-thumb:hover {
+    background: var(--colorBrandBackgroundHover);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.rangeInput:focus {
+    background: var(--colorNeutralBackground3);
+}
+
+.rangeInput:focus::-webkit-slider-thumb {
+    box-shadow:
+        0 0 0 2px var(--colorBrandStroke1),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.rangeValue {
+    text-align: center;
+    font-weight: 600;
+    font-size: var(--fontSizeBase300);
+    color: var(--colorBrandForeground1);
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
+    display: inline-block;
+    min-width: 80px;
+    font-variant-numeric: tabular-nums;
+    transition: all 0.2s ease;
+}
+
+.rangeValue:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Help text styling for range inputs */
+.rangeHelpText {
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground3);
+    margin-top: var(--spacingVerticalXS, 4px);
+    font-style: italic;
+    text-align: center;
 }

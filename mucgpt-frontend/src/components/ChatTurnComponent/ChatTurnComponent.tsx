@@ -3,19 +3,19 @@ import styles from "./ChatTurnComponent.module.css";
 
 interface Props {
     usermsg: ReactNode;
-    botmsg: ReactNode;
+    assistantmsg: ReactNode;
     usermsglabel: string;
-    botmsglabel: string;
+    assistantmsglabel: string;
 }
 
-export const ChatTurnComponent = ({ usermsg, botmsg, usermsglabel, botmsglabel }: Props) => {
+export const ChatTurnComponent = ({ usermsg, assistantmsg, usermsglabel, assistantmsglabel }: Props) => {
     return (
         <div className={styles.chatMessageStream}>
             <li className={styles.chatMessageUser} aria-description={usermsglabel}>
                 {usermsg}
             </li>
-            <li className={styles.chatMessageGpt} aria-description={botmsglabel}>
-                {botmsg}
+            <li className={styles.chatMessageGpt} aria-description={assistantmsglabel}>
+                {assistantmsg}
             </li>
         </div>
     );

@@ -13,7 +13,7 @@ export const MinimizeSidebarButton = ({ showSidebar, setShowSidebar }: Props) =>
     return (
         <Tooltip content={showSidebar ? t("common.sidebar_hide") : t("common.sidebar_show")} relationship="description" positioning="below">
             <Button
-                style={{ marginLeft: "5px" }}
+                style={{ marginLeft: "5px", right: "5px" }}
                 appearance="primary"
                 icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
                 onClick={() => {

@@ -1,0 +1,85 @@
+name: Build and Release Migrations Docker Image
+permissions:
+  contents: read
+
+on:
+  push:
+    tags:
+      - "mucgpt-assistant-migrations-*" # Triggers only on mucgpt-assistant-migrations tags
+  workflow_dispatch: # Allows manual triggering of the workflow
+    inputs:
+      tag:
+        description: "Migrations tag to release (e.g., mucgpt-assistant-migrations-1.0.0)"
+        required: true
+        default: "mucgpt-assistant-migrations-latest"
+
+jobs:
+  build-and-push-assistant-migrations-service:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      packages: write
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract version from mucgpt-assistant-migrations tag
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            FULL_TAG="${{ github.event.inputs.tag }}"
+          else
+            FULL_TAG=${GITHUB_REF#refs/tags/}
+          fi
+
+          # Extract version from mucgpt-assistant-migrations-* tag (e.g., mucgpt-assistant-migrations-1.0.0 -> 1.0.0)
+          if [[ "$FULL_TAG" =~ ^mucgpt-assistant-migrations-(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "Error: Tag must start with 'mucgpt-assistant-migrations-'"
+            exit 1
+          fi
+
+          echo "full_tag=${FULL_TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "repo_lowercase=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      - name: Set build timestamp
+        id: build_ts
+        run: echo "BUILD_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+      - name: Build and push mucgpt-assistant-migrations Docker image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: ./mucgpt-assistant-service-migrations
+          file: ./mucgpt-assistant-service-migrations/Dockerfile
+          push: true
+          sbom: true
+          provenance: true
+          tags: |
+            ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant-migrations:${{ steps.vars.outputs.version }}
+            ghcr.io/${{ steps.vars.outputs.repo_lowercase }}/mucgpt-assistant-migrations:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            IMAGE_CREATED=${{ github.event.repository.pushed_at || env.BUILD_TS }}
+            IMAGE_REVISION=${{ github.sha }}
+            IMAGE_VERSION=${{ steps.vars.outputs.version }}
+            COMMIT=${{ github.sha }}
+            VERSION=${{ steps.vars.outputs.version }}
+      - name: Image digest
+        run: |
+          echo "mucgpt-assistant-migrations image built and pushed:"
+          echo "  ghcr.io/${{ github.repository }}/mucgpt-assistant-migrations:${{ steps.vars.outputs.version }}"
+          echo "  ghcr.io/${{ github.repository }}/mucgpt-assistant-migrations:latest"

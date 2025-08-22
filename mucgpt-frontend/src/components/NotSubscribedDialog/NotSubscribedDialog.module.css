@@ -1,0 +1,31 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.icon {
+    margin-right: 8px;
+    color: var(--colorBrandForeground1);
+}
+
+.infoSection {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+    background-color: var(--colorNeutralBackground3);
+    border-radius: 6px;
+    border-left: 3px solid var(--colorBrandForeground1);
+}
+
+.infoIcon {
+    color: var(--colorBrandForeground1);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.infoText {
+    color: var(--colorNeutralForeground2);
+    line-height: 1.4;
+}

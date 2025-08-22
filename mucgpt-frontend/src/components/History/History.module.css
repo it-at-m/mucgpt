@@ -1,3 +1,30 @@
+.historyContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.headerContent {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    position: relative;
+}
+
+.icon {
+    color: var(--colorBrandForeground1);
+}
+
+.expandCollapseIcon {
+    margin-left: auto;
+    color: var(--colorNeutralForeground3);
+    transition: transform 0.2s ease;
+}
+
 .button {
     margin-left: 0px;
     display: flex;
@@ -7,31 +34,210 @@
 }
 
 .savedChatButton {
-    width: 80%;
+    width: 85%;
+    text-align: left;
+    justify-content: flex-start;
+    font-weight: normal;
+    padding: 10px 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.savedChatButton:hover {
+    background-color: var(--colorNeutralBackground2);
+}
+
+.activeChat {
+    background-color: var(--colorNeutralBackground3Hover) !important;
+    font-weight: 500;
+}
+
+.chatButtonContent {
+    display: flex;
     align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.chatName {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.favoriteIcon {
+    color: var(--colorBrandForeground1);
+    font-size: 14px;
+    margin-right: 6px;
+}
+
+.activeBadge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--colorBrandForeground1);
+    margin-left: 8px;
+}
+
+.categoryContent {
+    padding-left: 0;
+    list-style: none;
 }
 
 .singlechatcontainer {
     display: flex;
     flex-direction: row;
-    justify-content: end;
-    margin-right: var(--spacingVerticalL);
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 8px;
+    margin: 4px 0;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.singlechatcontainer:hover {
+    background-color: var(--colorNeutralBackground2Hover);
 }
 
 .nopaddingleft {
     padding-left: 0px;
+    list-style-type: none;
+    margin: 0 0 12px 0;
 }
 
 .header {
-    margin-bottom: 5px;
-    font-size: var(--fontSizeBase400);
-    margin-top: var(--spacingVerticalS);
+    margin-bottom: 12px;
+    font-size: var(--fontSizeBase300);
+    font-weight: 600;
+    color: var(--colorNeutralForeground2);
+    margin-top: var(--spacingVerticalM);
+    padding: 12px 16px 0;
     display: flex;
     flex-direction: row;
     justify-content: start;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    padding-bottom: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.header:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.categoryHeader {
+    margin: 16px 8px 8px 8px;
+    font-size: var(--fontSizeBase200);
+    font-weight: 600;
+    color: var(--colorNeutralForeground3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.categoryHeader:hover {
+    color: var(--colorNeutralForeground1);
+}
+
+.categoryHeaderContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.categoryHeaderContent:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.optionsButton {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.optionsButton:hover {
+    opacity: 1;
+    background-color: var(--colorNeutralBackground3Hover);
 }
 
 .historyContent {
-    margin-left: var(--spacingVerticalL);
+    margin-left: var(--spacingVerticalS);
+    margin-right: var(--spacingVerticalS);
     padding-bottom: var(--spacingVerticalL);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding-top: 4px;
+}
+
+.historyContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+.historyContent::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.historyContent::-webkit-scrollbar-thumb {
+    background-color: var(--colorNeutralStroke1);
+    border-radius: 3px;
+}
+
+.historyContent::-webkit-scrollbar-thumb:hover {
+    background-color: var(--colorNeutralStroke1Hover);
+}
+
+.loadMoreContainer {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0;
+    margin-top: 2px;
+}
+
+.loadMoreButton {
+    font-size: var(--fontSizeBase100);
+    color: var(--colorBrandForeground1);
+    width: 95%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.loadMoreButton:hover {
+    background-color: var(--colorNeutralBackground2Hover);
+}
+
+@media (max-width: 768px) {
+    .historyContainer {
+        width: 100%;
+    }
+
+    .historyContent {
+        max-height: 50vh; /* Better height on mobile */
+    }
+
+    .singlechatcontainer {
+        padding: 1px 4px;
+    }
+
+    .savedChatButton {
+        width: 80%;
+    }
 }

@@ -68,6 +68,21 @@ export function patchConfig(body: any): RequestInit {
     };
 }
 
+/**
+ * Returns a default DELETE-Config for fetch
+ * @param body Optional body to be transferred
+ */
+export function deleteConfig(body?: any): RequestInit {
+    return {
+        method: "DELETE",
+        body: body ? JSON.stringify(body) : undefined,
+        headers: getHeaders(),
+        mode: "cors",
+        credentials: "same-origin",
+        redirect: "manual"
+    };
+}
+
 export function handleRedirect(response: Response, reload = true) {
     if (response.type === "opaqueredirect") {
         if (reload) {
@@ -115,6 +130,32 @@ export function getHeaders(): Headers {
         headers.append("X-XSRF-TOKEN", csrfCookie);
     }
     return headers;
+}
+
+/**
+ * Handles API request execution with consistent error handling
+ * @param request The fetch request to execute
+ * @param defaultErrorMessage Default error message if none is provided by the API
+ * @returns Promise with the parsed response
+ */
+export async function handleApiRequest<T>(request: () => Promise<Response>, defaultErrorMessage: string): Promise<T> {
+    try {
+        const response = await request();
+        handleRedirect(response, true);
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `${defaultErrorMessage}: ${response.statusText}`);
+        }
+
+        const parsedResponse = await handleResponse(response);
+        return parsedResponse;
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error(`An unexpected error occurred: ${defaultErrorMessage.toLowerCase()}`);
+    }
 }
 
 /**

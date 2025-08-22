@@ -13,11 +13,49 @@ changes:
         user_name:
           - mucgpt-user
         lhmObjectID:
-          - mucgpt-user
+          - 323132123
         telephoneNumber:
           - "089-99998000"
         department:
-          - "IT"
+          - "ITM"
   - updateUserPassword:
       name: mucgpt-user
+      password: "mucgpt"
+  - addUser:
+      name: mucgpt-kicc-user
+      lastName: KICC
+      firstName: MUCCI
+      enabled: true
+      emailVerified: true
+      email: mucci@kicc.com
+      attributes:
+        user_name:
+          - mucci
+        lhmObjectID:
+          - 24242424
+        telephoneNumber:
+          - "089-99998000"
+        department:
+          - "ITM-KM-DI"
+  - updateUserPassword:
+      name: mucgpt-kicc-user
+      password: "mucgpt"
+  - addUser:
+      name: mucgpt-hr-user
+      lastName: Human
+      firstName: Herbert
+      enabled: true
+      emailVerified: true
+      email: herbert@hr.com
+      attributes:
+        user_name:
+          - herbert.hr
+        lhmObjectID:
+          - 23242424
+        telephoneNumber:
+          - "089-99998000"
+        department:
+          - "POR"
+  - updateUserPassword:
+      name: mucgpt-hr-user
       password: "mucgpt"

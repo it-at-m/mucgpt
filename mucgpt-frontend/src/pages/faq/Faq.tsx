@@ -3,9 +3,13 @@ import styles from "./Faq.module.css";
 import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, Button, Link, Tooltip } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { HeaderContext } from "../layout/HeaderContextProvider";
 
 const Faq = () => {
     const { t } = useTranslation();
+    const { setHeader } = useContext(HeaderContext);
+    setHeader("FAQs");
     const navigate = useNavigate();
     const onClose = () => {
         navigate("/");

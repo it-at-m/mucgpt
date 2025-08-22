@@ -1,0 +1,59 @@
+.fragmentContainer {
+    width: 100%;
+    margin-bottom: 24px;
+    background: var(--colorNeutralBackground1);
+    border-radius: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.fragmentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px 12px 20px;
+    background: var(--colorNeutralBackground2);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.fragmentTitle {
+    font-size: var(--fontSizeBase500);
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground1);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fragmentTitle::before {
+    content: "";
+    width: 4px;
+    height: 20px;
+    background: var(--colorBrandBackground);
+    border-radius: 2px;
+}
+
+.fragmentActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.fragmentContent {
+    width: 100%;
+    padding: 20px;
+}
+
+.fragmentBody {
+    white-space: pre-wrap;
+    font-size: var(--fontSizeBase400);
+    line-height: 1.6;
+    color: var(--colorNeutralForeground1);
+    max-width: 100%;
+}
+
+.iconRightMargin {
+    margin-right: 5px;
+}

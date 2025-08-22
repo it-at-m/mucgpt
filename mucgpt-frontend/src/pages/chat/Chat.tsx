@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { chatApi, AskResponse, countTokensAPI, ChatResponse } from "../../api";
+import { AskResponse, ChatResponse } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -9,7 +9,6 @@ import { LanguageContext } from "../../components/LanguageSelector/LanguageConte
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
-import useDebounce from "../../hooks/debouncehook";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
 import { CHAT_STORE } from "../../constants";
@@ -18,7 +17,14 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
+import { mapContextToBackendLang } from "../../utils/language-utils";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
+import { ToolListResponse } from "../../api/models";
+import { HeaderContext } from "../layout/HeaderContextProvider";
+import ToolStatusDisplay from "../../components/ToolStatusDisplay";
+import { ToolStatus } from "../../utils/ToolStreamHandler";
+import { Model } from "../../api";
+import { getTools, chatApi } from "../../api/core-client";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -79,17 +85,35 @@ const Chat = () => {
     const chatReducer = getChatReducer<ChatOptions>();
     // Contexts
     const { language } = useContext(LanguageContext);
-    const { LLM } = useContext(LLMContext);
+    const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
+    const { setHeader } = useContext(HeaderContext);
+    setHeader(t("header.chat"));
 
     // Independent states
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
-    const [systemPromptTokens, setSystemPromptTokens] = useState<number>(0);
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+    const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                // Get current language from context and map to backend format
+                const backendLang = mapContextToBackendLang(language);
+                const result = await getTools(backendLang);
+                setTools(result);
+            } catch {
+                setTools({ tools: [] });
+            }
+        };
+        fetchTools();
+    }, [language]);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -98,12 +122,11 @@ const Chat = () => {
         max_output_tokens: 4000,
         systemPrompt: "",
         active_chat: undefined,
-        allChats: [],
-        totalTokens: 0
+        allChats: []
     });
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats, totalTokens } = chatState;
+    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -120,17 +143,12 @@ const Chat = () => {
     // Storage Service mit useMemo
     const storageService = useStorageService(activeChatRef.current);
 
-    // Debounced system prompt
-    const debouncedSystemPrompt = useDebounce(systemPrompt, 1000);
-
-    // Token-Berechnung
-    const calculateTotalTokens = useCallback(() => {
-        const answerTokens = answers.reduce(
-            (sum: any, msg: { response: { user_tokens: any; tokens: any } }) => sum + (msg.response.user_tokens || 0) + (msg.response.tokens || 0),
-            0
-        );
-        return systemPromptTokens + answerTokens;
-    }, [answers, systemPromptTokens]);
+    // Add a scroll function
+    const scrollToBottom = useCallback(() => {
+        if (chatMessageStreamEnd.current) {
+            chatMessageStreamEnd.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, []);
 
     // Debounced Storage-Update
     const debouncedStorageUpdate = useMemo(
@@ -171,6 +189,12 @@ const Chat = () => {
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
+
+                    // Scroll to bottom after a short delay to ensure DOM is updated
+                    setTimeout(() => {
+                        scrollToBottom();
+                    }, 100);
+
                     return true;
                 }
                 return false;
@@ -180,7 +204,7 @@ const Chat = () => {
                 return false;
             }
         },
-        [storageService, lastQuestionRef.current]
+        [storageService, scrollToBottom]
     );
 
     // Clear chat state
@@ -204,7 +228,6 @@ const Chat = () => {
                 maxTokens: max_output_tokens,
                 temperature: temperature
             };
-
             try {
                 await makeApiRequest(
                     answers,
@@ -219,14 +242,27 @@ const Chat = () => {
                     chatMessageStreamEnd,
                     isLoadingRef,
                     fetchHistory,
-                    undefined
+                    undefined,
+                    selectedTools,
+                    setToolStatuses
                 );
             } catch (e) {
                 setError(e);
             }
             isLoadingRef.current = false;
         },
-        [isLoadingRef.current, answers, language, temperature, max_output_tokens, activeChatRef.current, LLM.llm_name, storageService, fetchHistory]
+        [
+            isLoadingRef.current,
+            answers,
+            language,
+            temperature,
+            max_output_tokens,
+            activeChatRef.current,
+            LLM.llm_name,
+            storageService,
+            fetchHistory,
+            selectedTools
+        ]
     );
 
     // Regenerate-Funktion
@@ -300,6 +336,19 @@ const Chat = () => {
         [max_output_tokens, temperature, debouncedStorageUpdate]
     );
 
+    // Handler for LLM selection
+    const onLLMSelectionChange = useCallback(
+        (nextLLM: string) => {
+            const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
+            if (found) setLLM(found);
+        },
+        [availableLLMs, setLLM]
+    );
+
+    // State to track if initialization is complete
+    const [isInitialized, setIsInitialized] = useState(false);
+    const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+
     // Initialisierung beim ersten Laden
     useEffect(() => {
         if (!isFirstRender.current) return;
@@ -307,53 +356,80 @@ const Chat = () => {
 
         isLoadingRef.current = true;
 
-        storageService
-            .getNewestChat()
-            .then(existingData => {
-                if (existingData) {
-                    dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
-                    dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
-                    dispatch({ type: "SET_MAX_TOKENS", payload: existingData.config.maxTokens });
-                    dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
-                    dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
+        // Check URL for question parameter - Handle hash router format
+        let questionFromUrl;
+        let toolsFromUrl;
+        const hashPart = window.location.hash;
 
-                    lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
-                }
-                isLoadingRef.current = false;
-                return fetchHistory();
-            })
-            .finally(() => {
-                isLoadingRef.current = false;
-            });
-    }, [fetchHistory, storageService]);
+        // For hash router format like #/chat?q=something&tools=tool1,tool2
+        if (hashPart && hashPart.includes("?")) {
+            const queryPart = hashPart.split("?")[1];
+            const hashParams = new URLSearchParams(queryPart);
+            questionFromUrl = hashParams.get("q") || hashParams.get("question");
+            toolsFromUrl = hashParams.get("tools");
+        } else {
+            // Fallback to regular URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            questionFromUrl = urlParams.get("q") || urlParams.get("question");
+            toolsFromUrl = urlParams.get("tools");
+        }
 
-    // Token-Zählung für System-Prompt
+        // Parse tools from URL if present
+        if (toolsFromUrl) {
+            const toolsArray = decodeURIComponent(toolsFromUrl)
+                .split(",")
+                .filter(tool => tool.trim() !== "");
+            setSelectedTools(toolsArray);
+        }
+
+        if (questionFromUrl) {
+            // If we have a question from URL, store it and wait for tools to load
+            const decodedQuestion = decodeURIComponent(questionFromUrl);
+            setQuestion(decodedQuestion);
+            setPendingQuestion(decodedQuestion);
+            storageService
+                .getNewestChat()
+                .then(() => {
+                    clearChat(); // Clear any existing chat
+                    setIsInitialized(true);
+                    return fetchHistory();
+                })
+                .finally(() => {
+                    isLoadingRef.current = false;
+                });
+        } else {
+            // Normal initialization without URL parameter
+            storageService
+                .getNewestChat()
+                .then(existingData => {
+                    if (existingData) {
+                        dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
+                        dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
+                        dispatch({ type: "SET_MAX_TOKENS", payload: existingData.config.maxTokens });
+                        dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
+                        dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
+
+                        lastQuestionRef.current = existingData.messages.length > 0 ? existingData.messages[existingData.messages.length - 1].user : "";
+                    }
+                    setIsInitialized(true);
+                    return fetchHistory();
+                })
+                .finally(() => {
+                    isLoadingRef.current = false;
+                });
+        }
+    }, [fetchHistory, storageService, clearChat]);
+
+    // Effect to handle pending question after tools are loaded
     useEffect(() => {
-        const countTokens = async () => {
-            if (debouncedSystemPrompt) {
-                try {
-                    const response = await countTokensAPI({
-                        text: debouncedSystemPrompt,
-                        model: LLM
-                    });
-                    setSystemPromptTokens(response.count);
-                } catch (e) {
-                    console.error("Failed to count tokens:", e);
-                    setSystemPromptTokens(0);
-                }
-            } else {
-                setSystemPromptTokens(0);
-            }
-        };
-
-        countTokens();
-    }, [debouncedSystemPrompt, LLM]);
-
-    // Update total tokens when answers or system prompt changes
-    useEffect(() => {
-        const newTotalTokens = calculateTotalTokens();
-        dispatch({ type: "SET_TOTAL_TOKENS", payload: newTotalTokens });
-    }, [calculateTotalTokens]);
+        if (isInitialized && pendingQuestion && tools !== undefined) {
+            // Wait a bit more to ensure tools are properly set
+            setTimeout(() => {
+                callApi(pendingQuestion, systemPrompt);
+                setPendingQuestion(null);
+            }, 200);
+        }
+    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt]);
 
     // Update max tokens if LLM changes
     useEffect(() => {
@@ -401,7 +477,7 @@ const Chat = () => {
         () => (
             <AnswerList
                 answers={answers}
-                regularBotMsg={(answer, index) => {
+                regularAssistantMsg={(answer, index) => {
                     return (
                         <>
                             {index === answers.length - 1 && (
@@ -447,12 +523,14 @@ const Chat = () => {
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={question => callApi(question, systemPrompt)}
-                tokens_used={totalTokens}
                 question={question}
                 setQuestion={question => setQuestion(question)}
+                selectedTools={selectedTools}
+                setSelectedTools={setSelectedTools}
+                tools={tools}
             />
         ),
-        [callApi, systemPrompt, totalTokens, question, t, isLoadingRef.current]
+        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools]
     );
 
     const sidebar_actions = useMemo(
@@ -508,22 +586,44 @@ const Chat = () => {
         ),
         [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged, sidebar_actions, sidebar_content]
     );
-
     const layout = useMemo(
         () => (
-            <ChatLayout
-                sidebar={sidebar}
-                examples={examplesComponent}
-                answers={answerList}
-                input={inputComponent}
-                showExamples={!lastQuestionRef.current}
-                header={t("chat.header")}
-                header_as_markdown={false}
-                messages_description={t("common.messages")}
-                size={showSidebar ? "large" : "none"}
-            ></ChatLayout>
+            <>
+                <ChatLayout
+                    sidebar={sidebar}
+                    examples={examplesComponent}
+                    answers={answerList}
+                    input={inputComponent}
+                    showExamples={!lastQuestionRef.current}
+                    header={t("chat.header")}
+                    header_as_markdown={false}
+                    messages_description={t("common.messages")}
+                    size={showSidebar ? "large" : "none"}
+                    llmOptions={availableLLMs}
+                    defaultLLM={LLM.llm_name}
+                    onLLMSelectionChange={onLLMSelectionChange}
+                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
+                    clearChat={clearChat}
+                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                />
+                <ToolStatusDisplay activeTools={toolStatuses} />
+            </>
         ),
-        [sidebar, examplesComponent, answerList, inputComponent, lastQuestionRef.current, t, showSidebar]
+        [
+            sidebar,
+            examplesComponent,
+            answerList,
+            inputComponent,
+            lastQuestionRef.current,
+            t,
+            showSidebar,
+            toolStatuses,
+            availableLLMs,
+            LLM.llm_name,
+            onLLMSelectionChange,
+            clearChat,
+            isLoadingRef.current
+        ]
     );
 
     return layout;

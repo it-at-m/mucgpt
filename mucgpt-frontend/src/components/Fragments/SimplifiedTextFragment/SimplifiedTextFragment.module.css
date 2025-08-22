@@ -1,0 +1,81 @@
+.simplifiedTextContent {
+    max-width: 100%;
+}
+
+.markdownContent {
+    line-height: 1.7;
+    color: var(--colorNeutralForeground1);
+    font-size: var(--fontSizeBase400);
+}
+
+.markdownContent p {
+    margin: 0 0 16px 0;
+    word-wrap: break-word;
+}
+
+.markdownContent p:last-child {
+    margin-bottom: 0;
+}
+
+.markdownContent h1,
+.markdownContent h2,
+.markdownContent h3 {
+    margin: 24px 0 12px 0;
+    color: var(--colorNeutralForeground1);
+}
+
+.markdownContent h1:first-child,
+.markdownContent h2:first-child,
+.markdownContent h3:first-child {
+    margin-top: 0;
+}
+
+.markdownContent ul,
+.markdownContent ol {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.markdownContent li {
+    margin: 8px 0;
+}
+
+.processingSection {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--colorNeutralStroke2);
+}
+
+.processingTitle {
+    font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground2);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.processingTitle::before {
+    content: "ℹ️";
+    font-size: var(--fontSizeBase200);
+}
+
+.processingContent {
+    padding: 12px 16px;
+}
+
+.processingMarkdown {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground2);
+    line-height: 1.5;
+}
+
+.processingMarkdown p {
+    margin: 6px 0;
+}
+
+.processingMarkdown p:last-child {
+    margin-bottom: 0;
+}

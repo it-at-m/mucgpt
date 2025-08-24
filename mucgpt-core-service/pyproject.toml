@@ -25,7 +25,7 @@ dependencies = [
     "langsmith==0.4.8",
     "joserfc",
     "tiktoken",
-    "pypdf==5.9.0",
+    "pypdf==6.0.0",
     "uvicorn==0.35.0",
     "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",

@@ -6,13 +6,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class SSOSettings(BaseSettings):
-    USERINFO_URL: str | None = None
-    ROLE: str | None = None
-
     model_config = SettingsConfigDict(
-        case_sensitive=False,
         env_prefix="MUCGPT_SSO_",
+        extra="ignore",
     )
+    URL: str
+    REALM: str = "intap"
+    ROLE: str = "lhm-ab-mucgpt-user"
+
+    @property
+    def USERINFO_URL(self) -> str:
+        return f"{self.URL}/auth/realms/{self.REALM}/protocol/openid-connect/userinfo"
 
 
 class Settings(BaseSettings):

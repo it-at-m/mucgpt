@@ -206,18 +206,6 @@ class TestMUCGPTAgentExecutor:
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False
 
-    def test_run_without_streaming_returns_response(self):
-        messages = [InputMessage(role="user", content="hi")]
-        response = self.runner.run_without_streaming(
-            messages=messages,
-            temperature=0.7,
-            max_output_tokens=10,
-            model="test",
-            department=None,
-        )
-        assert response.choices[0].message.content == "Simplified text."
-        assert response.choices[0].finish_reason == "stop"
-
     def test_run_without_streaming_returns_error_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)

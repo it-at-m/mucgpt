@@ -33,11 +33,6 @@ if not config.get_main_option("script_location"):
     print(f"Setting script_location to: {script_location}", file=sys.stderr)
     config.set_main_option("script_location", script_location)
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
-
 
 def get_database_url():
     """Get database URL from environment variables."""
@@ -58,16 +53,6 @@ def get_database_url():
         sys.exit(1)
 
     return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-
-
-# add your model's MetaData object here
-# for 'autogenerate' support
-target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:
@@ -109,6 +94,18 @@ async def run_async_migrations() -> None:
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = get_database_url()
 
+    # Get timeout settings from environment variables
+    db_timeout = int(os.getenv("MIGRATION_DB_TIMEOUT", "30"))
+
+    # Configure asyncpg connection parameters
+    connect_args = {
+        "timeout": db_timeout,
+        "command_timeout": db_timeout,
+    }
+
+    # Set the connect_args in the configuration (must be a dict, not string)
+    configuration["sqlalchemy.connect_args"] = connect_args
+
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",
@@ -125,12 +122,6 @@ def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
 
     asyncio.run(run_async_migrations())
-
-
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online()
 
 
 if context.is_offline_mode():

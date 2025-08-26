@@ -19,7 +19,7 @@ def getLogger(name: str = "mucgpt-core") -> logging.Logger:
     logging.Logger: The logger with the specified name.
     """
     settings = get_settings()
-    log_config_path = settings.log_config
+    log_config_path = settings.LOG_CONFIG
 
     with open(log_config_path) as file:
         log_config = safe_load(file)

@@ -27,7 +27,7 @@ from api.api_models import (
 )
 from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
-from config.settings import Settings
+from config.settings import LangfuseSettings
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-agent")
@@ -74,28 +74,33 @@ def toolchunk_to_chatcompletionchunk(
 class MUCGPTAgentExecutor:
     """Provides run_with_streaming and run_without_streaming methods using MUCGPTAgent."""
 
-    def __init__(self, agent: MUCGPTAgent = None, settings: Settings = None):
+    def __init__(
+        self,
+        version: str,
+        agent: MUCGPTAgent = None,
+        langfuse_cfg: LangfuseSettings = None,
+    ):
         self.logger = logger
         self.agent = agent
         self.langfuse = None
         self.langfuse_handler = None
 
-        if settings is not None:
+        if langfuse_cfg is not None:
             if (
-                settings.backend.langfuse_host
-                and settings.backend.langfuse_secret_key
-                and settings.backend.langfuse_public_key
+                langfuse_cfg.HOST
+                and langfuse_cfg.SECRET_KEY
+                and langfuse_cfg.PUBLIC_KEY
             ):
                 try:
                     self.langfuse = Langfuse(
-                        public_key=settings.backend.langfuse_public_key,
-                        host=settings.backend.langfuse_host,
-                        secret_key=settings.backend.langfuse_secret_key,
-                        release=settings.version,
+                        public_key=langfuse_cfg.PUBLIC_KEY,
+                        host=langfuse_cfg.HOST,
+                        secret_key=langfuse_cfg.SECRET_KEY,
+                        release=version,
                     )
                     self.langfuse.auth_check()
                     self.langfuse_handler = CallbackHandler(
-                        public_key=settings.backend.langfuse_public_key
+                        public_key=langfuse_cfg.PUBLIC_KEY,
                     )
                 except Exception as e:
                     self.logger.error(f"Error initializing Langfuse: {e}")

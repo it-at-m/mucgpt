@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
 
 class SummarizeResult(BaseModel):
@@ -313,3 +313,18 @@ class CreateAssistantResult(BaseModel):
             }
         }
     )
+
+
+class ModelsDTO(BaseModel):
+    llm_name: str
+    max_output_tokens: PositiveInt
+    max_input_tokens: PositiveInt
+    description: str
+
+
+class ConfigResponse(BaseModel):
+    env_name: str = "MUCGPT"
+    alternative_logo: bool = False
+    models: List[ModelsDTO] = []
+    version: str
+    commit: str

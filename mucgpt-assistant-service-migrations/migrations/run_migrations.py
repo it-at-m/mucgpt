@@ -84,9 +84,7 @@ def get_database_url():
         f"DB Host: {db_host}, Port: {db_port}, Database: {db_name}, User: {db_user}"
     )
 
-    return (
-        f"postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-    )
+    return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
 def run_migrations(revision="head"):
@@ -201,9 +199,9 @@ def validate_database_config():
 
     # Check database URL format
     db_url = get_database_url()
-    if not db_url.startswith("postgresql+psycopg2://"):
+    if not db_url.startswith("postgresql+asyncpg://"):
         logger.warning(
-            "Database URL does not use the expected postgresql+psycopg2 scheme."
+            "Database URL does not use the expected postgresql+asyncpg scheme."
         )
         issues_found = True
 

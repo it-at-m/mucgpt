@@ -11,19 +11,19 @@ maintainers = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
-requires-python = ">=3.10"
+requires-python = "==3.13.7"
 dependencies = [
     "asgi-correlation-id==4.3.4",
-    "asyncpg>=0.30.0",
+    "asyncpg==0.30.0",
     "fastapi[standard]==0.115.12",
-    "gitpython>=3.1.44",
-    "gunicorn>=23.0.0",
-    "joserfc>=1.1.0",
-    "psycopg2-binary>=2.9.10",
-    "pydantic-settings>=2.10.1",
-    "requests>=2.32.4",
-    "sqlalchemy>=2.0.43",
-    "uvicorn>=0.34.3",
+    "gitpython==3.1.44",
+    "gunicorn==23.0.0",
+    "joserfc==1.1.0",
+    "psycopg2-binary==2.9.10",
+    "pydantic-settings==2.10.1",
+    "requests==2.32.4",
+    "sqlalchemy==2.0.43",
+    "uvicorn==0.34.3",
 ]
 
 [tool.uv]
@@ -31,9 +31,9 @@ dev-dependencies = [
     "aiosqlite",
     "ipykernel==6.30.1",
     "pre-commit==4.3.0",
-    "pytest>=8.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-mock>=3.12.0",
+    "pytest==8.4.1",
+    "pytest-cov==6.2.1",
+    "pytest-mock==3.14.1",
     "pytest-asyncio",
     "pytest-env",
     "ruff==0.12.10",

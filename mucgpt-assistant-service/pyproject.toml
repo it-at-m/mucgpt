@@ -1,0 +1,82 @@
+[project]
+name = "mucgpt-assistant-service"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
+    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+]
+maintainers = [
+    { name = " ITM KICC", email = "itm.kicc@muenchen.de" },
+    { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
+    { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "asgi-correlation-id==4.3.4",
+    "asyncpg>=0.30.0",
+    "fastapi[standard]==0.115.12",
+    "gitpython>=3.1.44",
+    "gunicorn>=23.0.0",
+    "joserfc>=1.1.0",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.10.1",
+    "requests>=2.32.4",
+    "sqlalchemy>=2.0.43",
+    "uvicorn>=0.34.3",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "aiosqlite",
+    "ipykernel==6.30.1",
+    "pre-commit==4.3.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.12.0",
+    "pytest-asyncio",
+    "pytest-env",
+    "ruff==0.12.10",
+]
+
+[[tool.uv.index]]
+name = "pypy"
+url = "https://pypi.org/simple"
+
+
+[tool.ruff]
+target-version = "py38"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+ignore = ["E501", "E701"] # line too long, multiple statements on one line
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+pythonpath = ["src"]
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=src --cov-report=term-missing"
+markers = [
+    "integration: marks tests as integration tests (deselect with '-m \"not integration\"')"
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning"
+]
+env = [
+    "MUCGPT_ASSISTANT_LOG_CONFIG=src/logconf.yaml",
+    "MUCGPT_ASSISTANT_DB_HOST=test-host",
+    "MUCGPT_ASSISTANT_DB_NAME=test-db",
+    "MUCGPT_ASSISTANT_DB_USER=test-user",
+    "MUCGPT_ASSISTANT_DB_PASSWORD=test-password",
+]
+
+[tool.coverage.paths]
+source = ["scripts", "src"]
+
+[tool.coverage.report]
+show_missing = true

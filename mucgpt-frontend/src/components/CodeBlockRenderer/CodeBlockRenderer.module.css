@@ -5,6 +5,24 @@
     overflow-x: auto;
 }
 
+.mindmapContainer {
+    border-top: 2px solid #e1e1e1;
+    border-bottom: 2px solid #e1e1e1;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.simplifiedTextContainer {
+    border-top: 2px solid #e1e1e1;
+    border-bottom: 2px solid #e1e1e1;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
 .copyContainer {
     display: flex;
     flex-direction: column;

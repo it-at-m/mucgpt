@@ -8,16 +8,18 @@ import "./index.css";
 
 import Layout from "./pages/layout/Layout";
 import Chat from "./pages/chat/Chat";
-import Summarize from "./pages/summarize/Summarize";
 import { LanguageContextProvider } from "./components/LanguageSelector/LanguageContextProvider";
-import Brainstorm from "./pages/brainstorm/Brainstorm";
 import Faq from "./pages/faq/Faq";
 import Version from "./pages/version/Version";
 import Menu from "./pages/menu/Menu";
+import Tutorials from "./pages/tutorials/Tutorials";
 import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider";
-import Simply from "./pages/simplyfied-language/Simply";
-import Bot from "./pages/bot/Bot";
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
+import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
+import LocalAssistant from "./pages/assistant/LocalAssistant";
+import RefactoredOwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
+import RefactoredCommunityAssistant from "./pages/assistant/CommunityAssistant";
+import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToastContext";
 initializeIcons();
 
 const router = createHashRouter([
@@ -37,18 +39,33 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "sum",
-                element: <Summarize />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "brainstorm",
-                element: <Brainstorm />,
-                errorElement: <div>Fehler</div>
-            },
-            {
                 path: "faq",
                 element: <Faq />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/tools",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/brainstorm",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/simplify",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "tutorials/tips",
+                element: <Tutorials />,
                 errorElement: <div>Fehler</div>
             },
             {
@@ -57,13 +74,18 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "simply",
-                element: <Simply />,
+                path: "assistant/:id",
+                element: <LocalAssistant />,
                 errorElement: <div>Fehler</div>
             },
             {
-                path: "bot/:id",
-                element: <Bot />,
+                path: "owned/communityassistant/:id",
+                element: <RefactoredOwnedCommunityAssistant />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "communityassistant/:id",
+                element: <RefactoredCommunityAssistant />,
                 errorElement: <div>Fehler</div>
             },
             /** {
@@ -101,13 +123,17 @@ async function enableMocking() {
 enableMocking().then(() => {
     ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <React.StrictMode>
-            <LanguageContextProvider>
-                <LLMContextProvider>
-                    <QuickPromptProvider>
-                        <RouterProvider router={router} />
-                    </QuickPromptProvider>
-                </LLMContextProvider>
-            </LanguageContextProvider>
+            <GlobalToastProvider>
+                <LanguageContextProvider>
+                    <LLMContextProvider>
+                        <QuickPromptProvider>
+                            <HeaderContextProvider>
+                                <RouterProvider router={router} />
+                            </HeaderContextProvider>
+                        </QuickPromptProvider>
+                    </LLMContextProvider>
+                </LanguageContextProvider>
+            </GlobalToastProvider>
         </React.StrictMode>
     );
 });

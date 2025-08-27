@@ -17,46 +17,22 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             description: ""
         }
     ],
-    frontend: {
-        labels: {
-            env_name: "MUC tschibidi-C"
-        },
-        alternative_logo: true,
-        enable_simply: true,
-        community_assistants: []
-    },
+    env_name: "MUC tschibidi-C",
+    alternative_logo: true,
     version: "DEV 1.0.0",
     commit: "152b175"
 };
 
 //IDB storage configs
-export const BOT_STORE: IndexedDBStorage = {
+export const ASSISTANT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-ASSISTANTS",
     objectStore_name: "bots",
     db_version: 1
 };
-//Old storage, used to migrate existing bots
-export const LEGACY_BOT_STORE: IndexedDBStorage = {
+//Old storage, used to migrate existing assistants
+export const LEGACY_ASSISTANT_STORE: IndexedDBStorage = {
     db_name: "MUCGPT-BOTS",
     objectStore_name: "bots",
-    db_version: 3
-};
-
-export const SUMMARIZE_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-SUMMARIZE",
-    objectStore_name: "summarize",
-    db_version: 3
-};
-
-export const SIMPLY_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-SIMPLY",
-    objectStore_name: "simply",
-    db_version: 3
-};
-
-export const BRAINSTORM_STORE: IndexedDBStorage = {
-    db_name: "MUCGPT-BRAINSTORMING",
-    objectStore_name: "brainstorming",
     db_version: 3
 };
 
@@ -66,13 +42,9 @@ export const CHAT_STORE: IndexedDBStorage = {
     db_version: 3
 };
 
-export const enum STORAGE_KEYS_SIMPLY {
-    SIMPLY_SYSTEM_PROMPT = "SIMPLY_SYSTEM_PROMPT",
-    SIMPLY_OUTPUT_TYPE = "SIMPLY_OUTPUT_TYPE"
-}
-
-// Create Bot examples
-export const CREATE_BOT_EXAMPLE_1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
-export const CREATE_BOT_EXAMPLE_2 = "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
-export const CREATE_BOT_EXAMPLE_3 =
+// Create Assistant examples
+export const CREATE_ASSISTANT_EXAMPLE_1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
+export const CREATE_ASSISTANT_EXAMPLE_2 =
+    "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
+export const CREATE_ASSISTANT_EXAMPLE_3 =
     "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.";

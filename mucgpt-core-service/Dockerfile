@@ -1,31 +1,70 @@
-FROM python:3.12-slim@sha256:34656cd90456349040784165b9decccbcee4de66f3ead0a1168ba893455afd1e  AS python-builder
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:ef11ed817e6a5385c02cd49fdcc99c23d02426088252a8eace6b6e6a2a511f36 /uv /bin/uv
+# small ubi10 image
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest
 
-WORKDIR /code
 
-# copy uv version infos
-COPY uv.lock .
-COPY pyproject.toml .
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Enable bytecode compilation
+ENV UV_COMPILE_BYTECODE=1
+
+# Copy from the cache instead of linking since it's a mounted volume
+ENV UV_LINK_MODE=copy
+
+WORKDIR /app
+
+# Leverage layer cache
+COPY pyproject.toml uv.lock ./
+COPY departements.json* ./
 
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project
+    uv sync --no-dev --locked --no-install-project
 
-# copy data from builder and backend srcs
+# copy the application files
 COPY /src  .
 
-# add version information during build time and save it to an .env file
+# Install the project
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --no-dev --locked
+
+# Add version information
 ARG COMMIT
 ARG VERSION
+ENV MUCGPT_CORE_VERSION=${VERSION}
+ENV MUCGPT_CORE_COMMIT=${COMMIT}
 
-ENV MUCGPT_VERSION=${VERSION}
-ENV MUCGPT_COMMIT=${COMMIT}
+# Metadata for the image
+ARG IMAGE_CREATED="unknown"
+ARG IMAGE_REVISION="unknown"
+ARG IMAGE_VERSION="unknown"
+LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@muenchen.de>' \
+    org.opencontainers.image.vendor='Landeshauptstadt München' \
+    org.opencontainers.image.created="$IMAGE_CREATED" \
+    org.opencontainers.image.revision="$IMAGE_REVISION" \
+    org.opencontainers.image.version="$IMAGE_VERSION" \
+    org.opencontainers.image.url='ghcr.io/it-at-m/mucgpt/mucgpt-core' \
+    org.opencontainers.image.documentation='https://github.com/it-at-m/mucgpt/blob/main/README.md' \
+    org.opencontainers.image.source='https://github.com/it-at-m/mucgpt' \
+    org.opencontainers.image.licenses='MIT' \
+    org.opencontainers.image.title='mucgpt-core-service' \
+    org.opencontainers.image.description="The core backend for MUCGPT. Handles agent state, tools and the underlying communiction with the LLM."
 
-# sync the project
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
+# Give permissions to all so random UID can write
+# This should be compatible with OpenShift and plain K8s
+RUN chown -R root:0 /app && chmod -R g=u /app
+
+# Place executables in the environment at the front of the path
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Disable tqdm for cleaner logs
+ENV TQDM_DISABLE=1
+ENV HF_HUB_DISABLE_PROGRESS_BARS=1
+
+# Disable python warnings
+ENV PYTHONWARNINGS="ignore"
+
+ENV APP_VERSION=${IMAGE_VERSION}
+
 
 EXPOSE 8000
-CMD ["uv", "run", "gunicorn", "app:backend"]
+CMD ["python","-m",  "uvicorn", "app:backend", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,6 +1,5 @@
 import { ExampleModel } from "../components/Example";
 import { QuickPrompt } from "../components/QuickPrompt/QuickPrompt";
-import { DBMessage } from "../service/storage";
 
 export type AskResponse = {
     answer: string;
@@ -13,16 +12,17 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
-};
-
-export type SumResponse = {
-    answer: string[];
-    error?: string;
+    activeTools?: Array<{
+        name: string;
+        message: string;
+        state: "STARTED" | "ENDED" | null;
+        timestamp: number;
+    }>;
 };
 
 export type ChatTurn = {
     user: string;
-    bot?: string;
+    assistant?: string;
 };
 
 export type ChatRequest = {
@@ -33,48 +33,22 @@ export type ChatRequest = {
     system_message?: string;
     shouldStream?: boolean;
     model?: string;
+    enabled_tools?: string[];
+    assistant_id?: string;
 };
 
-export type CreateBotRequest = {
+export type CreateAssistantRequest = {
     input: string;
     max_output_tokens: number;
     model?: string;
 };
 
-export type SumRequest = {
-    text: string;
-    detaillevel?: "short" | "medium" | "long";
-    language?: string;
-    model: string;
-};
-
-export type SumarizeMessage = DBMessage<SumResponse>;
-
-export type BrainstormRequest = {
-    topic: string;
-    model: string;
-    temperature?: number;
-    language?: string;
-};
-
-export type SimplyRequest = {
-    topic: string;
-    temperature?: number;
-    model?: string;
-};
-
 export interface ApplicationConfig {
     models: Model[];
-    frontend: Frontend;
+    alternative_logo: boolean;
+    env_name: string;
     version: string;
     commit: string;
-}
-
-export interface Frontend {
-    alternative_logo: boolean;
-    labels: Labels;
-    enable_simply: boolean;
-    community_assistants: Bot[];
 }
 
 export interface Model {
@@ -88,15 +62,31 @@ export interface Labels {
     env_name: string;
 }
 
-export interface Chunk {
-    type: "E" | "C" | "I"; //ERROR, CONTENT, INFO
-    message: string | ChunkInfo;
-    order: number;
+// OpenAI-compatible streaming chunk types
+export interface ToolCall {
+    name: string;
+    state: string;
+    content: string;
+    metadata?: Record<string, any>;
 }
 
-export interface ChunkInfo {
-    requesttokens: number;
-    streamedtokens: number;
+export interface ChatCompletionDelta {
+    role?: "system" | "user" | "assistant";
+    content?: string;
+    tool_calls?: ToolCall[];
+}
+
+export interface ChatCompletionChunkChoice {
+    delta: ChatCompletionDelta;
+    index: number;
+    finish_reason?: string;
+}
+
+export interface ChatCompletionChunk {
+    id: string;
+    object: "chat.completion.chunk";
+    created: number;
+    choices: ChatCompletionChunkChoice[];
 }
 
 export type CountTokenRequest = {
@@ -107,11 +97,12 @@ export type CountTokenRequest = {
 export type CountTokenResponse = {
     count: number;
 };
-export type SimplyResponse = {
-    content: string;
-    error?: string;
+
+export type DepartementsResponse = {
+    departments: string[];
 };
-export type Bot = {
+
+export type Assistant = {
     title: string;
     description: string;
     system_message: string;
@@ -121,4 +112,118 @@ export type Bot = {
     max_output_tokens: number;
     examples?: ExampleModel[];
     quick_prompts?: QuickPrompt[];
+    version: string;
+    owner_ids?: string[];
+    tags?: string[];
+    hierarchical_access?: string[];
+    tools?: ToolBase[];
+    is_visible: boolean;
 };
+
+export interface ToolBase {
+    id: string;
+    config?: Record<string, any>;
+}
+
+export interface ExampleModelInput {
+    text: string;
+    value: string;
+}
+
+export interface AssistantCreateInput {
+    name: string;
+    description?: string;
+    system_prompt: string;
+    hierarchical_access?: string[];
+    temperature?: number;
+    max_output_tokens: number;
+    tools?: ToolBase[];
+    owner_ids?: string[];
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+    is_visible: boolean;
+}
+
+export interface AssistantVersionResponse {
+    id: string;
+    version: number;
+    created_at: string;
+    name: string;
+    description?: string;
+    system_prompt: string;
+    hierarchical_access?: string[];
+    temperature: number;
+    max_output_tokens: number;
+    tools?: ToolBase[];
+    owner_ids?: string[];
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+    is_visible: boolean;
+}
+
+export interface AssistantCreateResponse {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    hierarchical_access?: string[];
+    owner_ids?: string[];
+    latest_version: AssistantVersionResponse;
+}
+
+export interface AssistantUpdateInput {
+    name?: string;
+    description?: string;
+    system_prompt?: string;
+    hierarchical_access?: string[];
+    temperature?: number;
+    max_output_tokens?: number;
+    tools?: ToolBase[];
+    owner_ids?: string[];
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+    is_visible: boolean;
+    version: number;
+}
+
+export interface AssistantResponse {
+    id: string;
+    created_at: string;
+    updated_at: string;
+    subscriptions_count: number;
+    hierarchical_access?: string[];
+    owner_ids?: string[];
+    latest_version: AssistantVersionResponse;
+    is_visible: boolean;
+}
+
+// Tool info and list response for /tools endpoint
+export interface ToolInfo {
+    id: string;
+    name: string;
+    description: string;
+}
+
+export interface ToolListResponse {
+    tools: ToolInfo[];
+}
+
+export interface User {
+    sub?: string;
+    // LHM
+    displayName?: string;
+    surname?: string;
+    telephoneNumber?: string;
+    email?: string;
+    username?: string;
+    givenname?: string;
+    department?: string;
+    lhmObjectID?: string;
+    // LHM_Extended
+    preferred_username?: string;
+    memberof?: string[];
+    user_roles?: string[];
+    authorities?: string[];
+}

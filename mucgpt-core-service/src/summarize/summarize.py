@@ -8,15 +8,13 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
 from pydantic import BaseModel, Field
 
-from core.datahelper import Repository, Requestinfo
-from core.helper import llm_exception_handler
+from api.api_models import SummarizeResult
+from api.exception import llm_exception_handler
+from config.LlmConfigs import LlmConfigs
 from core.logtools import getLogger
-from core.textsplit import splitPDF, splitText
-from core.types.Config import ApproachConfig
-from core.types.LlmConfigs import LlmConfigs
-from core.types.SummarizeResult import SummarizeResult
+from core.text_processor import TextProcessor
 
-logger = getLogger(name="mucgpt-backend-summarize")
+logger = getLogger(name="mucgpt-core-summarize")
 
 
 class DenserSummary(BaseModel):
@@ -86,16 +84,12 @@ class Summarize:
     def __init__(
         self,
         llm: RunnableSerializable,
-        config: ApproachConfig,
-        repo: Repository,
         short_split=2100,
         medium_split=1500,
         long_split=700,
         use_last_n_summaries=-2,
     ):
         self.llm = llm
-        self.config = config
-        self.repo = repo
         self.switcher = {
             "short": short_split,
             "medium": medium_split,
@@ -256,17 +250,6 @@ class Summarize:
                 total_tokens += cb.total_tokens
                 final_summarys.append(chunk_summary.content)
         logger.info("Summarize completed with total tokens %s", total_tokens)
-        # save total tokens
-        if self.config.log_tokens:
-            self.repo.addInfo(
-                Requestinfo(
-                    tokencount=total_tokens,
-                    department=department,
-                    messagecount=1,
-                    method="Sum",
-                    model=llm_name,
-                )
-            )
 
         return SummarizeResult(answer=final_summarys)
 
@@ -284,9 +267,14 @@ class Summarize:
         splitsize = self.switcher.get(detaillevel, 700)
 
         if file is not None:
-            logger.info("Split pdf")
-            splits = splitPDF(file, splitsize, 0)
+            logger.info("Split pdf using TextProcessor.pdf_to_text & split_text")
+            raw_text = TextProcessor.pdf_to_text(file)
+            splits = TextProcessor.split_text(
+                raw_text, chunk_size=splitsize, chunk_overlap=0
+            )
         else:
-            logger.info("Split text")
-            splits = splitText(text, splitsize, 0)
+            logger.info("Split text using TextProcessor.split_text")
+            splits = TextProcessor.split_text(
+                text, chunk_size=splitsize, chunk_overlap=0
+            )
         return splits

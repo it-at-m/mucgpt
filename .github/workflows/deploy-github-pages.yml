@@ -1,0 +1,102 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    tags:
+      - "mucgpt-frontend-*" # Triggers only on mucgpt-frontend tags
+  workflow_dispatch:  # Allows manual triggering
+    inputs:
+      tag:
+        description: "Frontend tag to deploy (e.g., mucgpt-frontend-1.0.0)"
+        required: true
+        default: "mucgpt-frontend-latest"
+
+permissions:
+  contents: write  # Changed from read to write for gh-pages deployment
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.version }}
+      full_tag: ${{ steps.vars.outputs.full_tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Extract version from mucgpt-frontend tag
+        id: vars
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            FULL_TAG="${{ github.event.inputs.tag }}"
+          else
+            FULL_TAG=${GITHUB_REF#refs/tags/}
+          fi
+
+          # Extract version from mucgpt-frontend-* tag (e.g., mucgpt-frontend-1.0.0 -> 1.0.0)
+          if [[ "$FULL_TAG" =~ ^mucgpt-frontend-(.+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+          else
+            echo "Error: Tag must start with 'mucgpt-frontend-'"
+            exit 1
+          fi
+
+          echo "full_tag=${FULL_TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Extracted version: ${VERSION} from tag: ${FULL_TAG}"
+
+      - name: Update version in package.json
+        run: |
+          cd mucgpt-frontend
+          npm version ${{ steps.vars.outputs.version }} --no-git-tag-version
+          echo "Updated package.json to version ${{ steps.vars.outputs.version }}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mucgpt-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd mucgpt-frontend
+          npm ci
+
+      - name: Build for GitHub Pages
+        run: |
+          cd mucgpt-frontend
+          npm run build:ghpages
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './mucgpt-frontend/dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Display deployment info
+        run: |
+          echo "🚀 Deployed mucgpt-frontend version ${{ needs.build.outputs.version }}"
+          echo "📦 From tag: ${{ needs.build.outputs.full_tag }}"
+          echo "🌐 URL: ${{ steps.deployment.outputs.page_url }}"

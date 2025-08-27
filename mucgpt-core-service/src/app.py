@@ -1,10 +1,20 @@
 import argparse  # noqa
 import os  # noqa
-
 import uvicorn
+import logging
+
+from truststore import inject_into_ssl
+
+if os.getenv("TRUSTSTORE_DISABLE", "0") not in {"1", "true", "TRUE", "yes"}:
+    try:
+        inject_into_ssl()
+    except Exception as e:
+        logging.getLogger(__name__).warning("truststore injection failed: %s", e)
+
 from dotenv import find_dotenv, load_dotenv  # noqa
 
 load_dotenv(find_dotenv(raise_error_if_not_found=False))  # noqa
+
 from backend import backend  # noqa
 
 if __name__ == "__main__":

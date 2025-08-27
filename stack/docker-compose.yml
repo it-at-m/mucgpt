@@ -7,6 +7,8 @@ services:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     healthcheck: &healthcheck
@@ -17,10 +19,12 @@ services:
       start_period: 60s
     security_opt: &security_settings
       - no-new-privileges:true
+    networks:
+      - keycloak
 
-    # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
+  # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.6.0@sha256:2c7d73e13bd6c30b1d53e4c25d0d6d81adbd0799c4f4d6a09efc5d68fca5d16d
+    image: dpage/pgadmin4:9.7.0@sha256:5929bac24d91b5d7219686c8d66a703cd5851a498620bca4f5e4263873b015c0
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -36,13 +40,16 @@ services:
       test: ["CMD", "wget", "-O", "-", "http://localhost:5050/misc/ping"]
     security_opt: *security_settings
     volumes:
-      - "./pgadmin/servers.json:/pgadmin4/servers.json:ro"
+      - "./pgadmin/servers.json:/pgadmin4/servers.json"
       - "./pgadmin/pgpass:/pgadmin4/pgpass"
     user: root # see https://github.com/pgadmin-org/pgadmin4/issues/6257
     entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
+    networks:
+      - keycloak
 
   keycloak:
-    image: keycloak/keycloak:26.2.4@sha256:4a81762677f8911c6266e3dea57a2d78fa17bd63408debbf23afd8cc46fe256e
+    container_name: keycloak
+    image: keycloak/keycloak:26.3.3@sha256:6a7217a100bd3e5de4063a27a538ef999a3c5a88c4b4ec0ffc0a642aee7b2597
     command:
       - start-dev
     environment:
@@ -62,12 +69,12 @@ services:
       test:
         [
           "CMD-SHELL",
-          "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\\r\\nhost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3;if [ $? -eq 0 ]; then exit 0;else exit 1;fi;",
+          "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then exit 0;else exit 1;fi;",
         ]
     security_opt: *security_settings
 
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.81@sha256:2c73c904a644b75637a01434f357caee9c029f37bd8960793c68233d5afa468a
+    image: klg71/keycloakmigration:0.2.106@sha256:1bb087068881988c548eeaf0b837d88f0ab95c5e01f3718ad3db394d184c43db
     depends_on:
       - keycloak
     environment:
@@ -82,35 +89,41 @@ services:
     networks:
       - keycloak
     security_opt: *security_settings
-
   refarch-gateway:
     image: ghcr.io/it-at-m/refarch/refarch-gateway:1.6.0@sha256:df27f73a72c42f15e7d37267b2b726e70cc917bcf8b03f0b275787715477acae
     depends_on:
       init-keycloak:
         condition: service_completed_successfully
+      keycloak:
+        condition: service_started
     ports:
       - "8083:8080"
+    env_file:
+      - ./.env
     environment:
       - ALLOWED_ORIGINS_PUBLIC=http://localhost:*
       - ALLOWED_ORIGINS_CLIENTS=http://localhost:*
       - SPRING_CLOUD_GATEWAY_ROUTES_0_ID=sso
       - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://keycloak:8100/
       - SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0=Path=/api/sso/userinfo
-      - SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0=RewritePath=/api/sso/userinfo, /auth/realms/local_realm/protocol/openid-connect/userinfo
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0=RewritePath=/api/sso/userinfo, /auth/realms/${MUCGPT_SSO_REALM}/protocol/openid-connect/userinfo
       - SPRING_CLOUD_GATEWAY_ROUTES_1_ID=backend
       - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://core-service:8000/
       - SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0=Path=/api/backend/**
       - SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=frontend
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://frontend:8080/
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/local_realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/${MUCGPT_SSO_REALM}
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
       - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_PROVIDER=sso
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=mucgpt
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTSECRET=client_secret
-      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=profile,openid,LHM,LHM_Extended
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTID=${MUCGPT_SSO_CLIENTID}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_CLIENTSECRET=${MUCGPT_SSO_CLIENT_SECRET}
+      - SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SSO_SCOPE=${MUCGPT_SSO_SCOPE}
     networks:
       - keycloak
     extra_hosts:
@@ -121,8 +134,6 @@ services:
     security_opt: *security_settings
 
   core-service:
-    profiles:
-      - backend
     build:
       context: ../mucgpt-core-service
       dockerfile: Dockerfile
@@ -137,14 +148,46 @@ services:
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
+    environment:
+      - SSL_CERT_FILE=${SSL_CERT_FILE:-}
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
 
-  # If the frontend is to be started in the Docker-Compose, the following command must be executed at startup:
-  # docker-compose --profile=frontend up
-  # oder e.g.:
-  # docker-compose --profile=backend --profile=frontend --profile=online --profile=aenderungsservice --profile=eai up
+  assistant-migrations:
+    build:
+      context: ../mucgpt-assistant-service-migrations
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    networks:
+      - keycloak
+    restart: "no" # Run once and exit
+
+  assistant-service:
+    build:
+      context: ../mucgpt-assistant-service
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    depends_on:
+      assistant-migrations:
+        condition: service_completed_successfully
+    env_file:
+      - ./.env
+    ports:
+      - "39147:8084"
+    networks:
+      - keycloak
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl http://localhost:39147/api/backend/health"]
+
   frontend:
-    profiles:
-      - frontend
     build:
       context: ../mucgpt-frontend
       dockerfile: Dockerfile

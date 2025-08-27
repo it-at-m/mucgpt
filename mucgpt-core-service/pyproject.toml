@@ -15,41 +15,36 @@ maintainers = [
 ]
 
 dependencies = [
-    "mistral-common==1.8.3",
     "fastapi[standard]==0.116.1",
     "langchain==0.3.27",
-    "langchain-core==0.3.72",
+    "langchain-core==0.3.75",
     "langchain_community==0.3.27",
-    "langchain-openai==0.3.28",
-    "openai==1.97.1",
-    "langsmith==0.4.8",
+    "langchain-openai==0.3.32",
+    "openai==1.102.0",
+    "langsmith==0.4.18",
     "joserfc",
-    "tiktoken",
-    "pypdf==5.9.0",
+    "pypdf==6.0.0",
     "uvicorn==0.35.0",
-    "psycopg2-binary==2.9.10",
     "asgi-correlation-id==4.3.4",
-    "gunicorn",
-    "sqlalchemy==2.0.41",
     "gitpython==3.1.45",
+    "pydantic-settings>=2.8.1",
+    "langgraph>=0.5.1",
+    "truststore>=0.10.1",
+    "langfuse>=3.2.1",
 ]
 
-[project.optional-dependencies]
-test = [
+[tool.uv]
+dev-dependencies = [
+    "ipykernel==6.30.1",
+    "pre-commit==4.3.0",
+    "ruff==0.12.10",
     "pytest-env",
     "pytest",
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.8.2",
+    "coverage==7.10.5",
     "pytest-cov"
-]
-
-[tool.uv]
-dev-dependencies = [
-    "ipykernel==6.30.0",
-    "pre-commit==4.2.0",
-    "ruff==0.12.5",
 ]
 
 [[tool.uv.index]]
@@ -65,7 +60,7 @@ select = ["E", "F", "I", "UP"]
 ignore = ["E501", "E701"] # line too long, multiple statements on one line
 
 [tool.pytest.ini_options]
-addopts = "-ra --cov"
+addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=src"
 pythonpath = ["src/"]
 testpaths = [
     "tests"]
@@ -74,33 +69,10 @@ markers = [
     "unit: mark test as a unit test"
 ]
 env = [
-    "LOG_CONFIG=src/logconf.yaml",
-    "FRONTEND_LABELS_ENV_NAME=MUCGPT",
-    "FRONTEND_ALTERNATIVE_LOGO=false",
-    "BACKEND_ENABLE_AUTH=false",
-    "BACKEND_ENABLE_DATABASE=false",
-    "BACKEND_UNAUTHORIZED_USER_REDIRECT_URL=NOT USED",
-    "BACKEND_SSO_ISSUER=NOT USED",
-    "BACKEND_SSO_ROLE=lhm-ab-mucgpt-user",
-    "BACKEND_DB_HOST=NOT USED",
-    "BACKEND_DB_NAME=NOT USED",
-    "BACKEND_DB_USER=NOT USED",
-    "BACKEND_DB_PASSWORD=NOT USED",
-    "BACKEND_CHAT_LOG_TOKENS=false",
-    "BACKEND_BRAINSTORM_LOG_TOKENS=false",
-    "BACKEND_SUM_LOG_TOKENS=false",
-    "BACKEND_SIMPLY_LOG_TOKENS=false",
-    "BACKEND_MODEL_1_TYPE=AZURE",
-    "BACKEND_MODEL_1_LLM_NAME=TEST_MODEL",
-    "BACKEND_MODEL_1_DEPLOYMENT=NOT USED",
-    "BACKEND_MODEL_1_ENDPOINT=https://myfakeendpoint.com",
-    "BACKEND_MODEL_1_API_KEY=NOT USED",
-    "BACKEND_MODEL_1_MAX_OUTPUT_TOKENS=128000",
-    "BACKEND_MODEL_1_MAX_INPUT_TOKENS=8192",
-    "BACKEND_MODEL_1_API_VERSION=NOT USED",
-    "BACKEND_MODEL_1_DESCRIPTION=NOT USED",
-    "MUCGPT_VERSION=0.0",
-    "MUCGPT_COMMIT=12012lf",
+    "MUCGPT_CORE_LOG_CONFIG=src/logconf.yaml",
+    "MUCGPT_CORE_VERSION=0.0",
+    "MUCGPT_CORE_COMMIT=12012lf",
+    '''MUCGPT_CORE_MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Model developed by kicc. "}}]''',
     "GIT_PYTHON_REFRESH=quiet"
 ]
 

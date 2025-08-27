@@ -1,0 +1,74 @@
+version: 1
+filters:
+  correlation_id:
+    (): asgi_correlation_id.CorrelationIdFilter
+    uuid_length: 32
+    default_value: '-'
+formatters:
+  simple:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  http:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  json:
+    class: core.logtools.JsonFormatter
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: ERROR
+    formatter: json
+    filters: [correlation_id]
+    stream: ext://sys.stdout
+  httpx:
+    class: logging.StreamHandler
+    formatter: json
+    filters: [correlation_id]
+    stream: ext://sys.stderr
+loggers:
+  uvicorn.error:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  uvicorn.access:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  dev:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  httpx:
+    level: ERROR
+    handlers: [httpx]
+    propagate: no
+  httpcore:
+    level: ERROR
+    handlers: [httpx]
+    propagate: no
+  users_router:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  system_router:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  assistants_router:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  assistant_repo:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  mucgpt-assistant-service:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+  auth:
+    level: ERROR
+    handlers: [console]
+    propagate: no
+root:
+  level: ERROR
+  handlers: [console]

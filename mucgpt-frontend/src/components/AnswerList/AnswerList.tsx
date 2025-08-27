@@ -9,7 +9,7 @@ import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
 
 interface Props {
     answers: ChatMessage[];
-    regularBotMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
+    regularAssistantMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
     onRollbackMessage: (index: number) => void;
     isLoading: boolean;
     error: unknown;
@@ -21,7 +21,7 @@ interface Props {
 
 export const AnswerList = ({
     answers,
-    regularBotMsg,
+    regularAssistantMsg,
     onRollbackMessage,
     isLoading,
     error,
@@ -45,8 +45,8 @@ export const AnswerList = ({
                     key={index}
                     usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
                     usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    botmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    botmsg={regularBotMsg(answer, index)}
+                    assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
+                    assistantmsg={regularAssistantMsg(answer, index)}
                 ></ChatTurnComponent>
             ))
         );
@@ -60,8 +60,8 @@ export const AnswerList = ({
                     <ChatTurnComponent
                         usermsg={<UserChatMessage message={lastQuestionRef.current} onRollbackMessage={onRollbackError} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                        botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                        botmsg={<AnswerError error={error.toString()} onRetry={makeApiRequest} />}
+                        assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
+                        assistantmsg={<AnswerError error={error.toString()} onRetry={makeApiRequest} />}
                     ></ChatTurnComponent>
                 ) : (
                     <div></div>
@@ -70,8 +70,8 @@ export const AnswerList = ({
                     <ChatTurnComponent
                         usermsg={<UserChatMessage message={lastQuestionRef.current} />}
                         usermsglabel={t("components.usericon.label") + " " + (answers.length + 1).toString()}
-                        botmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
-                        botmsg={<AnswerLoading text={t("chat.answer_loading")} />}
+                        assistantmsglabel={t("components.answericon.label") + " " + (answers.length + 1).toString()}
+                        assistantmsg={<AnswerLoading text={t("chat.answer_loading")} />}
                     ></ChatTurnComponent>
                 ) : (
                     <div></div>

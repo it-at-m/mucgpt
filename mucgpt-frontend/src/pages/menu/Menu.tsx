@@ -2,97 +2,338 @@ import styles from "./Menu.module.css";
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Tooltip } from "@fluentui/react-components";
-import { useEffect, useState } from "react";
+import { Button, Tooltip } from "@fluentui/react-components";
+import { useContext, useEffect, useState } from "react";
 
-import { AddBotButton } from "../../components/AddBotButton";
-import { CreateBotDialog } from "../../components/CreateBotDialog/CreateBotDialog";
-import { BotStorageService } from "../../service/botstorage";
-import { Bot } from "../../api/models";
-import { BOT_STORE } from "../../constants";
-import { migrate_old_bots } from "../../service/migration";
+import { AddAssistantButton } from "../../components/AddAssistantButton";
+import { CreateAssistantDialog } from "../../components/CreateAssistantDialog/CreateAssistantDialog";
+import { AssistantStorageService } from "../../service/assistantstorage";
+import { AssistantResponse, Assistant } from "../../api/models";
+import { ASSISTANT_STORE } from "../../constants";
+import { migrate_old_assistants } from "../../service/migration";
+import { SearchCommunityAssistantButton } from "../../components/SearchCommunityAssistantButton/SearchCommunityAssistantButton";
+import { CommunityAssistantsDialog } from "../../components/CommunityAssistantDialog/CommunityAssistantDialog";
+import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
+import { UserContext } from "../layout/UserContextProvider";
+import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
+import { getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/assistant-client";
+import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
+import { Share24Regular, Chat24Regular, Book24Regular } from "@fluentui/react-icons";
+import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
+import { getTools } from "../../api/core-client";
+import { ToolListResponse } from "../../api/models";
+import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
+import { mapContextToBackendLang } from "../../utils/language-utils";
 
 const Menu = () => {
     const { t } = useTranslation();
-    const [bots, setBots] = useState<Bot[]>([]);
-    const [communityBots, setCommunityBots] = useState<Bot[]>([]);
+    const { language } = useContext(LanguageContext);
+    const [assistants, setAssistants] = useState<Assistant[]>([]);
+    const [communityAssistants, setCommunityAssistants] = useState<{ id: string; name: string; description: string }[]>([]);
+    const [ownedCommunityAssistants, setOwnedCommunityAssistants] = useState<AssistantResponse[]>([]);
+    const [showSearchAssistant, setShowSearchAssistant] = useState<boolean>(false);
+    const [getCommunityAssistants, setGetCommunityAssistants] = useState<boolean>(false);
+    const [hoveredAssistantId, setHoveredAssistantId] = useState<string | null>(null);
+    const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
+    const [question, setQuestion] = useState<string>("");
+    const [username, setUserName] = useState<string>("");
+    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
 
-    const botStorageService: BotStorageService = new BotStorageService(BOT_STORE);
+    const { setHeader } = useContext(HeaderContext);
+    const { user } = useContext(UserContext);
+    const { showSuccess } = useGlobalToastContext();
+    setHeader(DEFAULTHEADER);
+
+    const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
     useEffect(() => {
-        migrate_old_bots().then(async () => {
-            let bots = await botStorageService.getAllBotConfigs();
-            let community_assistants = communityBots;
-            for (const bot of bots) {
-                if (bot.publish) {
-                    if (community_assistants.find(b => b.id === bot.id)) {
-                        community_assistants = community_assistants.filter(b => b.id !== bot.id);
-                    }
-                    community_assistants.push(bot);
-                    bots = bots.filter(b => b.id !== bot.id);
-                }
+        // Check for query parameter in assistanth hash and regular URLs
+        let query = null;
+
+        // Check hash format like #/?q=something
+        const hashPart = window.location.hash;
+        if (hashPart && hashPart.includes("?q=")) {
+            const qIndex = hashPart.indexOf("?q=");
+            if (qIndex !== -1) {
+                query = hashPart.slice(qIndex + 3);
             }
-            setBots(bots);
-            setCommunityBots(community_assistants);
+        }
+        // Check regular format /?q=something
+        else {
+            const currentPath = window.location.pathname + window.location.search;
+            if (currentPath && currentPath.startsWith("/?q=")) {
+                query = currentPath.slice(4);
+            }
+        }
+
+        if (query) {
+            const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
+            setQuestion(decoded_query);
+        }
+
+        migrate_old_assistants().then(async () => {
+            const assistants = await assistantStorageService.getAllAssistantConfigs();
+            setAssistants(assistants);
+            getUserSubscriptionsApi().then(subscriptions => {
+                setCommunityAssistants(subscriptions);
+            });
+        });
+        getOwnedCommunityAssistants().then(response => {
+            setOwnedCommunityAssistants(response);
         });
     }, []);
 
-    const onAddBot = () => {
+    useEffect(() => {
+        if (user) {
+            setUserName(user.displayName || user.username || "User");
+        }
+    }, [user]);
+
+    useEffect(() => {
+        const fetchTools = async () => {
+            try {
+                // Get current language from context and map to backend format
+                const backendLang = mapContextToBackendLang(language);
+                const result = await getTools(backendLang);
+                setTools(result);
+            } catch {
+                setTools({ tools: [] });
+            }
+        };
+        fetchTools();
+    }, [language]);
+
+    const onAddAssistant = () => {
         setShowDialogInput(true);
     };
+    const onSearchAssistant = () => {
+        setShowSearchAssistant(true);
+        setGetCommunityAssistants(true);
+    };
 
+    const onSendQuestion = (question: string) => {
+        let url = `#/chat?q=${encodeURIComponent(question)}`;
+        if (selectedTools.length > 0) {
+            url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
+        }
+        window.location.href = url;
+    };
+
+    const onShareAssistant = (assistantId: string) => {
+        navigator.clipboard.writeText(`${window.location.origin}/#/communityassistant/${assistantId}`);
+        showSuccess("Link kopiert", "Der Assistant-Link wurde in die Zwischenablage kopiert.");
+    };
+
+    const handleFocus = (assistantId: string, event: React.FocusEvent) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        setHoverPosition({
+            x: rect.left + scrollX + rect.width / 2,
+            y: rect.bottom + scrollY
+        });
+        setHoveredAssistantId(assistantId);
+    };
+
+    const handleMouseEnter = (assistantId: string, event: React.MouseEvent) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        setHoverPosition({
+            x: rect.left + scrollX + rect.width / 2,
+            y: rect.bottom + scrollY
+        });
+        setHoveredAssistantId(assistantId);
+    };
+
+    const handleMouseLeave = () => {
+        setHoveredAssistantId(null);
+    };
     return (
-        <div className={styles.container}>
-            <CreateBotDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
-            <div className={styles.row}>
-                <Tooltip content={t("header.chat")} relationship="description" positioning="below">
-                    <Link to="/chat" className={styles.box}>
-                        {t("header.chat")}
-                    </Link>
-                </Tooltip>
-                <Tooltip content={t("header.sum")} relationship="description" positioning="below">
-                    <Link to="/sum" className={styles.box}>
-                        {t("header.sum")}
-                    </Link>
-                </Tooltip>
-                <Tooltip content={t("header.brainstorm")} relationship="description" positioning="below">
-                    <Link to="/brainstorm" className={styles.box}>
-                        {t("header.brainstorm")}
-                    </Link>
-                </Tooltip>
-                <Tooltip content={t("header.simply")} relationship="description" positioning="below">
-                    <Link to="/simply" className={styles.box}>
-                        <p className={styles.btnText}>{t("header.simply")}</p>
-                    </Link>
-                </Tooltip>
-            </div>
-            <div className={styles.rowheader}>
-                {t("menu.own_bots")} <AddBotButton onClick={onAddBot}></AddBotButton>
-            </div>
-            <div className={styles.row}>
-                {bots.map((bot: Bot, key) => (
-                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
-                        <Link to={`/bot/${bot.id}`} className={styles.box}>
-                            <span>{bot.title}</span>
+        <div role="presentation">
+            <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
+                <CreateAssistantDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
+                <h1 id="chat-header" className={styles.heading}>
+                    {t("menu.chat_header", { user: username })}{" "}
+                </h1>
+                <div className={styles.chatstarter}>
+                    <QuestionInput
+                        onSend={onSendQuestion}
+                        disabled={false}
+                        placeholder={t("chat.prompt")}
+                        setQuestion={question => {
+                            setQuestion(question);
+                        }}
+                        selectedTools={selectedTools}
+                        setSelectedTools={setSelectedTools}
+                        tools={tools}
+                        question={question}
+                    ></QuestionInput>
+                </div>
+                <nav className={styles.chatNavigationContainer} aria-label={t("menu.navigation_aria", "Chat Navigation")}>
+                    <Tooltip
+                        content={t("menu.go_to_chat_tooltip", "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen")}
+                        relationship="description"
+                        positioning="below"
+                    >
+                        <Link
+                            to="/chat"
+                            className={styles.chatNavigationButton}
+                            aria-label={t("menu.go_to_chat_aria", "Direkt zum Chat navigieren")}
+                            role="button"
+                        >
+                            <Chat24Regular aria-hidden />
+                            <span>{t("menu.go_to_chat", "Direkt zum Chat")}</span>
                         </Link>
                     </Tooltip>
-                ))}
-                {bots.length === 0 && <div>{t("menu.no_bots")}</div>}
-            </div>
-            <div className={styles.rowheader}>{t("menu.community_bots")}</div>
-            <div className={styles.row}>
-                {communityBots.map((bot: Bot, key) => (
-                    <Tooltip key={key} content={bot.title} relationship="description" positioning="below">
-                        <Link to={`/bot/${bot.id}`} className={styles.box}>
-                            {bot.title}
+                    <Tooltip
+                        content={t("menu.go_to_tutorials_tooltip", "Tutorials und Anleitungen zu Fragments und Tools")}
+                        relationship="description"
+                        positioning="below"
+                    >
+                        <Link
+                            to="/tutorials"
+                            className={styles.chatNavigationButton}
+                            aria-label={t("menu.go_to_tutorials_aria", "Zu Tutorials und Anleitungen navigieren")}
+                            role="button"
+                        >
+                            <Book24Regular aria-hidden />
+                            <span>{t("menu.go_to_tutorials", "Tutorials")}</span>
                         </Link>
                     </Tooltip>
-                ))}
-                {communityBots.length === 0 && <div>{t("menu.no_bots")}</div>}
-            </div>
-            <div className={styles.rowheader}> </div>
+                </nav>
+            </section>
+            <section className={styles.container} aria-labelledby="assistants-section">
+                <h2 id="assistants-section" className="sr-only">
+                    {t("menu.assistants_section", "Assistant-Verwaltung")}
+                </h2>
+                <div className={styles.rowheader} role="heading" aria-level={3}>
+                    {t("menu.own_assistants")} <AddAssistantButton onClick={onAddAssistant}></AddAssistantButton>
+                </div>
+                <div className={styles.row} role="list" aria-label={t("menu.own_assistants_list", "Eigene Assistants")}>
+                    {assistants.map((assistant: Assistant, key) => (
+                        <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
+                            <div className={styles.box} role="listitem" tabIndex={0}>
+                                <div className={styles.boxHeader}>{assistant.title}</div>
+                                <div className={styles.boxDescription}>{assistant.description}</div>
+                                <Link
+                                    to={`/assistant/${assistant.id}`}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                >
+                                    {t("menu.select")}
+                                </Link>
+                            </div>
+                        </Tooltip>
+                    ))}
+                    {assistants.length === 0 && (
+                        <div role="status" aria-live="polite">
+                            {t("menu.no_assistants")}
+                        </div>
+                    )}
+                </div>
+                <div className={styles.rowheader} role="heading" aria-level={3}>
+                    {t("menu.community_assistants")} <SearchCommunityAssistantButton onClick={onSearchAssistant} />
+                </div>
+                <CommunityAssistantsDialog
+                    showSearchDialogInput={showSearchAssistant}
+                    setShowSearchDialogInput={setShowSearchAssistant}
+                    takeCommunityAssistants={getCommunityAssistants}
+                    setTakeCommunityAssistants={setGetCommunityAssistants}
+                    ownedAssistants={ownedCommunityAssistants.map(a => a.id)}
+                    subscribedAssistants={communityAssistants.map(a => a.id)}
+                />
+                <div className={styles.subrowheader} role="heading" aria-level={4}>
+                    {t("menu.owned")}
+                </div>
+                <div className={styles.row} role="list" aria-label={t("menu.owned_assistants_list", "Eigene Community Assistants")}>
+                    {ownedCommunityAssistants.map((assistant: AssistantResponse, key) => (
+                        <div
+                            key={key}
+                            className={styles.box}
+                            role="listitem"
+                            tabIndex={0}
+                            onMouseEnter={e => handleMouseEnter(assistant.id, e)}
+                            onMouseLeave={handleMouseLeave}
+                            onFocus={e => handleFocus(assistant.id, e)}
+                            onBlur={handleMouseLeave}
+                        >
+                            <div className={styles.boxHeader}>{assistant.latest_version.name}</div>
+                            <div className={styles.boxDescription}>{assistant.latest_version.description}</div>
+                            <div className={styles.boxButtons}>
+                                <Link
+                                    to={`owned/communityassistant/${assistant.id}`}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
+                                >
+                                    {t("menu.select")}
+                                </Link>
+                                <Button
+                                    onClick={() => onShareAssistant(assistant.id)}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
+                                >
+                                    <Share24Regular aria-hidden /> Teilen
+                                </Button>
+                            </div>
+                        </div>
+                    ))}
+                    {ownedCommunityAssistants.length === 0 && (
+                        <div role="status" aria-live="polite">
+                            {t("menu.no_assistants")}
+                        </div>
+                    )}
+                </div>
+                <div className={styles.subrowheader} role="heading" aria-level={4}>
+                    {t("menu.subscribed")}
+                </div>
+                <div className={styles.row} role="list" aria-label={t("menu.subscribed_assistants_list", "Abonnierte Community Assistants")}>
+                    {communityAssistants.map(({ id, name, description }, key) => (
+                        <Tooltip key={key} content={name} relationship="description" positioning="below">
+                            <div className={styles.box} role="listitem" tabIndex={0}>
+                                <div className={styles.boxHeader}>{name}</div>
+                                <div className={styles.boxDescription}>{description}</div>
+                                <Link
+                                    to={`communityassistant/${id}`}
+                                    className={styles.boxChoose}
+                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: name })}
+                                >
+                                    {t("menu.select")}
+                                </Link>
+                            </div>
+                        </Tooltip>
+                    ))}
+                    {communityAssistants.length === 0 && (
+                        <div role="status" aria-live="polite">
+                            {t("menu.no_assistants")}
+                        </div>
+                    )}
+                </div>
+                <div className={styles.rowheader} aria-hidden="true">
+                    {" "}
+                </div>
+            </section>
+            {hoveredAssistantId && (
+                <div
+                    style={{
+                        position: "absolute",
+                        left: hoverPosition.x - 160, // Center horizontally (assuming 320px width)
+                        top: hoverPosition.y + 10, // Position below the assistant box
+                        zIndex: 1000,
+                        padding: "12px",
+                        pointerEvents: "none"
+                    }}
+                >
+                    {ownedCommunityAssistants.find(assistant => assistant.id === hoveredAssistantId) && (
+                        <AssistantStats assistant={ownedCommunityAssistants.find(assistant => assistant.id === hoveredAssistantId)!} />
+                    )}
+                </div>
+            )}
         </div>
     );
 };

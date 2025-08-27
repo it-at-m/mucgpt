@@ -137,10 +137,10 @@ cd stack
 cp .env.example .env
 ```
 
-Below is an example of how to configure the `MUCGPT_CORE_BACKEND__MODELS` environment variable in your `.env` file. This variable defines the available LLM models for the core backend as a JSON array. Each object in the array specifies the model type, name, endpoint, API key, token limits, and a description.
+Below is an example of how to configure the `MUCGPT_CORE_MODELS` environment variable in your `.env` file. This variable defines the available LLM models for the core backend as a JSON array. Each object in the array specifies the model type, name, endpoint, API key, token limits, and a description.
 
 ```env
-MUCGPT_CORE_BACKEND__MODELS='[
+MUCGPT_CORE_MODELS='[
   {
     "type": "OPENAI",
     "llm_name": "<your-llm-name>",

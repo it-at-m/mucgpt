@@ -2,7 +2,7 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./DepartmentDropdown.module.css";
 import { useTranslation } from "react-i18next";
-import { getDepartements } from "../../api/core-client";
+import { getDepartments } from "../../api/core-client";
 
 // Hilfsfunktion für Präfix-Matching
 function isDepartmentPrefixMatch(a: string, b: string) {
@@ -31,7 +31,7 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
 
     useEffect(() => {
         if (departments.length > 0) return; // Nur einmal laden, wenn noch keine Daten vorhanden sind
-        getDepartements().then(data => {
+        getDepartments().then(data => {
             setDepartments(data || []);
         });
     }, []);

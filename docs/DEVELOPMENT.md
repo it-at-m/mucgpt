@@ -1,4 +1,3 @@
-
 ## Working with UV
 
 ### Synchronize / Update Packages
@@ -23,7 +22,7 @@ Install pre-commit hooks
 
 Packages can be added using the following command
 
-```bash
+````bash
 # Add  package
 uv add pydantic
 
@@ -34,7 +33,7 @@ Packages can also be removed.
 ```bash
 # Remove package
 uv remove pydantic
-```
+````
 
 ## Running tests
 

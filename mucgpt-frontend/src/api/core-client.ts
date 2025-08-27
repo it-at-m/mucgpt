@@ -57,8 +57,8 @@ export async function countTokensAPI(options: CountTokenRequest): Promise<CountT
     );
 }
 
-export async function getDepartements(): Promise<string[]> {
-    return handleApiRequest(() => fetch(API_BASE + "departements", getConfig()), "Failed to get departments");
+export async function getDepartments(): Promise<string[]> {
+    return handleApiRequest(() => fetch(API_BASE + "departments", getConfig()), "Failed to get departments");
 }
 
 export async function createAssistantApi(options: CreateAssistantRequest): Promise<Response> {

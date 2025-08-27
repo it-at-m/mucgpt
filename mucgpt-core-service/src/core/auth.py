@@ -103,7 +103,6 @@ class AuthenticationHelper:
             raise AuthError("Missing Authorization header", status_code=401)
 
         user_info = self.get_user_info(accesstoken)
-        logger.debug(f"user_info: {user_info}")
 
         try:
             roles = self.getRoles(user_info)

@@ -86,7 +86,7 @@ class ChatCompletionRequest(BaseModel):
                 "temperature": 0.5,
                 "max_tokens": 300,
                 "stream": False,
-                "enabled_tools": ["WEB_SEARCH"],
+                "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
             }
         }

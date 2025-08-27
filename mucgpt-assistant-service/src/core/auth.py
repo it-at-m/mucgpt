@@ -39,8 +39,6 @@ class AuthenticationHelper:
             else f"Bearer {accesstoken}"
         )
 
-        logger.debug(f"Using authorization header: {auth_header[:15]}...")
-
         try:
             resp = requests.get(
                 url=self.userinfo_url,

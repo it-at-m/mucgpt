@@ -40,8 +40,8 @@ async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
     return response
 
 
-@router.get("/departements")
-async def getDepartements(user_info=Depends(authenticate_user)):
+@router.get("/departments")
+async def getDepartments(user_info=Depends(authenticate_user)):
     return departments
 
 

@@ -42,6 +42,12 @@ export const CHAT_STORE: IndexedDBStorage = {
     db_version: 3
 };
 
+export const COMMUNITY_ASSISTANT_STORE: IndexedDBStorage = {
+    db_name: "MUCGPT-COMMUNITY-ASSISTANTS",
+    objectStore_name: "assistants",
+    db_version: 1
+};
+
 // Create Assistant examples
 export const CREATE_ASSISTANT_EXAMPLE_1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
 export const CREATE_ASSISTANT_EXAMPLE_2 =

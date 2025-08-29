@@ -41,6 +41,8 @@ i18n
                         own_assistants_list: "Eigene Assistenten",
                         owned_assistants_list: "Eigene Community Assistenten",
                         subscribed_assistants_list: "Abonnierte Community Assistenten",
+                        deleted: "Gelöschte:",
+                        deleted_assistants_list: "Gelöschte Community Assistenten",
                         select_assistant_aria: "Assistent auswählen: {{title}}",
                         share_assistant_aria: "Assistent teilen: {{title}}"
                     },
@@ -248,6 +250,7 @@ i18n
                             "remove-assistant": "Assistent entfernen",
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
+                            deleted_warning: "Dieser Assistent wurde aus der Community gelöscht und ist nicht mehr verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschen",
                                 content: "Wollen Sie den Assistenten wirklich löschen? Dies kann nicht rückgängig gemacht werden.",
@@ -468,6 +471,8 @@ i18n
                         own_assistants_list: "Your assistants",
                         owned_assistants_list: "Your community assistants",
                         subscribed_assistants_list: "Subscribed community assistants",
+                        deleted: "Deleted:",
+                        deleted_assistants_list: "Deleted community assistants",
                         select_assistant_aria: "Select assistant: {{title}}",
                         share_assistant_aria: "Share assistant: {{title}}"
                     },
@@ -674,6 +679,7 @@ i18n
                             "remove-assistant": "Remove Assistant",
                             publish: "Publish",
                             unpublish: "Unpublish",
+                            deleted_warning: "This assistant has been deleted from the community and is no longer available.",
                             deleteDialog: {
                                 title: "Delete Assistant",
                                 content: "Are you sure you want to delete the assistant? This action cannot be undone.",
@@ -892,6 +898,8 @@ i18n
                         own_assistants_list: "Deina Assistentn",
                         owned_assistants_list: "Deina Community-Assistentn",
                         subscribed_assistants_list: "Abonniert Community-Assistentn",
+                        deleted: "Glöschte:",
+                        deleted_assistants_list: "Glöschte Community-Assistentn",
                         select_assistant_aria: "Assistent aussuacha: {{title}}",
                         share_assistant_aria: "Assistent teilen: {{title}}"
                     },
@@ -1099,6 +1107,7 @@ i18n
                             "remove-assistant": "Assistent entfern'n",
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
+                            deleted_warning: "Der Assistent is aus da Community glöscht wordn und is nimma verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschn",
                                 content: "Wuißt du den Assistenten echt löschn? Des ko nimma rückgängig gmocht werdn.",
@@ -1318,6 +1327,8 @@ i18n
                         own_assistants_list: "Vos assistants",
                         owned_assistants_list: "Vos assistants communautaires",
                         subscribed_assistants_list: "Assistants communautaires abonnés",
+                        deleted: "Supprimés:",
+                        deleted_assistants_list: "Assistants communautaires supprimés",
                         select_assistant_aria: "Sélectionner l'assistant : {{title}}",
                         share_assistant_aria: "Partager l'assistant : {{title}}"
                     },
@@ -1525,6 +1536,7 @@ i18n
                             "remove-assistant": "Retirer l'assistant",
                             publish: "Publier",
                             unpublish: "Dépublier",
+                            deleted_warning: "Cet assistant a été supprimé de la communauté et n'est plus disponible.",
                             deleteDialog: {
                                 title: "Supprimer l'Assistant",
                                 content: "Êtes-vous sûr de vouloir supprimer l'assistant ? Cette action ne peut pas être annulée.",
@@ -1745,6 +1757,8 @@ i18n
                         own_assistants_list: "Ваші асистенти",
                         owned_assistants_list: "Ваші асистенти спільноти",
                         subscribed_assistants_list: "Підписані асистенти спільноти",
+                        deleted: "Видалені:",
+                        deleted_assistants_list: "Видалені асистенти спільноти",
                         select_assistant_aria: "Вибрати асистента: {{title}}",
                         share_assistant_aria: "Поділитися асистентом: {{title}}"
                     },
@@ -1952,6 +1966,7 @@ i18n
                             "remove-assistant": "Видалити асистента",
                             publish: "Опублікувати",
                             unpublish: "Скасувати публікацію",
+                            deleted_warning: "Цей асистент був видалений з спільноти і більше не доступний.",
                             deleteDialog: {
                                 title: "Видалити Бота",
                                 content: "Ви впевнені, що хочете видалити бота? Цю дію не можна скасувати.",

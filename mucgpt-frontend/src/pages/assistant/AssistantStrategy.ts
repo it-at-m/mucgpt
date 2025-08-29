@@ -1,7 +1,9 @@
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantUpdateInput, Assistant } from "../../api/models";
-import { ASSISTANT_STORE } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
+import { C } from "msw/lib/core/HttpResponse-CKZrrwKE";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 
 export interface AssistantStrategy {
     loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined>;
@@ -37,6 +39,7 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
     isOwned = false;
     canEdit = false;
     requiresReloadOnSave = false;
+    communityStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
     async loadAssistantConfig(assistantId: string): Promise<Assistant | undefined> {
         const response = await getCommunityAssistantApi(assistantId);
@@ -63,6 +66,41 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
         await unsubscribeFromAssistantApi(assistantId);
         await assistantStorageService.deleteChatsForAssistant(assistantId);
+        await this.communityStorageService.deleteConfigForAssistant(assistantId);
+        window.location.href = "/";
+    }
+}
+
+export class DeletedCommunityAssistantStrategy implements AssistantStrategy {
+    isOwned = false;
+    canEdit = false;
+    requiresReloadOnSave = false;
+    communityStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
+
+    async loadAssistantConfig(assistantId: string): Promise<Assistant | undefined> {
+        const response = await this.communityStorageService.getAssistantConfig(assistantId);
+        return {
+            id: assistantId,
+            title: response?.title || "",
+            description: response?.description || "",
+            system_message: "",
+            publish: true,
+            temperature: 0,
+            max_output_tokens: 0,
+            version: "0",
+            examples: [],
+            quick_prompts: [],
+            tags: [],
+            owner_ids: [],
+            tools: [],
+            hierarchical_access: [],
+            is_visible: false
+        };
+    }
+
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
+        await assistantStorageService.deleteChatsForAssistant(assistantId);
+        await this.communityStorageService.deleteConfigForAssistant(assistantId);
         window.location.href = "/";
     }
 }

@@ -2,9 +2,9 @@ import { Button, Dialog, DialogBody, DialogContent, DialogSurface, DialogTitle, 
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useState } from "react";
-import { Assistant, AssistantResponse } from "../../api";
-import { AssistantStorageService } from "../../service/assistantstorage";
-import { ASSISTANT_STORE } from "../../constants";
+import { Assistant, AssistantResponse, CommunityAssistant } from "../../api";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { COMMUNITY_ASSISTANT_STORE } from "../../constants";
 
 // Components
 import { AssistantSearchSection } from "./components/AssistantSearchSection";
@@ -72,7 +72,7 @@ export const CommunityAssistantsDialog = ({
     const [selectedAssistant, setSelectedAssistant] = useState<Assistant>(createMockAssistant());
     const [showAssistantDialog, setShowAssistantDialog] = useState<boolean>(false);
 
-    const communityAssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+    const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
     // sort Functions
     const compareByTitle = (a: AssistantWithMetadata, b: AssistantWithMetadata): number => {
@@ -240,6 +240,12 @@ export const CommunityAssistantsDialog = ({
 
             try {
                 await subscribeToAssistantApi(assistant.id);
+                const community_config: CommunityAssistant = {
+                    id: assistant.id,
+                    title: assistant.title,
+                    description: assistant.description,
+                }
+                await communityAssistantStorageService.createAssistantConfig(community_config);
                 showSuccess(
                     t("components.community_assistants.subscribe_success_title", { title: assistant.title }),
                     t("components.community_assistants.subscribe_success_message")
@@ -274,9 +280,6 @@ export const CommunityAssistantsDialog = ({
             // Load full assistant details
             const fullAssistant = await loadAssistantDetails(assistant.id);
             setSelectedAssistant(fullAssistant);
-
-            // Update storage service
-            communityAssistantStorageService.getAssistantConfig(assistant.id);
         } catch (error) {
             // Error is handled in the hook
             console.error("Failed to load assistant details:", error);

@@ -17,9 +17,10 @@ import { LLMContextProvider } from "./components/LLMSelector/LLMContextProvider"
 import { QuickPromptProvider } from "./components/QuickPrompt/QuickPromptProvider";
 import { HeaderContextProvider } from "./pages/layout/HeaderContextProvider";
 import LocalAssistant from "./pages/assistant/LocalAssistant";
-import RefactoredOwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
-import RefactoredCommunityAssistant from "./pages/assistant/CommunityAssistant";
+import OwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
+import CommunityAssistant from "./pages/assistant/CommunityAssistant";
 import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToastContext";
+import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
 initializeIcons();
 
 const router = createHashRouter([
@@ -80,12 +81,17 @@ const router = createHashRouter([
             },
             {
                 path: "owned/communityassistant/:id",
-                element: <RefactoredOwnedCommunityAssistant />,
+                element: <OwnedCommunityAssistant />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "deleted/communityassistant/:id",
+                element: <DeletedCommunityAssistant />,
                 errorElement: <div>Fehler</div>
             },
             {
                 path: "communityassistant/:id",
-                element: <RefactoredCommunityAssistant />,
+                element: <CommunityAssistant />,
                 errorElement: <div>Fehler</div>
             },
             /** {

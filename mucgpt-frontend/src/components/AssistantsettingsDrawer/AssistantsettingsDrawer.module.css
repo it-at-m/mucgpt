@@ -285,3 +285,17 @@
 .newChatHeaderContent:hover {
     background-color: var(--colorNeutralBackground1Hover);
 }
+
+.deletedWarning {
+    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    background-color: var(--colorPaletteRedBackground1);
+    border: 1px solid var(--colorPaletteRedBorder1);
+    border-radius: var(--borderRadiusMedium);
+    color: var(--colorPaletteRedForeground1);
+    font-size: var(--fontSizeBase300);
+    font-weight: var(--fontWeightSemibold);
+    margin: var(--spacingVerticalM) var(--spacingHorizontalM);
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS);
+}

@@ -1,7 +1,7 @@
 from __future__ import annotations  # Enable forward references in annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -428,7 +428,7 @@ class AssistantRepository(Repository[Assistant]):
                     .values(
                         subscriptions_count=Assistant.subscriptions_count
                         - rows_deleted,
-                        updated_at=datetime.now(timezone.utc),
+                        updated_at=datetime.now(),
                     )
                 )
 

@@ -20,7 +20,7 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
-import { AssistantStrategy, CommunityAssistantStrategy } from "./AssistantStrategy";
+import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
@@ -397,13 +397,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <>
                 <AssistantsettingsDrawer
                     assistant={assistantConfig}
-                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
+                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => { }}
                     onDeleteAssistant={onDeleteAssistant}
                     history={history}
                     minimized={!showSidebar}
                     isOwned={strategy.isOwned}
                     clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy}
                     onToggleMinimized={toggleSidebar}
                     strategy={strategy}
                 ></AssistantsettingsDrawer>
@@ -427,14 +427,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <QuestionInput
                 clearOnSend
                 placeholder={t("chat.prompt")}
-                disabled={isLoadingRef.current || error !== undefined}
+                disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
                 onSend={question => callApi(question)}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={assistantConfig.tools ? assistantConfig.tools.map(tool => tool.id) : []}
             />
         ),
-        [isLoadingRef.current, callApi, question, t, error, assistantConfig.tools]
+        [isLoadingRef.current, callApi, question, t, error, assistantConfig.tools, strategy]
     );
 
     // AnswerList component

@@ -230,7 +230,7 @@ async def get_user_subscriptions(
         if latest_version:
             response = SubscriptionResponse(
                 id=assistant_id,
-                name=getattr(latest_version, "name", ""),
+                title=getattr(latest_version, "name", ""),
                 description=getattr(latest_version, "description", ""),
             )
             response_list.append(response)

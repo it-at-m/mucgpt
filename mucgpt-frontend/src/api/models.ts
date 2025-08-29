@@ -227,3 +227,9 @@ export interface User {
     user_roles?: string[];
     authorities?: string[];
 }
+
+export type CommunityAssistant = {
+    title: string;
+    description: string;
+    id: string;
+};

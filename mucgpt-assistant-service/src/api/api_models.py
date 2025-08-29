@@ -494,7 +494,7 @@ class SubscriptionResponse(BaseModel):
         description="Unique identifier for the assistant (UUID v4)",
         example="123e4567-e89b-12d3-a456-426614174000",
     )
-    name: str = Field(
+    title: str = Field(
         ...,
         description="The name/title of the assistant",
         example="Technical Support Assistant",
@@ -511,7 +511,8 @@ class SubscriptionResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "id": "123e4567-e89b-12d3-a456-426614174000",
-                "name": "Technical Support Assistant",
+                "title": "Technical Support Assistant",
+                "description": "An AI assistant specialized in providing technical support for software issues",
             }
         },
     )

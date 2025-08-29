@@ -29,7 +29,7 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { ASSISTANT_STORE } from "../../constants";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { deleteCommunityAssistantApi } from "../../api/assistant-client";
-import { AssistantStrategy } from "../../pages/assistant/AssistantStrategy";
+import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 
 interface Props {
     assistant: Assistant;
@@ -203,18 +203,23 @@ export const AssistantsettingsDrawer = ({
             <div className={styles.titleSection}>
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>
             </div>
+            {strategy instanceof DeletedCommunityAssistantStrategy && (
+                <div className={styles.deletedWarning}>
+                    {t("components.assistantsettingsdrawer.deleted_warning")}
+                </div>
+            )}
             <div
                 className={styles.actionsHeader}
                 role="heading"
                 aria-level={4}
-                onClick={clearChat}
+                onClick={clearChatDisabled ? undefined : clearChat}
                 aria-disabled={clearChatDisabled}
                 tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && clearChat()}
+                onKeyDown={clearChatDisabled ? undefined : e => e.key === "Enter" && clearChat()}
             >
                 <div className={styles.newChatHeaderContent}>
                     <ChatAdd24Regular className={styles.actionsIcon} aria-hidden="true" />
-                    <span>New Chat</span>
+                    <span>{t("common.clear_chat")}</span>
                 </div>
             </div>
 
@@ -237,6 +242,7 @@ export const AssistantsettingsDrawer = ({
                     icon={isOwner ? <Edit24Regular /> : <ChatSettings24Regular />}
                     onClick={toggleEditDialog}
                     className={styles.actionButton}
+                    disabled={strategy instanceof DeletedCommunityAssistantStrategy}
                 >
                     {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
                 </Button>

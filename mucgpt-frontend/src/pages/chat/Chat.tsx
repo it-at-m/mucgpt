@@ -602,7 +602,7 @@ const Chat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
+                    onToggleMinimized={() => setShowSidebar(prev => !prev)}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />

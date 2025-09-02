@@ -5,14 +5,25 @@ import {
     ChatSettings24Regular,
     Checkmark24Filled,
     CloudArrowUp24Filled,
-    ChevronDown20Regular,
-    ChevronRight20Regular,
-    Settings24Regular,
-    ChatAdd24Regular,
     ChevronDoubleRight20Regular,
     ChevronDoubleLeft20Regular
 } from "@fluentui/react-icons";
-import { Button, Tooltip, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
+import {
+    Button,
+    Tooltip,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    DialogTrigger,
+    Accordion,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
+    AccordionToggleEventHandler
+} from "@fluentui/react-components";
 
 import styles from "./AssistantsettingsDrawer.module.css";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
@@ -27,9 +38,9 @@ import { EditAssistantDialog } from "../EditAssistantDialog/EditAssistantDialog"
 import PublishAssistantDialog from "../PublishAssistantDialog/PublishAssistantDialog";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { ASSISTANT_STORE } from "../../constants";
-import { Collapse } from "@fluentui/react-motion-components-preview";
 import { deleteCommunityAssistantApi } from "../../api/assistant-client";
 import { AssistantStrategy } from "../../pages/assistant/AssistantStrategy";
+import { ClearChatButton } from "../ClearChatButton";
 
 interface Props {
     assistant: Assistant;
@@ -64,8 +75,19 @@ export const AssistantsettingsDrawer = ({
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
     const [invisibleChecked, setInvisibleChecked] = useState<boolean>(false);
-    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
-    const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
+    const [showEditDialog, setShowEditDialog] = useState<boolean>(false); // Use local storage to persist accordion state
+    const ACTIONS_ACCORDION_STATE = "ACTIONS_ACCORDION_STATE";
+
+    const [openItems, setOpenItems] = useState<string | string[]>(() => {
+        const storedState = localStorage.getItem(ACTIONS_ACCORDION_STATE);
+        // Default to closed if no stored state
+        return storedState ? JSON.parse(storedState) : [];
+    });
+
+    const handleToggle: AccordionToggleEventHandler<string> = (event, data) => {
+        setOpenItems(data.openItems);
+        localStorage.setItem(ACTIONS_ACCORDION_STATE, JSON.stringify(data.openItems));
+    };
 
     const storageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
@@ -78,12 +100,8 @@ export const AssistantsettingsDrawer = ({
     // Toggle read-only mode
     const toggleEditDialog = useCallback(() => {
         setShowEditDialog(!showEditDialog);
-    }, [showEditDialog]);
-
-    // Toggle actions section visibility
-    const toggleActionsVisibility = useCallback(() => {
-        setIsActionsExpanded(!isActionsExpanded);
-    }, [isActionsExpanded]);
+    }, [showEditDialog]); // No longer needed with Accordion
+    // We're using the Accordion's built-in toggle functionality
 
     const saveLocal = useCallback(async () => {
         if (!assistant.id) return;
@@ -145,26 +163,23 @@ export const AssistantsettingsDrawer = ({
             </Dialog>
         ),
         [showDeleteDialog, onDeleteAssistant, publish, t, saveLocal]
-    );
-
-    // actions component
+    ); // actions component
     const actions_component = useMemo(
         () => (
-            <Tooltip
-                content={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
-                relationship="description"
-                positioning="below"
-            >
-                <Button
-                    appearance="subtle"
-                    icon={minimized ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
-                    onClick={onToggleMinimized}
-                    className={styles.collapseButton}
-                    aria-label={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
-                />
-            </Tooltip>
+            <>
+                <ClearChatButton onClick={clearChat} disabled={clearChatDisabled} showText={true} />
+                {/* Create adapter function for MinimizeSidebarButton */}
+                {onToggleMinimized && (
+                    <Button
+                        appearance="primary"
+                        icon={minimized ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
+                        onClick={onToggleMinimized}
+                        aria-label={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
+                    />
+                )}
+            </>
         ),
-        [minimized, t, onToggleMinimized]
+        [minimized, t, onToggleMinimized, clearChat, clearChatDisabled]
     );
 
     // Publish dialog
@@ -195,29 +210,14 @@ export const AssistantsettingsDrawer = ({
             />
         ),
         [showEditDialog, assistant, onAssistantChange, isOwner, strategy]
-    );
-
-    // sidebar content
+    ); // sidebar content
     const content = (
         <>
             <div className={styles.titleSection}>
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>
+                {/* Actions below title like in ChatsettingsDrawer */}
+                <div className={styles.actionRow}>{actions_component}</div>
             </div>
-            <div
-                className={styles.actionsHeader}
-                role="heading"
-                aria-level={4}
-                onClick={clearChat}
-                aria-disabled={clearChatDisabled}
-                tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && clearChat()}
-            >
-                <div className={styles.newChatHeaderContent}>
-                    <ChatAdd24Regular className={styles.actionsIcon} aria-hidden="true" />
-                    <span>New Chat</span>
-                </div>
-            </div>
-
             <div className={styles.descriptionSection}>
                 <Markdown
                     className={styles.markdownDescription}
@@ -230,7 +230,6 @@ export const AssistantsettingsDrawer = ({
                     {description}
                 </Markdown>
             </div>
-
             <div className={styles.buttonSection}>
                 <Button
                     appearance="primary"
@@ -241,60 +240,48 @@ export const AssistantsettingsDrawer = ({
                     {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
                 </Button>
             </div>
-
-            <div className={styles.historySection}>{history}</div>
-
+            <div className={styles.historySection}>{history}</div>{" "}
             <div className={styles.actionsSection}>
-                <div
-                    className={styles.actionsHeader}
-                    role="heading"
-                    aria-level={4}
-                    onClick={toggleActionsVisibility}
-                    tabIndex={0}
-                    onKeyDown={e => e.key === "Enter" && toggleActionsVisibility()}
-                    aria-expanded={isActionsExpanded}
-                >
-                    <div className={styles.actionsHeaderContent}>
-                        <Settings24Regular className={styles.actionsIcon} aria-hidden="true" />
-                        <span>Aktionen</span>
-                        <div className={styles.expandCollapseIcon}>{isActionsExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
-                    </div>
-                </div>
+                <Accordion collapsible={true} openItems={openItems} onToggle={handleToggle}>
+                    <AccordionItem value="actions">
+                        <AccordionHeader>{t("components.assistantsettingsdrawer.actions", "Aktionen")}</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.actionsContent}>
+                                <Tooltip content={t("components.assistantsettingsdrawer.delete")} relationship="description" positioning="below">
+                                    <Button
+                                        appearance="secondary"
+                                        onClick={() => setShowDeleteDialog(true)}
+                                        icon={<Delete24Regular />}
+                                        className={`${styles.actionButton} ${styles.deleteButton}`}
+                                    >
+                                        {publish
+                                            ? isOwner
+                                                ? t("components.assistantsettingsdrawer.unpublish-button")
+                                                : t("components.assistantsettingsdrawer.remove-assistant")
+                                            : t("components.assistantsettingsdrawer.delete")}
+                                    </Button>
+                                </Tooltip>
 
-                <Collapse visible={isActionsExpanded}>
-                    <div className={styles.actionsContent}>
-                        <Tooltip content={t("components.assistantsettingsdrawer.delete")} relationship="description" positioning="below">
-                            <Button
-                                appearance="secondary"
-                                onClick={() => setShowDeleteDialog(true)}
-                                icon={<Delete24Regular />}
-                                className={`${styles.actionButton} ${styles.deleteButton}`}
-                            >
-                                {publish
-                                    ? isOwner
-                                        ? t("components.assistantsettingsdrawer.unpublish-button")
-                                        : t("components.assistantsettingsdrawer.remove-assistant")
-                                    : t("components.assistantsettingsdrawer.delete")}
-                            </Button>
-                        </Tooltip>
-
-                        {!publish && (
-                            <Button
-                                icon={<CloudArrowUp24Filled />}
-                                onClick={() => setShowPublishDialog(true)}
-                                appearance="outline"
-                                className={`${styles.actionButton} ${styles.publishButton}`}
-                            >
-                                {t("components.assistantsettingsdrawer.publish")}
-                            </Button>
-                        )}
-                    </div>
-                </Collapse>
+                                {!publish && (
+                                    <Button
+                                        icon={<CloudArrowUp24Filled />}
+                                        onClick={() => setShowPublishDialog(true)}
+                                        appearance="outline"
+                                        className={`${styles.actionButton} ${styles.publishButton}`}
+                                    >
+                                        {t("components.assistantsettingsdrawer.publish")}
+                                    </Button>
+                                )}
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
+                </Accordion>
             </div>
             {publishDialog}
             {editDialog}
             {deleteDialog}
         </>
     );
-    return <Sidebar actions={actions_component} content={content}></Sidebar>;
+    // No longer passing actions to the Sidebar since we've integrated them into the content
+    return <Sidebar actions={null} content={content}></Sidebar>;
 };

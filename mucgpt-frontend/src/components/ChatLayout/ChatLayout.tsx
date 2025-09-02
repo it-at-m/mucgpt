@@ -47,11 +47,26 @@ export const ChatLayout = ({
     clearChatDisabled
 }: Props) => {
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
+
+    const handleBackdropClose: React.PointerEventHandler<HTMLDivElement> = e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onToggleMinimized) onToggleMinimized();
+    };
+
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside hidden={size === "none"} className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>
+            <aside
+                hidden={size === "none"}
+                className={`${styles.sidebar} ${size !== "none" ? styles.sidebarOpen : ""}`}
+                style={size != "none" ? { borderRight: "1px solid" } : {}}
+            >
                 {sidebar}
             </aside>
+            {/* Mobile backdrop to close the slide-in sidebar */}
+            {size !== "none" && (
+                <div className={styles.sidebarBackdrop} role="button" aria-label="Close sidebar" onPointerDown={handleBackdropClose} tabIndex={0} />
+            )}
             <div hidden={size !== "none"} className={styles.sidebarOpener}>
                 <Button appearance="subtle" onClick={onToggleMinimized}>
                     <ChevronDoubleRight20Regular />

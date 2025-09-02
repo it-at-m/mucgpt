@@ -224,6 +224,8 @@ i18n
                             removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat Einstellungen",
+                            advanced_settings: "Erweiterte Einstellungen",
                             temperature: "Temperatur",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
@@ -237,6 +239,7 @@ i18n
                                 "sind vordefinierte Abfragen oder Anweisungen, die dazu dienen, die Antworten von MUCGPT gezielter und kontrollierter zu gestalten. Dabei nimmt die KI oft eine bestimmte Rolle ein, antwortet in einem bestimmten Format oder beachtet andere Einschränkungen."
                         },
                         assistantsettingsdrawer: {
+                            actions: "Aktionen",
                             expand: "Ansicht erweitern",
                             collapse: "Ansicht einklappen",
                             delete: "Assistent löschen",
@@ -650,6 +653,8 @@ i18n
                             removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat Settings",
+                            advanced_settings: "Advanced Settings",
                             temperature: "Temperature",
                             min_temperature: "conservative",
                             max_temperatur: "creative",
@@ -663,6 +668,7 @@ i18n
                                 "are predefined queries or instructions that serve to make the responses of MUCGPT more targeted and controlled. The AI often takes on a certain role, responds in a certain format, or observes other restrictions"
                         },
                         assistantsettingsdrawer: {
+                            actions: "Actions",
                             expand: "Expand view",
                             collapse: "Collapse view",
                             delete: "Delete assistant",
@@ -1075,6 +1081,8 @@ i18n
                             removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat-Einstellunga",
+                            advanced_settings: "Erweiterte Einstellunga",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
                             temperature: "Temperatur",
@@ -1088,6 +1096,7 @@ i18n
                                 "san vorgegebene Abfragen oder Anweisungen, de dazu dienen, de Antworten von MUCGPT zielgerichteter und kontrollierter zum doa. Dabei nimmt de KI oft a bestimmte Rolle ei, antwortet in am bestimmten Format oder beachtet andere Einschränkungen."
                         },
                         assistantsettingsdrawer: {
+                            actions: "Aktionen",
                             expand: "Ansicht erweitern",
                             collapse: "Ansicht einklapp'n",
                             delete: "Assistent löschn",
@@ -1501,6 +1510,8 @@ i18n
                             removedocument: "Supprimer le document"
                         },
                         chattsettingsdrawer: {
+                            title: "Paramètres du chat",
+                            advanced_settings: "Paramètres avancés",
                             temperature: "Température",
                             min_temperature: "conservatrice",
                             max_temperatur: "créative",
@@ -1514,6 +1525,7 @@ i18n
                                 "sont des requêtes ou des instructions prédéfinies destinées à rendre les réponses de MUCGPT plus ciblées et contrôlées. L'IA prend souvent un rôle spécifique, répond dans un format particulier ou respecte d'autres contraintes."
                         },
                         assistantsettingsdrawer: {
+                            actions: "Actions",
                             expand: "Développer la vue",
                             collapse: "Réduire la vue",
                             delete: "Supprimer l'assistant",
@@ -1928,6 +1940,8 @@ i18n
                             removedocument: "Видалити документ"
                         },
                         chattsettingsdrawer: {
+                            title: "Налаштування чату",
+                            advanced_settings: "Розширені налаштування",
                             temperature: "Температура",
                             min_temperature: "консервативна",
                             max_temperatur: "креативна",
@@ -1941,6 +1955,7 @@ i18n
                                 "це передвизначені запити або вказівки, які спрямовані на точне та контрольоване створення відповідей від MUCGPT. ШІ часто бере на себе певну роль, відповідає в певному форматі або дотримується інших обмежень."
                         },
                         assistantsettingsdrawer: {
+                            actions: "Дії",
                             expand: "Розгорнути вигляд",
                             collapse: "Згорнути вигляд",
                             delete: "Видалити асистента",

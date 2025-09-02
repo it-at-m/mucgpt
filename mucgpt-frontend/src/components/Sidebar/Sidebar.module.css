@@ -1,29 +1,42 @@
 .header {
-    margin-bottom: 5px;
-    font-size: var(--fontSizeBase400);
-    margin-top: var(--spacingVerticalS);
+    /* Sticky action bar */
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
-    padding-bottom: var(--spacingHorizontalS);
-    margin-bottom: var(--spacingHorizontalS);
-    border-bottom: 1px dotted var(--colorBrandBackground2);
+    padding: var(--spacingHorizontalS);
+    margin: 0 0 var(--spacingHorizontalS) 0;
+    font-size: var(--fontSizeBase400);
+
+    position: sticky;
+    top: 0;
+    background: var(--colorNeutralBackground1);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
+    z-index: 2;
 }
+
 .drawer {
-    width: calc(var(--sidebarWidth)-2em);
+    /* Convert to a flex column layout */
+    display: flex;
+    flex-direction: column;
+    width: calc(var(--sidebarWidth, 340px) - 2em);
+    max-height: 100vh; /* allow internal scrolling area below */
 }
 
 @media (max-width: 650px) {
     .drawer {
         width: 100%;
+        max-height: none;
     }
 }
 
 .drawerContent {
+    /* Scrollable content area */
+    flex: 1 1 auto;
     overflow-y: auto;
-    overflow-x: auto;
+    overflow-x: hidden;
     scrollbar-width: thin;
-    height: calc(100vh - 170px);
-    margin-bottom: 30px;
-    border-bottom: 1px dotted var(--colorBrandBackground2);
+
+    min-height: 0; /* required for flex children to allow scrolling */
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }

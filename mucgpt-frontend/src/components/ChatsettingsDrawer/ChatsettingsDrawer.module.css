@@ -103,40 +103,44 @@
 
 /* Enhanced section organization similar to AssistantsettingsDrawer */
 .titleSection {
-    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
-    background-color: var(--colorNeutralBackground1);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
 }
 
 .settingsTitle {
-    margin: 0;
-    font-size: var(--fontSizeBase500);
-    font-weight: var(--fontWeightSemibold);
-    color: var(--colorNeutralForeground1);
     display: flex;
     align-items: center;
     gap: var(--spacingHorizontalS, 8px);
-}
-
-.contentSection {
-    border-radius: var(--borderRadiusMedium, 6px);
-    margin: var(--spacingVerticalS, 8px) var(--spacingHorizontalS, 8px);
-    overflow: auto;
-    max-height: 60vh;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+    font-size: var(--fontSizeBase500);
+    font-weight: 600;
+    margin: 0;
+    color: var(--colorNeutralForeground1);
 }
 
 .actionSection {
+    padding: 0 var(--spacingHorizontalS, 8px) var(--spacingVerticalM, 12px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
 }
 
 .actionSectionContent {
-    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+    padding: var(--spacingVerticalXS, 4px);
     display: flex;
     flex-direction: column;
     gap: var(--spacingVerticalS, 8px);
+}
+
+.actionRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalXS, 4px) 0;
+    margin-top: var(--spacingVerticalXS, 4px);
 }
 
 /* Enhanced collapse animation similar to AssistantsettingsDrawer */
@@ -230,6 +234,13 @@
 .actionButton {
     flex: 1;
     min-width: 0;
+    height: 36px; /* Consistent button height */
+    font-weight: var(--fontWeightSemibold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacingHorizontalS, 8px);
+    border-radius: var(--borderRadiusMedium, 6px);
     transition: all 0.2s ease;
 }
 
@@ -456,4 +467,29 @@
     margin-top: var(--spacingVerticalXS, 4px);
     font-style: italic;
     text-align: center;
+}
+
+/* Customize accordion appearance */
+.actionSection :global(.fui-AccordionHeader) {
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+    background-color: var(--colorNeutralBackground3);
+    border-radius: var(--borderRadiusMedium, 6px);
+    margin: var(--spacingVerticalXS, 4px) 0;
+    font-weight: 600;
+}
+
+.actionSection :global(.fui-AccordionHeader:hover) {
+    background-color: var(--colorNeutralBackground3Hover);
+}
+
+.actionSection :global(.fui-AccordionPanel) {
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalS, 8px);
+}
+
+.buttonSection {
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+    display: flex;
+    gap: var(--spacingHorizontalS, 8px);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    margin-bottom: var(--spacingVerticalS, 8px);
 }

@@ -28,6 +28,11 @@
     width: var(--sidebarWidth);
 }
 
+/* Backdrop is hidden by default (desktop) and enabled on mobile via media query */
+.sidebarBackdrop {
+    display: none;
+}
+
 .chatEmptyState {
     flex-grow: 1;
     display: flex;
@@ -81,17 +86,68 @@
         margin-left: 0em;
     }
 
+    /* Sidebar becomes a slide-in drawer overlay on mobile */
     .sidebar {
-        position: relative;
-        height: unset;
-        width: 100%;
-        padding: 10px;
-        z-index: 1;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        height: calc(100% - 60px);
+        width: min(85vw, 360px);
+        padding: 12px;
+        z-index: 1001;
+        background: var(--colorNeutralBackground1);
+        border-right: 1px solid var(--colorNeutralStroke1);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+        transform: translateX(-100%);
+        transition: transform 180ms ease-out;
+        overscroll-behavior: contain;
+        margin-top: 0; /* override desktop offset */
+    }
+
+    /* Keep the element in the DOM even if the hidden attribute is set,
+       so we can animate the transform (avoid display:none jump) */
+    .sidebar[hidden] {
+        display: block !important;
+    }
+
+    /* Explicit open state for the drawer */
+    .sidebarOpen {
+        transform: translateX(0);
+    }
+
+    /* Dimmed backdrop behind the open drawer */
+    .sidebarBackdrop {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 1000;
+        backdrop-filter: blur(2px);
+        display: none; /* hidden by default on mobile */
+    }
+
+    /* Show backdrop only when drawer is open */
+    .sidebar.sidebarOpen + .sidebarBackdrop {
+        display: block;
     }
 
     .chatRoot {
         width: 100%;
         margin-left: 0px;
+    }
+
+    /* Use full width for messages and input on mobile */
+    .allChatMessages {
+        min-width: 100%;
+        max-width: 100%;
+    }
+
+    .chatInput {
+        max-width: 100%;
+        min-width: 100%;
+        padding-bottom: 70px;
     }
 }
 

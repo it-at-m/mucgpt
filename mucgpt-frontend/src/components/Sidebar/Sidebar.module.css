@@ -37,6 +37,6 @@
     scrollbar-width: thin;
 
     min-height: 0; /* required for flex children to allow scrolling */
-    padding-bottom: 30px;
+    padding-bottom: 55px;
     border-bottom: 1px solid var(--colorNeutralStroke1);
 }

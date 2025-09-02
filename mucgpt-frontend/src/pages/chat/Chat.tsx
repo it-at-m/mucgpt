@@ -8,6 +8,7 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
 import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
+import settingsStyles from "../../components/ChatsettingsDrawer/ChatsettingsDrawer.module.css";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
@@ -536,8 +537,12 @@ const Chat = () => {
     const sidebar_actions = useMemo(
         () => (
             <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+                <div className={settingsStyles.actionButtonContainer}>
+                    <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
+                </div>
+                <div className={settingsStyles.minimizeButtonContainer}>
+                    <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+                </div>
             </>
         ),
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]

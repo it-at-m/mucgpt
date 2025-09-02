@@ -15,14 +15,14 @@
     border-radius: var(--borderRadiusMedium, 6px);
 }
 
-.header:hover {
-    background-color: var(--colorNeutralBackground1Hover);
+.header:hover,
+.header:focus-visible {
+    background-color: var(--colorNeutralBackground2);
 }
 
 .header:focus-visible {
     outline: 2px solid var(--colorBrandStroke1);
     outline-offset: 2px;
-    background-color: var(--colorNeutralBackground1Hover);
 }
 
 .headerContent {
@@ -39,7 +39,6 @@
 .expandCollapseIcon {
     margin-left: auto;
     color: var(--colorNeutralForeground3);
-    transition: transform 0.2s ease;
 }
 
 .settingsContent {
@@ -57,22 +56,20 @@
 }
 
 .settingsContent::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 .settingsContent::-webkit-scrollbar-track {
-    background: var(--colorNeutralBackground3);
-    border-radius: var(--borderRadiusMedium, 6px);
+    background: var(--colorNeutralBackground1);
 }
 
 .settingsContent::-webkit-scrollbar-thumb {
     background-color: var(--colorNeutralStroke1);
     border-radius: var(--borderRadiusMedium, 6px);
-    border: 2px solid var(--colorNeutralBackground3);
 }
 
 .settingsContent::-webkit-scrollbar-thumb:hover {
-    background-color: var(--colorNeutralStroke1Hover);
+    background-color: var(--colorNeutralForeground3);
 }
 
 .temperatureLabel {
@@ -137,10 +134,11 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: var(--spacingHorizontalS, 8px);
     padding: var(--spacingVerticalXS, 4px) 0;
     margin-top: var(--spacingVerticalXS, 4px);
+    width: 100%;
 }
 
 /* Enhanced collapse animation similar to AssistantsettingsDrawer */
@@ -234,24 +232,18 @@
 .actionButton {
     flex: 1;
     min-width: 0;
-    height: 36px; /* Consistent button height */
+    height: 36px;
     font-weight: var(--fontWeightSemibold);
     display: flex;
     align-items: center;
     justify-content: center;
     gap: var(--spacingHorizontalS, 8px);
     border-radius: var(--borderRadiusMedium, 6px);
-    transition: all 0.2s ease;
 }
 
-.actionButton:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.actionButton:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.actionButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
 }
 
 .systemPromptContainer:focus-within {
@@ -322,8 +314,7 @@
 
 /* Improved hover effects for interactive elements */
 .header:hover .expandCollapseIcon {
-    color: var(--colorNeutralForeground1);
-    transform: scale(1.1);
+    color: var(--colorNeutralForeground2);
 }
 
 /* Enhanced section dividers */
@@ -335,12 +326,7 @@
     margin: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
 }
 
-/* Better focus management */
-.header:focus-visible {
-    outline: 2px solid var(--colorBrandStroke1);
-    outline-offset: 2px;
-    background-color: var(--colorNeutralBackground1Hover);
-}
+/* Already defined earlier, removing duplicate */
 
 /* Improved slider styling */
 .sliderWrapper [role="slider"] {
@@ -492,4 +478,21 @@
     gap: var(--spacingHorizontalS, 8px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
     margin-bottom: var(--spacingVerticalS, 8px);
+}
+
+.actionButtonContainer {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.minimizeButtonContainer {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.actionButtonContainer button,
+.minimizeButtonContainer button {
+    width: 100%;
 }

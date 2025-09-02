@@ -167,15 +167,21 @@ export const AssistantsettingsDrawer = ({
     const actions_component = useMemo(
         () => (
             <>
-                <ClearChatButton onClick={clearChat} disabled={clearChatDisabled} showText={true} />
+                <div className={styles.actionButtonContainer}>
+                    <ClearChatButton onClick={clearChat} disabled={clearChatDisabled} showText={true} />
+                </div>
                 {/* Create adapter function for MinimizeSidebarButton */}
                 {onToggleMinimized && (
-                    <Button
-                        appearance="primary"
-                        icon={minimized ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
-                        onClick={onToggleMinimized}
-                        aria-label={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
-                    />
+                    <div className={styles.minimizeButtonContainer}>
+                        <Button
+                            appearance="primary"
+                            icon={minimized ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
+                            onClick={onToggleMinimized}
+                            aria-label={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
+                        >
+                            {minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
+                        </Button>
+                    </div>
                 )}
             </>
         ),

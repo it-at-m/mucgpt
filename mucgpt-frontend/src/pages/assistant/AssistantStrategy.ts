@@ -2,7 +2,6 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantUpdateInput, Assistant } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
-import { C } from "msw/lib/core/HttpResponse-CKZrrwKE";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 
 export interface AssistantStrategy {

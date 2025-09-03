@@ -47,7 +47,9 @@ const Menu = () => {
     const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
     const { showSuccess } = useGlobalToastContext();
-    setHeader(DEFAULTHEADER);
+    useEffect(() => {
+        setHeader(DEFAULTHEADER);
+    }, [setHeader]);
 
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
     const communityAssistantStorageService: CommunityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
@@ -76,20 +78,23 @@ const Menu = () => {
             const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
             setQuestion(decoded_query);
         }
-
-        migrate_old_assistants().then(async () => {
-            const assistants = await assistantStorageService.getAllAssistantConfigs();
-            setAssistants(assistants);
-            getUserSubscriptionsApi().then(async subscriptions => {
-                const local_saved_assistants: CommunityAssistant[] = await communityAssistantStorageService.getAllAssistantConfigs();
-                setDeletedCommunityAssistants(local_saved_assistants.filter(local => !subscriptions.find(sub => sub.id === local.id)));
-                setCommunityAssistants(subscriptions);
-            });
-        });
-        getOwnedCommunityAssistants().then(async response => {
-            setDeletedCommunityAssistants(deletedCommunityAssistants.filter(local => response.find(sub => sub.id === local.id)));
-            setOwnedCommunityAssistants(response);
-        });
+        (async () => {
+            await migrate_old_assistants()
+            const [assistantsLocal, subs, owned, localCommunity] = await Promise.all([
+                assistantStorageService.getAllAssistantConfigs(),
+                getUserSubscriptionsApi(),
+                getOwnedCommunityAssistants(),
+                communityAssistantStorageService.getAllAssistantConfigs(),
+            ]);
+            setAssistants(assistantsLocal);
+            setCommunityAssistants(subs);
+            setOwnedCommunityAssistants(owned);
+            setDeletedCommunityAssistants(
+                localCommunity
+                    .filter(local => !subs.some(sub => sub.id === local.id)) // lokal, aber nicht in subs
+                    .filter(deleted => !owned.some(own => own.id === deleted.id)) // und nicht in owned
+            );
+        })();
     }, []);
 
     useEffect(() => {

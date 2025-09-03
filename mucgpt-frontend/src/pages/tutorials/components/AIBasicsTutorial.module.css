@@ -1,0 +1,486 @@
+/* AI Basics Tutorial Styles */
+
+/* Phase container and tabs */
+.phaseContainer {
+    margin: 24px 0;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border-radius: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.phasesTitle {
+    margin-bottom: 16px;
+    text-align: center;
+    color: var(--colorNeutralForeground1);
+}
+
+.phaseTabs {
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    margin-bottom: 24px;
+}
+
+.phaseContent {
+    padding: 16px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 6px;
+}
+
+.phaseHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.trainingPhase {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 95, 70, 0.05));
+    border-left: 4px solid var(--colorSuccessStroke1);
+}
+
+.inferencePhase {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(49, 46, 129, 0.05));
+    border-left: 4px solid var(--colorBrandStroke1);
+}
+
+.phaseIcon {
+    font-size: 24px;
+}
+
+.trainingPhase .phaseIcon {
+    color: var(--colorSuccessBackground);
+}
+
+.inferencePhase .phaseIcon {
+    color: var(--colorBrandBackground);
+}
+
+.phaseDescription {
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.keyConcept {
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(249, 250, 251, 0.8);
+    border-radius: 6px;
+    border: 1px solid var(--colorNeutralStroke2);
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.keyConceptIcon {
+    color: var(--colorBrandForeground1);
+    flex-shrink: 0;
+}
+
+.processDiagram {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+}
+
+.processStep {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.stepIcon {
+    font-size: 20px;
+}
+
+.stepText {
+    font-size: 12px;
+}
+
+.processArrow {
+    color: var(--colorNeutralForeground3);
+    font-size: 18px;
+    margin: 0 8px;
+}
+
+.generationProcess {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.generationStep {
+    display: flex;
+    align-items: center;
+    animation: fadeIn 0.5s forwards;
+    opacity: 0;
+}
+
+.generationStep:nth-child(1) {
+    animation-delay: 0.1s;
+}
+.generationStep:nth-child(2) {
+    animation-delay: 0.3s;
+}
+.generationStep:nth-child(3) {
+    animation-delay: 0.5s;
+}
+.generationStep:nth-child(4) {
+    animation-delay: 0.7s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.tokenOutput {
+    padding: 4px 10px;
+    background: var(--colorBrandBackground2);
+    color: var(--colorBrandForeground1);
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: 500;
+}
+
+.contentSection {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 8px;
+}
+
+.sectionTitle {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sectionIcon {
+    color: var(--colorBrandForeground1);
+}
+
+.imageContainer {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.tutorialImage {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+.highlightBox {
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 6px;
+    background: var(--colorNeutralBackground3);
+    border-left: 4px solid var(--colorBrandStroke1);
+}
+
+.infoBox {
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 6px;
+    background: var(--colorInfoBackground2);
+    border: 1px solid var(--colorInfoStroke1);
+}
+
+.limitationsBox {
+    margin: 16px 0;
+    padding: 16px;
+    border-radius: 6px;
+    background: var(--colorWarningBackground2);
+    border: 1px solid var(--colorWarningStroke1);
+}
+
+.conceptGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.conceptCard {
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.conceptCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.conceptIcon {
+    color: var(--colorBrandForeground1);
+    margin-bottom: 8px;
+}
+
+/* Timeline styling */
+.timeline {
+    position: relative;
+    margin: 24px 0;
+    padding-left: 24px;
+}
+
+.timeline:before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--colorNeutralStroke2);
+}
+
+.timelineItem {
+    position: relative;
+    padding: 8px 0 24px 24px;
+}
+
+.timelineItem:last-child {
+    padding-bottom: 0;
+}
+
+.timelineItem:before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 10px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--colorBrandBackground);
+    border: 2px solid var(--colorBrandStroke1);
+}
+
+.timelineYear {
+    font-weight: bold;
+    color: var(--colorBrandForeground1);
+    margin-bottom: 4px;
+}
+
+/* Mermaid diagram styling */
+.mermaidContainer {
+    margin: 20px 0;
+    padding: 20px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+/* Examples styling */
+.examplesContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.exampleItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exampleBox {
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+}
+
+.exampleBox p {
+    margin: 6px 0;
+}
+
+.exampleBox strong {
+    color: var(--colorBrandForeground1);
+}
+
+/* Self-attention explanation styles */
+.explanationList {
+    margin-top: 8px;
+    padding-left: 20px;
+}
+
+.explanationList li {
+    margin-bottom: 8px;
+}
+
+.explanationList p {
+    margin: 0;
+}
+
+/* Emoji styling */
+.emojiIcon {
+    font-size: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.emoji {
+    font-size: 16px;
+    margin-right: 4px;
+}
+
+/* Token visualization */
+.tokenVisualization {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 4px;
+}
+
+.token {
+    padding: 4px 8px;
+    background: var(--colorBrandBackground2);
+    color: var(--colorBrandForeground1);
+    border-radius: 4px;
+    font-weight: 500;
+    font-family: monospace;
+}
+
+/* Prediction styling */
+.predictions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.prediction {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 4px;
+    transition: transform 0.1s ease;
+}
+
+.prediction:hover {
+    transform: translateX(5px);
+    background: var(--colorBrandBackground2);
+}
+
+.predictionIcon {
+    font-size: 16px;
+}
+
+/* Comparison table */
+.comparisonTable {
+    margin-top: 24px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.comparisonRow {
+    display: flex;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.comparisonRow:last-child {
+    border-bottom: none;
+}
+
+.comparisonHeader {
+    padding: 12px 16px;
+    font-weight: 600;
+    background: var(--colorNeutralBackground3);
+    flex: 1;
+}
+
+.comparisonCell {
+    padding: 12px 16px;
+    flex: 1;
+}
+
+.trainingColumn {
+    border-left: 1px solid var(--colorNeutralStroke2);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.inferenceColumn {
+    border-left: 1px solid var(--colorNeutralStroke2);
+    background: rgba(79, 70, 229, 0.05);
+}
+
+/* Conclusion styles */
+.conclusionBox {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(249, 250, 251, 0.8));
+    border-radius: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.conclusionList {
+    margin: 16px 0;
+    padding-left: 20px;
+}
+
+.conclusionList li {
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.finalNote {
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: var(--colorBrandBackground2);
+    border-left: 4px solid var(--colorBrandStroke1);
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .conceptGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparisonRow {
+        flex-direction: column;
+    }
+
+    .comparisonCell,
+    .comparisonHeader {
+        border-left: none;
+        border-top: 1px solid var(--colorNeutralStroke2);
+    }
+
+    .comparisonHeader:first-child {
+        border-top: none;
+    }
+
+    .trainingColumn,
+    .inferenceColumn {
+        border-left: none;
+    }
+}

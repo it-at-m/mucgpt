@@ -19,6 +19,7 @@ import styles from "./Tutorials.module.css";
 import { BrainstormTutorial } from "./components/BrainstormTutorial";
 import { SimplifyTutorial } from "./components/SimplifyTutorial";
 import { ToolsTutorial } from "./components/ToolsTutorial";
+import { AIBasicsTutorial } from "./components/AIBasicsTutorial";
 
 interface TutorialSection {
     id: string;
@@ -78,8 +79,8 @@ export const Tutorials = () => {
                         title: t("tutorials.ki_basics.title", "KI-Grundlagen"),
                         description: t("tutorials.ki_basics.description", "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme."),
                         icon: <BrainCircuit24Regular />,
-                        badge: t("tutorials.badges.in_construction", "Im Aufbau"),
-                        component: <div>KI-Grundlagen Tutorial coming soon...</div>
+                        badge: t("tutorials.badges.new", "Neu"),
+                        component: <AIBasicsTutorial />
                     },
                     {
                         id: "prompt-engineering",

@@ -49,6 +49,11 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
+                path: "tutorials/ki-basics",
+                element: <Tutorials />,
+                errorElement: <div>Fehler</div>
+            },
+            {
                 path: "tutorials/tools",
                 element: <Tutorials />,
                 errorElement: <div>Fehler</div>

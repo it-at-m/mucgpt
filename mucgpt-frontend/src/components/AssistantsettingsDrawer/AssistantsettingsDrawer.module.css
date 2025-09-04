@@ -18,8 +18,22 @@
 }
 
 .titleSection {
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
+}
+
+.assistantTitle {
+    display: flex;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    font-size: var(--fontSizeBase500);
+    font-weight: 600;
+    margin: 0;
+    color: var(--colorNeutralForeground1);
 }
 
 .botTitle {
@@ -30,20 +44,49 @@
 }
 
 .descriptionSection {
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
-    background-color: var(--colorNeutralBackground1);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    border-radius: var(--borderRadiusMedium, 6px);
+    border: 1px solid var(--colorNeutralStroke2);
+    margin-left: var(--spacingHorizontalM, 12px);
+    margin-right: var(--spacingHorizontalM, 12px);
 }
 
 .buttonSection {
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
     display: flex;
-    gap: var(--spacingHorizontalS);
+    gap: var(--spacingHorizontalS, 8px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
+    margin-bottom: var(--spacingVerticalS, 8px);
 }
 
 .actionButton {
     flex: 1;
     min-width: 0;
+    height: 36px;
+    font-weight: var(--fontWeightSemibold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacingHorizontalS, 8px);
+    border-radius: var(--borderRadiusMedium, 6px);
+}
+
+.actionButtonContainer {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.minimizeButtonContainer {
+    flex: 0 0 auto;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.actionButtonContainer button,
+.minimizeButtonContainer button {
+    width: 100%;
 }
 
 .publishSection {
@@ -61,42 +104,46 @@
 }
 
 .actionsSection {
+    padding: 0 var(--spacingHorizontalS, 8px) var(--spacingVerticalM, 12px);
     border-bottom: 1px solid var(--colorNeutralStroke2);
 }
 
 .actionsHeader {
-    margin-bottom: 12px;
-    font-size: var(--fontSizeBase300);
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+    background-color: var(--colorNeutralBackground2);
+    border-radius: var(--borderRadiusMedium, 6px);
+    margin: var(--spacingVerticalXS, 4px) 0;
     font-weight: 600;
+    margin-top: var(--spacingVerticalM, 12px);
+    font-size: var(--fontSizeBase300);
     color: var(--colorNeutralForeground2);
-    margin-top: var(--spacingVerticalM);
-    padding: 12px 16px 0;
     display: flex;
     flex-direction: row;
     justify-content: start;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
-    padding-bottom: 8px;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s ease;
+    border-bottom: none;
 }
 
 .actionsHeader:hover {
-    background-color: var(--colorNeutralBackground1Hover);
+    background-color: var(--colorNeutralBackground3);
+}
+
+.newChatHeaderContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalXS, 4px);
+    width: 100%;
 }
 
 .actionsHeaderContent {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    padding: 4px;
-    border-radius: 4px;
     width: 100%;
-}
-
-.actionsHeaderContent:hover {
-    background-color: var(--colorNeutralBackground1Hover);
 }
 
 .actionsIcon {
@@ -107,14 +154,13 @@
 .expandCollapseIcon {
     margin-left: auto;
     color: var(--colorNeutralForeground3);
-    transition: transform 0.2s ease;
 }
 
 .actionsContent {
-    padding: var(--spacingVerticalM) var(--spacingHorizontalM);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
     display: flex;
     flex-direction: column;
-    gap: var(--spacingVerticalS);
+    gap: var(--spacingVerticalS, 8px);
 }
 
 .deleteButton {
@@ -125,55 +171,21 @@
 
 .deleteButton:hover {
     background-color: var(--colorPaletteRedBackground2) !important;
-    color: var(--colorPaletteRedForeground2) !important;
-    border-color: var(--colorPaletteRedBorder2) !important;
-}
-
-.deleteButton:active {
-    background-color: var(--colorPaletteRedBackground3) !important;
 }
 
 .publishButton {
-    background: linear-gradient(135deg, var(--colorBrandBackground) 0%, var(--colorBrandBackground2) 100%);
+    background-color: var(--colorBrandBackground);
     color: var(--colorNeutralForegroundOnBrand) !important;
     border: 1px solid var(--colorBrandStroke1);
     font-weight: var(--fontWeightSemibold);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.publishButton::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s ease;
 }
 
 .publishButton:hover {
-    background: linear-gradient(135deg, var(--colorBrandBackgroundHover) 0%, var(--colorBrandBackground2Hover) 100%);
-    border-color: var(--colorBrandStroke1Hover);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    transform: translateY(-1px);
-}
-
-.publishButton:hover::before {
-    left: 100%;
-}
-
-.publishButton:active {
-    background: linear-gradient(135deg, var(--colorBrandBackgroundPressed) 0%, var(--colorBrandBackground2Pressed) 100%);
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    background-color: var(--colorBrandBackgroundHover);
 }
 
 .publishButton:focus-visible {
-    outline: 2px solid var(--colorStrokeFocus2);
+    outline: 2px solid var(--colorBrandStroke1);
     outline-offset: 2px;
 }
 
@@ -190,11 +202,8 @@
     margin-right: 10px;
 }
 .markdownDescription {
-    max-width: calc(var(--sidebarWidth) - 20px);
-}
-
-.markdownDescription code {
-    white-space: wrap;
+    margin: 0;
+    overflow-wrap: break-word;
 }
 
 .verticalContainer {
@@ -223,9 +232,12 @@
 .actionRow {
     display: flex;
     flex-direction: row;
-    justify-content: start;
     align-items: center;
-    padding-bottom: var(--spacingVerticalS);
+    justify-content: space-between;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalXS, 4px) 0;
+    margin-top: var(--spacingVerticalXS, 4px);
+    width: 100%;
 }
 .dialog {
     width: 100%; /* Breite übernimmt die des Containers (z.B. Dropdown) */
@@ -252,36 +264,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    margin-left: auto;
 }
 
 .collapseButton:hover {
-    background-color: var(--colorNeutralBackground1Hover);
+    background-color: var(--colorNeutralBackground2);
     color: var(--colorNeutralForeground1);
-    border-color: var(--colorNeutralStroke2);
-}
-
-.collapseButton:active {
-    background-color: var(--colorNeutralBackground1Pressed);
-    color: var(--colorNeutralForeground1);
-    border-color: var(--colorNeutralStroke3);
 }
 
 .collapseButton:focus-visible {
     outline: 2px solid var(--colorBrandStroke1);
     outline-offset: 2px;
-}
-
-.newChatHeaderContent {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 4px;
-    border-radius: 4px;
-    width: 100%;
-}
-
-.newChatHeaderContent:hover {
-    background-color: var(--colorNeutralBackground1Hover);
 }

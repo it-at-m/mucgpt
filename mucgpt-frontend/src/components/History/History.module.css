@@ -3,16 +3,15 @@
     flex-direction: column;
     height: 100%;
     padding: 0;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-radius: var(--borderRadiusMedium, 6px);
+    background-color: var(--colorNeutralBackground1);
 }
 
 .headerContent {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--spacingHorizontalS, 8px);
     width: 100%;
-    position: relative;
 }
 
 .icon {
@@ -22,7 +21,11 @@
 .expandCollapseIcon {
     margin-left: auto;
     color: var(--colorNeutralForeground3);
-    transition: transform 0.2s ease;
+}
+
+.header:hover .expandCollapseIcon,
+.categoryHeader:hover .expandCollapseIcon {
+    color: var(--colorNeutralForeground2);
 }
 
 .button {
@@ -38,20 +41,28 @@
     text-align: left;
     justify-content: flex-start;
     font-weight: normal;
-    padding: 10px 12px;
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalM, 12px);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
+    border-radius: var(--borderRadiusMedium, 6px);
+    transition: all 0.2s ease;
+    height: 36px;
+    display: flex;
+    align-items: center;
 }
 
 .savedChatButton:hover {
     background-color: var(--colorNeutralBackground2);
 }
 
+.savedChatButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
 .activeChat {
-    background-color: var(--colorNeutralBackground3Hover) !important;
+    background-color: var(--colorNeutralBackground3) !important;
     font-weight: 500;
 }
 
@@ -84,7 +95,10 @@
 }
 
 .categoryContent {
-    padding-left: 0;
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
     list-style: none;
 }
 
@@ -93,14 +107,19 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 2px 8px;
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
     margin: 4px 0;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
+    border-radius: var(--borderRadiusMedium, 6px);
+    transition: all 0.2s ease;
 }
 
 .singlechatcontainer:hover {
-    background-color: var(--colorNeutralBackground2Hover);
+    background-color: var(--colorNeutralBackground2);
+}
+
+.singlechatcontainer:focus-within {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
 }
 
 .nopaddingleft {
@@ -110,53 +129,55 @@
 }
 
 .header {
-    margin-bottom: 12px;
     font-size: var(--fontSizeBase300);
     font-weight: 600;
     color: var(--colorNeutralForeground2);
-    margin-top: var(--spacingVerticalM);
-    padding: 12px 16px 0;
+    margin-top: var(--spacingVerticalM, 12px);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px) var(--spacingVerticalS, 8px);
     display: flex;
     flex-direction: row;
-    justify-content: start;
+    justify-content: space-between;
     border-bottom: 1px solid var(--colorNeutralStroke2);
-    padding-bottom: 8px;
     cursor: pointer;
     user-select: none;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    border-radius: var(--borderRadiusMedium, 6px);
 }
 
-.header:hover {
-    background-color: var(--colorNeutralBackground1Hover);
+.header:hover,
+.header:focus-visible {
+    background-color: var(--colorNeutralBackground2);
+}
+
+.header:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
 }
 
 .categoryHeader {
-    margin: 16px 8px 8px 8px;
-    font-size: var(--fontSizeBase200);
+    padding: var(--spacingVerticalS, 8px) var(--spacingHorizontalM, 12px);
+    background-color: var(--colorNeutralBackground2);
+    border-radius: var(--borderRadiusMedium, 6px);
+    margin: var(--spacingVerticalXS, 4px) 0;
     font-weight: 600;
-    color: var(--colorNeutralForeground3);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    margin-top: var(--spacingVerticalM, 12px);
+    font-size: var(--fontSizeBase300);
+    color: var(--colorNeutralForeground2);
     cursor: pointer;
     user-select: none;
     transition: background-color 0.2s ease;
 }
 
 .categoryHeader:hover {
-    color: var(--colorNeutralForeground1);
+    background-color: var(--colorNeutralBackground3);
 }
 
 .categoryHeaderContent {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    padding: 4px;
-    border-radius: 4px;
-}
-
-.categoryHeaderContent:hover {
-    background-color: var(--colorNeutralBackground1Hover);
+    width: 100%;
 }
 
 .optionsButton {
@@ -187,16 +208,16 @@
 }
 
 .historyContent::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--colorNeutralBackground1);
 }
 
 .historyContent::-webkit-scrollbar-thumb {
     background-color: var(--colorNeutralStroke1);
-    border-radius: 3px;
+    border-radius: var(--borderRadiusMedium, 6px);
 }
 
 .historyContent::-webkit-scrollbar-thumb:hover {
-    background-color: var(--colorNeutralStroke1Hover);
+    background-color: var(--colorNeutralForeground3);
 }
 
 .loadMoreContainer {
@@ -207,22 +228,67 @@
 }
 
 .loadMoreButton {
-    font-size: var(--fontSizeBase100);
+    font-size: var(--fontSizeBase200);
     color: var(--colorBrandForeground1);
     width: 95%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: var(--spacingHorizontalS, 8px);
     margin: 0 8px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
+    padding: var(--spacingVerticalXS, 4px) var(--spacingHorizontalS, 8px);
+    border-radius: var(--borderRadiusMedium, 6px);
+    height: 36px;
 }
 
 .loadMoreButton:hover {
-    background-color: var(--colorNeutralBackground2Hover);
+    background-color: var(--colorNeutralBackground2);
 }
+
+.contentSection {
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
+    background-color: var(--colorNeutralBackground1);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.actionButton {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    font-weight: var(--fontWeightSemibold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacingHorizontalS, 8px);
+    border-radius: var(--borderRadiusMedium, 6px);
+}
+
+.actionButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+}
+
+.actionRow {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalXS, 4px) 0;
+    margin-top: var(--spacingVerticalXS, 4px);
+}
+
+.titleSection {
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalM, 12px);
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+    margin-bottom: var(--spacingVerticalS, 8px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacingVerticalS, 8px);
+}
+
+/* Removed unused animation */
 
 @media (max-width: 768px) {
     .historyContainer {

@@ -1,10 +1,14 @@
-import { ChevronDown20Regular, ChevronRight20Regular, Settings24Regular } from "@fluentui/react-icons";
-import { useId } from "@fluentui/react-components";
+import { Settings24Regular } from "@fluentui/react-icons";
+import { Accordion, AccordionHeader, AccordionItem, AccordionPanel, AccordionToggleEventHandler } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
 import { ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Sidebar } from "../Sidebar/Sidebar";
 import { ChatSettingsContent } from "./ChatSettingsContent";
+
+const SETTINGS_ACCORDION_STATE = "SETTINGS_ACCORDION_STATE";
+
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -26,68 +30,53 @@ export const ChatsettingsDrawer = ({
     actions,
     content
 }: Props) => {
-    // State for collapsible sections
-    const [isOverviewExpanded, setIsOverviewExpanded] = useState<boolean>(true);
+    const { t } = useTranslation();
+    const [openItems, setOpenItems] = useState<string | string[]>(() => {
+        const storedState = localStorage.getItem(SETTINGS_ACCORDION_STATE);
+        // Default to open if no stored state
+        return storedState ? JSON.parse(storedState) : ["advanced"];
+    });
 
-    const overviewID = useId("header-overview");
-
-    // Toggle overview section visibility
-    const toggleOverview = (e?: React.MouseEvent | React.KeyboardEvent) => {
-        if (e) {
-            e.stopPropagation();
-        }
-        setIsOverviewExpanded(prev => !prev);
-    };
-
-    // sidebar action and content
-    const sidebar_action = <div className={styles.actionRow}>{actions}</div>;
-    const sidebar_content = (
+    const handleToggle: AccordionToggleEventHandler<string> = (event, data) => {
+        setOpenItems(data.openItems);
+        localStorage.setItem(SETTINGS_ACCORDION_STATE, JSON.stringify(data.openItems));
+    }; // sidebar action and content    // No longer using sidebarAction as we've moved actions below the title
+    const sidebarAction = null;
+    const sidebarContent = (
         <div className={styles.settingsContent}>
-            {/* Title Section */}
+            {" "}
+            {/* Title Section with cleaner layout */}
             <div className={styles.titleSection}>
                 <h3 className={styles.settingsTitle}>
                     <Settings24Regular className={styles.icon} aria-hidden="true" />
-                    Chat Einstellungen
+                    {t("components.chattsettingsdrawer.title", "Chat Einstellungen")}
                 </h3>
+
+                {/* Actions below title */}
+                <div className={styles.actionRow}>{actions}</div>
             </div>
-
-            {/* Additional content first */}
+            {/* Additional content first - improved spacing */}
             {content && <div className={styles.contentSection}>{content}</div>}
-
             {/* Chat Settings Overview Section */}
             <div className={styles.actionSection}>
-                <div
-                    className={styles.header}
-                    role="heading"
-                    aria-level={2}
-                    id={overviewID}
-                    onClick={e => toggleOverview(e)}
-                    tabIndex={0}
-                    onKeyDown={e => e.key === "Enter" && toggleOverview(e)}
-                    aria-expanded={isOverviewExpanded}
-                >
-                    <div className={styles.headerContent}>
-                        <span>Erweiterte Einstellungen</span>
-                    </div>
-                    <div className={styles.expandCollapseIcon}>{isOverviewExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
-                </div>
-
-                {/* The Collapse component */}
-                {isOverviewExpanded && (
-                    <div className={styles.collapseContent}>
-                        <ChatSettingsContent
-                            temperature={temperature}
-                            setTemperature={setTemperature}
-                            max_output_tokens={max_output_tokens}
-                            setMaxTokens={setMaxTokens}
-                            systemPrompt={systemPrompt}
-                            setSystemPrompt={setSystemPrompt}
-                        />
-                    </div>
-                )}
+                <Accordion collapsible={true} openItems={openItems} onToggle={handleToggle}>
+                    <AccordionItem value="advanced">
+                        <AccordionHeader>{t("components.chattsettingsdrawer.advanced_settings", "Erweiterte Einstellungen")}</AccordionHeader>
+                        <AccordionPanel>
+                            <ChatSettingsContent
+                                temperature={temperature}
+                                setTemperature={setTemperature}
+                                max_output_tokens={max_output_tokens}
+                                setMaxTokens={setMaxTokens}
+                                systemPrompt={systemPrompt}
+                                setSystemPrompt={setSystemPrompt}
+                            />
+                        </AccordionPanel>
+                    </AccordionItem>
+                </Accordion>
             </div>
         </div>
     );
 
-    return <Sidebar actions={sidebar_action} content={sidebar_content}></Sidebar>;
+    return <Sidebar actions={sidebarAction} content={sidebarContent}></Sidebar>;
 };

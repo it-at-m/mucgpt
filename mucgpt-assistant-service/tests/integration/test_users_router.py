@@ -523,7 +523,7 @@ def test_subscribe_to_assistant_success(test_client):
     # Validate using SubscriptionResponse model
     subscription_response = SubscriptionResponse.model_validate(subscriptions[0])
     assert subscription_response.id == assistant_id
-    assert subscription_response.name == "Subscribe Test Assistant"
+    assert subscription_response.title == "Subscribe Test Assistant"
 
 
 @pytest.mark.integration
@@ -630,7 +630,7 @@ def test_unsubscribe_from_assistant_success(test_client):
     # Validate using SubscriptionResponse model
     subscription_response = SubscriptionResponse.model_validate(subscriptions_before[0])
     assert subscription_response.id == assistant_id
-    assert subscription_response.name == "Unsubscribe Test Assistant"
+    assert subscription_response.title == "Unsubscribe Test Assistant"
 
     # Unsubscribe from the assistant
     unsubscribe_response = test_client.delete(
@@ -721,7 +721,7 @@ def test_get_user_subscriptions_multiple(test_client):
     assert len(subscriptions) == 2
 
     # Check that we have the correct assistants with simplified structure
-    subscription_names = [sub["name"] for sub in subscriptions]
+    subscription_names = [sub["title"] for sub in subscriptions]
     assert "Subscription Assistant 1" in subscription_names
     assert "Subscription Assistant 2" not in subscription_names
     assert (
@@ -731,14 +731,14 @@ def test_get_user_subscriptions_multiple(test_client):
         # Parse with SubscriptionResponse model to ensure structure is correct
         subscription_response = SubscriptionResponse.model_validate(subscription)
         assert subscription_response.id in [assistant_ids[0], assistant_ids[2]]
-        assert subscription_response.name in [
+        assert subscription_response.title in [
             "Subscription Assistant 1",
             "Subscription Assistant 3",
         ]
 
         # Also validate that only expected fields are present
         assert "id" in subscription
-        assert "name" in subscription
+        assert "title" in subscription
         # Should NOT have complex fields like latest_version
         assert "latest_version" not in subscription
         assert "created_at" not in subscription
@@ -776,7 +776,7 @@ async def test_subscription_lifecycle(test_client, test_db_session):
     # Validate using SubscriptionResponse model
     subscription_response = SubscriptionResponse.model_validate(after_subscribe[0])
     assert subscription_response.id == assistant_id
-    assert subscription_response.name == "Lifecycle Test Assistant"
+    assert subscription_response.title == "Lifecycle Test Assistant"
 
     # Also validate that only expected fields are present
     assert "latest_version" not in after_subscribe[0]
@@ -1161,7 +1161,7 @@ async def test_hierarchical_access_subscription_vs_ownership(
     # Verify subscription was created
     subscriptions = test_client.get("/user/subscriptions", headers=headers).json()
     assert len(subscriptions) == 1
-    assert subscriptions[0]["name"] == "IT Accessible Assistant"
+    assert subscriptions[0]["title"] == "IT Accessible Assistant"
 
 
 @pytest.mark.integration

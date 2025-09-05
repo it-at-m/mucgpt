@@ -8,8 +8,8 @@ import { useContext, useEffect, useState } from "react";
 import { AddAssistantButton } from "../../components/AddAssistantButton";
 import { CreateAssistantDialog } from "../../components/CreateAssistantDialog/CreateAssistantDialog";
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantResponse, Assistant } from "../../api/models";
-import { ASSISTANT_STORE } from "../../constants";
+import { AssistantResponse, Assistant, CommunityAssistant } from "../../api/models";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { migrate_old_assistants } from "../../service/migration";
 import { SearchCommunityAssistantButton } from "../../components/SearchCommunityAssistantButton/SearchCommunityAssistantButton";
 import { CommunityAssistantsDialog } from "../../components/CommunityAssistantDialog/CommunityAssistantDialog";
@@ -24,12 +24,14 @@ import { getTools } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { mapContextToBackendLang } from "../../utils/language-utils";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 
 const Menu = () => {
     const { t } = useTranslation();
     const { language } = useContext(LanguageContext);
     const [assistants, setAssistants] = useState<Assistant[]>([]);
-    const [communityAssistants, setCommunityAssistants] = useState<{ id: string; name: string; description: string }[]>([]);
+    const [communityAssistants, setCommunityAssistants] = useState<CommunityAssistant[]>([]);
+    const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistant[]>([]);
     const [ownedCommunityAssistants, setOwnedCommunityAssistants] = useState<AssistantResponse[]>([]);
     const [showSearchAssistant, setShowSearchAssistant] = useState<boolean>(false);
     const [getCommunityAssistants, setGetCommunityAssistants] = useState<boolean>(false);
@@ -45,9 +47,12 @@ const Menu = () => {
     const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
     const { showSuccess } = useGlobalToastContext();
-    setHeader(DEFAULTHEADER);
+    useEffect(() => {
+        setHeader(DEFAULTHEADER);
+    }, [setHeader]);
 
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+    const communityAssistantStorageService: CommunityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
     useEffect(() => {
         // Check for query parameter in assistanth hash and regular URLs
@@ -73,17 +78,23 @@ const Menu = () => {
             const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
             setQuestion(decoded_query);
         }
-
-        migrate_old_assistants().then(async () => {
-            const assistants = await assistantStorageService.getAllAssistantConfigs();
-            setAssistants(assistants);
-            getUserSubscriptionsApi().then(subscriptions => {
-                setCommunityAssistants(subscriptions);
-            });
-        });
-        getOwnedCommunityAssistants().then(response => {
-            setOwnedCommunityAssistants(response);
-        });
+        (async () => {
+            await migrate_old_assistants()
+            const [assistantsLocal, subs, owned, localCommunity] = await Promise.all([
+                assistantStorageService.getAllAssistantConfigs(),
+                getUserSubscriptionsApi(),
+                getOwnedCommunityAssistants(),
+                communityAssistantStorageService.getAllAssistantConfigs(),
+            ]);
+            setAssistants(assistantsLocal);
+            setCommunityAssistants(subs);
+            setOwnedCommunityAssistants(owned);
+            setDeletedCommunityAssistants(
+                localCommunity
+                    .filter(local => !subs.some(sub => sub.id === local.id)) // lokal, aber nicht in subs
+                    .filter(deleted => !owned.some(own => own.id === deleted.id)) // und nicht in owned
+            );
+        })();
     }, []);
 
     useEffect(() => {
@@ -293,15 +304,15 @@ const Menu = () => {
                     {t("menu.subscribed")}
                 </div>
                 <div className={styles.row} role="list" aria-label={t("menu.subscribed_assistants_list", "Abonnierte Community Assistants")}>
-                    {communityAssistants.map(({ id, name, description }, key) => (
-                        <Tooltip key={key} content={name} relationship="description" positioning="below">
+                    {communityAssistants.map((assistant, key) => (
+                        <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
                             <div className={styles.box} role="listitem" tabIndex={0}>
-                                <div className={styles.boxHeader}>{name}</div>
-                                <div className={styles.boxDescription}>{description}</div>
+                                <div className={styles.boxHeader}>{assistant.title}</div>
+                                <div className={styles.boxDescription}>{assistant.description}</div>
                                 <Link
-                                    to={`communityassistant/${id}`}
+                                    to={`communityassistant/${assistant.id}`}
                                     className={styles.boxChoose}
-                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: name })}
+                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
                                 >
                                     {t("menu.select")}
                                 </Link>
@@ -314,6 +325,30 @@ const Menu = () => {
                         </div>
                     )}
                 </div>
+                {deletedCommunityAssistants.length > 0 && (
+                    <div>
+                        <div className={styles.subrowheader} role="heading" aria-level={4}>
+                            {t("menu.deleted")}
+                        </div>
+                        <div className={styles.row} role="list" aria-label={t("menu.deleted_assistants_list", "Gelöschte Community Assistants")}>
+                            {deletedCommunityAssistants.map((assistant, key) => (
+                                <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
+                                    <div className={styles.box} role="listitem" tabIndex={0} style={{ opacity: 0.5 }}>
+                                        <div className={styles.boxHeader} style={{ color: "red" }}>{assistant.title}</div>
+                                        <div className={styles.boxDescription}>{assistant.description}</div>
+                                        <Link
+                                            to={`deleted/communityassistant/${assistant.id}`}
+                                            className={styles.boxChoose}
+                                            aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                        >
+                                            {t("menu.select")}
+                                        </Link>
+                                    </div>
+                                </Tooltip>
+                            ))}
+                        </div>
+                    </div>
+                )}
                 <div className={styles.rowheader} aria-hidden="true">
                     {" "}
                 </div>

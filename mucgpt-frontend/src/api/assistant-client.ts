@@ -1,12 +1,12 @@
 import { getConfig, handleApiRequest, postConfig, deleteConfig } from "./fetch-utils";
-import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Assistant } from "./models";
+import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Assistant, CommunityAssistant } from "./models";
 
 /**
  * Get all assistants the user is subscribed to (ID and name only).
  * @returns Array of SubscriptionResponse
  */
 
-export async function getUserSubscriptionsApi(): Promise<{ id: string; name: string; description: string }[]> {
+export async function getUserSubscriptionsApi(): Promise<CommunityAssistant[]> {
     return handleApiRequest(() => fetch("/api/user/subscriptions", getConfig()), "Failed to get user subscriptions");
 } /**
  * Unsubscribe the current user from an assistant.

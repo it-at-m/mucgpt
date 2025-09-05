@@ -43,7 +43,7 @@ dev-dependencies = [
     "pytest-asyncio",
     "pytest-snapshot",
     "pytest-mock",
-    "coverage==7.10.5",
+    "coverage==7.10.6",
     "pytest-cov"
 ]
 

@@ -108,7 +108,26 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
         }
     ];
 
-    const tips: TutorialTip[] = [];
+    const tips: TutorialTip[] = [
+        {
+            title: t("tutorials.simplify.tips.length.title", "Textlänge beachten:"),
+            description: t("tutorials.simplify.tips.length.description", "Sehr lange Texte in kleinere Abschnitte aufteilen für bessere Ergebnisse.")
+        },
+        {
+            title: t("tutorials.simplify.tips.review.title", "Ergebnis prüfen:"),
+            description: t(
+                "tutorials.simplify.tips.review.description",
+                "Lesen Sie den vereinfachten Text durch und prüfen Sie, ob alle wichtigen Informationen enthalten sind."
+            )
+        },
+        {
+            title: t("tutorials.simplify.tips.target.title", "Zielgruppe denken:"),
+            description: t(
+                "tutorials.simplify.tips.target.description",
+                "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
+            )
+        }
+    ];
     return (
         <div>
             {/* Tutorial Progress - Sticky */}
@@ -201,46 +220,6 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                                         </button>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* Tips Section */}
-                            <div id="section-tips" className={styles.contentSection}>
-                                <div className={styles.sectionTitle}>
-                                    <CheckmarkCircle24Regular className={styles.sectionIcon} />
-                                    <span className={styles.sectionTitleText}>{t("tutorials.simplify.sections.tips.title", "Tipps")}</span>
-                                </div>
-
-                                <div className={styles.tipsContainer}>
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.simplify.tips.length.title", "Textlänge beachten:")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.simplify.tips.length.description",
-                                                "Sehr lange Texte in kleinere Abschnitte aufteilen für bessere Ergebnisse."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.simplify.tips.review.title", "Ergebnis prüfen:")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.simplify.tips.review.description",
-                                                "Lesen Sie den vereinfachten Text durch und prüfen Sie, ob alle wichtigen Informationen enthalten sind."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.simplify.tips.target.title", "Zielgruppe denken:")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.simplify.tips.target.description",
-                                                "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
-                                            )}
-                                        </p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     )

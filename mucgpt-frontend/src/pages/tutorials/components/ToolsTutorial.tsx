@@ -165,8 +165,7 @@ export const ToolsTutorial = ({
         () => [
             { id: "intro", translationKey: "tutorials.tools.sections.titles.intro", defaultLabel: "Einführung" },
             { id: "selection", translationKey: "tutorials.tools.sections.titles.selection", defaultLabel: "Tool-Auswahl" },
-            { id: "usage", translationKey: "tutorials.tools.sections.titles.usage", defaultLabel: "Verwendung" },
-            { id: "tips", translationKey: "tutorials.tools.sections.titles.tips", defaultLabel: "Tipps & Best Practices" }
+            { id: "usage", translationKey: "tutorials.tools.sections.titles.usage", defaultLabel: "Verwendung" }
         ],
         []
     );
@@ -296,7 +295,29 @@ export const ToolsTutorial = ({
         }
     ];
 
-    const tips: TutorialTip[] = [];
+    const tips: TutorialTip[] = [
+        {
+            title: t("tutorials.tools.tips.select_relevant.title", "Wählen Sie relevante Tools:"),
+            description: t(
+                "tutorials.tools.tips.select_relevant.description",
+                "Wählen Sie nur die Tools aus, die Sie tatsächlich benötigen, um optimale Ergebnisse zu erzielen."
+            )
+        },
+        {
+            title: t("tutorials.tools.tips.combine_wisely.title", "Kombinieren Sie strategisch:"),
+            description: t(
+                "tutorials.tools.tips.combine_wisely.description",
+                "Kombinieren Sie Tools strategisch für komplexe Aufgaben und maximieren Sie so ihre Effizienz."
+            )
+        },
+        {
+            title: t("tutorials.tools.tips.clear_instructions.title", "Klare Anweisungen geben:"),
+            description: t(
+                "tutorials.tools.tips.clear_instructions.description",
+                "Geben Sie klare Anweisungen, wenn Sie mehrere Tools verwenden, damit die KI optimal arbeiten kann."
+            )
+        }
+    ];
 
     return (
         <div>
@@ -445,54 +466,6 @@ export const ToolsTutorial = ({
                                         </button>
                                     </div>
                                 )}
-                            </div>
-
-                            {/* Tips Section */}
-                            <div id="section-tips" className={styles.contentSection}>
-                                <div className={styles.sectionTitle}>
-                                    <CheckmarkCircle24Regular className={styles.sectionIcon} />
-                                    <Text as="h3" size={500} weight="semibold">
-                                        {t("tutorials.tools.sections.tips.title", "Tipps & Best Practices")}
-                                    </Text>
-                                </div>
-
-                                <div className={styles.keyConcept}>
-                                    <Text as="h4" size={300} weight="semibold">
-                                        {t("tutorials.tools.sections.tips.efficiency.title", "Effizienz maximieren")}
-                                    </Text>
-                                    <ul className={styles.tipsList}>
-                                        <li>
-                                            {t(
-                                                "tutorials.tools.sections.tips.efficiency.select_relevant",
-                                                "Wählen Sie nur die Tools aus, die Sie tatsächlich benötigen"
-                                            )}
-                                        </li>
-                                        <li>
-                                            {t(
-                                                "tutorials.tools.sections.tips.efficiency.combine_wisely",
-                                                "Kombinieren Sie Tools strategisch für komplexe Aufgaben"
-                                            )}
-                                        </li>
-                                        <li>
-                                            {t(
-                                                "tutorials.tools.sections.tips.efficiency.clear_instructions",
-                                                "Geben Sie klare Anweisungen, wenn Sie mehrere Tools verwenden"
-                                            )}
-                                        </li>
-                                    </ul>
-                                </div>
-
-                                <div className={styles.conclusionBox}>
-                                    <Text as="p" weight="semibold">
-                                        {t("tutorials.tools.sections.tips.conclusion.title", "Fazit:")}
-                                    </Text>
-                                    <Text as="p">
-                                        {t(
-                                            "tutorials.tools.sections.tips.conclusion.description",
-                                            "Werkzeuge erweitern die Möglichkeiten der KI erheblich. Mit der richtigen Auswahl können Sie komplexe Aufgaben effizienter lösen."
-                                        )}
-                                    </Text>
-                                </div>
                             </div>
                         </div>
                     )

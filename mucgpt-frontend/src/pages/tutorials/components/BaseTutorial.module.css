@@ -2,39 +2,48 @@
     max-width: 100%;
 }
 
+/* Content Sections */
 .introSection,
 .featuresSection,
 .stepsSection,
 .exampleSection,
 .tipsSection {
-    margin-bottom: 24px;
-    padding: 16px;
-    background: var(--colorNeutralBackground1);
+    margin-bottom: 32px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.introSection:last-child,
+.featuresSection:last-child,
+.stepsSection:last-child,
+.exampleSection:last-child,
+.tipsSection:last-child {
+    border-bottom: none;
 }
 
 .sectionTitle {
-    display: flex !important;
+    display: flex;
     align-items: center;
     gap: 12px;
     margin-bottom: 16px;
-    padding-bottom: 8px;
-    color: var(--colorNeutralForeground1);
-    font-weight: 600;
 }
 
 .sectionIcon {
     color: var(--colorBrandForeground1);
+    flex-shrink: 0;
     font-size: 20px;
-    background: var(--colorBrandBackground2);
-    padding: 6px;
-    border-radius: 4px;
+}
+
+.sectionTitleText {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
 }
 
 .description {
-    color: var(--colorNeutralForeground2);
     line-height: 1.6;
     margin-bottom: 16px;
-    margin-left: 16px;
+    color: var(--colorNeutralForeground2);
 }
 
 /* Features Section */
@@ -84,6 +93,11 @@
     background: var(--colorBrandBackground2);
     color: var(--colorBrandForeground1);
     margin-bottom: 12px;
+}
+
+/* Example Section */
+.exampleContainer {
+    margin-bottom: 24px;
 }
 
 /* Steps Section */
@@ -228,6 +242,31 @@
     margin-top: 16px;
 }
 
+/* Tips container */
+.tipsContainer {
+    margin: 20px 0;
+}
+
+.tipItem {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+}
+
+.tipItem strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--colorNeutralForeground1);
+}
+
+.tipItem p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--colorNeutralForeground2);
+}
+
 .tutorialIcon {
     opacity: 0.5;
     display: flex;
@@ -242,8 +281,88 @@
     margin-bottom: 12px;
 }
 
+/* Buttons */
+.buttonsContainer {
+    padding: 20px;
+    text-align: center;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.buttonsContainerSingle {
+    padding: 20px;
+    text-align: center;
+}
+
+.button {
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.button:active {
+    transform: translateY(0);
+}
+
+.hideButton {
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke1);
+}
+
+.hideButton:hover {
+    background: var(--colorNeutralBackground2);
+    border-color: var(--colorNeutralStroke2);
+}
+
+.showButton {
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    border: none;
+}
+
+.showButton:hover {
+    background: var(--colorBrandBackgroundHover);
+}
+
+.tryButton {
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tryButton:hover {
+    background: var(--colorBrandBackgroundHover);
+}
+
+.tryButtonIcon {
+    font-size: 16px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
+    .buttonsContainer {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .button {
+        width: 100%;
+        max-width: 280px;
+    }
+
     .featureGrid {
         grid-template-columns: 1fr;
         gap: 16px;
@@ -259,7 +378,22 @@
         display: flex;
         gap: 12px;
         width: 100%;
-        justify-content: space-between;
+    }
+}
+
+@media (max-width: 480px) {
+    .buttonsContainer,
+    .buttonsContainerSingle {
+        padding: 16px;
+    }
+
+    .button {
+        padding: 14px 20px;
+        font-size: 16px;
+    }
+
+    .tryButtonIcon {
+        font-size: 18px;
     }
 
     .stepCard {

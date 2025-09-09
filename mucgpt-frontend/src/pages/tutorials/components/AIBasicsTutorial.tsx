@@ -328,92 +328,25 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                                         <div className={styles.stepNumber}>2</div>
                                         <div className={styles.stepContent}>
                                             <Text as="h4" size={300} weight="semibold">
-                                                {t("tutorials.ai_basics.sections.how_it_works.step2.title", "Wörter werden zu Zahlen (Embeddings)")}
+                                                {t(
+                                                    "tutorials.ai_basics.sections.how_it_works.step2.title",
+                                                    "Verarbeitung innerhalb des LLMs. Zentrales Konzept: Attention"
+                                                )}
                                             </Text>
                                             <Text as="p" size={200}>
                                                 {t(
                                                     "tutorials.ai_basics.sections.how_it_works.step2.description",
-                                                    "Computer können nur mit Zahlen rechnen, nicht mit Wörtern. Deshalb wird jedes Token in eine Liste von Zahlen umgewandelt, die seine 'Bedeutung' repräsentiert."
+                                                    "Das Modell schaut sich alle Wörter an und entscheidet: Welche sind wichtig? Es wandelt Wörter in Zahlen um und nutzt viele Schichten für verschiedene Aufgaben."
                                                 )}
                                             </Text>
                                             <div className={styles.exampleBox}>
                                                 <Text size={200}>
-                                                    <strong>Vereinfachtes Beispiel:</strong>
-                                                </Text>
-                                                <div className={styles.embeddingExample}>
-                                                    <div className={styles.embeddingItem}>
-                                                        <span className={styles.token}>"Wetter"</span>
-                                                        <span className={styles.arrow}>→</span>
-                                                        <span className={styles.numbers}>[0.2, -0.1, 0.8, 0.3, ...]</span>
-                                                    </div>
-                                                    <div className={styles.embeddingItem}>
-                                                        <span className={styles.token}>"heute"</span>
-                                                        <span className={styles.arrow}>→</span>
-                                                        <span className={styles.numbers}>[0.1, 0.5, -0.2, 0.7, ...]</span>
-                                                    </div>
-                                                </div>
-                                                <Text size={100} className={styles.noteText}>
-                                                    {t("tutorials.ai_basics.sections.how_it_works.step2.note", "Ähnliche Wörter haben ähnliche Zahlenmuster")}
-                                                </Text>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.stepItem}>
-                                        <div className={styles.stepNumber}>3</div>
-                                        <div className={styles.stepContent}>
-                                            <Text as="h4" size={300} weight="semibold">
-                                                {t("tutorials.ai_basics.sections.how_it_works.step3.title", "Aufmerksamkeit und Kontext (Self-Attention)")}
-                                            </Text>
-                                            <Text as="p" size={200}>
-                                                {t(
-                                                    "tutorials.ai_basics.sections.how_it_works.step3.description",
-                                                    "Das Modell schaut sich alle Wörter gleichzeitig an und entscheidet, welche Wörter für das Verständnis des Satzes wichtig sind und wie sie zusammenhängen."
-                                                )}
-                                            </Text>
-                                            <div className={styles.exampleBox}>
-                                                <Text size={200}>
-                                                    <strong>Beispiel:</strong>
-                                                </Text>
-                                                <div className={styles.attentionExample}>
-                                                    <Text size={200}>
-                                                        Im Satz "Der Ball liegt im <strong>Park</strong>" bezieht sich "liegt" hauptsächlich auf "
-                                                        <strong>Ball</strong>" und "<strong>Park</strong>".
-                                                    </Text>
-                                                    <div className={styles.attentionVisualization}>
-                                                        <div className={styles.attentionConnection}>
-                                                            <span className={styles.word}>Ball</span>
-                                                            <span className={styles.connectionLine}>━━━</span>
-                                                            <span className={styles.word}>liegt</span>
-                                                            <span className={styles.connectionLine}>━━━</span>
-                                                            <span className={styles.word}>Park</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className={styles.stepItem}>
-                                        <div className={styles.stepNumber}>4</div>
-                                        <div className={styles.stepContent}>
-                                            <Text as="h4" size={300} weight="semibold">
-                                                {t("tutorials.ai_basics.sections.how_it_works.step4.title", "Informationen verarbeiten (Feed-Forward)")}
-                                            </Text>
-                                            <Text as="p" size={200}>
-                                                {t(
-                                                    "tutorials.ai_basics.sections.how_it_works.step4.description",
-                                                    "Die zusammengeführten Informationen werden durch mehrere Schichten von mathematischen Berechnungen geschickt, um komplexe Muster zu erkennen und Bedeutungen zu verstehen."
-                                                )}
-                                            </Text>
-                                            <div className={styles.exampleBox}>
-                                                <Text size={200}>
-                                                    <strong>Analogie:</strong>
+                                                    <strong>{t("tutorials.ai_basics.sections.how_it_works.step2.example_title", "Einfaches Beispiel:")}</strong>
                                                 </Text>
                                                 <Text size={200}>
                                                     {t(
-                                                        "tutorials.ai_basics.sections.how_it_works.step4.analogy",
-                                                        "Wie ein Detektiv, der aus verschiedenen Hinweisen Schlüsse zieht und das große Bild zusammenfügt."
+                                                        "tutorials.ai_basics.sections.how_it_works.step2.example_text",
+                                                        'Bei "Der Hund bellt" konzentriert sich das Modell hauptsächlich auf "Hund" und "bellt" - das sind die wichtigen Wörter.'
                                                     )}
                                                 </Text>
                                             </div>
@@ -421,7 +354,7 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                                     </div>
 
                                     <div className={styles.stepItem}>
-                                        <div className={styles.stepNumber}>5</div>
+                                        <div className={styles.stepNumber}>3</div>
                                         <div className={styles.stepContent}>
                                             <Text as="h4" size={300} weight="semibold">
                                                 {t("tutorials.ai_basics.sections.how_it_works.step5.title", "Vorhersage des nächsten Wortes")}
@@ -463,7 +396,7 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                                     </div>
 
                                     <div className={styles.stepItem}>
-                                        <div className={styles.stepNumber}>6</div>
+                                        <div className={styles.stepNumber}>4</div>
                                         <div className={styles.stepContent}>
                                             <Text as="h4" size={300} weight="semibold">
                                                 {t("tutorials.ai_basics.sections.how_it_works.step6.title", "Wiederholung für den ganzen Text")}

@@ -55,30 +55,27 @@ export const tutorialsTranslations = {
                     },
                     training_phase: {
                         description:
-                            "Die Trainingsphase findet nur einmal statt, bevor ein LLM genutzt werden kann. Hier lernt das Modell, Sprache zu verstehen und zu erzeugen – mit riesigen Mengen an Textdaten.",
-                        steps_title: "Der Trainingsprozess umfasst folgende Schritte:",
-                        key_concept: "Wichtig zu verstehen:",
-                        key_explanation:
-                            "Das Training ist sehr aufwendig und teuer. Große Modelle wie GPT-4 werden auf Hunderten von Grafikkarten über Wochen trainiert."
+                            "Bevor ein LLM benutzt werden kann, muss es einmal trainiert werden. Dabei lernt es aus vielen Texten, wie Sprache funktioniert.",
+                        steps_title: "So läuft das Training ab:",
+                        key_concept: "Wichtig:",
+                        key_explanation: "Training kostet viel Zeit und Geld. Große Modelle brauchen Wochen und viele Computer."
                     },
                     training: {
                         step1: {
-                            title: "1. Datensammlung",
-                            description:
-                                "Viele Texte aus dem Internet, Büchern und Artikeln werden gesammelt. Sie sind die Grundlage für das Sprachverständnis."
+                            title: "1. Texte sammeln (Datensammlung)",
+                            description: "Viele Texte aus dem Internet und Büchern werden gesammelt. Das ist wie ein riesiges Lehrbuch für die KI."
                         },
                         step2: {
-                            title: "2. Vortraining",
-                            description: "Das Modell lernt, Wörter und Sätze vorherzusagen, indem es Lücken im Text füllt – auf Millionen Beispielen."
+                            title: "2. Wörter raten lernen (Vortraining)",
+                            description: "Die KI übt, fehlende Wörter in Texten zu erraten. So lernt sie, wie Sprache funktioniert."
                         },
                         step3: {
-                            title: "3. Feinabstimmung",
-                            description:
-                                "Das Modell wird mit speziellen Daten weiter trainiert, oft mit menschlicher Hilfe, damit es bessere und sichere Antworten gibt."
+                            title: "3. Bessere Antworten (Feinabstimmung)",
+                            description: "Menschen helfen der KI dabei, noch bessere und hilfreichere Antworten zu geben."
                         },
                         step4: {
-                            title: "4. RLHF",
-                            description: "Mit menschlichem Feedback lernt das Modell, hilfreiche und sichere Antworten zu geben."
+                            title: "4. Feedback einbauen (RLHF)",
+                            description: "Die KI lernt aus menschlichem Feedback, was gute und schlechte Antworten sind."
                         }
                     },
                     how_it_works: {
@@ -93,9 +90,12 @@ export const tutorialsTranslations = {
                             description: "Dein Text wird in kleine Teile zerlegt, sogenannte Tokens. Das können Wörter oder Wortteile sein."
                         },
                         step2: {
-                            title: "Wörter werden zu Zahlen (Embeddings)",
-                            description: "Computer rechnen mit Zahlen, nicht mit Wörtern. Jedes Token wird in eine Zahlenliste umgewandelt.",
-                            note: "Ähnliche Wörter haben ähnliche Zahlenmuster."
+                            title: "Verarbeitung innerhalb des LLMs. Zentrales Konzept: Attention",
+                            description:
+                                "Das Modell schaut sich alle Wörter an und entscheidet: Welche sind wichtig? Es wandelt Wörter in Zahlen um und nutzt viele Schichten für verschiedene Aufgaben.",
+                            example_title: "Einfaches Beispiel:",
+                            example_text:
+                                'Bei "Der Hund bellt" konzentriert sich das Modell hauptsächlich auf "Hund" und "bellt" - das sind die wichtigen Wörter.'
                         },
                         step3: {
                             title: "Aufmerksamkeit und Kontext (Self-Attention)",

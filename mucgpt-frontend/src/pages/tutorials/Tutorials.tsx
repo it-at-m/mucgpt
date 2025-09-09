@@ -76,8 +76,8 @@ export const Tutorials = () => {
                 tutorials: [
                     {
                         id: "ki-basics",
-                        title: t("tutorials.ki_basics.title", "KI-Grundlagen"),
-                        description: t("tutorials.ki_basics.description", "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme."),
+                        title: t("tutorials.ai_basics.title", "KI-Grundlagen"),
+                        description: t("tutorials.ai_basics.description", "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme."),
                         icon: <BrainCircuit24Regular />,
                         badge: t("tutorials.badges.new", "Neu"),
                         component: <AIBasicsTutorial />
@@ -281,6 +281,13 @@ export const Tutorials = () => {
                 <Divider />
 
                 <div className={styles.tutorialBody}>{tutorial.component}</div>
+
+                <Divider />
+                <div className={styles.tutorialBreadcrumb}>
+                    <Button appearance="subtle" onClick={() => navigate("/tutorials")} size="small">
+                        ← {t("tutorials.back_to_overview", "Zurück zur Übersicht")}
+                    </Button>
+                </div>
             </div>
         );
     };

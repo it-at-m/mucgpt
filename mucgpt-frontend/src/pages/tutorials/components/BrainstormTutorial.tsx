@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Play24Regular, BrainCircuit24Regular, Target24Regular, DocumentBulletList24Regular, Send24Regular } from "@fluentui/react-icons";
 import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
+import TutorialProgress, { TutorialSection } from "./TutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
@@ -87,14 +88,46 @@ ${EXAMPLE_MINDMAP}
 export const BrainstormTutorial = () => {
     const { t } = useTranslation();
     const [showExample, setShowExample] = useState(false);
+    const [currentStep, setCurrentStep] = useState(0);
+    const [completedSections, setCompletedSections] = useState<string[]>([]);
     const chatMessageStreamEnd = useRef<HTMLDivElement>(null);
     const lastQuestionRef = useRef<string>("");
 
+    // Tutorial sections for brainstorming
+    const brainstormSections: TutorialSection[] = [
+        { id: "intro", translationKey: "tutorials.brainstorm.sections.intro", defaultLabel: "Einführung" },
+        { id: "example", translationKey: "tutorials.brainstorm.sections.example", defaultLabel: "Beispiel ansehen" },
+        { id: "practice", translationKey: "tutorials.brainstorm.sections.practice", defaultLabel: "Selbst ausprobieren" },
+        { id: "tips", translationKey: "tutorials.brainstorm.sections.tips", defaultLabel: "Tipps & Tricks" }
+    ];
+
+    const handleSectionComplete = (sectionId: string) => {
+        if (!completedSections.includes(sectionId)) {
+            setCompletedSections(prev => [...prev, sectionId]);
+            const sectionIndex = brainstormSections.findIndex(section => section.id === sectionId);
+            if (sectionIndex !== -1 && sectionIndex >= currentStep) {
+                setCurrentStep(sectionIndex + 1);
+            }
+        }
+    };
+
+    // Auto-complete intro section when tutorial loads
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            handleSectionComplete("intro");
+        }, 1000);
+        return () => clearTimeout(timer);
+    }, []);
+
     const toggleExample = useCallback(() => {
         setShowExample(!showExample);
+        if (!showExample) {
+            handleSectionComplete("example");
+        }
     }, [showExample]);
 
     const tryExample = useCallback(() => {
+        handleSectionComplete("practice");
         const exampleQuestion = "Erstelle eine Mindmap zum Thema 'Nachhaltiger Transport'";
         const tools = "Brainstorming"; // The brainstorm tool
         let url = `#/chat?q=${encodeURIComponent(exampleQuestion)}`;
@@ -170,35 +203,52 @@ export const BrainstormTutorial = () => {
             example={{
                 title: t("tutorials.brainstorm.example.title", "Brainstorming Beispiel"),
                 description: t("tutorials.brainstorm.example.description", ""),
-                component: showExample ? (
+                component: (
                     <div>
-                        <div className={styles.exampleContainer}>
-                            <AnswerList
-                                answers={createBrainstormWorkflowExample()}
-                                regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
-                                onRollbackMessage={() => {}}
-                                isLoading={false}
-                                error={null}
-                                makeApiRequest={() => {}}
-                                chatMessageStreamEnd={chatMessageStreamEnd}
-                                lastQuestionRef={lastQuestionRef}
-                            />
-                        </div>
-                        <div className={styles.buttonsContainer}>
-                            <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
-                                {t("tutorials.buttons.hide_example")}
-                            </button>
-                            <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
-                                <Send24Regular className={styles.tryButtonIcon} />
-                                {t("tutorials.buttons.try_example")}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className={styles.buttonsContainerSingle}>
-                        <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
-                            {t("tutorials.buttons.show_example")}
-                        </button>
+                        <TutorialProgress
+                            currentStep={currentStep}
+                            totalSteps={brainstormSections.length}
+                            completedSections={completedSections}
+                            onSectionComplete={handleSectionComplete}
+                            sections={brainstormSections}
+                            titleTranslationKey="tutorials.brainstorm.progress.title"
+                            defaultTitle="Brainstorming Tutorial Fortschritt"
+                            isSticky={true}
+                            stickyOffset={60}
+                            compact={true}
+                        />
+
+                        {showExample ? (
+                            <div>
+                                <div id="section-example" className={styles.exampleContainer}>
+                                    <AnswerList
+                                        answers={createBrainstormWorkflowExample()}
+                                        regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
+                                        onRollbackMessage={() => {}}
+                                        isLoading={false}
+                                        error={null}
+                                        makeApiRequest={() => {}}
+                                        chatMessageStreamEnd={chatMessageStreamEnd}
+                                        lastQuestionRef={lastQuestionRef}
+                                    />
+                                </div>
+                                <div className={styles.buttonsContainer}>
+                                    <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
+                                        {t("tutorials.buttons.hide_example")}
+                                    </button>
+                                    <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
+                                        <Send24Regular className={styles.tryButtonIcon} />
+                                        {t("tutorials.buttons.try_example")}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div id="section-intro" className={styles.buttonsContainerSingle}>
+                                <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
+                                    {t("tutorials.buttons.show_example")}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )
             }}

@@ -141,7 +141,21 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
     );
 };
 
-export const ToolsTutorial = ({ onNavigateToTutorial }: { onNavigateToTutorial?: (tutorialId: string) => void }) => {
+export const ToolsTutorial = ({
+    onNavigateToTutorial,
+    onPreviousTutorial,
+    onNextTutorial,
+    onBackToTop,
+    currentTutorialId,
+    allTutorials
+}: {
+    onNavigateToTutorial?: (tutorialId: string) => void;
+    onPreviousTutorial?: () => void;
+    onNextTutorial?: () => void;
+    onBackToTop?: () => void;
+    currentTutorialId?: string;
+    allTutorials?: Array<{ id: string; title: string }>;
+} = {}) => {
     const { t } = useTranslation();
     const [showExample, setShowExample] = useState(false);
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
@@ -300,6 +314,11 @@ export const ToolsTutorial = ({ onNavigateToTutorial }: { onNavigateToTutorial?:
                 showPercentage={true}
                 showStats={true}
                 compact={true}
+                onPreviousTutorial={onPreviousTutorial}
+                onNextTutorial={onNextTutorial}
+                onBackToTop={onBackToTop}
+                currentTutorialId={currentTutorialId}
+                allTutorials={allTutorials}
             />
 
             <BaseTutorial

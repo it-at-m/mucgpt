@@ -23,6 +23,14 @@ import TutorialProgress, { TutorialSection } from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import styles from "./AIBasicsTutorial.module.css";
 
+interface TutorialNavigationProps {
+    onPreviousTutorial?: () => void;
+    onNextTutorial?: () => void;
+    onBackToTop?: () => void;
+    currentTutorialId?: string;
+    allTutorials?: Array<{ id: string; title: string }>;
+}
+
 const DATA_MERMAID = `mindmap
   root((LLM's\n haben Zugriff auf folgende Informationen))
     Elernte Informationen aus dem Training
@@ -74,7 +82,7 @@ const ARCHITECTURE_MERMAID = `flowchart TD
     class Tokenize,Embedding,Attention,FFN,Predict process;
     class Output output;`;
 
-export const AIBasicsTutorial = () => {
+export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToTop, currentTutorialId, allTutorials }: TutorialNavigationProps = {}) => {
     const { t } = useTranslation();
 
     // Custom sections for AI Basics tutorial - memoized to prevent recreation
@@ -152,6 +160,11 @@ export const AIBasicsTutorial = () => {
                 showPercentage={true}
                 showStats={true}
                 compact={true}
+                onPreviousTutorial={onPreviousTutorial}
+                onNextTutorial={onNextTutorial}
+                onBackToTop={onBackToTop}
+                currentTutorialId={currentTutorialId}
+                allTutorials={allTutorials}
             />
 
             <BaseTutorial

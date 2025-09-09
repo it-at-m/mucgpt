@@ -21,6 +21,13 @@ export const tutorialsTranslations = {
             progress: {
                 stats: "{{completed}} von {{total}} Abschnitten abgeschlossen"
             },
+            navigation: {
+                back_to_top: "Zum Seitenanfang",
+                previous_tutorial: "Vorheriges Tutorial",
+                next_tutorial: "Nächstes Tutorial",
+                previous_section: "Vorheriger Abschnitt",
+                next_section: "Nächster Abschnitt"
+            },
             ai_basics: {
                 title: "KI-Grundlagen",
                 progress: {

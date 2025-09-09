@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Text } from "@fluentui/react-components";
-import { CheckmarkCircle24Regular } from "@fluentui/react-icons";
+import { Text, Button, Tooltip } from "@fluentui/react-components";
+import { CheckmarkCircle24Regular, ChevronLeft24Regular, ChevronRight24Regular, ArrowUp24Regular } from "@fluentui/react-icons";
 import styles from "./TutorialProgress.module.css";
 
 export interface TutorialSection {
@@ -30,6 +30,18 @@ interface TutorialProgressProps {
     enableSectionNavigation?: boolean;
     /** Custom scroll offset when navigating to sections */
     scrollOffset?: number;
+    /** Show navigation buttons (back to top, previous, next) */
+    showNavigationButtons?: boolean;
+    /** Callback when user clicks previous tutorial button */
+    onPreviousTutorial?: () => void;
+    /** Callback when user clicks next tutorial button */
+    onNextTutorial?: () => void;
+    /** Callback when user clicks back to top button */
+    onBackToTop?: () => void;
+    /** Current tutorial ID for tutorial-level navigation */
+    currentTutorialId?: string;
+    /** All available tutorials for navigation */
+    allTutorials?: Array<{ id: string; title: string }>;
 }
 
 export const TutorialProgress: React.FC<TutorialProgressProps> = ({
@@ -48,7 +60,13 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
     compact = false,
     className,
     enableSectionNavigation = true,
-    scrollOffset = -200
+    scrollOffset = -200,
+    showNavigationButtons = true,
+    onPreviousTutorial,
+    onNextTutorial,
+    onBackToTop,
+    currentTutorialId,
+    allTutorials = []
 }) => {
     const { t } = useTranslation();
     const progressPercentage = (currentStep / totalSteps) * 100;
@@ -63,19 +81,85 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
     const containerClassName = `${styles.progressContainer} ${isSticky ? styles.sticky : ""} ${compact ? styles.compact : ""} ${className || ""}`;
     const containerStyle = isSticky ? { top: `${stickyOffset}px` } : undefined;
 
+    // Navigation logic for tutorials
+    const currentTutorialIndex = currentTutorialId ? allTutorials.findIndex(t => t.id === currentTutorialId) : -1;
+    const canGoToPrevious = currentTutorialIndex > 0;
+    const canGoToNext = currentTutorialIndex >= 0 && currentTutorialIndex < allTutorials.length - 1;
+
+    const handleBackToTop = () => {
+        if (onBackToTop) {
+            onBackToTop();
+        } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    };
+
+    const handlePreviousTutorial = () => {
+        if (onPreviousTutorial) {
+            onPreviousTutorial();
+        }
+    };
+
+    const handleNextTutorial = () => {
+        if (onNextTutorial) {
+            onNextTutorial();
+        }
+    };
+
     return (
         <div className={containerClassName} style={containerStyle}>
             <div className={styles.progressHeader}>
-                <Text as="h4" size={compact ? 200 : 300} weight="semibold">
-                    {displayTitle}
-                </Text>
-                {showStats && (
-                    <Text size={compact ? 100 : 200} className={styles.progressStats}>
-                        {t("tutorials.progress.stats", "{{completed}} von {{total}} Abschnitten abgeschlossen", {
-                            completed: completedSections.length,
-                            total: sectionsToRender.length
-                        })}
+                <div className={styles.progressTitleContainer}>
+                    <Text as="h4" size={compact ? 200 : 300} weight="semibold">
+                        {displayTitle}
                     </Text>
+                    {showStats && (
+                        <Text size={compact ? 100 : 200} className={styles.progressStats}>
+                            {t("tutorials.progress.stats", "{{completed}} von {{total}} Abschnitten abgeschlossen", {
+                                completed: completedSections.length,
+                                total: sectionsToRender.length
+                            })}
+                        </Text>
+                    )}
+                </div>
+
+                {showNavigationButtons && (
+                    <div className={styles.navigationButtons}>
+                        <Tooltip content={t("tutorials.navigation.back_to_top", "Zum Seitenanfang")} relationship="description">
+                            <Button
+                                appearance="subtle"
+                                icon={<ArrowUp24Regular />}
+                                size={compact ? "small" : "medium"}
+                                onClick={handleBackToTop}
+                                className={styles.navigationButton}
+                                aria-label={t("tutorials.navigation.back_to_top", "Zum Seitenanfang")}
+                            />
+                        </Tooltip>
+
+                        <Tooltip content={t("tutorials.navigation.previous_tutorial", "Vorheriges Tutorial")} relationship="description">
+                            <Button
+                                appearance="subtle"
+                                icon={<ChevronLeft24Regular />}
+                                size={compact ? "small" : "medium"}
+                                onClick={handlePreviousTutorial}
+                                disabled={!canGoToPrevious}
+                                className={styles.navigationButton}
+                                aria-label={t("tutorials.navigation.previous_tutorial", "Vorheriges Tutorial")}
+                            />
+                        </Tooltip>
+
+                        <Tooltip content={t("tutorials.navigation.next_tutorial", "Nächstes Tutorial")} relationship="description">
+                            <Button
+                                appearance="subtle"
+                                icon={<ChevronRight24Regular />}
+                                size={compact ? "small" : "medium"}
+                                onClick={handleNextTutorial}
+                                disabled={!canGoToNext}
+                                className={styles.navigationButton}
+                                aria-label={t("tutorials.navigation.next_tutorial", "Nächstes Tutorial")}
+                            />
+                        </Tooltip>
+                    </div>
                 )}
             </div>
 
@@ -130,5 +214,5 @@ export default TutorialProgress;
 
 // Convenience component for sticky compact progress
 export const StickyTutorialProgress: React.FC<Omit<TutorialProgressProps, "isSticky" | "compact">> = props => (
-    <TutorialProgress {...props} isSticky={true} compact={true} stickyOffset={60} />
+    <TutorialProgress {...props} isSticky={true} compact={true} stickyOffset={60} showNavigationButtons={true} />
 );

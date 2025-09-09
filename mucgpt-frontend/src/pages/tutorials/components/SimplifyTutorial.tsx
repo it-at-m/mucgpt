@@ -11,6 +11,14 @@ import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
 import styles from "./SimplifyTutorial.module.css";
 
+interface TutorialNavigationProps {
+    onPreviousTutorial?: () => void;
+    onNextTutorial?: () => void;
+    onBackToTop?: () => void;
+    currentTutorialId?: string;
+    allTutorials?: Array<{ id: string; title: string }>;
+}
+
 // Create a realistic simplify workflow example
 const createSimplifyWorkflowExample = (): ChatMessage[] => {
     return [
@@ -42,7 +50,7 @@ Sonst können andere Firmen besser werden.
     ];
 };
 
-export const SimplifyTutorial = () => {
+export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToTop, currentTutorialId, allTutorials }: TutorialNavigationProps = {}) => {
     const { t } = useTranslation();
     const [showExample, setShowExample] = useState(false);
     const chatMessageStreamEnd = useRef<HTMLDivElement>(null);
@@ -117,6 +125,11 @@ export const SimplifyTutorial = () => {
                 showPercentage={true}
                 showStats={true}
                 compact={true}
+                onPreviousTutorial={onPreviousTutorial}
+                onNextTutorial={onNextTutorial}
+                onBackToTop={onBackToTop}
+                currentTutorialId={currentTutorialId}
+                allTutorials={allTutorials}
             />
 
             <BaseTutorial

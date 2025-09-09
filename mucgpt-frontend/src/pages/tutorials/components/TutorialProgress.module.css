@@ -56,6 +56,45 @@
 
 .progressHeader {
     margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.progressTitleContainer {
+    flex: 1;
+}
+
+.navigationButtons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.navigationButton {
+    min-width: unset;
+    transition: all 0.2s ease;
+}
+
+.navigationButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navigationButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Compact mode adjustments */
+.compact .navigationButtons {
+    gap: 2px;
+}
+
+.compact .navigationButton {
+    padding: 4px;
 }
 
 .progressStats {
@@ -197,5 +236,20 @@
 
     .sectionLabel {
         font-size: 10px;
+    }
+
+    .progressHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .navigationButtons {
+        align-self: flex-end;
+        gap: 2px;
+    }
+
+    .navigationButton {
+        padding: 6px;
     }
 }

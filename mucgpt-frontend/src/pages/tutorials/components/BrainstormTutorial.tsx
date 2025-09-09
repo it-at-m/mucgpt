@@ -10,6 +10,14 @@ import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
 import styles from "./BrainstormTutorial.module.css";
 
+interface TutorialNavigationProps {
+    onPreviousTutorial?: () => void;
+    onNextTutorial?: () => void;
+    onBackToTop?: () => void;
+    currentTutorialId?: string;
+    allTutorials?: Array<{ id: string; title: string }>;
+}
+
 // Example mindmap content for demonstration
 const EXAMPLE_MINDMAP = `
 \`\`\`MUCGPTBrainstorming
@@ -87,7 +95,7 @@ ${EXAMPLE_MINDMAP}
     ];
 };
 
-export const BrainstormTutorial = () => {
+export const BrainstormTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToTop, currentTutorialId, allTutorials }: TutorialNavigationProps = {}) => {
     const { t } = useTranslation();
     const [showExample, setShowExample] = useState(false);
     const chatMessageStreamEnd = useRef<HTMLDivElement>(null);
@@ -150,32 +158,7 @@ export const BrainstormTutorial = () => {
         }
     ];
 
-    const tips: TutorialTip[] = [
-        {
-            title: t("tutorials.brainstorm.tips.specific.title", "Seien Sie spezifisch"),
-            description: t(
-                "tutorials.brainstorm.tips.specific.description",
-                "Je präziser Ihr Thema, desto gezielter und relevanter werden die generierten Ideen."
-            ),
-            type: "success"
-        },
-        {
-            title: t("tutorials.brainstorm.tips.context.title", "Kontext hinzufügen"),
-            description: t(
-                "tutorials.brainstorm.tips.context.description",
-                "Fügen Sie zusätzlichen Kontext hinzu, um die KI bei der Ideengenerierung zu unterstützen."
-            ),
-            type: "info"
-        },
-        {
-            title: t("tutorials.brainstorm.tips.iterate.title", "Iterativ arbeiten"),
-            description: t(
-                "tutorials.brainstorm.tips.iterate.description",
-                "Nutzen Sie die Ergebnisse als Ausgangspunkt und verfeinern Sie Ihre Anfragen schrittweise."
-            ),
-            type: "info"
-        }
-    ];
+    const tips: TutorialTip[] = [];
 
     return (
         <div>
@@ -193,6 +176,11 @@ export const BrainstormTutorial = () => {
                 showPercentage={true}
                 showStats={true}
                 compact={true}
+                onPreviousTutorial={onPreviousTutorial}
+                onNextTutorial={onNextTutorial}
+                onBackToTop={onBackToTop}
+                currentTutorialId={currentTutorialId}
+                allTutorials={allTutorials}
             />
 
             <BaseTutorial

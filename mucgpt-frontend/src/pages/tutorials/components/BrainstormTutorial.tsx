@@ -1,8 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
+import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Play24Regular, BrainCircuit24Regular, Target24Regular, DocumentBulletList24Regular, Send24Regular } from "@fluentui/react-icons";
 import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
 import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import { useTutorialProgress } from "./useTutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
@@ -88,46 +90,30 @@ ${EXAMPLE_MINDMAP}
 export const BrainstormTutorial = () => {
     const { t } = useTranslation();
     const [showExample, setShowExample] = useState(false);
-    const [currentStep, setCurrentStep] = useState(0);
-    const [completedSections, setCompletedSections] = useState<string[]>([]);
     const chatMessageStreamEnd = useRef<HTMLDivElement>(null);
     const lastQuestionRef = useRef<string>("");
 
-    // Tutorial sections for brainstorming
-    const brainstormSections: TutorialSection[] = [
-        { id: "intro", translationKey: "tutorials.brainstorm.sections.intro", defaultLabel: "Einführung" },
-        { id: "example", translationKey: "tutorials.brainstorm.sections.example", defaultLabel: "Beispiel ansehen" },
-        { id: "practice", translationKey: "tutorials.brainstorm.sections.practice", defaultLabel: "Selbst ausprobieren" },
-        { id: "tips", translationKey: "tutorials.brainstorm.sections.tips", defaultLabel: "Tipps & Tricks" }
-    ];
+    // Tutorial sections for progress tracking
+    const tutorialSections = React.useMemo<TutorialSection[]>(
+        () => [
+            { id: "intro", translationKey: "tutorials.brainstorm.sections.titles.intro", defaultLabel: "Einführung" },
+            { id: "example", translationKey: "tutorials.brainstorm.sections.titles.example", defaultLabel: "Beispiel" },
+            { id: "tips", translationKey: "tutorials.brainstorm.sections.titles.tips", defaultLabel: "Tipps" }
+        ],
+        []
+    );
 
-    const handleSectionComplete = (sectionId: string) => {
-        if (!completedSections.includes(sectionId)) {
-            setCompletedSections(prev => [...prev, sectionId]);
-            const sectionIndex = brainstormSections.findIndex(section => section.id === sectionId);
-            if (sectionIndex !== -1 && sectionIndex >= currentStep) {
-                setCurrentStep(sectionIndex + 1);
-            }
-        }
-    };
-
-    // Auto-complete intro section when tutorial loads
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            handleSectionComplete("intro");
-        }, 1000);
-        return () => clearTimeout(timer);
-    }, []);
+    // Use the custom hook for progress tracking
+    const { currentStep, completedSections, handleSectionComplete } = useTutorialProgress({ sections: tutorialSections });
 
     const toggleExample = useCallback(() => {
         setShowExample(!showExample);
         if (!showExample) {
             handleSectionComplete("example");
         }
-    }, [showExample]);
+    }, [showExample, handleSectionComplete]);
 
     const tryExample = useCallback(() => {
-        handleSectionComplete("practice");
         const exampleQuestion = "Erstelle eine Mindmap zum Thema 'Nachhaltiger Transport'";
         const tools = "Brainstorming"; // The brainstorm tool
         let url = `#/chat?q=${encodeURIComponent(exampleQuestion)}`;
@@ -192,67 +178,138 @@ export const BrainstormTutorial = () => {
     ];
 
     return (
-        <BaseTutorial
-            title={t("tutorials.brainstorm.intro.title", "Was ist das Brainstorming-Tool?")}
-            titleIcon={<BrainCircuit24Regular className="sectionIcon" />}
-            description={t(
-                "tutorials.brainstorm.intro.description",
-                "Das Brainstorming-Tool generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
-            )}
-            features={features}
-            example={{
-                title: t("tutorials.brainstorm.example.title", "Brainstorming Beispiel"),
-                description: t("tutorials.brainstorm.example.description", ""),
-                component: (
-                    <div>
-                        <TutorialProgress
-                            currentStep={currentStep}
-                            totalSteps={brainstormSections.length}
-                            completedSections={completedSections}
-                            onSectionComplete={handleSectionComplete}
-                            sections={brainstormSections}
-                            titleTranslationKey="tutorials.brainstorm.progress.title"
-                            defaultTitle="Brainstorming Tutorial Fortschritt"
-                            isSticky={true}
-                            stickyOffset={60}
-                            compact={true}
-                        />
+        <div>
+            {/* Tutorial Progress - Sticky */}
+            <TutorialProgress
+                currentStep={currentStep}
+                totalSteps={tutorialSections.length}
+                completedSections={completedSections}
+                onSectionComplete={handleSectionComplete}
+                sections={tutorialSections}
+                titleTranslationKey="tutorials.brainstorm.progress.title"
+                defaultTitle="Brainstorming-Tutorial Fortschritt"
+                isSticky={true}
+                stickyOffset={50}
+                showPercentage={true}
+                showStats={true}
+                compact={true}
+            />
 
-                        {showExample ? (
-                            <div>
-                                <div id="section-example" className={styles.exampleContainer}>
-                                    <AnswerList
-                                        answers={createBrainstormWorkflowExample()}
-                                        regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
-                                        onRollbackMessage={() => {}}
-                                        isLoading={false}
-                                        error={null}
-                                        makeApiRequest={() => {}}
-                                        chatMessageStreamEnd={chatMessageStreamEnd}
-                                        lastQuestionRef={lastQuestionRef}
-                                    />
+            <BaseTutorial
+                title={t("tutorials.brainstorm.intro.title", "Was ist das Brainstorming-Tool?")}
+                titleIcon={<BrainCircuit24Regular className="sectionIcon" />}
+                description={t(
+                    "tutorials.brainstorm.intro.description",
+                    "Das Brainstorming-Tool generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
+                )}
+                features={features}
+                example={{
+                    title: t("tutorials.brainstorm.example.title", "Brainstorming Beispiel"),
+                    description: t("tutorials.brainstorm.example.description", ""),
+                    component: (
+                        <div>
+                            {/* Introduction Section */}
+                            <div id="section-intro" className={styles.contentSection}>
+                                <div className={styles.sectionTitle}>
+                                    <BrainCircuit24Regular className={styles.sectionIcon} />
+                                    <span className={styles.sectionTitleText}>
+                                        {t("tutorials.brainstorm.sections.intro.title", "Was ist das Brainstorming-Tool?")}
+                                    </span>
                                 </div>
-                                <div className={styles.buttonsContainer}>
-                                    <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
-                                        {t("tutorials.buttons.hide_example")}
-                                    </button>
-                                    <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
-                                        <Send24Regular className={styles.tryButtonIcon} />
-                                        {t("tutorials.buttons.try_example")}
-                                    </button>
+                                <p className={styles.sectionText}>
+                                    {t(
+                                        "tutorials.brainstorm.sections.intro.description",
+                                        "Das Brainstorming-Tool generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
+                                    )}
+                                </p>
+                            </div>
+
+                            {/* Example Section */}
+                            <div id="section-example" className={styles.contentSection}>
+                                <div className={styles.sectionTitle}>
+                                    <Send24Regular className={styles.sectionIcon} />
+                                    <span className={styles.sectionTitleText}>
+                                        {t("tutorials.brainstorm.sections.example.title", "Brainstorming Beispiel")}
+                                    </span>
+                                </div>
+
+                                {showExample ? (
+                                    <div>
+                                        <div className={styles.exampleContainer}>
+                                            <AnswerList
+                                                answers={createBrainstormWorkflowExample()}
+                                                regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
+                                                onRollbackMessage={() => {}}
+                                                isLoading={false}
+                                                error={null}
+                                                makeApiRequest={() => {}}
+                                                chatMessageStreamEnd={chatMessageStreamEnd}
+                                                lastQuestionRef={lastQuestionRef}
+                                            />
+                                        </div>
+                                        <div className={styles.buttonsContainer}>
+                                            <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
+                                                {t("tutorials.buttons.hide_example")}
+                                            </button>
+                                            <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
+                                                <Send24Regular className={styles.tryButtonIcon} />
+                                                {t("tutorials.buttons.try_example")}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={styles.buttonsContainerSingle}>
+                                        <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
+                                            {t("tutorials.buttons.show_example")}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Tips Section */}
+                            <div id="section-tips" className={styles.contentSection}>
+                                <div className={styles.sectionTitle}>
+                                    <Target24Regular className={styles.sectionIcon} />
+                                    <span className={styles.sectionTitleText}>{t("tutorials.brainstorm.sections.tips.title", "Tipps")}</span>
+                                </div>
+
+                                <div className={styles.tipsContainer}>
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.brainstorm.tips.specific.title", "Seien Sie spezifisch:")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.brainstorm.tips.specific.description",
+                                                "Je präziser Ihr Thema, desto gezielter und relevanter werden die generierten Ideen."
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.brainstorm.tips.context.title", "Kontext hinzufügen:")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.brainstorm.tips.context.description",
+                                                "Fügen Sie zusätzlichen Kontext hinzu, um die KI bei der Ideengenerierung zu unterstützen."
+                                            )}
+                                        </p>
+                                    </div>
+
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.brainstorm.tips.iterate.title", "Iterativ arbeiten:")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.brainstorm.tips.iterate.description",
+                                                "Nutzen Sie die Ergebnisse als Ausgangspunkt und verfeinern Sie Ihre Anfragen schrittweise."
+                                            )}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        ) : (
-                            <div id="section-intro" className={styles.buttonsContainerSingle}>
-                                <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
-                                    {t("tutorials.buttons.show_example")}
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )
-            }}
-            tips={tips}
-        />
+                        </div>
+                    )
+                }}
+                tips={tips}
+            />
+        </div>
     );
 };

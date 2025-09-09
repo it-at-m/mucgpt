@@ -99,3 +99,64 @@
         font-size: 18px;
     }
 }
+
+/* Content Sections */
+.contentSection {
+    margin-bottom: 32px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.contentSection:last-child {
+    border-bottom: none;
+}
+
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.sectionIcon {
+    color: var(--colorBrandForeground1);
+    flex-shrink: 0;
+    font-size: 20px;
+}
+
+.sectionTitleText {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.sectionText {
+    line-height: 1.6;
+    margin-bottom: 16px;
+    color: var(--colorNeutralForeground2);
+}
+
+/* Tips container */
+.tipsContainer {
+    margin: 20px 0;
+}
+
+.tipItem {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+}
+
+.tipItem strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--colorNeutralForeground1);
+}
+
+.tipItem p {
+    margin: 0;
+    line-height: 1.5;
+    color: var(--colorNeutralForeground2);
+}

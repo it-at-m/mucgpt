@@ -162,21 +162,26 @@
 }
 
 .contentSection {
-    margin-bottom: 24px;
-    padding: 16px;
-    background: var(--colorNeutralBackground2);
-    border-radius: 8px;
+    margin-bottom: 32px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.contentSection:last-child {
+    border-bottom: none;
 }
 
 .sectionTitle {
-    margin-bottom: 12px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .sectionIcon {
     color: var(--colorBrandForeground1);
+    flex-shrink: 0;
+    font-size: 20px;
 }
 
 .imageContainer {
@@ -216,29 +221,50 @@
 
 .conceptGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
-    margin: 20px 0;
+    margin-top: 16px;
 }
 
 .conceptCard {
-    padding: 16px;
-    background: var(--colorNeutralBackground1);
+    text-align: left;
+    overflow: hidden;
+    height: auto;
+    min-height: 120px;
+    border-radius: 8px;
+    color: var(--colorNeutralBackround1Hover);
+    text-decoration: none;
+    opacity: 0.9;
+    background: var(--colorNeutralBackground4);
     border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 6px;
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    cursor: default;
 }
 
 .conceptCard:hover {
+    opacity: 1;
+    box-shadow:
+        0px 8px 16px rgba(0, 0, 0, 0.14),
+        0px 0px 2px rgba(0, 0, 0, 0.12);
+    outline: 2px solid var(--colorNeutralForeground3Selected);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .conceptIcon {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--colorBrandBackground2);
     color: var(--colorBrandForeground1);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 /* Timeline styling */
@@ -436,25 +462,6 @@
 .inferenceColumn {
     border-left: 1px solid var(--colorNeutralStroke2);
     background: rgba(79, 70, 229, 0.05);
-}
-
-/* Conclusion styles */
-.conclusionBox {
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(249, 250, 251, 0.8));
-    border-radius: 8px;
-    border: 1px solid var(--colorNeutralStroke2);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-.conclusionList {
-    margin: 16px 0;
-    padding-left: 20px;
-}
-
-.conclusionList li {
-    margin-bottom: 12px;
-    line-height: 1.5;
 }
 
 .finalNote {
@@ -774,120 +781,35 @@
     }
 }
 
-/* Conclusion section styles */
-.conclusionBox {
-    padding: 24px;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(16, 185, 129, 0.02));
-    border: 2px solid var(--colorBrandStroke2);
-    border-radius: 12px;
-    margin: 16px 0;
+/* Tips and conclusion section styles - matching BaseTutorial */
+.tipsContainer {
+    margin: 20px 0;
 }
 
-.keyInsights {
-    margin: 24px 0;
-}
-
-.insightItem {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 20px;
+.tipItem {
+    margin-bottom: 16px;
     padding: 16px;
     background: var(--colorNeutralBackground1);
-    border-radius: 8px;
     border: 1px solid var(--colorNeutralStroke2);
-    transition: all 0.2s ease;
+    border-radius: 8px;
 }
 
-.insightItem:hover {
-    border-color: var(--colorBrandStroke1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.insightIcon {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--colorBrandBackground);
-    color: white;
-    border-radius: 50%;
-    font-size: 20px;
-}
-
-.insightContent {
-    flex: 1;
-}
-
-.insightContent h4 {
+.tipItem strong {
+    display: block;
     margin-bottom: 8px;
     color: var(--colorNeutralForeground1);
 }
 
-.insightContent p {
+.tipItem p {
+    margin: 0;
     line-height: 1.5;
     color: var(--colorNeutralForeground2);
-    margin: 0;
 }
 
-.futureOutlook {
-    margin: 24px 0;
-    padding: 20px;
-    background: rgba(16, 185, 129, 0.1);
-    border-radius: 8px;
-    border-left: 4px solid var(--colorSuccessStroke1);
-}
-
-.futureOutlook h4 {
-    margin-bottom: 12px;
-    color: var(--colorSuccessForeground1);
-}
-
-.futureOutlook p {
+.description {
     line-height: 1.6;
-    margin: 0;
-}
-
-.finalNote {
-    margin-top: 32px;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 193, 7, 0.05));
-    border-radius: 8px;
-    border: 2px solid #ffc107;
-}
-
-.finalNote p {
-    margin: 0;
-    color: var(--colorNeutralForeground1);
-}
-
-/* Responsive adjustments for conclusion */
-@media (max-width: 768px) {
-    .insightItem {
-        flex-direction: column;
-        gap: 12px;
-        padding: 12px;
-    }
-
-    .insightIcon {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-        align-self: flex-start;
-    }
-
-    .conclusionBox {
-        padding: 16px;
-    }
-
-    .futureOutlook {
-        padding: 16px;
-    }
-
-    .finalNote {
-        padding: 16px;
-    }
+    margin-bottom: 16px;
+    color: var(--colorNeutralForeground2);
 }
 
 /* Additional styles for inline style replacements */

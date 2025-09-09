@@ -9,7 +9,8 @@ import {
     TextBulletListSquare24Regular,
     Code24Regular,
     BookInformation24Regular,
-    LearningApp24Regular
+    LearningApp24Regular,
+    Lightbulb24Regular
 } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -624,88 +625,57 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                             {/* Conclusion section */}
                             <div id="section-conclusion" className={styles.contentSection}>
                                 <div className={styles.sectionTitle}>
-                                    <BrainCircuit24Regular className={styles.sectionIcon} />
+                                    <Lightbulb24Regular className={styles.sectionIcon} />
                                     <Text as="h3" size={500} weight="semibold">
-                                        {t("tutorials.ai_basics.sections.conclusion.title", "Fazit")}
+                                        {t("tutorials.ai_basics.sections.conclusion.title", "Fazit & wichtige Erkenntnisse")}
                                     </Text>
                                 </div>
+                                <Text as="p" className={styles.description}>
+                                    {t(
+                                        "tutorials.ai_basics.sections.conclusion.intro",
+                                        "Jetzt wissen Sie, wie KI-Sprachmodelle funktionieren! Hier sind die wichtigsten Punkte:"
+                                    )}
+                                </Text>
 
-                                <div className={styles.conclusionBox}>
-                                    <Text as="p" className={styles.conclusionIntro}>
-                                        {t(
-                                            "tutorials.ai_basics.sections.conclusion.intro",
-                                            "Jetzt wissen Sie, wie KI-Sprachmodelle funktionieren! Hier sind die wichtigsten Punkte:"
-                                        )}
-                                    </Text>
+                                <div className={styles.tipsContainer}>
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight1.title", "Lernen und Antworten sind getrennt")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.ai_basics.sections.conclusion.insight1.description",
+                                                "KI-Modelle lernen einmal aus vielen Texten und können dann Fragen beantworten. Beim Antworten lernen sie nichts Neues dazu - sie nutzen nur ihr bereits gespeichertes Wissen."
+                                            )}
+                                        </p>
+                                    </div>
 
-                                    <div className={styles.keyInsights}>
-                                        <div className={styles.insightItem}>
-                                            <div className={styles.insightIcon}>
-                                                <LearningApp24Regular />
-                                            </div>
-                                            <div className={styles.insightContent}>
-                                                <Text as="h4" size={300} weight="semibold">
-                                                    {t("tutorials.ai_basics.sections.conclusion.insight1.title", "Lernen und Antworten sind getrennt")}
-                                                </Text>
-                                                <Text as="p" size={200}>
-                                                    {t(
-                                                        "tutorials.ai_basics.sections.conclusion.insight1.description",
-                                                        "KI-Modelle lernen einmal aus vielen Texten und können dann Fragen beantworten. Beim Antworten lernen sie nichts Neues dazu - sie nutzen nur ihr bereits gespeichertes Wissen."
-                                                    )}
-                                                </Text>
-                                            </div>
-                                        </div>
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight2.title", "Wort für Wort Vorhersagen")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.ai_basics.sections.conclusion.insight2.description",
+                                                "KI funktioniert einfach: Sie rät immer das nächste passende Wort. So entstehen ganze Antworten - Wort für Wort. Die KI 'versteht' nicht wirklich, sondern erkennt Muster."
+                                            )}
+                                        </p>
+                                    </div>
 
-                                        <div className={styles.insightItem}>
-                                            <div className={styles.insightIcon}>
-                                                <DataArea24Regular />
-                                            </div>
-                                            <div className={styles.insightContent}>
-                                                <Text as="h4" size={300} weight="semibold">
-                                                    {t("tutorials.ai_basics.sections.conclusion.insight2.title", "Wort für Wort Vorhersagen")}
-                                                </Text>
-                                                <Text as="p" size={200}>
-                                                    {t(
-                                                        "tutorials.ai_basics.sections.conclusion.insight2.description",
-                                                        "KI funktioniert einfach: Sie rät immer das nächste passende Wort. So entstehen ganze Antworten - Wort für Wort. Die KI 'versteht' nicht wirklich, sondern erkennt Muster."
-                                                    )}
-                                                </Text>
-                                            </div>
-                                        </div>
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight3.title", "Klare Fragen = bessere Antworten")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.ai_basics.sections.conclusion.insight3.description",
+                                                "Je genauer Sie fragen, desto besser wird die Antwort. Sagen Sie der KI, was Sie brauchen und geben Sie genug Details mit."
+                                            )}
+                                        </p>
+                                    </div>
 
-                                        <div className={styles.insightItem}>
-                                            <div className={styles.insightIcon}>
-                                                <TextBulletListSquare24Regular />
-                                            </div>
-                                            <div className={styles.insightContent}>
-                                                <Text as="h4" size={300} weight="semibold">
-                                                    {t("tutorials.ai_basics.sections.conclusion.insight3.title", "Klare Fragen = bessere Antworten")}
-                                                </Text>
-                                                <Text as="p" size={200}>
-                                                    {t(
-                                                        "tutorials.ai_basics.sections.conclusion.insight3.description",
-                                                        "Je genauer Sie fragen, desto besser wird die Antwort. Sagen Sie der KI, was Sie brauchen und geben Sie genug Details mit."
-                                                    )}
-                                                </Text>
-                                            </div>
-                                        </div>
-
-                                        <div className={styles.insightItem}>
-                                            <div className={styles.insightIcon}>
-                                                <Search24Regular />
-                                            </div>
-                                            <div className={styles.insightContent}>
-                                                <Text as="h4" size={300} weight="semibold">
-                                                    {t("tutorials.ai_basics.sections.conclusion.insight4.title", "Verschiedene Wissensquellen")}
-                                                </Text>
-                                                <Text as="p" size={200}>
-                                                    {t(
-                                                        "tutorials.ai_basics.sections.conclusion.insight4.description",
-                                                        "KI nutzt ihr gelerntes Wissen, das aktuelle Gespräch und kann auch zusätzliche Hilfsmittel bekommen (wie Internet-Suche), um Ihnen zu helfen."
-                                                    )}
-                                                </Text>
-                                            </div>
-                                        </div>
+                                    <div className={styles.tipItem}>
+                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight4.title", "Verschiedene Wissensquellen")}</strong>
+                                        <p>
+                                            {t(
+                                                "tutorials.ai_basics.sections.conclusion.insight4.description",
+                                                "KI nutzt ihr gelerntes Wissen, das aktuelle Gespräch und kann auch zusätzliche Hilfsmittel bekommen (wie Internet-Suche), um Ihnen zu helfen."
+                                            )}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

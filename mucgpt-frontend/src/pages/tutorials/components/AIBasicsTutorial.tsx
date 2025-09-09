@@ -18,7 +18,7 @@ import CodeBlockRenderer from "../../../components/CodeBlockRenderer/CodeBlockRe
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 
-import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
+import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress, { TutorialSection } from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import styles from "./AIBasicsTutorial.module.css";
@@ -118,30 +118,6 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
         );
     };
 
-    const features: TutorialFeature[] = [
-        {
-            icon: <BrainCircuit24Regular />,
-            title: t("tutorials.ai_basics.features.understanding.title", "LLM-Funktionsweise verstehen"),
-            description: t(
-                "tutorials.ai_basics.features.understanding.description",
-                "Lernen Sie die Grundprinzipien und Architektur von Large Language Models kennen."
-            )
-        },
-        {
-            icon: <ChartMultiple24Regular />,
-            title: t("tutorials.ai_basics.features.training_vs_inference.title", "Training vs. Inferenz"),
-            description: t(
-                "tutorials.ai_basics.features.training_vs_inference.description",
-                "Verstehen Sie den Unterschied zwischen Trainings- und Nutzungsphase."
-            )
-        },
-        {
-            icon: <TextBulletListSquare24Regular />,
-            title: t("tutorials.ai_basics.features.best_practices.title", "Effektive Kommunikation"),
-            description: t("tutorials.ai_basics.features.best_practices.description", "Lernen Sie, wie Sie bessere Ergebnisse durch klare Prompts erzielen.")
-        }
-    ];
-
     const tips: TutorialTip[] = [];
 
     return (
@@ -174,7 +150,6 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                     "tutorials.ai_basics.intro.description",
                     "Verstehen Sie, wie moderne KI-Systeme wie Large Language Models (LLMs) funktionieren und trainiert werden."
                 )}
-                features={features}
                 example={{
                     title: t("tutorials.ai_basics.example.title", "Wie funktionieren Large Language Models?"),
                     description: t("tutorials.ai_basics.example.description", "Ein Überblick über die grundlegenden Konzepte und Funktionsweisen von LLMs."),

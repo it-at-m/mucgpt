@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from "react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { Play24Regular, BrainCircuit24Regular, Target24Regular, DocumentBulletList24Regular, Send24Regular } from "@fluentui/react-icons";
-import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
+import { BrainCircuit24Regular, Target24Regular, Send24Regular } from "@fluentui/react-icons";
+import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress, { TutorialSection } from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
@@ -129,35 +129,6 @@ export const BrainstormTutorial = ({ onPreviousTutorial, onNextTutorial, onBackT
         window.location.href = url;
     }, []);
 
-    const features: TutorialFeature[] = [
-        {
-            icon: <BrainCircuit24Regular />,
-            title: t("tutorials.brainstorm.features.ai.title", "KI-gestütztes Brainstorming"),
-            description: t(
-                "tutorials.brainstorm.features.ai.description",
-                "Nutzt fortschrittliche KI-Modelle, um kreative und strukturierte Ideen zu generieren."
-            )
-        },
-        {
-            icon: <Target24Regular />,
-            title: t("tutorials.brainstorm.features.structure.title", "Strukturierte Mindmaps"),
-            description: t(
-                "tutorials.brainstorm.features.structure.description",
-                "Organisiert Ideen hierarchisch mit Haupt- und Unterthemen für bessere Übersicht."
-            )
-        },
-        {
-            icon: <Play24Regular />,
-            title: t("tutorials.brainstorm.features.interactive.title", "Interaktive Darstellung"),
-            description: t("tutorials.brainstorm.features.interactive.description", "Expandierbare und navigierbare Mindmap-Knoten für intuitive Exploration.")
-        },
-        {
-            icon: <DocumentBulletList24Regular />,
-            title: t("tutorials.brainstorm.features.export.title", "Export-Funktionen"),
-            description: t("tutorials.brainstorm.features.export.description", "Mindmaps als Markdown, PDF oder Bild exportieren.")
-        }
-    ];
-
     const tips: TutorialTip[] = [];
 
     return (
@@ -190,7 +161,6 @@ export const BrainstormTutorial = ({ onPreviousTutorial, onNextTutorial, onBackT
                     "tutorials.brainstorm.intro.description",
                     "Das Brainstorming-Tool generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
                 )}
-                features={features}
                 example={{
                     title: t("tutorials.brainstorm.example.title", "Brainstorming Beispiel"),
                     description: t("tutorials.brainstorm.example.description", ""),

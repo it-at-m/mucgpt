@@ -97,12 +97,16 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
     const handlePreviousTutorial = () => {
         if (onPreviousTutorial) {
             onPreviousTutorial();
+            // Scroll to top after navigation using scrollOffset
+            window.scrollTo({ top: Math.max(0, scrollOffset), behavior: "smooth" });
         }
     };
 
     const handleNextTutorial = () => {
         if (onNextTutorial) {
             onNextTutorial();
+            // Scroll to top after navigation using scrollOffset
+            window.scrollTo({ top: Math.max(0, scrollOffset), behavior: "smooth" });
         }
     };
 

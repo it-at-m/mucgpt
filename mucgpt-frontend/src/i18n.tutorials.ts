@@ -217,17 +217,6 @@ export const tutorialsTranslations = {
                     description:
                         "Werkzeuge sind spezialisierte Funktionen, die schwierige Aufgaben erledigen. MUCGPT kann sich entscheiden diese zu benutzen, um zu besseren Ergebnissen zu kommen. Beispiele sind die Beschaffung von Informationen, die nicht in den Trainingsdaten enthalten ist (z.B. über Websuche oder die Anbindung von unserer KI Suche im Dienstleistungsfinder."
                 },
-                features: {
-                    selector: {
-                        title: "Erweiterbarkeit",
-                        description: "Mittels Werkzeugen kannst du MUCGPT um spezifische Funktionen erweitern, die für deine Aufgaben relevant sind."
-                    },
-                    efficiency: {
-                        title: "Effizienz",
-                        description:
-                            "Werkzeuge können MUCGPT helfen, spezifische Aufgaben effizient zu erledigen. Insebsondere für komplexe Aufgaben, für die ein Sprachmodell nicht direkt geeignet ist. Beispiele wären z.B. ein Taschenrechner Werkzeug was zwei zahlen zusammenzählt, oder ein Werkzeug, das eine Webseite besucht und Informationen extrahiert."
-                    }
-                },
                 example: {
                     title: "So funktioniert die Werkzeug-Auswahl:",
                     description: ""
@@ -247,24 +236,6 @@ export const tutorialsTranslations = {
                     title: "Was ist das Brainstorming Werkzeug?",
                     description:
                         "Das Brainstorming-Werkzeug generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
-                },
-                features: {
-                    ai: {
-                        title: "KI-gestütztes Brainstorming",
-                        description: "Nutzt fortschrittliche KI-Modelle, um kreative und strukturierte Ideen zu generieren."
-                    },
-                    structure: {
-                        title: "Strukturierte Mindmaps",
-                        description: "Organisiert Ideen hierarchisch mit Haupt- und Unterthemen für bessere Übersicht."
-                    },
-                    interactive: {
-                        title: "Interaktive Darstellung",
-                        description: "Expandierbare und navigierbare Mindmap-Knoten für intuitive Exploration."
-                    },
-                    export: {
-                        title: "Export-Funktionen",
-                        description: "Mindmaps können exportiert werden und in 'Freeplane' weiterverwendet werden."
-                    }
                 },
                 example: {
                     title: "Brainstorming Beispiel",
@@ -293,24 +264,6 @@ export const tutorialsTranslations = {
                     description:
                         "Das Text-Vereinfachungs-Werkzeug übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
                 },
-                features: {
-                    easy: {
-                        title: "Leichte Sprache A2",
-                        description: "Wandelt komplexe Texte in verständliche Leichte Sprache nach A2-Standard um."
-                    },
-                    reflective: {
-                        title: "Reflektive Verbesserung",
-                        description: "Automatische Qualitätsprüfung und iterative Verbesserung der Vereinfachung."
-                    },
-                    rules: {
-                        title: "Regelkonform",
-                        description: "Befolgt alle Regeln für Leichte Sprache: kurze Sätze, einfache Wörter, klare Struktur."
-                    },
-                    download: {
-                        title: "Download-Funktion",
-                        description: "Vereinfachte Texte als Textdatei herunterladen für weitere Verwendung."
-                    }
-                },
                 example: {
                     title: "Beispiel Text-Vereinfachung",
                     description: ""
@@ -337,9 +290,6 @@ export const tutorialsTranslations = {
             productivity_tips: {
                 title: "Produktivitäts-Tipps",
                 description: "Steigere deine Produktivität mit cleveren Tricks und Shortcuts."
-            },
-            features: {
-                title: "Funktionen"
             },
             tips: {
                 title: "Tipps und Tricks"
@@ -564,17 +514,6 @@ export const tutorialsTranslations = {
                     description:
                         "Tools are specialized functions that perform difficult tasks. MUCGPT may choose to use these to achieve better results. Examples include obtaining information not contained in the training data (e.g., through web searches or connecting from our AI search in the service finder)."
                 },
-                features: {
-                    selector: {
-                        title: "Extensibility",
-                        description: "With tools, you can extend MUCGPT with specific functions that are relevant to your tasks."
-                    },
-                    efficiency: {
-                        title: "Efficiency",
-                        description:
-                            "Tools can help MUCGPT perform specific tasks efficiently. Especially for complex tasks for which a language model is not directly suitable. Examples include a calculator tool that adds two numbers together or a tool that visits a webpage and extracts information."
-                    }
-                },
                 example: {
                     title: "This is how the tool selection works:",
                     description: ""
@@ -594,24 +533,6 @@ export const tutorialsTranslations = {
                     title: "What is the Brainstorming Tool?",
                     description:
                         "The brainstorming tool generates structured mind maps on any topic. It uses AI to collect, organize, and present creative ideas as an interactive mind map."
-                },
-                features: {
-                    ai: {
-                        title: "AI-Powered Brainstorming",
-                        description: "Uses advanced AI models to generate creative and structured ideas."
-                    },
-                    structure: {
-                        title: "Structured Mind Maps",
-                        description: "Organizes ideas hierarchically with main and subtopics for better clarity."
-                    },
-                    interactive: {
-                        title: "Interactive Representation",
-                        description: "Expandable and navigable mind map nodes for intuitive exploration."
-                    },
-                    export: {
-                        title: "Export Features",
-                        description: "Mind maps can be exported and reused in 'Freeplane'."
-                    }
                 },
                 example: {
                     title: "Brainstorming Example",
@@ -640,24 +561,6 @@ export const tutorialsTranslations = {
                     description:
                         "The text simplification tool translates complex texts into easy language according to A2 standards. It uses AI with automatic quality checks to make texts more understandable and accessible."
                 },
-                features: {
-                    easy: {
-                        title: "Easy Language A2",
-                        description: "Transforms complex texts into understandable easy language according to A2 standards."
-                    },
-                    reflective: {
-                        title: "Reflective Improvement",
-                        description: "Automatic quality checking and iterative improvement of the simplification."
-                    },
-                    rules: {
-                        title: "Rule-Compliant",
-                        description: "Follows all rules for easy language: short sentences, simple words, clear structure."
-                    },
-                    download: {
-                        title: "Download Function",
-                        description: "Download simplified texts as text files for further use."
-                    }
-                },
                 example: {
                     title: "Example Text Simplification",
                     description: ""
@@ -684,9 +587,6 @@ export const tutorialsTranslations = {
             productivity_tips: {
                 title: "Productivity Tips",
                 description: "Increase your productivity with clever tricks and shortcuts."
-            },
-            features: {
-                title: "Features"
             },
             tips: {
                 title: "Tips and Tricks"
@@ -911,17 +811,6 @@ export const tutorialsTranslations = {
                     description:
                         "Werkzeuge san spezialisierte Funktionen, die schwierige Aufgaben erledigen. MUCGPT kann sich entscheiden, diese zu benutzen, um bessere Ergebnisse zu kriegen. Beispiele san die Beschaffung von Informationen, die ned in den Trainingsdaten enthalten san (z.B. über Websuche oder die Anbindung von unserer KI-Suche im Dienstleistungsfinder)."
                 },
-                features: {
-                    selector: {
-                        title: "Erweiterbarkeit",
-                        description: "Mit Werkzeugen kannst du MUCGPT um spezifische Funktionen erweitern, die für deine Aufgaben wichtig san."
-                    },
-                    efficiency: {
-                        title: "Effizienz",
-                        description:
-                            "Werkzeuge können MUCGPT helfen, spezifische Aufgaben effizient zu erledigen. Besonders für komplexe Aufgaben, wo a Sprachmodell ned direkt geeignet is. Beispiele wären z.B. a Taschenrechner-Werkzeug, das zwei Zahlen zusammenzählt, oder ein Werkzeug, das a Webseite besucht und Informationen extrahiert."
-                    }
-                },
                 example: {
                     title: "So funktioniert die Werkzeug-Auswahl:",
                     description: ""
@@ -941,24 +830,6 @@ export const tutorialsTranslations = {
                     title: "Was ist das Brainstorming Werkzeug?",
                     description:
                         "Das Brainstorming-Werkzeug generiert strukturierte Mindmaps zu jedem Thema. Es nutzt KI, um kreative Ideen zu sammeln, zu organisieren und als interaktive Mindmap darzustellen."
-                },
-                features: {
-                    ai: {
-                        title: "KI-gestütztes Brainstorming",
-                        description: "Nutzt fortschrittliche KI-Modelle, um kreative und strukturierte Ideen zu generieren."
-                    },
-                    structure: {
-                        title: "Strukturierte Mindmaps",
-                        description: "Organisiert Ideen hierarchisch mit Haupt- und Unterthemen für bessere Übersicht."
-                    },
-                    interactive: {
-                        title: "Interaktive Darstellung",
-                        description: "Expandierbare und navigierbare Mindmap-Knoten für intuitive Erkundung."
-                    },
-                    export: {
-                        title: "Export-Funktionen",
-                        description: "Mindmaps können exportiert werden und in 'Freeplane' weiterverwendet werden."
-                    }
                 },
                 example: {
                     title: "Brainstorming Beispiel",
@@ -986,24 +857,6 @@ export const tutorialsTranslations = {
                     title: "Was ist das Text-Vereinfachungs-Werkzeug?",
                     description:
                         "Das Text-Vereinfachungs-Werkzeug übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
-                },
-                features: {
-                    easy: {
-                        title: "Leichte Sprache A2",
-                        description: "Wandelt komplexe Texte in verständliche Leichte Sprache nach A2-Standard um."
-                    },
-                    reflective: {
-                        title: "Reflektive Verbesserung",
-                        description: "Automatische Qualitätsprüfung und iterative Verbesserung der Vereinfachung."
-                    },
-                    rules: {
-                        title: "Regelkonform",
-                        description: "Befolgt alle Regeln für Leichte Sprache: kurze Sätze, einfache Wörter, klare Struktur."
-                    },
-                    download: {
-                        title: "Download-Funktion",
-                        description: "Vereinfachte Texte als Textdatei herunterladen für weitere Verwendung."
-                    }
                 },
                 example: {
                     title: "Beispiel Text-Vereinfachung",
@@ -1264,17 +1117,6 @@ export const tutorialsTranslations = {
                     description:
                         "Les outils sont des fonctions spécialisées qui accomplissent des tâches difficiles. MUCGPT peut choisir de les utiliser pour obtenir de meilleurs résultats. Des exemples incluent l'obtention d'informations qui ne figurent pas dans les données d'entraînement (par exemple, via une recherche sur le web ou la connexion de notre recherche IA dans le moteur de recherche de services)."
                 },
-                features: {
-                    selector: {
-                        title: "Extensibilité",
-                        description: "Avec les outils, vous pouvez étendre MUCGPT avec des fonctions spécifiques qui sont pertinentes pour vos tâches."
-                    },
-                    efficiency: {
-                        title: "Efficacité",
-                        description:
-                            "Les outils peuvent aider MUCGPT à accomplir des tâches spécifiques de manière efficace. En particulier pour des tâches complexes pour lesquelles un modèle linguistique n'est pas directement adapté. Des exemples incluent un outil de calculateur qui additionne deux nombres ou un outil qui visite un site web et extrait des informations."
-                    }
-                },
                 example: {
                     title: "Voici comment fonctionne la sélection d'outils :",
                     description: ""
@@ -1294,24 +1136,6 @@ export const tutorialsTranslations = {
                     title: "Qu'est-ce que l'outil de brainstorming ?",
                     description:
                         "L'outil de brainstorming génère des cartes mentales structurées sur n'importe quel sujet. Il utilise l'IA pour collecter, organiser et présenter des idées créatives sous forme de carte mentale interactive."
-                },
-                features: {
-                    ai: {
-                        title: "Brainstorming assisté par IA",
-                        description: "Utilise des modèles avancés d'IA pour générer des idées créatives et structurées."
-                    },
-                    structure: {
-                        title: "Cartes mentales structurées",
-                        description: "Organise les idées de manière hiérarchique avec des thèmes principaux et secondaires pour une meilleure clarté."
-                    },
-                    interactive: {
-                        title: "Représentation interactive",
-                        description: "Nœuds de carte mentale extensibles et navigables pour une exploration intuitive."
-                    },
-                    export: {
-                        title: "Fonctions d'exportation",
-                        description: "Les cartes mentales peuvent être exportées et réutilisées dans 'Freeplane'."
-                    }
                 },
                 example: {
                     title: "Exemple de brainstorming",
@@ -1340,24 +1164,6 @@ export const tutorialsTranslations = {
                     description:
                         "L'outil de simplification de texte traduit des textes complexes en langage simple selon les normes A2. Il utilise l'IA avec un contrôle automatique de la qualité pour rendre les textes plus compréhensibles et accessibles."
                 },
-                features: {
-                    easy: {
-                        title: "Langage simple A2",
-                        description: "Transforme des textes complexes en langage simple et compréhensible selon les normes A2."
-                    },
-                    reflective: {
-                        title: "Amélioration réfléchie",
-                        description: "Contrôle de qualité automatique et amélioration itérative de la simplification."
-                    },
-                    rules: {
-                        title: "Conforme aux règles",
-                        description: "Respecte toutes les règles du langage simple : phrases courtes, mots simples, structure claire."
-                    },
-                    download: {
-                        title: "Fonction de téléchargement",
-                        description: "Téléchargez des textes simplifiés en tant que fichiers texte pour une utilisation ultérieure."
-                    }
-                },
                 example: {
                     title: "Exemple de simplification de texte",
                     description: ""
@@ -1385,9 +1191,6 @@ export const tutorialsTranslations = {
             productivity_tips: {
                 title: "Conseils de productivité",
                 description: "Augmentez votre productivité avec des astuces et des raccourcis intelligents."
-            },
-            features: {
-                title: "Fonctionnalités"
             },
             tips: {
                 title: "Conseils et astuces"
@@ -1610,17 +1413,6 @@ export const tutorialsTranslations = {
                     description:
                         "Інструменти - це спеціалізовані функції, які виконують складні завдання. MUCGPT може вибрати їх для досягнення кращих результатів. Прикладами є отримання інформації, яка не входить до навчальних даних (наприклад, через веб-пошук або підключення з нашого ШІ-пошуку в пошуковику послуг)."
                 },
-                features: {
-                    selector: {
-                        title: "Розширюваність",
-                        description: "За допомогою інструментів ви можете розширити MUCGPT спеціальними функціями, які важливі для ваших завдань."
-                    },
-                    efficiency: {
-                        title: "Ефективність",
-                        description:
-                            "Інструменти можуть допомогти MUCGPT виконувати конкретні завдання ефективно. Особливо для складних завдань, для яких мовна модель не підходить безпосередньо. Прикладами можуть бути інструмент калькулятора, який складає два числа, або інструмент, який відвідує веб-сайт і витягує інформацію."
-                    }
-                },
                 example: {
                     title: "Ось як працює вибір інструментів:",
                     description: ""
@@ -1640,24 +1432,6 @@ export const tutorialsTranslations = {
                     title: "Що таке інструмент для мозкового штурму?",
                     description:
                         "Інструмент для мозкового штурму генерує структуровані мапи мислення на будь-яку тему. Він використовує ШІ для збору, організації та представлення креативних ідей у вигляді інтерактивної мапи мислення."
-                },
-                features: {
-                    ai: {
-                        title: "Мозковий штурм на основі ШІ",
-                        description: "Використовує передові моделі ШІ для генерації креативних і структурованих ідей."
-                    },
-                    structure: {
-                        title: "Структуровані мапи мислення",
-                        description: "Організовує ідеї ієрархічно з основними та підтемами для кращої ясності."
-                    },
-                    interactive: {
-                        title: "Інтерактивне представлення",
-                        description: "Розширювані та навігаційні вузли мапи мислення для інтуїтивного дослідження."
-                    },
-                    export: {
-                        title: "Функції експорту",
-                        description: "Мапи мислення можуть бути експортовані та повторно використані в 'Freeplane'."
-                    }
                 },
                 example: {
                     title: "Приклад мозкового штурму",
@@ -1686,24 +1460,6 @@ export const tutorialsTranslations = {
                     description:
                         "Інструмент спрощення тексту переводить складні тексти на просту мову згідно стандарту A2. Він використовує ШІ з автоматичною перевіркою якості для того, щоб зробити тексти більш зрозумілими та доступними."
                 },
-                features: {
-                    easy: {
-                        title: "Проста мова A2",
-                        description: "Перетворює складні тексти на зрозумілу просту мову згідно стандарту A2."
-                    },
-                    reflective: {
-                        title: "Рефлективне покращення",
-                        description: "Автоматична перевірка якості та ітеративне покращення спрощення."
-                    },
-                    rules: {
-                        title: "Відповідність правилам",
-                        description: "Дотримується всіх правил простої мови: короткі речення, прості слова, чітка структура."
-                    },
-                    download: {
-                        title: "Функція завантаження",
-                        description: "Завантажте спрощені тексти у вигляді текстового файлу для подальшого використання."
-                    }
-                },
                 example: {
                     title: "Приклад спрощення тексту",
                     description: ""
@@ -1731,9 +1487,6 @@ export const tutorialsTranslations = {
             productivity_tips: {
                 title: "Поради щодо продуктивності",
                 description: "Підвищте свою продуктивність з розумними хитрощами та гарячими клавішами."
-            },
-            features: {
-                title: "Функції"
             },
             tips: {
                 title: "Поради та хитрощі"

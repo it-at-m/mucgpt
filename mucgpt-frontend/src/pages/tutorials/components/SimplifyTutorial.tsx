@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef } from "react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TextBulletListSquare24Regular, CheckmarkCircle24Regular, Edit24Regular, ArrowDownload24Regular, Send24Regular } from "@fluentui/react-icons";
+import { TextBulletListSquare24Regular, Send24Regular } from "@fluentui/react-icons";
 
-import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
+import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress, { TutorialSection } from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
@@ -82,32 +82,6 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
         window.location.href = url;
     }, []);
 
-    const features: TutorialFeature[] = [
-        {
-            icon: <TextBulletListSquare24Regular />,
-            title: t("tutorials.simplify.features.easy.title", "Leichte Sprache A2"),
-            description: t("tutorials.simplify.features.easy.description", "Wandelt komplexe Texte in verständliche Leichte Sprache nach A2-Standard um.")
-        },
-        {
-            icon: <Edit24Regular />,
-            title: t("tutorials.simplify.features.reflective.title", "Reflektive Verbesserung"),
-            description: t("tutorials.simplify.features.reflective.description", "Automatische Qualitätsprüfung und iterative Verbesserung der Vereinfachung.")
-        },
-        {
-            icon: <CheckmarkCircle24Regular />,
-            title: t("tutorials.simplify.features.rules.title", "Regelkonform"),
-            description: t(
-                "tutorials.simplify.features.rules.description",
-                "Befolgt alle Regeln für Leichte Sprache: kurze Sätze, einfache Wörter, klare Struktur."
-            )
-        },
-        {
-            icon: <ArrowDownload24Regular />,
-            title: t("tutorials.simplify.features.download.title", "Download-Funktion"),
-            description: t("tutorials.simplify.features.download.description", "Vereinfachte Texte als Textdatei herunterladen für weitere Verwendung.")
-        }
-    ];
-
     const tips: TutorialTip[] = [
         {
             title: t("tutorials.simplify.tips.length.title", "Textlänge beachten:"),
@@ -158,7 +132,6 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                     "tutorials.simplify.intro.description",
                     "Das Text-Vereinfachungs-Tool übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
                 )}
-                features={features}
                 example={{
                     title: t("tutorials.simplify.example.title", "Text Vereinfachung Beispiel"),
                     description: t("tutorials.simplify.example.description", ""),

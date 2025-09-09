@@ -3,7 +3,7 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { Toolbox24Regular, CheckmarkCircle24Regular, BrainCircuit24Regular, TextBulletListSquare24Regular } from "@fluentui/react-icons";
 import { Button, Text } from "@fluentui/react-components";
-import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
+import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress, { TutorialSection } from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { QuestionInput } from "../../../components/QuestionInput/QuestionInput";
@@ -276,25 +276,6 @@ export const ToolsTutorial = ({
         return toolContent.length > 0 ? <>{toolContent}</> : null;
     };
 
-    const features: TutorialFeature[] = [
-        {
-            icon: <Toolbox24Regular />,
-            title: t("tutorials.tools.features.selector.title", "Tool-Auswahl"),
-            description: t(
-                "tutorials.tools.features.selector.description",
-                "Wählen Sie spezifische KI-Tools aus, die für Ihre Aufgabe am besten geeignet sind."
-            )
-        },
-        {
-            icon: <CheckmarkCircle24Regular />,
-            title: t("tutorials.tools.features.efficiency.title", "Effiziente Arbeitsweise"),
-            description: t(
-                "tutorials.tools.features.efficiency.description",
-                "KI Werkzeuge sind spezialisierte Funktionen, die bestimmte Aufgaben effizient erledigen, wie Web-Recherche, Code-Ausführung oder mathematische Berechnungen."
-            )
-        }
-    ];
-
     const tips: TutorialTip[] = [
         {
             title: t("tutorials.tools.tips.select_relevant.title", "Wählen Sie relevante Tools:"),
@@ -349,7 +330,6 @@ export const ToolsTutorial = ({
                     "tutorials.tools.intro.description",
                     "AI-Tools sind spezialisierte Funktionen, die Sie der KI hinzufügen können, um spezifische Aufgaben zu erledigen. Von Web-Recherche über mathematische Berechnungen bis hin zur Code-Ausführung - wählen Sie die Tools aus, die Sie für Ihre Aufgabe benötigen."
                 )}
-                features={features}
                 example={{
                     title: t("tutorials.tools.example.title", "So wählen Sie ein Tools aus:"),
                     description: t("tutorials.tools.example.description", ""),

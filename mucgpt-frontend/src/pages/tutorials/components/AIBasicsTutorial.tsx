@@ -20,6 +20,7 @@ import remarkMath from "remark-math";
 
 import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
 import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import { useTutorialProgress } from "./useTutorialProgress";
 import styles from "./AIBasicsTutorial.module.css";
 
 const DATA_MERMAID = `mindmap
@@ -75,8 +76,6 @@ const ARCHITECTURE_MERMAID = `flowchart TD
 
 export const AIBasicsTutorial = () => {
     const { t } = useTranslation();
-    const [currentStep, setCurrentStep] = React.useState<number>(0);
-    const [completedSections, setCompletedSections] = React.useState<string[]>([]);
 
     // Custom sections for AI Basics tutorial - memoized to prevent recreation
     const tutorialSections = React.useMemo<TutorialSection[]>(
@@ -90,83 +89,8 @@ export const AIBasicsTutorial = () => {
         []
     );
 
-    // Function to mark a section as completed
-    const handleSectionComplete = React.useCallback(
-        (sectionId: string) => {
-            setCompletedSections(prev => {
-                if (prev.includes(sectionId)) {
-                    return prev; // Already completed, no change
-                }
-                const newCompleted = [...prev, sectionId];
-
-                // Auto-advance step based on section completion
-                const sectionIndex = tutorialSections.findIndex(section => section.id === sectionId);
-                if (sectionIndex !== -1) {
-                    // currentStep is 0-based to match section indices, but represents next section to focus
-                    setCurrentStep(prevStep => Math.max(prevStep, sectionIndex + 1));
-                }
-
-                return newCompleted;
-            });
-        },
-        [tutorialSections]
-    );
-
-    // Intersection Observer for section completion - ONLY way to complete sections
-    React.useEffect(() => {
-        // Delay to ensure DOM elements are rendered
-        const setupObserver = () => {
-            const sectionElements = tutorialSections.map(section => document.getElementById(`section-${section.id}`)).filter(Boolean);
-
-            console.log(
-                "Found section elements:",
-                sectionElements.map(el => el?.id)
-            );
-
-            if (sectionElements.length === 0) return null;
-
-            const observer = new IntersectionObserver(
-                entries => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
-                            // Very low threshold
-                            const sectionId = entry.target.id.replace("section-", "");
-                            if (sectionId && tutorialSections.some(section => section.id === sectionId)) {
-                                handleSectionComplete(sectionId);
-                            }
-                        }
-                    });
-                },
-                {
-                    threshold: [0.1, 0.3, 0.5], // Multiple thresholds for better detection
-                    rootMargin: "0px 0px -100px 0px" // Complete when section is well in view
-                }
-            );
-
-            sectionElements.forEach(element => {
-                if (element) observer.observe(element);
-            });
-
-            return observer;
-        };
-
-        const timer = setTimeout(() => {
-            const observer = setupObserver();
-
-            return () => {
-                if (observer) {
-                    tutorialSections.forEach(section => {
-                        const element = document.getElementById(`section-${section.id}`);
-                        if (element) observer.unobserve(element);
-                    });
-                }
-            };
-        }, 1000); // Wait 1 second for DOM to be ready
-
-        return () => {
-            clearTimeout(timer);
-        };
-    }, [tutorialSections, handleSectionComplete]);
+    // Use the custom hook for progress tracking
+    const { currentStep, completedSections, handleSectionComplete } = useTutorialProgress({ sections: tutorialSections });
 
     // Function to render Mermaid diagrams with Markdown
     const renderMermaidDiagram = (mermaidCode: string) => {

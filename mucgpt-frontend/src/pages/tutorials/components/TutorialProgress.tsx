@@ -26,6 +26,10 @@ interface TutorialProgressProps {
     showStats?: boolean;
     compact?: boolean;
     className?: string;
+    /** Enable click-to-scroll functionality for section items */
+    enableSectionNavigation?: boolean;
+    /** Custom scroll offset when navigating to sections */
+    scrollOffset?: number;
 }
 
 export const TutorialProgress: React.FC<TutorialProgressProps> = ({
@@ -42,7 +46,9 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
     showPercentage = true,
     showStats = true,
     compact = false,
-    className
+    className,
+    enableSectionNavigation = true,
+    scrollOffset = -200
 }) => {
     const { t } = useTranslation();
     const progressPercentage = (currentStep / totalSteps) * 100;
@@ -92,15 +98,16 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
                             completedSections.includes(section.id) ? styles.completed : index === currentStep ? styles.current : styles.pending
                         }`}
                         onClick={() => {
-                            if (onSectionComplete) {
-                                onSectionComplete(section.id);
-                            }
-                            // Scroll to the section
-                            const sectionElement = document.getElementById(`section-${section.id}`);
-                            if (sectionElement) {
-                                const yOffset = -200;
-                                const y = sectionElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                                window.scrollTo({ top: y, behavior: "smooth" });
+                            if (enableSectionNavigation) {
+                                if (onSectionComplete) {
+                                    onSectionComplete(section.id);
+                                }
+                                // Scroll to the section
+                                const sectionElement = document.getElementById(`section-${section.id}`);
+                                if (sectionElement) {
+                                    const y = sectionElement.getBoundingClientRect().top + window.pageYOffset + scrollOffset;
+                                    window.scrollTo({ top: y, behavior: "smooth" });
+                                }
                             }
                         }}
                     >

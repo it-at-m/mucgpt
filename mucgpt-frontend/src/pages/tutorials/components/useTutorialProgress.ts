@@ -1,5 +1,5 @@
 import * as React from "react";
-import { TutorialSection } from "./TutorialProgress";
+import { TutorialSection } from "./TutorialTypes";
 
 interface UseTutorialProgressOptions {
     sections: TutorialSection[];

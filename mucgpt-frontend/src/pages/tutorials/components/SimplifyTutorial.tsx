@@ -4,20 +4,13 @@ import { useTranslation } from "react-i18next";
 import { TextBulletListSquare24Regular, Send24Regular, Target24Regular } from "@fluentui/react-icons";
 
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
-import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
 import styles from "./SimplifyTutorial.module.css";
-
-interface TutorialNavigationProps {
-    onPreviousTutorial?: () => void;
-    onNextTutorial?: () => void;
-    onBackToTop?: () => void;
-    currentTutorialId?: string;
-    allTutorials?: Array<{ id: string; title: string }>;
-}
+import { TutorialNavigationProps, TutorialSection } from "./TutorialTypes";
 
 // Create a realistic simplify workflow example
 const createSimplifyWorkflowExample = (): ChatMessage[] => {

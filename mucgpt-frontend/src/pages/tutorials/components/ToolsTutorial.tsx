@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Toolbox24Regular, CheckmarkCircle24Regular, BrainCircuit24Regular, TextBulletListSquare24Regular } from "@fluentui/react-icons";
 import { Button, Text } from "@fluentui/react-components";
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
-import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { QuestionInput } from "../../../components/QuestionInput/QuestionInput";
 import { ToolListResponse } from "../../../api/models";
@@ -14,6 +14,7 @@ import { LanguageContext } from "../../../components/LanguageSelector/LanguageCo
 import { getTools } from "../../../api/core-client";
 import { mapContextToBackendLang } from "../../../utils/language-utils";
 import styles from "./ToolsTutorial.module.css";
+import { TutorialSection } from "./TutorialTypes";
 
 // Create a tutorial-specific implementation using the real QuestionInput
 const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {

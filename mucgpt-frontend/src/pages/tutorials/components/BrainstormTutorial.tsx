@@ -3,20 +3,13 @@ import * as React from "react";
 import { useTranslation } from "react-i18next";
 import { BrainCircuit24Regular, Send24Regular } from "@fluentui/react-icons";
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
-import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
 import styles from "./BaseTutorial.module.css";
-
-interface TutorialNavigationProps {
-    onPreviousTutorial?: () => void;
-    onNextTutorial?: () => void;
-    onBackToTop?: () => void;
-    currentTutorialId?: string;
-    allTutorials?: Array<{ id: string; title: string }>;
-}
+import { TutorialNavigationProps, TutorialSection } from "./TutorialTypes";
 
 // Example mindmap content for demonstration
 const EXAMPLE_MINDMAP = `

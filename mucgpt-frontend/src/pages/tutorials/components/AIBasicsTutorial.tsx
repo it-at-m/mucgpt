@@ -20,17 +20,10 @@ import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
-import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import styles from "./AIBasicsTutorial.module.css";
-
-interface TutorialNavigationProps {
-    onPreviousTutorial?: () => void;
-    onNextTutorial?: () => void;
-    onBackToTop?: () => void;
-    currentTutorialId?: string;
-    allTutorials?: Array<{ id: string; title: string }>;
-}
+import { TutorialNavigationProps, TutorialSection } from "./TutorialTypes";
 
 const DATA_MERMAID = `mindmap
   root((LLM's\n haben Zugriff auf folgende Informationen))

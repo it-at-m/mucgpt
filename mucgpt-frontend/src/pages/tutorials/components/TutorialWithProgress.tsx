@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import TutorialProgress, { TutorialSection } from "./TutorialProgress";
+import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
+import { TutorialSection } from "./TutorialTypes";
 
 interface TutorialWithProgressProps {
     /** Tutorial sections configuration */

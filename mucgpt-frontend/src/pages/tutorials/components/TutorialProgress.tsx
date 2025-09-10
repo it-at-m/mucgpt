@@ -3,13 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Text, Button, Tooltip } from "@fluentui/react-components";
 import { CheckmarkCircle24Regular, ChevronLeft24Regular, ChevronRight24Regular, ArrowUp24Regular } from "@fluentui/react-icons";
 import styles from "./TutorialProgress.module.css";
-
-export interface TutorialSection {
-    id: string;
-    label?: string;
-    translationKey?: string;
-    defaultLabel?: string;
-}
+import { TutorialSection } from "./TutorialTypes";
 
 interface TutorialProgressProps {
     currentStep: number;

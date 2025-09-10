@@ -1,5 +1,4 @@
-import { useState, useCallback, useRef } from "react";
-import * as React from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { TextBulletListSquare24Regular, Send24Regular } from "@fluentui/react-icons";
 
@@ -63,11 +62,11 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
     const { currentStep, completedSections, handleSectionComplete } = useTutorialProgress({ sections: tutorialSections });
 
     const toggleExample = useCallback(() => {
-        setShowExample(!showExample);
-        if (!showExample) {
-            handleSectionComplete("example");
-        }
-    }, [showExample, handleSectionComplete]);
+        setShowExample(prev => {
+            if (!prev) handleSectionComplete("example");
+            return !prev;
+        });
+    }, [handleSectionComplete]);
 
     const tryExample = useCallback(() => {
         const exampleQuestion =
@@ -126,7 +125,7 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
 
             <BaseTutorial
                 title={t("tutorials.simplify.intro.title", "Was ist das Text-Vereinfachungs-Tool?")}
-                titleIcon={<TextBulletListSquare24Regular className="sectionIcon" />}
+                titleIcon={<TextBulletListSquare24Regular className={styles.sectionIcon} />}
                 description={t(
                     "tutorials.simplify.intro.description",
                     "Das Text-Vereinfachungs-Tool übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."

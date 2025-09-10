@@ -1,5 +1,4 @@
-import { useState, useCallback, useRef } from "react";
-import * as React from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { BrainCircuit24Regular, Send24Regular } from "@fluentui/react-icons";
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
@@ -117,11 +116,11 @@ export const BrainstormTutorial = ({ onPreviousTutorial, onNextTutorial, onBackT
     }, [handleSectionComplete]);
 
     const toggleExample = useCallback(() => {
-        setShowExample(!showExample);
-        if (!showExample) {
-            handleSectionComplete("example");
-        }
-    }, [showExample, handleSectionComplete]);
+        setShowExample(prev => {
+            if (!prev) handleSectionComplete("example");
+            return !prev;
+        });
+    }, [handleSectionComplete]);
 
     const tryExample = useCallback(() => {
         const exampleQuestion = "Erstelle eine Mindmap zum Thema 'Nachhaltiger Transport'";

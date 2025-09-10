@@ -13,9 +13,7 @@ import {
 } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../../../components/CodeBlockRenderer/CodeBlockRenderer";
-import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
@@ -280,7 +278,6 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
             <div className={styles.mermaidContainer}>
                 <Markdown
                     remarkPlugins={[remarkMath, remarkGfm]}
-                    rehypePlugins={[rehypeRaw, rehypeKatex]}
                     components={{
                         code: CodeBlockRenderer
                     }}

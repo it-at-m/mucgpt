@@ -53,7 +53,9 @@ export const useTutorialProgress = ({
     // Intersection Observer for section completion
     React.useEffect(() => {
         const setupObserver = () => {
-            const sectionElements = sections.map(section => document.getElementById(`section-${section.id}`)).filter(Boolean);
+            const sectionElements = sections
+                .map(section => document.getElementById(`section-${section.id}`))
+                .filter((element): element is HTMLElement => element !== null);
 
             if (sectionElements.length === 0) return null;
 

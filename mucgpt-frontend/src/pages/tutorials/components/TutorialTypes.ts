@@ -3,7 +3,7 @@ export interface TutorialNavigationProps {
     onNextTutorial?: () => void;
     onBackToTop?: () => void;
     currentTutorialId?: string;
-    allTutorials?: Array<{ id: string; title: string }>;
+    allTutorials?: ReadonlyArray<{ id: string; title: string }>;
 }
 export interface TutorialSection {
     id: string;

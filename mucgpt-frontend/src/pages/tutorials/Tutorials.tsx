@@ -333,6 +333,7 @@ export const Tutorials = () => {
                                         cursor: isUnderConstruction ? "not-allowed" : "pointer",
                                         opacity: isUnderConstruction ? 0.6 : 1
                                     }}
+                                    aria-disabled={isUnderConstruction}
                                 >
                                     <CardHeader
                                         image={<div className={styles.tutorialIcon}>{tutorial.icon}</div>}
@@ -367,7 +368,10 @@ export const Tutorials = () => {
     // Render selected tutorial
     const renderSelectedTutorial = () => {
         const tutorial = finalAllTutorials.find(t => t.id === currentTutorial);
-        if (!tutorial) return null;
+        if (!tutorial) {
+            navigate("/tutorials", { replace: true });
+            return null;
+        }
 
         return (
             <div className={styles.tutorialContent}>

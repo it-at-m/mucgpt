@@ -16,25 +16,9 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
     const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-    const [, setContainerSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
     const svgContainerRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
-
-    // Observe container size changes
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        const resizeObserver = new ResizeObserver(entries => {
-            for (const entry of entries) {
-                const { width, height } = entry.contentRect;
-                setContainerSize({ width, height });
-            }
-        });
-
-        resizeObserver.observe(containerRef.current);
-        return () => resizeObserver.disconnect();
-    }, []);
 
     useEffect(() => {
         const render = async () => {

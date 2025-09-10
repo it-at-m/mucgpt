@@ -34,8 +34,8 @@ export const BaseTutorial: React.FC<BaseTutorialProps> = ({ title, titleIcon, de
     return (
         <div className={styles.tutorial}>
             {/* Introduction */}
-            <div className={styles.introSection} id="section-intro">
-                <Text as="h3" size={500} weight="semibold" className={styles.sectionTitle}>
+            <div className={styles.introSection} role="region" aria-labelledby="section-intro-title" id="section-intro">
+                <Text id="section-intro-title" as="h3" size={500} weight="semibold" className={styles.sectionTitle}>
                     <div className={styles.tutorialIcon}>{titleIcon}</div>
                     <div>{title}</div>
                 </Text>
@@ -43,10 +43,10 @@ export const BaseTutorial: React.FC<BaseTutorialProps> = ({ title, titleIcon, de
             </div>
             {/* Live Example */}
             {example && (
-                <div className={styles.exampleSection} id="section-example">
+                <div className={styles.exampleSection} id="section-example" aria-labelledby="section-example-title">
                     <div className={styles.sectionTitle}>
                         <span className={styles.sectionIcon}>💡</span>
-                        <Text as="h3" size={500} weight="semibold">
+                        <Text id="section-example-title" as="h3" size={500} weight="semibold">
                             {example.title}
                         </Text>
                     </div>
@@ -57,10 +57,10 @@ export const BaseTutorial: React.FC<BaseTutorialProps> = ({ title, titleIcon, de
             )}{" "}
             {/* Tips Section */}
             {tips.length > 0 && (
-                <div className={styles.tipsSection} id="section-tips">
+                <div className={styles.tipsSection} id="section-tips" aria-labelledby="section-tips-title">
                     <div className={styles.sectionTitle}>
                         <Lightbulb24Regular className={styles.sectionIcon} />
-                        <Text as="h3" size={500} weight="semibold">
+                        <Text id="section-tips-title" as="h3" size={500} weight="semibold">
                             {t("tutorials.tips.title", "Tipps und Best Practices")}
                         </Text>
                     </div>

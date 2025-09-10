@@ -196,7 +196,7 @@ i18n
                             zoomIn: "Vergrößern",
                             zoomOut: "Verkleinern",
                             resetZoom: "Zoom zurücksetzen",
-                            panHint: "Ziehen zum Verschieben • Strg+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
+                            panHint: "Ziehen zum Verschieben • Strg/Cmd+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
                             zoomHint: "Strg+Mausrad zum Zoomen • Doppelklick zum Anpassen"
                         },
                         mindmap: {

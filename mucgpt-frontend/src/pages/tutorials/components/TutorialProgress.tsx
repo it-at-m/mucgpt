@@ -35,7 +35,7 @@ interface TutorialProgressProps {
     /** Current tutorial ID for tutorial-level navigation */
     currentTutorialId?: string;
     /** All available tutorials for navigation */
-    allTutorials?: Array<{ id: string; title: string }>;
+    allTutorials?: ReadonlyArray<{ id: string; title: string }>;
 }
 
 export const TutorialProgress: React.FC<TutorialProgressProps> = ({
@@ -162,11 +162,18 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
             </div>
 
             <div className={styles.progressBarContainer}>
-                <div className={styles.progressBar}>
+                <div
+                    className={styles.progressBar}
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(progressPercentage)}
+                    aria-label={t("tutorials.progress.aria_label", "Tutorial-Fortschritt")}
+                >
                     <div className={styles.progressFill} style={{ width: `${progressPercentage}%` }} />
                 </div>
                 {showPercentage && (
-                    <Text size={compact ? 100 : 100} className={styles.progressPercentage}>
+                    <Text size={100} className={styles.progressPercentage}>
                         {Math.round(progressPercentage)}%
                     </Text>
                 )}
@@ -188,7 +195,7 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
                                 const sectionElement = document.getElementById(`section-${section.id}`);
                                 if (sectionElement) {
                                     const y = sectionElement.getBoundingClientRect().top + window.pageYOffset + scrollOffset;
-                                    window.scrollTo({ top: y, behavior: "smooth" });
+                                    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
                                 }
                             }
                         }}

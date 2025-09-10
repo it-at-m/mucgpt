@@ -19,7 +19,8 @@ export const tutorialsTranslations = {
                 }
             },
             progress: {
-                stats: "{{completed}} von {{total}} Abschnitten abgeschlossen"
+                stats: "{{completed}} von {{total}} Abschnitten abgeschlossen",
+                aria_label: "Tutorial-Fortschritt"
             },
             navigation: {
                 back_to_top: "Zum Seitenanfang",
@@ -406,7 +407,8 @@ export const tutorialsTranslations = {
                 }
             },
             progress: {
-                stats: "{{completed}} of {{total}} sections completed"
+                stats: "{{completed}} of {{total}} sections completed",
+                aria_label: "Tutorial Progress"
             },
             ai_basics: {
                 title: "AI Basics",
@@ -785,7 +787,8 @@ export const tutorialsTranslations = {
                 }
             },
             progress: {
-                stats: "{{completed}} vo {{total}} Abschnitte gschafft"
+                stats: "{{completed}} vo {{total}} Abschnitte gschafft",
+                aria_label: "Tutorial-Fortschritt"
             },
             ai_basics: {
                 title: "KI-Grundlagen",
@@ -1168,7 +1171,8 @@ export const tutorialsTranslations = {
                 }
             },
             progress: {
-                stats: "{{completed}} sur {{total}} sections terminées"
+                stats: "{{completed}} sur {{total}} sections terminées",
+                aria_label: "Progression du tutoriel"
             },
             ai_basics: {
                 title: "Bases de l'IA",
@@ -1555,7 +1559,8 @@ export const tutorialsTranslations = {
                 }
             },
             progress: {
-                stats: "{{completed}} з {{total}} розділів завершено"
+                stats: "{{completed}} з {{total}} розділів завершено",
+                aria_label: "Прогрес навчання"
             },
             ai_basics: {
                 title: "Основи ШІ",

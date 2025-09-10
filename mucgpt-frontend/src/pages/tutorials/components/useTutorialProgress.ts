@@ -93,7 +93,7 @@ export const useTutorialProgress = ({
             if (observer) {
                 sections.forEach(section => {
                     const element = document.getElementById(`section-${section.id}`);
-                    if (element) observer.unobserve(element);
+                    if (element && observer) observer.unobserve(element);
                 });
                 observer.disconnect();
             }

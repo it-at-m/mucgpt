@@ -192,7 +192,12 @@ i18n
                         mermaid: {
                             download: "Diagramm herunterladen",
                             render: "Zeichne Diagramm...",
-                            error: "Das Diagramm kann leider nicht dargestellt werden, da es Fehler enthält."
+                            error: "Das Diagramm kann leider nicht dargestellt werden, da es Fehler enthält.",
+                            zoomIn: "Vergrößern",
+                            zoomOut: "Verkleinern",
+                            resetZoom: "Zoom zurücksetzen",
+                            panHint: "Ziehen zum Verschieben • Strg+Mausrad zum Zoomen • Doppelklick zum Zurücksetzen",
+                            zoomHint: "Strg+Mausrad zum Zoomen • Doppelklick zum Anpassen"
                         },
                         mindmap: {
                             download: "Herunterladen",
@@ -631,7 +636,12 @@ i18n
                         mermaid: {
                             download: "Download diagram",
                             render: "Draw diagram...",
-                            error: "Unfortunately, the diagram cannot be displayed as it contains errors."
+                            error: "Unfortunately, the diagram cannot be displayed as it contains errors.",
+                            zoomIn: "Zoom In",
+                            zoomOut: "Zoom Out",
+                            resetZoom: "Reset Zoom",
+                            panHint: "Drag to pan • Ctrl+Scroll to zoom • Double-click to reset",
+                            zoomHint: "Ctrl+Scroll to zoom • Double-click to fit"
                         },
                         sumanswer: {
                             header: "Unique entities/aspects:",
@@ -1056,7 +1066,12 @@ i18n
                         mermaid: {
                             download: "Schau-Buidl obalada",
                             render: "Zeichne Schau-Buidl...",
-                            error: "Des Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd."
+                            error: "Des Schau-Buidl ko leiwa net duagstellt wern, wei's Fehla håd.",
+                            zoomIn: "Vergrößern",
+                            zoomOut: "Verkleinern",
+                            resetZoom: "Zoom zrucksetzn",
+                            panHint: "Ziahn zum Veschibn • Strg+Mausradl zum Zoomen • Doppelklick zum Zrucksetzn",
+                            zoomHint: "Strg+Mausradl zum Zoomen • Doppelklick zum Anpassn"
                         },
                         sumanswer: {
                             header: "Einzigartige Schwerpunkte:",
@@ -1469,7 +1484,12 @@ i18n
                         mermaid: {
                             download: "Télécharger le diagramme",
                             render: "Dessiner le diagramme...",
-                            error: "Le diagramme ne peut malheureusement pas être affiché en raison d'erreurs."
+                            error: "Le diagramme ne peut malheureusement pas être affiché en raison d'erreurs.",
+                            zoomIn: "Agrandir",
+                            zoomOut: "Réduire",
+                            resetZoom: "Réinitialiser le zoom",
+                            panHint: "Glisser pour déplacer • Ctrl+Molette pour zoomer • Double-clic pour réinitialiser",
+                            zoomHint: "Ctrl+Molette pour zoomer • Double-clic pour ajuster"
                         },
                         mindmap: {
                             download: "Télécharger",
@@ -1896,7 +1916,12 @@ i18n
                         mermaid: {
                             download: "Завантажити діаграму",
                             render: "Малювати діаграму...",
-                            error: "На жаль, діаграму не можна відобразити через помилки."
+                            error: "На жаль, діаграму не можна відобразити через помилки.",
+                            zoomIn: "Збільшити",
+                            zoomOut: "Зменшити",
+                            resetZoom: "Скинути масштаб",
+                            panHint: "Перетягніть для переміщення • Ctrl+прокрутка для масштабування • Подвійний клік для скидання",
+                            zoomHint: "Ctrl+прокрутка для масштабування • Подвійний клік для підгонки"
                         },
                         mindmap: {
                             download: "Завантажити",

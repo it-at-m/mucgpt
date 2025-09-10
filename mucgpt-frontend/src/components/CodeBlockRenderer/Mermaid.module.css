@@ -1,12 +1,179 @@
 .diagramContainer {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+    background: var(--colorNeutralBackground1);
+    overflow: hidden;
+}
+
+.diagramWrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 200px;
+    max-height: 80vh;
+    padding: 16px;
+    background: var(--colorNeutralBackground1);
+    position: relative;
+}
+
+.svgContainer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-width: 100%;
+    transform-origin: top left;
+    transition: transform 0.2s ease-in-out;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.controlsContainer {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 8px 16px;
+    background: var(--colorNeutralBackground2);
+    border-top: 1px solid var(--colorNeutralStroke2);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.zoomControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.zoomButtons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.zoomLevel {
+    font-size: 12px;
+    color: var(--colorNeutralForeground2);
+    min-width: 40px;
+    text-align: center;
+    font-weight: 500;
 }
 
 .downloadContainer {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    padding-left: 10px;
+    gap: 8px;
+}
+
+.mermaidLabel {
+    font-size: 12px;
+    color: var(--colorNeutralForeground2);
+    font-weight: 500;
+    text-transform: lowercase;
+}
+
+/* Enhanced SVG rendering */
+.svgContainer svg {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    shape-rendering: geometricPrecision;
+    text-rendering: geometricPrecision;
+    max-width: 100%;
+    height: auto;
+
+    /* Additional CSS optimizations for sharpness */
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    will-change: transform;
+
+    /* Font smoothing for better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Enhanced text rendering within SVG */
+.svgContainer svg text,
+.svgContainer svg tspan {
+    font-weight: 500;
+    text-rendering: geometricPrecision;
+    shape-rendering: geometricPrecision;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Enhanced line and shape rendering */
+.svgContainer svg path,
+.svgContainer svg line,
+.svgContainer svg polyline,
+.svgContainer svg polygon,
+.svgContainer svg rect,
+.svgContainer svg circle,
+.svgContainer svg ellipse {
+    shape-rendering: geometricPrecision;
+    vector-effect: non-scaling-stroke;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    .diagramContainer {
+        border-color: var(--colorNeutralStroke1);
+    }
+
+    .controlsContainer {
+        background: var(--colorNeutralBackground3);
+        border-top-color: var(--colorNeutralStroke1);
+    }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .controlsContainer {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 16px;
+    }
+
+    .zoomControls {
+        order: 1;
+    }
+
+    .downloadContainer {
+        order: 2;
+    }
+
+    .panHint {
+        position: relative;
+        top: auto;
+        right: auto;
+        order: 3;
+        width: 100%;
+        text-align: center;
+        margin-top: 8px;
+    }
+} /* Print styles */
+@media print {
+    .controlsContainer {
+        display: none;
+    }
+
+    .diagramWrapper {
+        max-height: none;
+        overflow: visible;
+    }
+
+    .svgContainer {
+        transform: none !important;
+    }
 }

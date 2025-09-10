@@ -232,6 +232,16 @@ export const tutorialsTranslations = {
             brainstorm: {
                 title: "Brainstorming Werkzeug",
                 description: "Lerne, wie du mit dem Brainstorming-Werkzeug kreative Mindmaps erstellen und strukturieren kannst.",
+                progress: {
+                    title: "Brainstorming-Tutorial Fortschritt"
+                },
+                sections: {
+                    titles: {
+                        intro: "Einführung",
+                        example: "Beispiel",
+                        tips: "Tipps"
+                    }
+                },
                 intro: {
                     title: "Was ist das Brainstorming Werkzeug?",
                     description:
@@ -529,6 +539,16 @@ export const tutorialsTranslations = {
             brainstorm: {
                 title: "Brainstorming Tool",
                 description: "Learn how to create and structure creative mind maps with the brainstorming tool.",
+                progress: {
+                    title: "Brainstorming Tutorial Progress"
+                },
+                sections: {
+                    titles: {
+                        intro: "Introduction",
+                        example: "Example",
+                        tips: "Tips"
+                    }
+                },
                 intro: {
                     title: "What is the Brainstorming Tool?",
                     description:
@@ -826,6 +846,16 @@ export const tutorialsTranslations = {
             brainstorm: {
                 title: "Brainstorming Werkzeug",
                 description: "Lern, wia du mit dem Brainstorming-Werkzeug kreative Mindmaps erstellen und strukturieren kannst.",
+                progress: {
+                    title: "Brainstorming-Tutorial Fortschritt"
+                },
+                sections: {
+                    titles: {
+                        intro: "Einführung",
+                        example: "Beispiel",
+                        tips: "Tipps"
+                    }
+                },
                 intro: {
                     title: "Was ist das Brainstorming Werkzeug?",
                     description:
@@ -1132,6 +1162,16 @@ export const tutorialsTranslations = {
             brainstorm: {
                 title: "Outil de brainstorming",
                 description: "Apprenez comment créer et structurer des cartes mentales créatives avec l'outil de brainstorming.",
+                progress: {
+                    title: "Progrès du tutoriel de brainstorming"
+                },
+                sections: {
+                    titles: {
+                        intro: "Introduction",
+                        example: "Exemple",
+                        tips: "Conseils"
+                    }
+                },
                 intro: {
                     title: "Qu'est-ce que l'outil de brainstorming ?",
                     description:
@@ -1428,6 +1468,16 @@ export const tutorialsTranslations = {
             brainstorm: {
                 title: "Інструмент для мозкового штурму",
                 description: "Дізнайтеся, як створювати та структурувати креативні мапи мислення за допомогою інструмента для мозкового штурму.",
+                progress: {
+                    title: "Прогрес навчання мозкового штурму"
+                },
+                sections: {
+                    titles: {
+                        intro: "Вступ",
+                        example: "Приклад",
+                        tips: "Поради"
+                    }
+                },
                 intro: {
                     title: "Що таке інструмент для мозкового штурму?",
                     description:

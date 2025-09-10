@@ -34,7 +34,7 @@ export const BaseTutorial: React.FC<BaseTutorialProps> = ({ title, titleIcon, de
     return (
         <div className={styles.tutorial}>
             {/* Introduction */}
-            <div className={styles.introSection}>
+            <div className={styles.introSection} id="section-intro">
                 <Text as="h3" size={500} weight="semibold" className={styles.sectionTitle}>
                     <div className={styles.tutorialIcon}>{titleIcon}</div>
                     <div>{title}</div>
@@ -43,7 +43,7 @@ export const BaseTutorial: React.FC<BaseTutorialProps> = ({ title, titleIcon, de
             </div>
             {/* Live Example */}
             {example && (
-                <div className={styles.exampleSection}>
+                <div className={styles.exampleSection} id="section-example">
                     <div className={styles.sectionTitle}>
                         <span className={styles.sectionIcon}>💡</span>
                         <Text as="h3" size={500} weight="semibold">
@@ -57,7 +57,7 @@ export const BaseTutorial: React.FC<BaseTutorialProps> = ({ title, titleIcon, de
             )}{" "}
             {/* Tips Section */}
             {tips.length > 0 && (
-                <div className={styles.tipsSection}>
+                <div className={styles.tipsSection} id="section-tips">
                     <div className={styles.sectionTitle}>
                         <Lightbulb24Regular className={styles.sectionIcon} />
                         <Text as="h3" size={500} weight="semibold">

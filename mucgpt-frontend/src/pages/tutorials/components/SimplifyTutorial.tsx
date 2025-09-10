@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
-import { TextBulletListSquare24Regular, Send24Regular, Target24Regular } from "@fluentui/react-icons";
+import { TextBulletListSquare24Regular, Send24Regular } from "@fluentui/react-icons";
 
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress from "./TutorialProgress";
@@ -78,7 +78,29 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
         window.location.href = url;
     }, []);
 
-    const tips: TutorialTip[] = [];
+    const tips: TutorialTip[] = [
+        {
+            title: t("tutorials.simplify.tips.length.title", "Textlänge beachten:"),
+            description: t("tutorials.simplify.tips.length.description", "Sehr lange Texte in kleinere Abschnitte aufteilen für bessere Ergebnisse."),
+            type: "info"
+        },
+        {
+            title: t("tutorials.simplify.tips.review.title", "Ergebnis prüfen:"),
+            description: t(
+                "tutorials.simplify.tips.review.description",
+                "Lesen Sie den vereinfachten Text durch und prüfen Sie, ob alle wichtigen Informationen enthalten sind."
+            ),
+            type: "warning"
+        },
+        {
+            title: t("tutorials.simplify.tips.target.title", "Zielgruppe denken:"),
+            description: t(
+                "tutorials.simplify.tips.target.description",
+                "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
+            ),
+            type: "success"
+        }
+    ];
     return (
         <div>
             {/* Tutorial Progress - Sticky */}
@@ -113,104 +135,38 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                     title: t("tutorials.simplify.example.title", "Text Vereinfachung Beispiel"),
                     description: t("tutorials.simplify.example.description", ""),
                     component: (
-                        <div>
-                            {/* Introduction Section */}
-                            <div id="section-intro" className={styles.contentSection}>
-                                <div className={styles.sectionTitle}>
-                                    <TextBulletListSquare24Regular className={styles.sectionIcon} />
-                                    <span className={styles.sectionTitleText}>
-                                        {t("tutorials.simplify.sections.intro.title", "Was ist das Text-Vereinfachungs-Tool?")}
-                                    </span>
-                                </div>
-                                <p className={styles.sectionText}>
-                                    {t(
-                                        "tutorials.simplify.sections.intro.description",
-                                        "Das Text-Vereinfachungs-Tool übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
-                                    )}
-                                </p>
-                            </div>
-
-                            {/* Example Section */}
-                            <div id="section-example" className={styles.contentSection}>
-                                <div className={styles.sectionTitle}>
-                                    <Send24Regular className={styles.sectionIcon} />
-                                    <span className={styles.sectionTitleText}>
-                                        {t("tutorials.simplify.sections.example.title", "Text Vereinfachung Beispiel")}
-                                    </span>
-                                </div>
-
-                                {showExample ? (
-                                    <div>
-                                        <div className={styles.exampleContainer}>
-                                            <AnswerList
-                                                answers={createSimplifyWorkflowExample()}
-                                                regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
-                                                onRollbackMessage={() => {}}
-                                                isLoading={false}
-                                                error={null}
-                                                makeApiRequest={() => {}}
-                                                chatMessageStreamEnd={chatMessageStreamEnd}
-                                                lastQuestionRef={lastQuestionRef}
-                                            />
-                                        </div>
-                                        <div className={styles.buttonsContainer}>
-                                            <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
-                                                {t("tutorials.buttons.hide_example")}
-                                            </button>
-                                            <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
-                                                <Send24Regular className={styles.tryButtonIcon} />
-                                                {t("tutorials.buttons.try_example")}
-                                            </button>
-                                        </div>
+                        <div id="section-example">
+                            {showExample ? (
+                                <div>
+                                    <div className={styles.exampleContainer}>
+                                        <AnswerList
+                                            answers={createSimplifyWorkflowExample()}
+                                            regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
+                                            onRollbackMessage={() => {}}
+                                            isLoading={false}
+                                            error={null}
+                                            makeApiRequest={() => {}}
+                                            chatMessageStreamEnd={chatMessageStreamEnd}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
                                     </div>
-                                ) : (
-                                    <div className={styles.buttonsContainerSingle}>
-                                        <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
-                                            {t("tutorials.buttons.show_example")}
+                                    <div className={styles.buttonsContainer}>
+                                        <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
+                                            {t("tutorials.buttons.hide_example")}
+                                        </button>
+                                        <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
+                                            <Send24Regular className={styles.tryButtonIcon} />
+                                            {t("tutorials.buttons.try_example")}
                                         </button>
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Tips Section */}
-                            <div id="section-tips" className={styles.contentSection}>
-                                <div className={styles.sectionTitle}>
-                                    <Target24Regular className={styles.sectionIcon} />
-                                    <span className={styles.sectionTitleText}>{t("tutorials.simplify.sections.tips.title", "Tipps")}</span>
                                 </div>
-
-                                <div className={styles.tipsContainer}>
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.simplify.tips.length.title", "Textlänge beachten:")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.simplify.tips.length.description",
-                                                "Sehr lange Texte in kleinere Abschnitte aufteilen für bessere Ergebnisse."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.simplify.tips.review.title", "Ergebnis prüfen:")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.simplify.tips.review.description",
-                                                "Lesen Sie den vereinfachten Text durch und prüfen Sie, ob alle wichtigen Informationen enthalten sind."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.simplify.tips.target.title", "Zielgruppe denken:")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.simplify.tips.target.description",
-                                                "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
-                                            )}
-                                        </p>
-                                    </div>
+                            ) : (
+                                <div className={styles.buttonsContainerSingle}>
+                                    <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
+                                        {t("tutorials.buttons.show_example")}
+                                    </button>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     )
                 }}

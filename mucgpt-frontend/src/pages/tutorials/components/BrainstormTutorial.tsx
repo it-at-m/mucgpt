@@ -229,9 +229,6 @@ export const BrainstormTutorial = ({ onPreviousTutorial, onNextTutorial, onBackT
                     tips={tips}
                 />
             </div>
-
-            {/* Tips section marker for progress tracking */}
-            <div id="section-tips" style={{ position: "absolute", bottom: 0, height: "1px" }}></div>
         </div>
     );
 };

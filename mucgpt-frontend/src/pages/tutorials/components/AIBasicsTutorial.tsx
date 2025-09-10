@@ -9,8 +9,7 @@ import {
     TextBulletListSquare24Regular,
     Code24Regular,
     BookInformation24Regular,
-    LearningApp24Regular,
-    Lightbulb24Regular
+    LearningApp24Regular
 } from "@fluentui/react-icons";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -86,7 +85,7 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
             { id: "training", translationKey: "tutorials.ai_basics.sections.titles.training", defaultLabel: "Training" },
             { id: "functionality", translationKey: "tutorials.ai_basics.sections.titles.functionality", defaultLabel: "Funktionsweise" },
             { id: "access", translationKey: "tutorials.ai_basics.sections.titles.access", defaultLabel: "Was weiß ein Sprachmodell?" },
-            { id: "conclusion", translationKey: "tutorials.ai_basics.sections.titles.conclusion", defaultLabel: "Fazit & Ausblick" }
+            { id: "tips", translationKey: "tutorials.ai_basics.sections.titles.conclusion", defaultLabel: "Fazit & Ausblick" }
         ],
         []
     );
@@ -112,7 +111,40 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
         );
     };
 
-    const tips: TutorialTip[] = [];
+    const tips: TutorialTip[] = [
+        {
+            title: t("tutorials.ai_basics.sections.conclusion.insight1.title", "Lernen und Antworten sind getrennt"),
+            description: t(
+                "tutorials.ai_basics.sections.conclusion.insight1.description",
+                "KI-Modelle lernen einmal aus vielen Texten und können dann Fragen beantworten. Beim Antworten lernen sie nichts Neues dazu - sie nutzen nur ihr bereits gespeichertes Wissen."
+            ),
+            type: "info"
+        },
+        {
+            title: t("tutorials.ai_basics.sections.conclusion.insight2.title", "Wort für Wort Vorhersagen"),
+            description: t(
+                "tutorials.ai_basics.sections.conclusion.insight2.description",
+                "KI funktioniert einfach: Sie rät immer das nächste passende Wort. So entstehen ganze Antworten - Wort für Wort. Die KI 'versteht' nicht wirklich, sondern erkennt Muster."
+            ),
+            type: "info"
+        },
+        {
+            title: t("tutorials.ai_basics.sections.conclusion.insight3.title", "Klare Fragen = bessere Antworten"),
+            description: t(
+                "tutorials.ai_basics.sections.conclusion.insight3.description",
+                "Je genauer Sie fragen, desto besser wird die Antwort. Sagen Sie der KI, was Sie brauchen und geben Sie genug Details mit."
+            ),
+            type: "success"
+        },
+        {
+            title: t("tutorials.ai_basics.sections.conclusion.insight4.title", "Verschiedene Wissensquellen"),
+            description: t(
+                "tutorials.ai_basics.sections.conclusion.insight4.description",
+                "KI nutzt ihr gelerntes Wissen, das aktuelle Gespräch und kann auch zusätzliche Hilfsmittel bekommen (wie Internet-Suche), um Ihnen zu helfen."
+            ),
+            type: "info"
+        }
+    ];
 
     return (
         <div>
@@ -546,64 +578,6 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
 
                                 {/* Access Mermaid diagram */}
                                 {renderMermaidDiagram(DATA_MERMAID)}
-                            </div>
-
-                            {/* Conclusion section */}
-                            <div id="section-conclusion" className={styles.contentSection}>
-                                <div className={styles.sectionTitle}>
-                                    <Lightbulb24Regular className={styles.sectionIcon} />
-                                    <Text as="h3" size={500} weight="semibold">
-                                        {t("tutorials.ai_basics.sections.conclusion.title", "Fazit & wichtige Erkenntnisse")}
-                                    </Text>
-                                </div>
-                                <Text as="p" className={styles.description}>
-                                    {t(
-                                        "tutorials.ai_basics.sections.conclusion.intro",
-                                        "Jetzt wissen Sie, wie KI-Sprachmodelle funktionieren! Hier sind die wichtigsten Punkte:"
-                                    )}
-                                </Text>
-
-                                <div className={styles.tipsContainer}>
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight1.title", "Lernen und Antworten sind getrennt")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.ai_basics.sections.conclusion.insight1.description",
-                                                "KI-Modelle lernen einmal aus vielen Texten und können dann Fragen beantworten. Beim Antworten lernen sie nichts Neues dazu - sie nutzen nur ihr bereits gespeichertes Wissen."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight2.title", "Wort für Wort Vorhersagen")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.ai_basics.sections.conclusion.insight2.description",
-                                                "KI funktioniert einfach: Sie rät immer das nächste passende Wort. So entstehen ganze Antworten - Wort für Wort. Die KI 'versteht' nicht wirklich, sondern erkennt Muster."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight3.title", "Klare Fragen = bessere Antworten")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.ai_basics.sections.conclusion.insight3.description",
-                                                "Je genauer Sie fragen, desto besser wird die Antwort. Sagen Sie der KI, was Sie brauchen und geben Sie genug Details mit."
-                                            )}
-                                        </p>
-                                    </div>
-
-                                    <div className={styles.tipItem}>
-                                        <strong>{t("tutorials.ai_basics.sections.conclusion.insight4.title", "Verschiedene Wissensquellen")}</strong>
-                                        <p>
-                                            {t(
-                                                "tutorials.ai_basics.sections.conclusion.insight4.description",
-                                                "KI nutzt ihr gelerntes Wissen, das aktuelle Gespräch und kann auch zusätzliche Hilfsmittel bekommen (wie Internet-Suche), um Ihnen zu helfen."
-                                            )}
-                                        </p>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     )

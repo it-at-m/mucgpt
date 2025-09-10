@@ -1289,7 +1289,7 @@ i18n
                             cancel: "Obbrecha"
                         }
                     },
-                    ...tutorialsTranslations.Bayrisch
+                    ...tutorialsTranslations.Bairisch
                 }
             },
             French: {

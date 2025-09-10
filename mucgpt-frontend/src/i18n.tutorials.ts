@@ -30,6 +30,7 @@ export const tutorialsTranslations = {
             },
             ai_basics: {
                 title: "KI-Grundlagen",
+                description: "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme.",
                 progress: {
                     title: "KI-Grundlagen Fortschritt",
                     stats: "{{completed}} von {{total}} Abschnitten abgeschlossen"
@@ -212,6 +213,42 @@ export const tutorialsTranslations = {
             tools: {
                 title: "Übersicht",
                 description: "Erfahre, was Werkzeuge im Kontext von MUCGPT sind und wie du sie effektiv nutzen kannst.",
+                progress: {
+                    title: "Werkzeuge Tutorial Fortschritt"
+                },
+                sections: {
+                    titles: {
+                        intro: "Einführung",
+                        selection: "Werkzeug-Auswahl",
+                        usage: "Verwendung"
+                    },
+                    intro: {
+                        title: "Was sind KI-Werkzeuge?",
+                        description:
+                            "KI-Werkzeuge sind spezialisierte Funktionen, die den Sprachmodellen erweiterte Fähigkeiten verleihen. Sie ermöglichen es der KI, spezifische Aufgaben wie Web-Recherche, Brainstorming oder Textvereinfachung durchzuführen.",
+                        key_point: "Wichtig:",
+                        key_explanation:
+                            "Werkzeuge erweitern die Kernfähigkeiten der KI und ermöglichen es ihr, aktuelle Informationen abzurufen oder komplexe Berechnungen durchzuführen."
+                    },
+                    selection: {
+                        title: "Werkzeug-Auswahl",
+                        description:
+                            "Die Auswahl der richtigen Werkzeuge ist entscheidend für optimale Ergebnisse. Jedes Werkzeug ist für spezifische Aufgaben optimiert.",
+                        brainstorming: {
+                            title: "Brainstorming",
+                            description: "Erstellt strukturierte Mind Maps zu jedem Thema"
+                        },
+                        simplify: {
+                            title: "Vereinfachen",
+                            description: "Übersetzt komplexe Texte in einfache Sprache"
+                        }
+                    },
+                    usage: {
+                        title: "Werkzeuge verwenden",
+                        description:
+                            "Probieren Sie die Werkzeugauswahl aus. Die ausgewählten Werkzeuge werden automatisch bei der Antwortgenerierung aktiviert."
+                    }
+                },
                 intro: {
                     title: "Was sind Werkzeuge?",
                     description:
@@ -226,7 +263,22 @@ export const tutorialsTranslations = {
                         title: "Nur relevante Werkzeuge wählen",
                         description:
                             "Wählen Sie nur die Werkzeuge aus, die Sie gerade wirklich benötigen. Zu viele Werkzeuge können die Antwort verlangsamen oder zu schlechten Ergebnissen führen."
+                    },
+                    select_relevant: {
+                        title: "Relevante Werkzeuge auswählen:",
+                        description: "Wählen Sie nur die Werkzeuge aus, die Sie tatsächlich benötigen, um optimale Ergebnisse zu erzielen."
+                    },
+                    combine_wisely: {
+                        title: "Strategisch kombinieren:",
+                        description: "Kombinieren Sie Werkzeuge strategisch für komplexe Aufgaben und maximieren Sie ihre Effizienz."
+                    },
+                    clear_instructions: {
+                        title: "Klare Anweisungen geben:",
+                        description: "Geben Sie klare Anweisungen bei der Verwendung mehrerer Werkzeuge, damit die KI optimal arbeiten kann."
                     }
+                },
+                buttons: {
+                    show_example: "Beispiel anzeigen"
                 }
             },
             brainstorm: {
@@ -269,6 +321,29 @@ export const tutorialsTranslations = {
             simplify: {
                 title: "Text-Vereinfachung Werkzeug",
                 description: "Erfahre, wie du komplexe Texte in verständliche Leichte Sprache übersetzt.",
+                progress: {
+                    title: "Vereinfachen-Tutorial Fortschritt"
+                },
+                sections: {
+                    titles: {
+                        intro: "Einführung",
+                        example: "Beispiel",
+                        tips: "Tipps"
+                    },
+                    intro: {
+                        title: "Was ist das Text-Vereinfachungs-Werkzeug?",
+                        description:
+                            "Das Text-Vereinfachungs-Werkzeug übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
+                    },
+                    example: {
+                        title: "Beispiel Text-Vereinfachung",
+                        description: ""
+                    },
+                    tips: {
+                        title: "Tipps",
+                        description: "Praktische Hinweise für die optimale Nutzung des Text-Vereinfachungs-Werkzeugs."
+                    }
+                },
                 intro: {
                     title: "Was ist das Text-Vereinfachungs-Werkzeug?",
                     description:
@@ -519,6 +594,40 @@ export const tutorialsTranslations = {
             tools: {
                 title: "Overview",
                 description: "Learn what tools are in the context of MUCGPT and how you can use them effectively.",
+                progress: {
+                    title: "Tools Tutorial Progress"
+                },
+                sections: {
+                    titles: {
+                        intro: "Introduction",
+                        selection: "Tool Selection",
+                        usage: "Usage"
+                    },
+                    intro: {
+                        title: "What are AI Tools?",
+                        description:
+                            "AI tools are specialized functions that add advanced capabilities to language models. They enable AI to perform specific tasks such as web research, brainstorming, or text simplification.",
+                        key_point: "Important:",
+                        key_explanation:
+                            "Tools extend the core capabilities of AI and enable it to retrieve current information or perform complex calculations."
+                    },
+                    selection: {
+                        title: "Tool Selection",
+                        description: "Selecting the right tools is crucial for optimal results. Each tool is optimized for specific tasks.",
+                        brainstorming: {
+                            title: "Brainstorming",
+                            description: "Creates structured mind maps on any topic"
+                        },
+                        simplify: {
+                            title: "Simplify",
+                            description: "Translates complex texts into plain language"
+                        }
+                    },
+                    usage: {
+                        title: "Using Tools",
+                        description: "Try out the tool selection. The selected tools will be automatically activated during response generation."
+                    }
+                },
                 intro: {
                     title: "What are Tools?",
                     description:
@@ -533,7 +642,22 @@ export const tutorialsTranslations = {
                         title: "Select only relevant tools",
                         description:
                             "Only choose the tools that you actually need at the moment. Too many tools can slow down the response or lead to poor results."
+                    },
+                    select_relevant: {
+                        title: "Select relevant tools:",
+                        description: "Choose only the tools you actually need to achieve optimal results."
+                    },
+                    combine_wisely: {
+                        title: "Combine strategically:",
+                        description: "Combine tools strategically for complex tasks and maximize their efficiency."
+                    },
+                    clear_instructions: {
+                        title: "Give clear instructions:",
+                        description: "Give clear instructions when using multiple tools so that the AI can work optimally."
                     }
+                },
+                buttons: {
+                    show_example: "Show example"
                 }
             },
             brainstorm: {
@@ -576,6 +700,29 @@ export const tutorialsTranslations = {
             simplify: {
                 title: "Text Simplification Tool",
                 description: "Learn how to translate complex texts into understandable easy language.",
+                progress: {
+                    title: "Simplify Tutorial Progress"
+                },
+                sections: {
+                    titles: {
+                        intro: "Introduction",
+                        example: "Example",
+                        tips: "Tips"
+                    },
+                    intro: {
+                        title: "What is the Text Simplification Tool?",
+                        description:
+                            "The text simplification tool translates complex texts into easy language according to A2 standards. It uses AI with automatic quality checks to make texts more understandable and accessible."
+                    },
+                    example: {
+                        title: "Example Text Simplification",
+                        description: ""
+                    },
+                    tips: {
+                        title: "Tips",
+                        description: "Practical guidance for optimal use of the text simplification tool."
+                    }
+                },
                 intro: {
                     title: "What is the Text Simplification Tool?",
                     description:
@@ -618,7 +765,7 @@ export const tutorialsTranslations = {
             }
         }
     },
-    Bayrisch: {
+    Bairisch: {
         tutorials: {
             back_to_overview: "Zürück zur Übersicht",
             title: "Lern",
@@ -826,6 +973,41 @@ export const tutorialsTranslations = {
             tools: {
                 title: "Übersicht",
                 description: "Lern, was Werkzeuge im Kontext von MUCGPT san und wia du sie effektiv nutzen kannst.",
+                progress: {
+                    title: "Werkzeuge Tutorial Fortschritt"
+                },
+                sections: {
+                    titles: {
+                        intro: "Einführung",
+                        selection: "Werkzeug-Auswahl",
+                        usage: "Verwendung"
+                    },
+                    intro: {
+                        title: "Was san KI-Werkzeuge?",
+                        description:
+                            "KI-Werkzeuge san spezialisierte Funktionen, die den Sprachmodellen erweiterte Fähigkeiten verleihen. Sie ermöglichen es der KI, spezifische Aufgaben wie Web-Recherche, Brainstorming oder Textvereinfachung durchzuführen.",
+                        key_point: "Wichtig:",
+                        key_explanation:
+                            "Werkzeuge erweitern die Kernfähigkeiten der KI und ermöglichen es ihr, aktuelle Informationen abzurufen oder komplexe Berechnungen durchzuführen."
+                    },
+                    selection: {
+                        title: "Werkzeug-Auswahl",
+                        description:
+                            "Die Auswahl der richtigen Werkzeuge is entscheidend für optimale Ergebnisse. Jedes Werkzeug is für spezifische Aufgaben optimiert.",
+                        brainstorming: {
+                            title: "Brainstorming",
+                            description: "Erstellt strukturierte Mind Maps zu jedem Thema"
+                        },
+                        simplify: {
+                            title: "Vereinfachen",
+                            description: "Übersetzt komplexe Texte in einfache Sprache"
+                        }
+                    },
+                    usage: {
+                        title: "Werkzeuge verwenden",
+                        description: "Probier die Werkzeugauswahl aus. Die ausgewählten Werkzeuge werden automatisch bei der Antwortgenerierung aktiviert."
+                    }
+                },
                 intro: {
                     title: "Was sind Werkzeuge?",
                     description:
@@ -840,7 +1022,22 @@ export const tutorialsTranslations = {
                         title: "Nur relevante Werkzeuge wählen",
                         description:
                             "Wähl nur die Werkzeuge aus, die du grad wirklich brauchst. Zu viele Werkzeuge können die Antwort verlangsamen oder zu schlechten Ergebnissen führen."
+                    },
+                    select_relevant: {
+                        title: "Relevante Werkzeuge auswählen:",
+                        description: "Wähl nur die Werkzeuge aus, die du tatsächlich brauchst, um optimale Ergebnisse zu erzielen."
+                    },
+                    combine_wisely: {
+                        title: "Strategisch kombinieren:",
+                        description: "Kombinier Werkzeuge strategisch für komplexe Aufgaben und maximier ihre Effizienz."
+                    },
+                    clear_instructions: {
+                        title: "Kloare Anweisungen geben:",
+                        description: "Gib kloare Anweisungen bei der Verwendung mehrerer Werkzeuge, damit die KI optimal arbeiten kann."
                     }
+                },
+                buttons: {
+                    show_example: "Beispiel anzeigen"
                 }
             },
             brainstorm: {
@@ -883,6 +1080,29 @@ export const tutorialsTranslations = {
             simplify: {
                 title: "Text-Vereinfachung Werkzeug",
                 description: "Erfahre, wia du komplexe Texte in verständliche Leichte Sprache übersetzt.",
+                progress: {
+                    title: "Vereinfachen-Tutorial Fortschritt"
+                },
+                sections: {
+                    titles: {
+                        intro: "Einführung",
+                        example: "Beispiel",
+                        tips: "Tipps"
+                    },
+                    intro: {
+                        title: "Was ist das Text-Vereinfachungs-Werkzeug?",
+                        description:
+                            "Das Text-Vereinfachungs-Werkzeug übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
+                    },
+                    example: {
+                        title: "Text Vereinfachung Beispiel",
+                        description: ""
+                    },
+                    tips: {
+                        title: "Tipps",
+                        description: "Praktische Hinweise für die optimale Nutzung des Text-Vereinfachungs-Werkzeugs."
+                    }
+                },
                 intro: {
                     title: "Was ist das Text-Vereinfachungs-Werkzeug?",
                     description:
@@ -1142,6 +1362,40 @@ export const tutorialsTranslations = {
             tools: {
                 title: "Aperçu",
                 description: "Découvrez quels sont les outils dans le contexte de MUCGPT et comment vous pouvez les utiliser efficacement.",
+                progress: {
+                    title: "Progression du tutoriel des outils"
+                },
+                sections: {
+                    titles: {
+                        intro: "Introduction",
+                        selection: "Sélection d'outils",
+                        usage: "Utilisation"
+                    },
+                    intro: {
+                        title: "Que sont les outils IA ?",
+                        description:
+                            "Les outils IA sont des fonctions spécialisées qui ajoutent des capacités avancées aux modèles de langage. Ils permettent à l'IA d'effectuer des tâches spécifiques comme la recherche web, le brainstorming ou la simplification de texte.",
+                        key_point: "Important :",
+                        key_explanation:
+                            "Les outils étendent les capacités de base de l'IA et lui permettent de récupérer des informations actuelles ou d'effectuer des calculs complexes."
+                    },
+                    selection: {
+                        title: "Sélection d'outils",
+                        description: "Choisir les bons outils est crucial pour des résultats optimaux. Chaque outil est optimisé pour des tâches spécifiques.",
+                        brainstorming: {
+                            title: "Brainstorming",
+                            description: "Crée des cartes mentales structurées sur n'importe quel sujet"
+                        },
+                        simplify: {
+                            title: "Simplifier",
+                            description: "Traduit des textes complexes en langage simple"
+                        }
+                    },
+                    usage: {
+                        title: "Utiliser les outils",
+                        description: "Essayez la sélection d'outils. Les outils sélectionnés seront automatiquement activés lors de la génération de réponse."
+                    }
+                },
                 intro: {
                     title: "Que sont les outils ?",
                     description:
@@ -1156,7 +1410,23 @@ export const tutorialsTranslations = {
                         title: "Sélectionnez uniquement les outils pertinents",
                         description:
                             "Choisissez uniquement les outils dont vous avez réellement besoin. Trop d'outils peuvent ralentir la réponse ou conduire à de mauvais résultats."
+                    },
+                    select_relevant: {
+                        title: "Sélectionner les outils pertinents :",
+                        description: "Choisissez uniquement les outils dont vous avez réellement besoin pour obtenir des résultats optimaux."
+                    },
+                    combine_wisely: {
+                        title: "Combiner stratégiquement :",
+                        description: "Combinez les outils de manière stratégique pour les tâches complexes et maximisez leur efficacité."
+                    },
+                    clear_instructions: {
+                        title: "Donner des instructions claires :",
+                        description:
+                            "Donnez des instructions claires lors de l'utilisation de plusieurs outils pour que l'IA puisse travailler de manière optimale."
                     }
+                },
+                buttons: {
+                    show_example: "Afficher l'exemple"
                 }
             },
             brainstorm: {
@@ -1199,6 +1469,29 @@ export const tutorialsTranslations = {
             simplify: {
                 title: "Outil de simplification de texte",
                 description: "Apprenez comment traduire des textes complexes en langage simple et compréhensible.",
+                progress: {
+                    title: "Progression du tutoriel de simplification"
+                },
+                sections: {
+                    titles: {
+                        intro: "Introduction",
+                        example: "Exemple",
+                        tips: "Conseils"
+                    },
+                    intro: {
+                        title: "Qu'est-ce que l'outil de simplification de texte ?",
+                        description:
+                            "L'outil de simplification de texte traduit des textes complexes en langage simple selon les normes A2. Il utilise l'IA avec un contrôle automatique de la qualité pour rendre les textes plus compréhensibles et accessibles."
+                    },
+                    example: {
+                        title: "Exemple de simplification de texte",
+                        description: ""
+                    },
+                    tips: {
+                        title: "Conseils",
+                        description: "Conseils pratiques pour une utilisation optimale de l'outil de simplification de texte."
+                    }
+                },
                 intro: {
                     title: "Qu'est-ce que l'outil de simplification de texte ?",
                     description:
@@ -1448,6 +1741,41 @@ export const tutorialsTranslations = {
             tools: {
                 title: "Огляд",
                 description: "Дізнайтеся, що таке інструменти в контексті MUCGPT і як їх можна використовувати ефективно.",
+                progress: {
+                    title: "Прогрес навчання інструментів"
+                },
+                sections: {
+                    titles: {
+                        intro: "Вступ",
+                        selection: "Вибір інструментів",
+                        usage: "Використання"
+                    },
+                    intro: {
+                        title: "Що таке інструменти ШІ?",
+                        description:
+                            "Інструменти ШІ - це спеціалізовані функції, які додають розширені можливості мовним моделям. Вони дозволяють ШІ виконувати конкретні завдання, такі як веб-дослідження, мозковий штурм або спрощення тексту.",
+                        key_point: "Важливо:",
+                        key_explanation:
+                            "Інструменти розширюють основні можливості ШІ та дозволяють їй отримувати актуальну інформацію або виконувати складні обчислення."
+                    },
+                    selection: {
+                        title: "Вибір інструментів",
+                        description:
+                            "Вибір правильних інструментів є вирішальним для оптимальних результатів. Кожен інструмент оптимізовано для конкретних завдань.",
+                        brainstorming: {
+                            title: "Мозковий штурм",
+                            description: "Створює структуровані мапи мислення на будь-яку тему"
+                        },
+                        simplify: {
+                            title: "Спростити",
+                            description: "Переводить складні тексти в просту мову"
+                        }
+                    },
+                    usage: {
+                        title: "Використання інструментів",
+                        description: "Спробуйте вибір інструментів. Обрані інструменти будуть автоматично активовані під час генерації відповіді."
+                    }
+                },
                 intro: {
                     title: "Що таке інструменти?",
                     description:
@@ -1462,7 +1790,22 @@ export const tutorialsTranslations = {
                         title: "Вибирайте лише релевантні інструменти",
                         description:
                             "Оберіть лише ті інструменти, які вам дійсно потрібні. Занадто багато інструментів можуть сповільнити відповідь або призвести до поганих результатів."
+                    },
+                    select_relevant: {
+                        title: "Обирайте релевантні інструменти:",
+                        description: "Вибирайте лише ті інструменти, які вам дійсно потрібні для досягнення оптимальних результатів."
+                    },
+                    combine_wisely: {
+                        title: "Поєднуйте розумно:",
+                        description: "Поєднуйте інструменти стратегічно для складних завдань і максимізуйте їх ефективність."
+                    },
+                    clear_instructions: {
+                        title: "Давайте чіткі інструкції:",
+                        description: "Давайте чіткі інструкції при використанні декількох інструментів, щоб ШІ могла працювати оптимально."
                     }
+                },
+                buttons: {
+                    show_example: "Показати приклад"
                 }
             },
             brainstorm: {
@@ -1505,6 +1848,29 @@ export const tutorialsTranslations = {
             simplify: {
                 title: "Інструмент спрощення тексту",
                 description: "Дізнайтеся, як переводити складні тексти на зрозумілу просту мову.",
+                progress: {
+                    title: "Прогрес навчального посібника зі спрощення"
+                },
+                sections: {
+                    titles: {
+                        intro: "Вступ",
+                        example: "Приклад",
+                        tips: "Поради"
+                    },
+                    intro: {
+                        title: "Що таке інструмент спрощення тексту?",
+                        description:
+                            "Інструмент спрощення тексту переводить складні тексти на просту мову згідно стандарту A2. Він використовує ШІ з автоматичною перевіркою якості для того, щоб зробити тексти більш зрозумілими та доступними."
+                    },
+                    example: {
+                        title: "Приклад спрощення тексту",
+                        description: ""
+                    },
+                    tips: {
+                        title: "Поради",
+                        description: "Практичні поради для оптимального використання інструменту спрощення тексту."
+                    }
+                },
                 intro: {
                     title: "Що таке інструмент спрощення тексту?",
                     description:

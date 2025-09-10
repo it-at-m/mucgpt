@@ -83,21 +83,20 @@ export const useTutorialProgress = ({
             return observer;
         };
 
+        let observer: IntersectionObserver | null = null;
         const timer = setTimeout(() => {
-            const observer = setupObserver();
-
-            return () => {
-                if (observer) {
-                    sections.forEach(section => {
-                        const element = document.getElementById(`section-${section.id}`);
-                        if (element) observer.unobserve(element);
-                    });
-                }
-            };
+            observer = setupObserver();
         }, observerDelay);
 
         return () => {
             clearTimeout(timer);
+            if (observer) {
+                sections.forEach(section => {
+                    const element = document.getElementById(`section-${section.id}`);
+                    if (element) observer.unobserve(element);
+                });
+                observer.disconnect();
+            }
         };
     }, [sections, handleSectionComplete, observerDelay, intersectionThreshold, rootMargin]);
 

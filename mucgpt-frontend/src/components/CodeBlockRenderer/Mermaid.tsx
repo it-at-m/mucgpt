@@ -4,6 +4,7 @@ import { ArrowDownload24Regular, ZoomIn24Regular, ZoomOut24Regular, FullScreenMa
 import { Button, Tooltip } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import mermaid, { MermaidConfig } from "mermaid";
+import DOMPurify from "dompurify";
 export interface MermaidProps {
     text: string;
     darkTheme: boolean;
@@ -19,18 +20,16 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const svgContainerRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+    const initializedThemeRef = useRef<boolean | null>(null);
 
+    // Initialize once per theme
     useEffect(() => {
-        const render = async () => {
-            // Generate a random ID for Mermaid to use.
-            const id = `mermaid-svg-${Math.round(Math.random() * 10000000)}`;
-            setID(id);
-
+        if (initializedThemeRef.current !== darkTheme) {
             // Enhanced Mermaid configuration for better rendering
             mermaid.initialize({
                 startOnLoad: false,
                 theme: darkTheme ? "dark" : "default",
-                securityLevel: "loose",
+                securityLevel: "strict",
                 suppressErrorRendering: true,
                 fontFamily: "ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                 fontSize: 18, // Further increased from 16 for even higher resolution
@@ -80,15 +79,41 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                     fontSize: 18
                 }
             } as MermaidConfig);
+            initializedThemeRef.current = darkTheme;
+        }
+    }, [darkTheme]);
 
-            // Confirm the diagram is valid before rendering
-            text = text.replaceAll("`", "");
-            const validMermaid = await mermaid.parse(text, { suppressErrors: true });
+    useEffect(() => {
+        const render = async () => {
+            // Generate a random ID for Mermaid to use.
+            const id = `mermaid-svg-${Math.round(Math.random() * 10000000)}`;
+            setID(id);
+
+            // Confirm the diagram is valid before rendering (basic input cleaning only)
+            const cleanedInput = text.replaceAll("`", "").trim();
+
+            // Additional input validation to prevent potentially malicious Mermaid syntax
+            if (cleanedInput.length > 50000) {
+                console.warn("Mermaid input too large, potential DoS attempt");
+                setDiagram(false);
+                return;
+            }
+
+            // Check for potentially dangerous patterns in Mermaid input
+            const suspiciousPatterns = [/<script/i, /javascript:/i, /data:text\/html/i, /vbscript:/i, /on\w+\s*=/i];
+
+            if (suspiciousPatterns.some(pattern => pattern.test(cleanedInput))) {
+                console.warn("Potentially malicious content detected in Mermaid input");
+                setDiagram(false);
+                return;
+            }
+
+            const validMermaid = await mermaid.parse(cleanedInput, { suppressErrors: true });
             if (validMermaid) {
                 let svg: string | undefined;
                 try {
                     // Attempt to render the Mermaid diagram
-                    const result = await mermaid.render(id, text);
+                    const result = await mermaid.render(id, cleanedInput);
                     svg = result.svg;
                 } catch (error) {
                     // If rendering fails, ensure svg is undefined
@@ -96,6 +121,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                     console.error("Mermaid rendering failed:", error);
                 }
                 if (svg) {
+                    // Parse the SVG directly without aggressive sanitization first
                     const svgImage = new DOMParser().parseFromString(svg, "text/html").body.firstElementChild;
                     if (svgImage) {
                         // Get original dimensions
@@ -162,11 +188,108 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
 
                         // Add high-DPI support
                         svgImage.setAttribute("data-dpr", window.devicePixelRatio?.toString() || "1");
+
+                        // Final sanitization - comprehensive allowlist to preserve all styling
+                        const finalSanitizedSvg = DOMPurify.sanitize(svgImage.outerHTML, {
+                            USE_PROFILES: { svg: true },
+                            KEEP_CONTENT: true,
+                            ADD_TAGS: ["foreignObject", "tspan", "text", "defs", "marker", "pattern", "clipPath", "mask"],
+                            ADD_ATTR: [
+                                // Basic SVG attributes
+                                "class",
+                                "id",
+                                "x",
+                                "y",
+                                "dx",
+                                "dy",
+                                "width",
+                                "height",
+                                "viewBox",
+                                "preserveAspectRatio",
+                                // Text attributes
+                                "text-anchor",
+                                "dominant-baseline",
+                                "font-family",
+                                "font-size",
+                                "font-weight",
+                                "font-style",
+                                // Visual styling
+                                "fill",
+                                "stroke",
+                                "stroke-width",
+                                "stroke-dasharray",
+                                "stroke-linecap",
+                                "stroke-linejoin",
+                                "opacity",
+                                "fill-opacity",
+                                "stroke-opacity",
+                                // Rendering attributes
+                                "text-rendering",
+                                "shape-rendering",
+                                "vector-effect",
+                                "paint-order",
+                                "image-rendering",
+                                // Transform and positioning
+                                "style",
+                                "transform",
+                                "transform-origin",
+                                "data-dpr",
+                                // Geometry attributes
+                                "d",
+                                "cx",
+                                "cy",
+                                "r",
+                                "rx",
+                                "ry",
+                                "x1",
+                                "y1",
+                                "x2",
+                                "y2",
+                                "points",
+                                // Path and shape attributes
+                                "pathLength",
+                                "marker-start",
+                                "marker-mid",
+                                "marker-end",
+                                // Filter and effects
+                                "filter",
+                                "clip-path",
+                                "mask",
+                                // Additional Mermaid-specific attributes
+                                "data-id",
+                                "data-node-id",
+                                "data-edge-id",
+                                "role",
+                                "aria-label",
+                                "tabindex"
+                            ],
+                            FORBID_TAGS: ["script", "object", "embed", "link", "meta", "base"],
+                            FORBID_ATTR: [
+                                "onload",
+                                "onerror",
+                                "onclick",
+                                "onmouseover",
+                                "onfocus",
+                                "onblur",
+                                "onmousedown",
+                                "onmouseup",
+                                "onmousemove",
+                                "onkeydown",
+                                "onkeyup",
+                                "onkeypress",
+                                "onchange",
+                                "onsubmit",
+                                "onreset"
+                            ]
+                        });
+
+                        setDiagram(finalSanitizedSvg);
+                    } else {
+                        setDiagram(false);
                     }
-                    if (svgImage) setDiagram(svgImage.outerHTML);
-                    else setDiagram(false);
                 } else {
-                    document.querySelectorAll(`[id=${id}]`).forEach(el => el.remove());
+                    const stale = document.getElementById(id);
+                    if (stale) stale.remove();
                     setDiagram(false);
                 }
             } else {
@@ -174,7 +297,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
             }
         };
         render();
-    }, [text, darkTheme, zoomLevel]);
+    }, [text, darkTheme]);
 
     const download = useCallback(() => {
         const svgElement = document.getElementById(id);
@@ -194,13 +317,16 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
             `
             );
 
-            const base64doc = btoa(unescape(encodeURIComponent(svgCopy.outerHTML)));
+            if (!svgCopy.getAttribute("xmlns")) {
+                svgCopy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            }
+            const blob = new Blob([svgCopy.outerHTML], { type: "image/svg+xml;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            const e = new MouseEvent("click");
-
             a.download = "mermaid-diagram.svg";
-            a.href = "data:image/svg+xml;base64," + base64doc;
-            a.dispatchEvent(e);
+            a.href = url;
+            a.click();
+            URL.revokeObjectURL(url);
         }
     }, [id]);
 
@@ -271,7 +397,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                 const containerWidth = containerRef.current.clientWidth - 32; // Account for padding
                 const svgElement = svgContainerRef.current.querySelector("svg");
                 if (svgElement) {
-                    const svgWidth = svgElement.getBoundingClientRect().width / zoomLevel; // Get original width
+                    const svgWidth = svgElement.getBoundingClientRect().width; // Get current width without division
                     const fitZoom = Math.min(containerWidth / svgWidth, 3); // Max 3x zoom
                     setZoomLevel(fitZoom);
                 }
@@ -344,7 +470,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                         ref={svgContainerRef}
                         className={styles.svgContainer}
                         style={{
-                            transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
+                            transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
                             transformOrigin: "top left",
                             transition: isDragging ? "none" : "transform 0.2s ease-in-out",
                             cursor: zoomLevel > 1 ? (isDragging ? "grabbing" : "grab") : "default"
@@ -354,6 +480,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseLeave}
                         onDoubleClick={handleDoubleClick}
+                        /* biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized via DOMPurify above */
                         dangerouslySetInnerHTML={{ __html: diagram ?? "" }}
                     />
                 </div>

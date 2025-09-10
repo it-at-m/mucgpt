@@ -80,10 +80,6 @@
 
 /* Enhanced SVG rendering */
 .svgContainer svg {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
     shape-rendering: geometricPrecision;
     text-rendering: geometricPrecision;
     max-width: 100%;
@@ -96,11 +92,9 @@
     -webkit-transform-style: preserve-3d;
     will-change: transform;
 
-    /* Font smoothing for better text rendering */
+    /* Font smoothing */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-smooth: never;
-    -webkit-font-smoothing: subpixel-antialiased;
 }
 
 /* Enhanced text rendering within SVG */

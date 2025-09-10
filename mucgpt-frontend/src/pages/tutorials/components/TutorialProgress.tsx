@@ -63,12 +63,18 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
     allTutorials = []
 }) => {
     const { t } = useTranslation();
-    const progressPercentage = (currentStep / totalSteps) * 100;
 
     // Default sections if none provided
     const defaultSections: TutorialSection[] = [];
 
     const sectionsToRender = sections || defaultSections;
+
+    const stepsTotal = totalSteps || sectionsToRender.length;
+
+    const completedCount = Math.min(completedSections.length, stepsTotal);
+
+    const progressPercentage = stepsTotal > 0 ? (completedCount / stepsTotal) * 100 : 0;
+
     const displayTitle =
         title || (titleTranslationKey ? t(titleTranslationKey, defaultTitle || "Tutorial-Fortschritt") : t("tutorials.progress.title", "Tutorial-Fortschritt"));
 
@@ -92,7 +98,7 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
         if (onPreviousTutorial) {
             onPreviousTutorial();
             // Scroll to top after navigation using scrollOffset
-            window.scrollTo({ top: Math.max(0, scrollOffset), behavior: "smooth" });
+            window.scrollTo({ top: 0, behavior: "smooth" });
         }
     };
 
@@ -100,7 +106,7 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
         if (onNextTutorial) {
             onNextTutorial();
             // Scroll to top after navigation using scrollOffset
-            window.scrollTo({ top: Math.max(0, scrollOffset), behavior: "smooth" });
+            window.scrollTo({ top: 0, behavior: "smooth" });
         }
     };
 

@@ -24,56 +24,236 @@ import { useTutorialProgress } from "./useTutorialProgress";
 import styles from "./AIBasicsTutorial.module.css";
 import { TutorialNavigationProps, TutorialSection } from "./TutorialTypes";
 
-const DATA_MERMAID = `mindmap
-  root((LLM's\n haben Zugriff auf folgende Informationen))
-    Elernte Informationen aus dem Training
-      Allgemeines Wissen, welches erlernt wird
-        Fakten
-        Konzepte
-        Wie funktioniert Sprache
-      Inhalte bis zum Trainingszeitpunkt
-        Bücher
-        Websites
-        Wissenschaftliche Artikel
-      Künstlich erzeugte Trainingsdaten
-    Aktueller Kontext während der Benutzung
-      Verlauf
-        Aktuelle Eingaben
-        Gesprächsverlauf
-        Systemprompt
-      Werkzeuge, die den Kontext befüllen
-        z.B. Websuche
-        Brainstorming
-    `;
+const DATA_MERMAID = `graph LR
+    subgraph Training ["📚 Erlerntes Wissen aus Training"]
+        direction TB
+        TrainingData["📖 Trainingsdaten<br/>(Terabytes an Text)<br/>🌍 Globale Wissenssammlung"]
 
-const TRAINING_MERMAID = `flowchart TD
-    Data[("Trainingsdaten\n(Terabytes an Text)")] --> Clean["Datenbereinigung\nund Vorbereitung"]
-    Clean --> Tokenize["Tokenisierung\nder Texte"]
-    Tokenize --> Pretrain["Vortraining\n(Selbstüberwachtes Lernen)"]
-    Pretrain --> Finetune["Feinabstimmung\n(Supervisiertes Lernen)"]
-    Finetune --> RLHF["RLHF\n(Verstärkendes Lernen\naus Human Feedback)"]
-    RLHF --> Deploy["Fertiges\nLLM-Modell"]
+        subgraph Knowledge ["🧠 Wissenskategorien"]
+            direction LR
+            GeneralKnowledge["🌍 Allgemeinwissen<br/>• Fakten & Konzepte<br/>• Sprachstrukturen<br/>• Mathematik & Logik<br/>• Wissenschaftliche Erkenntnisse<br/>• Kulturelles Wissen"]
+            HistoricalContent["📜 Historische Inhalte<br/>• Bücher & Literatur<br/>• Enzyklopädien & Lexika<br/>• Websites & Blogs<br/>• Wissenschaftliche Papers<br/>• News & Zeitungsartikel<br/>• Wikipedia & Fachportale"]
+            SyntheticData["🔧 Künstliche Trainingsdaten<br/>• Generierte Beispiele<br/>• Strukturierte Dialoge<br/>• Q&A Paare<br/>• Code-Kommentare<br/>• Übersetzungspaare"]
+        end
 
-    classDef process fill:#22C55E,stroke:#166534,color:white;
-    classDef data fill:#3B82F6,stroke:#1E40AF,color:white;
-    class Data,Deploy data;
-    class Clean,Tokenize,Pretrain,Finetune,RLHF process;`;
+        TrainingData --> GeneralKnowledge
+        TrainingData --> HistoricalContent
+        TrainingData --> SyntheticData
+    end
+
+    subgraph Context ["💬 Aktueller Kontext"]
+        direction TB
+        CurrentContext["🗨️ Gesprächskontext<br/>Dynamische Informationen"]
+
+        subgraph ContextDetails ["📝 Kontextquellen"]
+            direction LR
+            UserInput["👤 Ihre Eingabe<br/>• Aktuelle Frage<br/>• Spezifische Anfrage<br/>• Zusätzliche Details<br/>• Präferenzen"]
+            ChatHistory["📝 Gesprächsverlauf<br/>• Vorherige Nachrichten<br/>• Themenkontext<br/>• Referenzen<br/>• Kontinuität"]
+            SystemPrompt["⚙️ Systemprompt<br/>• Verhaltensvorgaben<br/>• Rolle & Expertise<br/>• Antwortformat<br/>• Sicherheitsregeln"]
+        end
+
+        UserInput --> CurrentContext
+        ChatHistory --> CurrentContext
+        SystemPrompt --> CurrentContext
+    end
+
+    subgraph Tools ["🛠️ Externe Werkzeuge & Hilfsmittel"]
+        direction TB
+        ToolsMain["🔧 Zusätzliche Fähigkeiten<br/>Erweiterte Funktionalitäten"]
+
+        subgraph ToolTypes ["🎯 Werkzeugkategorien"]
+            direction LR
+            WebSearch["🌐 Internet-Suche<br/>• Aktuelle Informationen<br/>• News & Updates<br/>• Fachspezifische Daten<br/>• Echtzeitdaten"]
+            CodeExecution["💻 Code-Ausführung<br/>• Python & JavaScript<br/>• Berechnungen<br/>• Datenanalyse<br/>• Algorithmen testen"]
+            DatabaseAccess["🗄️ Datenbankzugriff<br/>• Unternehmensdaten<br/>• Spezielle Wissensbasen<br/>• APIs & Services<br/>• Strukturierte Abfragen"]
+            FileAccess["📁 Dateizugriff<br/>• Dokumente analysieren<br/>• PDFs & Images<br/>• Uploads verarbeiten<br/>• Kontext erweitern"]
+        end
+
+        WebSearch --> ToolsMain
+        CodeExecution --> ToolsMain
+        DatabaseAccess --> ToolsMain
+        FileAccess --> ToolsMain
+    end
+
+    subgraph LLMCenter ["🤖 Large Language Model"]
+        direction TB
+        LLM["🧠 Zentrale Verarbeitungseinheit<br/>🎯 Transformer-Architektur<br/>⚡ Neuronale Netzwerke<br/>🔍 Pattern Recognition<br/>💡 Intelligente Antworten"]
+    end
+
+    %% Main connections
+    Knowledge --> LLM
+    CurrentContext --> LLM
+    ToolsMain --> LLM
+
+    %% Styling
+    classDef llmStyle fill:#6366f1,stroke:#4338ca,stroke-width:4px,color:white,font-weight:bold,font-size:14px
+    classDef trainingStyle fill:#10b981,stroke:#059669,stroke-width:2px,color:white,font-weight:bold
+    classDef contextStyle fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:white,font-weight:bold
+    classDef toolsStyle fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:white,font-weight:bold
+    classDef mainStyle fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white,font-weight:bold
+
+    class LLM llmStyle
+    class TrainingData,GeneralKnowledge,HistoricalContent,SyntheticData trainingStyle
+    class CurrentContext,UserInput,ChatHistory,SystemPrompt contextStyle
+    class ToolsMain,WebSearch,CodeExecution,DatabaseAccess,FileAccess toolsStyle
+    class Knowledge,ContextDetails,ToolTypes mainStyle`;
+
+const TRAINING_MERMAID = `flowchart TB
+    subgraph DataCollection ["📊 Phase 1: Datensammlung & Quellen"]
+        direction LR
+        subgraph Sources ["🌐 Datenquellen"]
+            Internet["🌐 Internet-Texte<br/>• Websites & Blogs<br/>• Foren & Social Media"]
+            Literature["📚 Literatur<br/>• Bücher & Fachwerke<br/>• Lehrbücher"]
+            Academic["🎓 Wissenschaft<br/>• Research Papers<br/>• Journals & Studien"]
+            Reference["📖 Referenzen<br/>• Wikipedia<br/>• Enzyklopädien"]
+        end
+
+        subgraph Volume ["📈 Datenvolumen"]
+            DataSize["� Gigantische Mengen<br/>🗄️ Terabytes an Text<br/>📄 Milliarden von Seiten<br/>🌍 100+ Sprachen<br/>⏰ Jahre an Inhalten"]
+            Quality["✅ Qualitätskriterien<br/>📝 Lesbare Texte<br/>🎯 Informativ & akkurat<br/>🔍 Faktenchecks<br/>⚖️ Ausgewogen"]
+        end
+
+        Internet --> DataSize
+        Literature --> DataSize
+        Academic --> DataSize
+        Reference --> DataSize
+        DataSize --> Quality
+    end
+
+    subgraph DataPrep ["🔧 Phase 2: Datenaufbereitung & Bereinigung"]
+        direction LR
+        subgraph Cleaning ["🧹 Bereinigungsschritte"]
+            RemoveDuplicates["🔍 Duplikate entfernen<br/>• Identische Texte<br/>• Ähnliche Inhalte<br/>• Near-Duplicates<br/>• Redundanzen"]
+            QualityFilter["✅ Qualitätskontrolle<br/>• Spam erkennen<br/>• Broken Text reparieren<br/>• Encoding-Probleme<br/>• Unvollständige Texte"]
+            ContentFilter["�️ Inhaltsfilterung<br/>• Datenschutz beachten<br/>• Urheberrecht prüfen<br/>• Sensible Daten<br/>• Toxische Inhalte"]
+        end
+
+        subgraph Tokenization ["✂️ Tokenisierung & Strukturierung"]
+            TokenSplit["🔤 Tokenisierung<br/>• Text → Tokens<br/>• Wörter & Subwörter"]
+            VocabBuild["📚 Vokabular<br/>• Token-Häufigkeiten<br/>• Multi-linguales Vocab"]
+            Encoding["🔢 Kodierung<br/>• Token → IDs<br/>• Batch Preparation"]
+        end
+
+        RemoveDuplicates --> TokenSplit
+        QualityFilter --> TokenSplit
+        ContentFilter --> TokenSplit
+        TokenSplit --> VocabBuild
+        VocabBuild --> Encoding
+    end
+
+    subgraph Training ["🎯 Phase 3: Training & Lernprozess"]
+        direction LR
+        subgraph PreTraining ["📖 Vortraining"]
+            NextToken["🎯 Next-Token Prediction<br/>⚡ Massive Skalierung"]
+        end
+
+        subgraph FineTuning ["🎨 Feinabstimmung (Supervised)"]
+            TaskSpecific["📋 Aufgaben-spezifisch<br/>• Instruktionsdaten<br/>• Q&A Paare<br/>• Dialogformate<br/>• Spezielle Fähigkeiten"]
+            Supervised["👨‍🏫 Überwachtes Lernen<br/>⏱️ Tage bis Wochen<br/>� Tausende Euro<br/>🎯 Zielgerichtetes Training<br/>📊 Labeled Data"]
+        end
+
+        subgraph RLHF ["👥 Human Feedback"]
+            HumanFeedback["👩‍💻 Antworten bewerten<br/>🔄 Policy Optimization"]
+        end
+
+        NextToken --> TaskSpecific
+        TaskSpecific --> HumanFeedback
+    end
+
+    subgraph Deployment ["🚀 Phase 4: Bereitstellung"]
+        direction TB
+        Evaluation["📊 Evaluierung<br/>📈 Tests & Benchmarks<br/>🛡️ Sicherheitstests"]
+        Production["🌟 Produktion<br/>🔧 Model Optimization<br/>🏗️ Infrastruktur"]
+        UserReady["👨‍💻 Benutzer-Ready<br/>💻 Web Interfaces<br/>📚 Documentation"]
+
+        Evaluation --> Production
+        Production --> UserReady
+        Infrastructure --> UserReady
+    end
+
+    %% Main Flow
+    Quality --> RemoveDuplicates
+    Encoding --> NextToken
+    HumanFeedback --> Evaluation
+
+    %% Feedback loops
+    Evaluation -.->|"❌ Issues"| HumanFeedback
+    UserReady -.->|"📈 Improvements"| HumanFeedback
+
+    %% Styling
+    classDef dataStyle fill:#3b82f6,stroke:#1e40af,stroke-width:2px,color:white,font-weight:bold
+    classDef processStyle fill:#10b981,stroke:#059669,stroke-width:2px,color:white,font-weight:bold
+    classDef trainingStyle fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:white,font-weight:bold
+    classDef deployStyle fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white,font-weight:bold
+    classDef phaseStyle fill:#ef4444,stroke:#dc2626,stroke-width:3px,color:white,font-weight:bold
+
+    class Sources,Volume dataStyle
+    class Cleaning,Processing processStyle
+    class PreTraining,FineTuning,RLHF trainingStyle
+    class Evaluation,Production,UserReady deployStyle
+    class DataCollection,DataPrep,Training,Deployment phaseStyle`;
 
 const ARCHITECTURE_MERMAID = `flowchart TD
-    Input["📝 Eingabetext\n'Wie ist das Wetter heute?'"] --> Tokenize["🔤 Tokenisierung\n[Wie][ist][das][Wetter][heute][?]"]
-    Tokenize --> Embedding["🔢 Embeddings\nWörter → Zahlen"]
-    Embedding --> Attention["🔍 Self-Attention\nWelche Wörter sind wichtig?"]
-    Attention --> FFN["⚙️ Feed-Forward\nMuster erkennen"]
-    FFN --> Predict["🎯 Vorhersage\nNächstes Wort bestimmen"]
-    Predict --> Output["💬 Ausgabe\n'Das Wetter ist heute...'"]
+    subgraph "🎯 Eingabe-Verarbeitung"
+        Input["📝 Benutzer-Eingabe<br/>'Wie ist das Wetter heute?'<br/>🔤 Roher Text"]
+        Tokenize["✂️ Tokenisierung<br/>🔗 [Wie][ist][das][Wetter][heute][?]<br/>📊 6 Tokens"]
+        Embedding["🔢 Wort-Embeddings<br/>📈 Jedes Token → Zahlenvektor<br/>🎨 Semantische Bedeutung"]
+    end
 
-    classDef input fill:#8B5CF6,stroke:#4C1D95,color:white;
-    classDef process fill:#10B981,stroke:#065F46,color:white;
-    classDef output fill:#3B82F6,stroke:#1E3A8A,color:white;
+    subgraph "🧠 Neuronale Verarbeitung"
+        subgraph "🔍 Attention-Mechanismus"
+            SelfAttention["�️ Self-Attention<br/>🤔 'Welche Wörter sind wichtig?'<br/>🔗 Beziehungen zwischen Tokens<br/>⭐ Fokus auf relevante Teile"]
+            MultiHead["🎭 Multi-Head Attention<br/>👀 Verschiedene Perspektiven<br/>🔄 Parallel processing<br/>📊 8-16 Attention Heads"]
+        end
 
-    class Input input;
-    class Tokenize,Embedding,Attention,FFN,Predict process;
-    class Output output;`;
+        subgraph "⚙️ Feed-Forward Netzwerk"
+            FFN["🔧 Feed-Forward Layer<br/>🎯 Muster erkennen & transformieren<br/>📈 Nicht-lineare Aktivierung<br/>🧮 Millionen Parameter"]
+            Norm["📏 Layer Normalization<br/>⚖️ Stabilisierung<br/>🔄 Residual Connections<br/>📊 Bessere Konvergenz"]
+        end
+    end
+
+    subgraph "🎲 Ausgabe-Generierung"
+        Predict["🎯 Nächstes Token vorhersagen<br/>📊 Wahrscheinlichkeitsverteilung<br/>🎲 Sampling-Strategien<br/>🔥 Temperature Control"]
+        TopK["🏆 Top-K Auswahl<br/>📈 'schön': 35%<br/>☀️ 'sonnig': 25%<br/>🌧️ 'regnerisch': 20%"]
+        Generation["🔄 Iterative Generierung<br/>➡️ Token für Token<br/>🛑 Stop-Kriterien<br/>📝 Kohärente Antwort"]
+    end
+
+    subgraph "💬 Finale Ausgabe"
+        Output["✨ Fertige Antwort<br/>'Das Wetter ist heute schön<br/>und sonnig mit 23°C.'<br/>🎨 Natürliche Sprache"]
+        PostProcess["🔧 Nachbearbeitung<br/>✅ Qualitätskontrolle<br/>🛡️ Safety Filter<br/>📖 Formatierung"]
+    end
+
+    %% Main Flow
+    Input --> Tokenize
+    Tokenize --> Embedding
+    Embedding --> SelfAttention
+    SelfAttention --> MultiHead
+    MultiHead --> FFN
+    FFN --> Norm
+    Norm --> Predict
+    Predict --> TopK
+    TopK --> Generation
+    Generation --> Output
+    Output --> PostProcess
+
+    %% Feedback Loop for Generation
+    Generation -.->|"🔄 Für jedes neue Token"| SelfAttention
+
+    %% Parallel processing indication
+    SelfAttention -.->|"⚡ Parallel"| FFN
+
+    %% Styling
+    classDef inputStyle fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white,font-weight:bold
+    classDef processStyle fill:#10b981,stroke:#059669,stroke-width:2px,color:white,font-weight:bold
+    classDef attentionStyle fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:white,font-weight:bold
+    classDef outputStyle fill:#3b82f6,stroke:#1e40af,stroke-width:2px,color:white,font-weight:bold
+    classDef finalStyle fill:#ef4444,stroke:#dc2626,stroke-width:2px,color:white,font-weight:bold
+
+    class Input,Tokenize,Embedding inputStyle
+    class FFN,Norm processStyle
+    class SelfAttention,MultiHead attentionStyle
+    class Predict,TopK,Generation outputStyle
+    class Output,PostProcess finalStyle`;
 
 export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToTop, currentTutorialId, allTutorials }: TutorialNavigationProps = {}) => {
     const { t } = useTranslation();

@@ -44,12 +44,10 @@
 
 .trainingPhase {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 95, 70, 0.05));
-    border-left: 4px solid var(--colorSuccessStroke1);
 }
 
 .inferencePhase {
     background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(49, 46, 129, 0.05));
-    border-left: 4px solid var(--colorBrandStroke1);
 }
 
 .phaseIcon {
@@ -200,7 +198,6 @@
     padding: 16px;
     border-radius: 6px;
     background: var(--colorNeutralBackground3);
-    border-left: 4px solid var(--colorBrandStroke1);
 }
 
 .infoBox {
@@ -232,7 +229,6 @@
     height: auto;
     min-height: 120px;
     border-radius: 8px;
-    color: var(--colorNeutralBackground1Hover);
     text-decoration: none;
     opacity: 0.9;
     background: var(--colorNeutralBackground4);
@@ -315,9 +311,6 @@
 .mermaidContainer {
     margin: 20px 0;
     padding: 20px;
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 6px;
     overflow-x: auto;
 }
 
@@ -336,9 +329,6 @@
 }
 
 .exampleBox {
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 6px;
     padding: 12px;
     font-size: 14px;
 }
@@ -455,12 +445,10 @@
 }
 
 .trainingColumn {
-    border-left: 1px solid var(--colorNeutralStroke2);
     background: rgba(16, 185, 129, 0.05);
 }
 
 .inferenceColumn {
-    border-left: 1px solid var(--colorNeutralStroke2);
     background: rgba(79, 70, 229, 0.05);
 }
 
@@ -468,7 +456,6 @@
     margin-top: 20px;
     padding: 12px 16px;
     background: var(--colorBrandBackground2);
-    border-left: 4px solid var(--colorBrandStroke1);
     border-radius: 4px;
 }
 
@@ -688,7 +675,6 @@
     padding: 8px 12px;
     background: var(--colorNeutralBackground1);
     border-radius: 6px;
-    border-left: 3px solid var(--colorBrandBackground);
     font-family: monospace;
     font-size: 14px;
 }
@@ -703,7 +689,6 @@
     padding: 24px;
     background: var(--colorNeutralBackground2);
     border-radius: 12px;
-    border-left: 4px solid var(--colorBrandBackground);
 }
 
 .analogyBox h4 {

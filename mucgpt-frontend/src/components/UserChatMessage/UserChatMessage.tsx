@@ -27,16 +27,17 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
                 <ChatMessageIcon aria-hidden></ChatMessageIcon>
                 {onRollbackMessage && <RollBackMessage onRollback={onRollbackMessage} />}
             </Stack>
-            <Markdown
-                className={styles.answerText}
-                remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
-                components={{
-                    code: CodeBlockRenderer
-                }}
-            >
-                {message}
-            </Markdown>
+            <div className={styles.answerText}>
+                <Markdown
+                    remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
+                    rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
+                    components={{
+                        code: CodeBlockRenderer
+                    }}
+                >
+                    {message}
+                </Markdown>
+            </div>
         </div>
     );
 };

@@ -222,16 +222,17 @@ export const AssistantsettingsDrawer = ({
             </div>
 
             <div className={styles.descriptionSection}>
-                <Markdown
-                    className={styles.markdownDescription}
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                    components={{
-                        code: CodeBlockRenderer
-                    }}
-                >
-                    {description}
-                </Markdown>
+                <div className={styles.markdownDescription}>
+                    <Markdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                        components={{
+                            code: CodeBlockRenderer
+                        }}
+                    >
+                        {description}
+                    </Markdown>
+                </div>
             </div>
 
             <div className={styles.buttonSection}>

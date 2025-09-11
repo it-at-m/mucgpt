@@ -169,8 +169,18 @@ class MUCGPTAgentExecutor:
                         message_chunk, AIMessageChunk
                     ):
                         chunk_content = message_chunk.content
-                        if not chunk_content or chunk_content.isspace():
+                        if chunk_content is None:
                             continue
+                        if isinstance(chunk_content, str):
+                            # Skip only if it's empty OR only spaces/tabs WITHOUT any newline characters.
+                            if (
+                                chunk_content.strip() == ""
+                                and "\n" not in chunk_content
+                            ):
+                                continue
+                        else:
+                            # If content is not a string (e.g., list for multimodal), keep existing behavior and pass through.
+                            pass
                         yield ChatCompletionChunk(
                             id=id_,
                             object="chat.completion.chunk",

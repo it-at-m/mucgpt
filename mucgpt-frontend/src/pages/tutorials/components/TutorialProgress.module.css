@@ -1,0 +1,255 @@
+/* Tutorial Progress Styles */
+
+.progressContainer {
+    margin: 16px 0;
+    padding: 16px;
+    background: var(--colorNeutralBackground2);
+    border-radius: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+/* Sticky positioning */
+.sticky {
+    position: sticky !important;
+    z-index: 1000 !important;
+    backdrop-filter: blur(10px);
+    background: var(--colorNeutralBackground2);
+    border-bottom: 2px solid var(--colorBrandStroke1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0;
+    margin: 0;
+}
+
+/* Compact mode */
+.compact {
+    padding: 12px;
+    margin: 12px 0;
+}
+
+.compact .progressHeader {
+    margin-bottom: 8px;
+}
+
+.compact .progressBarContainer {
+    margin-bottom: 12px;
+}
+
+.compact .sectionsList {
+    gap: 6px;
+}
+
+.compact .sectionItem {
+    padding: 6px 8px;
+}
+
+.compact .sectionIcon {
+    width: 16px;
+    height: 16px;
+    font-size: 14px;
+}
+
+.compact .sectionNumber {
+    font-size: 8px;
+}
+
+.progressHeader {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.progressTitleContainer {
+    flex: 1;
+}
+
+.navigationButtons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.navigationButton {
+    min-width: unset;
+    transition: all 0.2s ease;
+}
+
+.navigationButton:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.navigationButton:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Compact mode adjustments */
+.compact .navigationButtons {
+    gap: 2px;
+}
+
+.compact .navigationButton {
+    padding: 4px;
+}
+
+.progressStats {
+    color: var(--colorNeutralForeground2);
+    margin-top: 4px;
+}
+
+.progressBarContainer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.progressBar {
+    flex: 1;
+    height: 8px;
+    background: var(--colorNeutralBackground3);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--colorBrandBackground), var(--colorBrandBackgroundPressed));
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.progressPercentage {
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+    min-width: 35px;
+    text-align: right;
+}
+
+.sectionsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.sectionItem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.sectionItem:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sectionItem.completed {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid var(--colorSuccessStroke1);
+}
+
+.sectionItem.current {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid var(--colorBrandStroke1);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.sectionItem.pending {
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke2);
+    opacity: 0.7;
+}
+
+.sectionIcon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 16px;
+}
+
+.completed .sectionIcon {
+    color: var(--colorSuccessForeground1);
+}
+
+.current .sectionIcon {
+    background: var(--colorBrandBackground);
+    color: white;
+}
+
+.pending .sectionIcon {
+    background: var(--colorNeutralBackground3);
+    color: var(--colorNeutralForeground2);
+}
+
+.sectionNumber {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.sectionLabel {
+    flex: 1;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+.completed .sectionLabel {
+    color: var(--colorSuccessForeground1);
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+.current .sectionLabel {
+    color: var(--colorBrandForeground1);
+    font-weight: 600;
+}
+
+.pending .sectionLabel {
+    color: var(--colorNeutralForeground2);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .sectionsList {
+        grid-template-columns: 1fr;
+    }
+
+    .progressContainer {
+        padding: 12px;
+    }
+
+    .sectionItem {
+        padding: 6px 8px;
+    }
+
+    .sectionLabel {
+        font-size: 10px;
+    }
+
+    .progressHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .navigationButtons {
+        align-self: flex-end;
+        gap: 2px;
+    }
+
+    .navigationButton {
+        padding: 6px;
+    }
+}

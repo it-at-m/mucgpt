@@ -19,6 +19,7 @@ import styles from "./Tutorials.module.css";
 import { BrainstormTutorial } from "./components/BrainstormTutorial";
 import { SimplifyTutorial } from "./components/SimplifyTutorial";
 import { ToolsTutorial } from "./components/ToolsTutorial";
+import { AIBasicsTutorial } from "./components/AIBasicsTutorial";
 
 interface TutorialSection {
     id: string;
@@ -53,12 +54,6 @@ export const Tutorials = () => {
         },
         [navigate]
     );
-    const handleTutorialSelect = useCallback(
-        (tutorialId: string) => {
-            navigate(`/tutorials/${tutorialId}`);
-        },
-        [navigate]
-    );
 
     // Check if tutorial is under construction
     const isTutorialUnderConstruction = useCallback(
@@ -67,7 +62,9 @@ export const Tutorials = () => {
         },
         [t]
     );
-    const tutorialSections = useMemo(
+
+    // Create basic tutorial sections first (without navigation props)
+    const baseTutorialSections = useMemo(
         (): Record<string, TutorialSectionGroup> => ({
             "ki-background": {
                 title: t("tutorials.sections.ki_background.title", "KI Background"),
@@ -75,11 +72,11 @@ export const Tutorials = () => {
                 tutorials: [
                     {
                         id: "ki-basics",
-                        title: t("tutorials.ki_basics.title", "KI-Grundlagen"),
-                        description: t("tutorials.ki_basics.description", "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme."),
+                        title: t("tutorials.ai_basics.title", "KI-Grundlagen"),
+                        description: t("tutorials.ai_basics.description", "Was ist KI und wie funktioniert sie? Verstehe die Grundlagen moderner AI-Systeme."),
                         icon: <BrainCircuit24Regular />,
-                        badge: t("tutorials.badges.in_construction", "Im Aufbau"),
-                        component: <div>KI-Grundlagen Tutorial coming soon...</div>
+                        badge: t("tutorials.badges.new", "Neu"),
+                        component: <AIBasicsTutorial />
                     },
                     {
                         id: "prompt-engineering",
@@ -183,8 +180,124 @@ export const Tutorials = () => {
         [t, handleNavigateToTutorial]
     );
 
-    // Flatten all tutorials for navigation
+    const handleTutorialSelect = useCallback(
+        (tutorialId: string) => {
+            // Find the tutorial and check if it's under construction
+            const tutorial = Object.values(baseTutorialSections)
+                .flatMap(section => section.tutorials)
+                .find(t => t.id === tutorialId);
+
+            if (tutorial && !isTutorialUnderConstruction(tutorial)) {
+                navigate(`/tutorials/${tutorialId}`);
+            }
+        },
+        [navigate, baseTutorialSections, isTutorialUnderConstruction]
+    );
+
+    // Flatten all tutorials for navigation (exclude under construction)
     const allTutorials = useMemo(() => {
+        const tutorials: TutorialSection[] = [];
+        Object.values(baseTutorialSections).forEach(section => {
+            tutorials.push(...section.tutorials.filter(tutorial => !isTutorialUnderConstruction(tutorial)));
+        });
+        return tutorials;
+    }, [baseTutorialSections, isTutorialUnderConstruction]);
+
+    // Navigation between tutorials
+    const handlePreviousTutorial = useCallback(() => {
+        if (!currentTutorial) return;
+
+        const currentIndex = allTutorials.findIndex(t => t.id === currentTutorial);
+        if (currentIndex > 0) {
+            const previousTutorial = allTutorials[currentIndex - 1];
+            navigate(`/tutorials/${previousTutorial.id}`);
+        }
+    }, [currentTutorial, allTutorials, navigate]);
+
+    const handleNextTutorial = useCallback(() => {
+        if (!currentTutorial) return;
+
+        const currentIndex = allTutorials.findIndex(t => t.id === currentTutorial);
+        if (currentIndex >= 0 && currentIndex < allTutorials.length - 1) {
+            const nextTutorial = allTutorials[currentIndex + 1];
+            navigate(`/tutorials/${nextTutorial.id}`);
+        }
+    }, [currentTutorial, allTutorials, navigate]);
+
+    const handleBackToTop = useCallback(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    }, []);
+
+    // Create tutorial sections with navigation props
+    const tutorialSections = useMemo(
+        (): Record<string, TutorialSectionGroup> => ({
+            "ki-background": {
+                ...baseTutorialSections["ki-background"],
+                tutorials: [
+                    {
+                        ...baseTutorialSections["ki-background"].tutorials[0],
+                        component: (
+                            <AIBasicsTutorial
+                                onPreviousTutorial={handlePreviousTutorial}
+                                onNextTutorial={handleNextTutorial}
+                                onBackToTop={handleBackToTop}
+                                currentTutorialId={currentTutorial || undefined}
+                                allTutorials={allTutorials.map(t => ({ id: t.id, title: t.title }))}
+                            />
+                        )
+                    },
+                    ...baseTutorialSections["ki-background"].tutorials.slice(1)
+                ]
+            },
+            tools: {
+                ...baseTutorialSections.tools,
+                tutorials: [
+                    {
+                        ...baseTutorialSections.tools.tutorials[0],
+                        component: (
+                            <ToolsTutorial
+                                onNavigateToTutorial={handleNavigateToTutorial}
+                                onPreviousTutorial={handlePreviousTutorial}
+                                onNextTutorial={handleNextTutorial}
+                                onBackToTop={handleBackToTop}
+                                currentTutorialId={currentTutorial || undefined}
+                                allTutorials={allTutorials.map(t => ({ id: t.id, title: t.title }))}
+                            />
+                        )
+                    },
+                    {
+                        ...baseTutorialSections.tools.tutorials[1],
+                        component: (
+                            <BrainstormTutorial
+                                onPreviousTutorial={handlePreviousTutorial}
+                                onNextTutorial={handleNextTutorial}
+                                onBackToTop={handleBackToTop}
+                                currentTutorialId={currentTutorial || undefined}
+                                allTutorials={allTutorials.map(t => ({ id: t.id, title: t.title }))}
+                            />
+                        )
+                    },
+                    {
+                        ...baseTutorialSections.tools.tutorials[2],
+                        component: (
+                            <SimplifyTutorial
+                                onPreviousTutorial={handlePreviousTutorial}
+                                onNextTutorial={handleNextTutorial}
+                                onBackToTop={handleBackToTop}
+                                currentTutorialId={currentTutorial || undefined}
+                                allTutorials={allTutorials.map(t => ({ id: t.id, title: t.title }))}
+                            />
+                        )
+                    }
+                ]
+            },
+            "general-tips": baseTutorialSections["general-tips"]
+        }),
+        [baseTutorialSections, handleNavigateToTutorial, handlePreviousTutorial, handleNextTutorial, handleBackToTop, currentTutorial, allTutorials]
+    );
+
+    // Final flattened tutorials for rendering
+    const finalAllTutorials = useMemo(() => {
         const tutorials: TutorialSection[] = [];
         Object.values(tutorialSections).forEach(section => {
             tutorials.push(...section.tutorials);
@@ -220,6 +333,7 @@ export const Tutorials = () => {
                                         cursor: isUnderConstruction ? "not-allowed" : "pointer",
                                         opacity: isUnderConstruction ? 0.6 : 1
                                     }}
+                                    aria-disabled={isUnderConstruction}
                                 >
                                     <CardHeader
                                         image={<div className={styles.tutorialIcon}>{tutorial.icon}</div>}
@@ -249,10 +363,15 @@ export const Tutorials = () => {
                 </div>
             ))}
         </div>
-    ); // Render selected tutorial
+    );
+
+    // Render selected tutorial
     const renderSelectedTutorial = () => {
-        const tutorial = allTutorials.find(t => t.id === currentTutorial);
-        if (!tutorial) return null;
+        const tutorial = finalAllTutorials.find(t => t.id === currentTutorial);
+        if (!tutorial) {
+            navigate("/tutorials", { replace: true });
+            return null;
+        }
 
         return (
             <div className={styles.tutorialContent}>
@@ -280,6 +399,13 @@ export const Tutorials = () => {
                 <Divider />
 
                 <div className={styles.tutorialBody}>{tutorial.component}</div>
+
+                <Divider />
+                <div className={styles.tutorialBreadcrumb}>
+                    <Button appearance="subtle" onClick={() => navigate("/tutorials")} size="small">
+                        ← {t("tutorials.back_to_overview", "Zurück zur Übersicht")}
+                    </Button>
+                </div>
             </div>
         );
     };

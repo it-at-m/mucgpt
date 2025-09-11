@@ -24,10 +24,13 @@
         "remark": "15.0.1",
         "remark-gfm": "4.0.1",
         "remark-math": "6.0.0",
+        "prismjs": ">=1.30.0",
         "typescript-eslint": "8.42.0",
         "uuid": "13.0.0"
     },
     "devDependencies": {
+        "brace-expansion": ">=1.1.12",
+        "esbuild": ">=0.25.0",
         "@types/dompurify": "3.2.0",
         "@types/node": "22.14.0",
         "@types/react": "18.3.12",

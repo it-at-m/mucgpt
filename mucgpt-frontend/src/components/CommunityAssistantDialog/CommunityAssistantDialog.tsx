@@ -243,8 +243,8 @@ export const CommunityAssistantsDialog = ({
                 const community_config: CommunityAssistant = {
                     id: assistant.id,
                     title: assistant.title,
-                    description: assistant.description,
-                }
+                    description: assistant.description
+                };
                 await communityAssistantStorageService.createAssistantConfig(community_config);
                 showSuccess(
                     t("components.community_assistants.subscribe_success_title", { title: assistant.title }),

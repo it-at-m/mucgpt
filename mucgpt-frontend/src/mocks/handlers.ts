@@ -277,5 +277,17 @@ export const handlers = [
             user_roles: ["lhm-ab-mucgpt-user"],
             authorities: []
         });
+    }),
+
+    http.get("/api/user/subscriptions", async () => {
+        await delay(300);
+        // Return a subset of assistants as subscriptions with simplified information
+        // as defined in the SubscriptionResponse model
+        const subscriptions = DYNAMIC_ASSISTANTS.slice(0, 2).map(assistant => ({
+            id: assistant.id,
+            title: assistant.latest_version.name,
+            description: assistant.latest_version.description
+        }));
+        return HttpResponse.json(subscriptions);
     })
 ];

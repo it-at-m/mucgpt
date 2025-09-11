@@ -111,16 +111,17 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
 
             <Stack.Item className={styles.growItem} grow>
                 {formatted && (
-                    <Markdown
-                        className={styles.answerText}
-                        remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                        rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
-                        components={{
-                            code: CodeBlockRenderer
-                        }}
-                    >
-                        {processedText}
-                    </Markdown>
+                    <div className={styles.answerText}>
+                        <Markdown
+                            remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
+                            rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
+                            components={{
+                                code: CodeBlockRenderer
+                            }}
+                        >
+                            {processedText}
+                        </Markdown>
+                    </div>
                 )}
                 {!formatted && (
                     <div className={styles.unformattedAnswer} tabIndex={0}>

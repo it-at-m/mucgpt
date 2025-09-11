@@ -397,7 +397,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <>
                 <AssistantsettingsDrawer
                     assistant={assistantConfig}
-                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => { }}
+                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
                     onDeleteAssistant={onDeleteAssistant}
                     history={history}
                     minimized={!showSidebar}

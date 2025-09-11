@@ -70,8 +70,8 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
     const sectionsToRender = sections || defaultSections;
 
     const stepsTotal = totalSteps || sectionsToRender.length;
-
-    const completedCount = Math.min(completedSections.length, stepsTotal);
+    const sanitizedCurrentStep = Math.min(Math.max(0, currentStep), Math.max(stepsTotal - 1, 0));
+    const completedCount = Math.min(new Set(completedSections).size, stepsTotal);
 
     const progressPercentage = stepsTotal > 0 ? (completedCount / stepsTotal) * 100 : 0;
 
@@ -190,7 +190,7 @@ export const TutorialProgress: React.FC<TutorialProgressProps> = ({
                     <div
                         key={section.id}
                         className={`${styles.sectionItem} ${
-                            completedSections.includes(section.id) ? styles.completed : index === currentStep ? styles.current : styles.pending
+                            completedSections.includes(section.id) ? styles.completed : index === sanitizedCurrentStep ? styles.current : styles.pending
                         }`}
                         onClick={() => {
                             if (enableSectionNavigation) {

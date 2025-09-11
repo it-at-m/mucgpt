@@ -289,7 +289,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
                     }
                 } else {
                     const stale = document.getElementById(id);
-                    if (stale) stale.remove();
+                    if (stale && !svgContainerRef.current?.contains(stale)) stale.remove();
                     setDiagram(false);
                 }
             } else {
@@ -300,7 +300,8 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
     }, [text, darkTheme]);
 
     const download = useCallback(() => {
-        const svgElement = document.getElementById(id);
+        const container = svgContainerRef.current;
+        const svgElement = container?.querySelector(`svg#${CSS.escape(id)}`) as SVGElement | null;
 
         if (svgElement) {
             // Create a copy of the SVG for download (without zoom transform)
@@ -394,11 +395,12 @@ export const Mermaid: React.FC<MermaidProps> = ({ text, darkTheme }) => {
         if (zoomLevel === 1) {
             // If at default zoom (100%), zoom to fit width
             if (containerRef.current && svgContainerRef.current) {
-                const containerWidth = containerRef.current.clientWidth - 32; // Account for padding
+                const containerWidth = containerRef.current.clientWidth - 32;
                 const svgElement = svgContainerRef.current.querySelector("svg");
                 if (svgElement) {
-                    const svgWidth = svgElement.getBoundingClientRect().width; // Get current width without division
-                    const fitZoom = Math.min(containerWidth / svgWidth, 3); // Max 3x zoom
+                    const vb = (svgElement as SVGSVGElement).viewBox.baseVal;
+                    const contentWidth = vb && vb.width ? vb.width : Number(svgElement.getAttribute("width")) || 800;
+                    const fitZoom = Math.min(containerWidth / contentWidth, 3);
                     setZoomLevel(fitZoom);
                 }
             }

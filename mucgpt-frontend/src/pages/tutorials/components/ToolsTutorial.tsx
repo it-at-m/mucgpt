@@ -1,5 +1,4 @@
-import { useState, useCallback, useContext, useEffect } from "react";
-import * as React from "react";
+import { useState, useCallback, useContext, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Toolbox24Regular, CheckmarkCircle24Regular, BrainCircuit24Regular, TextBulletListSquare24Regular } from "@fluentui/react-icons";
 import { Button, Text } from "@fluentui/react-components";
@@ -162,7 +161,7 @@ export const ToolsTutorial = ({
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
 
     // Tutorial sections for progress tracking
-    const tutorialSections = React.useMemo<TutorialSection[]>(
+    const tutorialSections = useMemo<TutorialSection[]>(
         () => [
             { id: "intro", translationKey: "tutorials.tools.sections.titles.intro", defaultLabel: "Einführung" },
             { id: "selection", translationKey: "tutorials.tools.sections.titles.selection", defaultLabel: "Tool-Auswahl" },
@@ -332,7 +331,7 @@ export const ToolsTutorial = ({
                     "AI-Tools sind spezialisierte Funktionen, die Sie der KI hinzufügen können, um spezifische Aufgaben zu erledigen. Von Web-Recherche über mathematische Berechnungen bis hin zur Code-Ausführung - wählen Sie die Tools aus, die Sie für Ihre Aufgabe benötigen."
                 )}
                 example={{
-                    title: t("tutorials.tools.example.title", "So wählen Sie ein Tools aus:"),
+                    title: t("tutorials.tools.example.title", "So wählen Sie ein Tool aus:"),
                     description: t("tutorials.tools.example.description", ""),
                     component: (
                         <div>

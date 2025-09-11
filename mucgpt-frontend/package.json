@@ -37,7 +37,7 @@
         "eslint": "9.34.0",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",
-        "msw": "2.10.5",
+        "msw": "2.11.1",
         "prettier": "3.6.2",
         "typescript": "5.9.2",
         "vite": "5.4.19"

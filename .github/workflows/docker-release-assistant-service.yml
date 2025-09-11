@@ -5,7 +5,8 @@ permissions:
 on:
   push:
     tags:
-      - "mucgpt-assistant-*" # Triggers only on mucgpt-assistant tags
+      - "mucgpt-assistant-[0-9]*" # Triggers only on mucgpt-assistant tags, not migrations
+      - "mucgpt-assistant-latest" # Also allow explicit latest tag
   workflow_dispatch: # Allows manual triggering of the workflow
     inputs:
       tag:

@@ -79,12 +79,12 @@ const Menu = () => {
             setQuestion(decoded_query);
         }
         (async () => {
-            await migrate_old_assistants()
+            await migrate_old_assistants();
             const [assistantsLocal, subs, owned, localCommunity] = await Promise.all([
                 assistantStorageService.getAllAssistantConfigs(),
                 getUserSubscriptionsApi(),
                 getOwnedCommunityAssistants(),
-                communityAssistantStorageService.getAllAssistantConfigs(),
+                communityAssistantStorageService.getAllAssistantConfigs()
             ]);
             setAssistants(assistantsLocal);
             setCommunityAssistants(subs);
@@ -334,7 +334,9 @@ const Menu = () => {
                             {deletedCommunityAssistants.map((assistant, key) => (
                                 <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
                                     <div className={styles.box} role="listitem" tabIndex={0} style={{ opacity: 0.5 }}>
-                                        <div className={styles.boxHeader} style={{ color: "red" }}>{assistant.title}</div>
+                                        <div className={styles.boxHeader} style={{ color: "red" }}>
+                                            {assistant.title}
+                                        </div>
                                         <div className={styles.boxDescription}>{assistant.description}</div>
                                         <Link
                                             to={`deleted/communityassistant/${assistant.id}`}

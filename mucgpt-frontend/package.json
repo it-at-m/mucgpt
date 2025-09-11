@@ -40,7 +40,7 @@
         "msw": "2.10.5",
         "prettier": "3.6.2",
         "typescript": "5.9.2",
-        "vite": "5.4.19"
+        "vite": "5.4.20"
     },
     "engines": {
         "node": ">=20.0.0"

@@ -1,0 +1,24 @@
+name: Mirror to openCode
+
+on:
+  push:
+    branches:
+      - 'chore-mirror-opencode' # optional, nur bei Änderungen auf diesem Branch
+  schedule:
+    - cron: '0 * * * *' # optional, stündlich
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mirror repository to GitLab
+        env:
+          
+          GITLAB_TOKEN: ${{ secrets.GITLAB_MIRROR_PUSH }}
+        run: |
+          git config --global user.name "GitHub Actions Mirror Bot"
+          git config --global user.email "bot@muenchen.de"
+          git clone --mirror https://github.com/it-at-m/mucgpt.git
+          cd mucgpt.git
+          git remote add opencode https://gitlab.opencode.de/landeshauptstadt-muenchen/mucgpt.git
+          git push --mirror opencode

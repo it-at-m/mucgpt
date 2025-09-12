@@ -15,7 +15,7 @@ requires-python = ">=3.10"
 dependencies = [
     "asgi-correlation-id==4.3.4",
     "asyncpg>=0.30.0",
-    "fastapi[standard]==0.115.12",
+    "fastapi[standard]==0.116.1",
     "gitpython>=3.1.44",
     "gunicorn>=23.0.0",
     "joserfc>=1.1.0",

@@ -28,7 +28,7 @@ jobs:
       full_tag: ${{ steps.vars.outputs.full_tag }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4
         with:
           ref: ${{ github.ref }}
 
@@ -60,9 +60,9 @@ jobs:
           echo "Updated package.json to version ${{ steps.vars.outputs.version }}"
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: '20.19.5'
           cache: 'npm'
           cache-dependency-path: mucgpt-frontend/package-lock.json
 
@@ -77,10 +77,10 @@ jobs:
           npm run build:ghpages
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d # v4
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: './mucgpt-frontend/dist'
 
@@ -93,7 +93,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
 
       - name: Display deployment info
         run: |

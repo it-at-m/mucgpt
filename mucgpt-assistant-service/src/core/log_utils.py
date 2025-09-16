@@ -2,8 +2,11 @@
 
 import os
 import re
+from typing import Any, Dict
 
 from yaml import safe_load
+
+_ENV_VAR_PATTERN = re.compile(r"\$\{([^}:]+)(?::-([^}]*))?\}")
 
 
 def expand_env_vars(text):
@@ -15,13 +18,12 @@ def expand_env_vars(text):
         return os.getenv(var_name, default_value)
 
     # Pattern to match ${VAR_NAME:-default} or ${VAR_NAME}
-    pattern = r"\$\{([^}:]+)(?::-([^}]*))?\}"
-    return re.sub(pattern, replace_var, text)
+    return _ENV_VAR_PATTERN.sub(replace_var, text)
 
 
-def load_log_config(config_path):
+def load_log_config(config_path: str) -> Dict[str, Any]:
     """Load and process log configuration with environment variable expansion"""
-    with open(config_path) as file:
+    with open(config_path, encoding="utf-8") as file:
         config_text = file.read()
 
     # Expand environment variables

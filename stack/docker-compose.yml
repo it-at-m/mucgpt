@@ -147,17 +147,17 @@ services:
       - keycloak
     healthcheck:
       <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8000/api/backend/health"]
     environment:
       - SSL_CERT_FILE=${SSL_CERT_FILE:-}
-      - LOG_LEVEL_ROOT=DEBUG
-      - LOG_LEVEL_DEV=DEBUG
-      - LOG_LEVEL_UVICORN_ERROR=DEBUG
-      - LOG_LEVEL_UVICORN_ACCESS=DEBUG
-      - LOG_LEVEL_MUCGPT_CORE=DEBUG
-      - LOG_LEVEL_MUCGPT_CORE_AGENT=DEBUG
-      - LOG_LEVEL_HTTPX=DEBUG
-      - LOG_LEVEL_HTTPCORE=DEBUG
+      - LOG_LEVEL_ROOT=INFO
+      - LOG_LEVEL_DEV=INFO
+      - LOG_LEVEL_HTTPX=INFO
+      - LOG_LEVEL_HTTPCORE=INFO
+      - LOG_LEVEL_UVICORN_ERROR=INFO
+      - LOG_LEVEL_UVICORN_ACCESS=INFO
+      - LOG_LEVEL_MUCGPT_CORE=INFO
+      - LOG_LEVEL_MUCGPT_CORE_AGENT=INFO
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
 
@@ -192,17 +192,21 @@ services:
     networks:
       - keycloak
     environment:
-      - LOG_LEVEL_ROOT=DEBUG
-      - LOG_LEVEL_DEV=DEBUG
-      - LOG_LEVEL_UVICORN_ERROR=DEBUG
-      - LOG_LEVEL_UVICORN_ACCESS=DEBUG
-      - LOG_LEVEL_USERS_ROUTER=DEBUG
-      - LOG_LEVEL_ASSISTANTS_ROUTER=DEBUG
-      - LOG_LEVEL_ASSISTANT_REPO=DEBUG
-      - LOG_LEVEL_AUTH=DEBUG
+      - LOG_LEVEL_ROOT=INFO
+      - LOG_LEVEL_DEV=INFO
+      - LOG_LEVEL_HTTPX=INFO
+      - LOG_LEVEL_HTTPCORE=INFO
+      - LOG_LEVEL_UVICORN_ERROR=INFO
+      - LOG_LEVEL_UVICORN_ACCESS=INFO
+      - LOG_LEVEL_SYSTEM_ROUTER=INFO
+      - LOG_LEVEL_USERS_ROUTER=INFO
+      - LOG_LEVEL_ASSISTANTS_ROUTER=INFO
+      - LOG_LEVEL_ASSISTANT_REPO=INFO
+      - LOG_LEVEL_MUCGPT_ASSISTANT_SERVICE=INFO
+      - LOG_LEVEL_AUTH=INFO
     healthcheck:
       <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:39147/api/backend/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8084/api/backend/health"]
 
   frontend:
     build:

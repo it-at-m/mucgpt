@@ -30,7 +30,7 @@ loggers:
     handlers: [console]
     propagate: no
   uvicorn.access:
-    level: ${LOG_LEVEL_UVICORN_ACCESS:-ERROR}
+    level: ${LOG_LEVEL_UVICORN_ACCESS:-INFO}
     handlers: [console]
     propagate: no
   dev:

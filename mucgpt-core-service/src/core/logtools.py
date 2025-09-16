@@ -1,11 +1,16 @@
 import json
 import logging
 import logging.config
+import threading
 import traceback
 from datetime import datetime
 
 from config.settings import get_settings
 from core.log_utils import load_log_config
+
+# Thread-safe configuration lock
+_config_lock = threading.Lock()
+_configured = False
 
 
 def getLogger(name: str = "mucgpt-core") -> logging.Logger:
@@ -17,13 +22,28 @@ def getLogger(name: str = "mucgpt-core") -> logging.Logger:
     Returns:
     logging.Logger: The logger with the specified name.
     """
-    settings = get_settings()
-    log_config_path = settings.LOG_CONFIG
+    global _configured
 
-    # Load and process the log configuration
-    log_config = load_log_config(log_config_path)
+    # Use double-checked locking pattern for thread safety
+    if not _configured:
+        with _config_lock:
+            if not _configured:
+                try:
+                    settings = get_settings()
+                    log_config_path = settings.LOG_CONFIG
+                    log_config = load_log_config(log_config_path)
+                    logging.config.dictConfig(log_config)
+                    _configured = True
+                except Exception as e:
+                    # Fallback to basic configuration if loading fails
+                    logging.basicConfig(
+                        level=logging.INFO,
+                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                    )
+                    _configured = True
+                    # Log the configuration error
+                    logging.getLogger(__name__).error(f"Failed to load log config: {e}")
 
-    logging.config.dictConfig(log_config)
     return logging.getLogger(name)
 
 

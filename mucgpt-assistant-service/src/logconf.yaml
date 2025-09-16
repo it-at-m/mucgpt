@@ -15,7 +15,7 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: ERROR
+    level: DEBUG
     formatter: json
     filters: [correlation_id]
     stream: ext://sys.stdout
@@ -26,49 +26,49 @@ handlers:
     stream: ext://sys.stderr
 loggers:
   uvicorn.error:
-    level: ERROR
+    level: ${LOG_LEVEL_UVICORN_ERROR:-ERROR}
     handlers: [console]
     propagate: no
   uvicorn.access:
-    level: ERROR
+    level: ${LOG_LEVEL_UVICORN_ACCESS:-INFO}
     handlers: [console]
     propagate: no
   dev:
-    level: ERROR
+    level: ${LOG_LEVEL_DEV:-ERROR}
     handlers: [console]
     propagate: no
   httpx:
-    level: ERROR
+    level: ${LOG_LEVEL_HTTPX:-ERROR}
     handlers: [httpx]
     propagate: no
   httpcore:
-    level: ERROR
+    level: ${LOG_LEVEL_HTTPCORE:-ERROR}
     handlers: [httpx]
     propagate: no
   users_router:
-    level: ERROR
+    level: ${LOG_LEVEL_USERS_ROUTER:-ERROR}
     handlers: [console]
     propagate: no
   system_router:
-    level: ERROR
+    level: ${LOG_LEVEL_SYSTEM_ROUTER:-ERROR}
     handlers: [console]
     propagate: no
   assistants_router:
-    level: ERROR
+    level: ${LOG_LEVEL_ASSISTANTS_ROUTER:-ERROR}
     handlers: [console]
     propagate: no
   assistant_repo:
-    level: ERROR
+    level: ${LOG_LEVEL_ASSISTANT_REPO:-ERROR}
     handlers: [console]
     propagate: no
   mucgpt-assistant-service:
-    level: ERROR
+    level: ${LOG_LEVEL_MUCGPT_ASSISTANT_SERVICE:-ERROR}
     handlers: [console]
     propagate: no
   auth:
-    level: ERROR
+    level: ${LOG_LEVEL_AUTH:-ERROR}
     handlers: [console]
     propagate: no
 root:
-  level: ERROR
+  level: ${LOG_LEVEL_ROOT:-ERROR}
   handlers: [console]

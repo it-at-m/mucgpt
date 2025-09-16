@@ -4,9 +4,8 @@ import logging.config
 import traceback
 from datetime import datetime
 
-from yaml import safe_load
-
 from config.settings import get_settings
+from core.log_utils import load_log_config
 
 
 def getLogger(name: str = "mucgpt-backend") -> logging.Logger:
@@ -21,8 +20,8 @@ def getLogger(name: str = "mucgpt-backend") -> logging.Logger:
     settings = get_settings()
     log_config_path = settings.LOG_CONFIG
 
-    with open(log_config_path) as file:
-        log_config = safe_load(file)
+    # Load and process the log configuration
+    log_config = load_log_config(log_config_path)
 
     logging.config.dictConfig(log_config)
     return logging.getLogger(name)

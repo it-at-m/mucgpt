@@ -26,45 +26,33 @@ handlers:
     stream: ext://sys.stderr
 loggers:
   uvicorn.error:
-    level: DEBUG
+    level: ${LOG_LEVEL_UVICORN_ERROR:-ERROR}
     handlers: [console]
     propagate: no
   uvicorn.access:
-    level: DEBUG
+    level: ${LOG_LEVEL_UVICORN_ACCESS:-ERROR}
     handlers: [console]
     propagate: no
   dev:
-    level: DEBUG
+    level: ${LOG_LEVEL_DEV:-ERROR}
     handlers: [console]
     propagate: no
   mucgpt-core:
-    level: DEBUG
+    level: ${LOG_LEVEL_MUCGPT_CORE:-ERROR}
     handlers: [console]
     propagate: no
   mucgpt-core-agent:
-    level: DEBUG
-    handlers: [console]
-    propagate: no
-  mucgpt-core-simply:
-    level: DEBUG
-    handlers: [console]
-    propagate: no
-  mucgpt-core-summarize:
-    level: DEBUG
-    handlers: [console]
-    propagate: no
-  mucgpt-core-brainstorm:
-    level: DEBUG
+    level: ${LOG_LEVEL_MUCGPT_CORE_AGENT:-ERROR}
     handlers: [console]
     propagate: no
   httpx:
-    level: INFO
+    level: ${LOG_LEVEL_HTTPX:-ERROR}
     handlers: [httpx]
     propagate: no
   httpcore:
-    level: INFO
+    level: ${LOG_LEVEL_HTTPCORE:-ERROR}
     handlers: [httpx]
     propagate: no
 root:
-  level: INFO
+  level: ${LOG_LEVEL_ROOT:-ERROR}
   handlers: [console]

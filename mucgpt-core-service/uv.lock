@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1430,7 +1430,7 @@ wheels = [
 
 [[package]]
 name = "langsmith"
-version = "0.4.18"
+version = "0.4.29"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -1441,9 +1441,9 @@ dependencies = [
     { name = "requests-toolbelt" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/65/4e79ad22cc12b31a87bdcf96b1ca5ddabe42a8494eda20e124d044d5562e/langsmith-0.4.18.tar.gz", hash = "sha256:c1340371119f66b7c506810c5998db3669cd04f018a276288d80b91169a68ccc", size = 931753, upload-time = "2025-08-26T17:00:05.901Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/0e/7e218e85e6e10b1313e8bca504917ec260766d3d4d2a30c5fddeeb6e80b1/langsmith-0.4.29.tar.gz", hash = "sha256:7014606b6710cc1b14333c75cdb981d5bea3ed488626a026bad51d2a61e354c4", size = 958792, upload-time = "2025-09-18T22:07:58.742Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/73/91a506e17bb1bc6d20c2c04cf7b459dc58951bfbfe7f97f2c952646b4500/langsmith-0.4.18-py3-none-any.whl", hash = "sha256:ad63154f503678356aadf5b999f40393b4bbd332aee2d04cde3e431c61f2e1c2", size = 376444, upload-time = "2025-08-26T17:00:03.564Z" },
+    { url = "https://files.pythonhosted.org/packages/f2/a5/56169ce49b3020b47112703b2f9ed0e3255073c8d438b74406b290fb5687/langsmith-0.4.29-py3-none-any.whl", hash = "sha256:20f39c96057d47a83b6df2b18a5137e2389b5b41f34fe0a64a8d6812de3c0ccf", size = 386229, upload-time = "2025-09-18T22:07:56.887Z" },
 ]
 
 [[package]]
@@ -1598,7 +1598,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = "==0.3.32" },
     { name = "langfuse", specifier = ">=3.3.4" },
     { name = "langgraph", specifier = ">=0.6.0" },
-    { name = "langsmith", specifier = "==0.4.18" },
+    { name = "langsmith", specifier = "==0.4.29" },
     { name = "openai", specifier = "==1.102.0" },
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "pypdf", specifier = "==6.0.0" },

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.11'",
@@ -535,7 +535,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
@@ -910,14 +910,14 @@ wheels = [
 
 [[package]]
 name = "joserfc"
-version = "1.3.3"
+version = "1.3.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/67/c38debd7b24dc734c11d56e1aae38dd5839df697cb64b9c10cf35d74db40/joserfc-1.3.3.tar.gz", hash = "sha256:f9a80eb9f179a6c594d48cb2c29c5147d308dd7d8e353da2a14b57e16c7178f5", size = 196526, upload-time = "2025-09-15T07:25:42.942Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/79/d63a882c0212e95f3ba8863a115e5ca9a5d39413b02273ddce72058e717f/joserfc-1.3.4.tar.gz", hash = "sha256:67d8413c501c239f65eefad5ae685cfbfc401aa63289fc409ef7cc331b007227", size = 197787, upload-time = "2025-09-21T15:49:34.7Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/0c/7cbe4d00a2a92beb8494686af7c86acbc238810b649e45d460817feaff9c/joserfc-1.3.3-py3-none-any.whl", hash = "sha256:3ff23bf4dd8564b07d4844078cc376064687c6991ebcdcb7822bb90c0f2eb073", size = 74606, upload-time = "2025-09-15T07:25:41.257Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/78/beb171f0caac81f51695f43c87c0c20b3ce2a190cf74a3fbb0b9afe03b45/joserfc-1.3.4-py3-none-any.whl", hash = "sha256:30c845c58d441cfe32d08ac35e437812481ca8155373873b7abf80224bf601c0", size = 75638, upload-time = "2025-09-21T15:49:33.14Z" },
 ]
 
 [[package]]
@@ -1077,7 +1077,7 @@ requires-dist = [
     { name = "asyncpg", specifier = ">=0.30.0" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.116.1" },
     { name = "gitpython", specifier = "==3.1.45" },
-    { name = "joserfc", specifier = "==1.3.3" },
+    { name = "joserfc", specifier = "==1.3.4" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "requests", specifier = ">=2.32.5" },

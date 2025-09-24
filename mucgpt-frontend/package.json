@@ -4,7 +4,7 @@
         "@fluentui/react-components": "9.70.0",
         "@fluentui/react-icons": "2.0.309",
         "@react-spring/web": "10.0.2",
-        "dompurify": "3.2.6",
+        "dompurify": "3.2.7",
         "i18next": "25.5.2",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",

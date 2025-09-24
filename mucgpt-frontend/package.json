@@ -2,7 +2,7 @@
     "dependencies": {
         "@fluentui/react": "8.123.6",
         "@fluentui/react-components": "9.70.0",
-        "@fluentui/react-icons": "2.0.309",
+        "@fluentui/react-icons": "2.0.310",
         "@react-spring/web": "10.0.2",
         "dompurify": "3.2.6",
         "i18next": "25.5.2",

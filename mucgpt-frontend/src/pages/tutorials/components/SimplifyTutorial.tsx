@@ -1,12 +1,15 @@
-import { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { TextBulletListSquare24Regular, CheckmarkCircle24Regular, Edit24Regular, ArrowDownload24Regular, Send24Regular } from "@fluentui/react-icons";
+import { TextBulletListSquare24Regular, Send24Regular } from "@fluentui/react-icons";
 
-import { BaseTutorial, TutorialFeature, TutorialTip } from "./BaseTutorial";
+import { BaseTutorial, TutorialTip } from "./BaseTutorial";
+import TutorialProgress from "./TutorialProgress";
+import { useTutorialProgress } from "./useTutorialProgress";
 import { AnswerList } from "../../../components/AnswerList/AnswerList";
 import { Answer } from "../../../components/Answer";
 import { ChatMessage } from "../../chat/Chat";
 import styles from "./SimplifyTutorial.module.css";
+import { TutorialNavigationProps, TutorialSection } from "./TutorialTypes";
 
 // Create a realistic simplify workflow example
 const createSimplifyWorkflowExample = (): ChatMessage[] => {
@@ -39,15 +42,31 @@ Sonst können andere Firmen besser werden.
     ];
 };
 
-export const SimplifyTutorial = () => {
+export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToTop, currentTutorialId, allTutorials }: TutorialNavigationProps = {}) => {
     const { t } = useTranslation();
     const [showExample, setShowExample] = useState(false);
     const chatMessageStreamEnd = useRef<HTMLDivElement>(null);
     const lastQuestionRef = useRef<string>("");
 
+    // Tutorial sections for progress tracking
+    const tutorialSections = React.useMemo<TutorialSection[]>(
+        () => [
+            { id: "intro", translationKey: "tutorials.simplify.sections.titles.intro", defaultLabel: "Einführung" },
+            { id: "example", translationKey: "tutorials.simplify.sections.titles.example", defaultLabel: "Beispiel" },
+            { id: "tips", translationKey: "tutorials.simplify.sections.titles.tips", defaultLabel: "Tipps" }
+        ],
+        []
+    );
+
+    // Use the custom hook for progress tracking
+    const { currentStep, completedSections, handleSectionComplete } = useTutorialProgress({ sections: tutorialSections });
+
     const toggleExample = useCallback(() => {
-        setShowExample(!showExample);
-    }, [showExample]);
+        setShowExample(prev => {
+            if (!prev) handleSectionComplete("example");
+            return !prev;
+        });
+    }, [handleSectionComplete]);
 
     const tryExample = useCallback(() => {
         const exampleQuestion =
@@ -58,48 +77,22 @@ export const SimplifyTutorial = () => {
         window.location.href = url;
     }, []);
 
-    const features: TutorialFeature[] = [
-        {
-            icon: <TextBulletListSquare24Regular />,
-            title: t("tutorials.simplify.features.easy.title", "Leichte Sprache A2"),
-            description: t("tutorials.simplify.features.easy.description", "Wandelt komplexe Texte in verständliche Leichte Sprache nach A2-Standard um.")
-        },
-        {
-            icon: <Edit24Regular />,
-            title: t("tutorials.simplify.features.reflective.title", "Reflektive Verbesserung"),
-            description: t("tutorials.simplify.features.reflective.description", "Automatische Qualitätsprüfung und iterative Verbesserung der Vereinfachung.")
-        },
-        {
-            icon: <CheckmarkCircle24Regular />,
-            title: t("tutorials.simplify.features.rules.title", "Regelkonform"),
-            description: t(
-                "tutorials.simplify.features.rules.description",
-                "Befolgt alle Regeln für Leichte Sprache: kurze Sätze, einfache Wörter, klare Struktur."
-            )
-        },
-        {
-            icon: <ArrowDownload24Regular />,
-            title: t("tutorials.simplify.features.download.title", "Download-Funktion"),
-            description: t("tutorials.simplify.features.download.description", "Vereinfachte Texte als Textdatei herunterladen für weitere Verwendung.")
-        }
-    ];
-
     const tips: TutorialTip[] = [
         {
-            title: t("tutorials.simplify.tips.length.title", "Textlänge beachten"),
+            title: t("tutorials.simplify.tips.length.title", "Textlänge beachten:"),
             description: t("tutorials.simplify.tips.length.description", "Sehr lange Texte in kleinere Abschnitte aufteilen für bessere Ergebnisse."),
             type: "info"
         },
         {
-            title: t("tutorials.simplify.tips.review.title", "Ergebnis prüfen"),
+            title: t("tutorials.simplify.tips.review.title", "Ergebnis prüfen:"),
             description: t(
                 "tutorials.simplify.tips.review.description",
                 "Lesen Sie den vereinfachten Text durch und prüfen Sie, ob alle wichtigen Informationen enthalten sind."
             ),
-            type: "info"
+            type: "warning"
         },
         {
-            title: t("tutorials.simplify.tips.target.title", "Zielgruppe denken"),
+            title: t("tutorials.simplify.tips.target.title", "Zielgruppe denken:"),
             description: t(
                 "tutorials.simplify.tips.target.description",
                 "Leichte Sprache hilft Menschen mit Lernschwierigkeiten, Sprachlernenden und allen, die einfache Texte bevorzugen."
@@ -108,50 +101,76 @@ export const SimplifyTutorial = () => {
         }
     ];
     return (
-        <BaseTutorial
-            title={t("tutorials.simplify.intro.title", "Was ist das Text-Vereinfachungs-Tool?")}
-            titleIcon={<TextBulletListSquare24Regular className="sectionIcon" />}
-            description={t(
-                "tutorials.simplify.intro.description",
-                "Das Text-Vereinfachungs-Tool übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
-            )}
-            features={features}
-            example={{
-                title: t("tutorials.simplify.example.title", "Text Vereinfachung Beispiel"),
-                description: t("tutorials.simplify.example.description", ""),
-                component: showExample ? (
-                    <div>
-                        <div className={styles.exampleContainer}>
-                            <AnswerList
-                                answers={createSimplifyWorkflowExample()}
-                                regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
-                                onRollbackMessage={() => {}}
-                                isLoading={false}
-                                error={null}
-                                makeApiRequest={() => {}}
-                                chatMessageStreamEnd={chatMessageStreamEnd}
-                                lastQuestionRef={lastQuestionRef}
-                            />
+        <div>
+            {/* Tutorial Progress - Sticky */}
+            <TutorialProgress
+                currentStep={currentStep}
+                totalSteps={tutorialSections.length}
+                completedSections={completedSections}
+                onSectionComplete={handleSectionComplete}
+                sections={tutorialSections}
+                titleTranslationKey="tutorials.simplify.progress.title"
+                defaultTitle="Vereinfachen-Tutorial Fortschritt"
+                isSticky={true}
+                stickyOffset={50}
+                showPercentage={true}
+                showStats={true}
+                compact={true}
+                onPreviousTutorial={onPreviousTutorial}
+                onNextTutorial={onNextTutorial}
+                onBackToTop={onBackToTop}
+                currentTutorialId={currentTutorialId}
+                allTutorials={allTutorials}
+            />
+
+            <BaseTutorial
+                title={t("tutorials.simplify.intro.title", "Was ist das Text-Vereinfachungs-Tool?")}
+                titleIcon={<TextBulletListSquare24Regular className={styles.sectionIcon} />}
+                description={t(
+                    "tutorials.simplify.intro.description",
+                    "Das Text-Vereinfachungs-Tool übersetzt komplexe Texte in Leichte Sprache nach A2-Standard. Es nutzt KI mit automatischer Qualitätsprüfung, um Texte verständlicher und barrierefreier zu machen."
+                )}
+                example={{
+                    title: t("tutorials.simplify.example.title", "Text Vereinfachung Beispiel"),
+                    description: t("tutorials.simplify.example.description", ""),
+                    component: (
+                        <div id="section-example">
+                            {showExample ? (
+                                <div>
+                                    <div className={styles.exampleContainer}>
+                                        <AnswerList
+                                            answers={createSimplifyWorkflowExample()}
+                                            regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
+                                            onRollbackMessage={() => {}}
+                                            isLoading={false}
+                                            error={null}
+                                            makeApiRequest={() => {}}
+                                            chatMessageStreamEnd={chatMessageStreamEnd}
+                                            lastQuestionRef={lastQuestionRef}
+                                        />
+                                    </div>
+                                    <div className={styles.buttonsContainer}>
+                                        <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
+                                            {t("tutorials.buttons.hide_example")}
+                                        </button>
+                                        <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
+                                            <Send24Regular className={styles.tryButtonIcon} />
+                                            {t("tutorials.buttons.try_example")}
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className={styles.buttonsContainerSingle}>
+                                    <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
+                                        {t("tutorials.buttons.show_example")}
+                                    </button>
+                                </div>
+                            )}
                         </div>
-                        <div className={styles.buttonsContainer}>
-                            <button onClick={toggleExample} className={`${styles.button} ${styles.hideButton}`}>
-                                {t("tutorials.buttons.hide_example")}
-                            </button>
-                            <button onClick={tryExample} className={`${styles.button} ${styles.tryButton}`}>
-                                <Send24Regular className={styles.tryButtonIcon} />
-                                {t("tutorials.buttons.try_example")}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className={styles.buttonsContainerSingle}>
-                        <button onClick={toggleExample} className={`${styles.button} ${styles.showButton}`}>
-                            {t("tutorials.buttons.show_example")}
-                        </button>
-                    </div>
-                )
-            }}
-            tips={tips}
-        />
+                    )
+                }}
+                tips={tips}
+            />
+        </div>
     );
 };

@@ -24,7 +24,7 @@ services:
 
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.7.0@sha256:5929bac24d91b5d7219686c8d66a703cd5851a498620bca4f5e4263873b015c0
+    image: dpage/pgadmin4:9.8.0@sha256:d115bcd737940a6cfb61a54439d50de8b850e0782e2363102c9fa761f4022f49
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -49,7 +49,7 @@ services:
 
   keycloak:
     container_name: keycloak
-    image: keycloak/keycloak:26.3.3@sha256:6a7217a100bd3e5de4063a27a538ef999a3c5a88c4b4ec0ffc0a642aee7b2597
+    image: keycloak/keycloak:26.3.4@sha256:2b32a51a31e8d780d9fa9a69a59ead69975263c61b5dd13559090e22aa26f100
     command:
       - start-dev
     environment:
@@ -147,9 +147,17 @@ services:
       - keycloak
     healthcheck:
       <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:39146/api/backend/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8000/api/backend/health"]
     environment:
       - SSL_CERT_FILE=${SSL_CERT_FILE:-}
+      - LOG_LEVEL_ROOT=INFO
+      - LOG_LEVEL_DEV=INFO
+      - LOG_LEVEL_HTTPX=INFO
+      - LOG_LEVEL_HTTPCORE=INFO
+      - LOG_LEVEL_UVICORN_ERROR=INFO
+      - LOG_LEVEL_UVICORN_ACCESS=INFO
+      - LOG_LEVEL_MUCGPT_CORE=INFO
+      - LOG_LEVEL_MUCGPT_CORE_AGENT=INFO
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
 
@@ -183,9 +191,22 @@ services:
       - "39147:8084"
     networks:
       - keycloak
+    environment:
+      - LOG_LEVEL_ROOT=INFO
+      - LOG_LEVEL_DEV=INFO
+      - LOG_LEVEL_HTTPX=INFO
+      - LOG_LEVEL_HTTPCORE=INFO
+      - LOG_LEVEL_UVICORN_ERROR=INFO
+      - LOG_LEVEL_UVICORN_ACCESS=INFO
+      - LOG_LEVEL_SYSTEM_ROUTER=INFO
+      - LOG_LEVEL_USERS_ROUTER=INFO
+      - LOG_LEVEL_ASSISTANTS_ROUTER=INFO
+      - LOG_LEVEL_ASSISTANT_REPO=INFO
+      - LOG_LEVEL_MUCGPT_ASSISTANT_SERVICE=INFO
+      - LOG_LEVEL_AUTH=INFO
     healthcheck:
       <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:39147/api/backend/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8084/api/backend/health"]
 
   frontend:
     build:

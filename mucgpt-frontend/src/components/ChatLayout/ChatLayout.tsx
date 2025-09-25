@@ -67,9 +67,11 @@ export const ChatLayout = ({
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                                 {header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
-                                        <Markdown className={styles.answerText} remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                            {header}
-                                        </Markdown>
+                                        <div className={styles.answerText}>
+                                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+                                                {header}
+                                            </Markdown>
+                                        </div>
                                     </div>
                                 ) : (
                                     <h2 className={styles.chatEmptyStateSubtitle}> {header}</h2>

@@ -73,13 +73,25 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
     // Fragment content
     const fragmentContent = (
         <div className={styles.simplifiedTextContent}>
-            <ReactMarkdown className={styles.markdownContent}>{simplifiedText}</ReactMarkdown>
+            <ReactMarkdown
+                components={{
+                    div: props => <div className={styles.markdownContent} {...props} />
+                }}
+            >
+                {simplifiedText}
+            </ReactMarkdown>
 
             {processingInfo && (
                 <div className={styles.processingSection}>
                     <div className={styles.processingTitle}>Verarbeitungsdetails</div>
                     <div className={styles.processingContent}>
-                        <ReactMarkdown className={styles.processingMarkdown}>{processingInfo}</ReactMarkdown>
+                        <ReactMarkdown
+                            components={{
+                                div: props => <div className={styles.processingMarkdown} {...props} />
+                            }}
+                        >
+                            {processingInfo}
+                        </ReactMarkdown>
                     </div>
                 </div>
             )}

@@ -204,9 +204,7 @@ export const AssistantsettingsDrawer = ({
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>
             </div>
             {strategy instanceof DeletedCommunityAssistantStrategy && (
-                <div className={styles.deletedWarning}>
-                    {t("components.assistantsettingsdrawer.deleted_warning")}
-                </div>
+                <div className={styles.deletedWarning}>{t("components.assistantsettingsdrawer.deleted_warning")}</div>
             )}
             <div
                 className={styles.actionsHeader}
@@ -224,16 +222,17 @@ export const AssistantsettingsDrawer = ({
             </div>
 
             <div className={styles.descriptionSection}>
-                <Markdown
-                    className={styles.markdownDescription}
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                    components={{
-                        code: CodeBlockRenderer
-                    }}
-                >
-                    {description}
-                </Markdown>
+                <div className={styles.markdownDescription}>
+                    <Markdown
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[rehypeRaw]}
+                        components={{
+                            code: CodeBlockRenderer
+                        }}
+                    >
+                        {description}
+                    </Markdown>
+                </div>
             </div>
 
             <div className={styles.buttonSection}>

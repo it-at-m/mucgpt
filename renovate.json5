@@ -1,6 +1,44 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>it-at-m/.github//renovate-configs/renovate-config.json5"
-  ]
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  description: "Renovate configuration for mucgpt",
+  extends: [
+    "config:best-practices",
+    "customManagers:githubActionsVersions",
+    "helpers:pinGitHubActionDigestsToSemver",
+    ":pinAllExceptPeerDependencies",
+    "schedule:weekly",
+    ":separateMultipleMajorReleases",
+    ":timezone(Europe/Berlin)",
+    "security:openssf-scorecard",
+  ],
+  labels: ["renovate"],
+  lockFileMaintenance: {
+    enabled: true,
+  },
+  reviewers: ["Meteord", "pilitz"],
+  packageRules: [
+    {
+      matchManagers: ["npm"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "npm: non-major updates",
+      groupSlug: "npm-non-major",
+    },
+    {
+      matchManagers: ["github-actions"],
+      groupName: "GitHub Actions dependencies",
+      groupSlug: "github-actions",
+    },
+    {
+      matchManagers: ["pep621"],
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "Python: non-major updates",
+      groupSlug: "python-non-major",
+      matchDepNames: ["!python"],
+    },
+    {
+      matchManagers: ["dockerfile"],
+      groupName: "Dockerfile base images",
+      groupSlug: "dockerfile-base-images",
+    },
+  ],
 }

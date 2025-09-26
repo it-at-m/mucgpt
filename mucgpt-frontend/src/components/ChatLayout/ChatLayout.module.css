@@ -113,8 +113,8 @@
     bottom: 10px;
     flex: 0 0 100px;
     padding-bottom: 60px;
-    max-width: 90%;
-    min-width: 50%;
+    max-width: 100%;
+    min-width: 80%;
 }
 
 .sidebarOpener {

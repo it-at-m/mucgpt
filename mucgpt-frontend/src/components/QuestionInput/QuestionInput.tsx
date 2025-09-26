@@ -1,6 +1,6 @@
 import { Stack } from "@fluentui/react";
 import { Button, Textarea, TextareaOnChangeData, Tooltip, Badge } from "@fluentui/react-components";
-import { Send28Filled, Toolbox24Color } from "@fluentui/react-icons";
+import { Dismiss24Regular, Send28Filled, Toolbox24Color } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
@@ -146,9 +146,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                                         }}
                                         icon={
                                             setSelectedTools && (
-                                                <span className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`}>
-                                                    ✕
-                                                </span>
+                                                <Dismiss24Regular className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`} />
                                             )
                                         }
                                     >

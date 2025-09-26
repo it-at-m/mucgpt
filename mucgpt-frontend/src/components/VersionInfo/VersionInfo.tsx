@@ -27,11 +27,14 @@ export const VersionInfo = ({ version, commit, versionUrl }: VersionInfoProps) =
 
     if (versionUrl) {
         return (
-            <Tooltip content={tooltipContent} relationship="description" positioning="above">
-                <a href={versionUrl} className={styles.versionLink}>
+            <>
+                <Tooltip content={tooltipContent} relationship="description" positioning="above">
                     {content}
+                </Tooltip>
+                <a href={versionUrl} className={styles.versionLink}>
+                    {t("components.versioninfo.whats_new", "Was gibt's neues?")}
                 </a>
-            </Tooltip>
+            </>
         );
     }
 
@@ -43,3 +46,4 @@ export const VersionInfo = ({ version, commit, versionUrl }: VersionInfoProps) =
 };
 
 export default VersionInfo;
+

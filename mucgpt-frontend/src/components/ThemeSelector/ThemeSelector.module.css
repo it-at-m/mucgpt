@@ -23,9 +23,9 @@
 .buttonContainer {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
     cursor: pointer;
-    padding: 4px;
+    padding: 8px;
     border-radius: 4px;
     transition: background-color 0.2s;
 }
@@ -41,5 +41,11 @@
 
 .darkTheme {
     background-color: var(--colorNeutralForeground1);
+    color: var(--colorNeutralForeground1);
+}
+
+.text {
+    font-size: 14px;
+    font-weight: 500;
     color: var(--colorNeutralForeground1);
 }

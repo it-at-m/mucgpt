@@ -1,5 +1,5 @@
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Link, Tooltip } from "@fluentui/react-components";
-import { Checkmark24Filled, TextBulletList24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled, DocumentBulletListMultiple24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
@@ -20,7 +20,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={t("components.terms_of_use.tooltip", "Nutzungsbedingungen anzeigen")} relationship="description" positioning="above">
                         <div className={styles.triggerContainer}>
-                            <TextBulletList24Regular className={styles.termsIcon} />
+                            <DocumentBulletListMultiple24Regular className={styles.termsIcon} />
                             <span className={styles.termsText}>{t("components.terms_of_use.label", "Nutzungsbedingungen")}</span>
                         </div>
                     </Tooltip>

@@ -160,7 +160,8 @@ i18n
                         versioninfo: {
                             tooltip: "Anwendungs-Version anzeigen",
                             tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
-                            label: "Version:"
+                            label: "Version:",
+                            whats_new: "Was gibt's neues?"
                         },
                         feedback: {
                             tooltip: "Feedback geben",
@@ -176,7 +177,9 @@ i18n
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechseln"
+                            change_theme: "Thema wechseln",
+                            light_short: "Hell",
+                            dark_short: "Dunkel"
                         },
                         sumlength: {
                             sentences: "Zwei Sätze",
@@ -492,8 +495,8 @@ i18n
                             informal_tooltip: "Write your answer more informal",
                             shorter: "➖ less detail",
                             longer: "➕  more detail",
-                            formal: "👕 more formal",
-                            informal: "more informal",
+                            formal: "👔 more formal",
+                            informal: "👕 more informal",
                             shorter_prompt:
                                 "Rewrite your last message into a new, shorter text that conveys the original content in a more concise and impactful way. This text should include the most important information and improve the reader's understanding.",
                             longer_prompt:
@@ -594,7 +597,8 @@ i18n
                         versioninfo: {
                             tooltip: "Show application version",
                             tooltip_with_commit: "Application version: {{version}}, Commit: {{commit}}",
-                            label: "Version:"
+                            label: "Version:",
+                            whats_new: "What's new?"
                         },
                         feedback: {
                             tooltip: "Give feedback",
@@ -610,7 +614,9 @@ i18n
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
-                            change_theme: "Change theme"
+                            change_theme: "Change theme",
+                            light_short: "Light",
+                            dark_short: "Dark"
                         },
                         sumlength: {
                             sentences: "Two sentences",
@@ -1027,7 +1033,8 @@ i18n
                         versioninfo: {
                             tooltip: "Anwendungs-Version zeig'n",
                             tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
-                            label: "Version:"
+                            label: "Version:",
+                            whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
                             tooltip: "Feedback geb'n",
@@ -1043,7 +1050,9 @@ i18n
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
-                            change_theme: "Thema wechs'l"
+                            change_theme: "Thema wechs'l",
+                            light_short: "Hell",
+                            dark_short: "Dunkl"
                         },
                         sumlength: {
                             sentences: "Zwoa Sätzen",
@@ -1459,9 +1468,10 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip: "Pоказати версію програми",
-                            tooltip_with_commit: "Версія програми: {{version}}, Commit: {{commit}}",
-                            label: "Версія:"
+                            tooltip: "Afficher la version de l'application",
+                            tooltip_with_commit: "Version de l'application: {{version}}, Commit: {{commit}}",
+                            label: "Version:",
+                            whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
                             tooltip: "Donner un avis",
@@ -1477,7 +1487,9 @@ i18n
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
-                            change_theme: "Changer de thème"
+                            change_theme: "Changer de thème",
+                            light_short: "Clair",
+                            dark_short: "Sombre"
                         },
                         sumlength: {
                             sentences: "Deux phrases",
@@ -1896,7 +1908,8 @@ i18n
                         versioninfo: {
                             tooltip: "Показати версію програми",
                             tooltip_with_commit: "Версія програми: {{version}}, Commit: {{commit}}",
-                            label: "Версія:"
+                            label: "Версія:",
+                            whats_new: "Що нового?"
                         },
                         feedback: {
                             tooltip: "Залишити відгук",
@@ -1912,7 +1925,9 @@ i18n
                         theme_selector: {
                             theme_light: "Світла тема",
                             theme_dark: "Темна тема",
-                            change_theme: "Змінити тему"
+                            change_theme: "Змінити тему",
+                            light_short: "Світло",
+                            dark_short: "Темно"
                         },
                         sumlength: {
                             sentences: "Два речення",

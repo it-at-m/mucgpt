@@ -1,6 +1,6 @@
 import { Tooltip } from "@fluentui/react-components";
 import { useState, useEffect, useCallback } from "react";
-import { DarkTheme24Regular, LightbulbCircle24Regular } from "@fluentui/react-icons";
+import { WeatherSunny24Regular, WeatherMoon24Regular } from "@fluentui/react-icons";
 import styles from "./ThemeSelector.module.css";
 import { useTranslation } from "react-i18next";
 
@@ -46,9 +46,15 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
             <div className={styles.container} onClick={handleButtonClick} role="button" tabIndex={0} aria-label={tooltipContent} onKeyDown={handleKeyDown}>
                 <div className={styles.buttonContainer}>
                     {currentIsLight ? (
-                        <LightbulbCircle24Regular className={styles.iconRightMargin} />
+                        <>
+                            <WeatherSunny24Regular className={styles.iconRightMargin} />
+                            <span className={styles.text}>{t("components.theme_selector.light_short")}</span>
+                        </>
                     ) : (
-                        <DarkTheme24Regular className={styles.iconRightMargin} />
+                        <>
+                            <WeatherMoon24Regular className={styles.iconRightMargin} />
+                            <span className={styles.text}>{t("components.theme_selector.dark_short")}</span>
+                        </>
                     )}
                 </div>
             </div>

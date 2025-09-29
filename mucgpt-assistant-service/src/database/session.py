@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 from functools import lru_cache
+from urllib.parse import quote_plus
 
 from fastapi import Depends
 from sqlalchemy import URL, exc
@@ -30,13 +31,30 @@ def create_database_url(settings: Settings) -> URL:
     # Log password length for debugging (without revealing content)
     if settings.DB_PASSWORD:
         logger.debug(f"Password length: {len(settings.DB_PASSWORD)} characters")
+
+        # Check for problematic characters that can cause URL parsing issues
+        problematic_chars = ["'", "#", "@", "/", "\\", "?", "&", "%", ":", ";"]
+        found_chars = [
+            char for char in problematic_chars if char in settings.DB_PASSWORD
+        ]
+        if found_chars:
+            logger.warning(
+                f"Password contains URL-problematic characters: {found_chars}"
+            )
+            logger.warning("These characters will be URL-encoded for safe connection")
+
+        # URL encode the password to handle special characters
+        encoded_password = quote_plus(settings.DB_PASSWORD)
+        if encoded_password != settings.DB_PASSWORD:
+            logger.debug("Password has been URL-encoded for safe connection")
     else:
         logger.error("Database password is not set!")
+        encoded_password = settings.DB_PASSWORD
 
     url = URL.create(
         drivername="postgresql+asyncpg",
         username=settings.DB_USER,
-        password=settings.DB_PASSWORD,
+        password=encoded_password,  # Use URL-encoded password
         host=settings.DB_HOST,
         port=settings.DB_PORT,
         database=settings.DB_NAME,

@@ -36,11 +36,38 @@ def main():
         if var.endswith("PASSWORD"):
             if value:
                 print(f"✅ {var}: SET (length: {len(value)} characters)")
+
                 # Check for common password issues
                 if len(value) < 8:
                     print(f"   ⚠️  Warning: Password seems short ({len(value)} chars)")
                 if value.strip() != value:
                     print("   ⚠️  Warning: Password has leading/trailing whitespace")
+
+                # Check for problematic characters in database URLs
+                problematic_chars = ["'", "#", "@", "/", "\\", "?", "&", "%"]
+                found_chars = [char for char in problematic_chars if char in value]
+                if found_chars:
+                    print(
+                        f"   ⚠️  Warning: Password contains URL-problematic characters: {found_chars}"
+                    )
+                    print(
+                        "      These may need URL encoding or cause connection issues!"
+                    )
+
+                # Check for specific characters that commonly cause issues
+                if "'" in value:
+                    print(
+                        "   🔥 CRITICAL: Single quote (') in password may cause SQL/URL parsing issues!"
+                    )
+                if "#" in value:
+                    print(
+                        "   🔥 CRITICAL: Hash (#) in password may be interpreted as URL fragment!"
+                    )
+                if "@" in value:
+                    print(
+                        "   🔥 CRITICAL: At symbol (@) in password may confuse URL parsing!"
+                    )
+
             else:
                 print(f"❌ {var}: NOT SET")
                 missing_vars.append(var)
@@ -84,6 +111,26 @@ def main():
         print(f"   Host: {host}:{port}")
         print(f"   User: {user}")
         print(f"   Database: {os.getenv('MUCGPT_ASSISTANT_DB_NAME')}")
+
+        # Check for password character issues
+        password = os.getenv("MUCGPT_ASSISTANT_DB_PASSWORD")
+        if password:
+            problematic_chars = ["'", "#", "@", "/", "\\", "?", "&", "%", ":", ";"]
+            found_chars = [char for char in problematic_chars if char in password]
+            if found_chars:
+                print("\n⚠️  PASSWORD CHARACTER WARNING:")
+                print(
+                    "   Your password contains characters that may cause connection issues:"
+                )
+                print(f"   Found: {found_chars}")
+                print("\n🔧 Solutions:")
+                print(
+                    "   1. The application will automatically URL-encode these characters"
+                )
+                print("   2. If you still get auth errors, try changing the password")
+                print(
+                    "   3. Avoid these characters in database passwords: ' # @ / \\ ? & % : ;"
+                )
 
         return True
 

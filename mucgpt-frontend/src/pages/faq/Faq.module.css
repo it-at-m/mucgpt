@@ -43,7 +43,7 @@
 
 .commandsContainer {
     position: fixed;
-    top: 16px;
+    top: 64px;
     right: 32px;
     display: flex;
     justify-content: flex-end;

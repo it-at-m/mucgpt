@@ -1,6 +1,5 @@
 from collections.abc import AsyncGenerator
 from functools import lru_cache
-from urllib.parse import quote_plus
 
 from fastapi import Depends
 from sqlalchemy import URL, exc
@@ -18,7 +17,7 @@ logger = getLogger("mucgpt-assistant-service")
 
 # Database URL creation with settings
 def create_database_url(settings: Settings) -> URL:
-    """Create database URL from settings."""
+    """Create database URL from settings using direct parameters (safer for special characters)."""
     logger.info("Creating database URL with settings")
     logger.debug(f"DB_HOST: {settings.DB_HOST}")
     logger.debug(f"DB_PORT: {settings.DB_PORT}")
@@ -41,20 +40,18 @@ def create_database_url(settings: Settings) -> URL:
             logger.warning(
                 f"Password contains URL-problematic characters: {found_chars}"
             )
-            logger.warning("These characters will be URL-encoded for safe connection")
-
-        # URL encode the password to handle special characters
-        encoded_password = quote_plus(settings.DB_PASSWORD)
-        if encoded_password != settings.DB_PASSWORD:
-            logger.debug("Password has been URL-encoded for safe connection")
+            logger.warning(
+                "Using direct parameter passing to avoid URL encoding issues"
+            )
     else:
         logger.error("Database password is not set!")
-        encoded_password = settings.DB_PASSWORD
 
+    # Use direct parameter passing instead of URL string construction
+    # This avoids URL encoding issues with special characters
     url = URL.create(
         drivername="postgresql+asyncpg",
         username=settings.DB_USER,
-        password=encoded_password,  # Use URL-encoded password
+        password=settings.DB_PASSWORD,  # Use original password, not URL-encoded
         host=settings.DB_HOST,
         port=settings.DB_PORT,
         database=settings.DB_NAME,
@@ -94,6 +91,62 @@ def get_engine_and_factory(database_url: str):
         raise
 
 
+# Alternative safer approach using direct connection parameters
+# Note: No @lru_cache here because Settings objects are not hashable
+_engine_cache = None
+_factory_cache = None
+
+
+def get_engine_and_factory_direct(settings: Settings):
+    """Create and cache the SQLAlchemy engine using direct connection parameters (safer for special characters)."""
+    global _engine_cache, _factory_cache
+
+    # Simple caching without lru_cache (since Settings is not hashable)
+    if _engine_cache is not None and _factory_cache is not None:
+        logger.debug("Using cached engine and session factory")
+        return _engine_cache, _factory_cache
+
+    logger.info("Creating SQLAlchemy engine with direct connection parameters")
+    logger.debug(
+        f"Connecting to: {settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+    )
+    logger.debug(f"User: {settings.DB_USER}")
+
+    try:
+        # Create engine with connection arguments instead of URL string
+        # This avoids URL parsing issues with special characters
+        connect_args = {
+            "host": settings.DB_HOST,
+            "port": settings.DB_PORT,
+            "database": settings.DB_NAME,
+            "user": settings.DB_USER,
+            "password": settings.DB_PASSWORD,  # No URL encoding needed!
+        }
+
+        engine = create_async_engine(
+            "postgresql+asyncpg://",  # Just the driver, parameters passed separately
+            connect_args=connect_args,
+            echo=False,  # Set to True for SQL query logging
+            pool_pre_ping=True,  # Verify connections before use
+            pool_recycle=3600,  # Recycle connections after 1 hour
+        )
+        factory = async_sessionmaker(engine)
+
+        # Cache the results
+        _engine_cache = engine
+        _factory_cache = factory
+
+        logger.info(
+            "Successfully created engine and session factory with direct parameters"
+        )
+        return engine, factory
+    except Exception as e:
+        logger.error(
+            f"Failed to create engine and session factory with direct parameters: {e}"
+        )
+        raise
+
+
 async def get_db_session(
     settings: Settings = Depends(get_settings),
 ) -> AsyncGenerator[AsyncSession, None]:
@@ -101,8 +154,8 @@ async def get_db_session(
     logger.debug("Starting database session creation")
 
     try:
-        database_url = str(create_database_url(settings))
-        engine, factory = get_engine_and_factory(database_url)
+        # Use direct parameter approach for better special character handling
+        engine, factory = get_engine_and_factory_direct(settings)
 
         logger.debug("Attempting to create async session")
         async with factory() as session:
@@ -185,8 +238,8 @@ async def validate_database_connection(settings: Settings) -> bool:
     logger.info("Testing database connection...")
 
     try:
-        database_url = str(create_database_url(settings))
-        engine, factory = get_engine_and_factory(database_url)
+        # Use direct parameter approach for better special character handling
+        engine, factory = get_engine_and_factory_direct(settings)
 
         logger.info("Attempting to connect to database...")
         async with factory() as session:

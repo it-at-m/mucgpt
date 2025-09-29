@@ -180,8 +180,8 @@ async def get_db_session(
         raise
 
 
-async def test_database_connection(settings: Settings) -> bool:
-    """Test database connection with detailed logging."""
+async def validate_database_connection(settings: Settings) -> bool:
+    """Validate database connection with detailed logging."""
     logger.info("Testing database connection...")
 
     try:

@@ -1,4 +1,6 @@
-import requests
+import base64
+import json
+
 from fastapi import Depends, Header, HTTPException
 
 from config.settings import SSOSettings, get_sso_settings
@@ -13,84 +15,48 @@ ROLE_PREFIX = "ROLE_"
 
 
 class AuthenticationHelper:
-    """Authenticates against an OpenID Connect provider."""
+    """Authenticates by parsing JWT access tokens directly."""
 
-    def __init__(self, userinfo_url: str, role: str):
-        self.userinfo_url = userinfo_url
+    def __init__(self, role: str):
         self.role = role
 
-    def get_user_info(self, accesstoken: str) -> dict:
-        """Gets user info from the userinfo endpoint.
+    def parse_jwt_payload(self, token: str) -> dict:
+        """Parse JWT token and extract payload.
 
         Args:
-            accesstoken: The access token to use for authentication
+            token: The JWT access token
 
         Returns:
-            dict: The user info from the userinfo endpoint
+            dict: The decoded JWT payload
 
         Raises:
-            AuthError: If the user info could not be fetched
+            AuthError: If the token cannot be parsed
         """
-        logger.debug(f"Fetching user info from {self.userinfo_url}")
-        # Make sure the token is properly formatted with "Bearer" prefix
-        auth_header = (
-            accesstoken
-            if accesstoken.startswith("Bearer ")
-            else f"Bearer {accesstoken}"
-        )
-
         try:
-            resp = requests.get(
-                url=self.userinfo_url,
-                headers={"Authorization": auth_header, "Accept": "application/json"},
-                timeout=5,
-                allow_redirects=False,  # Don't follow redirects to prevent getting login page
-            )
+            # Remove 'Bearer ' prefix if present
+            if token.startswith("Bearer "):
+                token = token[7:]
 
-            logger.debug(f"User info response status: {resp.status_code}")
-            logger.debug(f"User info response headers: {resp.headers}")
+            # JWT tokens have 3 parts separated by dots: header.payload.signature
+            parts = token.split(".")
+            if len(parts) != 3:
+                raise AuthError("Invalid JWT token format", status_code=401)
 
-            if resp.status_code in [301, 302, 303, 307, 308]:
-                logger.error(
-                    f"Redirect detected to {resp.headers.get('Location')}. This suggests authentication issues."
-                )
-                raise AuthError(
-                    "Authentication token is invalid or expired. Please login again.",
-                    status_code=401,
-                )
+            # Decode the payload (second part)
+            payload = parts[1]
+            # Add padding if needed for base64 decoding
+            padding = len(payload) % 4
+            if padding:
+                payload += "=" * (4 - padding)
 
-            resp.raise_for_status()
+            decoded_bytes = base64.urlsafe_b64decode(payload)
+            payload_dict = json.loads(decoded_bytes.decode("utf-8"))
 
-            # Check if response is HTML (login page) instead of JSON
-            content_type = resp.headers.get("Content-Type", "")
-            if (
-                "html" in content_type
-                or resp.text.strip().startswith("<!DOCTYPE html>")
-                or "<html" in resp.text
-            ):
-                logger.error(
-                    f"Received HTML instead of JSON. Content-Type: {content_type}"
-                )
-                raise AuthError(
-                    "Authentication service returned HTML instead of user info. Your session may have expired.",
-                    status_code=401,
-                )
+            return payload_dict
 
-            try:
-                return resp.json()
-            except requests.exceptions.JSONDecodeError as e:
-                logger.error(f"Failed to decode JSON response: {e}")
-                logger.debug(f"Response content (first 500 chars): {resp.text[:500]}")
-                raise AuthError("Invalid response from authentication service.", 500)
-
-        except requests.exceptions.RequestException as e:
-            logger.error("Error fetching user info", exc_info=e)
-            if e.response is not None and e.response.status_code in [401, 403]:
-                raise AuthError(
-                    ACCESS_DENIED_MESSAGE,
-                    status_code=e.response.status_code,
-                )
-            raise AuthError("Could not connect to authentication service.", 500)
+        except (ValueError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to parse JWT token: {e}")
+            raise AuthError("Invalid JWT token", status_code=401)
 
     def authenticate(self, accesstoken: str) -> AuthenticationResult:
         """Authenticates the user based on the access token.
@@ -103,11 +69,11 @@ class AuthenticationHelper:
             logger.warning("Authentication failed: Missing Authorization header")
             raise AuthError("Missing Authorization header", status_code=401)
 
-        user_info = self.get_user_info(accesstoken)
-        logger.debug(f"user_info: {user_info}")
+        token_payload = self.parse_jwt_payload(accesstoken)
+        logger.debug(f"token_payload: {token_payload}")
 
         try:
-            roles = self.getRoles(user_info)
+            roles = self.getRoles(token_payload)
             logger.debug(f"User roles: {roles}")
         except KeyError:
             logger.warning("Authentication failed: No roles found in token")
@@ -126,36 +92,57 @@ class AuthenticationHelper:
             )
 
         return AuthenticationResult(
-            user_id=self.getLHMObjectID(user_info),
-            department=self.getDepartment(user_info),
-            name=self.getName(user_info),
+            user_id=self.getLHMObjectID(token_payload),
+            department=self.getDepartment(token_payload),
+            name=self.getName(token_payload),
             roles=roles,
         )
 
-    def getRoles(self, userinfo: dict) -> list[str]:
-        logger.debug("Extracting roles from userinfo")
-        # Map 'authorities' like ['ROLE_lhm-ab-mucgpt-user'] to role names
-        authorities = userinfo.get("authorities", [])
-        roles = []
+    def getRoles(self, token_payload: dict) -> list[str]:
+        logger.debug("Extracting roles from token payload")
+        # Extract roles from resource_access.mucgpt.roles structure
+        resource_access = token_payload.get("resource_access", {})
+        mucgpt_access = resource_access.get("mucgpt", {})
+        roles = mucgpt_access.get("roles", [])
+
+        # Also check for authorities in case they exist in the token
+        authorities = token_payload.get("authorities", [])
         for auth in authorities:
             if auth.startswith(ROLE_PREFIX):
                 roles.append(auth[len(ROLE_PREFIX) :])  # Remove 'ROLE_' prefix
             else:
                 roles.append(auth)
+
         return roles
 
-    def getName(self, userinfo: dict) -> str:
-        logger.debug("Extracting name from userinfo")
-        return userinfo.get("name", "")
+    def getName(self, token_payload: dict) -> str:
+        logger.debug("Extracting name from token payload")
+        # Use givenname from token, fallback to other common JWT claims
+        given_name = token_payload.get("givenname", "")
+        if given_name:
+            return given_name
+        return (
+            token_payload.get("name", "")
+            or token_payload.get("preferred_username", "")
+            or token_payload.get("given_name", "")
+        ).strip()
 
-    def getDepartment(self, userinfo: dict) -> str:
-        logger.debug("Extracting department from userinfo")
-        return str(userinfo.get("department", ""))
+    def getDepartment(self, token_payload: dict) -> str:
+        logger.debug("Extracting department from token payload")
+        return str(token_payload.get("department", ""))
 
-    def getLHMObjectID(self, userinfo: dict) -> str:
-        """Get the LHM Object ID from the userinfo."""
-        logger.debug("Extracting LHM Object ID from userinfo")
-        return str(userinfo.get("lhmObjectID", ""))
+    def getEmail(self, token_payload: dict) -> str:
+        logger.debug("Extracting email from token payload")
+        return str(token_payload.get("email", ""))
+
+    def getUsername(self, token_payload: dict) -> str:
+        logger.debug("Extracting username from token payload")
+        return str(token_payload.get("username", ""))
+
+    def getLHMObjectID(self, token_payload: dict) -> str:
+        """Get the LHM Object ID from the token payload."""
+        logger.debug("Extracting LHM Object ID from token payload")
+        return str(token_payload.get("lhmObjectID", "") or token_payload.get("sub", ""))
 
 
 # Authentication dependency for FastAPI
@@ -166,7 +153,6 @@ def authenticate_user(
     """Dependency to authenticate users based on access token."""  # Load configuration
     logger.debug("Loading configuration for authentication")
     auth_helper = AuthenticationHelper(
-        userinfo_url=sso_settings.USERINFO_URL,
         role=sso_settings.ROLE,
     )
 

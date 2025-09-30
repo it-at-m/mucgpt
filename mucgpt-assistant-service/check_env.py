@@ -44,7 +44,7 @@ def main():
                     print("   ⚠️  Warning: Password has leading/trailing whitespace")
 
                 # Check for problematic characters in database URLs
-                problematic_chars = ["'", "#", "@", "/", "\\", "?", "&", "%"]
+                problematic_chars = ["'", "#", "@", "/", "\\", "?", "&", "%", ":", ";"]
                 found_chars = [char for char in problematic_chars if char in value]
                 if found_chars:
                     print(

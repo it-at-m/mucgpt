@@ -88,7 +88,7 @@ const Menu = () => {
 
     useEffect(() => {
         if (user) {
-            setUserName(user.displayName || user.username || "User");
+            setUserName(user.givenname || user.displayName || user.username || "User");
         }
     }, [user]);
 

@@ -74,7 +74,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
             </MenuTrigger>
             <MenuPopover>
                 {AVAILABLE_LANGUAGES.map(language => (
-                    <MenuItem onClick={() => handleButtonClick(language)} onKeyDown={event => handleKeyDown(event, language)}>
+                    <MenuItem key={language.code} onClick={() => handleButtonClick(language)} onKeyDown={event => handleKeyDown(event, language)}>
                         {language.code} - {language.name}
                     </MenuItem>
                 ))}

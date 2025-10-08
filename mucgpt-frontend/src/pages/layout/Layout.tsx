@@ -61,23 +61,20 @@ export const Layout = () => {
     const language_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LANGUAGE) || DEFAULTLANG;
     const llm_pref = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM) || config.models[0].llm_name;
 
-    const font_scaling_pref = Number(localStorage.getItem(STORAGE_KEYS.SETTINGS_FONT_SCALING)) || 1;
-    const [fontscaling] = useState<number>(font_scaling_pref);
-
     const ligth_theme_pref =
         localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
 
-    const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
+    const [theme, setTheme] = useState<Theme>(adjustTheme(isLight));
 
     // change theme
     const onThemeChange = useCallback(
         (light: boolean) => {
             setLight(light);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-            setTheme(adjustTheme(light, fontscaling));
+            setTheme(adjustTheme(light));
         },
-        [fontscaling, setLight, setTheme]
+        [setLight, setTheme]
     );
 
     useEffect(() => {

@@ -8,6 +8,7 @@ authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
     { name = "Lea-Sophie Riedl", email = "l.riedl@muenchen.de" },
+    { name = "Simon Hirtreiter", email = "simon.hirtreiter@muenchen.de" },
 ]
 maintainers = [
     { name = " ITM KICC", email = "itm.kicc@muenchen.de" },

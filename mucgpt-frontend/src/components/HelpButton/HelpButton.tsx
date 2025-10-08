@@ -1,6 +1,5 @@
-import { Tooltip } from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 import { QuestionCircle24Regular } from "@fluentui/react-icons";
-import styles from "./HelpButton.module.css";
 import { useTranslation } from "react-i18next";
 
 interface HelpButtonProps {
@@ -15,12 +14,11 @@ export const HelpButton = ({ url, label }: HelpButtonProps) => {
 
     return (
         <Tooltip content={t("components.helpbutton.tooltip", "Hilfe und häufig gestellte Fragen")} relationship="description" positioning="below">
-            <div className={styles.container}>
-                <a href={url} className={styles.buttonContainer} aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}>
-                    <QuestionCircle24Regular className={styles.helpIcon} aria-hidden />
-                    <span className={styles.helpText}>{helpLabel}</span>
-                </a>
-            </div>
+            <a href={url}>
+                <Button appearance={"subtle"} icon={<QuestionCircle24Regular />} aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}>
+                    {helpLabel}
+                </Button>
+            </a>
         </Tooltip>
     );
 };

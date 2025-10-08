@@ -1,7 +1,6 @@
-import { Tooltip } from "@fluentui/react-components";
+import { Button, Tooltip } from "@fluentui/react-components";
 import { useState, useEffect, useCallback } from "react";
 import { WeatherSunny24Regular, WeatherMoon24Regular } from "@fluentui/react-icons";
-import styles from "./ThemeSelector.module.css";
 import { useTranslation } from "react-i18next";
 
 interface ThemeSelectorProps {
@@ -43,21 +42,15 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
 
     return (
         <Tooltip content={tooltipContent} relationship="description" positioning="below">
-            <div className={styles.container} onClick={handleButtonClick} role="button" tabIndex={0} aria-label={tooltipContent} onKeyDown={handleKeyDown}>
-                <div className={styles.buttonContainer}>
-                    {currentIsLight ? (
-                        <>
-                            <WeatherSunny24Regular className={styles.iconRightMargin} />
-                            <span className={styles.text}>{t("components.theme_selector.light_short")}</span>
-                        </>
-                    ) : (
-                        <>
-                            <WeatherMoon24Regular className={styles.iconRightMargin} />
-                            <span className={styles.text}>{t("components.theme_selector.dark_short")}</span>
-                        </>
-                    )}
-                </div>
-            </div>
+            <Button
+                appearance={"subtle"}
+                onClick={handleButtonClick}
+                aria-label={tooltipContent}
+                onKeyDown={handleKeyDown}
+                icon={currentIsLight ? <WeatherSunny24Regular /> : <WeatherMoon24Regular />}
+            >
+                {currentIsLight ? t("components.theme_selector.light_short") : t("components.theme_selector.dark_short")}
+            </Button>
         </Tooltip>
     );
 };

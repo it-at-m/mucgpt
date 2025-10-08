@@ -174,6 +174,9 @@ i18n
                             tooltip: "Hilfe und häufig gestelle Fragen anzeigen",
                             aria_label: "Hilfe und FAQ öffnen"
                         },
+                        language_selector: {
+                            change_language: "Sprache ändern"
+                        },
                         theme_selector: {
                             theme_light: "Helles Thema",
                             theme_dark: "Dunkles Thema",
@@ -611,6 +614,9 @@ i18n
                             tooltip: "Show help and frequently asked questions",
                             aria_label: "Open help and FAQ"
                         },
+                        language_selector: {
+                            change_language: "Change language"
+                        },
                         theme_selector: {
                             theme_light: "Light theme",
                             theme_dark: "Dark theme",
@@ -1046,6 +1052,9 @@ i18n
                             label: "Hilfe & FAQ",
                             tooltip: "Hilfe und häufige Frog'n zeig'n",
                             aria_label: "Hilfe und FAQ aufmach'n"
+                        },
+                        language_selector: {
+                            change_language: "Sprach wechs'l"
                         },
                         theme_selector: {
                             theme_light: "Helles Thema",
@@ -1484,6 +1493,9 @@ i18n
                             tooltip: "Afficher l'aide et les questions fréquentes",
                             aria_label: "Ouvrir l'aide et la FAQ"
                         },
+                        language_selector: {
+                            change_language: "Changer la langue"
+                        },
                         theme_selector: {
                             theme_light: "Thème clair",
                             theme_dark: "Thème sombre",
@@ -1921,6 +1933,9 @@ i18n
                             label: "Допомога та FAQ",
                             tooltip: "Показати допомогу та часто задавані питання",
                             aria_label: "Відкрити допомогу та FAQ"
+                        },
+                        language_selector: {
+                            change_language: "Змінити мову"
                         },
                         theme_selector: {
                             theme_light: "Світла тема",

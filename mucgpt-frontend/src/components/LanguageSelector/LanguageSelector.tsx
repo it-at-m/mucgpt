@@ -2,6 +2,7 @@ import { Menu, MenuButton, MenuItem, MenuPopover, MenuTrigger, Tooltip } from "@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LocalLanguage24Regular } from "@fluentui/react-icons";
 import styles from "./LanguageSelector.module.css";
+import { useTranslation } from "react-i18next";
 
 interface LanguageSelectorProps {
     onSelectionChange: (newSelection: string) => void;
@@ -16,14 +17,15 @@ interface Language {
 // Defining languages outside component to avoid re-creation on each render
 const AVAILABLE_LANGUAGES: Language[] = [
     { code: "DE", name: "Deutsch" },
-    { code: "EN", name: "Englisch" },
-    { code: "FR", name: "French" },
-    { code: "BA", name: "Bairisch" },
-    { code: "UK", name: "Ukrainisch" }
+    { code: "EN", name: "English" },
+    { code: "FR", name: "Français" },
+    { code: "BA", name: "Boarisch" },
+    { code: "UK", name: "Українська" }
 ];
 
 export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSelectorProps) => {
     const [selectedLang, setSelectedLang] = useState(defaultlang);
+    const { t } = useTranslation();
 
     // Handle button click - cycle through languages with useCallback for stability
     const handleButtonClick = useCallback(
@@ -57,7 +59,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
     );
 
     // Tooltip text
-    const tooltipText = `Sprache: ${currentLanguage.name} - Zum Ändern klicken`
+    const tooltipText = `${currentLanguage.name} - ${t("components.language_selector.change_language")}`;
 
     return (
         <Menu>

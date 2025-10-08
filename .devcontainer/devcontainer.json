@@ -23,7 +23,7 @@
   "hostRequirements": {
     "memory": "8gb"
   },
-  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
   "name": "Azure Search OpenAI Demo",
   "postCreateCommand": "",
   "remoteUser": "vscode"

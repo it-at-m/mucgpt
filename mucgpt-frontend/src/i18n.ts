@@ -452,7 +452,7 @@ i18n
                             cancel: "Abbrechen"
                         }
                     },
-                    ...tutorialsTranslations.Deutsch
+                    ...tutorialsTranslations.DE
                 }
             },
             EN: {
@@ -889,7 +889,7 @@ i18n
                             cancel: "Cancel"
                         }
                     },
-                    ...tutorialsTranslations.Englisch
+                    ...tutorialsTranslations.EN
                 }
             },
             BA: {
@@ -1331,7 +1331,7 @@ i18n
                             cancel: "Obbrecha"
                         }
                     },
-                    ...tutorialsTranslations.Bairisch
+                    ...tutorialsTranslations.BA
                 }
             },
             FR: {
@@ -1772,7 +1772,7 @@ i18n
                             cancel: "Annuler"
                         }
                     },
-                    ...tutorialsTranslations.French
+                    ...tutorialsTranslations.FR
                 }
             },
             UK: {
@@ -2211,7 +2211,7 @@ i18n
                             cancel: "Скасувати"
                         }
                     },
-                    ...tutorialsTranslations.Ukrainisch
+                    ...tutorialsTranslations.UK
                 }
             }
         }

@@ -1,5 +1,5 @@
 export const tutorialsTranslations = {
-    Deutsch: {
+    DE: {
         tutorials: {
             back_to_overview: "Zurück zur Übersicht",
             title: "Lerne",
@@ -387,7 +387,7 @@ export const tutorialsTranslations = {
             }
         }
     },
-    Englisch: {
+    EN: {
         tutorials: {
             back_to_overview: "Back to overview",
             title: "Learn",
@@ -767,7 +767,7 @@ export const tutorialsTranslations = {
             }
         }
     },
-    Bairisch: {
+    BA: {
         tutorials: {
             back_to_overview: "Zürück zur Übersicht",
             title: "Lern",
@@ -1151,7 +1151,7 @@ export const tutorialsTranslations = {
             }
         }
     },
-    French: {
+    FR: {
         tutorials: {
             back_to_overview: "Retour à l'aperçu",
             title: "Apprendre",
@@ -1539,7 +1539,7 @@ export const tutorialsTranslations = {
             }
         }
     },
-    Ukrainisch: {
+    UK: {
         tutorials: {
             back_to_overview: "Повернутися до огляду",
             title: "Навчитися",

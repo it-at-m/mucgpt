@@ -23,6 +23,7 @@ import { HelpButton } from "../../components/HelpButton";
 import { configApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { Navigation24Regular, DismissRegular, Settings24Regular, ContactCard24Regular } from "@fluentui/react-icons";
+import TutorialsButton from "../../components/TutorialsButton";
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -183,6 +184,9 @@ export const Layout = () => {
                                         <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
                                             <div className={styles.headerNavRightContainer}>
                                                 <div className={styles.headerNavList}>
+                                                    <TutorialsButton />
+                                                </div>
+                                                <div className={styles.headerNavList}>
                                                     <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
                                                 </div>
                                                 <div className={styles.headerNavList}>
@@ -226,6 +230,9 @@ export const Layout = () => {
                                                 <AccordionHeader icon={<ContactCard24Regular />}>{t("common.support", "Support & Hilfe")}</AccordionHeader>
                                                 <AccordionPanel className={styles.accordionPanel}>
                                                     <div className={styles.accordionContent}>
+                                                        <div className={styles.accordionItem}>
+                                                            <TutorialsButton />
+                                                        </div>
                                                         <div className={styles.accordionItem}>
                                                             <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
                                                         </div>

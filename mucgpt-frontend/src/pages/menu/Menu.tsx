@@ -18,7 +18,7 @@ import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { Share24Regular, Chat24Regular, Book24Regular } from "@fluentui/react-icons";
+import { Share24Regular, Chat24Regular } from "@fluentui/react-icons";
 import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { getTools } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
@@ -200,21 +200,6 @@ const Menu = () => {
                         >
                             <Chat24Regular aria-hidden />
                             <span>{t("menu.go_to_chat", "Direkt zum Chat")}</span>
-                        </Link>
-                    </Tooltip>
-                    <Tooltip
-                        content={t("menu.go_to_tutorials_tooltip", "Tutorials und Anleitungen zu Fragments und Tools")}
-                        relationship="description"
-                        positioning="below"
-                    >
-                        <Link
-                            to="/tutorials"
-                            className={styles.chatNavigationButton}
-                            aria-label={t("menu.go_to_tutorials_aria", "Zu Tutorials und Anleitungen navigieren")}
-                            role="button"
-                        >
-                            <Book24Regular aria-hidden />
-                            <span>{t("menu.go_to_tutorials", "Tutorials")}</span>
                         </Link>
                     </Tooltip>
                 </nav>

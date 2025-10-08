@@ -6,7 +6,7 @@ interface ILanguageProvider {
     setLanguage: Dispatch<SetStateAction<string>>;
 }
 
-export const DEFAULTLANG = "Deutsch";
+export const DEFAULTLANG = "DE";
 export const LanguageContext = React.createContext<ILanguageProvider>({ language: DEFAULTLANG, setLanguage: () => {} });
 
 export const LanguageContextProvider = (props: React.PropsWithChildren<unknown>) => {

@@ -9,12 +9,12 @@ i18n
     // for all options read: https://www.i18next.com/overview/configuration-options
     .init({
         debug: true,
-        fallbackLng: "Deutsch",
+        fallbackLng: "DE",
         interpolation: {
             escapeValue: false // not needed for react as it escapes by default
         },
         resources: {
-            Deutsch: {
+            DE: {
                 translation: {
                     header: {
                         chat: "Chat",
@@ -452,7 +452,7 @@ i18n
                     ...tutorialsTranslations.Deutsch
                 }
             },
-            Englisch: {
+            EN: {
                 translation: {
                     header: {
                         chat: "Chat",
@@ -886,7 +886,7 @@ i18n
                     ...tutorialsTranslations.Englisch
                 }
             },
-            Bairisch: {
+            BA: {
                 translation: {
                     header: {
                         chat: "Redn",
@@ -1325,7 +1325,7 @@ i18n
                     ...tutorialsTranslations.Bairisch
                 }
             },
-            French: {
+            FR: {
                 translation: {
                     header: {
                         chat: "Chat",
@@ -1763,7 +1763,7 @@ i18n
                     ...tutorialsTranslations.French
                 }
             },
-            Ukrainisch: {
+            UK: {
                 translation: {
                     header: {
                         chat: "Чат",

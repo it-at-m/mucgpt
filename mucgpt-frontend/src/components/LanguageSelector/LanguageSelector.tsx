@@ -28,8 +28,8 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
     // Handle button click - cycle through languages with useCallback for stability
     const handleButtonClick = useCallback(
         (language: Language) => {
-            setSelectedLang(language.name);
-            onSelectionChange(language.name);
+            setSelectedLang(language.code);
+            onSelectionChange(language.code);
         },
         [selectedLang, onSelectionChange]
     );
@@ -41,7 +41,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
 
     // Memoize the current language to prevent unnecessary re-calculations
     const currentLanguage = useMemo(() => {
-        const current = AVAILABLE_LANGUAGES.find((lang: Language) => lang.name === selectedLang);
+        const current = AVAILABLE_LANGUAGES.find((lang: Language) => lang.code === selectedLang);
         return current || AVAILABLE_LANGUAGES[0];
     }, [selectedLang]);
 

@@ -1,7 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LocalLanguage24Regular } from "@fluentui/react-icons";
-import styles from "./LanguageSelector.module.css";
 import { useTranslation } from "react-i18next";
 
 interface LanguageSelectorProps {
@@ -65,11 +64,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
         <Menu>
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={tooltipText} relationship="description" positioning="below">
-                    <MenuButton
-                        appearance={"subtle"}
-                        aria-label={tooltipText}
-                        icon={<LocalLanguage24Regular className={styles.iconRightMargin} />}
-                    >
+                    <MenuButton appearance={"subtle"} aria-label={tooltipText} icon={<LocalLanguage24Regular />}>
                         {currentLanguage.code}
                     </MenuButton>
                 </Tooltip>

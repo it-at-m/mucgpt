@@ -46,4 +46,3 @@ export const VersionInfo = ({ version, commit, versionUrl }: VersionInfoProps) =
 };
 
 export default VersionInfo;
-

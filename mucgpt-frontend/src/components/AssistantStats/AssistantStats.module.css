@@ -1,6 +1,6 @@
 .statsContainer {
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 8px;
     padding: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -11,10 +11,9 @@
 .statsTitle {
     font-weight: 600;
     font-size: 14px;
-    color: var(--colorNeutralForeground1);
     margin-bottom: 10px;
     text-align: center;
-    border-bottom: 1px solid var(--colorNeutralStroke3);
+    border-bottom: 1px solid var(--outline);
     padding-bottom: 6px;
 }
 
@@ -48,7 +47,7 @@
 }
 
 .visible {
-    color: var(--colorPaletteGreenForeground1);
+    color: var(--primary);
 }
 
 .invisible {

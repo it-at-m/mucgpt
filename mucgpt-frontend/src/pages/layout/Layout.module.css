@@ -17,8 +17,8 @@
     display: flex;
     align-items: center;
     margin-right: 20px;
-    color: var(--colorNeutralForeground1);
     text-decoration: none;
+    color: var(--surface);
     width: auto;
     left: 1em;
 }
@@ -46,7 +46,7 @@
 }
 
 .headerNavPageLink {
-    color: var(--colorNeutralForeground1);
+    color: var(--surface);
     font-size: var(--fontSizeHero700);
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -95,7 +95,7 @@
     position: fixed;
     top: 0;
     width: 100%;
-    background-color: var(--colorNeutralBackground2);
+    background-color: var(--on_surface);
     height: 50px;
     z-index: 10;
     justify-content: space-between;
@@ -206,8 +206,8 @@
     align-items: center;
     margin-top: auto;
     justify-content: space-between;
-    background-color: var(--colorNeutralBackground2);
-    color: var(--colorNeutralForeground1);
+    background-color: var(--on_surface);
+    color: var(--surface);
     padding: 8px 16px;
     font-size: 14px;
 }
@@ -222,7 +222,6 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--colorNeutralBackground1);
     text-decoration: none;
     padding: 4px 8px;
     border-radius: 4px;
@@ -230,7 +229,7 @@
 }
 
 .footerLink:hover {
-    background-color: var(--colorBrandBackgroundHover);
+    background-color: var(--on_surface_variant);
     text-decoration: none;
 }
 

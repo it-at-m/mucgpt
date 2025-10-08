@@ -19,7 +19,7 @@
     justify-content: center;
     padding-top: 50px;
     width: 100%;
-    background: var(--colorBackgroundOverlay);
+    background: var(--primary);
 }
 
 .heading {
@@ -69,14 +69,13 @@
 }
 
 .chatNavigationButton {
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--on_primary);
+    color: var(--surface);
     padding: 12px 24px;
     border-radius: 6px;
     text-decoration: none;
     font-size: var(--fontSizeBase300);
     font-weight: 500;
-    border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.2s ease;
     min-width: 120px;
@@ -88,7 +87,6 @@
 }
 
 .chatNavigationButton:hover {
-    background: var(--colorBrandBackgroundHover);
     text-decoration: none;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -103,20 +101,9 @@
     justify-content: space-between;
     margin-bottom: 16px;
     padding-bottom: 8px;
-    border-bottom: 2px solid var(--colorBrandStroke2);
     color: var(--colorBrandForeground1);
     letter-spacing: 0.5px;
     position: relative;
-}
-
-.rowheader::after {
-    content: "";
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    width: 60px;
-    height: 2px;
-    background-color: var(--colorBrandBackground);
 }
 
 .subrowheader {
@@ -129,7 +116,6 @@
     margin-top: 20px;
     margin-bottom: 12px;
     padding-left: 10px;
-    border-left: 4px solid var(--colorBrandBackground);
     color: var(--colorNeutralForeground1);
 }
 
@@ -158,8 +144,8 @@
     text-decoration: none;
     opacity: 0.9;
     font-size: var(--fontSizeBase400);
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--primary_container);
+    border: 1px solid var(--outline);
     display: flex;
     flex-direction: column;
     padding: 16px;
@@ -224,20 +210,20 @@
     text-align: center;
     min-width: 100px;
     align-self: flex-start;
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--primary);
+    color: var(--on_primary);
     padding: 6px 12px;
     border-radius: 4px;
     text-decoration: none;
     font-size: var(--fontSizeBase200);
     font-weight: 500;
-    border: none;
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
 
 .boxChoose:hover {
-    background: var(--colorBrandBackgroundHover);
+    background: var(--on_primary);
+    color: var(--surface);
     text-decoration: none;
 }
 .btnText {

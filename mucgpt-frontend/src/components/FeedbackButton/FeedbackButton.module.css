@@ -12,12 +12,12 @@
     padding: 8px;
     border-radius: 4px;
     transition: background-color 0.2s;
-    color: var(--colorNeutralForeground1);
+    color: var(--surface);
     text-decoration: none;
 }
 
 .buttonContainer:hover {
-    background-color: var(--colorNeutralBackground2Hover);
+    background-color: var(--on_surface_variant);
 }
 
 .feedbackText {

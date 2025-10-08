@@ -186,6 +186,11 @@ const Menu = () => {
                         question={question}
                     ></QuestionInput>
                 </div>
+                <div className={styles.divider}>
+                    <hr />
+                    <span>{t("menu.or", "oder")}</span>
+                    <hr />
+                </div>
                 <nav className={styles.chatNavigationContainer} aria-label={t("menu.navigation_aria", "Chat Navigation")}>
                     <Tooltip
                         content={t("menu.go_to_chat_tooltip", "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen")}

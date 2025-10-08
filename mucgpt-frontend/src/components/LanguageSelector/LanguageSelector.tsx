@@ -1,4 +1,4 @@
-import { Tooltip } from "@fluentui/react-components";
+import { Menu, MenuButton, MenuItem, MenuPopover, MenuTrigger, Tooltip } from "@fluentui/react-components";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { LocalLanguage24Regular } from "@fluentui/react-icons";
 import styles from "./LanguageSelector.module.css";
@@ -26,15 +26,13 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
     const [selectedLang, setSelectedLang] = useState(defaultlang);
 
     // Handle button click - cycle through languages with useCallback for stability
-    const handleButtonClick = useCallback(() => {
-        const currentIndex = AVAILABLE_LANGUAGES.findIndex((lang: Language) => lang.name === selectedLang);
-        const nextIndex = (currentIndex + 1) % AVAILABLE_LANGUAGES.length;
-        const nextLang = AVAILABLE_LANGUAGES[nextIndex];
-
-        setSelectedLang(nextLang.name);
-
-        onSelectionChange(nextLang.name);
-    }, [selectedLang, onSelectionChange]);
+    const handleButtonClick = useCallback(
+        (language: Language) => {
+            setSelectedLang(language.name);
+            onSelectionChange(language.name);
+        },
+        [selectedLang, onSelectionChange]
+    );
 
     // Update selected language when defaultlang prop changes
     useEffect(() => {
@@ -49,30 +47,38 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
 
     // Memoize the keyboard handler
     const handleKeyDown = useCallback(
-        (e: React.KeyboardEvent) => {
+        (e: React.KeyboardEvent, language: Language) => {
             if (e.key === "Enter" || e.key === " ") {
-                handleButtonClick();
+                handleButtonClick(language);
                 e.preventDefault();
             }
         },
         [handleButtonClick]
     );
 
+    // Tooltip text
+    const tooltipText = `Sprache: ${currentLanguage.name} - Zum Ändern klicken`
+
     return (
-        <Tooltip content={`${currentLanguage.name} - Klicken zum Ändern`} relationship="description" positioning="below">
-            <div
-                className={styles.container}
-                onClick={handleButtonClick}
-                role="button"
-                tabIndex={0}
-                aria-label={`Sprache: ${currentLanguage.name}. Klicken zum Ändern`}
-                onKeyDown={handleKeyDown}
-            >
-                <div className={styles.buttonContainer}>
-                    <LocalLanguage24Regular className={styles.iconRightMargin} />
-                    <span className={styles.languageCode}>{currentLanguage.code}</span>
-                </div>
-            </div>
-        </Tooltip>
+        <Menu>
+            <MenuTrigger disableButtonEnhancement>
+                <Tooltip content={tooltipText} relationship="description" positioning="below">
+                    <MenuButton
+                        appearance={"subtle"}
+                        aria-label={tooltipText}
+                        icon={<LocalLanguage24Regular className={styles.iconRightMargin} />}
+                    >
+                        {currentLanguage.code}
+                    </MenuButton>
+                </Tooltip>
+            </MenuTrigger>
+            <MenuPopover>
+                {AVAILABLE_LANGUAGES.map(language => (
+                    <MenuItem onClick={() => handleButtonClick(language)} onKeyDown={event => handleKeyDown(event, language)}>
+                        {language.code} - {language.name}
+                    </MenuItem>
+                ))}
+            </MenuPopover>
+        </Menu>
     );
 };

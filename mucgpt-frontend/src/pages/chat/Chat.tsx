@@ -97,6 +97,10 @@ const Chat = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const setAndStoreShowSidebar = (value: boolean) => {
+        setShowSidebar(value)
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString())
+    };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
@@ -537,7 +541,7 @@ const Chat = () => {
         () => (
             <>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
             </>
         ),
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
@@ -602,7 +606,7 @@ const Chat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
+                    onToggleMinimized={() => setAndStoreShowSidebar(true)}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />

@@ -27,8 +27,9 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     env_name: "MUCGPT",
     alternative_logo: false,
-    version: "FRONTEND DEMO 1.0.0",
-    commit: "152b175"
+    core_version: "0.0.1",
+    frontend_version: "0.0.1",
+    assistant_version: "0.0.1"
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);

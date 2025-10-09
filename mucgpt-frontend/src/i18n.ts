@@ -308,7 +308,7 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Erstelle deinen eigenen Assistenten"
+                            add_assistant: "Neuer Assistent"
                         },
                         create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
@@ -410,11 +410,11 @@ i18n
                             publish_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich veröffentlicht"
                         },
                         search_assistant_button: {
-                            search_assistants: "Assistenten durchsuchen"
+                            search_assistants: "Assistenten suchen"
                         },
                         community_assistants: {
                             title: "Community Assistenten", // Deutsch
-                            search: "Assistenten durchsuchen",
+                            search: "Assistenten suchen",
                             filter_by_tag: "Nach Tag filtern",
                             sort_by: "Sortieren nach",
                             sort_title: "Titel",
@@ -748,7 +748,7 @@ i18n
                             more: "more"
                         },
                         add_assistant_button: {
-                            add_assistant: "Create your own assistant"
+                            add_assistant: "New assistant"
                         },
                         create_assistant_dialog: {
                             what_function: "What should your assistant be able to do?",
@@ -1187,7 +1187,7 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Erstell dein eigenen Assistenten"
+                            add_assistant: "Neia Assistent"
                         },
                         create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
@@ -1627,7 +1627,7 @@ i18n
                             more: "plus"
                         },
                         add_assistant_button: {
-                            add_assistant: "Crée ton propre assistant"
+                            add_assistant: "nouvel assistant"
                         },
                         create_assistant_dialog: {
                             what_function: "Que doit pouvoir faire votre assistant?",
@@ -2068,7 +2068,7 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "Створи свого власного асистента"
+                            add_assistant: "новий асистент"
                         },
                         create_assistant_dialog: {
                             what_function: "Що має вміти ваш асистент?",

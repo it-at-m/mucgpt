@@ -1,4 +1,4 @@
-import { BotAdd24Regular } from "@fluentui/react-icons";
+import { Add24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 
 import styles from "./AddAssistantButton.module.css";
@@ -15,7 +15,7 @@ export const AddAssistantButton = ({ onClick }: Props) => {
                 <Button
                     appearance="secondary"
                     aria-label={t("components.add_assistant_button.add_assistant")}
-                    icon={<BotAdd24Regular className={styles.iconLeftMargin} />}
+                    icon={<Add24Regular className={styles.iconLeftMargin} />}
                     onClick={onClick}
                     size="large"
                 >

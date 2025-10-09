@@ -149,14 +149,14 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                             <Collapse visible={!!expandedCategories[category]}>
                                 <div className={styles.categoryContent}>
                                     {chats.slice(0, itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY).map((chat: DBObject<any, any>, index: number) => (
-                                        <li key={index} className={styles.singlechatcontainer}>
+                                        <li key={index} className={`${styles.singlechatcontainer} ${currentActiveChatId === chat.id ? styles.activeChat : ""}`}>
                                             <Tooltip
                                                 content={t("components.history.lastEdited") + new Date(chat._last_edited as number).toLocaleString()}
                                                 relationship="description"
                                                 positioning="below"
                                             >
                                                 <Button
-                                                    className={`${styles.savedChatButton} ${currentActiveChatId === chat.id ? styles.activeChat : ""}`}
+                                                    className={styles.savedChatButton}
                                                     onClick={() => onSelect(chat.id as string)}
                                                     appearance="subtle"
                                                 >

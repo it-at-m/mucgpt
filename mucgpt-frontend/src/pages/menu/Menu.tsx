@@ -236,7 +236,7 @@ const Menu = () => {
                 </TabList>
 
                 {selectedTab === "local" && (
-                    <div className={styles.row} role="list" aria-label={t("menu.own_assistants", "Eigene Assistants")}>
+                    <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
                         {assistants.map((assistant: Assistant, key) => (
                             <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
                                 <div className={styles.box} role="listitem" tabIndex={0}>
@@ -261,7 +261,7 @@ const Menu = () => {
                 )}
 
                 {selectedTab === "owned" && (
-                    <div className={styles.row} role="list" aria-label={t("menu.owned", "Eigene Assistenten")}>
+                    <div className={styles.row} role="list" aria-label={t("menu.owned", "Veröffentlicht in der Community")}>
                         {ownedCommunityAssistants.map((assistant: AssistantResponse, key) => (
                             <div
                                 key={key}

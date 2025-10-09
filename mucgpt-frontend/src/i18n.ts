@@ -2068,7 +2068,7 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "новий асистента"
+                            add_assistant: "новий асистент"
                         },
                         create_assistant_dialog: {
                             what_function: "Що має вміти ваш асистент?",

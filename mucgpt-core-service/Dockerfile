@@ -16,6 +16,9 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY departements.json* ./
 
+# Install build dependencies for packages with C extensions
+RUN microdnf install -y gcc python3-devel
+
 # Install dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --locked --no-install-project
@@ -26,6 +29,10 @@ COPY /src  .
 # Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --locked
+
+# Remove build dependencies to keep image small
+RUN microdnf remove -y gcc python3-devel && \
+    microdnf clean all
 
 # Add version information
 ARG COMMIT

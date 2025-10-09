@@ -24,8 +24,9 @@ async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
     response = ConfigResponse(
         env_name=settings.ENV_NAME,
         alternative_logo=settings.ALTERNATIVE_LOGO,
-        version=settings.VERSION,
-        commit=settings.COMMIT,
+        core_version=settings.VERSION,
+        frontend_version=settings.FRONTEND_VERSION,
+        assistant_version=settings.ASSISTANT_VERSION,
     )
 
     models = settings.MODELS

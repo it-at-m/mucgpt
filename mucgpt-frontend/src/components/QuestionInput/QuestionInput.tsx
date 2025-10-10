@@ -144,11 +144,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                                         onClick={() => {
                                             if (setSelectedTools) setSelectedTools(selectedTools.filter(t => t !== toolName));
                                         }}
-                                        icon={
-                                            setSelectedTools && (
-                                                <Dismiss24Regular className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`} />
-                                            )
-                                        }
+                                        icon={setSelectedTools && <Dismiss24Regular className={styles.toolBadgeIcon} aria-label={`Entferne ${toolName}`} />}
                                     >
                                         {toolName}
                                     </Badge>

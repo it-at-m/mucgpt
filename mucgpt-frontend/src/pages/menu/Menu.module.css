@@ -5,6 +5,8 @@
     max-width: 80%;
     margin-right: 10%;
     margin-left: 10%;
+    margin-top: 20px;
+    margin-bottom: 50px;
     min-height: calc(100vh - 140px);
     max-height: none;
     overflow-y: auto;

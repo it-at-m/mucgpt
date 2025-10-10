@@ -169,6 +169,8 @@ const Menu = () => {
 
     const onTabSelect = (event: SelectTabEvent, data: SelectTabData) => {
         setSelectedTab(data.value as string);
+        setHoveredAssistantId(null);
+        setHoverPosition({ x: 0, y: 0 });
     };
 
     return (

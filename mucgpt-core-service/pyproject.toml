@@ -15,13 +15,13 @@ maintainers = [
 ]
 
 dependencies = [
-    "fastapi[standard]==0.118.0",
+    "fastapi[standard]==0.119.0",
     "langchain==0.3.27",
-    "langchain-core==0.3.78",
+    "langchain-core==0.3.79",
     "langchain_community==0.3.31",
     "langchain-openai==0.3.35",
     "openai==1.109.1",
-    "langsmith==0.4.33",
+    "langsmith==0.4.34",
     "joserfc",
     "pypdf==6.1.1",
     "uvicorn==0.37.0",

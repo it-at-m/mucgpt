@@ -553,16 +553,16 @@ wheels = [
 
 [[package]]
 name = "fastapi"
-version = "0.118.0"
+version = "0.119.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "starlette" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/28/3c/2b9345a6504e4055eaa490e0b41c10e338ad61d9aeaae41d97807873cdf2/fastapi-0.118.0.tar.gz", hash = "sha256:5e81654d98c4d2f53790a7d32d25a7353b30c81441be7d0958a26b5d761fa1c8", size = 310536, upload-time = "2025-09-29T03:37:23.126Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/f9/5c5bcce82a7997cc0eb8c47b7800f862f6b56adc40486ed246e5010d443b/fastapi-0.119.0.tar.gz", hash = "sha256:451082403a2c1f0b99c6bd57c09110ed5463856804c8078d38e5a1f1035dbbb7", size = 336756, upload-time = "2025-10-11T17:13:40.53Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/20/54e2bdaad22ca91a59455251998d43094d5c3d3567c52c7c04774b3f43f2/fastapi-0.118.0-py3-none-any.whl", hash = "sha256:705137a61e2ef71019d2445b123aa8845bd97273c395b744d5a7dfe559056855", size = 97694, upload-time = "2025-09-29T03:37:21.338Z" },
+    { url = "https://files.pythonhosted.org/packages/ce/70/584c4d7cad80f5e833715c0a29962d7c93b4d18eed522a02981a6d1b6ee5/fastapi-0.119.0-py3-none-any.whl", hash = "sha256:90a2e49ed19515320abb864df570dd766be0662c5d577688f1600170f7f73cf2", size = 107095, upload-time = "2025-10-11T17:13:39.048Z" },
 ]
 
 [package.optional-dependencies]
@@ -910,14 +910,14 @@ wheels = [
 
 [[package]]
 name = "joserfc"
-version = "1.3.4"
+version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/79/d63a882c0212e95f3ba8863a115e5ca9a5d39413b02273ddce72058e717f/joserfc-1.3.4.tar.gz", hash = "sha256:67d8413c501c239f65eefad5ae685cfbfc401aa63289fc409ef7cc331b007227", size = 197787, upload-time = "2025-09-21T15:49:34.7Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/a0/4b8dfecc8ec3c15aa1f2ff7d5b947344378b5b595ce37c8a8fe6e25c1400/joserfc-1.4.0.tar.gz", hash = "sha256:e8c2f327bf10a937d284d57e9f8aec385381e5e5850469b50a7dade1aba59759", size = 196339, upload-time = "2025-10-09T07:47:00.835Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/78/beb171f0caac81f51695f43c87c0c20b3ce2a190cf74a3fbb0b9afe03b45/joserfc-1.3.4-py3-none-any.whl", hash = "sha256:30c845c58d441cfe32d08ac35e437812481ca8155373873b7abf80224bf601c0", size = 75638, upload-time = "2025-09-21T15:49:33.14Z" },
+    { url = "https://files.pythonhosted.org/packages/55/05/342459b7629c6fcb5f99a646886ee2904491955b8cce6b26b0b9a498f67c/joserfc-1.4.0-py3-none-any.whl", hash = "sha256:46917e6b53f1ec0c7e20d34d6f3e6c27da0fa43d0d4ebfb89aada7c86582933a", size = 66390, upload-time = "2025-10-09T07:46:59.591Z" },
 ]
 
 [[package]]
@@ -1075,9 +1075,9 @@ dev = [
 requires-dist = [
     { name = "asgi-correlation-id", specifier = "==4.3.4" },
     { name = "asyncpg", specifier = ">=0.30.0" },
-    { name = "fastapi", extras = ["standard"], specifier = "==0.118.0" },
+    { name = "fastapi", extras = ["standard"], specifier = "==0.119.0" },
     { name = "gitpython", specifier = "==3.1.45" },
-    { name = "joserfc", specifier = "==1.3.4" },
+    { name = "joserfc", specifier = "==1.4.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },
     { name = "requests", specifier = ">=2.32.5" },

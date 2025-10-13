@@ -19,6 +19,12 @@
     }
 }
 
+.actionRow {
+    display: flex;
+    gap: var(--spacingHorizontalS, 8px);
+    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
+}
+
 .drawerContent {
     overflow-y: auto;
     overflow-x: auto;

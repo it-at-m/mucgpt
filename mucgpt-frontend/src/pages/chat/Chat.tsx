@@ -25,6 +25,7 @@ import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
 import { getTools, chatApi } from "../../api/core-client";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -547,35 +548,33 @@ const Chat = () => {
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-    const sidebar_content = useMemo(
+    const sidebar_history = useMemo(
         () => (
-            <>
-                <History
-                    allChats={allChats}
-                    currentActiveChatId={activeChatRef.current}
-                    onDeleteChat={async id => {
-                        await storageService.delete(id);
-                        await fetchHistory();
-                    }}
-                    onChatNameChange={async (id, name: string) => {
-                        const newName = prompt(t("components.history.newchat"), name);
-                        await storageService.renameChat(id, newName ? newName.trim() : name);
-                        await fetchHistory();
-                    }}
-                    onFavChange={async (id: string, fav: boolean) => {
-                        await storageService.changeFavouritesInDb(id, fav);
-                        await fetchHistory();
-                    }}
-                    onSelect={async (id: string) => {
-                        loadChat(id);
-                    }}
-                ></History>
-            </>
+            <History
+                allChats={allChats}
+                currentActiveChatId={activeChatRef.current}
+                onDeleteChat={async id => {
+                    await storageService.delete(id);
+                    await fetchHistory();
+                }}
+                onChatNameChange={async (id, name: string) => {
+                    const newName = prompt(t("components.history.newchat"), name);
+                    await storageService.renameChat(id, newName ? newName.trim() : name);
+                    await fetchHistory();
+                }}
+                onFavChange={async (id: string, fav: boolean) => {
+                    await storageService.changeFavouritesInDb(id, fav);
+                    await fetchHistory();
+                }}
+                onSelect={async (id: string) => {
+                    loadChat(id);
+                }}
+            ></History>
         ),
         [allChats, activeChatRef.current, fetchHistory, storageService, loadChat, t]
     );
 
-    const sidebar = useMemo(
+    const sidebar_chat_settings = useMemo(
         () => (
             <ChatsettingsDrawer
                 temperature={temperature}
@@ -583,12 +582,21 @@ const Chat = () => {
                 max_output_tokens={max_output_tokens}
                 setMaxTokens={onMaxTokensChanged}
                 systemPrompt={systemPrompt}
-                setSystemPrompt={onSystemPromptChanged}
-                actions={sidebar_actions}
-                content={sidebar_content}
-            />
+                setSystemPrompt={onSystemPromptChanged} />
         ),
-        [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged, sidebar_actions, sidebar_content]
+            [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged]
+        );
+
+    const sidebar = useMemo(
+        () => (
+            <Sidebar actions={sidebar_actions} content={
+                <>
+                    {sidebar_chat_settings}
+                    {sidebar_history}
+                </>
+            }></Sidebar>
+        ),
+        [sidebar_actions, sidebar_history, sidebar_chat_settings]
     );
     const layout = useMemo(
         () => (

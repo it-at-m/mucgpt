@@ -420,9 +420,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     assistant={assistantConfig}
                     onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
                     onDeleteAssistant={onDeleteAssistant}
-                    minimized={!showSidebar}
                     isOwned={strategy.isOwned}
-                    onToggleMinimized={toggleSidebar}
                     strategy={strategy}
                 ></AssistantsettingsDrawer>
             </>

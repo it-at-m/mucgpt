@@ -4,6 +4,7 @@ import { useId } from "@fluentui/react-components";
 import styles from "./ChatsettingsDrawer.module.css";
 import { useState } from "react";
 import { ChatSettingsContent } from "./ChatSettingsContent";
+import { useTranslation } from "react-i18next";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {
+    const { t } = useTranslation();
+
     // State for collapsible sections
     const [isOverviewExpanded, setIsOverviewExpanded] = useState<boolean>(false);
 
@@ -43,7 +46,7 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
                 >
                     <div className={styles.headerContent}>
                         <Settings24Regular />
-                        <span>Chat Einstellungen</span>
+                        <span>{t("components.chattsettingsdrawer.title")}</span>
                     </div>
                     <div className={styles.expandCollapseIcon}>{isOverviewExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
                 </div>

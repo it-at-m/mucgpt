@@ -31,9 +31,7 @@ interface Props {
     assistant: Assistant;
     onAssistantChange: (assistant: Assistant) => void;
     onDeleteAssistant: () => void;
-    minimized: boolean;
     isOwned?: boolean;
-    onToggleMinimized?: () => void;
     strategy: AssistantStrategy;
 }
 
@@ -198,7 +196,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 >
                     <div className={styles.actionsHeaderContent}>
                         <Settings24Regular className={styles.actionsIcon} aria-hidden="true" />
-                        <span>Aktionen</span>
+                        <span>{t("components.assistant_chat.actions")}</span>
                         <div className={styles.expandCollapseIcon}>{isActionsExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
                     </div>
                 </div>

@@ -13,14 +13,7 @@ interface Props {
     setSystemPrompt: (systemPrompt: string) => void;
 }
 
-export const ChatsettingsDrawer = ({
-    temperature,
-    setTemperature,
-    max_output_tokens,
-    setMaxTokens,
-    systemPrompt,
-    setSystemPrompt
-}: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {
     // State for collapsible sections
     const [isOverviewExpanded, setIsOverviewExpanded] = useState<boolean>(false);
 

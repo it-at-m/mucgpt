@@ -99,8 +99,8 @@ const Chat = () => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const setAndStoreShowSidebar = (value: boolean) => {
-        setShowSidebar(value)
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString())
+        setShowSidebar(value);
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
@@ -582,19 +582,23 @@ const Chat = () => {
                 max_output_tokens={max_output_tokens}
                 setMaxTokens={onMaxTokensChanged}
                 systemPrompt={systemPrompt}
-                setSystemPrompt={onSystemPromptChanged} />
+                setSystemPrompt={onSystemPromptChanged}
+            />
         ),
-            [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged]
-        );
+        [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged]
+    );
 
     const sidebar = useMemo(
         () => (
-            <Sidebar actions={sidebar_actions} content={
-                <>
-                    {sidebar_chat_settings}
-                    {sidebar_history}
-                </>
-            }></Sidebar>
+            <Sidebar
+                actions={sidebar_actions}
+                content={
+                    <>
+                        {sidebar_chat_settings}
+                        {sidebar_history}
+                    </>
+                }
+            ></Sidebar>
         ),
         [sidebar_actions, sidebar_history, sidebar_chat_settings]
     );

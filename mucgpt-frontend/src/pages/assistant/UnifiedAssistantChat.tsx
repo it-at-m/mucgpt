@@ -79,8 +79,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const setAndStoreShowSidebar = (value: boolean) => {
-        setShowSidebar(value)
-        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString())
+        setShowSidebar(value);
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
@@ -402,7 +402,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const sidebar_actions = useMemo(
         () => (
             <>
-                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy} showText={showSidebar} />
+                <ClearChatButton
+                    onClick={clearChat}
+                    disabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy}
+                    showText={showSidebar}
+                />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
             </>
         ),
@@ -426,12 +430,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [assistantConfig, onAssistantChanged, onDeleteAssistant, history, showSidebar, strategy.canEdit, strategy.isOwned, strategy]
     );
 
-    const sidebar = useMemo(() => (
+    const sidebar = useMemo(
+        () => (
             <Sidebar
-                content={<>
-                    {sidebar_assistant_settings}
-                    {history}
-                </>} actions={sidebar_actions}            />
+                content={
+                    <>
+                        {sidebar_assistant_settings}
+                        {history}
+                    </>
+                }
+                actions={sidebar_actions}
+            />
         ),
         [history, sidebar_assistant_settings]
     );

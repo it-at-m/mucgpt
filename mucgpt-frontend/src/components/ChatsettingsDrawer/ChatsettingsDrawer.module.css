@@ -160,8 +160,6 @@
     margin-right: var(--spacingHorizontalXS, 4px);
 }
 
-
-
 .actionRow:last-child {
     border-bottom: none;
     padding-bottom: var(--spacingVerticalL, 16px);

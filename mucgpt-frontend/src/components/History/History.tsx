@@ -155,11 +155,7 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                                 relationship="description"
                                                 positioning="below"
                                             >
-                                                <Button
-                                                    className={styles.savedChatButton}
-                                                    onClick={() => onSelect(chat.id as string)}
-                                                    appearance="subtle"
-                                                >
+                                                <Button className={styles.savedChatButton} onClick={() => onSelect(chat.id as string)} appearance="subtle">
                                                     <div className={styles.chatButtonContent}>
                                                         {chat.favorite && <Star24Filled className={styles.favoriteIcon} />}
                                                         <span className={styles.chatName}>{chat.name}</span>

@@ -37,13 +37,7 @@ interface Props {
     strategy: AssistantStrategy;
 }
 
-export const AssistantsettingsDrawer = ({
-    assistant,
-    onAssistantChange,
-    onDeleteAssistant,
-    isOwned,
-    strategy
-}: Props) => {
+export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDeleteAssistant, isOwned, strategy }: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(assistant.description);

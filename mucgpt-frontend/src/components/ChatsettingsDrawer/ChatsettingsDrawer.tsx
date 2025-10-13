@@ -49,7 +49,8 @@ export const ChatsettingsDrawer = ({
                     aria-expanded={isOverviewExpanded}
                 >
                     <div className={styles.headerContent}>
-                        <span>Erweiterte Einstellungen</span>
+                        <Settings24Regular />
+                        <span>Chat Einstellungen</span>
                     </div>
                     <div className={styles.expandCollapseIcon}>{isOverviewExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
                 </div>

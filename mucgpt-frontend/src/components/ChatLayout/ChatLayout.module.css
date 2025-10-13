@@ -20,11 +20,10 @@
 }
 
 .sidebar {
-    padding-left: 1em;
     position: fixed;
-    margin-top: 50px;
+    padding-top: 50px;
+    padding-bottom: 60px;
     height: 100%;
-    padding-bottom: var(--spacingHorizontalM);
     width: var(--sidebarWidth);
 }
 

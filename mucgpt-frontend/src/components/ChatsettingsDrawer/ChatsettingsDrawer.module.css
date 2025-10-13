@@ -2,13 +2,10 @@
     font-size: var(--fontSizeBase300);
     font-weight: 600;
     color: var(--colorNeutralForeground2);
-    margin-top: var(--spacingVerticalM, 12px);
-    margin-bottom: var(--spacingVerticalS, 8px);
     padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px) var(--spacingVerticalS, 8px);
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
     cursor: pointer;
     user-select: none;
     transition: all 0.2s ease;
@@ -39,7 +36,6 @@
 .expandCollapseIcon {
     margin-left: auto;
     color: var(--colorNeutralForeground3);
-    transition: transform 0.2s ease;
 }
 
 .settingsContent {
@@ -49,11 +45,7 @@
     flex-direction: column;
     overflow-y: auto;
     scroll-behavior: smooth;
-    height: 100%;
     background-color: var(--colorNeutralBackground1);
-    max-height: 100vh;
-    display: flex;
-    flex-direction: column;
 }
 
 .settingsContent::-webkit-scrollbar {
@@ -168,16 +160,7 @@
     margin-right: var(--spacingHorizontalXS, 4px);
 }
 
-.actionRow {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: var(--spacingHorizontalS, 8px);
-    padding: var(--spacingVerticalM, 12px) var(--spacingHorizontalL, 16px);
-    background-color: var(--colorNeutralBackground1);
-    border-bottom: 1px solid var(--colorNeutralStroke2);
-}
+
 
 .actionRow:last-child {
     border-bottom: none;

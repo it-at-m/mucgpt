@@ -14,11 +14,9 @@ export const HelpButton = ({ url, label }: HelpButtonProps) => {
 
     return (
         <Tooltip content={t("components.helpbutton.tooltip", "Hilfe und häufig gestellte Fragen")} relationship="description" positioning="below">
-            <a href={url}>
-                <Button appearance={"subtle"} icon={<QuestionCircle24Regular />} aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}>
-                    {helpLabel}
-                </Button>
-            </a>
+            <Button as={"a"} href={url} appearance={"subtle"} icon={<QuestionCircle24Regular />} aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}>
+                {helpLabel}
+            </Button>
         </Tooltip>
     );
 };

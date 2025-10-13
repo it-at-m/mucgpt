@@ -128,7 +128,6 @@
 }
 
 .categoryHeader {
-    margin: 16px 8px 8px 8px;
     font-size: var(--fontSizeBase200);
     font-weight: 600;
     color: var(--colorNeutralForeground3);

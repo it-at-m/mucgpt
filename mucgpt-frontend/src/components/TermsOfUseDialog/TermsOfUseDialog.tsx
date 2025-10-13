@@ -36,7 +36,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                 </li>
                                 <li>
                                     <strong>Erlaubte Nutzung:</strong> MUCGPT darf nur im dienstlichen Kontext genutzt werden. Die Nutzung vergleichbarer
-                                    kommerzieller KI-Produkte (z.B. ChatGPT, Google Bard etc.) ist nicht erlaubt.{" "}
+                                    kommerzieller KI-Produkte (z.B. ChatGPT, Gemini etc.) ist nur mit öffentlichen Daten erlaubt.{" "}
                                 </li>
                                 <li>
                                     <strong>Informationssicherheit und Datenschutz</strong> Bei der Nutzung von MUCGPT dürfen keine personenbezogenen Daten

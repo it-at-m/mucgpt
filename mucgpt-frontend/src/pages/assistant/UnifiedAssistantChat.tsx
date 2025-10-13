@@ -442,7 +442,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 actions={sidebar_actions}
             />
         ),
-        [history, sidebar_assistant_settings]
+        [history, sidebar_assistant_settings, sidebar_actions]
     );
 
     // Examples component

@@ -16,11 +16,7 @@ export const MinimizeSidebarButton = ({ showSidebar, setShowSidebar }: Props) =>
                 style={{ marginLeft: "5px", right: "5px" }}
                 appearance="primary"
                 icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
-                onClick={() => {
-                    const toggled = !showSidebar;
-                    setShowSidebar(toggled);
-                    localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, toggled.toString());
-                }}
+                onClick={() => setShowSidebar(false)}
             />
         </Tooltip>
     );

@@ -107,6 +107,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Aktionen",
+
                             load_assistant_failed: "Assistent konnte nicht geladen werden",
                             assistant_not_found: "Assistent wurde nicht gefunden",
                             load_assistant_failed_message: "Beim Laden des Assistenten ist ein Fehler aufgetreten",
@@ -235,6 +237,7 @@ i18n
                             removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat Einstellungen",
                             temperature: "Temperatur",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
@@ -545,6 +548,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Actions",
+
                             load_assistant_failed: "Assistant could not be loaded",
                             assistant_not_found: "Assistant was not found",
                             load_assistant_failed_message: "An error occurred while loading the assistant",
@@ -673,6 +678,7 @@ i18n
                             removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat Settings",
                             temperature: "Temperature",
                             min_temperature: "conservative",
                             max_temperatur: "creative",
@@ -981,6 +987,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Aktionen",
+
                             load_assistant_failed: "Assistent konnt ned geladen werd'n",
                             assistant_not_found: "Assistent wurde ned g'funden",
                             load_assistant_failed_message: "Beim Laden vom Assistenten is a Fehler aufgetreten",
@@ -1109,6 +1117,7 @@ i18n
                             removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
+                            title: "Ratsch Einstellunga",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
                             temperature: "Temperatur",
@@ -1419,6 +1428,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Actions",
+
                             load_assistant_failed: "L'assistant n'a pas pu être chargé",
                             assistant_not_found: "L'assistant n'a pas été trouvé",
                             load_assistant_failed_message: "Une erreur s'est produite lors du chargement de l'assistant",
@@ -1547,6 +1558,7 @@ i18n
                             removedocument: "Supprimer le document"
                         },
                         chattsettingsdrawer: {
+                            title: "Paramètres de discussion",
                             temperature: "Température",
                             min_temperature: "conservatrice",
                             max_temperatur: "créative",
@@ -1858,6 +1870,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Дії",
+
                             load_assistant_failed: "Не вдалося завантажити асистента",
                             assistant_not_found: "Асистента не знайдено",
                             load_assistant_failed_message: "Сталася помилка під час завантаження асистента",
@@ -1986,6 +2000,7 @@ i18n
                             removedocument: "Видалити документ"
                         },
                         chattsettingsdrawer: {
+                            title: "Налаштування чату",
                             temperature: "Температура",
                             min_temperature: "консервативна",
                             max_temperatur: "креативна",

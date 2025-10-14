@@ -6,13 +6,13 @@ import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
-import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer/AssistantsettingsDrawer";
+import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
-import { ExampleList } from "../../components/Example/ExampleList";
+import { ExampleList } from "../../components/Example";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { ChatOptions } from "../chat/Chat";
@@ -24,7 +24,10 @@ import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistan
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
-import { NotSubscribedDialog } from "../../components/NotSubscribedDialog/NotSubscribedDIalog";
+import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { ClearChatButton } from "../../components/ClearChatButton";
+import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -75,6 +78,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const setAndStoreShowSidebar = (value: boolean) => {
+        setShowSidebar(value);
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
+    };
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
@@ -392,24 +399,48 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, (!showSidebar).toString());
     }, [showSidebar]);
 
-    const sidebar = useMemo(
+    const sidebar_actions = useMemo(
+        () => (
+            <>
+                <ClearChatButton
+                    onClick={clearChat}
+                    disabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy}
+                    showText={showSidebar}
+                />
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
+            </>
+        ),
+        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
+    );
+
+    const sidebar_assistant_settings = useMemo(
         () => (
             <>
                 <AssistantsettingsDrawer
                     assistant={assistantConfig}
                     onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
                     onDeleteAssistant={onDeleteAssistant}
-                    history={history}
-                    minimized={!showSidebar}
                     isOwned={strategy.isOwned}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy}
-                    onToggleMinimized={toggleSidebar}
                     strategy={strategy}
                 ></AssistantsettingsDrawer>
             </>
         ),
         [assistantConfig, onAssistantChanged, onDeleteAssistant, history, showSidebar, strategy.canEdit, strategy.isOwned, strategy]
+    );
+
+    const sidebar = useMemo(
+        () => (
+            <Sidebar
+                content={
+                    <>
+                        {sidebar_assistant_settings}
+                        {history}
+                    </>
+                }
+                actions={sidebar_actions}
+            />
+        ),
+        [history, sidebar_assistant_settings, sidebar_actions]
     );
 
     // Examples component

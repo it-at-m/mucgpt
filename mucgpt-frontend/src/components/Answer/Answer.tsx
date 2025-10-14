@@ -9,7 +9,6 @@ import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
@@ -46,11 +45,11 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
         }
         setProcessedText(
             answer.answer
-                .replace(/\\\[/g, "$$$") // Replace all occurrences of \[ with $$
-                .replace(/\\\]/g, "$$$") // Replace all occurrences of \] with $$
-                .replace(/\\\(/g, "$$$") // Replace all occurrences of \( with $$
-                .replace(/\\\)/g, "$$$")
-        ); // Replace all occurrences of \) with $$
+                .replace(/\\\[/g, "$$") // Replace \[ with $$ (display math start)
+                .replace(/\\\]/g, "$$") // Replace \] with $$ (display math end)
+                .replace(/\\\(/g, "$") // Replace \( with $ (inline math start)
+                .replace(/\\\)/g, "$") // Replace \) with $ (inline math end)
+        );
     }, [answer.answer]); // Run this effect only when the message changes
 
     const remarkMathOptions = {
@@ -114,7 +113,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                     <div className={styles.answerText}>
                         <Markdown
                             remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                            rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
+                            rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
                             components={{
                                 code: CodeBlockRenderer
                             }}

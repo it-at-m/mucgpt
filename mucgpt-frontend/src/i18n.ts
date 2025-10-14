@@ -41,7 +41,8 @@ i18n
                         deleted: "Gelöschte:",
                         deleted_assistants_list: "Gelöschte Community Assistenten",
                         select_assistant_aria: "Assistent auswählen: {{title}}",
-                        share_assistant_aria: "Assistent teilen: {{title}}"
+                        share_assistant_aria: "Assistent teilen: {{title}}",
+                        share: "Teilen"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -479,7 +480,8 @@ i18n
                         deleted: "Deleted:",
                         deleted_assistants_list: "Deleted community assistants",
                         select_assistant_aria: "Select assistant: {{title}}",
-                        share_assistant_aria: "Share assistant: {{title}}"
+                        share_assistant_aria: "Share assistant: {{title}}",
+                        share: "Share"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -913,7 +915,8 @@ i18n
                         deleted: "Glöschte:",
                         deleted_assistants_list: "Glöschte Community-Assistentn",
                         select_assistant_aria: "Assistent aussuacha: {{title}}",
-                        share_assistant_aria: "Assistent teilen: {{title}}"
+                        share_assistant_aria: "Assistent teilen: {{title}}",
+                        share: "Teilen"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -1350,7 +1353,8 @@ i18n
                         deleted: "Supprimés:",
                         deleted_assistants_list: "Assistants communautaires supprimés",
                         select_assistant_aria: "Sélectionner l'assistant : {{title}}",
-                        share_assistant_aria: "Partager l'assistant : {{title}}"
+                        share_assistant_aria: "Partager l'assistant : {{title}}",
+                        share: "Partager"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1788,7 +1792,8 @@ i18n
                         deleted: "Видалені:",
                         deleted_assistants_list: "Видалені асистенти спільноти",
                         select_assistant_aria: "Вибрати асистента: {{title}}",
-                        share_assistant_aria: "Поділитися асистентом: {{title}}"
+                        share_assistant_aria: "Поділитися асистентом: {{title}}",
+                        share: "Поділитися"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",

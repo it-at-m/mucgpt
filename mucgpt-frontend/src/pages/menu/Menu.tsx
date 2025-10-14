@@ -280,7 +280,7 @@ const Menu = () => {
                                         className={styles.boxChoose}
                                         aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
                                     >
-                                        <Share24Regular aria-hidden /> Teilen
+                                        <Share24Regular aria-hidden /> {t("menu.share", "Teilen")}
                                     </Button>
                                 </div>
                             </div>

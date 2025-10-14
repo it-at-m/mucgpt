@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Tooltip } from "@fluentui/react-components";
+import { Button, Tooltip, Card, CardHeader, CardFooter, CardPreview } from "@fluentui/react-components";
 import styles from "./AssistantCard.module.css";
 
 export interface AssistantCardProps {
@@ -43,7 +43,7 @@ export const AssistantCard = ({
     };
 
     const card = (
-        <div
+        <Card
             className={styles.box}
             role="listitem"
             tabIndex={0}
@@ -53,23 +53,31 @@ export const AssistantCard = ({
             onFocus={onFocus ? e => onFocus(id, e) : undefined}
             onBlur={onBlur}
         >
-            <div className={styles.boxHeader} style={titleStyle}>
-                {title}
-            </div>
-            <div className={styles.boxDescription}>{description}</div>
-            {additionalButtons ? (
-                <div className={styles.boxButtons}>
-                    {additionalButtons}
-                    <Button onClick={handleNavigate} className={styles.boxChoose} appearance="primary" aria-label={linkAriaLabel}>
-                        {linkText}
-                    </Button>
-                </div>
-            ) : (
-                <Button onClick={handleNavigate} className={styles.boxChoose} appearance="primary" aria-label={linkAriaLabel}>
-                    {linkText}
-                </Button>
-            )}
-        </div>
+            <CardHeader
+                header={
+                    <div className={styles.boxHeader} style={titleStyle}>
+                        {title}
+                    </div>
+                }
+            />
+            <CardPreview className={styles.boxDescription}>{description}</CardPreview>
+            <CardFooter className={styles.boxFooter}>
+                {additionalButtons ? (
+                    <div className={styles.boxButtons}>
+                        {additionalButtons}
+                        <Button onClick={handleNavigate} appearance="primary" aria-label={linkAriaLabel}>
+                            {linkText}
+                        </Button>
+                    </div>
+                ) : (
+                    <div className={styles.boxButtons}>
+                        <Button onClick={handleNavigate} appearance="primary" aria-label={linkAriaLabel}>
+                            {linkText}
+                        </Button>
+                    </div>
+                )}
+            </CardFooter>
+        </Card>
     );
 
     if (showTooltip) {

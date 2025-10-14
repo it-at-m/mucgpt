@@ -14,11 +14,15 @@ export const FeedbackButton = ({ emailAddress, subject = "Feedback" }: FeedbackB
 
     return (
         <Tooltip content={t("components.feedback.tooltip", "Send us your feedback")} relationship="description" positioning="below">
-            <a href={mailtoLink}>
-                <Button appearance={"subtle"} icon={<Mail24Regular />} aria-label={t("components.feedback.aria_label", "Send feedback via email")}>
-                    {t("components.feedback.label", "Feedback")}
-                </Button>
-            </a>
+            <Button
+                as={"a"}
+                href={mailtoLink}
+                appearance={"subtle"}
+                icon={<Mail24Regular />}
+                aria-label={t("components.feedback.aria_label", "Send feedback via email")}
+            >
+                {t("components.feedback.label", "Feedback")}
+            </Button>
         </Tooltip>
     );
 };

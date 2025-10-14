@@ -2,9 +2,9 @@ import { ChevronDown20Regular, ChevronRight20Regular, Settings24Regular } from "
 import { useId } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { ReactNode, useState } from "react";
-import { Sidebar } from "../Sidebar/Sidebar";
+import { useState } from "react";
 import { ChatSettingsContent } from "./ChatSettingsContent";
+import { useTranslation } from "react-i18next";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
@@ -12,22 +12,13 @@ interface Props {
     setMaxTokens: (maxTokens: number) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
-    actions: ReactNode;
-    content: ReactNode;
 }
 
-export const ChatsettingsDrawer = ({
-    temperature,
-    setTemperature,
-    max_output_tokens,
-    setMaxTokens,
-    systemPrompt,
-    setSystemPrompt,
-    actions,
-    content
-}: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {
+    const { t } = useTranslation();
+
     // State for collapsible sections
-    const [isOverviewExpanded, setIsOverviewExpanded] = useState<boolean>(true);
+    const [isOverviewExpanded, setIsOverviewExpanded] = useState<boolean>(false);
 
     const overviewID = useId("header-overview");
 
@@ -39,21 +30,8 @@ export const ChatsettingsDrawer = ({
         setIsOverviewExpanded(prev => !prev);
     };
 
-    // sidebar action and content
-    const sidebar_action = <div className={styles.actionRow}>{actions}</div>;
-    const sidebar_content = (
+    return (
         <div className={styles.settingsContent}>
-            {/* Title Section */}
-            <div className={styles.titleSection}>
-                <h3 className={styles.settingsTitle}>
-                    <Settings24Regular className={styles.icon} aria-hidden="true" />
-                    Chat Einstellungen
-                </h3>
-            </div>
-
-            {/* Additional content first */}
-            {content && <div className={styles.contentSection}>{content}</div>}
-
             {/* Chat Settings Overview Section */}
             <div className={styles.actionSection}>
                 <div
@@ -67,7 +45,8 @@ export const ChatsettingsDrawer = ({
                     aria-expanded={isOverviewExpanded}
                 >
                     <div className={styles.headerContent}>
-                        <span>Erweiterte Einstellungen</span>
+                        <Settings24Regular />
+                        <span>{t("components.chattsettingsdrawer.title")}</span>
                     </div>
                     <div className={styles.expandCollapseIcon}>{isOverviewExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
                 </div>
@@ -88,6 +67,4 @@ export const ChatsettingsDrawer = ({
             </div>
         </div>
     );
-
-    return <Sidebar actions={sidebar_action} content={sidebar_content}></Sidebar>;
 };

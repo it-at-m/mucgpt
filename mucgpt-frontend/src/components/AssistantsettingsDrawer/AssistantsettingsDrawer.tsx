@@ -7,20 +7,16 @@ import {
     CloudArrowUp24Filled,
     ChevronDown20Regular,
     ChevronRight20Regular,
-    Settings24Regular,
-    ChatAdd24Regular,
-    ChevronDoubleRight20Regular,
-    ChevronDoubleLeft20Regular
+    Settings24Regular
 } from "@fluentui/react-icons";
 import { Button, Tooltip, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
 
 import styles from "./AssistantsettingsDrawer.module.css";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
-import { Sidebar } from "../Sidebar/Sidebar";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
 import { EditAssistantDialog } from "../EditAssistantDialog/EditAssistantDialog";
@@ -35,27 +31,11 @@ interface Props {
     assistant: Assistant;
     onAssistantChange: (assistant: Assistant) => void;
     onDeleteAssistant: () => void;
-    history: ReactNode;
-    minimized: boolean;
-    clearChat: () => void;
-    clearChatDisabled: boolean;
     isOwned?: boolean;
-    onToggleMinimized?: () => void;
     strategy: AssistantStrategy;
 }
 
-export const AssistantsettingsDrawer = ({
-    assistant,
-    onAssistantChange,
-    onDeleteAssistant,
-    history,
-    minimized,
-    isOwned,
-    clearChat,
-    clearChatDisabled,
-    onToggleMinimized,
-    strategy
-}: Props) => {
+export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDeleteAssistant, isOwned, strategy }: Props) => {
     const { t } = useTranslation();
 
     const [description, setDescription] = useState<string>(assistant.description);
@@ -147,26 +127,6 @@ export const AssistantsettingsDrawer = ({
         [showDeleteDialog, onDeleteAssistant, publish, t, saveLocal]
     );
 
-    // actions component
-    const actions_component = useMemo(
-        () => (
-            <Tooltip
-                content={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
-                relationship="description"
-                positioning="below"
-            >
-                <Button
-                    appearance="subtle"
-                    icon={minimized ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
-                    onClick={onToggleMinimized}
-                    className={styles.collapseButton}
-                    aria-label={minimized ? t("components.assistantsettingsdrawer.expand") : t("components.assistantsettingsdrawer.collapse")}
-                />
-            </Tooltip>
-        ),
-        [minimized, t, onToggleMinimized]
-    );
-
     // Publish dialog
     const publishDialog = useMemo(
         () => (
@@ -198,28 +158,17 @@ export const AssistantsettingsDrawer = ({
     );
 
     // sidebar content
-    const content = (
+    return (
         <>
+            {publishDialog}
+            {editDialog}
+            {deleteDialog}
             <div className={styles.titleSection}>
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>
             </div>
             {strategy instanceof DeletedCommunityAssistantStrategy && (
                 <div className={styles.deletedWarning}>{t("components.assistantsettingsdrawer.deleted_warning")}</div>
             )}
-            <div
-                className={styles.actionsHeader}
-                role="heading"
-                aria-level={4}
-                onClick={clearChatDisabled ? undefined : clearChat}
-                aria-disabled={clearChatDisabled}
-                tabIndex={0}
-                onKeyDown={clearChatDisabled ? undefined : e => e.key === "Enter" && clearChat()}
-            >
-                <div className={styles.newChatHeaderContent}>
-                    <ChatAdd24Regular className={styles.actionsIcon} aria-hidden="true" />
-                    <span>{t("common.clear_chat")}</span>
-                </div>
-            </div>
 
             <div className={styles.descriptionSection}>
                 <div className={styles.markdownDescription}>
@@ -235,20 +184,6 @@ export const AssistantsettingsDrawer = ({
                 </div>
             </div>
 
-            <div className={styles.buttonSection}>
-                <Button
-                    appearance="primary"
-                    icon={isOwner ? <Edit24Regular /> : <ChatSettings24Regular />}
-                    onClick={toggleEditDialog}
-                    className={styles.actionButton}
-                    disabled={strategy instanceof DeletedCommunityAssistantStrategy}
-                >
-                    {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
-                </Button>
-            </div>
-
-            <div className={styles.historySection}>{history}</div>
-
             <div className={styles.actionsSection}>
                 <div
                     className={styles.actionsHeader}
@@ -261,13 +196,22 @@ export const AssistantsettingsDrawer = ({
                 >
                     <div className={styles.actionsHeaderContent}>
                         <Settings24Regular className={styles.actionsIcon} aria-hidden="true" />
-                        <span>Aktionen</span>
+                        <span>{t("components.assistant_chat.actions")}</span>
                         <div className={styles.expandCollapseIcon}>{isActionsExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}</div>
                     </div>
                 </div>
 
                 <Collapse visible={isActionsExpanded}>
                     <div className={styles.actionsContent}>
+                        <Button
+                            appearance="primary"
+                            icon={isOwner ? <Edit24Regular /> : <ChatSettings24Regular />}
+                            onClick={toggleEditDialog}
+                            className={styles.actionButton}
+                            disabled={strategy instanceof DeletedCommunityAssistantStrategy}
+                        >
+                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
+                        </Button>
                         <Tooltip content={t("components.assistantsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
                                 appearance="secondary"
@@ -296,10 +240,6 @@ export const AssistantsettingsDrawer = ({
                     </div>
                 </Collapse>
             </div>
-            {publishDialog}
-            {editDialog}
-            {deleteDialog}
         </>
     );
-    return <Sidebar actions={actions_component} content={content}></Sidebar>;
 };

@@ -2,7 +2,7 @@ import styles from "./Menu.module.css";
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip } from "@fluentui/react-components";
+import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData } from "@fluentui/react-components";
 import { useContext, useEffect, useState } from "react";
 
 import { AddAssistantButton } from "../../components/AddAssistantButton";
@@ -18,7 +18,7 @@ import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { Share24Regular, Chat24Regular, Book24Regular } from "@fluentui/react-icons";
+import { Share24Regular, Chat24Regular } from "@fluentui/react-icons";
 import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { getTools } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
@@ -37,6 +37,7 @@ const Menu = () => {
     const [getCommunityAssistants, setGetCommunityAssistants] = useState<boolean>(false);
     const [hoveredAssistantId, setHoveredAssistantId] = useState<string | null>(null);
     const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [selectedTab, setSelectedTab] = useState<string>("local");
 
     const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
     const [question, setQuestion] = useState<string>("");
@@ -165,6 +166,13 @@ const Menu = () => {
     const handleMouseLeave = () => {
         setHoveredAssistantId(null);
     };
+
+    const onTabSelect = (event: SelectTabEvent, data: SelectTabData) => {
+        setSelectedTab(data.value as string);
+        setHoveredAssistantId(null);
+        setHoverPosition({ x: 0, y: 0 });
+    };
+
     return (
         <div role="presentation">
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
@@ -186,6 +194,11 @@ const Menu = () => {
                         question={question}
                     ></QuestionInput>
                 </div>
+                <div className={styles.divider}>
+                    <hr />
+                    <span>{t("menu.or", "oder")}</span>
+                    <hr />
+                </div>
                 <nav className={styles.chatNavigationContainer} aria-label={t("menu.navigation_aria", "Chat Navigation")}>
                     <Tooltip
                         content={t("menu.go_to_chat_tooltip", "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen")}
@@ -202,52 +215,83 @@ const Menu = () => {
                             <span>{t("menu.go_to_chat", "Direkt zum Chat")}</span>
                         </Link>
                     </Tooltip>
-                    <Tooltip
-                        content={t("menu.go_to_tutorials_tooltip", "Tutorials und Anleitungen zu Fragments und Tools")}
-                        relationship="description"
-                        positioning="below"
-                    >
-                        <Link
-                            to="/tutorials"
-                            className={styles.chatNavigationButton}
-                            aria-label={t("menu.go_to_tutorials_aria", "Zu Tutorials und Anleitungen navigieren")}
-                            role="button"
-                        >
-                            <Book24Regular aria-hidden />
-                            <span>{t("menu.go_to_tutorials", "Tutorials")}</span>
-                        </Link>
-                    </Tooltip>
                 </nav>
             </section>
             <section className={styles.container} aria-labelledby="assistants-section">
-                <h2 id="assistants-section" className="sr-only">
-                    {t("menu.assistants_section", "Assistant-Verwaltung")}
-                </h2>
-                <div className={styles.rowheader} role="heading" aria-level={3}>
+                <div id="assistants-section" className={styles.rowheader} role="heading" aria-level={3}>
                     {t("menu.own_assistants")} <AddAssistantButton onClick={onAddAssistant}></AddAssistantButton>
                 </div>
-                <div className={styles.row} role="list" aria-label={t("menu.own_assistants_list", "Eigene Assistants")}>
-                    {assistants.map((assistant: Assistant, key) => (
-                        <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
-                            <div className={styles.box} role="listitem" tabIndex={0}>
-                                <div className={styles.boxHeader}>{assistant.title}</div>
-                                <div className={styles.boxDescription}>{assistant.description}</div>
-                                <Link
-                                    to={`/assistant/${assistant.id}`}
-                                    className={styles.boxChoose}
-                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
-                                >
-                                    {t("menu.select")}
-                                </Link>
+
+                <TabList selectedValue={selectedTab} onTabSelect={onTabSelect}>
+                    <Tab value="local">{t("menu.local")}</Tab>
+                    <Tab value="owned">{t("menu.owned")}</Tab>
+                </TabList>
+
+                {selectedTab === "local" && (
+                    <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
+                        {assistants.map((assistant: Assistant, key) => (
+                            <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
+                                <div className={styles.box} role="listitem" tabIndex={0}>
+                                    <div className={styles.boxHeader}>{assistant.title}</div>
+                                    <div className={styles.boxDescription}>{assistant.description}</div>
+                                    <Link
+                                        to={`/assistant/${assistant.id}`}
+                                        className={styles.boxChoose}
+                                        aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                    >
+                                        {t("menu.select")}
+                                    </Link>
+                                </div>
+                            </Tooltip>
+                        ))}
+                        {assistants.length === 0 && (
+                            <div role="status" aria-live="polite">
+                                {t("menu.no_assistants")}
                             </div>
-                        </Tooltip>
-                    ))}
-                    {assistants.length === 0 && (
-                        <div role="status" aria-live="polite">
-                            {t("menu.no_assistants")}
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
+
+                {selectedTab === "owned" && (
+                    <div className={styles.row} role="list" aria-label={t("menu.owned", "Veröffentlicht in der Community")}>
+                        {ownedCommunityAssistants.map((assistant: AssistantResponse, key) => (
+                            <div
+                                key={key}
+                                className={styles.box}
+                                role="listitem"
+                                tabIndex={0}
+                                onMouseEnter={e => handleMouseEnter(assistant.id, e)}
+                                onMouseLeave={handleMouseLeave}
+                                onFocus={e => handleFocus(assistant.id, e)}
+                                onBlur={handleMouseLeave}
+                            >
+                                <div className={styles.boxHeader}>{assistant.latest_version.name}</div>
+                                <div className={styles.boxDescription}>{assistant.latest_version.description}</div>
+                                <div className={styles.boxButtons}>
+                                    <Link
+                                        to={`owned/communityassistant/${assistant.id}`}
+                                        className={styles.boxChoose}
+                                        aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
+                                    >
+                                        {t("menu.select")}
+                                    </Link>
+                                    <Button
+                                        onClick={() => onShareAssistant(assistant.id)}
+                                        className={styles.boxChoose}
+                                        aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
+                                    >
+                                        <Share24Regular aria-hidden /> {t("menu.share", "Teilen")}
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                        {ownedCommunityAssistants.length === 0 && (
+                            <div role="status" aria-live="polite">
+                                {t("menu.no_assistants")}
+                            </div>
+                        )}
+                    </div>
+                )}
                 <div className={styles.rowheader} role="heading" aria-level={3}>
                     {t("menu.community_assistants")} <SearchCommunityAssistantButton onClick={onSearchAssistant} />
                 </div>
@@ -259,51 +303,7 @@ const Menu = () => {
                     ownedAssistants={ownedCommunityAssistants.map(a => a.id)}
                     subscribedAssistants={communityAssistants.map(a => a.id)}
                 />
-                <div className={styles.subrowheader} role="heading" aria-level={4}>
-                    {t("menu.owned")}
-                </div>
-                <div className={styles.row} role="list" aria-label={t("menu.owned_assistants_list", "Eigene Community Assistants")}>
-                    {ownedCommunityAssistants.map((assistant: AssistantResponse, key) => (
-                        <div
-                            key={key}
-                            className={styles.box}
-                            role="listitem"
-                            tabIndex={0}
-                            onMouseEnter={e => handleMouseEnter(assistant.id, e)}
-                            onMouseLeave={handleMouseLeave}
-                            onFocus={e => handleFocus(assistant.id, e)}
-                            onBlur={handleMouseLeave}
-                        >
-                            <div className={styles.boxHeader}>{assistant.latest_version.name}</div>
-                            <div className={styles.boxDescription}>{assistant.latest_version.description}</div>
-                            <div className={styles.boxButtons}>
-                                <Link
-                                    to={`owned/communityassistant/${assistant.id}`}
-                                    className={styles.boxChoose}
-                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
-                                >
-                                    {t("menu.select")}
-                                </Link>
-                                <Button
-                                    onClick={() => onShareAssistant(assistant.id)}
-                                    className={styles.boxChoose}
-                                    aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
-                                >
-                                    <Share24Regular aria-hidden /> Teilen
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
-                    {ownedCommunityAssistants.length === 0 && (
-                        <div role="status" aria-live="polite">
-                            {t("menu.no_assistants")}
-                        </div>
-                    )}
-                </div>
-                <div className={styles.subrowheader} role="heading" aria-level={4}>
-                    {t("menu.subscribed")}
-                </div>
-                <div className={styles.row} role="list" aria-label={t("menu.subscribed_assistants_list", "Abonnierte Community Assistants")}>
+                <div className={styles.row} role="list" aria-label={t("menu.community_assistants", "Abonnierte Community Assistenten")}>
                     {communityAssistants.map((assistant, key) => (
                         <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
                             <div className={styles.box} role="listitem" tabIndex={0}>

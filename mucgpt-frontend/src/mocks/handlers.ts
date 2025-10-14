@@ -194,7 +194,7 @@ export const handlers = [
     }),
 
     // Replace /api/assistant/create with dynamic builder
-    http.post("/api/assistant/create", async ({ request }) => {
+    http.post("/api/backend/v1/generate/assistant", async ({ request }) => {
         await delay(500);
         const raw = await request.json();
         const body = raw && typeof raw === "object" && (raw as any).latest_version ? (raw as any).latest_version : {};

@@ -25,6 +25,7 @@ import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
 import { getTools, chatApi } from "../../api/core-client";
+import { Sidebar } from "../../components/Sidebar/Sidebar";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -97,6 +98,10 @@ const Chat = () => {
     const [showSidebar, setShowSidebar] = useState<boolean>(
         localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
+    const setAndStoreShowSidebar = (value: boolean) => {
+        setShowSidebar(value);
+        localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
+    };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
@@ -537,41 +542,39 @@ const Chat = () => {
         () => (
             <>
                 <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current} showText={showSidebar} />
-                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setShowSidebar} />
+                <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
             </>
         ),
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-    const sidebar_content = useMemo(
+    const sidebar_history = useMemo(
         () => (
-            <>
-                <History
-                    allChats={allChats}
-                    currentActiveChatId={activeChatRef.current}
-                    onDeleteChat={async id => {
-                        await storageService.delete(id);
-                        await fetchHistory();
-                    }}
-                    onChatNameChange={async (id, name: string) => {
-                        const newName = prompt(t("components.history.newchat"), name);
-                        await storageService.renameChat(id, newName ? newName.trim() : name);
-                        await fetchHistory();
-                    }}
-                    onFavChange={async (id: string, fav: boolean) => {
-                        await storageService.changeFavouritesInDb(id, fav);
-                        await fetchHistory();
-                    }}
-                    onSelect={async (id: string) => {
-                        loadChat(id);
-                    }}
-                ></History>
-            </>
+            <History
+                allChats={allChats}
+                currentActiveChatId={activeChatRef.current}
+                onDeleteChat={async id => {
+                    await storageService.delete(id);
+                    await fetchHistory();
+                }}
+                onChatNameChange={async (id, name: string) => {
+                    const newName = prompt(t("components.history.newchat"), name);
+                    await storageService.renameChat(id, newName ? newName.trim() : name);
+                    await fetchHistory();
+                }}
+                onFavChange={async (id: string, fav: boolean) => {
+                    await storageService.changeFavouritesInDb(id, fav);
+                    await fetchHistory();
+                }}
+                onSelect={async (id: string) => {
+                    loadChat(id);
+                }}
+            ></History>
         ),
         [allChats, activeChatRef.current, fetchHistory, storageService, loadChat, t]
     );
 
-    const sidebar = useMemo(
+    const sidebar_chat_settings = useMemo(
         () => (
             <ChatsettingsDrawer
                 temperature={temperature}
@@ -580,11 +583,24 @@ const Chat = () => {
                 setMaxTokens={onMaxTokensChanged}
                 systemPrompt={systemPrompt}
                 setSystemPrompt={onSystemPromptChanged}
-                actions={sidebar_actions}
-                content={sidebar_content}
             />
         ),
-        [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged, sidebar_actions, sidebar_content]
+        [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged]
+    );
+
+    const sidebar = useMemo(
+        () => (
+            <Sidebar
+                actions={sidebar_actions}
+                content={
+                    <>
+                        {sidebar_chat_settings}
+                        {sidebar_history}
+                    </>
+                }
+            ></Sidebar>
+        ),
+        [sidebar_actions, sidebar_history, sidebar_chat_settings]
     );
     const layout = useMemo(
         () => (
@@ -602,7 +618,7 @@ const Chat = () => {
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setShowSidebar(!showSidebar)}
+                    onToggleMinimized={() => setAndStoreShowSidebar(true)}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />

@@ -2,7 +2,6 @@ import { ArrowMaximize24Filled, ArrowMinimize24Filled } from "@fluentui/react-ic
 import { Button, Tooltip } from "@fluentui/react-components";
 
 import { useTranslation } from "react-i18next";
-import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 interface Props {
     showSidebar: boolean;
     setShowSidebar: (showSidebar: boolean) => void;
@@ -16,11 +15,7 @@ export const MinimizeSidebarButton = ({ showSidebar, setShowSidebar }: Props) =>
                 style={{ marginLeft: "5px", right: "5px" }}
                 appearance="primary"
                 icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}
-                onClick={() => {
-                    const toggled = !showSidebar;
-                    setShowSidebar(toggled);
-                    localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, toggled.toString());
-                }}
+                onClick={() => setShowSidebar(false)}
             />
         </Tooltip>
     );

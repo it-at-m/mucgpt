@@ -1,4 +1,4 @@
-import { BotAdd24Regular } from "@fluentui/react-icons";
+import { Search24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 
 import styles from "./SearchCommunityAssistantButton.module.css";
@@ -15,7 +15,7 @@ export const SearchCommunityAssistantButton = ({ onClick }: Props) => {
                 <Button
                     appearance="secondary"
                     aria-label={t("components.search_assistant_button.search_assistants")}
-                    icon={<BotAdd24Regular className={styles.iconLeftMargin} />}
+                    icon={<Search24Regular className={styles.iconLeftMargin} />}
                     onClick={onClick}
                     size="large"
                 >

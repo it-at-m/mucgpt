@@ -22,29 +22,27 @@ i18n
                         create_assistant: "Assistent erstellen"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu MUCGPT anzeigen",
-                        go_to_tutorials: "Lerne MUCGPT kennen",
-                        go_to_tutorials_aria: "Tutorials und Anleitungen zu MUCGPT",
+                        go_to_tutorials_tooltip: "Lerne, wie MUCGPT und Sprachmodelle im allgemeinen funktionieren",
+                        go_to_tutorials: "Über MUCGPT",
+                        go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
+                        or: "oder",
                         chat_header: "Hallo {{user}}, was hast du heute vor?",
-                        own_assistants: "Lokale Assistenten",
-                        community_assistants: "Community Assistenten",
+                        own_assistants: "Eigene Assistenten",
+                        community_assistants: "Assistenten aus der Community",
                         no_assistants: "Keine Assistenten gefunden",
                         soon: "In Entwicklung...",
-                        owned: "Eigene:",
-                        subscribed: "Abonnierte:",
+                        owned: "Veröffentlicht in der Community",
                         select: "Auswählen",
+                        local: "Lokal",
                         navigation_aria: "Chat Navigation",
                         go_to_chat: "Direkt zum Chat",
                         go_to_chat_tooltip: "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen",
                         go_to_chat_aria: "Direkt zum Chat navigieren",
-                        assistants_section: "Assistenten-Verwaltung",
-                        own_assistants_list: "Eigene Assistenten",
-                        owned_assistants_list: "Eigene Community Assistenten",
-                        subscribed_assistants_list: "Abonnierte Community Assistenten",
                         deleted: "Gelöschte:",
                         deleted_assistants_list: "Gelöschte Community Assistenten",
                         select_assistant_aria: "Assistent auswählen: {{title}}",
-                        share_assistant_aria: "Assistent teilen: {{title}}"
+                        share_assistant_aria: "Assistent teilen: {{title}}",
+                        share: "Teilen"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -109,6 +107,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Aktionen",
+
                             load_assistant_failed: "Assistent konnte nicht geladen werden",
                             assistant_not_found: "Assistent wurde nicht gefunden",
                             load_assistant_failed_message: "Beim Laden des Assistenten ist ein Fehler aufgetreten",
@@ -237,6 +237,7 @@ i18n
                             removedocument: "Dokument löschen"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat Einstellungen",
                             temperature: "Temperatur",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
@@ -308,7 +309,7 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Erstelle deinen eigenen Assistenten"
+                            add_assistant: "Neuer Assistent"
                         },
                         create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
@@ -410,11 +411,11 @@ i18n
                             publish_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich veröffentlicht"
                         },
                         search_assistant_button: {
-                            search_assistants: "Assistenten durchsuchen"
+                            search_assistants: "Assistenten suchen"
                         },
                         community_assistants: {
                             title: "Community Assistenten", // Deutsch
-                            search: "Assistenten durchsuchen",
+                            search: "Assistenten suchen",
                             filter_by_tag: "Nach Tag filtern",
                             sort_by: "Sortieren nach",
                             sort_title: "Titel",
@@ -463,29 +464,27 @@ i18n
                         create_assistant: "Create assistant"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Show tutorials and guides for MUCGPT",
-                        go_to_tutorials: "Get to know MUCGPT",
-                        go_to_tutorials_aria: "Tutorials and guides for MUCGPT",
+                        go_to_tutorials_tooltip: "Learn how MUCGPT and language models work in general",
+                        go_to_tutorials: "About MUCGPT",
+                        go_to_tutorials_aria: "Navigate to tutorials and guides",
+                        or: "or",
                         chat_header: "Hello {{user}}, what are you planning today?",
-                        own_assistants: "Local Assistants", // Englisch
+                        own_assistants: "Own Assistants",
                         community_assistants: "Community Assistants",
                         no_assistants: "No Assistants found",
                         soon: "In Development...",
-                        owned: "Owned:",
-                        subscribed: "Subscribed:",
+                        owned: "Published in the Community",
+                        local: "Local",
                         select: "Select",
                         navigation_aria: "Chat navigation",
                         go_to_chat: "Go to chat",
                         go_to_chat_tooltip: "Navigate directly to chat page without entering a question",
                         go_to_chat_aria: "Navigate directly to chat",
-                        assistants_section: "Assistant management",
-                        own_assistants_list: "Your assistants",
-                        owned_assistants_list: "Your community assistants",
-                        subscribed_assistants_list: "Subscribed community assistants",
                         deleted: "Deleted:",
                         deleted_assistants_list: "Deleted community assistants",
                         select_assistant_aria: "Select assistant: {{title}}",
-                        share_assistant_aria: "Share assistant: {{title}}"
+                        share_assistant_aria: "Share assistant: {{title}}",
+                        share: "Share"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -549,6 +548,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Actions",
+
                             load_assistant_failed: "Assistant could not be loaded",
                             assistant_not_found: "Assistant was not found",
                             load_assistant_failed_message: "An error occurred while loading the assistant",
@@ -677,6 +678,7 @@ i18n
                             removedocument: "Delete document"
                         },
                         chattsettingsdrawer: {
+                            title: "Chat Settings",
                             temperature: "Temperature",
                             min_temperature: "conservative",
                             max_temperatur: "creative",
@@ -748,7 +750,7 @@ i18n
                             more: "more"
                         },
                         add_assistant_button: {
-                            add_assistant: "Create your own assistant"
+                            add_assistant: "New assistant"
                         },
                         create_assistant_dialog: {
                             what_function: "What should your assistant be able to do?",
@@ -900,30 +902,27 @@ i18n
                         create_assistant: "Assistenten erstoin"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Zeig Tutorials und Anleitungen für MUCGPT",
-                        go_to_tutorials: "Lerne MUCGPT lernen",
-
-                        go_to_tutorials_aria: "Tutorials und Anleitungen für MUCGPT",
+                        go_to_tutorials_tooltip: "Lern, wia MUCGPT und Sprachmodelle im Allgemeinen funktioniern",
+                        go_to_tutorials: "Über MUCGPT",
+                        go_to_tutorials_aria: "Zu Tutorials und Anleitunga navigiern",
+                        or: "oder",
                         chat_header: "Griaß di {{user}}, wos host heid vor?",
-                        own_assistants: "Lokale Assitentn", // Bairisch
-                        community_assistants: "Community Assistentn",
+                        own_assistants: "Eigne Assistentn", // Bairisch
+                        community_assistants: "Assistentn aus da Gmoa",
                         no_assistants: "Koane Assitentn gfundn",
                         soon: "In Entwicklung...",
-                        owned: "Eigene:",
-                        subscribed: "Abonnierte:",
+                        owned: "In da Gmoa veröfentlicht",
+                        local: "Lokal",
                         select: "Auswähln",
                         navigation_aria: "Chat-Navigation",
                         go_to_chat: "Glei zum Chat",
                         go_to_chat_tooltip: "Glei auf’d Chat-Seit geh, ganz ohne Frog eingeben",
                         go_to_chat_aria: "Glei zum Chat geh",
-                        assistants_section: "Assistenten-Verwaltung",
-                        own_assistants_list: "Deina Assistentn",
-                        owned_assistants_list: "Deina Community-Assistentn",
-                        subscribed_assistants_list: "Abonniert Community-Assistentn",
                         deleted: "Glöschte:",
                         deleted_assistants_list: "Glöschte Community-Assistentn",
                         select_assistant_aria: "Assistent aussuacha: {{title}}",
-                        share_assistant_aria: "Assistent teilen: {{title}}"
+                        share_assistant_aria: "Assistent teilen: {{title}}",
+                        share: "Teilen"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -988,6 +987,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Aktionen",
+
                             load_assistant_failed: "Assistent konnt ned geladen werd'n",
                             assistant_not_found: "Assistent wurde ned g'funden",
                             load_assistant_failed_message: "Beim Laden vom Assistenten is a Fehler aufgetreten",
@@ -1116,6 +1117,7 @@ i18n
                             removedocument: "Dokument löschn"
                         },
                         chattsettingsdrawer: {
+                            title: "Ratsch Einstellunga",
                             min_temperature: "konservativ",
                             max_temperatur: "kreativ",
                             temperature: "Temperatur",
@@ -1187,7 +1189,7 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Erstell dein eigenen Assistenten"
+                            add_assistant: "Neia Assistent"
                         },
                         create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
@@ -1341,29 +1343,27 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Afficher les tutoriels et guides pour MUCGPT",
-                        go_to_tutorials: "Découvrez MUCGPT",
-                        go_to_tutorials_aria: "Tutoriels et guides pour MUCGPT",
+                        go_to_tutorials_tooltip: "Découvrez comment MUCGPT et les modèles de langage fonctionnent en général",
+                        go_to_tutorials: "À propos de MUCGPT",
+                        go_to_tutorials_aria: "Naviguer vers les tutoriels et les guides",
+                        or: "ou",
                         chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
-                        own_assistants: "Assistants Locaux", // French
-                        community_assistants: "Assistants Communautaires",
+                        own_assistants: "Assistants Personnels",
+                        community_assistants: "Assistants de la Communauté",
                         no_assistants: "Aucun Assistant trouvé",
                         soon: "En Développement...",
-                        owned: "Possédés:",
-                        subscribed: "Abonnés:",
+                        owned: "Publiés dans la Communauté",
+                        local: "Local",
                         select: "Sélectionner",
                         navigation_aria: "Navigation du chat",
                         go_to_chat: "Aller au chat",
                         go_to_chat_tooltip: "Accéder directement à la page du chat sans saisir de question",
                         go_to_chat_aria: "Accéder directement au chat",
-                        assistants_section: "Gestion des assistants",
-                        own_assistants_list: "Vos assistants",
-                        owned_assistants_list: "Vos assistants communautaires",
-                        subscribed_assistants_list: "Assistants communautaires abonnés",
                         deleted: "Supprimés:",
                         deleted_assistants_list: "Assistants communautaires supprimés",
                         select_assistant_aria: "Sélectionner l'assistant : {{title}}",
-                        share_assistant_aria: "Partager l'assistant : {{title}}"
+                        share_assistant_aria: "Partager l'assistant : {{title}}",
+                        share: "Partager"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1428,6 +1428,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Actions",
+
                             load_assistant_failed: "L'assistant n'a pas pu être chargé",
                             assistant_not_found: "L'assistant n'a pas été trouvé",
                             load_assistant_failed_message: "Une erreur s'est produite lors du chargement de l'assistant",
@@ -1556,6 +1558,7 @@ i18n
                             removedocument: "Supprimer le document"
                         },
                         chattsettingsdrawer: {
+                            title: "Paramètres de discussion",
                             temperature: "Température",
                             min_temperature: "conservatrice",
                             max_temperatur: "créative",
@@ -1627,7 +1630,7 @@ i18n
                             more: "plus"
                         },
                         add_assistant_button: {
-                            add_assistant: "Crée ton propre assistant"
+                            add_assistant: "nouvel assistant"
                         },
                         create_assistant_dialog: {
                             what_function: "Que doit pouvoir faire votre assistant?",
@@ -1782,29 +1785,27 @@ i18n
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Показати посібники та інструкції для MUCGPT",
-                        go_to_tutorials: "Познайомтеся з MUCGPT",
-                        go_to_tutorials_aria: "Посібники та інструкції для MUCGPT",
+                        go_to_tutorials_tooltip: "Дізнайтеся, як працюють MUCGPT та мовні моделі загалом",
+                        go_to_tutorials: "Про MUCGPT",
+                        go_to_tutorials_aria: "Перейти до навчальних посібників та інструкцій",
+                        or: "або",
                         chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
-                        own_assistants: "Локальні Асистенти", // Ukrainisch
-                        community_assistants: "Громадські Асистенти",
+                        own_assistants: "Власні Асистенти",
+                        community_assistants: "Асистенти Спільноти",
                         no_assistants: "Асистентів не знайдено",
                         soon: "В розробці...",
-                        owned: "Власні:",
-                        subscribed: "Підписані:",
+                        owned: "Опубліковано в Спільноті",
+                        local: "Локальний",
                         select: "Вибрати",
                         navigation_aria: "Навігація чату",
                         go_to_chat: "Перейти до чату",
                         go_to_chat_tooltip: "Перейти прямо на сторінку чату без введення питання",
                         go_to_chat_aria: "Перейти прямо до чату",
-                        assistants_section: "Управління асистентами",
-                        own_assistants_list: "Ваші асистенти",
-                        owned_assistants_list: "Ваші асистенти спільноти",
-                        subscribed_assistants_list: "Підписані асистенти спільноти",
                         deleted: "Видалені:",
                         deleted_assistants_list: "Видалені асистенти спільноти",
                         select_assistant_aria: "Вибрати асистента: {{title}}",
-                        share_assistant_aria: "Поділитися асистентом: {{title}}"
+                        share_assistant_aria: "Поділитися асистентом: {{title}}",
+                        share: "Поділитися"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
@@ -1869,6 +1870,8 @@ i18n
                     },
                     components: {
                         assistant_chat: {
+                            actions: "Дії",
+
                             load_assistant_failed: "Не вдалося завантажити асистента",
                             assistant_not_found: "Асистента не знайдено",
                             load_assistant_failed_message: "Сталася помилка під час завантаження асистента",
@@ -1997,6 +2000,7 @@ i18n
                             removedocument: "Видалити документ"
                         },
                         chattsettingsdrawer: {
+                            title: "Налаштування чату",
                             temperature: "Температура",
                             min_temperature: "консервативна",
                             max_temperatur: "креативна",
@@ -2068,7 +2072,7 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "Створи свого власного асистента"
+                            add_assistant: "новий асистент"
                         },
                         create_assistant_dialog: {
                             what_function: "Що має вміти ваш асистент?",

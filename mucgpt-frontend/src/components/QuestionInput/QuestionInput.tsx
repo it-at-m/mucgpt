@@ -35,6 +35,9 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
         const resizeTextarea = () => {
             const textarea = textareaRef.current;
             if (textarea) {
+                // Check if textarea currently has focus
+                const hadFocus = document.activeElement === textarea;
+
                 // Store current cursor position
                 const selectionStart = textarea.selectionStart;
                 const selectionEnd = textarea.selectionEnd;
@@ -46,9 +49,11 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                 const newHeight = textarea.scrollHeight;
                 textarea.style.height = `${newHeight}px`;
 
-                // Restore focus and cursor position
-                textarea.focus();
-                textarea.setSelectionRange(selectionStart, selectionEnd);
+                // Only restore focus and cursor position if textarea had focus before
+                if (hadFocus) {
+                    textarea.focus();
+                    textarea.setSelectionRange(selectionStart, selectionEnd);
+                }
             }
         };
 

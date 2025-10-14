@@ -3,6 +3,13 @@
     z-index: 1050 !important;
 }
 
+/* Toast Background - Target Fluent UI's toast classes */
+.globalToastHandler :global(.fui-Toast) {
+    background-color: var(--colorNeutralBackground1, #ffffff);
+    box-shadow: var(--shadow16, 0 8px 16px rgba(0, 0, 0, 0.14));
+    border: 1px solid var(--colorNeutralStroke2, #e0e0e0);
+}
+
 .toastTitleContainer {
     display: flex;
     align-items: center;
@@ -15,31 +22,4 @@
 .warningIcon,
 .infoIcon {
     font-size: 16px;
-}
-
-/* Make toast backgrounds more visible */
-:global(.fui-Toast[data-intent="success"]) {
-    background: rgba(255, 255, 255, 0.95);
-}
-
-:global(.fui-Toast[data-intent="error"]) {
-    background: rgba(255, 255, 255, 0.95);
-}
-
-:global(.fui-Toast[data-intent="warning"]) {
-    background: rgba(255, 255, 255, 0.95);
-}
-
-:global(.fui-Toast[data-intent="info"]) {
-    background: rgba(255, 255, 255, 0.95);
-}
-
-/* Dark theme */
-@media (prefers-color-scheme: dark) {
-    :global(.fui-Toast[data-intent="success"]),
-    :global(.fui-Toast[data-intent="error"]),
-    :global(.fui-Toast[data-intent="warning"]),
-    :global(.fui-Toast[data-intent="info"]) {
-        background: rgba(32, 32, 32, 0.98);
-    }
 }

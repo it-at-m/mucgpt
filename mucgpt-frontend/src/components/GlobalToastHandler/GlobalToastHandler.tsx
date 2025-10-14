@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Link } from "@fluentui/react-components";
-import { CheckmarkCircle20Filled, ErrorCircle20Filled, Info20Filled, Warning20Filled, Dismiss20Regular } from "@fluentui/react-icons";
+import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button } from "@fluentui/react-components";
+import { Dismiss20Regular } from "@fluentui/react-icons";
 import styles from "./GlobalToastHandler.module.css";
 
 export interface ToastMessage {
@@ -31,20 +31,6 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
                 return;
             }
 
-            const getIcon = () => {
-                switch (message.type) {
-                    case "success":
-                        return <CheckmarkCircle20Filled className={styles.successIcon} />;
-                    case "error":
-                        return <ErrorCircle20Filled className={styles.errorIcon} />;
-                    case "warning":
-                        return <Warning20Filled className={styles.warningIcon} />;
-                    case "info":
-                    default:
-                        return <Info20Filled className={styles.infoIcon} />;
-                }
-            };
-
             const getIntent = () => {
                 switch (message.type) {
                     case "success":
@@ -64,16 +50,11 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
                     <ToastTitle
                         action={
                             <ToastTrigger>
-                                <Link>
-                                    <Dismiss20Regular />
-                                </Link>
+                                <Button appearance="subtle" icon={<Dismiss20Regular />} aria-label="Dismiss toast" />
                             </ToastTrigger>
                         }
                     >
-                        <div className={styles.toastTitleContainer}>
-                            {getIcon()}
-                            <span>{message.title}</span>
-                        </div>
+                        {message.title}
                     </ToastTitle>
                     {message.message && <ToastBody>{message.message}</ToastBody>}
                 </Toast>,

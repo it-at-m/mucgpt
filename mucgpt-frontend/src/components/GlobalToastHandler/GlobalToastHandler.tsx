@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
-import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody } from "@fluentui/react-components";
-import { CheckmarkCircle20Filled, ErrorCircle20Filled, Info20Filled, Warning20Filled } from "@fluentui/react-icons";
+import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Link } from "@fluentui/react-components";
+import { CheckmarkCircle20Filled, ErrorCircle20Filled, Info20Filled, Warning20Filled, Dismiss20Regular } from "@fluentui/react-icons";
 import styles from "./GlobalToastHandler.module.css";
 
 export interface ToastMessage {
@@ -61,13 +61,21 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
 
             dispatchToast(
                 <Toast>
-                    <ToastTitle>
-                        <div className={`${styles.toastTitleContainer} ${styles[`${message.type}ToastTitle`]}`}>
+                    <ToastTitle
+                        action={
+                            <ToastTrigger>
+                                <Link>
+                                    <Dismiss20Regular />
+                                </Link>
+                            </ToastTrigger>
+                        }
+                    >
+                        <div className={styles.toastTitleContainer}>
                             {getIcon()}
-                            <span className={styles.toastTitle}>{message.title}</span>
+                            <span>{message.title}</span>
                         </div>
                     </ToastTitle>
-                    {message.message && <ToastBody className={styles.toastBody}>{message.message}</ToastBody>}
+                    {message.message && <ToastBody>{message.message}</ToastBody>}
                 </Toast>,
                 {
                     intent: getIntent(),

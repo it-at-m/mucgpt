@@ -179,7 +179,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                                 size="large"
                                 appearance={"subtle"}
                                 icon={<Send28Filled />}
-                                aria-label={placeholder}
+                                aria-label={t("components.questioninput.send_question", "Frage senden")}
                                 disabled={disabled || !question.trim()}
                                 onClick={sendQuestion}
                             />

@@ -232,7 +232,8 @@ i18n
                             toolsselectorbutton_tooltip: "Werkzeuge auswählen",
                             tutorial_help: "Tutorial öffnen",
                             tool_header: "Zusätzliche Tools zu wählen:",
-                            tutorial_help_aria: "Tutorial für {{tool}} öffnen"
+                            tutorial_help_aria: "Tutorial für {{tool}} öffnen",
+                            send_question: "Frage senden"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -676,7 +677,8 @@ i18n
                             toolsselectorbutton_tooltip: "Select tools",
                             tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
-                            tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} "
+                            tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
+                            send_question: "Send question"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1118,7 +1120,8 @@ i18n
                             toolsselectorbutton_tooltip: "Werkzeig aussuachn",
                             tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
-                            tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn"
+                            tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
+                            send_question: "Froog senden"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1562,7 +1565,8 @@ i18n
                             toolsselectorbutton_tooltip: "Sélectionner des outils",
                             tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
-                            tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}"
+                            tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
+                            send_question: "Envoyer la question"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2007,7 +2011,8 @@ i18n
                             toolsselectorbutton_tooltip: "Вибрати інструменти",
                             tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
-                            tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}"
+                            tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
+                            send_question: "Надіслати питання"
                         },
                         suminput: {
                             tokensused: "Використано токени",

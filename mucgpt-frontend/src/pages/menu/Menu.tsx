@@ -218,7 +218,7 @@ const Menu = () => {
                 </nav>
             </section>
             <section className={styles.container} aria-labelledby="assistants-section">
-                <div className={styles.rowheader} role="heading" aria-level={3}>
+                <div id="assistants-section" className={styles.rowheader} role="heading" aria-level={3}>
                     {t("menu.own_assistants")} <AddAssistantButton onClick={onAddAssistant}></AddAssistantButton>
                 </div>
 

@@ -239,6 +239,7 @@ const Menu = () => {
                                 linkTo={`/assistant/${assistant.id}`}
                                 linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
                                 linkText={t("menu.select")}
+                                role="listitem"
                                 showTooltip={true}
                             />
                         ))}
@@ -261,6 +262,7 @@ const Menu = () => {
                                 linkTo={`owned/communityassistant/${assistant.id}`}
                                 linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
                                 linkText={t("menu.select")}
+                                role="listitem"
                                 showTooltip={false}
                                 onMouseEnter={handleMouseEnter}
                                 onMouseLeave={handleMouseLeave}
@@ -313,6 +315,7 @@ const Menu = () => {
                             linkTo={`communityassistant/${assistant.id}`}
                             linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
                             linkText={t("menu.select")}
+                            role="listitem"
                             showTooltip={true}
                         />
                     ))}
@@ -337,6 +340,7 @@ const Menu = () => {
                                     linkTo={`deleted/communityassistant/${assistant.id}`}
                                     linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
                                     linkText={t("menu.select")}
+                                    role="listitem"
                                     showTooltip={true}
                                     style={{ opacity: 0.5 }}
                                     titleStyle={{ color: "red" }}

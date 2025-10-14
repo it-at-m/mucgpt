@@ -12,6 +12,7 @@ export interface AssistantCardProps {
     linkText?: string;
     additionalButtons?: ReactNode;
     showTooltip?: boolean;
+    role?: string;
     style?: React.CSSProperties;
     titleStyle?: React.CSSProperties;
     onMouseEnter?: (id: string, event: React.MouseEvent) => void;
@@ -29,6 +30,7 @@ export const AssistantCard = ({
     linkText = "Auswählen",
     additionalButtons,
     showTooltip = true,
+    role,
     style,
     titleStyle,
     onMouseEnter,
@@ -45,7 +47,7 @@ export const AssistantCard = ({
     const card = (
         <Card
             className={styles.box}
-            role="listitem"
+            role={role}
             tabIndex={0}
             style={style}
             onMouseEnter={onMouseEnter ? e => onMouseEnter(id, e) : undefined}
@@ -62,20 +64,12 @@ export const AssistantCard = ({
             />
             <CardPreview className={styles.boxDescription}>{description}</CardPreview>
             <CardFooter className={styles.boxFooter}>
-                {additionalButtons ? (
-                    <div className={styles.boxButtons}>
-                        {additionalButtons}
-                        <Button onClick={handleNavigate} appearance="primary" aria-label={linkAriaLabel}>
-                            {linkText}
-                        </Button>
-                    </div>
-                ) : (
-                    <div className={styles.boxButtons}>
-                        <Button onClick={handleNavigate} appearance="primary" aria-label={linkAriaLabel}>
-                            {linkText}
-                        </Button>
-                    </div>
-                )}
+                <div className={styles.boxButtons}>
+                    {additionalButtons}
+                    <Button onClick={handleNavigate} appearance="primary" aria-label={linkAriaLabel}>
+                        {linkText}
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
     );

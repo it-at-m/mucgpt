@@ -1,5 +1,5 @@
 import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Send28Filled, Checkmark24Regular } from "@fluentui/react-icons";
+import { Send28Filled, Checkmark24Regular, QuestionCircle16Regular } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,13 @@ interface Props {
     setSelectedTools?: (tools: string[]) => void;
     tools?: ToolListResponse;
 }
+
+// Map tool IDs to their tutorial routes
+const TOOL_TUTORIAL_MAP: Record<string, string> = {
+    Brainstorming: "/tutorials/brainstorm",
+    Vereinfachen: "/tutorials/simplify"
+    // Add more tool-to-tutorial mappings here as needed
+};
 
 export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, question, setQuestion, selectedTools, setSelectedTools, tools }: Props) => {
     const { t } = useTranslation();
@@ -102,6 +109,14 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
         [selectedTools, setSelectedTools]
     );
 
+    const openTutorial = useCallback((toolId: string, event: React.MouseEvent) => {
+        event.stopPropagation(); // Prevent toggling the tool
+        const tutorialRoute = TOOL_TUTORIAL_MAP[toolId];
+        if (tutorialRoute) {
+            window.open(`#${tutorialRoute}`, "_blank");
+        }
+    }, []);
+
     return (
         <>
             <div className={styles.questionInputWrapper}>
@@ -111,17 +126,30 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                         <span className={styles.toolBadgesLabel}>Zusätzliche Tools zu wählen:</span>
                         {tools.tools.map(tool => {
                             const isSelected = selectedTools.includes(tool.id);
+                            const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
                             return (
-                                <Button
-                                    key={tool.id}
-                                    appearance={isSelected ? "primary" : "secondary"}
-                                    size="medium"
-                                    className={styles.toolButton}
-                                    onClick={() => toggleTool(tool.id)}
-                                    icon={isSelected ? <Checkmark24Regular /> : undefined}
-                                >
-                                    {tool.id}
-                                </Button>
+                                <div key={tool.id} className={styles.toolButtonWrapper}>
+                                    <Button
+                                        appearance={isSelected ? "primary" : "secondary"}
+                                        size="medium"
+                                        className={styles.toolButton}
+                                        onClick={() => toggleTool(tool.id)}
+                                        icon={isSelected ? <Checkmark24Regular /> : undefined}
+                                    >
+                                        {tool.id}
+                                    </Button>
+                                    {hasTutorial && (
+                                        <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
+                                            <button
+                                                className={styles.toolHelpButton}
+                                                onClick={e => openTutorial(tool.id, e)}
+                                                aria-label={`Open tutorial for ${tool.id}`}
+                                            >
+                                                <QuestionCircle16Regular />
+                                            </button>
+                                        </Tooltip>
+                                    )}
+                                </div>
                             );
                         })}
                     </div>

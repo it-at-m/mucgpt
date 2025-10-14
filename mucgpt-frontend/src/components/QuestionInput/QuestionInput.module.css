@@ -104,6 +104,37 @@
     transition: all 0.2s ease;
 }
 
+.toolButtonWrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+}
+
+.toolHelpButton {
+    background: none;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--colorNeutralForeground3);
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+}
+
+.toolHelpButton:hover {
+    color: var(--colorBrandForeground1);
+    background: var(--colorNeutralBackground1Hover);
+}
+
+.toolHelpButton:active {
+    transform: scale(0.95);
+}
+
 @media (max-width: 768px) {
     .questionInputContainer {
         padding: 8px 4px 8px 12px;

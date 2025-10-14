@@ -7,7 +7,7 @@
     min-height: 140px;
     margin-right: 10px;
     margin-left: 10px;
-    color: var(--colorNeutralBackround1Hover);
+    color: var(--colorNeutralBackground1Hover);
     text-decoration: none;
     opacity: 0.9;
     font-size: var(--fontSizeBase400);

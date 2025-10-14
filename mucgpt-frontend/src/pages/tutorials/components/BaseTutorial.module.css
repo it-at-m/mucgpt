@@ -60,7 +60,7 @@
     height: auto;
     min-height: 120px;
     border-radius: 8px;
-    color: var(--colorNeutralBackround1Hover);
+    color: var(--colorNeutralBackground1Hover);
     text-decoration: none;
     opacity: 0.9;
     background: var(--colorNeutralBackground4);

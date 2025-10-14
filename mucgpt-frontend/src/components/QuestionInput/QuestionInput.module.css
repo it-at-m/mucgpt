@@ -38,7 +38,14 @@
 }
 
 .questionInputContainer:focus-within {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    outline: 2px solid var(--colorBrandForeground2);
+    outline-offset: 2px;
+    transition:
+        box-shadow 0.15s ease,
+        outline 0.15s ease,
+        transform 0.15s ease;
 }
 
 .noTools {

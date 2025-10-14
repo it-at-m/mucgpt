@@ -231,7 +231,8 @@ i18n
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
                             toolsselectorbutton_tooltip: "Werkzeuge auswählen",
                             tutorial_help: "Tutorial öffnen",
-                            tool_header: "Zusätzliche Tools zu wählen:"
+                            tool_header: "Zusätzliche Tools zu wählen:",
+                            tutorial_help_aria: "Tutorial für {{tool}} öffnen"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -674,7 +675,8 @@ i18n
                             errorhint: "MUCGPT can make errors. Verify important information.",
                             toolsselectorbutton_tooltip: "Select tools",
                             tutorial_help: "Open tutorial",
-                            tool_header: "Choose additional tools:"
+                            tool_header: "Choose additional tools:",
+                            tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} "
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1115,7 +1117,8 @@ i18n
                             errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
                             toolsselectorbutton_tooltip: "Werkzeig aussuachn",
                             tutorial_help: "Tutorial aufmachn",
-                            tool_header: "Wuißd no mehr Werkzeig nutzn: "
+                            tool_header: "Zusätzliche Werkzeig auswähln:",
+                            tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1558,7 +1561,8 @@ i18n
                             errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes.",
                             toolsselectorbutton_tooltip: "Sélectionner des outils",
                             tutorial_help: "Ouvrir le tutoriel",
-                            tool_header: "Voulez-vous utiliser plus d'outils: "
+                            tool_header: "Choisir des outils supplémentaires:",
+                            tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2002,7 +2006,8 @@ i18n
                             errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",
                             toolsselectorbutton_tooltip: "Вибрати інструменти",
                             tutorial_help: "Відкрити навчальний посібник",
-                            tool_header: "Бажаєте використовувати більше інструментів: "
+                            tool_header: "Вибрати додаткові інструменти:",
+                            tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}"
                         },
                         suminput: {
                             tokensused: "Використано токени",

@@ -4,10 +4,10 @@ import { Button, Tooltip, Card, CardHeader, CardFooter, CardPreview } from "@flu
 import styles from "./AssistantCard.module.css";
 
 export interface AssistantCardProps {
-    id: string;
-    title: string;
-    description: string;
-    linkTo: string;
+    id?: string;
+    title?: string;
+    description?: string;
+    linkTo?: string;
     linkAriaLabel?: string;
     linkText?: string;
     additionalButtons?: ReactNode;
@@ -15,10 +15,17 @@ export interface AssistantCardProps {
     role?: string;
     style?: React.CSSProperties;
     titleStyle?: React.CSSProperties;
+    className?: string;
+    onClick?: () => void;
     onMouseEnter?: (id: string, event: React.MouseEvent) => void;
     onMouseLeave?: () => void;
     onFocus?: (id: string, event: React.FocusEvent) => void;
     onBlur?: () => void;
+    // New props for customization
+    header?: ReactNode;
+    footer?: ReactNode;
+    showDivider?: boolean;
+    tabIndex?: number;
 }
 
 export const AssistantCard = ({
@@ -33,48 +40,92 @@ export const AssistantCard = ({
     role,
     style,
     titleStyle,
+    className,
+    onClick,
     onMouseEnter,
     onMouseLeave,
     onFocus,
-    onBlur
+    onBlur,
+    header,
+    footer,
+    showDivider = false,
+    tabIndex = 0
 }: AssistantCardProps) => {
     const navigate = useNavigate();
 
-    const handleNavigate = () => {
-        navigate(linkTo);
+    const handleClick = () => {
+        if (onClick) {
+            onClick();
+        } else if (linkTo) {
+            navigate(linkTo);
+        }
+    };
+
+    // Render custom header or default header
+    const renderHeader = () => {
+        if (header !== undefined) {
+            return header;
+        }
+
+        if (title) {
+            return (
+                <CardHeader
+                    header={
+                        <div className={styles.boxHeader} style={titleStyle}>
+                            {title}
+                        </div>
+                    }
+                />
+            );
+        }
+
+        return null;
+    };
+
+    // Render custom footer or default footer
+    const renderFooter = () => {
+        if (footer !== undefined) {
+            return footer;
+        }
+
+        if (linkTo || additionalButtons) {
+            return (
+                <CardFooter className={styles.boxFooter}>
+                    <div className={styles.boxButtons}>
+                        {additionalButtons}
+                        {linkTo && (
+                            <Button onClick={handleClick} appearance="primary" aria-label={linkAriaLabel}>
+                                {linkText}
+                            </Button>
+                        )}
+                    </div>
+                </CardFooter>
+            );
+        }
+
+        return null;
     };
 
     const card = (
         <Card
-            className={styles.box}
+            className={className ? className : styles.box}
             role={role}
-            tabIndex={0}
+            tabIndex={tabIndex}
             style={style}
-            onMouseEnter={onMouseEnter ? e => onMouseEnter(id, e) : undefined}
+            onClick={onClick}
+            onMouseEnter={onMouseEnter && id ? e => onMouseEnter(id, e) : undefined}
             onMouseLeave={onMouseLeave}
-            onFocus={onFocus ? e => onFocus(id, e) : undefined}
+            onFocus={onFocus && id ? e => onFocus(id, e) : undefined}
             onBlur={onBlur}
         >
-            <CardHeader
-                header={
-                    <div className={styles.boxHeader} style={titleStyle}>
-                        {title}
-                    </div>
-                }
-            />
-            <CardPreview className={styles.boxDescription}>{description}</CardPreview>
-            <CardFooter className={styles.boxFooter}>
-                <div className={styles.boxButtons}>
-                    {additionalButtons}
-                    <Button onClick={handleNavigate} appearance="primary" aria-label={linkAriaLabel}>
-                        {linkText}
-                    </Button>
-                </div>
-            </CardFooter>
+            {renderHeader()}
+            {description && <CardPreview className={styles.boxDescription}>{description}</CardPreview>}
+            {showDivider && <div className={styles.cardDivider}></div>}
+            {renderFooter()}
         </Card>
     );
 
-    if (showTooltip) {
+    if (showTooltip && title) {
         return (
             <Tooltip content={title} relationship="description" positioning="below">
                 {card}

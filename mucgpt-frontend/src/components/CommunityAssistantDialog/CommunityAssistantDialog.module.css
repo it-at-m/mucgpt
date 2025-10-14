@@ -116,6 +116,7 @@
     align-items: flex-start;
     width: 100%;
     gap: 8px;
+    flex-wrap: wrap;
 }
 
 .assistantTitle {
@@ -124,11 +125,21 @@
     margin-bottom: 8px;
     flex: 1;
     line-height: 1.3;
+    min-width: 150px;
 }
 
 .assistantDescription {
     color: var(--colorNeutralForeground2);
     line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.tagsContainer {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
 }
 
 .cardDivider {

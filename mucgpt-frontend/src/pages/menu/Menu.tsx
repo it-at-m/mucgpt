@@ -297,14 +297,6 @@ const Menu = () => {
                     ownedAssistants={ownedCommunityAssistants.map(a => a.id)}
                     subscribedAssistants={communityAssistants.map(a => a.id)}
                 />
-                <CommunityAssistantsDialog
-                    showSearchDialogInput={showSearchAssistant}
-                    setShowSearchDialogInput={setShowSearchAssistant}
-                    takeCommunityAssistants={getCommunityAssistants}
-                    setTakeCommunityAssistants={setGetCommunityAssistants}
-                    ownedAssistants={ownedCommunityAssistants.map(a => a.id)}
-                    subscribedAssistants={communityAssistants.map(a => a.id)}
-                />
                 <div className={styles.row} role="list" aria-label={t("menu.community_assistants", "Abonnierte Community Assistenten")}>
                     {communityAssistants.map((assistant, key) => (
                         <AssistantCard

@@ -163,3 +163,25 @@
     white-space: nowrap;
     border: 0;
 }
+
+/* Divider with "or" text */
+.divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 700px;
+    margin: 30px auto;
+    gap: 20px;
+}
+
+.divider hr {
+    flex: 1;
+    border: none;
+    border-top: 1px solid var(--colorBrandStroke2);
+    margin: 0;
+}
+
+.divider span {
+    color: var(--colorNeutralForeground2);
+    font-size: var(--fontSizeBase500);
+}

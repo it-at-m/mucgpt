@@ -22,9 +22,10 @@ i18n
                         create_assistant: "Assistent erstellen"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Tutorials und Anleitungen zu MUCGPT anzeigen",
-                        go_to_tutorials: "Lerne MUCGPT kennen",
-                        go_to_tutorials_aria: "Tutorials und Anleitungen zu MUCGPT",
+                        go_to_tutorials_tooltip: "Lerne, wie MUCGPT und Sprachmodelle im allgemeinen funktionieren",
+                        go_to_tutorials: "Über MUCGPT",
+                        go_to_tutorials_aria: "Zu Tutorials und Anleitungen navigieren",
+                        or: "oder",
                         chat_header: "Hallo {{user}}, was hast du heute vor?",
                         own_assistants: "Lokale Assistenten",
                         community_assistants: "Community Assistenten",
@@ -308,7 +309,7 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Erstelle deinen eigenen Assistenten"
+                            add_assistant: "Neuer Assistent"
                         },
                         create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
@@ -410,11 +411,11 @@ i18n
                             publish_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich veröffentlicht"
                         },
                         search_assistant_button: {
-                            search_assistants: "Assistenten durchsuchen"
+                            search_assistants: "Assistenten suchen"
                         },
                         community_assistants: {
                             title: "Community Assistenten", // Deutsch
-                            search: "Assistenten durchsuchen",
+                            search: "Assistenten suchen",
                             filter_by_tag: "Nach Tag filtern",
                             sort_by: "Sortieren nach",
                             sort_title: "Titel",
@@ -463,9 +464,10 @@ i18n
                         create_assistant: "Create assistant"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Show tutorials and guides for MUCGPT",
-                        go_to_tutorials: "Get to know MUCGPT",
-                        go_to_tutorials_aria: "Tutorials and guides for MUCGPT",
+                        go_to_tutorials_tooltip: "Learn how MUCGPT and language models work in general",
+                        go_to_tutorials: "About MUCGPT",
+                        go_to_tutorials_aria: "Navigate to tutorials and guides",
+                        or: "or",
                         chat_header: "Hello {{user}}, what are you planning today?",
                         own_assistants: "Local Assistants", // Englisch
                         community_assistants: "Community Assistants",
@@ -748,7 +750,7 @@ i18n
                             more: "more"
                         },
                         add_assistant_button: {
-                            add_assistant: "Create your own assistant"
+                            add_assistant: "New assistant"
                         },
                         create_assistant_dialog: {
                             what_function: "What should your assistant be able to do?",
@@ -900,10 +902,10 @@ i18n
                         create_assistant: "Assistenten erstoin"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Zeig Tutorials und Anleitungen für MUCGPT",
-                        go_to_tutorials: "Lerne MUCGPT lernen",
-
-                        go_to_tutorials_aria: "Tutorials und Anleitungen für MUCGPT",
+                        go_to_tutorials_tooltip: "Lern, wia MUCGPT und Sprachmodelle im Allgemeinen funktioniern",
+                        go_to_tutorials: "Über MUCGPT",
+                        go_to_tutorials_aria: "Zu Tutorials und Anleitunga navigiern",
+                        or: "oder",
                         chat_header: "Griaß di {{user}}, wos host heid vor?",
                         own_assistants: "Lokale Assitentn", // Bairisch
                         community_assistants: "Community Assistentn",
@@ -1187,7 +1189,7 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Erstell dein eigenen Assistenten"
+                            add_assistant: "Neia Assistent"
                         },
                         create_assistant_dialog: {
                             what_function: "Was soll dein Assistent können?",
@@ -1341,9 +1343,10 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Afficher les tutoriels et guides pour MUCGPT",
-                        go_to_tutorials: "Découvrez MUCGPT",
-                        go_to_tutorials_aria: "Tutoriels et guides pour MUCGPT",
+                        go_to_tutorials_tooltip: "Découvrez comment MUCGPT et les modèles de langage fonctionnent en général",
+                        go_to_tutorials: "À propos de MUCGPT",
+                        go_to_tutorials_aria: "Naviguer vers les tutoriels et les guides",
+                        or: "ou",
                         chat_header: "Bonjour {{user}}, qu'est-ce que vous prévoyez aujourd'hui ?",
                         own_assistants: "Assistants Locaux", // French
                         community_assistants: "Assistants Communautaires",
@@ -1627,7 +1630,7 @@ i18n
                             more: "plus"
                         },
                         add_assistant_button: {
-                            add_assistant: "Crée ton propre assistant"
+                            add_assistant: "nouvel assistant"
                         },
                         create_assistant_dialog: {
                             what_function: "Que doit pouvoir faire votre assistant?",
@@ -1782,9 +1785,10 @@ i18n
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
-                        go_to_tutorials_tooltip: "Показати посібники та інструкції для MUCGPT",
-                        go_to_tutorials: "Познайомтеся з MUCGPT",
-                        go_to_tutorials_aria: "Посібники та інструкції для MUCGPT",
+                        go_to_tutorials_tooltip: "Дізнайтеся, як працюють MUCGPT та мовні моделі загалом",
+                        go_to_tutorials: "Про MUCGPT",
+                        go_to_tutorials_aria: "Перейти до навчальних посібників та інструкцій",
+                        or: "або",
                         chat_header: "Привіт {{user}}, що ти плануєш сьогодні?",
                         own_assistants: "Локальні Асистенти", // Ukrainisch
                         community_assistants: "Громадські Асистенти",
@@ -2068,7 +2072,7 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "Створи свого власного асистента"
+                            add_assistant: "новий асистент"
                         },
                         create_assistant_dialog: {
                             what_function: "Що має вміти ваш асистент?",

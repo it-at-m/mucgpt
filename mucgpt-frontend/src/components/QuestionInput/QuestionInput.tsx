@@ -123,7 +123,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                 {/* Tool badges at the top - show all tools */}
                 {tools && tools.tools && tools.tools.length > 0 && setSelectedTools && (
                     <div className={styles.toolBadgesHeader}>
-                        <span className={styles.toolBadgesLabel}>Zusätzliche Tools zu wählen:</span>
+                        <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
                         {tools.tools.map(tool => {
                             const isSelected = selectedTools.includes(tool.id);
                             const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];

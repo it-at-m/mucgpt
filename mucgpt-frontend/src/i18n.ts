@@ -229,7 +229,9 @@ i18n
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
-                            toolsselectorbutton_tooltip: "Werkzeuge auswählen"
+                            toolsselectorbutton_tooltip: "Werkzeuge auswählen",
+                            tutorial_help: "Tutorial öffnen",
+                            tool_header: "Zusätzliche Tools zu wählen:"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -670,7 +672,9 @@ i18n
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
                             errorhint: "MUCGPT can make errors. Verify important information.",
-                            toolsselectorbutton_tooltip: "Select tools"
+                            toolsselectorbutton_tooltip: "Select tools",
+                            tutorial_help: "Open tutorial",
+                            tool_header: "Choose additional tools:"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1109,7 +1113,9 @@ i18n
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
                             errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
-                            toolsselectorbutton_tooltip: "Werkzeig aussuachn"
+                            toolsselectorbutton_tooltip: "Werkzeig aussuachn",
+                            tutorial_help: "Tutorial aufmachn",
+                            tool_header: "Wuißd no mehr Werkzeig nutzn: "
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1550,7 +1556,9 @@ i18n
                             tokensused: "Jetons utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
                             errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes.",
-                            toolsselectorbutton_tooltip: "Sélectionner des outils"
+                            toolsselectorbutton_tooltip: "Sélectionner des outils",
+                            tutorial_help: "Ouvrir le tutoriel",
+                            tool_header: "Voulez-vous utiliser plus d'outils: "
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -1992,7 +2000,9 @@ i18n
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
                             errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",
-                            toolsselectorbutton_tooltip: "Вибрати інструменти"
+                            toolsselectorbutton_tooltip: "Вибрати інструменти",
+                            tutorial_help: "Відкрити навчальний посібник",
+                            tool_header: "Бажаєте використовувати більше інструментів: "
                         },
                         suminput: {
                             tokensused: "Використано токени",

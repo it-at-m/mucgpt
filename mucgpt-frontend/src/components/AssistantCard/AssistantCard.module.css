@@ -16,14 +16,6 @@
     gap: 12px;
 }
 
-.box span {
-    display: inline-block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .box:hover {
     opacity: 1;
     box-shadow:

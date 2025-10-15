@@ -22,6 +22,7 @@ export const VersionInfo = ({ core_version, versionUrl, frontend_version, assist
             <span className={styles.label}>{t("components.versioninfo.core_version", "Core Version:")}</span>
             <Tag shape="circular">{core_version}</Tag>
             <span className={styles.label}>{t("components.versioninfo.frontend_version", "Frontend Version:")}</span>
+            <Tag shape="circular">{frontend_version}</Tag>
             <span className={styles.label}>{t("components.versioninfo.assistant_version", "Assistant Version:")}</span>
             <Tag shape="circular">{assistant_version}</Tag>
         </div>

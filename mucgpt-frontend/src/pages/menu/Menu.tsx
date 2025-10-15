@@ -18,13 +18,14 @@ import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { Share24Regular, Chat24Regular } from "@fluentui/react-icons";
+import { Chat24Regular, ShareIos24Regular } from "@fluentui/react-icons";
 import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { getTools } from "../../api/core-client";
 import { ToolListResponse } from "../../api/models";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { mapContextToBackendLang } from "../../utils/language-utils";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { AssistantCard } from "../../components/AssistantCard";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -230,19 +231,17 @@ const Menu = () => {
                 {selectedTab === "local" && (
                     <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
                         {assistants.map((assistant: Assistant, key) => (
-                            <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
-                                <div className={styles.box} role="listitem" tabIndex={0}>
-                                    <div className={styles.boxHeader}>{assistant.title}</div>
-                                    <div className={styles.boxDescription}>{assistant.description}</div>
-                                    <Link
-                                        to={`/assistant/${assistant.id}`}
-                                        className={styles.boxChoose}
-                                        aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
-                                    >
-                                        {t("menu.select")}
-                                    </Link>
-                                </div>
-                            </Tooltip>
+                            <AssistantCard
+                                key={key}
+                                id={assistant.id || `assistant-${key}`}
+                                title={assistant.title}
+                                description={assistant.description}
+                                linkTo={`/assistant/${assistant.id}`}
+                                linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                linkText={t("menu.select")}
+                                role="listitem"
+                                showTooltip={true}
+                            />
                         ))}
                         {assistants.length === 0 && (
                             <div role="status" aria-live="polite">
@@ -255,35 +254,29 @@ const Menu = () => {
                 {selectedTab === "owned" && (
                     <div className={styles.row} role="list" aria-label={t("menu.owned", "Veröffentlicht in der Community")}>
                         {ownedCommunityAssistants.map((assistant: AssistantResponse, key) => (
-                            <div
+                            <AssistantCard
                                 key={key}
-                                className={styles.box}
+                                id={assistant.id}
+                                title={assistant.latest_version.name}
+                                description={assistant.latest_version.description || ""}
+                                linkTo={`owned/communityassistant/${assistant.id}`}
+                                linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
+                                linkText={t("menu.select")}
                                 role="listitem"
-                                tabIndex={0}
-                                onMouseEnter={e => handleMouseEnter(assistant.id, e)}
+                                showTooltip={false}
+                                onMouseEnter={handleMouseEnter}
                                 onMouseLeave={handleMouseLeave}
-                                onFocus={e => handleFocus(assistant.id, e)}
+                                onFocus={handleFocus}
                                 onBlur={handleMouseLeave}
-                            >
-                                <div className={styles.boxHeader}>{assistant.latest_version.name}</div>
-                                <div className={styles.boxDescription}>{assistant.latest_version.description}</div>
-                                <div className={styles.boxButtons}>
-                                    <Link
-                                        to={`owned/communityassistant/${assistant.id}`}
-                                        className={styles.boxChoose}
-                                        aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
-                                    >
-                                        {t("menu.select")}
-                                    </Link>
+                                additionalButtons={
                                     <Button
                                         onClick={() => onShareAssistant(assistant.id)}
-                                        className={styles.boxChoose}
                                         aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
                                     >
-                                        <Share24Regular aria-hidden /> {t("menu.share", "Teilen")}
+                                        <ShareIos24Regular aria-hidden /> Teilen
                                     </Button>
-                                </div>
-                            </div>
+                                }
+                            />
                         ))}
                         {ownedCommunityAssistants.length === 0 && (
                             <div role="status" aria-live="polite">
@@ -292,6 +285,7 @@ const Menu = () => {
                         )}
                     </div>
                 )}
+
                 <div className={styles.rowheader} role="heading" aria-level={3}>
                     {t("menu.community_assistants")} <SearchCommunityAssistantButton onClick={onSearchAssistant} />
                 </div>
@@ -305,19 +299,17 @@ const Menu = () => {
                 />
                 <div className={styles.row} role="list" aria-label={t("menu.community_assistants", "Abonnierte Community Assistenten")}>
                     {communityAssistants.map((assistant, key) => (
-                        <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
-                            <div className={styles.box} role="listitem" tabIndex={0}>
-                                <div className={styles.boxHeader}>{assistant.title}</div>
-                                <div className={styles.boxDescription}>{assistant.description}</div>
-                                <Link
-                                    to={`communityassistant/${assistant.id}`}
-                                    className={styles.boxChoose}
-                                    aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
-                                >
-                                    {t("menu.select")}
-                                </Link>
-                            </div>
-                        </Tooltip>
+                        <AssistantCard
+                            key={key}
+                            id={assistant.id || `community-${key}`}
+                            title={assistant.title}
+                            description={assistant.description}
+                            linkTo={`communityassistant/${assistant.id}`}
+                            linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                            linkText={t("menu.select")}
+                            role="listitem"
+                            showTooltip={true}
+                        />
                     ))}
                     {communityAssistants.length === 0 && (
                         <div role="status" aria-live="polite">
@@ -332,21 +324,19 @@ const Menu = () => {
                         </div>
                         <div className={styles.row} role="list" aria-label={t("menu.deleted_assistants_list", "Gelöschte Community Assistants")}>
                             {deletedCommunityAssistants.map((assistant, key) => (
-                                <Tooltip key={key} content={assistant.title} relationship="description" positioning="below">
-                                    <div className={styles.box} role="listitem" tabIndex={0} style={{ opacity: 0.5 }}>
-                                        <div className={styles.boxHeader} style={{ color: "red" }}>
-                                            {assistant.title}
-                                        </div>
-                                        <div className={styles.boxDescription}>{assistant.description}</div>
-                                        <Link
-                                            to={`deleted/communityassistant/${assistant.id}`}
-                                            className={styles.boxChoose}
-                                            aria-label={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
-                                        >
-                                            {t("menu.select")}
-                                        </Link>
-                                    </div>
-                                </Tooltip>
+                                <AssistantCard
+                                    key={key}
+                                    id={assistant.id || `deleted-${key}`}
+                                    title={assistant.title}
+                                    description={assistant.description}
+                                    linkTo={`deleted/communityassistant/${assistant.id}`}
+                                    linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                    linkText={t("menu.select")}
+                                    role="listitem"
+                                    showTooltip={true}
+                                    style={{ opacity: 0.5 }}
+                                    titleStyle={{ color: "red" }}
+                                />
                             ))}
                         </div>
                     </div>

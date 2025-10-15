@@ -5,7 +5,7 @@ import zurückziehen from "../../assets/zurückziehen.png";
 import history from "../../assets/History.png";
 import simply from "../../assets/simply.png";
 import latex from "../../assets/latex.png";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import { Dismiss24Regular } from "@fluentui/react-icons";
 import { useNavigate } from "react-router-dom";
 
@@ -40,40 +40,46 @@ const Version = () => {
                                 <h3>{t("version.added")}</h3>
                                 <div>
                                     <ul>
-                                        <h4>{t("versions.v2_0.communityAssistants.title")}</h4>
-                                        <ul>
-                                            <li>{t("versions.v2_0.communityAssistants.share")}</li>
-                                            <li>{t("versions.v2_0.communityAssistants.subscribe")}</li>
-                                            <li>{t("versions.v2_0.communityAssistants.searchable")}</li>
-                                            <li>{t("versions.v2_0.communityAssistants.manage")}</li>
-                                        </ul>
-
-                                        <h4>{t("versions.v2_0.tools.title")}</h4>
-                                        <ul>
-                                            <li>{t("versions.v2_0.tools.brainstorming")}</li>
-                                            <li>{t("versions.v2_0.tools.fullscreen")}</li>
-                                            <li>{t("versions.v2_0.tools.simplify")}</li>
-                                            <li>{t("versions.v2_0.tools.interfaces")}</li>
-                                        </ul>
-
-                                        <h4>{t("versions.v2_0.misc.title")}</h4>
-                                        <ul>
-                                            <li>{t("versions.v2_0.misc.mermaid")}</li>
-                                            <li>{t("versions.v2_0.misc.username")}</li>
-                                            <li>{t("versions.v2_0.misc.tutorial")}</li>
-                                        </ul>
-
-                                        <h4>{t("versions.v2_0.redesign.title")}</h4>
-                                        <ul>
-                                            <li>{t("versions.v2_0.redesign.languageSelection")}</li>
-                                            <li>{t("versions.v2_0.redesign.settings")}</li>
-                                        </ul>
-
-                                        <h4>{t("versions.v2_0.technical.title")}</h4>
-                                        <ul>
-                                            <li>{t("versions.v2_0.technical.services")}</li>
-                                            <li>{t("versions.v2_0.technical.agents")}</li>
-                                        </ul>
+                                        <li>
+                                            <h4>{t("versions.v2_0.communityAssistants.title")}</h4>
+                                            <ul>
+                                                <li>{t("versions.v2_0.communityAssistants.share")}</li>
+                                                <li>{t("versions.v2_0.communityAssistants.subscribe")}</li>
+                                                <li>{t("versions.v2_0.communityAssistants.searchable")}</li>
+                                                <li>{t("versions.v2_0.communityAssistants.manage")}</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <h4>{t("versions.v2_0.tools.title")}</h4>
+                                            <ul>
+                                                <li>{t("versions.v2_0.tools.brainstorming")}</li>
+                                                <li>{t("versions.v2_0.tools.fullscreen")}</li>
+                                                <li>{t("versions.v2_0.tools.simplify")}</li>
+                                                <li>{t("versions.v2_0.tools.interfaces")}</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <h4>{t("versions.v2_0.misc.title")}</h4>
+                                            <ul>
+                                                <li>{t("versions.v2_0.misc.mermaid")}</li>
+                                                <li>{t("versions.v2_0.misc.username")}</li>
+                                                <li>{t("versions.v2_0.misc.tutorial")}</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <h4>{t("versions.v2_0.redesign.title")}</h4>
+                                            <ul>
+                                                <li>{t("versions.v2_0.redesign.languageSelection")}</li>
+                                                <li>{t("versions.v2_0.redesign.settings")}</li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <h4>{t("versions.v2_0.technical.title")}</h4>
+                                            <ul>
+                                                <li>{t("versions.v2_0.technical.services")}</li>
+                                                <li>{t("versions.v2_0.technical.agents")}</li>
+                                            </ul>
+                                        </li>
                                     </ul>
                                     <h3>{t("version.changed")}</h3>
                                     <ul>
@@ -102,7 +108,9 @@ const Version = () => {
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_5.changed.simpleLanguagePrompt") }}></li>
+                                    <li>
+                                        <Trans i18nKey="versions.v1_2_5.changed.simpleLanguagePrompt" components={{ i: <i /> }} />
+                                    </li>
                                     <li>{t("versions.v1_2_5.changed.generalImprovements")}</li>
                                 </ul>
                             </div>
@@ -114,20 +122,22 @@ const Version = () => {
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    {t("versions.v1_2_4.added.communityAssistantsTitle")}
-                                    <ul>
-                                        <li>{t("versions.v1_2_4.added.examplesAndSuggestions")}</li>
-                                        <li>
-                                            {t("versions.v1_2_4.added.newVersionsTitle")}
-                                            <ul>
-                                                <li>{t("versions.v1_2_4.added.sherlock")}</li>
-                                                <li>{t("versions.v1_2_4.added.consultor")}</li>
-                                                <li>{t("versions.v1_2_4.added.arielle")}</li>
-                                            </ul>
-                                        </li>
+                                    <li>
+                                        {t("versions.v1_2_4.added.communityAssistantsTitle")}
+                                        <ul>
+                                            <li>{t("versions.v1_2_4.added.examplesAndSuggestions")}</li>
+                                            <li>
+                                                {t("versions.v1_2_4.added.newVersionsTitle")}
+                                                <ul>
+                                                    <li>{t("versions.v1_2_4.added.sherlock")}</li>
+                                                    <li>{t("versions.v1_2_4.added.consultor")}</li>
+                                                    <li>{t("versions.v1_2_4.added.arielle")}</li>
+                                                </ul>
+                                            </li>
 
-                                        <li>{t("versions.v1_2_4.added.centralConfig")}</li>
-                                    </ul>
+                                            <li>{t("versions.v1_2_4.added.centralConfig")}</li>
+                                        </ul>
+                                    </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
@@ -140,7 +150,9 @@ const Version = () => {
                                         {t("versions.v1_2_4.fixed.tokenUsageTitle")}
                                         <ul>
                                             <li>{t("versions.v1_2_4.fixed.tokenDisplay")}</li>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.fixed.tokenRemoved") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_4.fixed.tokenRemoved" components={{ i: <i /> }} />
+                                            </li>
                                             <li>{t("versions.v1_2_4.fixed.tokenHidden")}</li>
                                         </ul>
                                     </li>
@@ -151,14 +163,20 @@ const Version = () => {
                                     <li>
                                         {t("versions.v1_2_4.changed.simpleLanguageTitle")}
                                         <ul>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.changed.easyLanguageRemoved") }}></li>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.changed.simpleLanguagePrompt") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_4.changed.easyLanguageRemoved" components={{ i: <i /> }} />
+                                            </li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_4.changed.simpleLanguagePrompt" components={{ i: <i /> }} />
+                                            </li>
                                         </ul>
                                     </li>
                                     <li>
                                         {t("versions.v1_2_4.changed.ownAssistantsTitle")}
                                         <ul>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.changed.settingsEditOnly") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_4.changed.settingsEditOnly" components={{ i: <i /> }} />
+                                            </li>
                                             <li>{t("versions.v1_2_4.changed.sidebarExpands")}</li>
                                             <li>{t("versions.v1_2_4.changed.communityReadOnly")}</li>
                                         </ul>
@@ -209,14 +227,18 @@ const Version = () => {
                                     <li>
                                         {t("versions.v1_2_3.changed.simpleLanguageTitle")}
                                         <ul>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_3.changed.titleRenamed") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_3.changed.titleRenamed" components={{ i: <i /> }} />
+                                            </li>
                                         </ul>
                                     </li>
                                     <li>
                                         {t("versions.v1_2_3.changed.uiImprovementsTitle")}
                                         <ul>
                                             <li>{t("versions.v1_2_3.changed.sidebar")}</li>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_3.changed.storage") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_3.changed.storage" components={{ i: <i /> }} />
+                                            </li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -232,10 +254,14 @@ const Version = () => {
                                     <li>
                                         {t("versions.v1_2_2.added.customAssistants")}
                                         <ul>
-                                            {t("versions.v1_2_2.added.examplesTitle")}
-                                            <li>{t("versions.v1_2_2.added.translator")}</li>
-                                            <li>{t("versions.v1_2_2.added.testGenerator")}</li>
-                                            <li>{t("versions.v1_2_2.added.editor")}</li>
+                                            <li>
+                                                {t("versions.v1_2_2.added.examplesTitle")}
+                                                <ul>
+                                                    <li>{t("versions.v1_2_2.added.translator")}</li>
+                                                    <li>{t("versions.v1_2_2.added.testGenerator")}</li>
+                                                    <li>{t("versions.v1_2_2.added.editor")}</li>
+                                                </ul>
+                                            </li>
                                         </ul>
                                     </li>
                                     <li>{t("versions.v1_2_2.added.creation")}</li>
@@ -268,7 +294,9 @@ const Version = () => {
                                             <li>{t("versions.v1_2_1.added.selection")}</li>
                                             <li>{t("versions.v1_2_1.added.easyLanguageDef")}</li>
                                             <li>{t("versions.v1_2_1.added.plainLanguageDef")}</li>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_1.added.modelRecommendation") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_2_1.added.modelRecommendation" components={{ strong: <strong /> }} />
+                                            </li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -404,12 +432,16 @@ const Version = () => {
                                         {t("versions.v1_1_0.added.chatTitle")}
                                         <ul>
                                             <li>
-                                                <div dangerouslySetInnerHTML={{ __html: t("versions.v1_1_0.added.suggestedResponses") }}></div>
+                                                <div>
+                                                    <Trans i18nKey="versions.v1_1_0.added.suggestedResponses" components={{ b: <b /> }} />
+                                                </div>
                                                 <p>
                                                     <img width="80%" src={vorgeschlageneAntworten}></img>
                                                 </p>
                                             </li>
-                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_1_0.added.mermaidDiagrams") }}></li>
+                                            <li>
+                                                <Trans i18nKey="versions.v1_1_0.added.mermaidDiagrams" components={{ b: <b /> }} />
+                                            </li>
                                             <li>{t("versions.v1_1_0.added.arielle")}</li>
                                             <li>{t("versions.v1_1_0.added.systempromptSpace")}</li>
                                             <li>{t("versions.v1_1_0.added.systempromptWarning")}</li>
@@ -433,6 +465,7 @@ const Version = () => {
                                 <ul>
                                     <li>{t("versions.v1_0_0.added.production")}</li>
                                     <li>{t("versions.v1_0_0.added.faq")}</li>
+                                    <li>{t("versions.v1_0_0.added.communityExamples")}</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
@@ -446,7 +479,6 @@ const Version = () => {
                                     <li>{t("versions.v1_0_0.changed.servicedesk")}</li>
                                     <li>{t("versions.v1_0_0.changed.wilmaLink")}</li>
                                 </ul>
-                                <li>{t("versions.v1_0_0.added.communityExamples")}</li>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>

@@ -32,6 +32,62 @@ const Version = () => {
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
                 <Accordion multiple collapsible defaultOpenItems="14">
+                    <AccordionItem value="15">
+                        <AccordionHeader>[2.0] 15.10.2025</AccordionHeader>
+                        <AccordionPanel>
+                            <div className={styles.panel}>
+                                <h3>{t("version.added")}</h3>
+                                <div>
+                                    <ul>
+                                        <h4>Community-Assistenten</h4>
+                                        <ul>
+                                            <li>Eigene Assistenten können als Community-Assistenten geteilt werden.</li>
+                                            <li>Community-Assistenten können abonniert werden.</li>
+                                            <li>Community-Assistenten sind durchsuchbar.</li>
+                                            <li>Community-Assistenten können verwaltet und gelöscht werden.</li>
+                                        </ul>
+
+                                        <h4>Werkzeuge</h4>
+                                        <ul>
+                                            <li>Neues Brainstorming-Werkzeug: Ein Agentensystem erstellt neue Mindmaps oder erweitert bestehende Mindmaps.</li>
+                                            <li>Vollbildansicht für generierte Brainstorming-Mindmaps.</li>
+                                            <li>
+                                                Neues "Vereinfachen"-Werkzeug: Vereinfacht Texte iterativ nach Regeln für einfache Sprache, kritisiert und
+                                                verbessert Texte und wiederholt den Prozess, bis das Ergebnis zufriedenstellend ist.
+                                            </li>
+                                            <li>Perspektivisch können viele verschiedene Schnittstellen und Anwendungen an MUCGPT angebunden werden.</li>
+                                        </ul>
+
+                                        <h4>Diverses</h4>
+                                        <ul>
+                                            <li>Verbesserte Darstellung von Mermaid-Diagrammen (inkl. Steuerung zum Zoomen).</li>
+                                            <li>Anzeige des Benutzernamens aus Single Sign-On.</li>
+                                            <li>
+                                                Beginn eines interaktiven Tutorials in MUCGPT, das erklärt, wie Sprachmodelle und Systeme wie MUCGPT
+                                                funktionieren.
+                                            </li>
+                                        </ul>
+
+                                        <h4>Beginn des Redesigns</h4>
+                                        <ul>
+                                            <li>Verbesserte Sprachauswahl.</li>
+                                            <li>Einstellungen wurden in die Navigationsleiste / den Footer verlagert.</li>
+                                        </ul>
+
+                                        <h4>Technische Änderungen</h4>
+                                        <ul>
+                                            <li>Aufteilung in mehrere Services; kompletter Betrieb ist nun lokal möglich (SSO, API-Gateway, ...).</li>
+                                            <li>Das System basiert nun auf einem agentenbasierten Ansatz.</li>
+                                        </ul>
+                                    </ul>
+                                    <h3>{t("version.changed")}</h3>
+                                    <ul>
+                                        <li>Zusammenfassen wurde entfernt</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </AccordionPanel>
+                    </AccordionItem>
                     <AccordionItem value="14">
                         <AccordionHeader>[1.2.5] 24.04.2025</AccordionHeader>
                         <AccordionPanel>

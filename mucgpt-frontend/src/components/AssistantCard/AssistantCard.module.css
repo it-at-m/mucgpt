@@ -54,7 +54,7 @@
     -webkit-box-orient: vertical;
     word-break: break-word;
     flex: 1 1 auto;
-    padding: 8px;
+    padding: var(--fui-Card--size);
     margin: 0;
 }
 

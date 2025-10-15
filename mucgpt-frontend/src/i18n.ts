@@ -1784,7 +1784,7 @@ i18n
                             cancel: "Annuler"
                         },
                         globaltoasthandler: {
-                            dismiss_aria_label: "Dismiss toast"
+                            dismiss_aria_label: "Fermer la notification"
                         }
                     },
                     ...tutorialsTranslations.FR

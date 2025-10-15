@@ -451,6 +451,9 @@ i18n
                             none: "Keine Tools verfügbar.",
                             apply: "Übernehmen",
                             cancel: "Abbrechen"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Toast schließen"
                         }
                     },
                     ...tutorialsTranslations.DE
@@ -889,6 +892,9 @@ i18n
                             none: "No tools available.",
                             apply: "Apply",
                             cancel: "Cancel"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Dismiss toast"
                         }
                     },
                     ...tutorialsTranslations.EN
@@ -1331,6 +1337,9 @@ i18n
                             none: "Koane Werkzeig verfügbar.",
                             apply: "Ibernemma",
                             cancel: "Obbrecha"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Toast schließn"
                         }
                     },
                     ...tutorialsTranslations.BA
@@ -1773,6 +1782,9 @@ i18n
                             none: "Aucun outil disponible.",
                             apply: "Appliquer",
                             cancel: "Annuler"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Fermer la notification"
                         }
                     },
                     ...tutorialsTranslations.FR
@@ -2213,6 +2225,9 @@ i18n
                             none: "Немає доступних інструментів.",
                             apply: "Застосувати",
                             cancel: "Скасувати"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Закрити тост"
                         }
                     },
                     ...tutorialsTranslations.UK

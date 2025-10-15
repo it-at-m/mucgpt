@@ -2,7 +2,7 @@ import { ArrowMaximize24Filled, ArrowMinimize24Filled } from "@fluentui/react-ic
 import { Button, Tooltip } from "@fluentui/react-components";
 
 import { useTranslation } from "react-i18next";
-import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
+
 interface Props {
     showSidebar: boolean;
     setShowSidebar: (showSidebar: boolean) => void;

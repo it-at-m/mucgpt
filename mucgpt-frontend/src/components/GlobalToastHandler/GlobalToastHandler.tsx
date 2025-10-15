@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button } from "@fluentui/react-components";
 import { Dismiss20Regular } from "@fluentui/react-icons";
 import styles from "./GlobalToastHandler.module.css";
+import { useTranslation } from "react-i18next";
 
 export interface ToastMessage {
     id: string;
@@ -21,6 +22,8 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
     const toasterId = useId("global-toast-handler");
     const { dispatchToast } = useToastController(toasterId);
     const displayedMessagesRef = useRef<Set<string>>(new Set());
+    // Translation
+    const { t } = useTranslation();
 
     useEffect(() => {
         const displayedMessages = displayedMessagesRef.current;
@@ -50,7 +53,11 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
                     <ToastTitle
                         action={
                             <ToastTrigger>
-                                <Button appearance="subtle" icon={<Dismiss20Regular />} aria-label="Dismiss toast" />
+                                <Button
+                                    appearance="subtle"
+                                    icon={<Dismiss20Regular />}
+                                    aria-label={t("components.globaltoasthandler.dismiss_aria_label", "Dismiss toast")}
+                                />
                             </ToastTrigger>
                         }
                     >

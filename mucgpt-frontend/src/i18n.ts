@@ -158,7 +158,7 @@ i18n
                             accept: "Zustimmen"
                         },
                         versioninfo: {
-                            tooltip: "Kern Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Was gibt's neues?"
                         },
@@ -1035,7 +1035,7 @@ i18n
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
-                            tooltip: "Kern Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Wos gibt's Nei's?"
                         },
@@ -1474,7 +1474,8 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip:  "Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
+                            tooltip:
+                                "Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Quoi de neuf ?"
                         },

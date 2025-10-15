@@ -258,7 +258,12 @@ export const Layout = () => {
                                 </address>
                             </div>
                             <div className={styles.footerSection}>
-                                <VersionInfo core_version={config.core_version} frontend_version={config.frontend_version} assistant_version={config.assistant_version} versionUrl={import.meta.env.BASE_URL + "#/version"} />
+                                <VersionInfo
+                                    core_version={config.core_version}
+                                    frontend_version={config.frontend_version}
+                                    assistant_version={config.assistant_version}
+                                    versionUrl={import.meta.env.BASE_URL + "#/version"}
+                                />
                             </div>
                             <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
                         </footer>

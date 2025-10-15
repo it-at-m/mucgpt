@@ -13,16 +13,15 @@ interface VersionInfoProps {
 export const VersionInfo = ({ core_version, versionUrl, frontend_version, assistant_version }: VersionInfoProps) => {
     const { t } = useTranslation();
 
-    const tooltipContent =
-        t(
-            "components.versioninfo.tooltip",
-            "Application version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
-            {
-                core_version,
-                frontend_version,
-                assistant_version,
-            }
-        );
+    const tooltipContent = t(
+        "components.versioninfo.tooltip",
+        "Application version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
+        {
+            core_version,
+            frontend_version,
+            assistant_version
+        }
+    );
 
     const content = (
         <div className={styles.versionContainer}>

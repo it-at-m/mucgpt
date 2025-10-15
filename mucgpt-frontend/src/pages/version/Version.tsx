@@ -15,6 +15,7 @@ const Version = () => {
     const onClose = () => {
         navigate("/");
     };
+
     return (
         <div className={styles.container}>
             <div className={styles.commandsContainer}>
@@ -31,158 +32,135 @@ const Version = () => {
 
             <div className={styles.versionRoot}>
                 <h1 className={styles.header}>{t("version.header")}</h1>
-                <Accordion multiple collapsible defaultOpenItems="14">
+                <Accordion multiple collapsible defaultOpenItems="15">
                     <AccordionItem value="15">
-                        <AccordionHeader>[2.0] 15.10.2025</AccordionHeader>
+                        <AccordionHeader>{t("versions.v2_0.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <div>
                                     <ul>
-                                        <h4>Community-Assistenten</h4>
+                                        <h4>{t("versions.v2_0.communityAssistants.title")}</h4>
                                         <ul>
-                                            <li>Eigene Assistenten können als Community-Assistenten geteilt werden.</li>
-                                            <li>Community-Assistenten können abonniert werden.</li>
-                                            <li>Community-Assistenten sind durchsuchbar.</li>
-                                            <li>Community-Assistenten können verwaltet und gelöscht werden.</li>
+                                            <li>{t("versions.v2_0.communityAssistants.share")}</li>
+                                            <li>{t("versions.v2_0.communityAssistants.subscribe")}</li>
+                                            <li>{t("versions.v2_0.communityAssistants.searchable")}</li>
+                                            <li>{t("versions.v2_0.communityAssistants.manage")}</li>
                                         </ul>
 
-                                        <h4>Werkzeuge</h4>
+                                        <h4>{t("versions.v2_0.tools.title")}</h4>
                                         <ul>
-                                            <li>Neues Brainstorming-Werkzeug: Ein Agentensystem erstellt neue Mindmaps oder erweitert bestehende Mindmaps.</li>
-                                            <li>Vollbildansicht für generierte Brainstorming-Mindmaps.</li>
-                                            <li>
-                                                Neues "Vereinfachen"-Werkzeug: Vereinfacht Texte iterativ nach Regeln für einfache Sprache, kritisiert und
-                                                verbessert Texte und wiederholt den Prozess, bis das Ergebnis zufriedenstellend ist.
-                                            </li>
-                                            <li>Perspektivisch können viele verschiedene Schnittstellen und Anwendungen an MUCGPT angebunden werden.</li>
+                                            <li>{t("versions.v2_0.tools.brainstorming")}</li>
+                                            <li>{t("versions.v2_0.tools.fullscreen")}</li>
+                                            <li>{t("versions.v2_0.tools.simplify")}</li>
+                                            <li>{t("versions.v2_0.tools.interfaces")}</li>
                                         </ul>
 
-                                        <h4>Diverses</h4>
+                                        <h4>{t("versions.v2_0.misc.title")}</h4>
                                         <ul>
-                                            <li>Verbesserte Darstellung von Mermaid-Diagrammen (inkl. Steuerung zum Zoomen).</li>
-                                            <li>Anzeige des Benutzernamens aus Single Sign-On.</li>
-                                            <li>
-                                                Beginn eines interaktiven Tutorials in MUCGPT, das erklärt, wie Sprachmodelle und Systeme wie MUCGPT
-                                                funktionieren.
-                                            </li>
+                                            <li>{t("versions.v2_0.misc.mermaid")}</li>
+                                            <li>{t("versions.v2_0.misc.username")}</li>
+                                            <li>{t("versions.v2_0.misc.tutorial")}</li>
                                         </ul>
 
-                                        <h4>Beginn des Redesigns</h4>
+                                        <h4>{t("versions.v2_0.redesign.title")}</h4>
                                         <ul>
-                                            <li>Verbesserte Sprachauswahl.</li>
-                                            <li>Einstellungen wurden in die Navigationsleiste / den Footer verlagert.</li>
+                                            <li>{t("versions.v2_0.redesign.languageSelection")}</li>
+                                            <li>{t("versions.v2_0.redesign.settings")}</li>
                                         </ul>
 
-                                        <h4>Technische Änderungen</h4>
+                                        <h4>{t("versions.v2_0.technical.title")}</h4>
                                         <ul>
-                                            <li>Aufteilung in mehrere Services; kompletter Betrieb ist nun lokal möglich (SSO, API-Gateway, ...).</li>
-                                            <li>Das System basiert nun auf einem agentenbasierten Ansatz.</li>
+                                            <li>{t("versions.v2_0.technical.services")}</li>
+                                            <li>{t("versions.v2_0.technical.agents")}</li>
                                         </ul>
                                     </ul>
                                     <h3>{t("version.changed")}</h3>
                                     <ul>
-                                        <li>Zusammenfassen wurde entfernt</li>
+                                        <li>{t("versions.v2_0.changed.summarizeRemoved")}</li>
                                     </ul>
                                 </div>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="14">
-                        <AccordionHeader>[1.2.5] 24.04.2025</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_2_5.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Fehler beim Einstellen der Tokenanzahl im Assistentenchat gefixt.</li>
-                                    <li>Fehler mit "Nachricht zurückrufen" und "Nachricht neu generieren" der ersten Nachricht gefixt.</li>
-                                    <li>Fehler beim Darstellen des Generierens einer Nachricht wurde behoben.</li>
+                                    <li>{t("versions.v1_2_5.fixed.tokenSetting")}</li>
+                                    <li>{t("versions.v1_2_5.fixed.messageRecall")}</li>
+                                    <li>{t("versions.v1_2_5.fixed.messageDisplay")}</li>
                                     <li>
-                                        Mathematische Formeln werden nun mit LaTeX korrekt gerendert.
+                                        {t("versions.v1_2_5.fixed.latex")}
                                         <p>
-                                            <img width="50%" src={latex} alt="Bild von mathematischen Formeln in MUCGPT"></img>
+                                            <img width="50%" src={latex} alt={t("versions.v1_2_5.fixed.latexAlt")}></img>
                                         </p>
                                     </li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>
-                                        Der Prompt für <i>einfache Sprache</i> wurde an neue Guidelines angepasst.
-                                    </li>
-                                    <li>Allgemeine Verbesserungen der Benutzeroberfläche und des Quellcodes.</li>
+                                    <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_5.changed.simpleLanguagePrompt") }}></li>
+                                    <li>{t("versions.v1_2_5.changed.generalImprovements")}</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="13">
-                        <AccordionHeader>[1.2.4] 4.03.2025</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_2_4.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    Community Assistenten:
+                                    {t("versions.v1_2_4.added.communityAssistantsTitle")}
                                     <ul>
-                                        <li>Community-Assistenten können nun eigene Beispiele und vorgeschlagene Antworten haben.</li>
+                                        <li>{t("versions.v1_2_4.added.examplesAndSuggestions")}</li>
                                         <li>
-                                            Neue Versionen von Community-Assistenten
+                                            {t("versions.v1_2_4.added.newVersionsTitle")}
                                             <ul>
-                                                <li>Sherlock🕵Testfallgenerator: Erstellt und exportiert Tesftälle. Von itm.km73</li>
-                                                <li>Consultor: Berät zum Angebot von consult.in.M. Von consult.in.M </li>
-                                                <li>🧜Arielle: Erstellt Mermaid Diagramme</li>
+                                                <li>{t("versions.v1_2_4.added.sherlock")}</li>
+                                                <li>{t("versions.v1_2_4.added.consultor")}</li>
+                                                <li>{t("versions.v1_2_4.added.arielle")}</li>
                                             </ul>
                                         </li>
 
-                                        <li>Community-Assistenten können zentral konfiguriert werden und es wird stets die neueste Version verwendet</li>
+                                        <li>{t("versions.v1_2_4.added.centralConfig")}</li>
                                     </ul>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Performanceprobleme bei langen Chats (mehr als 20k Tokens). </li>
+                                    <li>{t("versions.v1_2_4.fixed.performance")}</li>
+                                    <li>{t("versions.v1_2_4.fixed.policyViolation")}</li>
+                                    <li>{t("versions.v1_2_4.fixed.codeBlocks")}</li>
+                                    <li>{t("versions.v1_2_4.fixed.settingsButton")}</li>
+                                    <li>{t("versions.v1_2_4.fixed.versionFaq")}</li>
                                     <li>
-                                        Wird ein Prompt als gefährlich identifziert, wird nun nur noch "Es wurde ein Richtlinienverstoß festgestellt und der
-                                        Chat wird hier beendet" zurückgegeben.{" "}
-                                    </li>
-                                    <li>Code-Blöcke passen sich nun an die Schriftgröße an.</li>
-                                    <li>"Einstellungen & Feedback"-Button bleiben jetzt im Header beim Vergrößern der Schriftgröße.</li>
-                                    <li>Version & FAQ: Stil angepasst sowie Rechtschreib- und Grammatikfehler korrigiert.</li>
-                                    <li>
-                                        Token-Nutzung:
+                                        {t("versions.v1_2_4.fixed.tokenUsageTitle")}
                                         <ul>
-                                            <li>Anzeigeproblem beim Neuladen behoben.</li>
-                                            <li>
-                                                Token-Usage aus den Features <i>Zusammenfassen</i> und <i>Brainstorming</i> entfernt.
-                                            </li>
-                                            <li>
-                                                Wenn keine Tokens verwendet werden, wird die Token-Usage nicht angezeigt, um eine übersichtlichere Oberfläche zu
-                                                bieten.
-                                            </li>
+                                            <li>{t("versions.v1_2_4.fixed.tokenDisplay")}</li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.fixed.tokenRemoved") }}></li>
+                                            <li>{t("versions.v1_2_4.fixed.tokenHidden")}</li>
                                         </ul>
                                     </li>
-                                    <li>Zahlreiche Rechtschreib- und Grammatikfehler wurden korrigiert.</li>
+                                    <li>{t("versions.v1_2_4.fixed.typos")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>
-                                        Einfache Sprache:
+                                        {t("versions.v1_2_4.changed.simpleLanguageTitle")}
                                         <ul>
-                                            <li>
-                                                <i>Leichte Sprache</i> wurde entfernt, da wir keine vollständige Übersetzung in leichte Sprache durchführen
-                                                können und der Name deswegen irreführend ist.
-                                            </li>
-                                            <li>
-                                                Der Prompt für <i>einfache Sprache</i> wurde angepasst und erweitert.
-                                            </li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.changed.easyLanguageRemoved") }}></li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.changed.simpleLanguagePrompt") }}></li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Eigene Assistenten:
+                                        {t("versions.v1_2_4.changed.ownAssistantsTitle")}
                                         <ul>
-                                            <li>
-                                                Einstellungen wie <i>System-Prompt</i> oder <i>Maximale Token-Anzahl</i> werden nur beim Bearbeiten angezeigt.
-                                            </li>
-                                            <li>Beim Bearbeiten eines Assistenten verbreitert sich die Einstellungs-Sidebar.</li>
-                                            <li>Community-Assistenten sind Read-Only und können von den Benutzern nicht verändert werden.</li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_4.changed.settingsEditOnly") }}></li>
+                                            <li>{t("versions.v1_2_4.changed.sidebarExpands")}</li>
+                                            <li>{t("versions.v1_2_4.changed.communityReadOnly")}</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -190,79 +168,55 @@ const Version = () => {
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="12">
-                        <AccordionHeader>[1.2.3] 30.01.2025</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_2_3.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>
-                                        Neuer Community-Assistent Sherlock 🕵️‍♂️. Unterstützt beim Review und der Erstellung von Testfällen. Entwickelt von
-                                        itm.km73.
-                                    </li>
+                                    <li>{t("versions.v1_2_3.added.sherlock")}</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
                                     <li>
-                                        Brainstorming:
+                                        {t("versions.v1_2_3.fixed.brainstormingTitle")}
                                         <ul>
-                                            <li>Mindmaps werden nun im dunklen Design richtig dargestellt.</li>
+                                            <li>{t("versions.v1_2_3.fixed.darkMode")}</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Einfache Sprache:
+                                        {t("versions.v1_2_3.fixed.simpleLanguageTitle")}
                                         <ul>
-                                            <li>
-                                                Links werden nun beim Übersetzen in einfache Sprache ignoriert. Dies hatte zuvor zu Halluzinationen geführt.
-                                            </li>
+                                            <li>{t("versions.v1_2_3.fixed.linksIgnored")}</li>
                                         </ul>
                                     </li>
-                                    <li>
-                                        Es ist nun möglich, partielle Codeblöcke in Chrome zu kopieren. Dies hatte zuvor zu Zeilenumbrüchen nach jedem Wort
-                                        geführt.
-                                    </li>
-                                    <li>Ein Fehler bei der Kommunikation mit Mistral-Modellen über die API wurde behoben.</li>
+                                    <li>{t("versions.v1_2_3.fixed.codeCopy")}</li>
+                                    <li>{t("versions.v1_2_3.fixed.mistralApi")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>
-                                        Brainstorming:
+                                        {t("versions.v1_2_3.changed.brainstormingTitle")}
                                         <ul>
-                                            <li>
-                                                Mindmap-Erstellung wurde verbessert. Mehr Kindknoten werden generiert, was zu größeren, detaillierteren Mindmaps
-                                                führt.
-                                            </li>
+                                            <li>{t("versions.v1_2_3.changed.mindmapImproved")}</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Assistenten:
+                                        {t("versions.v1_2_3.changed.assistantsTitle")}
                                         <ul>
-                                            <li>
-                                                Assistenten können nun mehrere Chatverläufe haben. Ähnlich wie bei der Chatfunktion kann ein Chatverlauf
-                                                umbenannt und favorisiert werden. Die Daten werden ausschließlich lokal im Browser gespeichert.
-                                            </li>
+                                            <li>{t("versions.v1_2_3.changed.multipleChats")}</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Einfache Sprache:
+                                        {t("versions.v1_2_3.changed.simpleLanguageTitle")}
                                         <ul>
-                                            <li>
-                                                Der Titel des <i>leichte Sprache</i> Beispiels wurde umbenannt. Es handelt sich hierbei richtigerweise um einen
-                                                Artikel zum Arbeitsschutzgesetz.
-                                            </li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_3.changed.titleRenamed") }}></li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Generelle Oberflächenverbesserungen:
+                                        {t("versions.v1_2_3.changed.uiImprovementsTitle")}
                                         <ul>
-                                            <li>
-                                                Jede Funktion (z.B. Chat, Zusammenfassen) hat nun die Aktionselemente in einer immer geöffneten Sidebar auf der
-                                                linken Seite.
-                                            </li>
-                                            <li>
-                                                Das lokale Speichermanagement in der Browserdatenbank wurde verbessert und vereinheitlicht. Bestehende Daten
-                                                (alte Chats und Assistenten) werden migriert. ⚠ Konversationen in <i>Zusammenfassen</i>, <i>Brainstorming</i>{" "}
-                                                und <i>Einfache Sprache</i> bleiben nicht erhalten.
-                                            </li>
+                                            <li>{t("versions.v1_2_3.changed.sidebar")}</li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_3.changed.storage") }}></li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -270,122 +224,98 @@ const Version = () => {
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="11">
-                        <AccordionHeader>[1.2.2] 07.11.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_2_2.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Es besteht nun die Möglichkeit, eigene Assistenten zu erstellen. Diese Funktion ermöglicht es den Benutzern, für
-                                        wiederkehrende Aufgaben spezialisierte Assistenten zu entwickeln, die mit einem Systemprompt ausgestattet sind.
+                                        {t("versions.v1_2_2.added.customAssistants")}
                                         <ul>
-                                            Beispiele für Assistenten sind:
-                                            <li>Englisch-Übersetzer: Übersetzt alle Eingaben ins Englische.</li>
-                                            <li>Testgenerator: Erstellt hilfreiche Testfälle basierend auf dem eingegebenen Programmcode.</li>
-                                            <li>Lektor: Korrigiert eingegebene Texte und schlägt alternative Formulierungen vor.</li>
+                                            {t("versions.v1_2_2.added.examplesTitle")}
+                                            <li>{t("versions.v1_2_2.added.translator")}</li>
+                                            <li>{t("versions.v1_2_2.added.testGenerator")}</li>
+                                            <li>{t("versions.v1_2_2.added.editor")}</li>
                                         </ul>
                                     </li>
-                                    <li>
-                                        Um einen Assistenten zu erstellen, beschreibt der Benutzer die gewünschte Funktion in einem Textfeld. MUCGPT generiert
-                                        daraufhin einen passenden Titel, eine Beschreibung und einen Systemprompt, die anschließend weiter angepasst werden
-                                        können.
-                                    </li>
+                                    <li>{t("versions.v1_2_2.added.creation")}</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Verschiedene Fehler im Frontend wurden behoben.</li>
+                                    <li>{t("versions.v1_2_2.fixed.frontendBugs")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Das Design der Benutzeroberfläche von MUCGPT wurde aktualisiert.</li>
-                                    <li>🧜‍♀️ Arielle, die Diagramm-Assistentin, ist jetzt unter "Community Assistenten" zu finden und nicht mehr im Chat.</li>
+                                    <li>{t("versions.v1_2_2.changed.design")}</li>
+                                    <li>{t("versions.v1_2_2.changed.arielle")}</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="10">
-                        <AccordionHeader>[1.2.1] 27.09.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_2_1.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Neben den Funktionen Chat, Zusammenfassen und Brainstorming bieten wir nun als viertes Feature "Leichte Sprache" an.
+                                        {t("versions.v1_2_1.added.simpleLanguageFeature")}
                                         <p>
-                                            <img width="70%" src={simply} alt="Bild zur Leichten Sprache"></img>
+                                            <img width="70%" src={simply} alt={t("versions.v1_2_1.added.simpleLanguageAlt")}></img>
                                         </p>
                                         <ul>
-                                            <li>
-                                                Über einen Chat können Texte an das Sprachmodell gesendet werden, die in leichte oder einfache Sprache übersetzt
-                                                werden.
-                                            </li>
-                                            <li>Oben rechts können Sie auswählen, ob der Text in leichte oder einfache Sprache übersetzt werden soll.</li>
-                                            <li>
-                                                Einfache Sprache ist eine vereinfachte Form der Standardsprache, die auf Komplexität verzichtet, um eine
-                                                breitere Zielgruppe zu erreichen.
-                                            </li>
-                                            <li>
-                                                Leichte Sprache verwendet einfache Wörter und kurze Sätze, um Informationen klar und verständlich zu vermitteln.
-                                            </li>
-                                            <li>
-                                                Das Feature "Leichte Sprache" nutzt dasselbe Sprachmodell wie die anderen Features, das über die Einstellungen
-                                                ausgewählt wird. Wir empfehlen jedoch für die Nutzung von "Leichte Sprache" die Modelle{" "}
-                                                <strong>mistral-large-2407</strong> oder <strong>gpt-4o</strong> zu verwenden.
-                                            </li>
+                                            <li>{t("versions.v1_2_1.added.chat")}</li>
+                                            <li>{t("versions.v1_2_1.added.selection")}</li>
+                                            <li>{t("versions.v1_2_1.added.easyLanguageDef")}</li>
+                                            <li>{t("versions.v1_2_1.added.plainLanguageDef")}</li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_2_1.added.modelRecommendation") }}></li>
                                         </ul>
                                     </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>
-                                        Benutzer, die sich noch nicht in ServiceNow für MUCGPT registriert haben, werden beim Aufrufen des Dienstes automatisch
-                                        zu ServiceNow weitergeleitet.
-                                    </li>
-                                    <li>Die Performance bei längeren Chats mit einer hohen Anzahl an generierten Tokens wurde optimiert.</li>
+                                    <li>{t("versions.v1_2_1.fixed.serviceNowRedirect")}</li>
+                                    <li>{t("versions.v1_2_1.fixed.performance")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="9">
-                        <AccordionHeader>[1.2.0] 18.09.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_2_0.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Generierter Code wurde manchmal nicht korrekt dargestellt (Klammern entfernt).</li>
+                                    <li>{t("versions.v1_2_0.fixed.codeDisplay")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="8">
-                        <AccordionHeader>[1.1.4] 11.09.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_1_4.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Versionsnummer wird wieder richtig gespeichert und in den Einstellungen angezeigt.</li>
-                                    <li>
-                                        Maximale Tokens aus der Config aufgeteilt in Input- und Output-Tokens. Dadurch laufen Modelle mit kleineren
-                                        Kontextfenstern (wie z.B. Mistral) nicht mehr in einen Fehler.
-                                    </li>
+                                    <li>{t("versions.v1_1_4.fixed.versionNumber")}</li>
+                                    <li>{t("versions.v1_1_4.fixed.tokenSplit")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="7">
-                        <AccordionHeader>[1.1.3] 28.08.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_1_3.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Benutzer haben nun die Möglichkeit, zwischen 3 verschiedenen Sprachmodellen zu wählen, welches für ihren Anwendungsfall
-                                        am besten passt.
+                                        {t("versions.v1_1_3.added.modelSelection")}
                                         <ul>
                                             <li>GPT-4o-mini</li>
                                             <li>GPT-4o</li>
@@ -396,12 +326,12 @@ const Version = () => {
                                 <h3>{t("version.fixed")}</h3>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Das standardmäßig benutzte Sprachmodell wurde von GPT-3.5 auf die neuere Version GPT-4o-mini geändert.</li>
+                                    <li>{t("versions.v1_1_3.changed.defaultModel")}</li>
                                     <li>
-                                        Verbesserung der "Zusammenfassen"-Funktion:
+                                        {t("versions.v1_1_3.changed.summarizeTitle")}
                                         <ul>
-                                            <li>Weniger Fehler</li>
-                                            <li>Zuverlässigere Zusammenfassungen in der gewünschten Struktur</li>
+                                            <li>{t("versions.v1_1_3.changed.fewerErrors")}</li>
+                                            <li>{t("versions.v1_1_3.changed.reliableSummaries")}</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -409,24 +339,21 @@ const Version = () => {
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="6">
-                        <AccordionHeader>[1.1.2] 31.07.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_1_2.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Für die Chat-Funktion gibt es nun eine Historie aller durchgeführten Konversationen.
+                                        {t("versions.v1_1_2.added.chatHistory")}
                                         <p>
                                             <img width="70%" src={history}></img>
                                         </p>
                                         <ul>
-                                            <li>Alle Chat-Verläufe im Tab "Chat" werden automatisch gespeichert.</li>
-                                            <li>Chats können im "Historie"-Fenster gelöscht, umbenannt oder favorisiert werden.</li>
-                                            <li>Favorisierte Chats werden immer ganz oben angezeigt.</li>
-                                            <li>
-                                                Die Chats werden nach dem letzten Bearbeitungszeitpunkt sortiert und gruppiert in "Heute", "Gestern", "Letzte 7
-                                                Tage" und "Älter".
-                                            </li>
+                                            <li>{t("versions.v1_1_2.added.autoSave")}</li>
+                                            <li>{t("versions.v1_1_2.added.management")}</li>
+                                            <li>{t("versions.v1_1_2.added.favorites")}</li>
+                                            <li>{t("versions.v1_1_2.added.sorting")}</li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -436,191 +363,168 @@ const Version = () => {
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="5">
-                        <AccordionHeader>[1.1.1] 04.06.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_1_1.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>Neuer Hinweis im Antwortfeld vom Chat: MUCGPT macht Fehler.</li>
+                                    <li>{t("versions.v1_1_1.added.errorHint")}</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Der Hilfstext für den Systemprompt ist nicht mehr transparent.</li>
+                                    <li>{t("versions.v1_1_1.fixed.systempromptHelp")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Die Beschreibung des Arielle-Chat-Beispiels wurde verbessert.</li>
+                                    <li>{t("versions.v1_1_1.changed.arielleDescription")}</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="1">
-                        <AccordionHeader>[1.1.0] 22.05.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_1_0.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Chat/Zusammenfassen/Brainstorming:
+                                        {t("versions.v1_1_0.added.chatSummarizeBrainstormTitle")}
                                         <ul>
                                             <li>
-                                                Eigene Nachrichten können zurückgenommen werden. Beim Klicken des entsprechenden Buttons werden alle darunter
-                                                liegenden Nachrichten und die ausgewählte Nachricht gelöscht. In das Eingabefeld wird die ausgewählte Nachricht
-                                                eingefügt und kann abgeändert werden:
+                                                {t("versions.v1_1_0.added.recallMessages")}
                                                 <p>
                                                     <img width="70%" src={zurückziehen}></img>
                                                 </p>
                                             </li>
-                                            <li>
-                                                Der aktuelle Chatverlauf wird im Browser zwischengespeichert und bleibt somit beim Verlassen der Seite bestehen.
-                                            </li>
+                                            <li>{t("versions.v1_1_0.added.browserCache")}</li>
                                         </ul>
                                     </li>
-                                    <li>Was gibt's Neues?: Updatehistorie kann angezeigt werden.</li>
+                                    <li>{t("versions.v1_1_0.added.updateHistory")}</li>
                                     <li>
-                                        Chat:
+                                        {t("versions.v1_1_0.added.chatTitle")}
                                         <ul>
                                             <li>
-                                                <div>
-                                                    Auf eine Antwort von MUCGPT werden nun <b>Antwortmöglichkeiten</b> vorgeschlagen. Beim Auswählen einer
-                                                    Antwortmöglichkeit wird ein entsprechender Prompt in das Eingabefeld geladen:
-                                                </div>
+                                                <div dangerouslySetInnerHTML={{ __html: t("versions.v1_1_0.added.suggestedResponses") }}></div>
                                                 <p>
                                                     <img width="80%" src={vorgeschlageneAntworten}></img>
                                                 </p>
                                             </li>
-                                            <li>
-                                                <b>Mermaid-Diagramme</b> können im Chat angezeigt und heruntergeladen werden.
-                                            </li>
-                                            <li>
-                                                Es gibt Arielle, die Diagramm-Assistentin. Diese begleitet den Nutzer beim Erstellen von Mermaid-Diagrammen.
-                                            </li>
-                                            <li>Mehr Platz für die Eingabe des Systemprompts.</li>
-                                            <li>Warnmeldung wird angezeigt, falls ein Systemprompt gesetzt ist.</li>
-                                            <li>Bessere Beschreibungen für die Temperatureinstellung.</li>
+                                            <li dangerouslySetInnerHTML={{ __html: t("versions.v1_1_0.added.mermaidDiagrams") }}></li>
+                                            <li>{t("versions.v1_1_0.added.arielle")}</li>
+                                            <li>{t("versions.v1_1_0.added.systempromptSpace")}</li>
+                                            <li>{t("versions.v1_1_0.added.systempromptWarning")}</li>
+                                            <li>{t("versions.v1_1_0.added.temperatureDescription")}</li>
                                         </ul>
                                     </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Der Systemprompt wird nun ins Tokenlimit miteinbezogen.</li>
+                                    <li>{t("versions.v1_1_0.fixed.systempromptToken")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="2">
-                        <AccordionHeader>[1.0.0] 26.02.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v1_0_0.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>Produktivumgebung aufgebaut.</li>
-                                    <li>FAQ wurde ergänzt.</li>
+                                    <li>{t("versions.v1_0_0.added.production")}</li>
+                                    <li>{t("versions.v1_0_0.added.faq")}</li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Fehlermeldungen anzeigen, falls das Sprachmodell während des Streamings überlastet ist.</li>
-                                    <li>Rechtschreibfehler in Hilfetexten verbessert.</li>
+                                    <li>{t("versions.v1_0_0.fixed.streamingErrors")}</li>
+                                    <li>{t("versions.v1_0_0.fixed.typos")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
-                                    <li>Nutzungsbedingungen müssen nun einmal am Tag bestätigt werden.</li>
-                                    <li>Nutzungsbedingungen wurden ergänzt.</li>
-                                    <li>Hinweis auf Servicedesk.</li>
-                                    <li>Link zum Wilma-Arbeitsraum.</li>
+                                    <li>{t("versions.v1_0_0.changed.termsDaily")}</li>
+                                    <li>{t("versions.v1_0_0.changed.termsUpdated")}</li>
+                                    <li>{t("versions.v1_0_0.changed.servicedesk")}</li>
+                                    <li>{t("versions.v1_0_0.changed.wilmaLink")}</li>
                                 </ul>
-                                <li>Chat-Beispiele von der Community wurden eingepflegt.</li>
+                                <li>{t("versions.v1_0_0.added.communityExamples")}</li>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="3">
-                        <AccordionHeader>[0.3.0] 06.02.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v0_3_0.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
                                 <h3>{t("version.added")}</h3>
                                 <ul>
-                                    <li>Bereits getätigte Einstellungen werden gespeichert (z.B. Sprache, Systemprompt, Nutzungsbedingungen gelesen).</li>
+                                    <li>{t("versions.v0_3_0.added.settingsSaved")}</li>
                                     <li>
-                                        Barrierefreiheit:
+                                        {t("versions.v0_3_0.added.accessibilityTitle")}
                                         <ul>
-                                            <li>Optimierte Darstellung für Screenreader.</li>
-                                            <li>Bessere Unterscheidbarkeit für Farbenblinde.</li>
-                                            <li>Unterstützung von Windows High Contrast Mode.</li>
-                                            <li>Und noch viele weitere Optimierungen ...</li>
+                                            <li>{t("versions.v0_3_0.added.screenreader")}</li>
+                                            <li>{t("versions.v0_3_0.added.colorblind")}</li>
+                                            <li>{t("versions.v0_3_0.added.highContrast")}</li>
+                                            <li>{t("versions.v0_3_0.added.moreOptimizations")}</li>
                                         </ul>
                                     </li>
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>
-                                        Als Code (mit Single-Backticks, ` ) formatierte Wörter in Antworten werden nun nicht mehr als Codeblock dargestellt, da
-                                        dies zu sehr den Lesefluss gestört hat.
-                                    </li>
+                                    <li>{t("versions.v0_3_0.fixed.inlineCode")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                                 <ul>
                                     <li>
-                                        Brainstorm:
+                                        {t("versions.v0_3_0.changed.brainstormTitle")}
                                         <ul>
-                                            <li>
-                                                Mindmaps sind nun im .mm-Format herunterladbar und können mit dem Mindmap-Tool Freeplane weiterverarbeitet
-                                                werden.
-                                            </li>
+                                            <li>{t("versions.v0_3_0.changed.mindmapDownload")}</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Zusammenfassen:
+                                        {t("versions.v0_3_0.changed.summarizeTitle")}
                                         <ul>
-                                            <li>
-                                                Die Länge der Zusammenfassung hängt nun von der Gesamtlänge des Eingabetexts ab - längere Eingabetexte führen zu
-                                                längeren Zusammenfassungen.
-                                            </li>
-                                            <li>Der Detaillierungsgrad (kurz, mittel, lang) lässt sich über eine eigene Einstellung setzen.</li>
+                                            <li>{t("versions.v0_3_0.changed.summaryLength")}</li>
+                                            <li>{t("versions.v0_3_0.changed.detailLevel")}</li>
                                         </ul>
                                     </li>
-                                    <li>Design vereinheitlicht.</li>
-                                    <li>Dark Mode hinzugefügt.</li>
-                                    <li>Nutzungsbedingungen aktualisiert.</li>
+                                    <li>{t("versions.v0_3_0.changed.designUnified")}</li>
+                                    <li>{t("versions.v0_3_0.changed.darkMode")}</li>
+                                    <li>{t("versions.v0_3_0.changed.termsUpdated")}</li>
                                 </ul>
                             </div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="4">
-                        <AccordionHeader>[0.3.0] 06.02.2024</AccordionHeader>
+                        <AccordionHeader>{t("versions.v0_2_0.date")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>
-                                ❄Neujahrsupdate❄
+                                {t("versions.v0_2_0.subtitle")}
                                 <h3>{t("version.added")}</h3>
                                 <ul>
                                     <li>
-                                        Bessere Darstellung von Antworten, die Markdown enthalten:
+                                        {t("versions.v0_2_0.added.markdownTitle")}
                                         <ul>
-                                            <li>Bei Codeblöcken wird die Programmiersprache mit angezeigt.</li>
-                                            <li>Bei Codeblöcken werden die Zeilennummern mit angegeben.</li>
+                                            <li>{t("versions.v0_2_0.added.codeLanguage")}</li>
+                                            <li>{t("versions.v0_2_0.added.lineNumbers")}</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Zusammenfassen:
+                                        {t("versions.v0_2_0.added.summarizeTitle")}
                                         <ul>
-                                            <li>Zusammenfassungen können kopiert werden.</li>
-                                            <li>Tokenlimit (Wörterlimit) wurde entfernt.</li>
-                                            <li>Es können PDFs hochgeladen werden, die anschließend zusammengefasst werden.</li>
+                                            <li>{t("versions.v0_2_0.added.copySummary")}</li>
+                                            <li>{t("versions.v0_2_0.added.noTokenLimit")}</li>
+                                            <li>{t("versions.v0_2_0.added.pdfUpload")}</li>
                                         </ul>
                                     </li>
                                     <li>
-                                        Chat:
+                                        {t("versions.v0_2_0.added.chatTitle")}
                                         <ul>
+                                            <li>{t("versions.v0_2_0.added.unformattedView")}</li>
                                             <li>
-                                                Antworten können nun optional unformatiert angezeigt werden (Alternative zur automatischen Darstellung als
-                                                HTML/Markdown).
-                                            </li>
-                                            <li>
-                                                Mehr Einstellungen für den Chat:
+                                                {t("versions.v0_2_0.added.moreSettingsTitle")}
                                                 <ul>
-                                                    <li>Temperatur: Kreativität der Antworten festlegen.</li>
-                                                    <li>Maximale Antwortlänge.</li>
-                                                    <li>Systemprompt: Verhalten des Sprachmodells festlegen, indem man z.B. eine bestimmte Rolle vergibt.</li>
+                                                    <li>{t("versions.v0_2_0.added.temperature")}</li>
+                                                    <li>{t("versions.v0_2_0.added.maxLength")}</li>
+                                                    <li>{t("versions.v0_2_0.added.systemprompt")}</li>
                                                 </ul>
                                             </li>
                                         </ul>
@@ -628,19 +532,10 @@ const Version = () => {
                                 </ul>
                                 <h3>{t("version.fixed")}</h3>
                                 <ul>
-                                    <li>Bei längeren Eingaben ist das Eingabetextfeld nicht mitgewachsen.</li>
-                                    <li>
-                                        Falls Antworten HTML enthalten wie &lt;, wird dies nicht mehr in &amp;lt; übersetzt. R-Skripte oder Bash Skripte sollten
-                                        nun wieder korrekt generiert werden.
-                                    </li>
-                                    <li>
-                                        Generierte Antworten mit Codeblöcken in Markdown: Falls keine Sprache im zurückgegebenen Codeblock definiert war und
-                                        dieser sehr lange Zeilen enthalten hat, gab es keinen Zeilenumbruch.
-                                    </li>
-                                    <li>
-                                        Falls die Authentifizierungsinformationen ausgelaufen sind (Fenster zu lange offen ohne Interaktion), wird die Seite neu
-                                        geladen.
-                                    </li>
+                                    <li>{t("versions.v0_2_0.fixed.textFieldGrowth")}</li>
+                                    <li>{t("versions.v0_2_0.fixed.htmlEntities")}</li>
+                                    <li>{t("versions.v0_2_0.fixed.codeBlockWrapping")}</li>
+                                    <li>{t("versions.v0_2_0.fixed.authExpiration")}</li>
                                 </ul>
                                 <h3>{t("version.changed")}</h3>
                             </div>

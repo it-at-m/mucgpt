@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
+import { versionTranslations } from "./i18n.version";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -456,7 +457,8 @@ i18n
                             dismiss_aria_label: "Toast schließen"
                         }
                     },
-                    ...tutorialsTranslations.DE
+                    ...tutorialsTranslations.DE,
+                    ...versionTranslations.DE
                 }
             },
             EN: {
@@ -897,7 +899,8 @@ i18n
                             dismiss_aria_label: "Dismiss toast"
                         }
                     },
-                    ...tutorialsTranslations.EN
+                    ...tutorialsTranslations.EN,
+                    ...versionTranslations.EN
                 }
             },
             BA: {
@@ -1342,7 +1345,8 @@ i18n
                             dismiss_aria_label: "Toast schließn"
                         }
                     },
-                    ...tutorialsTranslations.BA
+                    ...tutorialsTranslations.BA,
+                    ...versionTranslations.BA
                 }
             },
             FR: {
@@ -1787,7 +1791,8 @@ i18n
                             dismiss_aria_label: "Fermer la notification"
                         }
                     },
-                    ...tutorialsTranslations.FR
+                    ...tutorialsTranslations.FR,
+                    ...versionTranslations.FR
                 }
             },
             UK: {
@@ -2230,7 +2235,8 @@ i18n
                             dismiss_aria_label: "Закрити тост"
                         }
                     },
-                    ...tutorialsTranslations.UK
+                    ...tutorialsTranslations.UK,
+                    ...versionTranslations.UK
                 }
             }
         }

@@ -4,24 +4,34 @@ import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
 
 interface VersionInfoProps {
-    version: string;
-    commit?: string;
+    core_version: string;
+    frontend_version: string;
+    assistant_version: string;
     versionUrl?: string;
 }
 
-export const VersionInfo = ({ version, commit, versionUrl }: VersionInfoProps) => {
+export const VersionInfo = ({ core_version, versionUrl, frontend_version, assistant_version }: VersionInfoProps) => {
     const { t } = useTranslation();
 
-    const tooltipContent = commit
-        ? t("components.versioninfo.tooltip_with_commit", "Application version: {{version}}, Commit: {{commit}}", { version, commit })
-        : t("components.versioninfo.tooltip", "Application version: {{version}}", { version });
+    const tooltipContent = t(
+        "components.versioninfo.tooltip",
+        "Application version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
+        {
+            core_version,
+            frontend_version,
+            assistant_version
+        }
+    );
 
     const content = (
         <div className={styles.versionContainer}>
             <InfoRegular className={styles.infoIcon} aria-hidden />
-            <span className={styles.label}>{t("components.versioninfo.label", "Version:")}</span>
-            <Tag shape="circular">{version}</Tag>
-            {commit && <Tag shape="circular">{commit}</Tag>}
+            <span className={styles.label}>{t("components.versioninfo.core_version", "Core Version:")}</span>
+            <Tag shape="circular">{core_version}</Tag>
+            <span className={styles.label}>{t("components.versioninfo.frontend_version", "Frontend Version:")}</span>
+            <Tag shape="circular">{frontend_version}</Tag>
+            <span className={styles.label}>{t("components.versioninfo.assistant_version", "Assistant Version:")}</span>
+            <Tag shape="circular">{assistant_version}</Tag>
         </div>
     );
 

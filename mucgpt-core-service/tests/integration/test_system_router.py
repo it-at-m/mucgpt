@@ -11,8 +11,11 @@ def test_config_endpoint(test_client):
     response = test_client.get("/config", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert "version" in data
-    assert "commit" in data
+    assert "core_version" in data
+    assert "frontend_version" in data  # Note: typo in API model
+    assert "assistant_version" in data
+    assert "env_name" in data
+    assert "alternative_logo" in data
     assert "models" in data
     assert isinstance(data["models"], list)
 

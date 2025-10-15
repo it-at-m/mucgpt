@@ -4,8 +4,6 @@ from typing import List
 from pydantic import BaseModel, Field, HttpUrl, PositiveInt, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from core.version import VersionInfo
-
 
 class ModelsConfig(BaseModel):
     type: str = Field(..., min_length=1)
@@ -52,24 +50,17 @@ class Settings(BaseSettings):
     )
     # General settings
     VERSION: str = Field(default="")
-    COMMIT: str = Field(default="")
     LOG_CONFIG: str = "logconf.yaml"
 
     # Frontend settings
     ENV_NAME: str = "MUCGPT"
     ALTERNATIVE_LOGO: bool = False
+    FRONTEND_VERSION: str = "unknown"
+    ASSISTANT_VERSION: str = "unknown"
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: List[ModelsConfig] = []
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # Set version and commit if not provided via environment
-        if not self.VERSION:
-            self.VERSION = VersionInfo.get_version()
-        if not self.COMMIT:
-            self.COMMIT = VersionInfo.get_commit()
 
 
 @lru_cache(maxsize=1)

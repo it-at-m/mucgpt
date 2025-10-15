@@ -158,8 +158,7 @@ i18n
                             accept: "Zustimmen"
                         },
                         versioninfo: {
-                            tooltip: "Anwendungs-Version anzeigen",
-                            tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Was gibt's neues?"
                         },
@@ -602,8 +601,7 @@ i18n
                             accept: "Accept"
                         },
                         versioninfo: {
-                            tooltip: "Show application version",
-                            tooltip_with_commit: "Application version: {{version}}, Commit: {{commit}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "What's new?"
                         },
@@ -1044,8 +1042,7 @@ i18n
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
-                            tooltip: "Anwendungs-Version zeig'n",
-                            tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Wos gibt's Nei's?"
                         },
@@ -1488,8 +1485,8 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip: "Afficher la version de l'application",
-                            tooltip_with_commit: "Version de l'application: {{version}}, Commit: {{commit}}",
+                            tooltip:
+                                "Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Quoi de neuf ?"
                         },
@@ -1933,8 +1930,7 @@ i18n
                             accept: "Прийняти"
                         },
                         versioninfo: {
-                            tooltip: "Показати версію програми",
-                            tooltip_with_commit: "Версія програми: {{version}}, Commit: {{commit}}",
+                            tooltip: "основна версія: {{core_version}}, версія інтерфейсу: {{frontend_version}}, версія помічника: {{assistant_version}}",
                             label: "Версія:",
                             whats_new: "Що нового?"
                         },

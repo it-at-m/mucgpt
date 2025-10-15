@@ -47,8 +47,9 @@ export interface ApplicationConfig {
     models: Model[];
     alternative_logo: boolean;
     env_name: string;
-    version: string;
-    commit: string;
+    core_version: string;
+    frontend_version: string;
+    assistant_version: string;
 }
 
 export interface Model {

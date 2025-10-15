@@ -148,7 +148,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                                             <button
                                                 className={styles.toolHelpButton}
                                                 onClick={e => openTutorial(tool.id, e)}
-                                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
+                                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.name })}
                                             >
                                                 <QuestionCircle16Regular />
                                             </button>

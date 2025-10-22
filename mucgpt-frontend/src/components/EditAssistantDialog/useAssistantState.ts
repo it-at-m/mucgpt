@@ -28,8 +28,18 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTitle(initialAssistant.title);
         setDescription(initialAssistant.description);
         setSystemPrompt(initialAssistant.system_message);
-        setQuickPrompts(initialAssistant.quick_prompts || []);
-        setExamples(initialAssistant.examples || []);
+        // Ensure all quick prompts have IDs
+        const quickPromptsWithIds = (initialAssistant.quick_prompts || []).map(qp => ({
+            ...qp,
+            id: qp.id || crypto.randomUUID()
+        }));
+        setQuickPrompts(quickPromptsWithIds);
+        // Ensure all examples have IDs
+        const examplesWithIds = (initialAssistant.examples || []).map(ex => ({
+            ...ex,
+            id: ex.id || crypto.randomUUID()
+        }));
+        setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
         setMaxOutputTokens(initialAssistant.max_output_tokens || 1024);
         setVersion(initialAssistant.version || "0");
@@ -89,8 +99,18 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTitle(initialAssistant.title);
         setDescription(initialAssistant.description);
         setSystemPrompt(initialAssistant.system_message);
-        setQuickPrompts(initialAssistant.quick_prompts || []);
-        setExamples(initialAssistant.examples || []);
+        // Ensure all quick prompts have IDs
+        const quickPromptsWithIds = (initialAssistant.quick_prompts || []).map(qp => ({
+            ...qp,
+            id: qp.id || crypto.randomUUID()
+        }));
+        setQuickPrompts(quickPromptsWithIds);
+        // Ensure all examples have IDs
+        const examplesWithIds = (initialAssistant.examples || []).map(ex => ({
+            ...ex,
+            id: ex.id || crypto.randomUUID()
+        }));
+        setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
         setMaxOutputTokens(initialAssistant.max_output_tokens);
         setVersion(initialAssistant.version);

@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
                     manualChunks: {
                         react: ["react", "react-dom", "react-router-dom"],
                         fluentui: ["@fluentui/react", "@fluentui/react-components", "@fluentui/react-icons"],
-                        markdown: ["react-markdown", "remark-gfm", "rehype-raw"],
+                        markdown: ["react-markdown", "remark-gfm"],
                         visualizations: ["markmap-view", "markmap-lib", "mermaid"]
                     }
                 }

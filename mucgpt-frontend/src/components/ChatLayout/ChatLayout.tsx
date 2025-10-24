@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import styles from "./ChatLayout.module.css";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
 import { Button } from "@fluentui/react-components";
@@ -68,9 +67,7 @@ export const ChatLayout = ({
                                 {header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>
-                                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                                {header}
-                                            </Markdown>
+                                            <Markdown remarkPlugins={[remarkGfm]}>{header}</Markdown>
                                         </div>
                                     </div>
                                 ) : (

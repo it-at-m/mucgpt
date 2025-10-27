@@ -1,7 +1,12 @@
 import os
 from unittest.mock import patch
 
-from src.config.settings import Settings, get_settings
+from src.config.settings import (
+    Settings,
+    get_langfuse_settings,
+    get_settings,
+    get_sso_settings,
+)
 
 
 class TestSettings:
@@ -11,26 +16,29 @@ class TestSettings:
         """Test that settings load with default values when no env vars are set."""
         # Clear any existing environment variables
         with patch.dict(os.environ, {}, clear=True):
-            settings = (
-                Settings()
-            )  # Check that version and commit have some default values
-            assert settings.VERSION is not None
-            assert settings.COMMIT is not None
-            assert len(settings.VERSION) > 0
-            assert len(settings.COMMIT) > 0
+            settings = Settings()
+            assert settings.VERSION == ""
+            assert settings.FRONTEND_VERSION == "unknown"
+            assert settings.ASSISTANT_VERSION == "unknown"
 
     def test_settings_with_env_variables(self):
         """Test that settings respect environment variables."""
         test_version = "test-version-1.0.0"
-        test_commit = "abc123def456"
+        test_frontend_version = "frontend-2.0.0"
+        test_assistant_version = "assistant-3.0.0"
 
         with patch.dict(
             os.environ,
-            {"MUCGPT_CORE_VERSION": test_version, "MUCGPT_CORE_COMMIT": test_commit},
+            {
+                "MUCGPT_CORE_VERSION": test_version,
+                "MUCGPT_CORE_FRONTEND_VERSION": test_frontend_version,
+                "MUCGPT_CORE_ASSISTANT_VERSION": test_assistant_version,
+            },
         ):
             settings = Settings()
             assert settings.VERSION == test_version
-            assert settings.COMMIT == test_commit
+            assert settings.FRONTEND_VERSION == test_frontend_version
+            assert settings.ASSISTANT_VERSION == test_assistant_version
 
     def test_get_settings_cached(self):
         """Test that get_settings returns cached instance."""
@@ -41,14 +49,12 @@ class TestSettings:
             os.environ,
             {
                 "MUCGPT_CORE_VERSION": "cached-test-version",
-                "MUCGPT_CORE_COMMIT": "cached-test-commit",
             },
         ):
             settings1 = get_settings()
             settings2 = get_settings()  # Should be the same instance due to caching
             assert settings1 is settings2
             assert settings1.VERSION == "cached-test-version"
-            assert settings1.COMMIT == "cached-test-commit"
 
     def test_frontend_config_defaults(self):
         """Test frontend configuration defaults."""
@@ -56,12 +62,15 @@ class TestSettings:
             settings = Settings()
             assert settings.ENV_NAME == "MUCGPT"
             assert settings.ALTERNATIVE_LOGO is False
+            assert settings.FRONTEND_VERSION == "unknown"
+            assert settings.ASSISTANT_VERSION == "unknown"
 
     def test_backend_config_defaults(self):
         """Test backend configuration defaults."""
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
             assert len(settings.MODELS) == 0
+            assert settings.UNAUTHORIZED_USER_REDIRECT_URL == ""
 
     def test_nested_env_variables(self):
         """Test that nested environment variables work correctly."""
@@ -109,7 +118,53 @@ class TestSettings:
             assert model.max_output_tokens == 1000
             assert model.max_input_tokens == 2000
 
+    def test_sso_settings(self):
+        """Test SSO settings configuration."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_SSO_ROLE": "custom-role",
+            },
+        ):
+            get_sso_settings.cache_clear()
+            sso_settings = get_sso_settings()
+            assert sso_settings.ROLE == "custom-role"
+
+    def test_sso_settings_default(self):
+        """Test SSO settings default values."""
+        with patch.dict(os.environ, {}, clear=True):
+            get_sso_settings.cache_clear()
+            sso_settings = get_sso_settings()
+            assert sso_settings.ROLE == "lhm-ab-mucgpt-user"
+
+    def test_langfuse_settings(self):
+        """Test Langfuse settings configuration."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_LANGFUSE_PUBLIC_KEY": "test-public-key",
+                "MUCGPT_LANGFUSE_SECRET_KEY": "test-secret-key",
+                "MUCGPT_LANGFUSE_HOST": "https://langfuse.example.com",
+            },
+        ):
+            get_langfuse_settings.cache_clear()
+            langfuse_settings = get_langfuse_settings()
+            assert langfuse_settings.PUBLIC_KEY == "test-public-key"
+            assert langfuse_settings.SECRET_KEY == "test-secret-key"
+            assert langfuse_settings.HOST == "https://langfuse.example.com"
+
+    def test_langfuse_settings_default(self):
+        """Test Langfuse settings default values."""
+        with patch.dict(os.environ, {}, clear=True):
+            get_langfuse_settings.cache_clear()
+            langfuse_settings = get_langfuse_settings()
+            assert langfuse_settings.PUBLIC_KEY is None
+            assert langfuse_settings.SECRET_KEY is None
+            assert langfuse_settings.HOST is None
+
     def teardown_method(self):
         """Clean up after each test."""
         # Clear the cache to ensure tests don't interfere with each other
         get_settings.cache_clear()
+        get_sso_settings.cache_clear()
+        get_langfuse_settings.cache_clear()

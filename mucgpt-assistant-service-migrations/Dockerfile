@@ -17,6 +17,9 @@ WORKDIR /app
 # Leverage layer cache
 COPY pyproject.toml uv.lock ./
 
+# Install build dependencies for packages with C extensions
+RUN microdnf install -y gcc python3-devel
+
 # Install dependencies
 RUN --mount=type=cache,target=/app/.cache/uv \
     uv sync --no-dev --locked --no-install-project
@@ -28,6 +31,10 @@ COPY /test_db_connection.py /app/
 # Install the project
 RUN --mount=type=cache,target=/app/.cache/uv \
     uv sync --no-dev --locked
+
+# Remove build dependencies to keep image small
+RUN microdnf remove -y gcc python3-devel && \
+    microdnf clean all
 
 # Make sure migrations directory is in the path
 ENV PYTHONPATH="/app/migrations:${PYTHONPATH}"

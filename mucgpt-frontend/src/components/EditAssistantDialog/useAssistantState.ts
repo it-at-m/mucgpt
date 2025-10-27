@@ -22,23 +22,21 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [hasChanged, setHasChanged] = useState<boolean>(false);
     const [isVisible, setIsVisible] = useState<boolean>(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
 
+    const ensureIds = useCallback(
+        <T extends { id?: string }>(items: T[] | undefined) => (items || []).map(it => ({ ...it, id: it.id || crypto.randomUUID() })),
+        []
+    );
+
     // Update state when assistant prop changes
     useEffect(() => {
+        const quickPromptsWithIds = ensureIds(initialAssistant.quick_prompts);
+        const examplesWithIds = ensureIds(initialAssistant.examples);
+
         setAssistantId(initialAssistant.id);
         setTitle(initialAssistant.title);
         setDescription(initialAssistant.description);
         setSystemPrompt(initialAssistant.system_message);
-        // Ensure all quick prompts have IDs
-        const quickPromptsWithIds = (initialAssistant.quick_prompts || []).map(qp => ({
-            ...qp,
-            id: qp.id || crypto.randomUUID()
-        }));
         setQuickPrompts(quickPromptsWithIds);
-        // Ensure all examples have IDs
-        const examplesWithIds = (initialAssistant.examples || []).map(ex => ({
-            ...ex,
-            id: ex.id || crypto.randomUUID()
-        }));
         setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
         setMaxOutputTokens(initialAssistant.max_output_tokens || 1024);
@@ -50,7 +48,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
-    }, [initialAssistant]);
+    }, [initialAssistant, ensureIds]);
 
     // Change handlers
     const updateTitle = useCallback((newTitle: string) => {
@@ -95,21 +93,14 @@ export const useAssistantState = (initialAssistant: Assistant) => {
 
     // Reset to original values
     const resetToOriginal = useCallback(() => {
+        const quickPromptsWithIds = ensureIds(initialAssistant.quick_prompts);
+        const examplesWithIds = ensureIds(initialAssistant.examples);
+
         setAssistantId(initialAssistant.id);
         setTitle(initialAssistant.title);
         setDescription(initialAssistant.description);
         setSystemPrompt(initialAssistant.system_message);
-        // Ensure all quick prompts have IDs
-        const quickPromptsWithIds = (initialAssistant.quick_prompts || []).map(qp => ({
-            ...qp,
-            id: qp.id || crypto.randomUUID()
-        }));
         setQuickPrompts(quickPromptsWithIds);
-        // Ensure all examples have IDs
-        const examplesWithIds = (initialAssistant.examples || []).map(ex => ({
-            ...ex,
-            id: ex.id || crypto.randomUUID()
-        }));
         setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
         setMaxOutputTokens(initialAssistant.max_output_tokens);
@@ -121,7 +112,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
-    }, [initialAssistant]);
+    }, [initialAssistant, ensureIds]);
 
     // Create assistant object for saving
     const createAssistantForSaving = useCallback((): Assistant => {
@@ -137,8 +128,14 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             owner_ids: ownerIds,
             temperature: temperature,
             max_output_tokens: maxOutputTokens,
-            quick_prompts: validQuickPrompts,
-            examples: validExamples,
+            quick_prompts: validQuickPrompts.map(({ id: _omitId, ...rest }) => {
+                void _omitId;
+                return rest;
+            }),
+            examples: validExamples.map(({ id: _omitId, ...rest }) => {
+                void _omitId;
+                return rest;
+            }),
             version: version,
             tools: tools,
             hierarchical_access: hierarchicalAccess,

@@ -20,16 +20,12 @@ import { getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { Chat24Regular, ShareIos24Regular } from "@fluentui/react-icons";
 import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
-import { getTools } from "../../api/core-client";
-import { ToolListResponse } from "../../api/models";
-import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
-import { mapContextToBackendLang } from "../../utils/language-utils";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { AssistantCard } from "../../components/AssistantCard";
+import { useToolsContext } from "../../components/ToolsProvider";
 
 const Menu = () => {
     const { t } = useTranslation();
-    const { language } = useContext(LanguageContext);
     const [assistants, setAssistants] = useState<Assistant[]>([]);
     const [communityAssistants, setCommunityAssistants] = useState<CommunityAssistant[]>([]);
     const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistant[]>([]);
@@ -44,7 +40,7 @@ const Menu = () => {
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
+    const { tools } = useToolsContext();
 
     const { setHeader } = useContext(HeaderContext);
     const { user } = useContext(UserContext);
@@ -104,20 +100,6 @@ const Menu = () => {
             setUserName(user.givenname || user.displayName || user.username || "User");
         }
     }, [user]);
-
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                // Get current language from context and map to backend format
-                const backendLang = mapContextToBackendLang(language);
-                const result = await getTools(backendLang);
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, [language]);
 
     const onAddAssistant = () => {
         setShowDialogInput(true);

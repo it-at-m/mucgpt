@@ -17,15 +17,14 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { mapContextToBackendLang } from "../../utils/language-utils";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { ToolListResponse } from "../../api/models";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
-import { getTools, chatApi } from "../../api/core-client";
+import { chatApi } from "../../api/core-client";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { useToolsContext } from "../../components/ToolsProvider";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -90,7 +89,11 @@ const Chat = () => {
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
-    setHeader(t("header.chat"));
+    const headerTitle = t("header.chat");
+    useEffect(() => {
+        setHeader(headerTitle);
+    }, [setHeader, headerTitle]);
+    const { tools } = useToolsContext();
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -103,22 +106,7 @@ const Chat = () => {
         localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
-
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                // Get current language from context and map to backend format
-                const backendLang = mapContextToBackendLang(language);
-                const result = await getTools(backendLang);
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, [language]);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {

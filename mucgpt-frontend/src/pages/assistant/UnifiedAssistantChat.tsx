@@ -21,16 +21,14 @@ import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy } from "./AssistantStrategy";
-import { chatApi, getTools } from "../../api/core-client";
+import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
-import { ToolListResponse } from "../../api/models";
-import { mapContextToBackendLang } from "../../utils/language-utils";
-import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { NotSubscribedDialog } from "../../components/NotSubscribedDialog";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
+import { useToolsContext } from "../../components/ToolsProvider";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -71,10 +69,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
-    const { language } = useContext(LanguageContext);
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
+    const { tools } = useToolsContext();
 
     const [error, setError] = useState<unknown>();
     const [sidebarSize] = useState<SidebarSizes>("large");
@@ -87,7 +85,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
@@ -109,21 +106,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         version: "0",
         is_visible: true
     });
-
-    // useEffect to fetch tools
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                // Get current language from context and map to backend format
-                const backendLang = mapContextToBackendLang(language);
-                const result = await getTools(backendLang);
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, [language]);
 
     // useEffect to load the assistant config and chat history
     useEffect(() => {

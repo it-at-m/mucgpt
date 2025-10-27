@@ -552,7 +552,7 @@ const Chat = () => {
         () => (
             <History
                 allChats={allChats}
-                currentActiveChatId={activeChatRef.current}
+                currentActiveChatId={active_chat}
                 onDeleteChat={async id => {
                     await storageService.delete(id);
                     await fetchHistory();
@@ -571,7 +571,7 @@ const Chat = () => {
                 }}
             ></History>
         ),
-        [allChats, activeChatRef.current, fetchHistory, storageService, loadChat, t]
+        [allChats, active_chat, fetchHistory, storageService, loadChat, t]
     );
 
     const sidebar_chat_settings = useMemo(

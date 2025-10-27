@@ -148,53 +148,62 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                             </li>
                             <Collapse visible={!!expandedCategories[category]}>
                                 <div className={styles.categoryContent}>
-                                    {chats.slice(0, itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY).map((chat: DBObject<any, any>, index: number) => (
-                                        <li key={index} className={`${styles.singlechatcontainer} ${currentActiveChatId === chat.id ? styles.activeChat : ""}`}>
-                                            <Tooltip
-                                                content={t("components.history.lastEdited") + new Date(chat._last_edited as number).toLocaleString()}
-                                                relationship="description"
-                                                positioning="below"
+                                    {chats.slice(0, itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY).map((chat: DBObject<any, any>) => {
+                                        const chatId = chat.id != null ? String(chat.id) : undefined;
+                                        const isActiveChat =
+                                            chatId !== undefined && currentActiveChatId !== undefined && String(currentActiveChatId) === chatId;
+
+                                        return (
+                                            <li
+                                                key={`${category}-${chatId ?? "unknown"}`}
+                                                className={`${styles.singlechatcontainer} ${isActiveChat ? styles.activeChat : ""}`}
                                             >
-                                                <Button className={styles.savedChatButton} onClick={() => onSelect(chat.id as string)} appearance="subtle">
-                                                    <div className={styles.chatButtonContent}>
-                                                        {chat.favorite && <Star24Filled className={styles.favoriteIcon} />}
-                                                        <span className={styles.chatName}>{chat.name}</span>
-                                                    </div>
-                                                </Button>
-                                            </Tooltip>
-                                            <Menu>
-                                                <MenuTrigger disableButtonEnhancement>
-                                                    <Tooltip content={t("components.history.options")} relationship="description" positioning="below">
-                                                        <Button
-                                                            icon={<MoreHorizontal20Regular />}
-                                                            appearance="subtle"
-                                                            size="small"
-                                                            className={styles.optionsButton}
-                                                        />
-                                                    </Tooltip>
-                                                </MenuTrigger>
-                                                <MenuPopover>
-                                                    <MenuList>
-                                                        <MenuItem onClick={() => onDeleteChat(chat.id as string)} disabled={currentActiveChatId == chat.id}>
-                                                            {t("components.history.delete")}
-                                                        </MenuItem>
-                                                        <MenuItem onClick={() => onChatNameChange(chat.id as string, chat.name as string)}>
-                                                            {t("components.history.rename")}
-                                                        </MenuItem>
-                                                        {chat.favorite ? (
-                                                            <MenuItem onClick={() => onFavChange(chat.id as string, false)}>
-                                                                {t("components.history.unsave")}
+                                                <Tooltip
+                                                    content={t("components.history.lastEdited") + new Date(chat._last_edited as number).toLocaleString()}
+                                                    relationship="description"
+                                                    positioning="below"
+                                                >
+                                                    <Button className={styles.savedChatButton} onClick={() => chatId && onSelect(chatId)} appearance="subtle">
+                                                        <div className={styles.chatButtonContent}>
+                                                            {chat.favorite && <Star24Filled className={styles.favoriteIcon} />}
+                                                            <span className={styles.chatName}>{chat.name}</span>
+                                                        </div>
+                                                    </Button>
+                                                </Tooltip>
+                                                <Menu>
+                                                    <MenuTrigger disableButtonEnhancement>
+                                                        <Tooltip content={t("components.history.options")} relationship="description" positioning="below">
+                                                            <Button
+                                                                icon={<MoreHorizontal20Regular />}
+                                                                appearance="subtle"
+                                                                size="small"
+                                                                className={styles.optionsButton}
+                                                            />
+                                                        </Tooltip>
+                                                    </MenuTrigger>
+                                                    <MenuPopover>
+                                                        <MenuList>
+                                                            <MenuItem onClick={() => chatId && onDeleteChat(chatId)} disabled={isActiveChat}>
+                                                                {t("components.history.delete")}
                                                             </MenuItem>
-                                                        ) : (
-                                                            <MenuItem onClick={() => onFavChange(chat.id as string, true)}>
-                                                                {t("components.history.save")}
+                                                            <MenuItem onClick={() => chatId && onChatNameChange(chatId, chat.name as string)}>
+                                                                {t("components.history.rename")}
                                                             </MenuItem>
-                                                        )}
-                                                    </MenuList>
-                                                </MenuPopover>
-                                            </Menu>
-                                        </li>
-                                    ))}
+                                                            {chat.favorite ? (
+                                                                <MenuItem onClick={() => chatId && onFavChange(chatId, false)}>
+                                                                    {t("components.history.unsave")}
+                                                                </MenuItem>
+                                                            ) : (
+                                                                <MenuItem onClick={() => chatId && onFavChange(chatId, true)}>
+                                                                    {t("components.history.save")}
+                                                                </MenuItem>
+                                                            )}
+                                                        </MenuList>
+                                                    </MenuPopover>
+                                                </Menu>
+                                            </li>
+                                        );
+                                    })}
                                     {chats.length > (itemsToShow[category] || INITIAL_ITEMS_PER_CATEGORY) && (
                                         <li className={styles.loadMoreContainer}>
                                             <Button

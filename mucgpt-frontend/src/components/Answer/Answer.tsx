@@ -45,10 +45,10 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
         }
         setProcessedText(
             answer.answer
-                .replace(/\\\[/g, "$$") // Replace \[ with $$ (display math start)
-                .replace(/\\\]/g, "$$") // Replace \] with $$ (display math end)
-                .replace(/\\\(/g, "$") // Replace \( with $ (inline math start)
-                .replace(/\\\)/g, "$") // Replace \) with $ (inline math end)
+                .replace(/\\\[/g, "$$$") // Replace \[ with $$ (display math start)
+                .replace(/\\\]/g, "$$$") // Replace \] with $$ (display math end)
+                .replace(/\\\(/g, "$$$") // Replace \( with $ (inline math start)
+                .replace(/\\\)/g, "$$$") // Replace \) with $ (inline math end)
         );
     }, [answer.answer]); // Run this effect only when the message changes
 

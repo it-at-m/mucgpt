@@ -360,7 +360,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         () => (
             <History
                 allChats={allChats}
-                currentActiveChatId={activeChatRef.current}
+                currentActiveChatId={active_chat}
                 onDeleteChat={async id => {
                     await assistantChatStorage.delete(id);
                     await fetchHistory();
@@ -390,7 +390,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 }}
             ></History>
         ),
-        [allChats, activeChatRef.current, fetchHistory, assistantChatStorage, t, scrollToBottom]
+        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom]
     );
 
     // Sidebar component

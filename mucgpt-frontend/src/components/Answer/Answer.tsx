@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import rehypeExternalLinks from "rehype-external-links";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
@@ -58,6 +59,10 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
     };
     const rehypeKatexOptions = {
         output: "mathml"
+    };
+    const rehypeExternalLinksOptions = {
+        target: "_blank",
+        rel: ["nofollow", "noopener", "noreferrer"]
     };
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
@@ -114,7 +119,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                     <div className={styles.answerText}>
                         <Markdown
                             remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                            rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions]]}
+                            rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
                             components={{
                                 code: CodeBlockRenderer
                             }}

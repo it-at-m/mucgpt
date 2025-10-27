@@ -281,6 +281,12 @@ export const makeApiRequest = async (
     const scheduleUpdate = () => {
         if (updateTimer) return;
         updateTimer = setTimeout(() => {
+            const timerToClear = updateTimer;
+            if (timerToClear) {
+                clearTimeout(timerToClear);
+                updateTimer = null;
+            }
+
             const toolContent = toolStreamHandler.getFormattedContent();
             const combinedContent = textBuffer + toolContent;
 
@@ -295,7 +301,6 @@ export const makeApiRequest = async (
             const updatedMessage = { user: question, response: updatedResponse };
             dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
             includeActiveToolsInUpdate = false;
-            updateTimer = null;
         }, 100);
     };
 
@@ -379,6 +384,12 @@ export const makeApiRequest = async (
     }
 
     // Ensure the final response is set with combined content after streaming completes
+    if (updateTimer) {
+        const timerToClear = updateTimer;
+        clearTimeout(timerToClear);
+        updateTimer = null;
+    }
+
     const finalToolContent = toolStreamHandler.getFormattedContent();
     const finalCombinedContent = textBuffer + finalToolContent;
 
@@ -386,7 +397,8 @@ export const makeApiRequest = async (
         ...askResponse,
         answer: finalCombinedContent,
         tokens: streamed_tokens,
-        user_tokens: user_tokens
+        user_tokens: user_tokens,
+        activeTools: activeToolStatuses
     };
 
     const finalMessage = {

@@ -15,7 +15,6 @@ import styles from "./AssistantsettingsDrawer.module.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Markdown from "react-markdown";
-import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
@@ -182,7 +181,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 <div className={styles.markdownDescription}>
                     <Markdown
                         remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
+                        rehypePlugins={[[rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
                         components={{
                             code: CodeBlockRenderer
                         }}

@@ -1,7 +1,6 @@
 import styles from "./UserChatMessage.module.css";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ChatMessageIcon } from "./ChatMessageIcon";
 import { Stack } from "@fluentui/react";
@@ -35,7 +34,7 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
             <div className={styles.answerText}>
                 <Markdown
                     remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                    rehypePlugins={[rehypeRaw, [rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
+                    rehypePlugins={[[rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
                     components={{
                         code: CodeBlockRenderer
                     }}

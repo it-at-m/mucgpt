@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
+import { versionTranslations } from "./i18n.version";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -158,8 +159,7 @@ i18n
                             accept: "Zustimmen"
                         },
                         versioninfo: {
-                            tooltip: "Anwendungs-Version anzeigen",
-                            tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Was gibt's neues?"
                         },
@@ -455,9 +455,13 @@ i18n
                             none: "Keine Tools verfügbar.",
                             apply: "Übernehmen",
                             cancel: "Abbrechen"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Toast schließen"
                         }
                     },
-                    ...tutorialsTranslations.DE
+                    ...tutorialsTranslations.DE,
+                    ...versionTranslations.DE
                 }
             },
             EN: {
@@ -603,8 +607,7 @@ i18n
                             accept: "Accept"
                         },
                         versioninfo: {
-                            tooltip: "Show application version",
-                            tooltip_with_commit: "Application version: {{version}}, Commit: {{commit}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "What's new?"
                         },
@@ -897,9 +900,13 @@ i18n
                             none: "No tools available.",
                             apply: "Apply",
                             cancel: "Cancel"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Dismiss toast"
                         }
                     },
-                    ...tutorialsTranslations.EN
+                    ...tutorialsTranslations.EN,
+                    ...versionTranslations.EN
                 }
             },
             BA: {
@@ -1046,8 +1053,7 @@ i18n
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
-                            tooltip: "Anwendungs-Version zeig'n",
-                            tooltip_with_commit: "Anwendungs-Version: {{version}}, Commit: {{commit}}",
+                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Wos gibt's Nei's?"
                         },
@@ -1343,9 +1349,13 @@ i18n
                             none: "Koane Werkzeig verfügbar.",
                             apply: "Ibernemma",
                             cancel: "Obbrecha"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Toast schließn"
                         }
                     },
-                    ...tutorialsTranslations.BA
+                    ...tutorialsTranslations.BA,
+                    ...versionTranslations.BA
                 }
             },
             FR: {
@@ -1491,8 +1501,8 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip: "Afficher la version de l'application",
-                            tooltip_with_commit: "Version de l'application: {{version}}, Commit: {{commit}}",
+                            tooltip:
+                                "Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
                             label: "Version:",
                             whats_new: "Quoi de neuf ?"
                         },
@@ -1789,9 +1799,13 @@ i18n
                             none: "Aucun outil disponible.",
                             apply: "Appliquer",
                             cancel: "Annuler"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Fermer la notification"
                         }
                     },
-                    ...tutorialsTranslations.FR
+                    ...tutorialsTranslations.FR,
+                    ...versionTranslations.FR
                 }
             },
             UK: {
@@ -1937,8 +1951,7 @@ i18n
                             accept: "Прийняти"
                         },
                         versioninfo: {
-                            tooltip: "Показати версію програми",
-                            tooltip_with_commit: "Версія програми: {{version}}, Commit: {{commit}}",
+                            tooltip: "основна версія: {{core_version}}, версія інтерфейсу: {{frontend_version}}, версія помічника: {{assistant_version}}",
                             label: "Версія:",
                             whats_new: "Що нового?"
                         },
@@ -2233,9 +2246,13 @@ i18n
                             none: "Немає доступних інструментів.",
                             apply: "Застосувати",
                             cancel: "Скасувати"
+                        },
+                        globaltoasthandler: {
+                            dismiss_aria_label: "Закрити тост"
                         }
                     },
-                    ...tutorialsTranslations.UK
+                    ...tutorialsTranslations.UK,
+                    ...versionTranslations.UK
                 }
             }
         }

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody } from "@fluentui/react-components";
-import { CheckmarkCircle20Filled, ErrorCircle20Filled, Info20Filled, Warning20Filled } from "@fluentui/react-icons";
+import { useId, Toaster, useToastController, Toast, ToastTitle, ToastBody, ToastTrigger, Button } from "@fluentui/react-components";
+import { Dismiss20Regular } from "@fluentui/react-icons";
 import styles from "./GlobalToastHandler.module.css";
+import { useTranslation } from "react-i18next";
 
 export interface ToastMessage {
     id: string;
@@ -21,6 +22,8 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
     const toasterId = useId("global-toast-handler");
     const { dispatchToast } = useToastController(toasterId);
     const displayedMessagesRef = useRef<Set<string>>(new Set());
+    // Translation
+    const { t } = useTranslation();
 
     useEffect(() => {
         const displayedMessages = displayedMessagesRef.current;
@@ -30,20 +33,6 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
             if (displayedMessages.has(message.id)) {
                 return;
             }
-
-            const getIcon = () => {
-                switch (message.type) {
-                    case "success":
-                        return <CheckmarkCircle20Filled className={styles.successIcon} />;
-                    case "error":
-                        return <ErrorCircle20Filled className={styles.errorIcon} />;
-                    case "warning":
-                        return <Warning20Filled className={styles.warningIcon} />;
-                    case "info":
-                    default:
-                        return <Info20Filled className={styles.infoIcon} />;
-                }
-            };
 
             const getIntent = () => {
                 switch (message.type) {
@@ -61,13 +50,20 @@ const GlobalToastHandler: React.FC<GlobalToastHandlerProps> = ({ messages, onMes
 
             dispatchToast(
                 <Toast>
-                    <ToastTitle>
-                        <div className={`${styles.toastTitleContainer} ${styles[`${message.type}ToastTitle`]}`}>
-                            {getIcon()}
-                            <span className={styles.toastTitle}>{message.title}</span>
-                        </div>
+                    <ToastTitle
+                        action={
+                            <ToastTrigger>
+                                <Button
+                                    appearance="subtle"
+                                    icon={<Dismiss20Regular />}
+                                    aria-label={t("components.globaltoasthandler.dismiss_aria_label", "Dismiss toast")}
+                                />
+                            </ToastTrigger>
+                        }
+                    >
+                        {message.title}
                     </ToastTitle>
-                    {message.message && <ToastBody className={styles.toastBody}>{message.message}</ToastBody>}
+                    {message.message && <ToastBody>{message.message}</ToastBody>}
                 </Toast>,
                 {
                     intent: getIntent(),

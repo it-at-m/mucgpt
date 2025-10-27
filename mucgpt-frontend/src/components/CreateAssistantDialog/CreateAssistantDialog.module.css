@@ -29,7 +29,6 @@
     text-overflow: ellipsis;
     height: 100px;
     border-radius: 20px;
-    color: var(--colorNeutralBackround1Hover);
     text-decoration: none;
     opacity: 0.75;
     font-size: var(--fontSizeBase400);

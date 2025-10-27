@@ -20,7 +20,6 @@
         "react-router-dom": "7.8.2",
         "react-syntax-highlighter": "15.6.6",
         "rehype-katex": "7.0.1",
-        "rehype-raw": "7.0.0",
         "remark": "15.0.1",
         "remark-gfm": "4.0.1",
         "remark-math": "6.0.0",
@@ -43,7 +42,7 @@
         "msw": "2.11.2",
         "prettier": "3.6.2",
         "typescript": "5.9.2",
-        "vite": "5.4.20"
+        "vite": "5.4.21"
     },
     "engines": {
         "node": ">=20.0.0"

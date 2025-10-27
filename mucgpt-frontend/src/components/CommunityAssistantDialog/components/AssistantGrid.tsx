@@ -1,6 +1,6 @@
 import { Text, Spinner } from "@fluentui/react-components";
 import { Assistant } from "../../../api";
-import { AssistantCard } from "./AssistantCard";
+import { CommunityAssistantCard } from "./CommunityAssistantCard";
 import { useTranslation } from "react-i18next";
 import styles from "../CommunityAssistantDialog.module.css";
 
@@ -38,7 +38,7 @@ export const AssistantGrid = ({ assistants, ownedAssistants, subscribedAssistant
     return (
         <div className={styles.assistantsGrid}>
             {filteredAssistants.map(assistantObj => (
-                <AssistantCard
+                <CommunityAssistantCard
                     key={assistantObj.assistant.id ?? ""}
                     assistant={assistantObj.assistant}
                     subscriptions={assistantObj.subscriptions}

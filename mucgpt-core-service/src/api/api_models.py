@@ -326,5 +326,6 @@ class ConfigResponse(BaseModel):
     env_name: str = "MUCGPT"
     alternative_logo: bool = False
     models: List[ModelsDTO] = []
-    version: str
-    commit: str
+    core_version: str
+    frontend_version: str
+    assistant_version: str

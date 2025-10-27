@@ -107,11 +107,11 @@ export const Layout = () => {
     // terms of use
     const onAcceptTermsOfUse = useCallback(() => {
         localStorage.setItem(STORAGE_KEYS.TERMS_OF_USE_READ, formatDate(new Date()));
-        if (localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.version) {
-            localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.version);
+        if (localStorage.getItem(STORAGE_KEYS.VERSION_UPDATE_SEEN) !== config.frontend_version) {
+            localStorage.setItem(STORAGE_KEYS.VERSION_UPDATE_SEEN, config.frontend_version);
             navigate("version");
         }
-    }, [config.version, navigate]);
+    }, [config.frontend_version, navigate]);
 
     // language change
     const onLanguageSelectionChanged = useCallback(
@@ -265,7 +265,12 @@ export const Layout = () => {
                                 </address>
                             </div>
                             <div className={styles.footerSection}>
-                                <VersionInfo version={config.version} commit={config.commit} versionUrl={import.meta.env.BASE_URL + "#/version"} />
+                                <VersionInfo
+                                    core_version={config.core_version}
+                                    frontend_version={config.frontend_version}
+                                    assistant_version={config.assistant_version}
+                                    versionUrl={import.meta.env.BASE_URL + "#/version"}
+                                />
                             </div>
                             <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
                         </footer>

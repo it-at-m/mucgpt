@@ -272,10 +272,32 @@ export const makeApiRequest = async (
 
     // Buffer management for optimized UI updates
     let textBuffer = ""; // Accumulates regular text content
-    let updateTimer: ReturnType<typeof setTimeout> | null = null; // Debounces UI updates    // Setup streaming response processing
+    let updateTimer: ReturnType<typeof setTimeout> | null = null; // Debounces UI updates
+    let includeActiveToolsInUpdate = false; // Tracks whether tool statuses need to be sent in the next update
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let streamBuffer = ""; // Buffer for incomplete SSE lines
+
+    const scheduleUpdate = () => {
+        if (updateTimer) return;
+        updateTimer = setTimeout(() => {
+            const toolContent = toolStreamHandler.getFormattedContent();
+            const combinedContent = textBuffer + toolContent;
+
+            const updatedResponse = {
+                ...askResponse,
+                answer: combinedContent,
+                tokens: streamed_tokens,
+                user_tokens: user_tokens,
+                activeTools: includeActiveToolsInUpdate ? activeToolStatuses : undefined
+            };
+
+            const updatedMessage = { user: question, response: updatedResponse };
+            dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
+            includeActiveToolsInUpdate = false;
+            updateTimer = null;
+        }, 100);
+    };
 
     try {
         // Main streaming loop - process chunks as they arrive
@@ -330,27 +352,11 @@ export const makeApiRequest = async (
                                     if (onToolStatusUpdate) {
                                         onToolStatusUpdate(activeToolStatuses);
                                     }
+                                    includeActiveToolsInUpdate = true;
                                 }
 
                                 // Batch UI updates to prevent excessive re-renders
-                                if (updateTimer) clearTimeout(updateTimer);
-                                updateTimer = setTimeout(() => {
-                                    // Combine text content and tool output
-                                    const toolContent = toolStreamHandler.getFormattedContent();
-                                    const combinedContent = textBuffer + toolContent;
-
-                                    const updatedResponse = {
-                                        ...askResponse,
-                                        answer: combinedContent,
-                                        tokens: streamed_tokens,
-                                        user_tokens: user_tokens,
-                                        // Include active tool status messages
-                                        activeTools: statusChange ? activeToolStatuses : undefined
-                                    };
-
-                                    const updatedMessage = { user: question, response: updatedResponse };
-                                    dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
-                                }, 100);
+                                scheduleUpdate();
                             }
                         }
                         // Handle regular text content from the assistant
@@ -359,21 +365,7 @@ export const makeApiRequest = async (
                             textBuffer += content;
 
                             // Batch UI updates to prevent excessive re-renders
-                            if (updateTimer) clearTimeout(updateTimer);
-                            updateTimer = setTimeout(() => {
-                                const toolContent = toolStreamHandler.getFormattedContent();
-                                const combinedContent = textBuffer + toolContent;
-
-                                const updatedResponse = {
-                                    ...askResponse,
-                                    answer: combinedContent,
-                                    tokens: streamed_tokens,
-                                    user_tokens: user_tokens
-                                };
-
-                                const updatedMessage = { user: question, response: updatedResponse };
-                                dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
-                            }, 100);
+                            scheduleUpdate();
                         }
                     } catch (parseError) {
                         console.warn("Failed to parse SSE data:", data, parseError);

@@ -16,6 +16,7 @@ interface Props {
     selectedTools: string[];
     setSelectedTools?: (tools: string[]) => void;
     tools?: ToolListResponse;
+    allowToolSelection?: boolean;
 }
 
 // Map tool IDs to their tutorial routes
@@ -25,7 +26,18 @@ const TOOL_TUTORIAL_MAP: Record<string, string> = {
     // Add more tool-to-tutorial mappings here as needed
 };
 
-export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, question, setQuestion, selectedTools, setSelectedTools, tools }: Props) => {
+export const QuestionInput = ({
+    onSend,
+    disabled,
+    placeholder,
+    clearOnSend,
+    question,
+    setQuestion,
+    selectedTools,
+    setSelectedTools,
+    tools,
+    allowToolSelection = true
+}: Props) => {
     const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -103,7 +115,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
 
     const toggleTool = useCallback(
         (toolId: string) => {
-            if (!setSelectedTools) return;
+            if (!allowToolSelection || !setSelectedTools) return;
 
             if (selectedTools.includes(toolId)) {
                 setSelectedTools(selectedTools.filter(t => t !== toolId));
@@ -111,7 +123,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                 setSelectedTools([...selectedTools, toolId]);
             }
         },
-        [selectedTools, setSelectedTools]
+        [selectedTools, setSelectedTools, allowToolSelection]
     );
 
     const openTutorial = useCallback((toolId: string, event: React.MouseEvent) => {
@@ -126,7 +138,7 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
         <>
             <div className={styles.questionInputWrapper}>
                 {/* Tool badges at the top - show all tools */}
-                {tools && tools.tools && tools.tools.length > 0 && setSelectedTools && (
+                {tools && tools.tools && tools.tools.length > 0 && (
                     <div className={styles.toolBadgesHeader}>
                         <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
                         {tools.tools.map(tool => {
@@ -138,7 +150,8 @@ export const QuestionInput = ({ onSend, disabled, placeholder, clearOnSend, ques
                                         appearance={isSelected ? "primary" : "secondary"}
                                         size="medium"
                                         className={styles.toolButton}
-                                        onClick={() => toggleTool(tool.id)}
+                                        onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
+                                        disabled={!allowToolSelection}
                                         icon={isSelected ? <Checkmark24Regular /> : undefined}
                                     >
                                         {tool.id}

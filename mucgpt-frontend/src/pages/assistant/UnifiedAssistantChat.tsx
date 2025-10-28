@@ -477,6 +477,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
                 tools={filteredTools}
+                allowToolSelection={false}
             />
         );
     }, [isLoadingRef.current, callApi, question, t, error, selectedTools, tools, assistantConfig.tools, strategy]);

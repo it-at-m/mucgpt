@@ -25,6 +25,8 @@ import { ASSISTANT_STORE } from "../../constants";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { deleteCommunityAssistantApi } from "../../api/assistant-client";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
+import rehypeKatex from "rehype-katex";
+import rehypeExternalLinks from "rehype-external-links";
 
 interface Props {
     assistant: Assistant;
@@ -155,7 +157,13 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
         ),
         [showEditDialog, assistant, onAssistantChange, isOwner, strategy]
     );
-
+    const rehypeKatexOptions = {
+        output: "mathml"
+    };
+    const rehypeExternalLinksOptions = {
+        target: "_blank",
+        rel: ["nofollow", "noopener", "noreferrer"]
+    };
     // sidebar content
     return (
         <>
@@ -173,6 +181,10 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 <div className={styles.markdownDescription}>
                     <Markdown
                         remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[
+                            [rehypeKatex, rehypeKatexOptions],
+                            [rehypeExternalLinks, rehypeExternalLinksOptions]
+                        ]}
                         components={{
                             code: CodeBlockRenderer
                         }}

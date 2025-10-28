@@ -4,6 +4,7 @@ import { Example } from "./Example";
 import styles from "./Example.module.css";
 
 export type ExampleModel = {
+    id?: string;
     text: string;
     value: string;
     system?: string;
@@ -19,7 +20,7 @@ export const ExampleList = ({ examples, onExampleClicked }: Props) => {
     return (
         <ul className={styles.examplesNavList} aria-description={t("common.examples")}>
             {examples.map((x, i) => (
-                <li key={i} tabIndex={0}>
+                <li key={x.id || i} tabIndex={0}>
                     <Example
                         text={x.text}
                         system={x.system}

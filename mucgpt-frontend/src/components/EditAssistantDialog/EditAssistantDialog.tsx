@@ -4,8 +4,7 @@ import { Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle, Button }
 import styles from "./EditAssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useState, useMemo, useEffect } from "react";
-import { Assistant, ToolBase, ToolInfo } from "../../api";
-import { ToolsSelector } from "../ToolsSelector";
+import { Assistant, ToolInfo } from "../../api";
 import { StepperProgress } from "./StepperProgress";
 import { EditDialogActions } from "./EditDialogActions";
 import { useAssistantState } from "./useAssistantState";
@@ -63,19 +62,20 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const { t } = useTranslation();
     const { tools: availableTools } = useToolsContext();
 
-    // Tools state
-    const [showToolsSelector, setShowToolsSelector] = useState<boolean>(false);
-    const [selectedTools, setSelectedTools] = useState<ToolInfo[]>([]);
-
-    // Update selectedTools when tools change
-    useEffect(() => {
-        if (availableTools && tools.length > 0) {
-            const toolInfos = tools.map(tool => availableTools.tools.find((t: ToolInfo) => t.id === tool.id)).filter(Boolean) as ToolInfo[];
-            setSelectedTools(toolInfos);
-        } else {
-            setSelectedTools([]);
+    const selectedTools = useMemo(() => {
+        if (!availableTools) {
+            return [] as ToolInfo[];
         }
-    }, [tools, availableTools]);
+
+        const toolMap = new Map(availableTools.tools.map(tool => [tool.id, tool]));
+        return tools.map(tool => toolMap.get(tool.id)).filter(Boolean) as ToolInfo[];
+    }, [availableTools, tools]);
+
+    useEffect(() => {
+        if (!showDialog) {
+            setCurrentStep(0);
+        }
+    }, [showDialog]);
 
     // Stepper navigation functions
     const nextStep = () => {
@@ -101,20 +101,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
             default:
                 return true; // Tools, quick prompts, examples, and advanced settings are optional
         }
-    };
-
-    // Helper functions for tools
-    const handleToolsSelected = (selectedTools?: ToolInfo[]) => {
-        if (selectedTools) {
-            const newTools: ToolBase[] = selectedTools.map(tool => ({
-                id: tool.id,
-                config: {}
-            }));
-            assistantState.setTools(newTools);
-            setSelectedTools(selectedTools);
-            assistantState.setHasChanged(true);
-        }
-        setShowToolsSelector(false);
     };
 
     // save assistant
@@ -176,7 +162,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     }, [closeDialogOpen, t, closeDialogPressed]);
 
     // Function to render current step content
-    const getCurrentStepContent = () => {
+    const getCurrentStepContent = useMemo(() => {
         switch (currentStep) {
             case 0:
                 return <TitleStep title={title} isOwner={isOwner} onTitleChange={assistantState.updateTitle} onHasChanged={assistantState.setHasChanged} />;
@@ -203,10 +189,8 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     <ToolsStep
                         tools={tools}
                         selectedTools={selectedTools}
-                        isOwner={isOwner}
+                        availableTools={availableTools}
                         onToolsChange={assistantState.updateTools}
-                        onSelectedToolsChange={setSelectedTools}
-                        onShowToolsSelector={() => setShowToolsSelector(true)}
                         onHasChanged={assistantState.setHasChanged}
                     />
                 );
@@ -267,7 +251,23 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
             default:
                 return <TitleStep title={title} isOwner={isOwner} onTitleChange={assistantState.updateTitle} onHasChanged={assistantState.setHasChanged} />;
         }
-    };
+    }, [
+        currentStep,
+        title,
+        description,
+        systemPrompt,
+        tools,
+        selectedTools,
+        quickPrompts,
+        examples,
+        temperature,
+        maxOutputTokens,
+        publish,
+        hierarchicalAccess,
+        isVisible,
+        isOwner,
+        assistantState
+    ]);
 
     return (
         <div>
@@ -307,7 +307,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     <div className={styles.stepperFullWidth}>
                         <StepperProgress currentStep={currentStep} totalSteps={totalSteps} stepTitles={stepTitles} />
                     </div>
-                    <DialogBody className={styles.scrollableDialogContent}>{getCurrentStepContent()}</DialogBody>
+                    <DialogBody className={styles.scrollableDialogContent}>{getCurrentStepContent}</DialogBody>
                     <div className={styles.dialogActionsContainer}>
                         <div className={styles.stepperActions}>
                             <EditDialogActions
@@ -323,7 +323,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     </div>
                 </DialogSurface>
             </Dialog>
-            <ToolsSelector open={showToolsSelector} onClose={handleToolsSelected} tools={availableTools} selectedTools={selectedTools} />
             {closeDialog}
         </div>
     );

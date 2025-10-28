@@ -7,6 +7,7 @@ import { Stack } from "@fluentui/react";
 import { RollBackMessage } from "./RollbackMessage";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import rehypeExternalLinks from "rehype-external-links";
 
 interface Props {
     message: string;
@@ -20,6 +21,10 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
     const rehypeKatexOptions = {
         output: "mathml"
     };
+    const rehypeExternalLinksOptions = {
+        target: "_blank",
+        rel: ["nofollow", "noopener", "noreferrer"]
+    };
     return (
         <div className={styles.message}>
             <Stack horizontal horizontalAlign="space-between">
@@ -29,7 +34,10 @@ export const UserChatMessage = ({ message, onRollbackMessage: onRollbackMessage 
             <div className={styles.answerText}>
                 <Markdown
                     remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                    rehypePlugins={[[rehypeKatex, rehypeKatexOptions]]}
+                    rehypePlugins={[
+                        [rehypeKatex, rehypeKatexOptions],
+                        [rehypeExternalLinks, rehypeExternalLinksOptions]
+                    ]}
                     components={{
                         code: CodeBlockRenderer
                     }}

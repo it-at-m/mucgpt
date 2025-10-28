@@ -3,12 +3,7 @@ import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useRef } from "react";
 import styles from "../EditAssistantDialog.module.css";
-
-interface QuickPrompt {
-    label: string;
-    prompt: string;
-    tooltip: string;
-}
+import { QuickPrompt } from "../../QuickPrompt/QuickPrompt";
 
 interface QuickPromptsStepProps {
     quickPrompts: QuickPrompt[];
@@ -25,7 +20,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
         // Only add if there is no empty quick prompt
         const hasEmpty = quickPrompts.some(ex => !ex.label.trim() || !ex.prompt.trim());
         if (!hasEmpty) {
-            onQuickPromptsChange([...quickPrompts, { label: "", prompt: "", tooltip: "" }]);
+            onQuickPromptsChange([...quickPrompts, { id: crypto.randomUUID(), label: "", prompt: "", tooltip: "" }]);
             onHasChanged(true);
             // Scroll to bottom after adding
             setTimeout(() => {
@@ -95,7 +90,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                     <div className={styles.dynamicFieldList}>
                         {quickPrompts.length > 0 ? (
                             quickPrompts.map((qp, index) => (
-                                <div key={index} className={styles.dynamicFieldItem}>
+                                <div key={qp.id || index} className={styles.dynamicFieldItem}>
                                     <div className={styles.dynamicFieldInputs}>
                                         <div className={styles.dynamicFieldInputRow}>
                                             <span className={styles.dynamicFieldInputLabel}>Label:</span>

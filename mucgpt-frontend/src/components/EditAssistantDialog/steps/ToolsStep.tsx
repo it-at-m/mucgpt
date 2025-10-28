@@ -1,27 +1,26 @@
-import { DialogContent, Field, Button } from "@fluentui/react-components";
-import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
+import { DialogContent, Field } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { ToolBase, ToolInfo } from "../../../api";
+import { ToolBase, ToolInfo, ToolListResponse } from "../../../api";
+import { ToolsSelectorContent } from "../../ToolsSelector/ToolsSelector";
 import styles from "../EditAssistantDialog.module.css";
 
 interface ToolsStepProps {
     tools: ToolBase[];
     selectedTools: ToolInfo[];
-    isOwner: boolean;
+    availableTools?: ToolListResponse;
     onToolsChange: (tools: ToolBase[]) => void;
-    onSelectedToolsChange: (tools: ToolInfo[]) => void;
-    onShowToolsSelector: () => void;
     onHasChanged: (hasChanged: boolean) => void;
 }
 
-export const ToolsStep = ({ tools, selectedTools, isOwner, onToolsChange, onSelectedToolsChange, onShowToolsSelector, onHasChanged }: ToolsStepProps) => {
+export const ToolsStep = ({ selectedTools, availableTools, onToolsChange, onHasChanged }: ToolsStepProps) => {
     const { t } = useTranslation();
 
-    const handleRemoveTool = (toolID: string) => {
-        const newTools = tools.filter(t => t.id !== toolID);
+    const handleSelectionChange = (newSelectedTools: ToolInfo[]) => {
+        const newTools: ToolBase[] = newSelectedTools.map(tool => ({
+            id: tool.id,
+            config: {}
+        }));
         onToolsChange(newTools);
-        const newSelectedTools = selectedTools.filter(t => t.id !== toolID);
-        onSelectedToolsChange(newSelectedTools);
         onHasChanged(true);
     };
 
@@ -30,35 +29,14 @@ export const ToolsStep = ({ tools, selectedTools, isOwner, onToolsChange, onSele
             <Field size="large" className={styles.formField}>
                 <label className={styles.formLabel}>{t("components.edit_assistant_dialog.tools")}</label>
                 <div className={styles.dynamicFieldContainer}>
-                    <div className={styles.dynamicFieldList}>
-                        {selectedTools.length > 0 ? (
-                            selectedTools.map((tool, index) => (
-                                <div key={tool.id + index} className={styles.dynamicFieldItem}>
-                                    <div className={styles.dynamicFieldInputs}>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>{tool.name}:</span>
-                                            <span className={styles.toolDescription}>{tool.description}</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        className={styles.removeFieldButton}
-                                        onClick={() => handleRemoveTool(tool.id)}
-                                        disabled={!isOwner}
-                                        title={t("components.edit_assistant_dialog.remove")}
-                                    >
-                                        <Delete24Regular />
-                                    </button>
-                                </div>
-                            ))
-                        ) : (
-                            <div className={styles.noToolsText}>{t("components.edit_assistant_dialog.no_tools_selected")}</div>
-                        )}
+                    <div className={styles.toolSelectorContainer}>
+                        <ToolsSelectorContent
+                            tools={availableTools}
+                            selectedTools={selectedTools}
+                            onSelectionChange={handleSelectionChange}
+                            showActions={false}
+                        />
                     </div>
-                    {isOwner && (
-                        <Button appearance="subtle" onClick={onShowToolsSelector} disabled={!isOwner} className={styles.addFieldButton}>
-                            <Add24Regular /> {t("components.edit_assistant_dialog.select_tools")}
-                        </Button>
-                    )}
                 </div>
             </Field>
         </DialogContent>

@@ -3,16 +3,12 @@ import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useRef } from "react";
 import styles from "../EditAssistantDialog.module.css";
-
-interface Example {
-    text: string;
-    value: string;
-}
+import { ExampleModel } from "../../Example";
 
 interface ExamplesStepProps {
-    examples: Example[];
+    examples: ExampleModel[];
     isOwner: boolean;
-    onExamplesChange: (examples: Example[]) => void;
+    onExamplesChange: (examples: ExampleModel[]) => void;
     onHasChanged: (hasChanged: boolean) => void;
 }
 
@@ -24,7 +20,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
         // Only add if there is no empty example
         const hasEmpty = examples.some(ex => !ex.text.trim() || !ex.value.trim());
         if (!hasEmpty) {
-            onExamplesChange([...examples, { text: "", value: "" }]);
+            onExamplesChange([...examples, { id: crypto.randomUUID(), text: "", value: "" }]);
             onHasChanged(true);
             // Scroll to bottom after adding
             setTimeout(() => {
@@ -81,7 +77,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                     <div className={styles.dynamicFieldList}>
                         {examples.length > 0 ? (
                             examples.map((ex, index) => (
-                                <div key={index} className={styles.dynamicFieldItem}>
+                                <div key={ex.id || index} className={styles.dynamicFieldItem}>
                                     <div className={styles.dynamicFieldInputs}>
                                         <div className={styles.dynamicFieldInputRow}>
                                             <span className={styles.dynamicFieldInputLabel}>Text:</span>

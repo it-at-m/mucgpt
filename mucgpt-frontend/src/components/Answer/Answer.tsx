@@ -118,7 +118,10 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                     <div className={styles.answerText}>
                         <Markdown
                             remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                            rehypePlugins={[[rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
+                            rehypePlugins={[
+                                [rehypeKatex, rehypeKatexOptions],
+                                [rehypeExternalLinks, rehypeExternalLinksOptions]
+                            ]}
                             components={{
                                 code: CodeBlockRenderer
                             }}

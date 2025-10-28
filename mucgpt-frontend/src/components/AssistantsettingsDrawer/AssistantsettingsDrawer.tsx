@@ -181,7 +181,10 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 <div className={styles.markdownDescription}>
                     <Markdown
                         remarkPlugins={[remarkGfm]}
-                        rehypePlugins={[[rehypeKatex, rehypeKatexOptions], [rehypeExternalLinks, rehypeExternalLinksOptions]]}
+                        rehypePlugins={[
+                            [rehypeKatex, rehypeKatexOptions],
+                            [rehypeExternalLinks, rehypeExternalLinksOptions]
+                        ]}
                         components={{
                             code: CodeBlockRenderer
                         }}

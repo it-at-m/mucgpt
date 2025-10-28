@@ -3,19 +3,16 @@ import { Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle, Button }
 
 import styles from "./EditAssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useState, useMemo, useEffect, useContext } from "react";
-import { Assistant, ToolInfo, ToolListResponse } from "../../api";
+import { useCallback, useState, useMemo, useEffect } from "react";
+import { Assistant, ToolInfo } from "../../api";
 import { StepperProgress } from "./StepperProgress";
 import { EditDialogActions } from "./EditDialogActions";
 import { useAssistantState } from "./useAssistantState";
 import { TitleStep, DescriptionStep, SystemPromptStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "./steps";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
-
-import { getTools } from "../../api/core-client";
 import { AssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import { VisibilityStep } from "./steps/VisibilityStep";
-import { mapContextToBackendLang } from "../../utils/language-utils";
-import { LanguageContext } from "../LanguageSelector/LanguageContextProvider";
+import { useToolsContext } from "../ToolsProvider";
 
 interface Props {
     showDialog: boolean;
@@ -63,10 +60,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 
     const { t } = useTranslation();
-    const { language } = useContext(LanguageContext);
-
-    // Tools state
-    const [availableTools, setAvailableTools] = useState<ToolListResponse | undefined>(undefined);
+    const { tools: availableTools } = useToolsContext();
 
     const selectedTools = useMemo(() => {
         if (!availableTools) {
@@ -77,24 +71,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
         return tools.map(tool => toolMap.get(tool.id)).filter(Boolean) as ToolInfo[];
     }, [availableTools, tools]);
 
-    // Load available tools when dialog opens
-    useEffect(() => {
-        if (showDialog && !availableTools) {
-            const fetchTools = async () => {
-                try {
-                    // Get current language from context and map to backend format
-                    const backendLang = mapContextToBackendLang(language);
-                    const toolsResponse = await getTools(backendLang);
-                    setAvailableTools(toolsResponse);
-                } catch (error) {
-                    console.error("Failed to fetch tools:", error);
-                }
-            };
-            fetchTools();
-        }
-    }, [showDialog, availableTools, language]);
-
-    // Update selectedTools when tools change
     useEffect(() => {
         if (!showDialog) {
             setCurrentStep(0);

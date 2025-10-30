@@ -1,4 +1,5 @@
 import os
+import httpx
 
 from langchain_core.messages import SystemMessage
 
@@ -13,7 +14,11 @@ class DocumentService:
     DOC_SERVICE_URL = os.getenv("DOC_SERVICE_URL")
 
     def load_docs(self, ids: list[str]) -> list[str]:
-        pass
+        docs = []
+        for di in ids:
+            response = httpx.get(f"{self.DOC_SERVICE_URL}/docs/{di}")
+            docs.append(response.text)
+        return docs
 
     def inject_docs_in_messages(self, messages, ids: list[str]):
         # load docs

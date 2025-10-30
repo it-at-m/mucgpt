@@ -145,6 +145,7 @@ class MUCGPTAgentExecutor:
                     "llm": model,
                     "llm_streaming": True,
                     "enabled_tools": enabled_tools,
+                    "document_ids": document_ids,
                 },
             ),
         )

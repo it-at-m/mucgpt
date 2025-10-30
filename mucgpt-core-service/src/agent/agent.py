@@ -9,6 +9,7 @@ from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
+from agent.document_service import DocumentService
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from agent.tools.tools import ToolCollection
 from core.logtools import getLogger
@@ -132,6 +133,11 @@ class MUCGPTAgent:
         # Inject tool instructions if tools are enabled
         if enabled_tools:
             messages = self.toolCollection.add_instructions(messages, enabled_tools)
+        # inject docs
+        if config and config["configurable"].get("document_ids"):
+            doc_ids : list[str] = config["configurable"].get("document_ids")
+            self.logger.info(f"Loading docs info request context: {doc_ids}")
+            self.document_service.inject_docs_in_messages(messages=messages, ids=doc_ids)
         model = self.model
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
@@ -149,6 +155,7 @@ class MUCGPTAgent:
         self.toolCollection = ToolCollection(model=llm, logger=logger)
         self.tools = self.toolCollection.get_all()
         self.tool_node = ToolNode(self.tools)
+        self.document_service = DocumentService()
         self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
 
         # Define the new graph structure

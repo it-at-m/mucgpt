@@ -122,10 +122,6 @@ export const QuestionInput = ({
 
         if (clearOnSend) {
             setQuestion("");
-            if (uploadedDocuments.length > 0) {
-                setUploadedDocuments([]);
-                onDocumentsChange?.([]);
-            }
         }
     }, [disabled, question, onSend, uploadedDocuments, clearOnSend, setQuestion, onDocumentsChange]);
 

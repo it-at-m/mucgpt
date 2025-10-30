@@ -1,0 +1,34 @@
+[project]
+name = "mucgpt-doc-service"
+version = "0.1.0"
+description = "MucGPT document processing service"
+readme = "README.md"
+requires-python = "==3.13.5"
+dependencies = [
+    "fastapi==0.120.2",
+    "gitpython==3.1.45",
+    "httpx==0.28.1",
+    "pydantic-settings==2.11.0",
+    "python-multipart==0.0.20",
+    "pyyaml==6.0.3",
+    "uvicorn==0.38.0",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit==4.3.0"
+]
+beta-typing = [
+    "ty==0.0.1a24"
+]
+lint = [
+    "ruff==0.14.2"
+]
+notebooks = [
+    "ipykernel==7.0.1",
+    "jupyter==1.1.1"
+]
+
+[tool.uv]
+add-bounds = "exact"
+default-groups = ["dev", "lint", "notebooks"]

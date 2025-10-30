@@ -1,6 +1,6 @@
 import os
-import httpx
 
+import httpx
 from langchain_core.messages import SystemMessage
 
 DOCUMENTS_TEMPLATE = """

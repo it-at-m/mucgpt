@@ -1,0 +1,43 @@
+version: 1
+formatters:
+  simple:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+  http:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
+  json:
+    class: src.core.logtools.JsonFormatter
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: json
+    stream: ext://sys.stdout
+  httpx:
+    class: logging.StreamHandler
+    formatter: json
+    stream: ext://sys.stderr
+loggers:
+  uvicorn.error:
+    level: INFO
+    handlers: [ console ]
+    propagate: no
+  dev:
+    level: DEBUG
+    handlers: [ console ]
+    propagate: no
+  python-template:
+    level: INFO
+    handlers: [ console ]
+    propagate: no
+  httpx:
+    level: WARN
+    handlers: [ httpx ]
+    propagate: no
+  httpcore:
+    level: WARN
+    handlers: [ httpx ]
+    propagate: no
+root:
+  level: DEBUG
+  handlers: [ console ]

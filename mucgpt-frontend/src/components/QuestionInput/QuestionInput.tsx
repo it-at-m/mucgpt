@@ -1,13 +1,23 @@
 import { Button, Textarea, TextareaOnChangeData, Tooltip } from "@fluentui/react-components";
-import { Send28Filled, Checkmark24Regular, QuestionCircle16Regular } from "@fluentui/react-icons";
+import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolListResponse } from "../../api/models";
+import {
+    DocumentUploadDialog,
+    UploadedDocument,
+    createUploadedDocument,
+    getDocumentSignature,
+    getFileSignature
+} from "../DocumentUploadDialog/DocumentUploadDialog";
+import { ToolBadges } from "./ToolBadges";
+import { UploadedDocuments } from "./UploadedDocuments";
+import { uploadFileApi } from "../../api/doc-client";
 
 interface Props {
-    onSend: (question: string) => void;
+    onSend: (question: string, documents: UploadedDocument[]) => void;
     disabled: boolean;
     placeholder?: string;
     clearOnSend?: boolean;
@@ -17,14 +27,8 @@ interface Props {
     setSelectedTools?: (tools: string[]) => void;
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
+    onDocumentsChange?: (documents: UploadedDocument[]) => void;
 }
-
-// Map tool IDs to their tutorial routes
-const TOOL_TUTORIAL_MAP: Record<string, string> = {
-    Brainstorming: "/tutorials/brainstorm",
-    Vereinfachen: "/tutorials/simplify"
-    // Add more tool-to-tutorial mappings here as needed
-};
 
 export const QuestionInput = ({
     onSend,
@@ -36,11 +40,35 @@ export const QuestionInput = ({
     selectedTools,
     setSelectedTools,
     tools,
-    allowToolSelection = true
+    allowToolSelection = true,
+    onDocumentsChange
 }: Props) => {
     const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
+    const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
+    const wasDialogOpenRef = useRef(false);
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const [uploadedDocuments, setUploadedDocuments] = useState<UploadedDocument[]>([]);
+    const uploadedDocumentsRef = useRef<UploadedDocument[]>([]);
+    const [isDragActive, setIsDragActive] = useState(false);
+    const dragCounterRef = useRef(0);
+
+    useEffect(() => {
+        uploadedDocumentsRef.current = uploadedDocuments;
+    }, [uploadedDocuments]);
+
+    const hasFileData = useCallback((dataTransfer?: DataTransfer | null) => {
+        if (!dataTransfer || !dataTransfer.types) {
+            return false;
+        }
+        for (let i = 0; i < dataTransfer.types.length; i += 1) {
+            if (dataTransfer.types[i] === "Files") {
+                return true;
+            }
+        }
+        return false;
+    }, []);
 
     // Auto-resize functionality
     useEffect(() => {
@@ -85,12 +113,21 @@ export const QuestionInput = ({
             return;
         }
 
-        onSend(question);
+        const activeDocuments = uploadedDocuments.filter(doc => doc.isActive !== false);
+        onSend(question, activeDocuments);
+
+        if (uploadedDocuments.length > 0) {
+            onDocumentsChange?.(uploadedDocuments);
+        }
 
         if (clearOnSend) {
             setQuestion("");
+            if (uploadedDocuments.length > 0) {
+                setUploadedDocuments([]);
+                onDocumentsChange?.([]);
+            }
         }
-    }, [disabled, question, onSend, clearOnSend, setQuestion]);
+    }, [disabled, question, onSend, uploadedDocuments, clearOnSend, setQuestion, onDocumentsChange]);
 
     const onEnterPress = useCallback(
         (ev: React.KeyboardEvent<Element>) => {
@@ -113,68 +150,167 @@ export const QuestionInput = ({
         [setQuestion]
     );
 
-    const toggleTool = useCallback(
-        (toolId: string) => {
-            if (!allowToolSelection || !setSelectedTools) return;
+    const handleUploadButtonClick = useCallback(() => {
+        if (disabled) {
+            return;
+        }
+        setIsUploadDialogOpen(true);
+    }, [disabled]);
 
-            if (selectedTools.includes(toolId)) {
-                setSelectedTools(selectedTools.filter(t => t !== toolId));
-            } else {
-                setSelectedTools([...selectedTools, toolId]);
+    const handleDialogOpenChange = useCallback((open: boolean) => {
+        setIsUploadDialogOpen(open);
+    }, []);
+
+    const appendDocumentsFromFiles = useCallback(
+        (files: FileList | File[]) => {
+            const fileArray = Array.from(files ?? []);
+            if (fileArray.length === 0) {
+                return;
             }
+
+            setUploadedDocuments(prev => {
+                const existingSignatures = new Set(prev.map(getDocumentSignature));
+                const newDocs = fileArray
+                    .filter(file => !existingSignatures.has(getFileSignature(file)))
+                    .map(file => createUploadedDocument(file, "uploading"));
+
+                if (newDocs.length === 0) {
+                    return prev;
+                }
+
+                const updated = [...prev, ...newDocs];
+
+                // Upload each new document
+                newDocs.forEach(doc => {
+                    uploadFileApi(doc.file)
+                        .then(fileId => {
+                            const current = uploadedDocumentsRef.current;
+                            const updatedDocs = current.map(d => (d.id === doc.id ? { ...d, status: "ready" as const, fileId } : d));
+                            setUploadedDocuments(updatedDocs);
+                            onDocumentsChange?.(updatedDocs);
+                        })
+                        .catch(error => {
+                            console.error("Failed to upload document:", error);
+                            const current = uploadedDocumentsRef.current;
+                            const updatedDocs = current.map(d =>
+                                d.id === doc.id ? { ...d, status: "error" as const, errorMessage: error.message || "Upload failed" } : d
+                            );
+                            setUploadedDocuments(updatedDocs);
+                            onDocumentsChange?.(updatedDocs);
+                        });
+                });
+
+                onDocumentsChange?.(updated);
+                return updated;
+            });
         },
-        [selectedTools, setSelectedTools, allowToolSelection]
+        [onDocumentsChange]
     );
 
-    const openTutorial = useCallback((toolId: string, event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent toggling the tool
-        const tutorialRoute = TOOL_TUTORIAL_MAP[toolId];
-        if (tutorialRoute) {
-            window.open(`#${tutorialRoute}`, "_blank");
+    const handleDocumentsChange = useCallback(
+        (documents: UploadedDocument[]) => {
+            setUploadedDocuments(documents);
+            onDocumentsChange?.(documents);
+        },
+        [onDocumentsChange]
+    );
+
+    const handleRemoveDocument = useCallback(
+        (id: string) => {
+            setUploadedDocuments(prev => {
+                const updated = prev.filter(doc => doc.id !== id);
+                onDocumentsChange?.(updated);
+                return updated;
+            });
+        },
+        [onDocumentsChange]
+    );
+
+    const handleToggleDocument = useCallback(
+        (id: string) => {
+            setUploadedDocuments(prev => {
+                const updated = prev.map(doc => (doc.id === id ? { ...doc, isActive: !(doc.isActive !== false) } : doc));
+                onDocumentsChange?.(updated);
+                return updated;
+            });
+        },
+        [onDocumentsChange]
+    );
+
+    useEffect(() => {
+        if (wasDialogOpenRef.current && !isUploadDialogOpen) {
+            uploadButtonRef.current?.focus();
         }
-    }, []);
+        wasDialogOpenRef.current = isUploadDialogOpen;
+    }, [isUploadDialogOpen]);
+
+    const handleDragEnter = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+            event.preventDefault();
+            dragCounterRef.current += 1;
+            setIsDragActive(true);
+        },
+        [disabled, hasFileData]
+    );
+
+    const handleDragOver = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+        },
+        [disabled, hasFileData]
+    );
+
+    const handleDragLeave = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+            event.preventDefault();
+            dragCounterRef.current = Math.max(dragCounterRef.current - 1, 0);
+            if (dragCounterRef.current === 0) {
+                setIsDragActive(false);
+            }
+        },
+        [disabled, hasFileData]
+    );
+
+    const handleDrop = useCallback(
+        (event: React.DragEvent<HTMLDivElement>) => {
+            if (disabled || !hasFileData(event.dataTransfer)) {
+                return;
+            }
+            event.preventDefault();
+            dragCounterRef.current = 0;
+            setIsDragActive(false);
+            appendDocumentsFromFiles(event.dataTransfer.files);
+        },
+        [disabled, hasFileData, appendDocumentsFromFiles]
+    );
 
     return (
         <>
             <div className={styles.questionInputWrapper}>
                 {/* Tool badges at the top - show all tools */}
-                {tools && tools.tools && tools.tools.length > 0 && (
-                    <div className={styles.toolBadgesHeader}>
-                        <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
-                        {tools.tools.map(tool => {
-                            const isSelected = selectedTools.includes(tool.id);
-                            const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
-                            return (
-                                <div key={tool.id} className={styles.toolButtonWrapper}>
-                                    <Button
-                                        appearance={isSelected ? "primary" : "secondary"}
-                                        size="medium"
-                                        className={styles.toolButton}
-                                        onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
-                                        disabled={!allowToolSelection}
-                                        icon={isSelected ? <Checkmark24Regular /> : undefined}
-                                    >
-                                        {tool.id}
-                                    </Button>
-                                    {hasTutorial && (
-                                        <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
-                                            <button
-                                                className={styles.toolHelpButton}
-                                                onClick={e => openTutorial(tool.id, e)}
-                                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
-                                            >
-                                                <QuestionCircle16Regular />
-                                            </button>
-                                        </Tooltip>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
+                <ToolBadges tools={tools} selectedTools={selectedTools} allowToolSelection={allowToolSelection} setSelectedTools={setSelectedTools} />
+                <UploadedDocuments documents={uploadedDocuments} onToggle={handleToggleDocument} onRemove={handleRemoveDocument} />
 
                 {/* Input container with textarea and buttons */}
-                <div className={`${styles.questionInputContainer} ${!tools || !tools.tools || tools.tools.length === 0 ? styles.noTools : ""}`}>
+                <div
+                    className={`${styles.questionInputContainer} ${
+                        !tools || !tools.tools || tools.tools.length === 0 ? styles.noTools : ""
+                    } ${isDragActive ? styles.dragActive : ""}`}
+                    onDragEnter={handleDragEnter}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
                     <Textarea
                         className={styles.questionInputTextArea}
                         placeholder={placeholder}
@@ -186,6 +322,17 @@ export const QuestionInput = ({
                         ref={textareaRef}
                     />
                     <div className={styles.questionInputButtons}>
+                        <Tooltip content={t("components.questioninput.upload_document", "Dokument hochladen")} relationship="label">
+                            <Button
+                                ref={uploadButtonRef}
+                                size="large"
+                                appearance={"subtle"}
+                                icon={<DocumentAdd24Regular />}
+                                aria-label={t("components.questioninput.upload_document", "Dokument hochladen")}
+                                onClick={handleUploadButtonClick}
+                                disabled={disabled}
+                            />
+                        </Tooltip>
                         <Tooltip content={placeholder || ""} relationship="label">
                             <Button
                                 ref={sendButtonRef}
@@ -205,6 +352,12 @@ export const QuestionInput = ({
                     <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 </div>
             </div>
+            <DocumentUploadDialog
+                open={isUploadDialogOpen}
+                onOpenChange={handleDialogOpenChange}
+                documents={uploadedDocuments}
+                onDocumentsChange={handleDocumentsChange}
+            />
         </>
     );
 };

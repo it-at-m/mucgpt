@@ -35,6 +35,7 @@
         0px 2px 4px var(--colorBrandForeground2),
         0px 0px 2px var(--colorBrandForeground2);
     transition: box-shadow 0.2s ease;
+    border: 2px solid transparent;
 }
 
 .questionInputContainer:focus-within {
@@ -46,6 +47,12 @@
         box-shadow 0.15s ease,
         outline 0.15s ease,
         transform 0.15s ease;
+}
+
+.dragActive {
+    border: 2px dashed var(--colorBrandStroke1);
+    background: var(--colorNeutralBackground2);
+    box-shadow: none;
 }
 
 .noTools {
@@ -79,7 +86,7 @@
 
 .questionInputButtons {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
@@ -102,6 +109,14 @@
     color: var(--colorNeutralForeground3);
     margin: 0;
     letter-spacing: 0.01em;
+}
+
+.uploadedDocumentsHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 0 16px 8px 16px;
 }
 
 .toolButton {

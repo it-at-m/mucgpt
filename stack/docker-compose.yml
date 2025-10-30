@@ -212,6 +212,17 @@ services:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:8084/api/backend/health"]
 
+  doc-service:
+    build:
+      context: ../mucgpt-doc-service
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    env_file:
+      - ./.env
+    ports:
+      - "39148:8000"
+
   frontend:
     build:
       context: ../mucgpt-frontend

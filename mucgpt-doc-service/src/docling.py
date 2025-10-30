@@ -1,10 +1,9 @@
-import logging
 import os
 
-from fastapi import UploadFile
 import httpx
+from fastapi import UploadFile
 
-from src.core.logtools import getLogger
+from core.logtools import getLogger
 
 DOCLING_URL = os.getenv("DOCLING_URL")
 DOCLING_CONVERT_URL = f"{DOCLING_URL}/v1/convert/file"
@@ -13,6 +12,9 @@ TIMEOUT = 2*60
 logger = getLogger()
 
 class Docling:
+    def __init__(self):
+        logger.info(f"Using Docling url {DOCLING_URL}")
+
     @staticmethod
     async def process_doc(file: UploadFile) -> str:
         # Read the uploaded file content

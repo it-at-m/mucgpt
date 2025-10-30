@@ -12,6 +12,7 @@ dependencies = [
     "python-multipart==0.0.20",
     "pyyaml==6.0.3",
     "uvicorn==0.38.0",
+    "truststore>=0.10.4",
 ]
 
 [dependency-groups]

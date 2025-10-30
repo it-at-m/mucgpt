@@ -6,7 +6,7 @@ formatters:
     format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     datefmt: '%Y-%m-%d %H:%M:%S'
   json:
-    class: src.core.logtools.JsonFormatter
+    class: core.logtools.JsonFormatter
 handlers:
   console:
     class: logging.StreamHandler

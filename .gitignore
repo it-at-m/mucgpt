@@ -148,6 +148,10 @@ static/
 # notebooks
 notebooks
 
+# IntelliJ
+.idea
+*.iml
+
 #configs
 config/c.json
 config/k.json
@@ -155,4 +159,5 @@ config/p.json
 config/local.json
 .vscode/
 .env*
+!.env.example
 stack/ca-bundle.crt

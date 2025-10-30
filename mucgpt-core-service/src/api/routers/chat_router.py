@@ -46,6 +46,8 @@ async def chat_completions(
         enabled_tools = (
             request.enabled_tools if request.enabled_tools is not None else []
         )
+        # Use document_ids from request if provided
+        document_ids = request.document_ids if request.document_ids is not None else []
         if request.stream:
             gen = agent_executor.run_with_streaming(
                 messages=request.messages,
@@ -55,6 +57,7 @@ async def chat_completions(
                 department=user_info.department,
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
+                document_ids=document_ids,
             )
 
             async def sse_generator():
@@ -70,6 +73,7 @@ async def chat_completions(
                 model=request.model,
                 department=user_info.department,
                 enabled_tools=enabled_tools,
+                document_ids=document_ids,
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")

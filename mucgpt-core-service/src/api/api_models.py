@@ -75,6 +75,9 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: Optional[str] = Field(
         None, description="ID of the assistant to use for this completion request"
     )
+    document_ids: Optional[List[str]] = Field(
+        None, description="List of document IDs to use for this completion request"
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -88,6 +91,7 @@ class ChatCompletionRequest(BaseModel):
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
+                "document_ids": ["doc-uuid-1", "doc-uuid-2"],
             }
         }
     )

@@ -216,7 +216,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string) => {
+        async (question: string, documentIds?: string[]) => {
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -243,7 +243,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     fetchHistory,
                     assistant_id,
                     selectedTools,
-                    setToolStatuses
+                    setToolStatuses,
+                    documentIds
                 );
             } catch (e) {
                 setError(e);
@@ -471,8 +472,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 clearOnSend
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                onSend={(question, _documents) => callApi(question)}
+                onSend={(question, documents) => {
+                    // Extract fileIds from active documents that are ready
+                    const documentIds = documents.filter(doc => doc.isActive !== false && doc.status === "ready" && doc.fileId).map(doc => doc.fileId!);
+                    callApi(question, documentIds.length > 0 ? documentIds : undefined);
+                }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
@@ -481,9 +485,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 allowToolSelection={false}
             />
         );
-    }, [isLoadingRef.current, callApi, question, t, error, selectedTools, tools, assistantConfig.tools, strategy]);
-
-    // AnswerList component
+    }, [isLoadingRef.current, callApi, question, t, error, selectedTools, tools, assistantConfig.tools, strategy]); // AnswerList component
     const answerList = useMemo(
         () => (
             <AnswerList

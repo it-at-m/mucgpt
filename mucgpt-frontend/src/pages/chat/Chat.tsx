@@ -210,7 +210,7 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string) => {
+        async (question: string, system?: string, documentIds?: string[]) => {
             lastQuestionRef.current = question;
             setError(undefined);
             isLoadingRef.current = true;
@@ -237,7 +237,8 @@ const Chat = () => {
                     fetchHistory,
                     undefined,
                     selectedTools,
-                    setToolStatuses
+                    setToolStatuses,
+                    documentIds
                 );
             } catch (e) {
                 setError(e);
@@ -515,8 +516,11 @@ const Chat = () => {
                 clearOnSend
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                onSend={(question, _documents) => callApi(question, systemPrompt)}
+                onSend={(question, documents) => {
+                    // Extract fileIds from active documents that are ready
+                    const documentIds = documents.filter(doc => doc.isActive !== false && doc.status === "ready" && doc.fileId).map(doc => doc.fileId!);
+                    callApi(question, systemPrompt, documentIds.length > 0 ? documentIds : undefined);
+                }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}

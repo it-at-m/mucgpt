@@ -117,6 +117,9 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_I4=document
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://doc-service:39148/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/api/document/**, /api/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/${MUCGPT_SSO_REALM}
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}

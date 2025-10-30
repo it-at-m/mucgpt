@@ -1,6 +1,6 @@
 import { getConfig, handleApiRequest } from "./fetch-utils";
 
-const DOC_SERVICE_BASE = "/api/docs";
+const DOC_SERVICE_BASE = "/api/document/docs";
 
 /**
  * Uploads a file and returns a unique UUID for retrieval.

@@ -301,7 +301,7 @@ export const handlers = [
     }),
 
     // Doc-service API handlers
-    http.post("/api/docs/", async ({ request }) => {
+    http.post("/api/document/docs/", async ({ request }) => {
         // Simulate network delay for file upload (longer for larger files)
         await delay(8000 + Math.random() * 4000); // 8-12 seconds delay
 
@@ -327,7 +327,7 @@ export const handlers = [
         return HttpResponse.json(fileId);
     }),
 
-    http.get("/api/docs/:fileId", async ({ params }) => {
+    http.get("/api/document/docs/:fileId", async ({ params }) => {
         // Simulate network delay for file retrieval
         await delay(300 + Math.random() * 200); // 300-500ms delay
 

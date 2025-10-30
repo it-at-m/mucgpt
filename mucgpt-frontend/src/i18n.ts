@@ -47,7 +47,7 @@ i18n
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
-                        prompt: "Stelle eine Frage",
+                        prompt: "Stelle eine Frage oder lade ein Dokument hoch",
                         answer_loading: "Erstelle Antwort",
                         quickprompts: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
@@ -233,7 +233,20 @@ i18n
                             tutorial_help: "Tutorial öffnen",
                             tool_header: "Zusätzliche Tools zu wählen:",
                             tutorial_help_aria: "Tutorial für {{tool}} öffnen",
-                            send_question: "Frage senden"
+                            send_question: "Frage senden",
+                            upload_document: "Dokument hochladen",
+                            uploaded_documents_label: "Hinzugefügte Dokumente",
+                            remove_document: "Dokument entfernen",
+                            upload_dialog_title: "Dokumente hinzufügen",
+                            upload_dialog_description: "Wähle Dateien aus, die in deiner nächsten Frage verwendet werden sollen.",
+                            upload_dialog_select_label: "Dateien auswählen",
+                            upload_dialog_select_hint: "Mehrere Dateien sind möglich.",
+                            upload_dialog_pending_label: "Ausgewählte Dateien",
+                            upload_dialog_no_pending: "Keine Dateien ausgewählt.",
+                            upload_dialog_uploaded_label: "Bereits hinzugefügt",
+                            upload_dialog_no_uploaded: "Noch keine Dokumente hinzugefügt.",
+                            upload_dialog_cancel: "Abbrechen",
+                            upload_dialog_confirm: "Hinzufügen"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -496,7 +509,7 @@ i18n
                     },
                     chat: {
                         header: "Ask a question or try an example",
-                        prompt: "Ask a question",
+                        prompt: "Ask a question or upload a document",
                         answer_loading: "Generating answer",
                         quickprompts: {
                             shorter_tooltip: "Shorten your answer",
@@ -681,7 +694,20 @@ i18n
                             tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
                             tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
-                            send_question: "Send question"
+                            send_question: "Send question",
+                            upload_document: "Upload document",
+                            uploaded_documents_label: "Attached documents",
+                            remove_document: "Remove document",
+                            upload_dialog_title: "Add documents",
+                            upload_dialog_description: "Select files to include with your next question.",
+                            upload_dialog_select_label: "Choose files",
+                            upload_dialog_select_hint: "You can select multiple files.",
+                            upload_dialog_pending_label: "Selected files",
+                            upload_dialog_no_pending: "No files selected.",
+                            upload_dialog_uploaded_label: "Already added",
+                            upload_dialog_no_uploaded: "No documents added yet.",
+                            upload_dialog_cancel: "Cancel",
+                            upload_dialog_confirm: "Add"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -941,7 +967,7 @@ i18n
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
-                        prompt: "Stelle a Froog ",
+                        prompt: "Stell a Froog oder lad a Dokument hoch",
                         answer_loading: "I bearbeit grad de Frog",
                         quickprompts: {
                             shorter_tooltip: "Schreib a kürzere Antwort",
@@ -1127,7 +1153,20 @@ i18n
                             tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
                             tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
-                            send_question: "Froog senden"
+                            send_question: "Froog senden",
+                            upload_document: "Dokument hochladn",
+                            uploaded_documents_label: "Dazua gladne Dokumente",
+                            remove_document: "Dokument wegdoa",
+                            upload_dialog_title: "Dokumente dazua doa",
+                            upload_dialog_description: "Wäh de Dateien aus, de bei da nächsten Frog dabei sei soin.",
+                            upload_dialog_select_label: "Dateien aussuachn",
+                            upload_dialog_select_hint: "Mehrere Dateien san möglich.",
+                            upload_dialog_pending_label: "Ausgwählte Dateien",
+                            upload_dialog_no_pending: "Koane Dateien ausgwählt.",
+                            upload_dialog_uploaded_label: "Bereits dazua doa",
+                            upload_dialog_no_uploaded: "No koane Dokumente dazua doa.",
+                            upload_dialog_cancel: "Abbrecha",
+                            upload_dialog_confirm: "Dazua doa"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1389,7 +1428,7 @@ i18n
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
-                        prompt: "Posez une question",
+                        prompt: "Posez une question ou téléchargez un document",
                         answer_loading: "Créer une réponse",
                         quickprompts: {
                             shorter_tooltip: "Écrire une réponse plus courte",
@@ -1576,7 +1615,20 @@ i18n
                             tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
                             tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
-                            send_question: "Envoyer la question"
+                            send_question: "Envoyer la question",
+                            upload_document: "Télécharger un document",
+                            uploaded_documents_label: "Documents ajoutés",
+                            remove_document: "Supprimer le document",
+                            upload_dialog_title: "Ajouter des documents",
+                            upload_dialog_description: "Sélectionnez les fichiers à utiliser avec votre prochaine question.",
+                            upload_dialog_select_label: "Choisir des fichiers",
+                            upload_dialog_select_hint: "Plusieurs fichiers peuvent être sélectionnés.",
+                            upload_dialog_pending_label: "Fichiers sélectionnés",
+                            upload_dialog_no_pending: "Aucun fichier sélectionné.",
+                            upload_dialog_uploaded_label: "Déjà ajoutés",
+                            upload_dialog_no_uploaded: "Aucun document ajouté pour l'instant.",
+                            upload_dialog_cancel: "Annuler",
+                            upload_dialog_confirm: "Ajouter"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -1839,7 +1891,7 @@ i18n
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
-                        prompt: "Задайте питання",
+                        prompt: "Задайте питання або завантажте документ",
                         answer_loading: "Створення відповіді",
                         quickprompts: {
                             shorter_tooltip: "Написати коротшу відповідь",
@@ -2025,7 +2077,20 @@ i18n
                             tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
                             tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
-                            send_question: "Надіслати питання"
+                            send_question: "Надіслати питання",
+                            upload_document: "Завантажити документ",
+                            uploaded_documents_label: "Додані документи",
+                            remove_document: "Видалити документ",
+                            upload_dialog_title: "Додати документи",
+                            upload_dialog_description: "Виберіть файли, які будуть використані у вашому наступному питанні.",
+                            upload_dialog_select_label: "Вибрати файли",
+                            upload_dialog_select_hint: "Можна вибрати кілька файлів.",
+                            upload_dialog_pending_label: "Вибрані файли",
+                            upload_dialog_no_pending: "Файли не вибрано.",
+                            upload_dialog_uploaded_label: "Вже додано",
+                            upload_dialog_no_uploaded: "Ще немає доданих документів.",
+                            upload_dialog_cancel: "Скасувати",
+                            upload_dialog_confirm: "Додати"
                         },
                         suminput: {
                             tokensused: "Використано токени",

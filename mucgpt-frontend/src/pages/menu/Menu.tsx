@@ -9,6 +9,7 @@ import { AddAssistantButton } from "../../components/AddAssistantButton";
 import { CreateAssistantDialog } from "../../components/CreateAssistantDialog/CreateAssistantDialog";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantResponse, Assistant, CommunityAssistant } from "../../api/models";
+import { UploadedDocument } from "../../components/DocumentUploadDialog/DocumentUploadDialog";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { migrate_old_assistants } from "../../service/migration";
 import { SearchCommunityAssistantButton } from "../../components/SearchCommunityAssistantButton/SearchCommunityAssistantButton";
@@ -109,7 +110,8 @@ const Menu = () => {
         setGetCommunityAssistants(true);
     };
 
-    const onSendQuestion = (question: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const onSendQuestion = (question: string, _documents: UploadedDocument[]) => {
         let url = `#/chat?q=${encodeURIComponent(question)}`;
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;

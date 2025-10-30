@@ -11,6 +11,7 @@ import { ToolStatus, ToolStreamState } from "../../../utils/ToolStreamHandler";
 import { useToolsContext } from "../../../components/ToolsProvider";
 import styles from "./ToolsTutorial.module.css";
 import { TutorialSection } from "./TutorialTypes";
+import { UploadedDocument } from "../../../components/DocumentUploadDialog/DocumentUploadDialog";
 
 // Create a tutorial-specific implementation using the real QuestionInput
 const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {
@@ -80,15 +81,18 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
         [tools, t]
     );
 
-    const handleSend = useCallback(() => {
-        // This is just for demo - don't actually send
-        console.log("Demo: Would send question with tools:", selectedTools);
+    const handleSend = useCallback(
+        (_question: string, documents: UploadedDocument[]) => {
+            // This is just for demo - don't actually send
+            console.log("Demo: Would send question with tools:", selectedTools, "and documents:", documents);
 
-        // Simulate tool execution if tools are selected
-        if (selectedTools.length > 0) {
-            simulateToolExecution(selectedTools);
-        }
-    }, [selectedTools, simulateToolExecution]);
+            // Simulate tool execution if tools are selected
+            if (selectedTools.length > 0) {
+                simulateToolExecution(selectedTools);
+            }
+        },
+        [selectedTools, simulateToolExecution]
+    );
 
     return (
         <>

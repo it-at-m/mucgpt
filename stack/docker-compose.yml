@@ -115,13 +115,12 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
       - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=document
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://doc-service:8080/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://doc-service:8000/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/api/document/**
       - SPRING_CLOUD_GATEWAY_ROUTES_3_FILTERS_0=RewritePath=/api/document/(?<urlsegments>.*), /api/$\{urlsegments}
       - SPRING_CLOUD_GATEWAY_ROUTES_4_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_4_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0=Path=/**
-      - REFARCH_SECURITY_CSRFWHITELISTED_0=/api/document/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/${MUCGPT_SSO_REALM}
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
@@ -226,7 +225,7 @@ services:
     env_file:
       - ./.env
     ports:
-      - "39148:8080"
+      - "39148:8000"
     networks:
       - keycloak
     healthcheck:

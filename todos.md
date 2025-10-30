@@ -1,0 +1,8 @@
+- prompts von langfuse
+- save default tools in browser
+- simply agent langgraph tracing
+- sumarize from backend entfernen
+- configured llm to the tools ->
+- caching von tools und departments in context
+- logs im frontend enfternen & backend
+- departments configurieren/schnittstelle

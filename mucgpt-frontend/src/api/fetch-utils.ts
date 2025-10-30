@@ -27,6 +27,28 @@ export function postConfig(body: any): RequestInit {
 }
 
 /**
+ * Returns a POST-Config for file uploads with FormData
+ * Note: Content-Type is not set to allow browser to set multipart/form-data boundary
+ * @param formData FormData object containing the file(s)
+ */
+export function postFormDataConfig(formData: FormData): RequestInit {
+    const headers = new Headers();
+    const csrfToken = getXSRFToken();
+    if (csrfToken) {
+        headers.append("X-XSRF-TOKEN", csrfToken);
+    }
+    // Don't set Content-Type - browser will set it with boundary for FormData
+    return {
+        method: "POST",
+        body: formData,
+        headers: headers,
+        mode: "cors",
+        credentials: "same-origin",
+        redirect: "manual"
+    };
+}
+
+/**
  * Returns a default PUT-Config for fetch
  * If available, the version of the entity to be updated is included in this as an "If-Match" header.
  * @param body Optional body to be transferred

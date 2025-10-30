@@ -1,4 +1,4 @@
-import { getConfig, handleApiRequest } from "./fetch-utils";
+import { getConfig, handleApiRequest, postFormDataConfig } from "./fetch-utils";
 
 const DOC_SERVICE_BASE = "/api/document/docs";
 
@@ -11,16 +11,7 @@ export async function uploadFileApi(file: File): Promise<string> {
     const formData = new FormData();
     formData.append("file", file);
 
-    return handleApiRequest(async () => {
-        const response = await fetch(`${DOC_SERVICE_BASE}/`, {
-            method: "POST",
-            body: formData,
-            mode: "cors",
-            credentials: "same-origin",
-            redirect: "manual"
-        });
-        return response;
-    }, "Failed to upload file");
+    return handleApiRequest(() => fetch(`${DOC_SERVICE_BASE}/`, postFormDataConfig(formData)), "Failed to upload file");
 }
 
 /**

@@ -117,7 +117,7 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=document
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://doc-service:8000/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/api/document/**
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_FILTERS_0=RewritePath=/api/document/(?<urlsegments>.*), /$\{urlsegments}
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_FILTERS_0=RewritePath=/api/document/(?<urlsegments>.*), /api/$\{urlsegments}
       - SPRING_CLOUD_GATEWAY_ROUTES_4_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_4_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0=Path=/**
@@ -231,6 +231,8 @@ services:
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:8080/docs/"]
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
 
   frontend:
     build:

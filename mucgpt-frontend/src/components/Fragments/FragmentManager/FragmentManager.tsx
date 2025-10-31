@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { BrainstormFragment } from "../BrainstormFragment/BrainstormFragment";
+import { BPMNFragment } from "../BPMNFragment/BPMNFragment";
 import { SimplifiedTextFragment } from "../SimplifiedTextFragment/SimplifiedTextFragment";
 import { FragmentRegistry } from "../FragmentRegistry";
 
@@ -21,6 +22,13 @@ FragmentRegistry.register({
     title: "Leichte Sprache",
     identifiers: ["einfachesprache", "leichtesprache", "mucgptsimplify", "mucgpt-simplify"],
     component: SimplifiedTextFragment as any
+});
+
+FragmentRegistry.register({
+    type: "bpmn",
+    title: "BPMN Creator",
+    identifiers: ["mucgptbpmn", "mucgpt-bpmn", "<bpmn>", "bpmn-erstellung"],
+    component: BPMNFragment as any
 });
 
 export const FragmentManager = ({ content, fragmentType }: FragmentManagerProps): ReactNode => {

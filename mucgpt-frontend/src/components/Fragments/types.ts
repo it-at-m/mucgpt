@@ -1,7 +1,7 @@
 /**
  * Represents the types of fragments supported by the application
  */
-export type FragmentType = "brainstorming" | "simplify" | "summary" | "mindmap" | "diagram";
+export type FragmentType = "brainstorming" | "simplify" | "summary" | "mindmap" | "diagram" | "bpmn";
 
 /**
  * Base interface for all fragment metadata

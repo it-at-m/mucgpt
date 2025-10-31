@@ -33,5 +33,6 @@ class Docling:
             response = await client.post(DOCLING_CONVERT_URL, data=data, files=files, timeout=TIMEOUT)
         response.raise_for_status()
         response_body = response.json()
-        content = response_body["document"]["md_content"]
+        # content = response_body["document"]["md_content"]
+        content = response_body[0]["document"]["md_content"]
         return content

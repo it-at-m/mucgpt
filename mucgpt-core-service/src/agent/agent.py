@@ -122,6 +122,10 @@ class MUCGPTAgent:
         Call the model, dynamically enabling tools based on config.
         """
         messages = state["messages"]
+        user_request = next(
+            (msg.content for msg in state["messages"] if isinstance(msg, HumanMessage)),
+            None,
+        )
         enabled_tools = config["configurable"].get("enabled_tools") if config else None
         tools_to_use = (
             self.toolCollection.get_all(enabled_tools) if enabled_tools else []
@@ -137,7 +141,7 @@ class MUCGPTAgent:
         if config and config["configurable"].get("document_ids"):
             doc_ids : list[str] = config["configurable"].get("document_ids")
             self.logger.info(f"Loading docs info request context: {doc_ids}")
-            self.document_service.inject_docs_in_messages(messages=messages, ids=doc_ids)
+            self.document_service.inject_docs_in_messages(messages=messages, ids=doc_ids, query=user_request)
         model = self.model
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)

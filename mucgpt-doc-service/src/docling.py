@@ -24,10 +24,13 @@ class Docling:
         files = {
             "files": (file.filename, file_bytes, file.content_type)
         }
+        data = {
+            "image_export_mode": "placeholder"
+        }
 
         # Send POST request to Docling
         async with httpx.AsyncClient() as client:
-            response = await client.post(DOCLING_CONVERT_URL, files=files, timeout=TIMEOUT)
+            response = await client.post(DOCLING_CONVERT_URL, data=data, files=files, timeout=TIMEOUT)
         response.raise_for_status()
         response_body = response.json()
         content = response_body["document"]["md_content"]

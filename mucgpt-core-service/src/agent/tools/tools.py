@@ -12,70 +12,6 @@ from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from api.api_models import ToolInfo, ToolListResponse
 from core.logtools import getLogger
 
-# Centralized single-line summaries to avoid duplication across decorator, metadata and system prompt
-BRAINSTORMING_SUMMARY = "Generates or refines a detailed markdown mind map."  # one-line
-SIMPLIFY_SUMMARY = (
-    "Simplifies complex German text to A2 Easy Language (Leichte Sprache)."  # one-line
-)
-
-# Detailed instruction templates (dedented for clean system prompts)
-BRAINSTORMING_DETAILED = textwrap.dedent(
-    """
-    **Brainstorming**
-
-    Description: Generates or refines a detailed mind map (pure markdown; no code fences).
-
-    Use for:
-    • New idea exploration
-    • Organizing complex / hierarchical domains
-    • Structured refinement based on user feedback
-
-    Technical:
-    • Hierarchical markdown (headings + bullet lists)
-    • 4–7 main branches recommended; 2–4 nested levels where meaningful
-    • Bold only once for central concept line
-
-    Parameters:
-    - topic (required)
-    - context (optional) Supplemental info to integrate selectively
-    - existing_mindmap (optional) Full previous map for refinement
-    - feedback (optional) Specific change requests
-
-    Best Practices:
-    - In refinement: keep unchanged branches stable; modify only targeted areas
-    - Avoid generic placeholders (e.g., "Misc")
-    - Prefer parallel grammatical structure for sibling nodes
-    - Reference earlier output blocks shown as ```MUCGPTBrainstorming ...``` when refining.
-    """
-)
-
-SIMPLIFY_DETAILED = textwrap.dedent(
-    """
-    **Vereinfachen (Simplify)**
-
-    Description: Converts German text to A2 level (Leichte Sprache) while preserving meaning.
-
-    Use for:
-    • Accessibility
-    • Language learning support
-    • Plain-language rewrites
-
-    Technical:
-    • Short sentences (≤15 words), active voice, concrete vocabulary
-    • Blank lines separate logical units
-    • Preserve factual accuracy; no omissions
-
-    Parameter:
-    - text (required) Entire source text (single call; do not split)
-
-    Best Practices:
-    - Reject fragments; request full text if incomplete
-    - Keep proper nouns; explain only if ambiguous
-    - No idioms, passive voice, nested clauses
-    - Reference earlier output blocks shown as ```MUCGPTVereinfachen ...``` when user wants adjustments.
-    """
-)
-
 TOOL_INSTRUCTIONS_TEMPLATE = """
 # Tools
 ## Available tools:
@@ -105,63 +41,6 @@ You can reference these outputs in your responses when needed. The markdown form
 
 """
 
-
-def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = None):
-    @tool(
-        "Brainstorming",
-        description=BRAINSTORMING_SUMMARY,
-    )
-    def brainstorm_tool(
-        topic: str,
-        context: str = None,
-        existing_mindmap: str = None,
-        feedback: str = None,
-    ):
-        writer = get_stream_writer()
-        if existing_mindmap:
-            writer(
-                ToolStreamChunk(
-                    state=ToolStreamState.STARTED,
-                    content=f"Verbessere Brainstorming für Thema: {topic} basierend auf Feedback",
-                    tool_name="Brainstorming",
-                ).model_dump_json()
-            )
-        else:
-            writer(
-                ToolStreamChunk(
-                    state=ToolStreamState.STARTED,
-                    content=f"Starte Brainstorming für Thema: {topic}",
-                    tool_name="Brainstorming",
-                ).model_dump_json()
-            )
-        result = brainstorming(
-            topic, context, model, logger, writer, existing_mindmap, feedback
-        )
-        writer(
-            ToolStreamChunk(
-                state=ToolStreamState.ENDED,
-                content="Brainstorming abgeschlossen.",
-                tool_name="Brainstorming",
-            ).model_dump_json()
-        )
-        return result
-
-    return brainstorm_tool
-
-
-def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = None):
-    @tool(
-        "Vereinfachen",
-        description=SIMPLIFY_SUMMARY,
-    )
-    def simplify_tool(text: str):
-        writer = get_stream_writer()
-        result = simplify(text, model, logger, writer=writer)
-        return result
-
-    return simplify_tool
-
-
 class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
@@ -172,11 +51,11 @@ class ToolCollection:
         self._simplify_tool = make_simplify_tool(self.model, self.logger)
 
     @property
-    def simplify(self):
+    def simplify(self) -> BaseTool:
         return self._simplify_tool
 
     @property
-    def brainstorm(self):
+    def brainstorm(self) -> BaseTool:
         return self._brainstorm_tool
 
     def get_tools(self):
@@ -317,8 +196,8 @@ class ToolCollection:
 
         # Map tool name to detailed block
         detailed_map = {
-            "Brainstorming": BRAINSTORMING_DETAILED,
-            "Vereinfachen": SIMPLIFY_DETAILED,
+            "Brainstorming": brainstorm.BRAINSTORMING_DETAILED,
+            "Vereinfachen": simplify.SIMPLIFY_DETAILED,
         }
 
         tool_descriptions = []  # single-line summaries

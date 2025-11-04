@@ -91,6 +91,7 @@ class AuthenticationHelper:
             )
 
         return AuthenticationResult(
+            token=accesstoken,
             user_id=self.getLHMObjectID(token_payload),
             department=self.getDepartment(token_payload),
             name=self.getName(token_payload),

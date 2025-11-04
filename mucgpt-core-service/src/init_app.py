@@ -5,8 +5,10 @@ from typing import Any, Dict, Optional, Type, Union
 
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
+from agent.tools.tools import ToolCollection
 from config.model_provider import get_model
 from config.settings import LangfuseSettings, Settings
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -43,9 +45,10 @@ class ModelOptions:
         self.custom_model = custom_model
 
 
-def init_service(
+async def init_service(
     service_class: Type,
     cfg: Settings,
+    user_info: AuthenticationResult,
     options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
 ) -> Any:
     """Initialize a service with a configured model.
@@ -53,6 +56,7 @@ def init_service(
     Args:
         service_class: The service class to instantiate
         cfg: Backend configuration
+        user_info: The user to create the Agent for
         options: Model options as ModelOptions object or dict
 
     Returns:
@@ -89,15 +93,18 @@ def init_service(
             logger.debug("Initializing %s with custom model", service_class.__name__)
             model = options.custom_model
 
-        return service_class(llm=model)
+        tool_collection = ToolCollection(model=model)
+        tools = await tool_collection.get_tools(user_info=user_info)
+        return service_class(llm=model, tools=tools, tool_collection=tool_collection)
     except Exception as e:
         logger.error("Failed to initialize %s: %s", service_class.__name__, e)
         raise
 
 
-def init_agent(
+async def init_agent(
     cfg: Settings,
     langfuse_cfg: LangfuseSettings,
+    user_info: AuthenticationResult,
     options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
@@ -105,6 +112,7 @@ def init_agent(
     Args:
         cfg: Application settings
         langfuse_cfg: Langfuse configuration settings
+        user_info: The user to create the Agent for
         options: Model options as ModelOptions object or dict
 
     Returns:
@@ -112,10 +120,11 @@ def init_agent(
     """
     return MUCGPTAgentExecutor(
         version=cfg.VERSION,
-        agent=init_service(
+        agent=await init_service(
             MUCGPTAgent,
             cfg=cfg,
             options=options,
+            user_info=user_info
         ),
         langfuse_cfg=langfuse_cfg,
     )

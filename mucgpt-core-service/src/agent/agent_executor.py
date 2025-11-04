@@ -28,6 +28,7 @@ from api.api_models import (
 from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
 from config.settings import LangfuseSettings
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-agent")
@@ -121,7 +122,7 @@ class MUCGPTAgentExecutor:
         temperature: float,
         max_output_tokens: int,
         model: str,
-        department: Optional[str],
+        user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
@@ -144,6 +145,7 @@ class MUCGPTAgentExecutor:
                     "llm": model,
                     "llm_streaming": True,
                     "enabled_tools": enabled_tools,
+                    "user_info": user_info,
                 },
             ),
         )
@@ -239,7 +241,7 @@ class MUCGPTAgentExecutor:
         temperature: float,
         max_output_tokens: int,
         model: str,
-        department: Optional[str],
+        user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
     ) -> ChatCompletionResponse:
         logger.info(
@@ -256,6 +258,7 @@ class MUCGPTAgentExecutor:
                 "llm": model,
                 "llm_streaming": False,
                 "enabled_tools": enabled_tools,
+                "user_info": user_info,
             }
         )
         config = merge_configs(self.base_config, request_config)

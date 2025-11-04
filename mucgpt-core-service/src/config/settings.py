@@ -226,6 +226,16 @@ class LangfuseSettings(BaseSettings):
     SECRET_KEY: str | None = None
     HOST: str | None = None
 
+class MCPSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="MUCGPT_MCP_",
+        case_sensitive=False
+    )
+    class MCPSource(BaseModel):
+        url: str
+        forward_token: bool = False
+    SOURCES: dict[str, MCPSource] | None = None
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -545,3 +555,10 @@ def get_sso_settings() -> SSOSettings:
     """Return cached SSO Settings instance."""
     sso_settings = SSOSettings()
     return sso_settings
+
+
+@lru_cache(maxsize=1)
+def get_mcp_settings() -> MCPSettings:
+    """Return cached MCP Settings instance."""
+    mcp_settings = MCPSettings()
+    return mcp_settings

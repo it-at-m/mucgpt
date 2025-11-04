@@ -4,13 +4,16 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.messages.base import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import RunnableSerializable
+from langchain_core.tools.base import BaseTool
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
+from agent.tools.mcp import McpBearerAuthProvider
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
 from agent.tools.tools import ToolCollection
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
 
@@ -108,46 +111,42 @@ class MUCGPTAgent:
                 is_valid=False, messages=state["messages"] + [error_message]
             )
 
-    def after_validation(self, state: AgentState) -> str:
-        """
-        Conditional edge logic after validation.
-        """
-        if state["is_valid"]:
-            return END
-        return "call_model"
-
-    def call_model(self, state: AgentState, config: RunnableConfig) -> AgentState:
+    async def call_model(self, state: AgentState, config: RunnableConfig) -> AgentState:
         """
         Call the model, dynamically enabling tools based on config.
         """
         messages = state["messages"]
+        model = self.model
+        user_info : AuthenticationResult = config["configurable"].get("user_info")
+        # update mcp OAuth token
+        McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
+        # load tools
         enabled_tools = config["configurable"].get("enabled_tools") if config else None
-        tools_to_use = (
-            self.toolCollection.get_all(enabled_tools) if enabled_tools else []
+        tools_to_use : list[BaseTool] = (
+            await self.tool_collection.get_tools(enabled_tools=enabled_tools, user_info=user_info) if enabled_tools else []
         )
         if self.logger:
             self.logger.info(
                 f"MUCGPTAgent: Enabled tools: {enabled_tools if enabled_tools else 'None'}"
             )
-        # Inject tool instructions if tools are enabled
+        # inject tool instructions into system message
         if enabled_tools:
-            messages = self.toolCollection.add_instructions(messages, enabled_tools)
-        model = self.model
+            messages = self.tool_collection.add_instructions(messages, enabled_tools, tools=self.tools)
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
-        response = model.with_config(config).invoke(messages)
+        # invoke model
+        response = await model.with_config(config).ainvoke(messages)
         return AgentState(
             messages=messages + [response],
             is_valid=True,
         )
 
     """Responsible for tool and agent construction only."""
-
-    def __init__(self, llm: RunnableSerializable, logger=None):
+    def __init__(self, llm: RunnableSerializable, tool_collection: ToolCollection, tools: list[BaseTool], logger=None):
         self.model = llm
         self.validation_model = llm.with_structured_output(ValidationResult)
-        self.toolCollection = ToolCollection(model=llm, logger=logger)
-        self.tools = self.toolCollection.get_all()
+        self.tool_collection = tool_collection
+        self.tools = tools
         self.tool_node = ToolNode(self.tools)
         self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
 
@@ -163,13 +162,6 @@ class MUCGPTAgent:
             "call_model", self.should_continue, {"tools": "tools", END: END}
         )
         builder.add_edge("tools", "validate_results")
-        builder.add_conditional_edges(
-            "validate_results",
-            self.after_validation,
-            {
-                END: END,
-                "call_model": "call_model",
-            },
-        )
+        builder.add_edge("validate_results", "call_model")
 
         self.graph = builder.compile()

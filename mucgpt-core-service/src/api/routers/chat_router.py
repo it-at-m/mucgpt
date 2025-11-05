@@ -79,7 +79,7 @@ async def chat_completions(
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
                 model=request.model,
-                department=user_info.department,
+                user_info=user_info,
                 enabled_tools=enabled_tools,
             )
     except Exception as e:
@@ -109,7 +109,7 @@ async def create_assistant(
             temperature=1.0,
             max_output_tokens=request.max_tokens,
             model=request.model,
-            department=user_info.department,
+            user_info=user_info,
         )
         system_prompt = system_prompt.choices[0].message.content
         logger.info(system_prompt)
@@ -128,7 +128,7 @@ async def create_assistant(
             temperature=1.0,
             max_output_tokens=request.max_tokens,
             model=request.model,
-            department=user_info.department,
+            user_info=user_info,
         )
         description = description.choices[0].message.content
         logger.info("createAssistant: creating title prompt")
@@ -151,7 +151,7 @@ async def create_assistant(
             temperature=1.0,
             max_output_tokens=request.max_tokens,
             model=request.model,
-            department=user_info.department,
+            user_info=user_info,
         )
         title = title.choices[0].message.content
         logger.info("createAssistant: returning finished")

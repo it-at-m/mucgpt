@@ -58,18 +58,19 @@ class AuthenticationHelper:
             logger.error(f"Failed to parse JWT token: {e}")
             raise AuthError("Invalid JWT token", status_code=401)
 
-    def authenticate(self, accesstoken: str) -> AuthenticationResult:
+    def authenticate(self, auth_header: str) -> AuthenticationResult:
         """Authenticates the user based on the access token.
         Checks if the user has the required role.
         Returns an AuthenticationResult if authenticated.
         Raises AuthError if the user is not authenticated or does not have the required role.
         """
         logger.debug("Starting authentication process")
-        if accesstoken is None:
+        if auth_header is None:
             logger.warning("Authentication failed: Missing Authorization header")
             raise AuthError("Missing Authorization header", status_code=401)
 
-        token_payload = self.parse_jwt_payload(accesstoken)
+        token_payload = self.parse_jwt_payload(auth_header)
+        access_token = auth_header[7:] if auth_header.startswith("Bearer ") else auth_header
 
         try:
             roles = self.getRoles(token_payload)
@@ -91,7 +92,7 @@ class AuthenticationHelper:
             )
 
         return AuthenticationResult(
-            token=accesstoken,
+            token=access_token,
             user_id=self.getLHMObjectID(token_payload),
             department=self.getDepartment(token_payload),
             name=self.getName(token_payload),

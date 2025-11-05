@@ -33,9 +33,8 @@ class McpLoader:
             con = StreamableHttpConnection(transport="streamable_http", url=v.url)
             # add auth if enabled and user_info present
             if v.forward_token:
-                if user_info is not None:
-                    con["auth"] = McpBearerAuthProvider(uid=user_info.user_id, token=user_info.token)
-                    mcp_connections[k] = con
+                con["auth"] = McpBearerAuthProvider(uid=user_info.user_id, token=user_info.token)
+                mcp_connections[k] = con
             else:
                 mcp_connections[k] = con
         # create mcp client and get tools

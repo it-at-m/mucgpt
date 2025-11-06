@@ -20,7 +20,7 @@ departments = init_departments()
         401: {"description": "Unauthorized"},
     },
 )
-async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
+async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
     response = ConfigResponse(
         env_name=settings.ENV_NAME,
         alternative_logo=settings.ALTERNATIVE_LOGO,
@@ -50,7 +50,7 @@ async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
 
 
 @router.get("/departments")
-async def getDepartments(user_info=Depends(authenticate_user)):
+async def get_departments(user_info=Depends(authenticate_user)):
     return departments
 
 

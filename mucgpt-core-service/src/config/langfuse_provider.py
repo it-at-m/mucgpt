@@ -1,7 +1,7 @@
-from config.settings import LangfuseSettings
 from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler
 
+from config.settings import LangfuseSettings
 from core.logtools import getLogger
 
 logger = getLogger()

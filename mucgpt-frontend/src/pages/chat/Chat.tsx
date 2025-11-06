@@ -369,16 +369,17 @@ const Chat = () => {
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
-            const toolsArray = decodeURIComponent(toolsFromUrl)
+            const toolsArray = toolsFromUrl
                 .split(",")
+                .map(tool => tool.replaceAll("+", " "))
                 .filter(tool => tool.trim() !== "");
             setSelectedTools(toolsArray);
         }
 
         if (questionFromUrl) {
             // If we have a question from URL, store it and wait for tools to load
-            const decodedQuestion = decodeURIComponent(questionFromUrl);
-            setPendingQuestion(decodedQuestion);
+            const normalizedQuestion = questionFromUrl.replaceAll("+", " ");
+            setPendingQuestion(normalizedQuestion);
             storageService
                 .getNewestChat()
                 .then(() => {

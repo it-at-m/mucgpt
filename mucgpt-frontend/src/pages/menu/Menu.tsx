@@ -53,27 +53,27 @@ const Menu = () => {
     const communityAssistantStorageService: CommunityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
     useEffect(() => {
-        // Check for query parameter in assistanth hash and regular URLs
+        // Check for query parameter in hash and regular URLs
         let query = null;
 
         // Check hash format like #/?q=something
         const hashPart = window.location.hash;
-        if (hashPart && hashPart.includes("?q=")) {
-            const qIndex = hashPart.indexOf("?q=");
-            if (qIndex !== -1) {
-                query = hashPart.slice(qIndex + 3);
+        if (hashPart && hashPart.includes("?")) {
+            const queryString = hashPart.split("?")[1];
+            if (queryString) {
+                const params = new URLSearchParams(queryString);
+                query = params.get("q");
             }
         }
         // Check regular format /?q=something
         else {
-            const currentPath = window.location.pathname + window.location.search;
-            if (currentPath && currentPath.startsWith("/?q=")) {
-                query = currentPath.slice(4);
-            }
+            const params = new URLSearchParams(window.location.search);
+            query = params.get("q");
         }
 
         if (query) {
-            const decoded_query = decodeURIComponent(query).replaceAll("+", " ");
+            // URLSearchParams already decodes the value, but handle + as space for legacy URLs
+            const decoded_query = query.replaceAll("+", " ");
             setQuestion(decoded_query);
         }
         (async () => {

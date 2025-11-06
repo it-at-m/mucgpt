@@ -13,13 +13,14 @@ from api.api_models import (
     CreateAssistantResult,
 )
 from api.exception import llm_exception_handler
-from config.settings import get_langfuse_settings, get_settings
+from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from init_app import init_agent
 
 logger = getLogger()
+settings = get_settings()
 agent_executors : dict[str, MUCGPTAgentExecutor] = {}
 router = APIRouter(prefix="/v1")
 
@@ -29,9 +30,7 @@ async def get_agent_executor(user_info: AuthenticationResult) -> MUCGPTAgentExec
     global agent_executors
     uid = user_info.user_id
     if agent_executors.get(uid) is None:
-        settings = get_settings()
-        langfuse_settings = get_langfuse_settings()
-        agent_executor = await init_agent(cfg=settings, langfuse_cfg=langfuse_settings, user_info=user_info)
+        agent_executor = await init_agent(user_info=user_info)
         agent_executors[uid] = agent_executor
     return agent_executors[uid]
 
@@ -54,9 +53,7 @@ async def chat_completions(
     ae = await get_agent_executor(user_info)
     try:
         # Use enabled_tools from request if provided, otherwise use no tool
-        enabled_tools = (
-            request.enabled_tools if request.enabled_tools is not None else []
-        )
+        enabled_tools = request.enabled_tools or []
         if request.stream:
             gen = ae.run_with_streaming(
                 messages=request.messages,

@@ -1,12 +1,11 @@
-import inspect
 import json
 import os
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Optional
 
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.tools.tools import ToolCollection
-from config.model_provider import get_model
+from config.model_provider import ModelProvider
 from config.settings import LangfuseSettings, Settings, enrich_model_metadata
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
@@ -60,92 +59,38 @@ def _initialize_models_metadata(cfg: Settings) -> None:
             )
             raise
 
-
-async def init_service(
-    service_class: Type,
-    cfg: Settings,
-    user_info: AuthenticationResult,
-    options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
-) -> Any:
-    """Initialize a service with a configured model.
+async def init_agent(
+        cfg: Settings,
+        user_info: AuthenticationResult
+) -> MUCGPTAgentExecutor:
+    """Initialize a MUCGPTAgentExecutor with configuration.
 
     Args:
-        service_class: The service class to instantiate
         cfg: Backend configuration
         user_info: The user to create the Agent for
-        options: Model options as ModelOptions object or dict
 
     Returns:
-        Initialized service instance
-
-    Raises:
-        TypeError: If the service_class is not a valid type
-        Exception: For any other initialization errors
+        Configured MUCGPTAgentExecutor
     """
-    if not inspect.isclass(service_class):
-        raise TypeError(f"Service class {service_class} is not a class")
-
-    # Convert dict to ModelOptions if needed
-    if isinstance(options, dict):
-        options = ModelOptions(**options)
-    # Use default options if none provided
-    elif options is None:
-        options = ModelOptions()
+    options = ModelOptions()
 
     _initialize_models_metadata(cfg)
 
     try:
         if options.custom_model is None:
-            logger.debug(
-                "Initializing %s with model from config", service_class.__name__
-            )
-            model = get_model(
-                models=cfg.MODELS,
-                max_output_tokens=options.max_tokens,
-                n=1,
-                streaming=options.streaming,
-                temperature=options.temperature,
-                logger=logger,
-            )
+            logger.debug("Initializing agent with model from config")
+            model = ModelProvider.get_model()
         else:
-            logger.debug("Initializing %s with custom model", service_class.__name__)
+            logger.debug("Initializing agent with custom model")
             model = options.custom_model
 
         tool_collection = ToolCollection(model=model)
         tools = await tool_collection.get_tools(user_info=user_info)
-        return service_class(llm=model, tools=tools, tool_collection=tool_collection)
+        agent = MUCGPTAgent(llm=model, tools=tools, tool_collection=tool_collection)
     except Exception as e:
-        logger.error("Failed to initialize %s: %s", service_class.__name__, e)
+        logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise
-
-
-async def init_agent(
-    cfg: Settings,
-    langfuse_cfg: LangfuseSettings,
-    user_info: AuthenticationResult,
-    options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
-) -> MUCGPTAgentExecutor:
-    """Initialize a MUCGPTAgentExecutor with configuration.
-
-    Args:
-        cfg: Application settings
-        langfuse_cfg: Langfuse configuration settings
-        user_info: The user to create the Agent for
-        options: Model options as ModelOptions object or dict
-
-    Returns:
-        Configured MUCGPTAgentExecutor
-    """
-    return MUCGPTAgentExecutor(
-        version=cfg.VERSION,
-        agent=await init_service(
-            MUCGPTAgent,
-            cfg=cfg,
-            options=options,
-            user_info=user_info
-        ),
-        langfuse_cfg=langfuse_cfg,
-    )
+    return MUCGPTAgentExecutor(agent=agent)
 
 
 def init_departments() -> list:

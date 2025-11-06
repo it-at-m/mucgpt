@@ -378,7 +378,6 @@ const Chat = () => {
         if (questionFromUrl) {
             // If we have a question from URL, store it and wait for tools to load
             const decodedQuestion = decodeURIComponent(questionFromUrl);
-            setQuestion(decodedQuestion);
             setPendingQuestion(decodedQuestion);
             storageService
                 .getNewestChat()
@@ -420,6 +419,13 @@ const Chat = () => {
             setTimeout(() => {
                 callApi(pendingQuestion, systemPrompt);
                 setPendingQuestion(null);
+
+                // Clear URL parameters after submitting the question
+                const hashPart = window.location.hash;
+                if (hashPart && hashPart.includes("?")) {
+                    const basePath = hashPart.split("?")[0];
+                    window.history.replaceState(null, "", basePath);
+                }
             }, 200);
         }
     }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt]);

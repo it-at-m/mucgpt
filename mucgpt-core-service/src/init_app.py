@@ -5,7 +5,9 @@ from typing import Any, Optional
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.tools.tools import ToolCollection
+from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelProvider
+from config.settings import get_settings, get_langfuse_settings
 from config.settings import LangfuseSettings, Settings, enrich_model_metadata
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
@@ -43,6 +45,21 @@ class ModelOptions:
         self.max_tokens = max_tokens
         self.custom_model = custom_model
 
+def warmup_app():
+    settings = get_settings()
+    # init model
+    options = ModelOptions()
+    ModelProvider.init_model(
+        models=settings.MODELS,
+        max_output_tokens=options.max_tokens,
+        n=1,
+        streaming=options.streaming,
+        temperature=options.temperature,
+        logger=logger,
+    )
+    # init langfuse
+    langfuse_settings = get_langfuse_settings()
+    LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
 
 def _initialize_models_metadata(cfg: Settings) -> None:
     """Ensure all configured models have complete metadata before use."""
@@ -72,18 +89,10 @@ async def init_agent(
     Returns:
         Configured MUCGPTAgentExecutor
     """
-    options = ModelOptions()
-
     _initialize_models_metadata(cfg)
 
     try:
-        if options.custom_model is None:
-            logger.debug("Initializing agent with model from config")
-            model = ModelProvider.get_model()
-        else:
-            logger.debug("Initializing agent with custom model")
-            model = options.custom_model
-
+        model = ModelProvider.get_model()
         tool_collection = ToolCollection(model=model)
         tools = await tool_collection.get_tools(user_info=user_info)
         agent = MUCGPTAgent(llm=model, tools=tools, tool_collection=tool_collection)

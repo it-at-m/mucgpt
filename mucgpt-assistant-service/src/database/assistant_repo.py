@@ -141,28 +141,11 @@ class AssistantRepository(Repository[Assistant]):
         )
         all_assistants = list(all_assistants_query.scalars().all())
 
-        matching_assistants = []
-
-        for assistant in all_assistants:
-            # Include assistants with no hierarchical access restrictions (available to all)
-            if (
-                not assistant.hierarchical_access
-                or len(assistant.hierarchical_access) == 0
-            ):
-                matching_assistants.append(assistant)
-                continue  # Check each path in the hierarchical_access array
-            for path in assistant.hierarchical_access:
-                # Exact match
-                if department == path:
-                    matching_assistants.append(assistant)
-                    break
-
-                # Prefix match with delimiter (hierarchical access)
-                if department.startswith(path + "-") or department.startswith(
-                    path + "/"
-                ):
-                    matching_assistants.append(assistant)
-                    break
+        matching_assistants = [
+            assistant
+            for assistant in all_assistants
+            if assistant.is_allowed_for_user(department)
+        ]
 
         logger.info(
             f"Returning {len(matching_assistants)} assistants for department: {department}"

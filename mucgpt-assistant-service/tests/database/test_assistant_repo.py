@@ -532,6 +532,101 @@ class TestAssistantRepository:
         assert len(result2) == 0
         assert assistant1.id in [a.id for a in result1]
 
+    async def test_get_all_possible_assistants_with_slash_and_dash_delimeter(
+        self, db_session
+    ):
+        """Test hierarchical access paths with slash and dash delimeter"""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["POR-5/12"])
+        await db_session.commit()
+
+        # Act
+        result = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-5/12"
+            )
+        )
+
+        # Assert
+        assert [a.id for a in result] == [assistant.id]
+        assert assistant.is_allowed_for_user("POR-5/12")
+        assert result[0].is_allowed_for_user("POR-5/12")
+
+    async def test_get_all_possible_assistants_with_slash_and_dash_delimeter_and_subpath(
+        self, db_session
+    ):
+        """Test hierarchical access paths with slash and dash delimeter"""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["POR-5/1"])
+        await db_session.commit()
+
+        # Act
+        result_512 = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-5/12"
+            )
+        )
+        result_514 = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-5/12"
+            )
+        )
+
+        # Assert
+        assert [a.id for a in result_512] == [assistant.id]
+        assert [a.id for a in result_514] == [assistant.id]
+        assert assistant.is_allowed_for_user("POR-5/12")
+        assert assistant.is_allowed_for_user("POR-5/14")
+        assert result_512[0].is_allowed_for_user("POR-5/12")
+        assert result_514[0].is_allowed_for_user("POR-5/14")
+
+    async def test_get_all_possible_assistants_with_slash_and_dash_delimeter_and_different_parent_paths(
+        self, db_session
+    ):
+        """Test hierarchical access paths with slash and dash delimeter"""
+        # Arrange
+        assistant_repo = AssistantRepository(db_session)
+        assistant = await assistant_repo.create(hierarchical_access=["POR-5"])
+        await db_session.commit()
+
+        # Act
+        result_512 = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-5/12"
+            )
+        )
+        result_51 = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-5/1"
+            )
+        )
+
+        result_5 = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-5"
+            )
+        )
+
+        result_not_found = (
+            await assistant_repo.get_all_possible_assistants_for_user_with_department(
+                "POR-6"
+            )
+        )
+
+        # Assert
+        assert [a.id for a in result_512] == [assistant.id]
+        assert [a.id for a in result_51] == [assistant.id]
+        assert [a.id for a in result_5] == [assistant.id]
+        assert len(result_not_found) == 0
+        assert assistant.is_allowed_for_user("POR-5/12")
+        assert assistant.is_allowed_for_user("POR-5/1")
+        assert assistant.is_allowed_for_user("POR-5")
+        assert result_512[0].is_allowed_for_user("POR-5/12")
+        assert result_51[0].is_allowed_for_user("POR-5/1")
+        assert result_5[0].is_allowed_for_user("POR-5")
+
     async def test_get_all_possible_assistants_case_sensitivity(self, db_session):
         """Test case sensitivity in hierarchical access paths."""
         # Arrange

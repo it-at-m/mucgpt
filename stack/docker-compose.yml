@@ -49,7 +49,7 @@ services:
 
   keycloak:
     container_name: keycloak
-    image: keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
+    image: keycloak/keycloak:26.4.4@sha256:c6459d5fae1b759f5d667ebdc6237ab3121379c3494e213898569014ede1846d
     command:
       - start-dev
     environment:

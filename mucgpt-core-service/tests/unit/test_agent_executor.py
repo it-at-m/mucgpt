@@ -91,8 +91,7 @@ class TestMUCGPTAgentExecutor:
     def setup_method(self):
         self.llm = DummyRunnerLLM()
         self.agent = DummyAgent(self.llm)
-        self.settings = Settings()
-        self.runner = MUCGPTAgentExecutor(self.agent, self.settings)
+        self.runner = MUCGPTAgentExecutor(self.agent)
 
     @pytest.mark.skip(reason="Temporarily disabled")
     @pytest.mark.asyncio
@@ -104,7 +103,7 @@ class TestMUCGPTAgentExecutor:
             temperature=0.7,
             max_output_tokens=10,
             model="test",
-            department=None,
+            user_info=None,
         ):
             chunks.append(chunk)
         assert any(
@@ -125,7 +124,7 @@ class TestMUCGPTAgentExecutor:
             temperature=0.7,
             max_output_tokens=10,
             model="test",
-            department=None,
+            user_info=None,
         ):
             chunks.append(chunk)
         # Should yield a chunk with tool_calls
@@ -147,7 +146,7 @@ class TestMUCGPTAgentExecutor:
             temperature=0.7,
             max_output_tokens=10,
             model="test",
-            department=None,
+            user_info=None,
         ):
             chunks.append(chunk)
         # The last chunk should have finish_reason "stop"
@@ -156,15 +155,14 @@ class TestMUCGPTAgentExecutor:
     def test_run_without_streaming_returns_error_message_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
-        settings = Settings()
-        runner = MUCGPTAgentExecutor(agent, settings)
+        runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
         response = runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             max_output_tokens=10,
             model="test",
-            department=None,
+            user_info=None,
         )
         assert response.choices[0].message.content is not None
         assert response.choices[0].finish_reason == "error"
@@ -173,8 +171,7 @@ class TestMUCGPTAgentExecutor:
     def test_run_without_streaming_uses_enabled_tools_in_config(self):
         llm = DummyRunnerLLM()
         agent = DummyAgent(llm)
-        settings = Settings()
-        runner = MUCGPTAgentExecutor(agent, settings)
+        runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="hi")]
         enabled_tools = ["simplify"]
         runner.run_without_streaming(
@@ -182,7 +179,7 @@ class TestMUCGPTAgentExecutor:
             temperature=0.7,
             max_output_tokens=10,
             model="test",
-            department=None,
+            user_info=None,
             enabled_tools=enabled_tools,
         )
         assert llm.config["enabled_tools"] == enabled_tools
@@ -191,15 +188,14 @@ class TestMUCGPTAgentExecutor:
     def test_run_without_streaming_sets_llm_config(self):
         llm = DummyRunnerLLM()
         agent = DummyAgent(llm)
-        settings = Settings()
-        runner = MUCGPTAgentExecutor(agent, settings)
+        runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="hi")]
         runner.run_without_streaming(
             messages=messages,
             temperature=0.5,
             max_output_tokens=20,
             model="test-model",
-            department=None,
+            user_info=None,
         )
         assert llm.config["llm_max_tokens"] == 20
         assert llm.config["llm_temperature"] == 0.5
@@ -209,14 +205,13 @@ class TestMUCGPTAgentExecutor:
     def test_run_without_streaming_returns_error_on_exception(self):
         llm = DummyRunnerLLM(fail=True)
         agent = DummyAgent(llm)
-        settings = Settings()
-        runner = MUCGPTAgentExecutor(agent, settings)
+        runner = MUCGPTAgentExecutor(agent)
         messages = [InputMessage(role="user", content="fail")]
         response = runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
             max_output_tokens=10,
             model="test",
-            department=None,
+            user_info=None,
         )
         assert response.choices[0].finish_reason == "error"

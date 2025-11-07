@@ -10,6 +10,7 @@ from src.config.settings import (
     get_langfuse_settings,
     get_settings,
     get_sso_settings,
+    get_mcp_settings,
 )
 
 
@@ -334,6 +335,33 @@ class TestSettings:
             assert langfuse_settings.PUBLIC_KEY is None
             assert langfuse_settings.SECRET_KEY is None
             assert langfuse_settings.HOST is None
+
+    def test_mcp_settings(self):
+        """Test MCP settings configuration."""
+        mcp_json = json.dumps({
+            "test": {
+                "url": "https://example.com/mcp",
+                "forward_token": True
+            }
+        })
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_MCP_SOURCES": mcp_json,
+            },
+        ):
+            get_mcp_settings.cache_clear()
+            mcp_settings = get_mcp_settings()
+            assert len(mcp_settings.SOURCES.keys()) == 1
+            assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
+            assert mcp_settings.SOURCES["test"].forward_token == True
+
+    def test_mcp_settings_default(self):
+        """Test MCP settings default values."""
+        with patch.dict(os.environ, {}, clear=True):
+            get_mcp_settings.cache_clear()
+            mcp_settings = get_mcp_settings()
+            assert mcp_settings.SOURCES is None
 
     def teardown_method(self):
         """Clean up after each test."""

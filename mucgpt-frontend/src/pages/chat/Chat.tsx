@@ -353,7 +353,7 @@ const Chat = () => {
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
 
-        window.history.replaceState(null, "", currentUrl.toString());
+        window.history.replaceState(window.history.state, "", currentUrl.toString());
     }, []);
 
     // Handler for LLM selection

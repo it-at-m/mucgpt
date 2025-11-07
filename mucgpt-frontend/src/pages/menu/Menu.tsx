@@ -73,8 +73,7 @@ const Menu = () => {
 
         if (query) {
             // URLSearchParams already decodes the value, but handle + as space for legacy URLs
-            const decoded_query = query.replaceAll("+", " ");
-            setQuestion(decoded_query);
+            setQuestion(query);
         }
         (async () => {
             await migrate_old_assistants();

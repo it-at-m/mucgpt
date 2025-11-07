@@ -406,9 +406,7 @@ const Chat = () => {
         }
 
         if (questionFromUrl) {
-            // If we have a question from URL, store it and wait for tools to load
-            const normalizedQuestion = questionFromUrl.replaceAll("+", " ");
-            setPendingQuestion(normalizedQuestion);
+            setPendingQuestion(questionFromUrl);
             storageService
                 .getNewestChat()
                 .then(() => {

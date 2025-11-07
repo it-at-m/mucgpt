@@ -398,10 +398,7 @@ const Chat = () => {
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
-            const toolsArray = toolsFromUrl
-                .split(",")
-                .map(tool => tool.replaceAll("+", " "))
-                .filter(tool => tool.trim() !== "");
+            const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
             setSelectedTools(toolsArray);
         }
 
@@ -455,6 +452,10 @@ const Chat = () => {
 
         // Wait a bit more to ensure tools are properly set
         const timeoutId = window.setTimeout(() => {
+            // Check if this question is still pending
+            if (scheduledQuestionRef.current !== questionToAsk) {
+                return;
+            }
             callApi(questionToAsk, systemPrompt);
 
             // Clear state and hash param once the question is sent

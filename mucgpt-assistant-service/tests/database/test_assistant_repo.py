@@ -532,10 +532,10 @@ class TestAssistantRepository:
         assert len(result2) == 0
         assert assistant1.id in [a.id for a in result1]
 
-    async def test_get_all_possible_assistants_with_slash_and_dash_delimeter(
+    async def test_get_all_possible_assistants_with_slash_and_dash_delimiter(
         self, db_session
     ):
-        """Test hierarchical access paths with slash and dash delimeter"""
+        """Test hierarchical access paths with slash and dash delimiter"""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant = await assistant_repo.create(hierarchical_access=["POR-5/12"])
@@ -553,10 +553,10 @@ class TestAssistantRepository:
         assert assistant.is_allowed_for_user("POR-5/12")
         assert result[0].is_allowed_for_user("POR-5/12")
 
-    async def test_get_all_possible_assistants_with_slash_and_dash_delimeter_and_subpath(
+    async def test_get_all_possible_assistants_with_slash_and_dash_delimiter_and_subpath(
         self, db_session
     ):
-        """Test hierarchical access paths with slash and dash delimeter"""
+        """Test hierarchical access paths with slash and dash delimiter"""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant = await assistant_repo.create(hierarchical_access=["POR-5/1"])
@@ -570,7 +570,7 @@ class TestAssistantRepository:
         )
         result_514 = (
             await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5/12"
+                "POR-5/14"
             )
         )
 
@@ -582,10 +582,10 @@ class TestAssistantRepository:
         assert result_512[0].is_allowed_for_user("POR-5/12")
         assert result_514[0].is_allowed_for_user("POR-5/14")
 
-    async def test_get_all_possible_assistants_with_slash_and_dash_delimeter_and_different_parent_paths(
+    async def test_get_all_possible_assistants_with_slash_and_dash_delimiter_and_different_parent_paths(
         self, db_session
     ):
-        """Test hierarchical access paths with slash and dash delimeter"""
+        """Test hierarchical access paths with slash and dash delimiter"""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant = await assistant_repo.create(hierarchical_access=["POR-5"])

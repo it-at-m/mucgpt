@@ -1,8 +1,0 @@
-services:
-  refarch-gateway:
-    environment:
-      SPRING_CLOUD_GATEWAY_ROUTES_3_URI: http://host.docker.internal:5173/
-      SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://core-service:8000/
-  frontend:
-    profiles:
-      - prod

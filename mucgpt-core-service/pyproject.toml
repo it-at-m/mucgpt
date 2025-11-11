@@ -30,6 +30,7 @@ dependencies = [
     "langgraph>=0.6.0",
     "truststore>=0.10.4",
     "langfuse>=3.3.4",
+    "langchain-mcp-adapters>=0.1.11",
 ]
 
 [tool.uv]

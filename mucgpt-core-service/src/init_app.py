@@ -1,12 +1,12 @@
-import inspect
 import json
 import os
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Optional
 
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
-from config.model_provider import get_model
-from config.settings import LangfuseSettings, Settings
+from agent.tools.tools import ToolCollection
+from config.model_provider import ModelProvider
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -43,82 +43,34 @@ class ModelOptions:
         self.custom_model = custom_model
 
 
-def init_service(
-    service_class: Type,
-    cfg: Settings,
-    options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
-) -> Any:
-    """Initialize a service with a configured model.
-
-    Args:
-        service_class: The service class to instantiate
-        cfg: Backend configuration
-        options: Model options as ModelOptions object or dict
-
-    Returns:
-        Initialized service instance
-
-    Raises:
-        TypeError: If the service_class is not a valid type
-        Exception: For any other initialization errors
-    """
-    if not inspect.isclass(service_class):
-        raise TypeError(f"Service class {service_class} is not a class")
-
-    # Convert dict to ModelOptions if needed
-    if isinstance(options, dict):
-        options = ModelOptions(**options)
-    # Use default options if none provided
-    elif options is None:
-        options = ModelOptions()
-
-    try:
-        if options.custom_model is None:
-            logger.debug(
-                "Initializing %s with model from config", service_class.__name__
-            )
-            model = get_model(
-                models=cfg.MODELS,
-                max_output_tokens=options.max_tokens,
-                n=1,
-                streaming=options.streaming,
-                temperature=options.temperature,
-                logger=logger,
-            )
-        else:
-            logger.debug("Initializing %s with custom model", service_class.__name__)
-            model = options.custom_model
-
-        return service_class(llm=model)
-    except Exception as e:
-        logger.error("Failed to initialize %s: %s", service_class.__name__, e)
-        raise
-
-
-def init_agent(
-    cfg: Settings,
-    langfuse_cfg: LangfuseSettings,
-    options: Optional[Union[ModelOptions, Dict[str, Any]]] = None,
+async def init_agent(
+        user_info: AuthenticationResult
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
     Args:
-        cfg: Application settings
-        langfuse_cfg: Langfuse configuration settings
-        options: Model options as ModelOptions object or dict
+        user_info: The user to create the Agent for
 
     Returns:
         Configured MUCGPTAgentExecutor
     """
-    return MUCGPTAgentExecutor(
-        version=cfg.VERSION,
-        agent=init_service(
-            MUCGPTAgent,
-            cfg=cfg,
-            options=options,
-        ),
-        langfuse_cfg=langfuse_cfg,
-    )
+    options = ModelOptions()
+
+    try:
+        if options.custom_model is None:
+            logger.debug("Initializing agent with model from config")
+            model = ModelProvider.get_model()
+        else:
+            logger.debug("Initializing agent with custom model")
+            model = options.custom_model
+
+        tool_collection = ToolCollection(model=model)
+        tools = await tool_collection.get_tools(user_info=user_info)
+        agent = MUCGPTAgent(llm=model, tools=tools, tool_collection=tool_collection)
+    except Exception as e:
+        logger.error("Failed to initialize MUCGPTAgent: %s", e)
+        raise
+    return MUCGPTAgentExecutor(agent=agent)
 
 
 def init_departments() -> list:

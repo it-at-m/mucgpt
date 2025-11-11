@@ -329,6 +329,33 @@ const Chat = () => {
         [max_output_tokens, temperature, debouncedStorageUpdate]
     );
 
+    const clearNavigationQueryParams = useCallback(() => {
+        const currentUrl = new URL(window.location.href);
+
+        // Handle hash-based routing (e.g., #/chat?q=...)
+        if (currentUrl.hash && currentUrl.hash.includes("?")) {
+            const [hashPath, hashQuery] = currentUrl.hash.split("?");
+            const hashParams = new URLSearchParams(hashQuery);
+            hashParams.delete("q");
+            hashParams.delete("question");
+            hashParams.delete("tools");
+            const newHashQuery = hashParams.toString();
+            currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
+        }
+
+        // Handle search params (fallback navigation)
+        if (currentUrl.search) {
+            const searchParams = currentUrl.searchParams;
+            searchParams.delete("q");
+            searchParams.delete("question");
+            searchParams.delete("tools");
+            const newSearch = searchParams.toString();
+            currentUrl.search = newSearch ? `?${newSearch}` : "";
+        }
+
+        window.history.replaceState(window.history.state, "", currentUrl.toString());
+    }, []);
+
     // Handler for LLM selection
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
@@ -341,6 +368,8 @@ const Chat = () => {
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+    // Effect to handle pending question after tools are loaded
+    const scheduledQuestionRef = useRef<string | null>(null);
 
     // Initialisierung beim ersten Laden
     useEffect(() => {
@@ -369,17 +398,12 @@ const Chat = () => {
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
-            const toolsArray = decodeURIComponent(toolsFromUrl)
-                .split(",")
-                .filter(tool => tool.trim() !== "");
+            const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
             setSelectedTools(toolsArray);
         }
 
         if (questionFromUrl) {
-            // If we have a question from URL, store it and wait for tools to load
-            const decodedQuestion = decodeURIComponent(questionFromUrl);
-            setQuestion(decodedQuestion);
-            setPendingQuestion(decodedQuestion);
+            setPendingQuestion(questionFromUrl);
             storageService
                 .getNewestChat()
                 .then(() => {
@@ -413,16 +437,40 @@ const Chat = () => {
         }
     }, [fetchHistory, storageService, clearChat]);
 
-    // Effect to handle pending question after tools are loaded
     useEffect(() => {
-        if (isInitialized && pendingQuestion && tools !== undefined) {
-            // Wait a bit more to ensure tools are properly set
-            setTimeout(() => {
-                callApi(pendingQuestion, systemPrompt);
-                setPendingQuestion(null);
-            }, 200);
+        if (!isInitialized || !pendingQuestion || tools === undefined) {
+            return;
         }
-    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt]);
+
+        // Prevent scheduling the same question multiple times
+        if (scheduledQuestionRef.current === pendingQuestion) {
+            return;
+        }
+
+        scheduledQuestionRef.current = pendingQuestion;
+        const questionToAsk = pendingQuestion;
+
+        // Wait a bit more to ensure tools are properly set
+        const timeoutId = window.setTimeout(() => {
+            // Check if this question is still pending
+            if (scheduledQuestionRef.current !== questionToAsk) {
+                return;
+            }
+            callApi(questionToAsk, systemPrompt);
+
+            // Clear state and hash param once the question is sent
+            scheduledQuestionRef.current = null;
+            setPendingQuestion(current => (current === questionToAsk ? null : current));
+            clearNavigationQueryParams();
+        }, 200);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+            if (scheduledQuestionRef.current === questionToAsk) {
+                scheduledQuestionRef.current = null;
+            }
+        };
+    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
 
     // Update max tokens if LLM changes
     useEffect(() => {

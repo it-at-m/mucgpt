@@ -35,6 +35,16 @@ export default defineConfig(({ mode }) => {
         define: {
             "process.env.NODE_ENV": JSON.stringify(mode),
             "process.env.BUILD_TIME": JSON.stringify(new Date().toISOString())
+        },
+        server: {
+            host: true,
+            proxy: {
+                "/api": "http://localhost:8083"
+            },
+            allowedHosts: ["host.docker.internal"], // required to use frontend behind proxy (e.g. API Gateway)
+            headers: {
+                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
+            },
         }
     };
 });

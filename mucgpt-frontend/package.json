@@ -62,6 +62,7 @@
         "buildlocal": "tsc && vite build",
         "deploy": "gh-pages -d dist --remote origin",
         "dev": "vite",
+        "dev-no-mock": "vite --mode development-no-mock",
         "fix": "prettier . --write && eslint . --fix",
         "lint": "prettier . --check && eslint . && tsc --noEmit",
         "predeploy": "npm run build:ghpages",

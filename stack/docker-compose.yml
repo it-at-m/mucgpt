@@ -117,7 +117,6 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0=RewritePath=/api/sso/userinfo, /auth/realms/${MUCGPT_SSO_REALM}/protocol/openid-connect/userinfo
       - SPRING_CLOUD_GATEWAY_ROUTES_1_ID=backend
       - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://core-service:8000/
-#      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://host.docker.internal:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0=Path=/api/backend/**
       - SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
       - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
@@ -125,7 +124,6 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
-#      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://host.docker.internal:5173/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/${MUCGPT_SSO_REALM}

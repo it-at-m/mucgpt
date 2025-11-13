@@ -266,20 +266,24 @@ export const Layout = () => {
                             </main>
 
                             <footer className={styles.footer} role="contentinfo" aria-label={t("common.footer_info", "Fußzeileninformationen")}>
-                                <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
-                                    <address>
-                                        Landeshauptstadt München <br />
-                                        RIT/it@M KICC
-                                    </address>
-                                </div>
-                                <div className={styles.footerSection}>
-                                    <VersionInfo
-                                        core_version={config.core_version}
-                                        frontend_version={config.frontend_version}
-                                        assistant_version={config.assistant_version}
-                                        versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                    />
-                                </div>
+                                {!isMobile && (
+                                    <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
+                                        <address>
+                                            Landeshauptstadt München <br />
+                                            RIT/it@M KICC
+                                        </address>
+                                    </div>
+                                )}
+                                {!isMobile && (
+                                    <div className={styles.footerSection}>
+                                        <VersionInfo
+                                            core_version={config.core_version}
+                                            frontend_version={config.frontend_version}
+                                            assistant_version={config.assistant_version}
+                                            versionUrl={import.meta.env.BASE_URL + "#/version"}
+                                        />
+                                    </div>
+                                )}
                                 <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
                             </footer>
                         </div>

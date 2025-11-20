@@ -170,6 +170,8 @@ Replace the placeholder values with your actual model configuration.
 
 To start all required services using podman or docker run:
 
+Requires `keycloak` to be present in the `hosts` file (see [RefArch-Docs](https://refarch.oss.muenchen.de/templates/develop.html#container-engine)).
+
 ```bash
 # in case of podman run
 podman compose  --build up

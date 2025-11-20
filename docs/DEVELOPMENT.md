@@ -1,3 +1,17 @@
+## Run
+
+```shell
+# Start frontend with API mocking
+# inside /mucgpt-frontend
+npm run dev
+# Start frontend using container stack for API
+# inside /mucgpt-frontend
+npm run dev-no-mock
+# Start stack with local running services
+# inside /stack
+podman compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
 ## Working with UV
 
 ### Synchronize / Update Packages

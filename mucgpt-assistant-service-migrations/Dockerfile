@@ -1,7 +1,7 @@
 # small ubi10 image
-FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:649f7ce8082531148ac5e45b61612046a21e36648ab096a77e6ba0c94428cf60
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:28ec2f4662bdc4b0d4893ef0d8aebf36a5165dfb1d1dc9f46319bd8a03ed3365
 
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:8f926a80debadba6f18442030df316c0e2b28d6af62d1292fb44b1c874173dc0 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:f6e3549ed287fee0ddde2460a2a74a2d74366f84b04aaa34c1f19fec40da8652 /uv /uvx /bin/
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
@@ -17,6 +17,9 @@ WORKDIR /app
 # Leverage layer cache
 COPY pyproject.toml uv.lock ./
 
+# Install build dependencies for packages with C extensions
+RUN microdnf install -y gcc python3-devel
+
 # Install dependencies
 RUN --mount=type=cache,target=/app/.cache/uv \
     uv sync --no-dev --locked --no-install-project
@@ -28,6 +31,10 @@ COPY /test_db_connection.py /app/
 # Install the project
 RUN --mount=type=cache,target=/app/.cache/uv \
     uv sync --no-dev --locked
+
+# Remove build dependencies to keep image small
+RUN microdnf remove -y gcc python3-devel && \
+    microdnf clean all
 
 # Make sure migrations directory is in the path
 ENV PYTHONPATH="/app/migrations:${PYTHONPATH}"

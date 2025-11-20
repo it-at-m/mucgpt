@@ -19,6 +19,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.types import JSON
 
+from .path_matcher import path_matches_department
+
 Base = declarative_base()
 ModelType = TypeVar("ModelType", bound=Base)  # type: ignore # Define a TypeVar for the model
 
@@ -148,11 +150,7 @@ class Assistant(Base):
 
         # Check if department matches any of the hierarchical access paths
         for access_path in self.hierarchical_access:
-            if (
-                department == access_path
-                or department.startswith(access_path + "-")
-                or department.startswith(access_path + "/")
-            ):
+            if access_path and path_matches_department(access_path, department):
                 return True
 
         return False

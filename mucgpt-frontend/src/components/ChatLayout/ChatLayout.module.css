@@ -25,6 +25,7 @@
     padding-bottom: 60px;
     height: 100%;
     width: var(--sidebarWidth);
+    border-right: 1px solid;
 }
 
 .chatEmptyState {
@@ -86,6 +87,7 @@
         width: 100%;
         padding: 10px;
         z-index: 1;
+        border-right: none;
     }
 
     .chatRoot {
@@ -104,6 +106,8 @@
     overflow-y: auto;
     max-width: 100%;
     min-width: 80%;
+    margin: 0;
+    padding: 0;
 }
 
 .chatInput {

@@ -172,11 +172,8 @@ class MUCGPTAgentExecutor:
                         if chunk_content is None:
                             continue
                         if isinstance(chunk_content, str):
-                            # Skip only if it's empty OR only spaces/tabs WITHOUT any newline characters.
-                            if (
-                                chunk_content.strip() == ""
-                                and "\n" not in chunk_content
-                            ):
+                            # Skip only when the chunk is truly empty; spaces need to stream for proper formatting.
+                            if chunk_content == "":
                                 continue
                         else:
                             # If content is not a string (e.g., list for multimodal), keep existing behavior and pass through.

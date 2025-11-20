@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
                     manualChunks: {
                         react: ["react", "react-dom", "react-router-dom"],
                         fluentui: ["@fluentui/react", "@fluentui/react-components", "@fluentui/react-icons"],
-                        markdown: ["react-markdown", "remark-gfm", "rehype-raw"],
+                        markdown: ["react-markdown", "remark-gfm"],
                         visualizations: ["markmap-view", "markmap-lib", "mermaid"]
                     }
                 }
@@ -35,6 +35,16 @@ export default defineConfig(({ mode }) => {
         define: {
             "process.env.NODE_ENV": JSON.stringify(mode),
             "process.env.BUILD_TIME": JSON.stringify(new Date().toISOString())
+        },
+        server: {
+            host: true,
+            proxy: {
+                "/api": "http://localhost:8083"
+            },
+            allowedHosts: ["host.docker.internal"], // required to use frontend behind proxy (e.g. API Gateway)
+            headers: {
+                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
+            },
         }
     };
 });

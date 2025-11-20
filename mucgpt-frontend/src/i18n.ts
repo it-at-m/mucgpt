@@ -230,7 +230,11 @@ i18n
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
-                            toolsselectorbutton_tooltip: "Werkzeuge auswählen"
+                            toolsselectorbutton_tooltip: "Werkzeuge auswählen",
+                            tutorial_help: "Tutorial öffnen",
+                            tool_header: "Zusätzliche Tools zu wählen:",
+                            tutorial_help_aria: "Tutorial für {{tool}} öffnen",
+                            send_question: "Frage senden"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -371,7 +375,7 @@ i18n
                             step_description: "Beschreibung",
                             step_system_prompt: "System-Prompt",
                             step_tools: "Werkzeuge",
-                            step_quick_prompts: "Schnelle Eingaben",
+                            step_quick_prompts: "Vorgeschlagene Prompts",
                             step_examples: "Beispiele",
                             step_visibility: "Sichtbarkeit",
                             step_advanced_settings: "Erweiterte Einstellungen",
@@ -692,7 +696,11 @@ i18n
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
                             errorhint: "MUCGPT can make errors. Verify important information.",
-                            toolsselectorbutton_tooltip: "Select tools"
+                            toolsselectorbutton_tooltip: "Select tools",
+                            tutorial_help: "Open tutorial",
+                            tool_header: "Choose additional tools:",
+                            tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
+                            send_question: "Send question"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -832,7 +840,7 @@ i18n
                             step_description: "Description",
                             step_system_prompt: "System Prompt",
                             step_tools: "Tools",
-                            step_quick_prompts: "Quick Prompts",
+                            step_quick_prompts: "Proposed Prompts",
                             step_examples: "Examples",
                             step_visibility: "Visibility",
                             step_advanced_settings: "Advanced Settings",
@@ -1151,7 +1159,11 @@ i18n
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
                             errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
-                            toolsselectorbutton_tooltip: "Werkzeig aussuachn"
+                            toolsselectorbutton_tooltip: "Werkzeig aussuachn",
+                            tutorial_help: "Tutorial aufmachn",
+                            tool_header: "Zusätzliche Werkzeig auswähln:",
+                            tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
+                            send_question: "Froog senden"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -1292,7 +1304,7 @@ i18n
                             step_description: "Beschreibung",
                             step_system_prompt: "System-Prompt",
                             step_tools: "Werkzeig",
-                            step_quick_prompts: "Vorgeschlagene Antworn",
+                            step_quick_prompts: "Vogschlagene Prompts",
                             step_examples: "Beispui",
                             step_visibility: "Sichtbarkeit",
                             step_advanced_settings: "Erweiterte Einstellungen",
@@ -1613,7 +1625,11 @@ i18n
                             tokensused: "Jetons utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
                             errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes.",
-                            toolsselectorbutton_tooltip: "Sélectionner des outils"
+                            toolsselectorbutton_tooltip: "Sélectionner des outils",
+                            tutorial_help: "Ouvrir le tutoriel",
+                            tool_header: "Choisir des outils supplémentaires:",
+                            tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
+                            send_question: "Envoyer la question"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -1755,7 +1771,7 @@ i18n
                             step_description: "Description",
                             step_system_prompt: "Prompt système",
                             step_tools: "Outils",
-                            step_quick_prompts: "Prompts rapides",
+                            step_quick_prompts: "Invitations proposées",
                             step_examples: "Exemples",
                             step_visibility: "Visibilité",
                             step_advanced_settings: "Paramètres avancés",
@@ -2075,7 +2091,11 @@ i18n
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
                             errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",
-                            toolsselectorbutton_tooltip: "Вибрати інструменти"
+                            toolsselectorbutton_tooltip: "Вибрати інструменти",
+                            tutorial_help: "Відкрити навчальний посібник",
+                            tool_header: "Вибрати додаткові інструменти:",
+                            tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
+                            send_question: "Надіслати питання"
                         },
                         suminput: {
                             tokensused: "Використано токени",
@@ -2215,7 +2235,7 @@ i18n
                             step_description: "Опис",
                             step_system_prompt: "Системний запит",
                             step_tools: "Інструменти",
-                            step_quick_prompts: "Швидкі запити",
+                            step_quick_prompts: "Запропоновані підказки",
                             step_examples: "Приклади",
                             step_visibility: "Видимість",
                             step_advanced_settings: "Розширені налаштування",

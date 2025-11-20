@@ -17,15 +17,14 @@ import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
 import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from "../page_helpers";
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
-import { mapContextToBackendLang } from "../../utils/language-utils";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
-import { ToolListResponse } from "../../api/models";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
-import { getTools, chatApi } from "../../api/core-client";
+import { chatApi } from "../../api/core-client";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
+import { useToolsContext } from "../../components/ToolsProvider";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -90,7 +89,11 @@ const Chat = () => {
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
-    setHeader(t("header.chat"));
+    const headerTitle = t("header.chat");
+    useEffect(() => {
+        setHeader(headerTitle);
+    }, [setHeader, headerTitle]);
+    const { tools } = useToolsContext();
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -103,22 +106,7 @@ const Chat = () => {
         localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
-    const [tools, setTools] = useState<ToolListResponse | undefined>(undefined);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
-
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                // Get current language from context and map to backend format
-                const backendLang = mapContextToBackendLang(language);
-                const result = await getTools(backendLang);
-                setTools(result);
-            } catch {
-                setTools({ tools: [] });
-            }
-        };
-        fetchTools();
-    }, [language]);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -341,6 +329,33 @@ const Chat = () => {
         [max_output_tokens, temperature, debouncedStorageUpdate]
     );
 
+    const clearNavigationQueryParams = useCallback(() => {
+        const currentUrl = new URL(window.location.href);
+
+        // Handle hash-based routing (e.g., #/chat?q=...)
+        if (currentUrl.hash && currentUrl.hash.includes("?")) {
+            const [hashPath, hashQuery] = currentUrl.hash.split("?");
+            const hashParams = new URLSearchParams(hashQuery);
+            hashParams.delete("q");
+            hashParams.delete("question");
+            hashParams.delete("tools");
+            const newHashQuery = hashParams.toString();
+            currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
+        }
+
+        // Handle search params (fallback navigation)
+        if (currentUrl.search) {
+            const searchParams = currentUrl.searchParams;
+            searchParams.delete("q");
+            searchParams.delete("question");
+            searchParams.delete("tools");
+            const newSearch = searchParams.toString();
+            currentUrl.search = newSearch ? `?${newSearch}` : "";
+        }
+
+        window.history.replaceState(window.history.state, "", currentUrl.toString());
+    }, []);
+
     // Handler for LLM selection
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
@@ -353,6 +368,8 @@ const Chat = () => {
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+    // Effect to handle pending question after tools are loaded
+    const scheduledQuestionRef = useRef<string | null>(null);
 
     // Initialisierung beim ersten Laden
     useEffect(() => {
@@ -381,17 +398,12 @@ const Chat = () => {
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
-            const toolsArray = decodeURIComponent(toolsFromUrl)
-                .split(",")
-                .filter(tool => tool.trim() !== "");
+            const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
             setSelectedTools(toolsArray);
         }
 
         if (questionFromUrl) {
-            // If we have a question from URL, store it and wait for tools to load
-            const decodedQuestion = decodeURIComponent(questionFromUrl);
-            setQuestion(decodedQuestion);
-            setPendingQuestion(decodedQuestion);
+            setPendingQuestion(questionFromUrl);
             storageService
                 .getNewestChat()
                 .then(() => {
@@ -425,16 +437,40 @@ const Chat = () => {
         }
     }, [fetchHistory, storageService, clearChat]);
 
-    // Effect to handle pending question after tools are loaded
     useEffect(() => {
-        if (isInitialized && pendingQuestion && tools !== undefined) {
-            // Wait a bit more to ensure tools are properly set
-            setTimeout(() => {
-                callApi(pendingQuestion, systemPrompt);
-                setPendingQuestion(null);
-            }, 200);
+        if (!isInitialized || !pendingQuestion || tools === undefined) {
+            return;
         }
-    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt]);
+
+        // Prevent scheduling the same question multiple times
+        if (scheduledQuestionRef.current === pendingQuestion) {
+            return;
+        }
+
+        scheduledQuestionRef.current = pendingQuestion;
+        const questionToAsk = pendingQuestion;
+
+        // Wait a bit more to ensure tools are properly set
+        const timeoutId = window.setTimeout(() => {
+            // Check if this question is still pending
+            if (scheduledQuestionRef.current !== questionToAsk) {
+                return;
+            }
+            callApi(questionToAsk, systemPrompt);
+
+            // Clear state and hash param once the question is sent
+            scheduledQuestionRef.current = null;
+            setPendingQuestion(current => (current === questionToAsk ? null : current));
+            clearNavigationQueryParams();
+        }, 200);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+            if (scheduledQuestionRef.current === questionToAsk) {
+                scheduledQuestionRef.current = null;
+            }
+        };
+    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
 
     // Update max tokens if LLM changes
     useEffect(() => {
@@ -552,7 +588,7 @@ const Chat = () => {
         () => (
             <History
                 allChats={allChats}
-                currentActiveChatId={activeChatRef.current}
+                currentActiveChatId={active_chat}
                 onDeleteChat={async id => {
                     await storageService.delete(id);
                     await fetchHistory();
@@ -571,7 +607,7 @@ const Chat = () => {
                 }}
             ></History>
         ),
-        [allChats, activeChatRef.current, fetchHistory, storageService, loadChat, t]
+        [allChats, active_chat, fetchHistory, storageService, loadChat, t]
     );
 
     const sidebar_chat_settings = useMemo(

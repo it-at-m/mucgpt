@@ -1,4 +1,4 @@
-FROM node:22.20.0-alpine@sha256:cb3143549582cc5f74f26f0992cdef4a422b22128cb517f94173a5f910fa4ee7 AS builder
+FROM node:22.21.1-alpine@sha256:b2358485e3e33bc3a33114d2b1bdb18cdbe4df01bd2b257198eb51beb1f026c5 AS builder
 
 ENV GENERATE_SOURCEMAP=false
 ENV NODE_OPTIONS=--max_old_space_size=4096
@@ -25,7 +25,7 @@ COPY src/ ./src/
 RUN --mount=type=cache,target=/build/node_modules/.vite \
     npm run build
 
-FROM registry.access.redhat.com/ubi9/nginx-124:9.6-1758528767@sha256:7c1d7172880a3649591a0dc1ceb670c133ef88eed3d8192d8a2e80e3878d04c3
+FROM registry.access.redhat.com/ubi9/nginx-124:9.7-1763026876@sha256:cd49f0b20c71ade4babf4212869f850645d9f151591fe031d48739d213edd7d4
 
 # Copy built web application
 COPY --from=builder /build/dist ./

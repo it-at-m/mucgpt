@@ -1,4 +1,4 @@
-import { useState, useCallback, useContext, useEffect, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Toolbox24Regular, CheckmarkCircle24Regular, BrainCircuit24Regular, TextBulletListSquare24Regular } from "@fluentui/react-icons";
 import { Button, Text } from "@fluentui/react-components";
@@ -6,12 +6,9 @@ import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { QuestionInput } from "../../../components/QuestionInput/QuestionInput";
-import { ToolListResponse } from "../../../api/models";
 import ToolStatusDisplay from "../../../components/ToolStatusDisplay/ToolStatusDisplay";
 import { ToolStatus, ToolStreamState } from "../../../utils/ToolStreamHandler";
-import { LanguageContext } from "../../../components/LanguageSelector/LanguageContextProvider";
-import { getTools } from "../../../api/core-client";
-import { mapContextToBackendLang } from "../../../utils/language-utils";
+import { useToolsContext } from "../../../components/ToolsProvider";
 import styles from "./ToolsTutorial.module.css";
 import { TutorialSection } from "./TutorialTypes";
 
@@ -19,38 +16,8 @@ import { TutorialSection } from "./TutorialTypes";
 const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {
     const [question, setQuestion] = useState("Welche Ideen gibt es für nachhaltige Mobilität?");
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
-    const [tools, setTools] = useState<ToolListResponse>({ tools: [] });
+    const { tools } = useToolsContext();
     const { t } = useTranslation();
-    const { language } = useContext(LanguageContext);
-
-    // Fetch tools in the current language
-    useEffect(() => {
-        const fetchTools = async () => {
-            try {
-                const backendLang = mapContextToBackendLang(language);
-                const result = await getTools(backendLang);
-                setTools(result);
-            } catch (error) {
-                console.error("Failed to fetch tools for tutorial:", error);
-                // Fallback to mock tools if API fails
-                setTools({
-                    tools: [
-                        {
-                            id: "Brainstorming",
-                            name: "Brainstorming",
-                            description: "Generates a detailed mind map for a given topic in markdown format."
-                        },
-                        {
-                            id: "Vereinfachen",
-                            name: "Vereinfachen",
-                            description: "Simplifies complex German text to A2 level using Easy Language principles."
-                        }
-                    ]
-                });
-            }
-        };
-        fetchTools();
-    }, [language]);
 
     const simulateToolExecution = useCallback(
         (toolNames: string[]) => {
@@ -61,7 +28,7 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
 
             // Start all tools
             const startingStatuses: ToolStatus[] = toolNames.map(name => {
-                const tool = tools.tools.find(t => t.id === name);
+                const tool = tools?.tools.find((t: any) => t.id === name);
                 const toolDisplayName = tool?.name || name;
 
                 return {
@@ -82,7 +49,7 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
                 setTimeout(
                     () => {
                         setToolStatuses(current => {
-                            const tool = tools.tools.find(t => t.id === toolName);
+                            const tool = tools?.tools.find((t: any) => t.id === toolName);
                             const toolDisplayName = tool?.name || toolName;
 
                             // Remove the started status and add completed status

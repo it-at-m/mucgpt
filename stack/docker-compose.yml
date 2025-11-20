@@ -1,6 +1,9 @@
 name: mucgpt-stack
 
 services:
+  #
+  # #### PostgreSQL ####
+  #
   postgres:
     image: postgres:17.4-alpine3.21@sha256:7062a2109c4b51f3c792c7ea01e83ed12ef9a980886e3b3d380a7d2e5f6ce3f5
     environment:
@@ -21,10 +24,9 @@ services:
       - no-new-privileges:true
     networks:
       - keycloak
-
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.8.0@sha256:d115bcd737940a6cfb61a54439d50de8b850e0782e2363102c9fa761f4022f49
+    image: dpage/pgadmin4:9.10.0@sha256:8c128407f45f1c582eda69e71da1a393237388469052e3cc1e6ae4a475e12b70
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -47,9 +49,12 @@ services:
     networks:
       - keycloak
 
+  #
+  # #### Keycloak ####
+  #
   keycloak:
     container_name: keycloak
-    image: keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
+    image: quay.io/keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
     command:
       - start-dev
     environment:
@@ -72,9 +77,8 @@ services:
           "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: http://localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then exit 0;else exit 1;fi;",
         ]
     security_opt: *security_settings
-
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.106@sha256:1bb087068881988c548eeaf0b837d88f0ab95c5e01f3718ad3db394d184c43db
+    image: klg71/keycloakmigration:0.2.111@sha256:6fd84fd15813062bf2a9bb9492cb0f71d6d0d2b434b8fb68c8e7859a2e7aabfb
     depends_on:
       - keycloak
     environment:
@@ -89,6 +93,10 @@ services:
     networks:
       - keycloak
     security_opt: *security_settings
+
+  #
+  # #### Gateway ####
+  #
   refarch-gateway:
     image: ghcr.io/it-at-m/refarch/refarch-gateway:1.7.0@sha256:3f82ab83c212ca53c9c2b606cfe29291f21525eac86fece215d0e1c6ca51273f
     depends_on:
@@ -137,6 +145,9 @@ services:
       test: ["CMD-SHELL", "curl http://localhost:8080/actuator/health/liveness"]
     security_opt: *security_settings
 
+  #
+  # #### Application services ####
+  #
   core-service:
     build:
       context: ../mucgpt-core-service

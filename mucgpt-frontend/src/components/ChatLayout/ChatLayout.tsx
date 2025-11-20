@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import styles from "./ChatLayout.module.css";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
 import { LLMSelector } from "../LLMSelector/LLMSelector";
 import { Model } from "../../api";
 import { Button } from "@fluentui/react-components";
@@ -49,7 +48,7 @@ export const ChatLayout = ({
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside hidden={size === "none"} className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>
+            <aside hidden={size === "none"} className={styles.sidebar}>
                 {sidebar}
             </aside>
 
@@ -73,16 +72,14 @@ export const ChatLayout = ({
                 )}
             </div>
             <div className={styles.chatRoot}>
-                <div className={styles.chatContainer} style={size == "none" ? { marginLeft: "35px" } : {}}>
+                <div className={styles.chatContainer}>
                     {showExamples ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                                 {header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>
-                                            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-                                                {header}
-                                            </Markdown>
+                                            <Markdown remarkPlugins={[remarkGfm]}>{header}</Markdown>
                                         </div>
                                     </div>
                                 ) : (

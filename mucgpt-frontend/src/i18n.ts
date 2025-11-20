@@ -2,7 +2,6 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
 import { versionTranslations } from "./i18n.version";
-import { LLMSelector } from "./components/LLMSelector/LLMSelector";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -477,7 +476,6 @@ i18n
                             outputPrice_description: "Preis pro eine Milionen Token bei der Ausgabe durch das Sprachmodel",
                             price: "Preis: "
                         }
-
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -923,7 +921,7 @@ i18n
                         globaltoasthandler: {
                             dismiss_aria_label: "Dismiss toast"
                         },
-                         llmSelector: {
+                        llmSelector: {
                             title: "Languagemodel Selector",
                             bestFor: "Best for:",
                             knowledge: "Knowledge:",
@@ -1389,7 +1387,7 @@ i18n
                         globaltoasthandler: {
                             dismiss_aria_label: "Toast schließn"
                         },
-                         llmSelector: {
+                        llmSelector: {
                             title: "Sprachmodell Auswahl",
                             bestFor: "Best for:",
                             knowledge: "Knowledge:",
@@ -2320,7 +2318,7 @@ i18n
                         globaltoasthandler: {
                             dismiss_aria_label: "Закрити тост"
                         },
-                         llmSelector: {
+                        llmSelector: {
                             title: "sprachmodel Auswahl",
                             bestFor: "Best for:",
                             knowledge: "Knowledge:",

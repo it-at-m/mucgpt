@@ -1,5 +1,5 @@
 .container {
-    display:flex;
+    display: flex;
     align-items: center;
     gap: 8px;
     position: relative;
@@ -7,29 +7,32 @@
 
 .buttonContainer {
     display: inline-flex;
-    align-items:flex-start;
+    align-items: flex-start;
     justify-content: center;
     border-radius: 999px;
     padding: 6px 12px;
     background-color: var(--colorNeutralBackground3, #d3d3d3);
     color: var(--colorNeutralForeground1, #0b1220);
-    border: 1px solid rgba(0,0,0,0.12);
-    box-shadow: 0 8px 8px rgba(2,6,18,0.14);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 8px 8px rgba(2, 6, 18, 0.14);
     cursor: pointer;
-    transition: transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+    transition:
+        transform 140ms ease,
+        box-shadow 140ms ease,
+        background-color 140ms ease;
 }
 
 .buttonContainer:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 10px rgba(2,6,18,0.20);
-    background-color: rgba(0,0,0,0.08);
+    box-shadow: 0 16px 10px rgba(2, 6, 18, 0.2);
+    background-color: rgba(0, 0, 0, 0.08);
     outline: 1px solid rgb(0, 0, 0);
     border-radius: 999px;
 }
 
 .buttonContainer:focus,
 .buttonContainer:focus-visible {
-    outline: 3px solid rgba(0,0,0,0.08);
+    outline: 3px solid rgba(0, 0, 0, 0.08);
 }
 
 .iconRightMargin {
@@ -78,30 +81,34 @@
     display: flex;
     flex-direction: column;
     margin: 0;
-    border: 1px solid rgba(156,156,156,0.12);
+    border: 1px solid rgba(156, 156, 156, 0.12);
     border-radius: var(--borderRadiusSmall, 8px);
     background-color: var(--colorNeutralBackground1);
     color: var(--colorNeutralForeground1);
     overflow: hidden;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.291);
-    transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        background-color 160ms ease,
+        color 160ms ease;
     height: 100%;
 }
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 20px 48px rgba(0,0,0,0.32);
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
     background-color: var(--colorNeutralBackground2Hover, #eef0f6);
 }
 
 .card[data-selected="true"] {
     transform: translateY(-6px) scale(1.02);
     background-color: var(--colorNeutralBackground2Hover, #eef0f6);
-    border-color: rgba(0,0,0,0.08);
+    border-color: rgba(0, 0, 0, 0.08);
 }
 
 .cardContent {
-  display: flex;
+    display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     justify-content: center;
@@ -114,25 +121,30 @@
     background-color: var(--colorNeutralBackground2, #f7f7fb);
     color: var(--colorNeutralForeground1, #101214);
     border: none;
-    box-shadow: 0 16px 40px rgba(16,24,40,0.08);
+    box-shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
     border-radius: var(--borderRadiusMedium, 8px);
     padding: 12px;
 }
 
-.rocket, .money {
+.rocket,
+.money {
     width: 28px;
     height: 28px;
     font-size: 20px;
     opacity: 0.56;
     color: var(--colorNeutralForeground2, #4a4a4a);
-    transition: color 140ms ease, opacity 140ms ease, transform 140ms ease;
+    transition:
+        color 140ms ease,
+        opacity 140ms ease,
+        transform 140ms ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     vertical-align: middle;
 }
 
-.rocketActive, .moneyActive {
+.rocketActive,
+.moneyActive {
     opacity: 1;
     color: var(--colorAccentForeground, #4dd0a9);
     transform: translateY(-1px) scale(1.05);

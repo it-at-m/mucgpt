@@ -3,7 +3,7 @@ import { Model } from "../../api";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 import { RocketRegular, Checkmark24Filled, Rocket24Filled, Money24Filled, MoneyRegular } from "@fluentui/react-icons";
 import styles from "./LLMSelector.module.css";
-import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card, } from "@fluentui/react-components";
+import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
 import React from "react";
 import { InfoRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
@@ -39,7 +39,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const displayName = useMemo(() => {
         const parts = selectedModel.split("-");
         return parts[parts.length - 1].substring(0, 6);
-    }, [selectedModel])
+    }, [selectedModel]);
 
     const getSpeedRating = (speed?: string | number): number => {
         if (speed == null) return 1;
@@ -116,9 +116,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                     </Tooltip>
                 </DialogTrigger>
 
-                <DialogSurface
-                    className={styles.dialogSurface}
-                >
+                <DialogSurface className={styles.dialogSurface}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>{title}</DialogTitle>
                         <DialogContent>
@@ -160,8 +158,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 <div>
                                                     <p>
                                                         <strong>{t("components.llmSelector.knowledge")}</strong>
-                                                        <Tooltip content={knowledgeDesc}
-                                                            relationship="description" positioning="above"><InfoRegular></InfoRegular>
+                                                        <Tooltip content={knowledgeDesc} relationship="description" positioning="above">
+                                                            <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
                                                         {item.knowledge}
@@ -171,8 +169,14 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 <div>
                                                     <p>
                                                         <strong>{t("components.llmSelector.features")}</strong>
-                                                        <Tooltip content={"Der letzte Wissensstand mit welchem die KI trainiert wurde. Informationen die nach dem  das Moell nicht wissen"}
-                                                            relationship="description" positioning="above"><InfoRegular></InfoRegular>
+                                                        <Tooltip
+                                                            content={
+                                                                "Der letzte Wissensstand mit welchem die KI trainiert wurde. Informationen die nach dem  das Moell nicht wissen"
+                                                            }
+                                                            relationship="description"
+                                                            positioning="above"
+                                                        >
+                                                            <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
                                                         {item.reasoning}
@@ -181,8 +185,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 <div>
                                                     <p>
                                                         <strong>{t("components.llmSelector.maxInput")}</strong>
-                                                        <Tooltip content={maxInputDesc}
-                                                            relationship="description" positioning="above"><InfoRegular></InfoRegular>
+                                                        <Tooltip content={maxInputDesc} relationship="description" positioning="above">
+                                                            <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
                                                         {item.max_input_tokens} Token
@@ -191,8 +195,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 <div>
                                                     <p>
                                                         <strong>{t("components.llmSelector.maxOutput")}</strong>
-                                                        <Tooltip content={maxOutputDesc}
-                                                            relationship="description" positioning="above"><InfoRegular></InfoRegular>
+                                                        <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
+                                                            <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
                                                         {item.max_output_tokens} Token
@@ -214,8 +218,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     <div>
                                                         <p>
                                                             <strong>{t("components.llmSelector.inputPrice")}</strong>
-                                                            <Tooltip content={inputPriceDesc}
-                                                                relationship="description" positioning="above"><InfoRegular></InfoRegular>
+                                                            <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
+                                                                <InfoRegular></InfoRegular>
                                                             </Tooltip>
                                                             <span style={{ marginRight: 8 }}></span>
                                                             {item.input_price}$ / 1M Token
@@ -224,17 +228,14 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     <div>
                                                         <p>
                                                             <strong>{t("components.llmSelector.outputPrice")}</strong>
-                                                            <Tooltip content={outputPriceDesc}
-                                                                relationship="description" positioning="above"><InfoRegular></InfoRegular>
+                                                            <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
+                                                                <InfoRegular></InfoRegular>
                                                             </Tooltip>
                                                             <span style={{ marginRight: 8 }}></span>
                                                             {item.output_price}$ / 1M Token
                                                         </p>
                                                     </div>
-                                                    <div
-                                                        className={styles.price}
-                                                        aria-label={`Price ${Number.isFinite(priceVal) ? `${priceVal}` : ""}`}
-                                                    >
+                                                    <div className={styles.price} aria-label={`Price ${Number.isFinite(priceVal) ? `${priceVal}` : ""}`}>
                                                         <strong style={{ marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
                                                         {Array.from({ length: 3 }).map((_, i) => {
                                                             const active = i < priceRating;
@@ -256,12 +257,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
 
                         <DialogActions className={styles.dialogActions}>
                             <DialogTrigger disableButtonEnhancement>
-                                <Button
-                                    appearance="primary"
-                                    size="medium"
-                                    onClick={() => handleSelectModel(selectedModel)}
-                                    className={styles.acceptButton}
-                                >
+                                <Button appearance="primary" size="medium" onClick={() => handleSelectModel(selectedModel)} className={styles.acceptButton}>
                                     <Checkmark24Filled className={styles.checkIcon} />
                                     Auswählen
                                 </Button>
@@ -279,10 +275,7 @@ export const Selectable = (): JSX.Element => {
 
     return (
         <div className={styles.main}>
-            <Card
-                selected={selected1}
-                onSelectionChange={(_, { selected }) => setSelected1(selected)}
-            />
+            <Card selected={selected1} onSelectionChange={(_, { selected }) => setSelected1(selected)} />
         </div>
     );
 };

@@ -20,9 +20,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             speed: "fast",
             knowledge: "2025-07",
             reasoning: "Yes",
-            input_price: 0.30,
-            output_price: 0.90
-
+            input_price: 0.3,
+            output_price: 0.9
         },
         {
             llm_name: "UnknownGPT",
@@ -34,7 +33,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             reasoning: "No",
             input_price: 1.71,
             output_price: 6.84
-
         },
         {
             llm_name: "AnnonymGPT",
@@ -46,7 +44,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             reasoning: "No",
             input_price: 0.35,
             output_price: 1.37
-
         }
     ],
     env_name: "MUCGPT",

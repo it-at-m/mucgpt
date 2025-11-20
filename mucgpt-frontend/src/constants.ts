@@ -14,7 +14,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             reasoning: "",
             input_price: 1,
             output_price: 1
-
         },
         {
             llm_name: "Unknown GPT",
@@ -26,7 +25,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             reasoning: "",
             input_price: 1,
             output_price: 1
-
         },
         {
             llm_name: "AnnonymGPT",
@@ -38,7 +36,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             reasoning: "",
             input_price: 1,
             output_price: 1
-
         }
     ],
     env_name: "MUC tschibidi-C",

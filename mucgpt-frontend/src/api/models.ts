@@ -62,7 +62,6 @@ export interface Model {
     reasoning: string;
     input_price: number;
     output_price: number;
-
 }
 
 export interface Labels {

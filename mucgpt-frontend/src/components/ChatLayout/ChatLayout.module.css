@@ -115,6 +115,19 @@
     max-width: 100%;
     min-width: 80%;
 }
+.llmContainer {
+    position: fixed;
+    margin-left: 90px;
+    top: 53px;
+    left: var(--sidebarWidth, 90px);
+    z-index: 1000;
+    align-items: center;
+    gap: 90px;
+    padding: 8px;
+    background: transparent;
+    box-sizing: border-box;
+    transition: left 220ms cubic-bezier(.2,.9,.2,1);
+}
 
 .sidebarOpener {
     position: fixed;
@@ -139,4 +152,13 @@
 
 .sidebarOpener button:hover {
     background-color: var(--colorNeutralBackground1Selected);
+}
+
+@media (max-width: 650px) {
+    .sidebarControls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    .llmContainer { margin-left: 0; margin-top: 6px; }
 }

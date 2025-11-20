@@ -57,6 +57,12 @@ export interface Model {
     max_output_tokens: number;
     max_input_tokens: number;
     description: string;
+    speed: string;
+    knowledge: string;
+    reasoning: string;
+    input_price: number;
+    output_price: number;
+
 }
 
 export interface Labels {

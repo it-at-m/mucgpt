@@ -2,6 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
 import { versionTranslations } from "./i18n.version";
+import { LLMSelector } from "./components/LLMSelector/LLMSelector";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -454,7 +455,25 @@ i18n
                         },
                         globaltoasthandler: {
                             dismiss_aria_label: "Toast schließen"
+                        },
+                        llmSelector: {
+                            title: "Sprachmodell Auswahl",
+                            bestFor: "Ideal für:",
+                            knowledge: "Wissensstand:",
+                            knowledge_description: "Der letzte Stand der Daten mit denen das Sprachmodel trainiert wurde",
+                            features: "Funktionen:",
+                            maxInput: "Max Eingabe:",
+                            maxInput_description: "Die Maximale Anzahl an tokens die das Sprachmodel einlesen kann",
+                            maxOutput: "Max Ausgabe:",
+                            maxOutput_description: "Die Maximale länge an Tokens die das Sprachmodel ausgeben kann",
+                            speed: "Geschwindigkei:",
+                            inputPrice: "Eingabe Preis:",
+                            inputPrice__description: "Preis pro 1 Millionen Token bei der eingabe von Prompts für das Sprachmodel",
+                            outputPrice: "Ausgabe Preis:",
+                            outputPrice_description: "Preis pro eine Milionen Token bei der Ausgabe durch das Sprachmodel",
+                            price: "Preis: "
                         }
+
                     },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE
@@ -895,6 +914,23 @@ i18n
                         },
                         globaltoasthandler: {
                             dismiss_aria_label: "Dismiss toast"
+                        },
+                         llmSelector: {
+                            title: "Languagemodel Selector",
+                            bestFor: "Best for:",
+                            knowledge: "Knowledge:",
+                            knowledge_description: "enter description here",
+                            features: "Features:",
+                            maxInput: "Max Input:",
+                            maxInput_description: "description here",
+                            maxOutput: "Max Output:",
+                            maxOutput_description: "description output here",
+                            speed: "Speed:",
+                            inputPrice: "Input price:",
+                            inputPrice__description: "description ",
+                            outputPrice: "Output price:",
+                            outputPrice_description: "placeholder",
+                            price: "Price:"
                         }
                     },
                     ...tutorialsTranslations.EN,
@@ -1340,6 +1376,23 @@ i18n
                         },
                         globaltoasthandler: {
                             dismiss_aria_label: "Toast schließn"
+                        },
+                         llmSelector: {
+                            title: "Sprachmodell Auswahl",
+                            bestFor: "Best for:",
+                            knowledge: "Knowledge:",
+                            knowledge_description: "enter description here",
+                            features: "Features:",
+                            maxInput: "Max Input:",
+                            maxInput_description: "description here",
+                            maxOutput: "Max Output:",
+                            maxOutput_description: "description output here",
+                            speed: "Speed:",
+                            inputPrice: "Input price:",
+                            inputPrice__description: "description ",
+                            outputPrice: "Output price:",
+                            outputPrice_description: "placeholder",
+                            price: "Price:"
                         }
                     },
                     ...tutorialsTranslations.BA,
@@ -1786,6 +1839,23 @@ i18n
                         },
                         globaltoasthandler: {
                             dismiss_aria_label: "Fermer la notification"
+                        },
+                        llmSelector: {
+                            title: "Sprachmodelauswahl",
+                            bestFor: "Best for:",
+                            knowledge: "Knowledge:",
+                            knowledge_description: "enter description here",
+                            features: "Features:",
+                            maxInput: "Max Input:",
+                            maxInput_description: "description here",
+                            maxOutput: "Max Output:",
+                            maxOutput_description: "description output here",
+                            speed: "Speed:",
+                            inputPrice: "Input price:",
+                            inputPrice__description: "description ",
+                            outputPrice: "Output price:",
+                            outputPrice_description: "placeholder",
+                            price: "Price:"
                         }
                     },
                     ...tutorialsTranslations.FR,
@@ -2229,6 +2299,23 @@ i18n
                         },
                         globaltoasthandler: {
                             dismiss_aria_label: "Закрити тост"
+                        },
+                         llmSelector: {
+                            title: "sprachmodel Auswahl",
+                            bestFor: "Best for:",
+                            knowledge: "Knowledge:",
+                            knowledge_description: "enter description here",
+                            features: "Features:",
+                            maxInput: "Max Input:",
+                            maxInput_description: "description here",
+                            maxOutput: "Max Output:",
+                            maxOutput_description: "description output here",
+                            speed: "Speed:",
+                            inputPrice: "Input price:",
+                            inputPrice__description: "description ",
+                            outputPrice: "Output price:",
+                            outputPrice_description: "placeholder",
+                            price: "Price:"
                         }
                     },
                     ...tutorialsTranslations.UK,

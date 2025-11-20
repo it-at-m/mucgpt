@@ -16,13 +16,37 @@ const CONFIG_RESPONSE: ApplicationConfig = {
             llm_name: "KICCGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
-            description: "GPT build by KICC"
+            description: "GPT build by KICC",
+            speed: "fast",
+            knowledge: "2025-07",
+            reasoning: "Yes",
+            input_price: 0.30,
+            output_price: 0.90
+
         },
         {
             llm_name: "UnknownGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
-            description: "A young model that has to earn it's name, but with a lot of potential."
+            description: "A young model that has to earn it's name, but with a lot of potential.",
+            speed: "medium",
+            knowledge: "2024-10",
+            reasoning: "No",
+            input_price: 1.71,
+            output_price: 6.84
+
+        },
+        {
+            llm_name: "AnnonymGPT",
+            max_input_tokens: 128000,
+            max_output_tokens: 128000,
+            description: "A GPT that tends to write reddit comments",
+            speed: "slow",
+            knowledge: "2024-07",
+            reasoning: "No",
+            input_price: 0.35,
+            output_price: 1.37
+
         }
     ],
     env_name: "MUCGPT",

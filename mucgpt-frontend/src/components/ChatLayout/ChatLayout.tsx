@@ -48,7 +48,7 @@ export const ChatLayout = ({
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
         <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as React.CSSProperties}>
-            <aside hidden={size === "none"} className={styles.sidebar} style={size != "none" ? { borderRight: "1px solid" } : {}}>
+            <aside hidden={size === "none"} className={styles.sidebar}>
                 {sidebar}
             </aside>
             <div hidden={size !== "none"} className={styles.sidebarOpener}>

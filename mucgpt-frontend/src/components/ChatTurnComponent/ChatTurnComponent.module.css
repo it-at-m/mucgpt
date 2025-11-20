@@ -15,3 +15,15 @@
     width: 98%;
     align-self: flex-start;
 }
+
+@media (max-width: 650px) {
+    .chatMessageUser {
+        width: 100%;
+        align-self: flex-end;
+    }
+
+    .chatMessageGpt {
+        width: 100%;
+        align-self: flex-start;
+    }
+}

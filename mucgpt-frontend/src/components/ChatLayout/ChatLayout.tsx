@@ -60,7 +60,7 @@ export const ChatLayout = ({
                 </Button>
             </div>
             <div className={styles.chatRoot}>
-                <div className={styles.chatContainer} style={size == "none" ? { marginLeft: "35px" } : {}}>
+                <div className={styles.chatContainer}>
                     {showExamples ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>

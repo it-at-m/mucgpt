@@ -8,7 +8,6 @@
         0px 2px 4px var(--colorBrandForeground2),
         0px 0px 2px var(--colorBrandForeground2);
     outline: transparent solid 1px;
-    width: 98%; /* Take up full width within container */
     max-width: 100%; /* Ensure it doesn't overflow container */
     transition: all 0.2s ease-in-out;
     border-top-right-radius: 20px; /* More rounded corners for user messages */

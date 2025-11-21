@@ -114,6 +114,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const capabilityVision = t("components.llmSelector.capability_vision", { defaultValue: "Vision" });
     const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
     const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
+    const features_description = t("components.llmSelector.features");
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -189,104 +190,93 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                             <div className={styles.cardContent}>
                                                 <div>
                                                     <h2>{item.llm_name}</h2>
-                                                    <p>
-                                                        <strong>{t("components.llmSelector.bestFor")}</strong>
-                                                        <span style={{ marginRight: 8 }}></span>
-                                                        {descriptionText}
-                                                    </p>
+                                                    <strong>{t("components.llmSelector.bestFor")}</strong>
+                                                    <span style={{ marginRight: 8 }}></span>
+                                                    {descriptionText}
                                                 </div>
 
                                                 <div>
-                                                    <p>
-                                                        <strong>{t("components.llmSelector.knowledge")}</strong>
-                                                        <Tooltip content={knowledgeDesc} relationship="description" positioning="above">
-                                                            <InfoRegular></InfoRegular>
-                                                        </Tooltip>
-                                                        <span style={{ marginRight: 8 }}></span>
-                                                        {knowledgeText}
-                                                    </p>
+                                                    <strong>{t("components.llmSelector.knowledge")}</strong>
+                                                    <Tooltip content={knowledgeDesc} relationship="description" positioning="above">
+                                                        <InfoRegular></InfoRegular>
+                                                    </Tooltip>
+                                                    <span style={{ marginRight: 8 }}></span>
+                                                    {knowledgeText}
                                                 </div>
-
+                                                <div>
+                                                    <strong>{t("components.llmSelector.provider")}</strong>
+                                                    <span style={{ marginRight: 8 }}></span>
+                                                    {knowledgeText}
+                                                </div>
+                                                <div>
+                                                    <strong>{t("components.llmSelector.location")}</strong>
+                                                    <span style={{ marginRight: 8 }}></span>
+                                                    {knowledgeText}
+                                                </div>
                                                 <div>
                                                     <p>
-                                                        <strong>{t("components.llmSelector.features")}</strong>
-                                                        <Tooltip
-                                                            content={
-                                                                "Der letzte Wissensstand mit welchem die KI trainiert wurde. Informationen die nach dem  das Moell nicht wissen"
-                                                            }
-                                                            relationship="description"
-                                                            positioning="above"
-                                                        >
-                                                            <InfoRegular></InfoRegular>
-                                                        </Tooltip>
+                                                        <div>
+                                                            <strong>{t("components.llmSelector.features")}</strong>
+                                                            <Tooltip content={features_description} relationship="description" positioning="above">
+                                                                <InfoRegular></InfoRegular>
+                                                            </Tooltip>
+                                                        </div>
                                                         <span style={{ marginRight: 8 }}></span>
                                                         {featureText}
                                                     </p>
                                                 </div>
                                                 <div>
                                                     <p>
-                                                        <strong>{t("components.llmSelector.maxInput")}</strong>
-                                                        <Tooltip content={maxInputDesc} relationship="description" positioning="above">
-                                                            <InfoRegular></InfoRegular>
-                                                        </Tooltip>
-                                                        <span style={{ marginRight: 8 }}></span>
-                                                        {inputTokensText}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p>
-                                                        <strong>{t("components.llmSelector.maxOutput")}</strong>
-                                                        <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
-                                                            <InfoRegular></InfoRegular>
-                                                        </Tooltip>
-                                                        <span style={{ marginRight: 8 }}></span>
-                                                        {outputTokensText}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <div className={styles.speed} aria-label={`Speed ${speedRating}`}>
-                                                        <strong style={{ marginRight: 8 }}>{t("components.llmSelector.speed")}</strong>
-                                                        {Array.from({ length: 3 }).map((_, i) => {
-                                                            const active = i < speedRating;
-                                                            const cls = active ? `${styles.rocket} ${styles.rocketActive}` : styles.rocket;
-                                                            return active ? (
-                                                                <Rocket24Filled key={i} className={cls} aria-hidden="true" />
-                                                            ) : (
-                                                                <RocketRegular key={i} className={cls} aria-hidden="true" />
-                                                            );
-                                                        })}
-                                                    </div>
-                                                    <div>
-                                                        <p>
-                                                            <strong>{t("components.llmSelector.inputPrice")}</strong>
-                                                            <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
+                                                        <div><div><strong>{t("components.llmSelector.context")}</strong></div>
+                                                            <strong>{t("components.llmSelector.maxInput")}</strong>
+                                                            <Tooltip content={maxInputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
                                                             <span style={{ marginRight: 8 }}></span>
-                                                            {inputPriceText}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <p>
-                                                            <strong>{t("components.llmSelector.outputPrice")}</strong>
-                                                            <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
+                                                            {inputTokensText}
+                                                        </div>
+                                                        <div>
+                                                            <strong>{t("components.llmSelector.maxOutput")}</strong>
+                                                            <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
                                                             <span style={{ marginRight: 8 }}></span>
-                                                            {outputPriceText}
+                                                            {outputTokensText}
+                                                        </div>
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <div>
+                                                        <p>
+                                                            <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
+                                                                <strong style={{ marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
+                                                                {Array.from({ length: 3 }).map((_, i) => {
+                                                                    const active = i < priceRating;
+                                                                    const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
+                                                                    return active ? (
+                                                                        <Money24Filled key={i} className={cls} aria-hidden="true" />
+                                                                    ) : (
+                                                                        <MoneyRegular key={i} className={cls} aria-hidden="true" />
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <div>
+                                                                <strong>{t("components.llmSelector.inputPrice")}</strong>
+                                                                <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
+                                                                    <InfoRegular></InfoRegular>
+                                                                </Tooltip>
+                                                                <span style={{ marginRight: 8 }}></span>
+                                                                {inputPriceText}
+                                                            </div>
+                                                            <div>
+                                                                <strong>{t("components.llmSelector.outputPrice")}</strong>
+                                                                <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
+                                                                    <InfoRegular></InfoRegular>
+                                                                </Tooltip>
+                                                                <span style={{ marginRight: 8 }}></span>
+                                                                {outputPriceText}
+                                                            </div>
                                                         </p>
-                                                    </div>
-                                                    <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
-                                                        <strong style={{ marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
-                                                        {Array.from({ length: 3 }).map((_, i) => {
-                                                            const active = i < priceRating;
-                                                            const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
-                                                            return active ? (
-                                                                <Money24Filled key={i} className={cls} aria-hidden="true" />
-                                                            ) : (
-                                                                <MoneyRegular key={i} className={cls} aria-hidden="true" />
-                                                            );
-                                                        })}
                                                     </div>
                                                 </div>
                                             </div>

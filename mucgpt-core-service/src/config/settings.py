@@ -481,11 +481,19 @@ def _match_model_entry(
         ]
         return [name.lower() for name in names if isinstance(name, str) and name]
 
+    # First pass: exact matches only
     for entry in payload:
         entry_names = _candidates(entry)
         for desired in desired_names:
             for candidate in entry_names:
-                if desired == candidate or desired in candidate or candidate in desired:
+                if desired == candidate:
+                    return entry
+    # Second pass: substring matches as fallback
+    for entry in payload:
+        entry_names = _candidates(entry)
+        for desired in desired_names:
+            for candidate in entry_names:
+                if desired in candidate or candidate in desired:
                     return entry
 
     return None

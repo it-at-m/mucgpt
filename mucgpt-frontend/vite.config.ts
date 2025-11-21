@@ -43,8 +43,8 @@ export default defineConfig(({ mode }) => {
             },
             allowedHosts: ["host.docker.internal"], // required to use frontend behind proxy (e.g. API Gateway)
             headers: {
-                "x-frame-options": "SAMEORIGIN", // required to use devtools behind proxy (e.g. API Gateway)
-            },
+                "x-frame-options": "SAMEORIGIN" // required to use devtools behind proxy (e.g. API Gateway)
+            }
         }
     };
 });

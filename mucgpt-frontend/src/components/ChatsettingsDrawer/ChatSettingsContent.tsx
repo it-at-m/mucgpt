@@ -5,6 +5,7 @@ import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback, useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
+import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 
 interface Props {
     temperature: number;
@@ -26,7 +27,8 @@ export const ChatSettingsContent = ({ temperature, setTemperature, max_output_to
     const systemPromptID = useId("header-system-prompt");
 
     const min_max_tokens = 10;
-    const max_max_tokens = LLM.max_output_tokens;
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
+    const max_max_tokens = Math.max(llmMaxOutputTokens, max_output_tokens, min_max_tokens);
     const min_temp = 0;
     const max_temp = 1;
 
@@ -42,10 +44,11 @@ export const ChatSettingsContent = ({ temperature, setTemperature, max_output_to
     const onMaxTokensChangeHandler = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const value = Number(ev.target.value);
-            const maxTokens = value > LLM.max_output_tokens && LLM.max_output_tokens !== 0 ? LLM.max_output_tokens : value;
+            const limit = llmMaxOutputTokens;
+            const maxTokens = limit > 0 && value > limit ? limit : value;
             setMaxTokens(maxTokens);
         },
-        [LLM.max_output_tokens, setMaxTokens]
+        [llmMaxOutputTokens, setMaxTokens]
     );
 
     // System prompt change

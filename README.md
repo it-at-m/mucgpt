@@ -146,22 +146,41 @@ MUCGPT_CORE_MODELS='[
     "llm_name": "<your-llm-name>",
     "endpoint": "<your-endpoint>",
     "api_key": "<your-sk>",
-    "max_output_tokens": "<number>",
-    "max_input_tokens": "<number>",
-    "description": "<description>"
+    "model_info": {
+      "auto_enrich_from_model_info_endpoint": true,
+      "max_output_tokens": "<number>",
+      "max_input_tokens": "<number>",
+      "description": "<description>",
+      "input_cost_per_token": "<price>",
+      "output_cost_per_token": "<price>",
+      "supports_function_calling": true,
+      "supports_reasoning": false,
+      "supports_vision": true,
+      "litellm_provider": "<provider>",
+      "inference_location": "<region>"
+    }
   }
 ]'
 ```
 
-**Field descriptions:**
+**Top-level fields:**
 
 - `type`: The provider type (e.g., `OPENAI`).
 - `llm_name`: The name or identifier of your LLM model.
 - `endpoint`: The API endpoint URL for the model.
 - `api_key`: The API key or secret for authentication.
+
+**`model_info` fields:**
+
+- `auto_enrich_from_model_info_endpoint`: If `true` (default), missing metadata is fetched from `<endpoint>/model/info` (as it is available in litellm). Set to `false` to require manual values.
 - `max_output_tokens`: Maximum number of tokens the model can generate in a response.
 - `max_input_tokens`: Maximum number of tokens accepted as input.
 - `description`: A human-readable description of the model.
+- `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.
+- `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
+- `supports_function_calling`, `supports_reasoning`, `supports_vision`: Capability flags advertised to the UI.
+- `litellm_provider`: Provider identifier reported by LiteLLM.
+- `inference_location`: Region or deployment location for the model.
 
 Replace the placeholder values with your actual model configuration.
 

@@ -36,6 +36,14 @@ async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
             max_output_tokens=model.max_output_tokens,
             max_input_tokens=model.max_input_tokens,
             description=model.description,
+            input_cost_per_token=model.input_cost_per_token,
+            output_cost_per_token=model.output_cost_per_token,
+            supports_function_calling=model.supports_function_calling,
+            supports_reasoning=model.supports_reasoning,
+            supports_vision=model.supports_vision,
+            litellm_provider=model.litellm_provider,
+            inference_location=model.inference_location,
+            knowledge_cut_off=model.knowledge_cut_off,
         )
         response.models.append(dto)
     return response

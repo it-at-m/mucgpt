@@ -8,7 +8,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE } from "../../constants";
+import { ASSISTANT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
@@ -69,6 +69,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
@@ -98,7 +99,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         title: "Titel",
         description: "Beschreibung",
         publish: false,
-        max_output_tokens: LLM.max_output_tokens,
+        max_output_tokens: llmMaxOutputTokens,
         system_message: "",
         temperature: 0.7,
         quick_prompts: [],

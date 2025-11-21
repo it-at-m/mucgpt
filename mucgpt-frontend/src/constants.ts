@@ -1,6 +1,8 @@
 import { ApplicationConfig } from "./api";
 import { IndexedDBStorage } from "./service/indexedDBStorage";
 
+export const DEFAULT_MAX_OUTPUT_TOKENS = 4000;
+
 //APP Config
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
@@ -8,13 +10,46 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
             llm_name: "KICC GPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
-            description: ""
+            description: "",
+            speed: "",
+            knowledge_cut_off: "",
+            input_cost_per_token: 1,
+            output_cost_per_token: 1,
+            supports_function_calling: null,
+            supports_reasoning: null,
+            supports_vision: null,
+            litellm_provider: null,
+            inference_location: null
         },
         {
             llm_name: "Unknown GPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
-            description: ""
+            description: "",
+            speed: "",
+            knowledge_cut_off: "",
+            input_cost_per_token: 1,
+            output_cost_per_token: 1,
+            supports_function_calling: null,
+            supports_reasoning: null,
+            supports_vision: null,
+            litellm_provider: null,
+            inference_location: null
+        },
+        {
+            llm_name: "AnnonymGPT",
+            max_input_tokens: 128000,
+            max_output_tokens: 128000,
+            description: "",
+            speed: "",
+            knowledge_cut_off: "",
+            input_cost_per_token: 1,
+            output_cost_per_token: 1,
+            supports_function_calling: null,
+            supports_reasoning: null,
+            supports_vision: null,
+            litellm_provider: null,
+            inference_location: null
         }
     ],
     env_name: "MUC tschibidi-C",

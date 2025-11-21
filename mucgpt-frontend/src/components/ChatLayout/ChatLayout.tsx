@@ -90,7 +90,6 @@ export const ChatLayout = ({
                         </div>
                     ) : (
                         <>
-                            <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 0" }}></div>
                             <ul className={styles.allChatMessages} aria-description={messages_description}>
                                 {answers}
                             </ul>

@@ -1,10 +1,12 @@
 import json
 import os
+from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
 from src.config.settings import (
     Settings,
+    enrich_model_metadata,
     get_langfuse_settings,
     get_settings,
     get_sso_settings,
@@ -126,8 +128,8 @@ class TestSettings:
             assert model.max_output_tokens == 1000
             assert model.max_input_tokens == 2000
             assert model.description == "Test model"
-            assert model.input_cost_per_token == 9e-08
-            assert model.output_cost_per_token == 3.6e-07
+            assert model.input_cost_per_token == Decimal("9e-8")
+            assert model.output_cost_per_token == Decimal("3.6e-7")
             assert model.supports_function_calling is True
             assert model.supports_reasoning is False
             assert model.supports_vision is True
@@ -179,14 +181,15 @@ class TestSettings:
             ):
                 settings = Settings()
                 model = settings.MODELS[0]
+                enrich_model_metadata(model)
                 assert model.max_output_tokens == 32768
                 assert model.max_input_tokens == 1048576
                 assert "gpt-4.1-nano" in model.description
                 assert model.supports_function_calling is True
                 assert model.supports_reasoning is True
                 assert model.supports_vision is True
-                assert model.input_cost_per_token == 9e-08
-                assert model.output_cost_per_token == 3.6e-07
+                assert model.input_cost_per_token == Decimal("9e-8")
+                assert model.output_cost_per_token == Decimal("3.6e-7")
                 assert model.litellm_provider == "azure"
                 assert model.inference_location == "azure/datazone/eu"
                 assert model.model_info.auto_enrich_from_model_info_endpoint is True
@@ -213,8 +216,10 @@ class TestSettings:
                     "MUCGPT_CORE_MODELS": models_json,
                 },
             ):
+                settings = Settings()
+                model = settings.MODELS[0]
                 with pytest.raises(ValueError):
-                    Settings()
+                    enrich_model_metadata(model)
 
     def test_model_configuration_auto_enrich_from_model_info_endpoint_disabled_requires_manual_data(
         self,

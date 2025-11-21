@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from functools import lru_cache
 from typing import Any, List
 from urllib.parse import urljoin
@@ -9,6 +10,7 @@ from pydantic import (
     Field,
     HttpUrl,
     PositiveInt,
+    PrivateAttr,
     SecretStr,
     TypeAdapter,
     field_validator,
@@ -19,7 +21,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
 _logger = logging.getLogger(__name__)
 _positive_int_adapter = TypeAdapter(PositiveInt)
-_float_adapter = TypeAdapter(float)
+_decimal_adapter = TypeAdapter(Decimal)
 
 
 class ModelInfo(BaseModel):
@@ -27,8 +29,8 @@ class ModelInfo(BaseModel):
     max_output_tokens: PositiveInt | None = None
     max_input_tokens: PositiveInt | None = None
     description: str | None = None
-    input_cost_per_token: float | None = None
-    output_cost_per_token: float | None = None
+    input_cost_per_token: Decimal | None = None
+    output_cost_per_token: Decimal | None = None
     supports_function_calling: bool | None = None
     supports_reasoning: bool | None = None
     supports_vision: bool | None = None
@@ -44,6 +46,7 @@ class ModelsConfig(BaseModel):
     api_key: SecretStr
     api_version: str = ""
     model_info: ModelInfo = Field(default_factory=ModelInfo)
+    _metadata_enriched: bool = PrivateAttr(default=False)
 
     @field_validator("api_key", mode="before")
     def parse_secret(cls, value):
@@ -96,7 +99,7 @@ class ModelsConfig(BaseModel):
 
     @model_validator(mode="after")
     def ensure_model_metadata(cls, model: "ModelsConfig") -> "ModelsConfig":
-        """Ensure model metadata is fully populated."""
+        """Ensure model metadata is consistent before optional enrichment."""
 
         info = model.model_info
         info.description = (info.description or "").strip() or None
@@ -111,31 +114,6 @@ class ModelsConfig(BaseModel):
                 + ", ".join(sorted(missing_fields))
             )
 
-        try:
-            entry = _fetch_remote_model_entry(model)
-        except RuntimeError as exc:  # pragma: no cover - defended via unit tests
-            raise ValueError(
-                "Unable to enrich model configuration. Provide max_input_tokens, "
-                "max_output_tokens, and description directly or ensure the model info "
-                f"endpoint at {model.endpoint} is reachable."
-            ) from exc
-
-        if entry is None:
-            raise ValueError(
-                f"Model {model.llm_name} not found in info endpoint at {model.endpoint}. "
-                "Provide the missing metadata directly."
-            )
-
-        _apply_model_info(model, entry)
-
-        missing_fields = _missing_metadata_fields(info)
-        if missing_fields:
-            raise ValueError(
-                "Model metadata incomplete after enrichment: "
-                + ", ".join(sorted(missing_fields))
-            )
-
-        info.description = (info.description or "").strip() or None
         return model
 
     @property
@@ -163,19 +141,19 @@ class ModelsConfig(BaseModel):
         self.model_info.description = (value or "").strip() or None
 
     @property
-    def input_cost_per_token(self) -> float | None:
+    def input_cost_per_token(self) -> Decimal | None:
         return self.model_info.input_cost_per_token
 
     @input_cost_per_token.setter
-    def input_cost_per_token(self, value: float | None) -> None:
+    def input_cost_per_token(self, value: Decimal | None) -> None:
         self.model_info.input_cost_per_token = value
 
     @property
-    def output_cost_per_token(self) -> float | None:
+    def output_cost_per_token(self) -> Decimal | None:
         return self.model_info.output_cost_per_token
 
     @output_cost_per_token.setter
-    def output_cost_per_token(self, value: float | None) -> None:
+    def output_cost_per_token(self, value: Decimal | None) -> None:
         self.model_info.output_cost_per_token = value
 
     @property
@@ -259,6 +237,51 @@ class Settings(BaseSettings):
     MODELS: List[ModelsConfig] = []
 
 
+def enrich_model_metadata(model: ModelsConfig) -> None:
+    """Populate missing metadata for a model via the remote info endpoint."""
+
+    info = model.model_info
+    info.description = (info.description or "").strip() or None
+
+    if getattr(model, "_metadata_enriched", False):
+        return
+
+    if _has_complete_metadata(info):
+        model._metadata_enriched = True
+        return
+
+    if not info.auto_enrich_from_model_info_endpoint:
+        model._metadata_enriched = True
+        return
+
+    try:
+        entry = _fetch_remote_model_entry(model)
+    except RuntimeError as exc:  # pragma: no cover - defended via unit tests
+        raise ValueError(
+            "Unable to enrich model configuration. Provide max_input_tokens, "
+            "max_output_tokens, and description directly or ensure the model info "
+            f"endpoint at {model.endpoint} is reachable."
+        ) from exc
+
+    if entry is None:
+        raise ValueError(
+            f"Model {model.llm_name} not found in info endpoint at {model.endpoint}. "
+            "Provide the missing metadata directly."
+        )
+
+    _apply_model_info(model, entry)
+
+    missing_fields = _missing_metadata_fields(info)
+    if missing_fields:
+        raise ValueError(
+            "Model metadata incomplete after enrichment: "
+            + ", ".join(sorted(missing_fields))
+        )
+
+    info.description = (info.description or "").strip() or None
+    model._metadata_enriched = True
+
+
 def _has_complete_metadata(model_info: ModelInfo) -> bool:
     return (
         model_info.max_output_tokens is not None
@@ -294,7 +317,7 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
         )
 
     if info.input_cost_per_token is None:
-        info.input_cost_per_token = _coerce_float(
+        info.input_cost_per_token = _coerce_decimal(
             _first_non_null(
                 model_info.get("input_cost_per_token"),
                 litellm_params.get("input_cost_per_token"),
@@ -302,7 +325,7 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
         )
 
     if info.output_cost_per_token is None:
-        info.output_cost_per_token = _coerce_float(
+        info.output_cost_per_token = _coerce_decimal(
             _first_non_null(
                 model_info.get("output_cost_per_token"),
                 litellm_params.get("output_cost_per_token"),
@@ -343,13 +366,13 @@ def _coerce_positive_int(value: Any) -> PositiveInt | None:
         return None
 
 
-def _coerce_float(value: Any) -> float | None:
+def _coerce_decimal(value: Any) -> Decimal | None:
     if value is None:
         return None
     try:
-        return _float_adapter.validate_python(value)
+        return _decimal_adapter.validate_python(value)
     except Exception:  # pragma: no cover - defensive
-        _logger.debug("Invalid float received from model info: %s", value)
+        _logger.debug("Invalid decimal received from model info: %s", value)
         return None
 
 

@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Type, Union
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
 from config.model_provider import get_model
-from config.settings import LangfuseSettings, Settings
+from config.settings import LangfuseSettings, Settings, enrich_model_metadata
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -43,6 +43,22 @@ class ModelOptions:
         self.custom_model = custom_model
 
 
+def _initialize_models_metadata(cfg: Settings) -> None:
+    """Ensure all configured models have complete metadata before use."""
+
+    for model in cfg.MODELS:
+        try:
+            enrich_model_metadata(model)
+        except ValueError as exc:
+            logger.error(
+                "Unable to prepare model %s for %s: %s",
+                getattr(model, "llm_name", "<unknown>"),
+                cfg.ENV_NAME,
+                exc,
+            )
+            raise
+
+
 def init_service(
     service_class: Type,
     cfg: Settings,
@@ -71,6 +87,8 @@ def init_service(
     # Use default options if none provided
     elif options is None:
         options = ModelOptions()
+
+    _initialize_models_metadata(cfg)
 
     try:
         if options.custom_model is None:

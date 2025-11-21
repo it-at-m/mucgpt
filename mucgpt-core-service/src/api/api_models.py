@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
@@ -324,10 +325,10 @@ class ModelsDTO(BaseModel):
         None, description="Maximum tokens the model can receive as input"
     )
     description: str | None = Field(None, description="Human-readable summary")
-    input_cost_per_token: float | None = Field(
+    input_cost_per_token: Decimal | None = Field(
         None, description="Input pricing information per token"
     )
-    output_cost_per_token: float | None = Field(
+    output_cost_per_token: Decimal | None = Field(
         None, description="Output pricing information per token"
     )
     supports_function_calling: bool | None = Field(

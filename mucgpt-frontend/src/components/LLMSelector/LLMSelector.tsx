@@ -65,8 +65,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     }, [defaultLLM]);
 
     const displayName = useMemo(() => {
-        const parts = selectedModel.split("-");
-        return parts[parts.length - 1].substring(0, 6);
+        const parts = selectedModel.split("/");
+        return parts[parts.length - 1];
     }, [selectedModel]);
 
     const getSpeedRating = (speed?: string | number): number => {

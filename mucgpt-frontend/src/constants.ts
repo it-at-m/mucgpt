@@ -1,6 +1,8 @@
 import { ApplicationConfig } from "./api";
 import { IndexedDBStorage } from "./service/indexedDBStorage";
 
+export const DEFAULT_MAX_OUTPUT_TOKENS = 4000;
+
 //APP Config
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [

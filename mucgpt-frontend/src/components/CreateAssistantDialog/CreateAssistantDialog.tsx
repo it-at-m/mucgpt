@@ -17,7 +17,13 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { Assistant } from "../../api";
-import { ASSISTANT_STORE, CREATE_ASSISTANT_EXAMPLE_1, CREATE_ASSISTANT_EXAMPLE_2, CREATE_ASSISTANT_EXAMPLE_3 } from "../../constants";
+import {
+    ASSISTANT_STORE,
+    CREATE_ASSISTANT_EXAMPLE_1,
+    CREATE_ASSISTANT_EXAMPLE_2,
+    CREATE_ASSISTANT_EXAMPLE_3,
+    DEFAULT_MAX_OUTPUT_TOKENS
+} from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { createAssistantApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
@@ -37,7 +43,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // Context
     const { LLM } = useContext(LLMContext);
-    const llmMaxOutputTokens = LLM.max_output_tokens ?? 1;
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
     const { showError, showSuccess } = useGlobalToastContext();
 
     const { t } = useTranslation();

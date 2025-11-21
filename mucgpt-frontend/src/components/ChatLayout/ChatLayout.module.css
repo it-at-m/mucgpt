@@ -121,9 +121,8 @@
 }
 .llmContainer {
     position: fixed;
-    margin-left: 90px;
     top: 53px;
-    left: var(--sidebarWidth, 90px);
+    left: max(var(--sidebarWidth), 90px);
     z-index: 1000;
     align-items: center;
     gap: 90px;
@@ -163,9 +162,5 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
-    }
-    .llmContainer {
-        margin-left: 0;
-        margin-top: 6px;
     }
 }

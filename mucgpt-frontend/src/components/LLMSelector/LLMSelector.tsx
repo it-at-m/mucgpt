@@ -178,13 +178,13 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                             <div className={styles.cardContent}>
                                                 <div>
                                                     <h2>{item.llm_name}</h2>
-                                                    <strong>{t("components.llmSelector.bestFor")}</strong>
+                                                    <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.bestFor")}</strong>
                                                     <span style={{ marginRight: 8 }}></span>
                                                     {descriptionText}
                                                 </div>
 
                                                 <div>
-                                                    <strong>{t("components.llmSelector.knowledge")}</strong>
+                                                    <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.knowledge")}</strong>
                                                     <Tooltip content={knowledgeDesc} relationship="description" positioning="above">
                                                         <InfoRegular></InfoRegular>
                                                     </Tooltip>
@@ -192,12 +192,12 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     {knowledgeText}
                                                 </div>
                                                 <div>
-                                                    <strong>{t("components.llmSelector.provider")}</strong>
+                                                    <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.provider")}</strong>
                                                     <span style={{ marginRight: 8 }}></span>
                                                     {knowledgeText}
                                                 </div>
                                                 <div>
-                                                    <strong>{t("components.llmSelector.location")}</strong>
+                                                    <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.location")}</strong>
                                                     <span style={{ marginRight: 8 }}></span>
                                                     {knowledgeText}
                                                 </div>
@@ -217,9 +217,9 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     <p>
                                                         <div>
                                                             <div>
-                                                                <strong>{t("components.llmSelector.context")}</strong>
+                                                                <strong style={{ fontSize: 16 }}>{t("components.llmSelector.context")}</strong>
                                                             </div>
-                                                            <strong>{t("components.llmSelector.maxInput")}</strong>
+                                                            <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.maxInput")}</strong>
                                                             <Tooltip content={maxInputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
@@ -227,7 +227,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                             {inputTokensText}
                                                         </div>
                                                         <div>
-                                                            <strong>{t("components.llmSelector.maxOutput")}</strong>
+                                                            <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.maxOutput")}</strong>
                                                             <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
@@ -240,7 +240,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     <div>
                                                         <p>
                                                             <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
-                                                                <strong style={{ marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
+                                                                <strong style={{ fontSize: 16, marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
                                                                 {Array.from({ length: 3 }).map((_, i) => {
                                                                     const active = i < priceRating;
                                                                     const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
@@ -252,7 +252,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                                 })}
                                                             </div>
                                                             <div>
-                                                                <strong>{t("components.llmSelector.inputPrice")}</strong>
+                                                                <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.inputPrice")}</strong>
                                                                 <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
                                                                     <InfoRegular></InfoRegular>
                                                                 </Tooltip>
@@ -260,7 +260,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                                 {inputPriceText}
                                                             </div>
                                                             <div>
-                                                                <strong>{t("components.llmSelector.outputPrice")}</strong>
+                                                                <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.outputPrice")}</strong>
                                                                 <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
                                                                     <InfoRegular></InfoRegular>
                                                                 </Tooltip>

@@ -26,7 +26,8 @@ export const ChatSettingsContent = ({ temperature, setTemperature, max_output_to
     const systemPromptID = useId("header-system-prompt");
 
     const min_max_tokens = 10;
-    const max_max_tokens = LLM.max_output_tokens;
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? 1;
+    const max_max_tokens = llmMaxOutputTokens === 0 ? Math.max(max_output_tokens, min_max_tokens) : llmMaxOutputTokens;
     const min_temp = 0;
     const max_temp = 1;
 
@@ -42,10 +43,11 @@ export const ChatSettingsContent = ({ temperature, setTemperature, max_output_to
     const onMaxTokensChangeHandler = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const value = Number(ev.target.value);
-            const maxTokens = value > LLM.max_output_tokens && LLM.max_output_tokens !== 0 ? LLM.max_output_tokens : value;
+            const limit = llmMaxOutputTokens;
+            const maxTokens = limit > 1 && value > limit ? limit : value;
             setMaxTokens(maxTokens);
         },
-        [LLM.max_output_tokens, setMaxTokens]
+        [llmMaxOutputTokens, setMaxTokens]
     );
 
     // System prompt change

@@ -1,6 +1,8 @@
+import json
 import os
 from unittest.mock import patch
 
+import pytest
 from src.config.settings import (
     Settings,
     get_langfuse_settings,
@@ -87,8 +89,6 @@ class TestSettings:
 
     def test_model_configuration_from_env(self):
         """Test model configuration from environment variables."""
-        import json
-
         models_json = json.dumps(
             [
                 {
@@ -98,6 +98,14 @@ class TestSettings:
                     "api_key": "test-key",
                     "max_output_tokens": 1000,
                     "max_input_tokens": 2000,
+                    "description": "Test model",
+                    "input_cost_per_token": 9e-8,
+                    "output_cost_per_token": 3.6e-7,
+                    "supports_function_calling": True,
+                    "supports_reasoning": False,
+                    "supports_vision": True,
+                    "litellm_provider": "azure",
+                    "inference_location": "azure/eu",
                 }
             ]
         )
@@ -117,6 +125,162 @@ class TestSettings:
             assert model.api_key.get_secret_value() == "test-key"
             assert model.max_output_tokens == 1000
             assert model.max_input_tokens == 2000
+            assert model.description == "Test model"
+            assert model.input_cost_per_token == 9e-08
+            assert model.output_cost_per_token == 3.6e-07
+            assert model.supports_function_calling is True
+            assert model.supports_reasoning is False
+            assert model.supports_vision is True
+            assert model.litellm_provider == "azure"
+            assert model.inference_location == "azure/eu"
+            assert model.model_info.auto_enrich_from_model_info_endpoint is True
+
+    def test_model_configuration_enriched_from_info_endpoint(self):
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4.1-nano",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            ]
+        )
+
+        info_payload = [
+            {
+                "model_name": "gpt-4.1-nano",
+                "model_info": {
+                    "max_output_tokens": 32768,
+                    "max_input_tokens": 1048576,
+                    "version": "2025-04-14",
+                    "inference_location": "azure/datazone/eu",
+                    "base_model": "azure/gpt-4.1-nano",
+                    "supports_function_calling": True,
+                    "supports_reasoning": True,
+                    "supports_vision": True,
+                    "input_cost_per_token": 9e-8,
+                    "output_cost_per_token": 3.6e-7,
+                    "litellm_provider": "azure",
+                },
+                "litellm_params": {
+                    "input_cost_per_token": "9e-08",
+                    "output_cost_per_token": "3.6e-07",
+                },
+            }
+        ]
+
+        with patch("src.config.settings._load_model_info", return_value=info_payload):
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                settings = Settings()
+                model = settings.MODELS[0]
+                assert model.max_output_tokens == 32768
+                assert model.max_input_tokens == 1048576
+                assert "gpt-4.1-nano" in model.description
+                assert model.supports_function_calling is True
+                assert model.supports_reasoning is True
+                assert model.supports_vision is True
+                assert model.input_cost_per_token == 9e-08
+                assert model.output_cost_per_token == 3.6e-07
+                assert model.litellm_provider == "azure"
+                assert model.inference_location == "azure/datazone/eu"
+                assert model.model_info.auto_enrich_from_model_info_endpoint is True
+
+    def test_model_configuration_missing_metadata_raises_without_info(self):
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                }
+            ]
+        )
+
+        with patch(
+            "src.config.settings._load_model_info",
+            side_effect=RuntimeError("network error"),
+        ):
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                with pytest.raises(ValueError):
+                    Settings()
+
+    def test_model_configuration_auto_enrich_from_model_info_endpoint_disabled_requires_manual_data(
+        self,
+    ):
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "description": "Manual",
+                    },
+                }
+            ]
+        )
+
+        with patch("src.config.settings._load_model_info") as mocked:
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                with pytest.raises(ValueError):
+                    Settings()
+        mocked.assert_not_called()
+
+    def test_model_configuration_auto_enrich_from_model_info_endpoint_disabled_with_complete_data(
+        self,
+    ):
+        models_json = json.dumps(
+            [
+                {
+                    "type": "OPENAI",
+                    "llm_name": "gpt-4o-mini",
+                    "endpoint": "https://exampleproxy/v1",
+                    "api_key": "proxy-key",
+                    "model_info": {
+                        "auto_enrich_from_model_info_endpoint": False,
+                        "max_output_tokens": 1000,
+                        "max_input_tokens": 2000,
+                        "description": "Manual",
+                        "supports_function_calling": False,
+                    },
+                }
+            ]
+        )
+
+        with patch("src.config.settings._load_model_info") as mocked:
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_MODELS": models_json,
+                },
+            ):
+                settings = Settings()
+                model = settings.MODELS[0]
+                assert model.max_output_tokens == 1000
+                assert model.max_input_tokens == 2000
+                assert model.description == "Manual"
+                assert model.supports_function_calling is False
+        mocked.assert_not_called()
 
     def test_sso_settings(self):
         """Test SSO settings configuration."""

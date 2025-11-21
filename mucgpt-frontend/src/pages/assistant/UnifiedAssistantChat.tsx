@@ -69,6 +69,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? 1;
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
@@ -98,7 +99,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         title: "Titel",
         description: "Beschreibung",
         publish: false,
-        max_output_tokens: LLM.max_output_tokens,
+        max_output_tokens: llmMaxOutputTokens,
         system_message: "",
         temperature: 0.7,
         quick_prompts: [],

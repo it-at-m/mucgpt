@@ -37,6 +37,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // Context
     const { LLM } = useContext(LLMContext);
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? 1;
     const { showError, showSuccess } = useGlobalToastContext();
 
     const { t } = useTranslation();
@@ -88,7 +89,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 system_message: systemPrompt,
                 publish: false,
                 temperature: 0.6,
-                max_output_tokens: LLM.max_output_tokens,
+                max_output_tokens: llmMaxOutputTokens,
                 quick_prompts: [],
                 examples: [],
                 version: "0",
@@ -114,7 +115,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, LLM.max_output_tokens, storageService, showError, showSuccess, t]);
+    }, [title, description, systemPrompt, llmMaxOutputTokens, storageService, showError, showSuccess, t]);
 
     // back button clicked
     const onBackButtonClicked = useCallback(() => {
@@ -136,7 +137,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         if (input !== "") {
             setLoading(true);
             try {
-                const result = await (await createAssistantApi({ input: input, model: LLM.llm_name, max_output_tokens: LLM.max_output_tokens })).json();
+                const result = await (await createAssistantApi({ input: input, model: LLM.llm_name, max_output_tokens: llmMaxOutputTokens })).json();
                 setSystemPrompt(result.system_prompt);
                 setDescription(result.description);
                 setTitle(result.title);
@@ -155,7 +156,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 setLoading(false);
             }
         }
-    }, [input, LLM.llm_name, LLM.max_output_tokens, showError, showSuccess, t, setShowDialogInput]);
+    }, [input, LLM.llm_name, llmMaxOutputTokens, showError, showSuccess, t, setShowDialogInput]);
 
     const manuelAssistantCreation = useCallback(() => {
         setShowOutputView(true);

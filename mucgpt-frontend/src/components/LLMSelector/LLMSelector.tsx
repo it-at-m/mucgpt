@@ -14,6 +14,34 @@ interface Props {
     options: Model[];
 }
 
+const TOKENS_PER_MILLION = 1_000_000;
+
+const parseCostPerToken = (value: unknown): number | null => {
+    if (value === null || value === undefined) return null;
+    const numeric = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+};
+
+const averageCostPerToken = (input: number | null, output: number | null): number | null => {
+    if (input !== null && output !== null) {
+        return (input + output) / 2;
+    }
+    return input ?? output;
+};
+
+const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string): string => {
+    if (costPerToken === null) return fallbackLabel;
+    const perMillion = costPerToken * TOKENS_PER_MILLION;
+    if (!Number.isFinite(perMillion)) return fallbackLabel;
+    const absValue = Math.abs(perMillion);
+    const maximumFractionDigits = absValue >= 100 ? 2 : absValue >= 10 ? 3 : absValue >= 1 ? 4 : 6;
+    const minimumFractionDigits = absValue >= 1 ? 2 : 4;
+    return `${perMillion.toLocaleString(undefined, {
+        minimumFractionDigits,
+        maximumFractionDigits
+    })}$ / 1M Token`;
+};
+
 export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
@@ -58,22 +86,13 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         let max = Number.NEGATIVE_INFINITY;
 
         for (const o of options) {
-            const input = Number((o as any).input_price ?? NaN);
-            const output = Number((o as any).output_price ?? NaN);
+            const input = parseCostPerToken(o.input_cost_per_token);
+            const output = parseCostPerToken(o.output_cost_per_token);
+            const price = averageCostPerToken(input, output);
 
-            // prefer average when both present, otherwise use the one available
-            let p = Number.NaN;
-            if (Number.isFinite(input) && Number.isFinite(output)) {
-                p = (input + output) / 2;
-            } else if (Number.isFinite(input)) {
-                p = input;
-            } else if (Number.isFinite(output)) {
-                p = output;
-            }
-
-            if (!Number.isFinite(p)) continue;
-            if (p < min) min = p;
-            if (p > max) max = p;
+            if (price === null) continue;
+            if (price < min) min = price;
+            if (price > max) max = price;
         }
 
         if (min === Number.POSITIVE_INFINITY) {
@@ -89,6 +108,12 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const inputPriceDesc = t("components.llmSelector.inputPrice__description");
     const outputPriceDesc = t("components.llmSelector.outputPrice_description");
     const title = t("components.llmSelector.title");
+    const notAvailable = t("components.llmSelector.notAvailable", { defaultValue: "Nicht verfügbar" });
+    const capabilityReasoning = t("components.llmSelector.capability_reasoning", { defaultValue: "Reasoning" });
+    const capabilityFunctionCalling = t("components.llmSelector.capability_functionCalling", { defaultValue: "Function calling" });
+    const capabilityVision = t("components.llmSelector.capability_vision", { defaultValue: "Vision" });
+    const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
+    const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -125,18 +150,34 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                     const speedRating = getSpeedRating((item as any).speed);
 
                                     // compute a single numeric price for this model from input/output prices
-                                    const inputPrice = Number((item as any).input_price ?? NaN);
-                                    const outputPrice = Number((item as any).output_price ?? NaN);
-                                    let priceVal = Number.NaN;
-                                    if (Number.isFinite(inputPrice) && Number.isFinite(outputPrice)) {
-                                        priceVal = (inputPrice + outputPrice) / 2;
-                                    } else if (Number.isFinite(inputPrice)) {
-                                        priceVal = inputPrice;
-                                    } else if (Number.isFinite(outputPrice)) {
-                                        priceVal = outputPrice;
-                                    }
+                                    const inputPrice = parseCostPerToken(item.input_cost_per_token);
+                                    const outputPrice = parseCostPerToken(item.output_cost_per_token);
+                                    const priceVal = averageCostPerToken(inputPrice, outputPrice);
 
-                                    const priceRating = getPriceRating(priceVal);
+                                    const capabilityHighlights: string[] = [];
+                                    if (item.supports_reasoning) capabilityHighlights.push(capabilityReasoning);
+                                    if (item.supports_function_calling) capabilityHighlights.push(capabilityFunctionCalling);
+                                    if (item.supports_vision) capabilityHighlights.push(capabilityVision);
+
+                                    const providerMeta: string[] = [];
+                                    if (item.litellm_provider) providerMeta.push(`${providerLabel}: ${item.litellm_provider}`);
+                                    if (item.inference_location) providerMeta.push(`${regionLabel}: ${item.inference_location}`);
+
+                                    const featureText = [...capabilityHighlights, ...providerMeta].join(" • ") || notAvailable;
+                                    const knowledgeText = item.knowledge && item.knowledge.trim().length > 0 ? item.knowledge : notAvailable;
+                                    const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
+                                    const inputTokensText =
+                                        Number.isFinite(item.max_input_tokens) && item.max_input_tokens != null
+                                            ? `${item.max_input_tokens} Token`
+                                            : notAvailable;
+                                    const outputTokensText =
+                                        Number.isFinite(item.max_output_tokens) && item.max_output_tokens != null
+                                            ? `${item.max_output_tokens} Token`
+                                            : notAvailable;
+                                    const inputPriceText = formatCostPerMillion(inputPrice, notAvailable);
+                                    const outputPriceText = formatCostPerMillion(outputPrice, notAvailable);
+
+                                    const priceRating = getPriceRating(priceVal ?? undefined);
                                     return (
                                         <Card
                                             className={styles.card}
@@ -151,7 +192,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     <p>
                                                         <strong>{t("components.llmSelector.bestFor")}</strong>
                                                         <span style={{ marginRight: 8 }}></span>
-                                                        {item.description}
+                                                        {descriptionText}
                                                     </p>
                                                 </div>
 
@@ -162,7 +203,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                             <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
-                                                        {item.knowledge}
+                                                        {knowledgeText}
                                                     </p>
                                                 </div>
 
@@ -179,7 +220,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                             <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
-                                                        {item.reasoning}
+                                                        {featureText}
                                                     </p>
                                                 </div>
                                                 <div>
@@ -189,7 +230,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                             <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
-                                                        {item.max_input_tokens} Token
+                                                        {inputTokensText}
                                                     </p>
                                                 </div>
                                                 <div>
@@ -199,7 +240,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                             <InfoRegular></InfoRegular>
                                                         </Tooltip>
                                                         <span style={{ marginRight: 8 }}></span>
-                                                        {item.max_output_tokens} Token
+                                                        {outputTokensText}
                                                     </p>
                                                 </div>
                                                 <div>
@@ -222,7 +263,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
                                                             <span style={{ marginRight: 8 }}></span>
-                                                            {item.input_price}$ / 1M Token
+                                                            {inputPriceText}
                                                         </p>
                                                     </div>
                                                     <div>
@@ -232,10 +273,10 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
                                                             <span style={{ marginRight: 8 }}></span>
-                                                            {item.output_price}$ / 1M Token
+                                                            {outputPriceText}
                                                         </p>
                                                     </div>
-                                                    <div className={styles.price} aria-label={`Price ${Number.isFinite(priceVal) ? `${priceVal}` : ""}`}>
+                                                    <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
                                                         <strong style={{ marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
                                                         {Array.from({ length: 3 }).map((_, i) => {
                                                             const active = i < priceRating;

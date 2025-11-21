@@ -54,14 +54,24 @@ export interface ApplicationConfig {
 
 export interface Model {
     llm_name: string;
-    max_output_tokens: number;
-    max_input_tokens: number;
-    description: string;
-    speed: string;
-    knowledge: string;
-    reasoning: string;
-    input_price: number;
-    output_price: number;
+    max_output_tokens?: number | null;
+    max_input_tokens?: number | null;
+    description?: string | null;
+    /**
+     * Not currently provided by the backend but kept for UI continuity.
+     */
+    speed?: string | null;
+    /**
+     * Not currently provided by the backend but kept for UI continuity.
+     */
+    knowledge?: string | null;
+    input_cost_per_token?: number | null;
+    output_cost_per_token?: number | null;
+    supports_function_calling?: boolean | null;
+    supports_reasoning?: boolean | null;
+    supports_vision?: boolean | null;
+    litellm_provider?: string | null;
+    inference_location?: string | null;
 }
 
 export interface Labels {

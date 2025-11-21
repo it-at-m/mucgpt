@@ -36,6 +36,7 @@ class ModelInfo(BaseModel):
     supports_vision: bool | None = None
     litellm_provider: str | None = None
     inference_location: str | None = None
+    knowledge_cut_off: str | None = None
 
 
 class ModelsConfig(BaseModel):
@@ -72,6 +73,7 @@ class ModelsConfig(BaseModel):
             "supports_vision",
             "litellm_provider",
             "inference_location",
+            "knowledge_cut_off",
         }
 
         existing_info = data.get("model_info")
@@ -195,6 +197,15 @@ class ModelsConfig(BaseModel):
     @inference_location.setter
     def inference_location(self, value: str | None) -> None:
         self.model_info.inference_location = value
+
+    @property
+    def knowledge_cut_off(self) -> str | None:
+        return self.model_info.knowledge_cut_off
+
+    @knowledge_cut_off.setter
+    def knowledge_cut_off(self, value: str | None) -> None:
+        cleaned = (value or "").strip() or None
+        self.model_info.knowledge_cut_off = cleaned
 
 
 class SSOSettings(BaseSettings):
@@ -352,6 +363,14 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
     if info.inference_location is None:
         info.inference_location = model_info.get("inference_location")
 
+    if info.knowledge_cut_off is None:
+        info.knowledge_cut_off = _coerce_str(
+            _first_non_null(
+                model_info.get("knowledge_cut_off"),
+                entry.get("knowledge_cut_off"),
+            )
+        )
+
     if not (info.description or "").strip():
         info.description = _build_description(entry, model.llm_name)
 
@@ -391,6 +410,14 @@ def _coerce_bool(value: Any) -> bool | None:
     if isinstance(value, (int, float)):
         return bool(value)
     return None
+
+
+def _coerce_str(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value.strip() or None
+    return str(value).strip() or None
 
 
 def _first_non_null(*values: Any) -> Any:

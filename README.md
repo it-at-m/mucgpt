@@ -176,6 +176,7 @@ MUCGPT_CORE_MODELS='[
 - `max_output_tokens`: Maximum number of tokens the model can generate in a response.
 - `max_input_tokens`: Maximum number of tokens accepted as input.
 - `description`: A human-readable description of the model.
+- `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.
 - `input_cost_per_token` / `output_cost_per_token`: Optional pricing hints per token.
 - `supports_function_calling`, `supports_reasoning`, `supports_vision`: Capability flags advertised to the UI.
 - `litellm_provider`: Provider identifier reported by LiteLLM.

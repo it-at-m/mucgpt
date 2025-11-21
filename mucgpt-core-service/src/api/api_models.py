@@ -346,6 +346,9 @@ class ModelsDTO(BaseModel):
     inference_location: str | None = Field(
         None, description="Physical or logical inference region"
     )
+    knowledge_cut_off: str | None = Field(
+        None, description="Last known training data cutoff for the model"
+    )
 
 
 class ConfigResponse(BaseModel):

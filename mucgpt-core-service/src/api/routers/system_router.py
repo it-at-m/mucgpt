@@ -43,6 +43,7 @@ async def getConfig(user_info=Depends(authenticate_user)) -> ConfigResponse:
             supports_vision=model.supports_vision,
             litellm_provider=model.litellm_provider,
             inference_location=model.inference_location,
+            knowledge_cut_off=model.knowledge_cut_off,
         )
         response.models.append(dto)
     return response

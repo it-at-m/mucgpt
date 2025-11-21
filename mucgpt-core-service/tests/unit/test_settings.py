@@ -108,6 +108,7 @@ class TestSettings:
                     "supports_vision": True,
                     "litellm_provider": "azure",
                     "inference_location": "azure/eu",
+                    "knowledge_cut_off": "2023-09-01",
                 }
             ]
         )
@@ -135,6 +136,7 @@ class TestSettings:
             assert model.supports_vision is True
             assert model.litellm_provider == "azure"
             assert model.inference_location == "azure/eu"
+            assert model.knowledge_cut_off == "2023-09-01"
             assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
     def test_model_configuration_enriched_from_info_endpoint(self):
@@ -164,6 +166,7 @@ class TestSettings:
                     "input_cost_per_token": 9e-8,
                     "output_cost_per_token": 3.6e-7,
                     "litellm_provider": "azure",
+                    "knowledge_cut_off": "2024-07-01",
                 },
                 "litellm_params": {
                     "input_cost_per_token": "9e-08",
@@ -192,6 +195,7 @@ class TestSettings:
                 assert model.output_cost_per_token == Decimal("3.6e-7")
                 assert model.litellm_provider == "azure"
                 assert model.inference_location == "azure/datazone/eu"
+                assert model.knowledge_cut_off == "2024-07-01"
                 assert model.model_info.auto_enrich_from_model_info_endpoint is True
 
     def test_model_configuration_missing_metadata_raises_without_info(self):

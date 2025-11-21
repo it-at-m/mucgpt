@@ -927,7 +927,7 @@ i18n
                         llmSelector: {
                             title: "Languagemodel Selector",
                             bestFor: "Best for:",
-                            knowledge: "Knowledge:",                            
+                            knowledge: "Knowledge:",
                             knowledge_description: "Date of lates information the model has been trained with.",
                             provider: "Provider:",
                             location: "Region:",
@@ -1401,7 +1401,7 @@ i18n
                             provider: "Anbieter:",
                             location: "Region:",
                             features: "Funktionen:",
-                            features_description:"Verschiedene Funktionen de des Sprachmodel besitzt.",
+                            features_description: "Verschiedene Funktionen de des Sprachmodel besitzt.",
                             context: "Kontext:",
                             maxInput: "Max Eingabe:",
                             maxInput_description: "De Maximale Anzahl an tokens de des Sprachmodel einlesen ko",

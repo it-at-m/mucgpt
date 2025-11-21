@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Model } from "../../api";
 import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
-import { RocketRegular, Checkmark24Filled, Rocket24Filled, Money24Filled, MoneyRegular } from "@fluentui/react-icons";
+import { RocketRegular, Checkmark24Filled, Money24Filled, MoneyRegular } from "@fluentui/react-icons";
 import styles from "./LLMSelector.module.css";
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
 import React from "react";
@@ -68,17 +68,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         const parts = selectedModel.split("/");
         return parts[parts.length - 1];
     }, [selectedModel]);
-
-    const getSpeedRating = (speed?: string | number): number => {
-        if (speed == null) return 1;
-        const s = String(speed).trim().toLowerCase();
-        if (s.includes("fast")) return 3;
-        if (s.includes("medium")) return 2;
-        if (s.includes("slow")) return 1;
-        const n = Number(s);
-        if (isNaN(n) || !isFinite(n)) return 1;
-        return Math.max(1, Math.min(3, Math.round(n)));
-    };
 
     // compute numeric min/max prices from options once
     const [minPrice, maxPrice] = useMemo(() => {
@@ -148,8 +137,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                         <DialogContent>
                             <div className={styles.main}>
                                 {options.map((item: Model) => {
-                                    const speedRating = getSpeedRating((item as any).speed);
-
                                     // compute a single numeric price for this model from input/output prices
                                     const inputPrice = parseCostPerToken(item.input_cost_per_token);
                                     const outputPrice = parseCostPerToken(item.output_cost_per_token);
@@ -165,7 +152,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                     if (item.inference_location) providerMeta.push(`${regionLabel}: ${item.inference_location}`);
 
                                     const featureText = [...capabilityHighlights, ...providerMeta].join(" • ") || notAvailable;
-                                    const knowledgeText = item.knowledge && item.knowledge.trim().length > 0 ? item.knowledge : notAvailable;
+                                    const knowledgeText =
+                                        item.knowledge_cut_off && item.knowledge_cut_off.trim().length > 0 ? item.knowledge_cut_off : notAvailable;
                                     const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
                                     const inputTokensText =
                                         Number.isFinite(item.max_input_tokens) && item.max_input_tokens != null
@@ -227,7 +215,10 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 </div>
                                                 <div>
                                                     <p>
-                                                        <div><div><strong>{t("components.llmSelector.context")}</strong></div>
+                                                        <div>
+                                                            <div>
+                                                                <strong>{t("components.llmSelector.context")}</strong>
+                                                            </div>
                                                             <strong>{t("components.llmSelector.maxInput")}</strong>
                                                             <Tooltip content={maxInputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>

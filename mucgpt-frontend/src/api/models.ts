@@ -64,7 +64,7 @@ export interface Model {
     /**
      * Not currently provided by the backend but kept for UI continuity.
      */
-    knowledge?: string | null;
+    knowledge_cut_off?: string | null;
     input_cost_per_token?: number | null;
     output_cost_per_token?: number | null;
     supports_function_calling?: boolean | null;

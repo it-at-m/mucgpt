@@ -162,3 +162,7 @@
     opacity: 1;
     color: var(--colorAccentForegroundHover, #4dd0a9);
 }
+
+.infoRow {
+    margin-left: 8px;
+}

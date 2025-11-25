@@ -115,6 +115,26 @@
     padding: 14px;
 }
 
+.cardHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.bestForText {
+    margin: 4px 0 0 8px;
+    font-size: 14px;
+    color: var(--colorNeutralForeground2, #4a4a4a);
+    height: 48px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+}
+
 .dialogSurface {
     min-width: min(1240px, 96vw);
     max-width: 96vw;
@@ -165,4 +185,80 @@
 
 .infoRow {
     margin-left: 8px;
+}
+
+.infoRow + .infoRow {
+    margin-top: 8px;
+}
+
+.locationPlaceholder {
+    min-height: 28px;
+    display: block;
+}
+
+.inlineLabel {
+    margin-left: 8px;
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.inlineSpacer {
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.sectionTitleSpacing {
+    margin-right: 8px;
+}
+
+.sectionTitleStacked {
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.badgeList {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.badge {
+    border-radius: 999px;
+    padding: 2px 10px;
+    background-color: var(--colorNeutralBackground5, #e1e5ee);
+    color: var(--colorNeutralForeground2, #4a4a4a);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badgeKnowledge {
+    background-color: var(--colorBrandBackground2, #e9f2ff);
+    color: var(--colorBrandForeground2, #0b5cab);
+}
+
+.featuresValue {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.featuresMeta {
+    font-size: 12px;
+    color: var(--colorNeutralForeground3, #6b6b6b);
+    margin-top: 6px;
+}
+
+.sectionGroup {
+    margin-top: 20px;
+}
+
+.rowSpacing {
+    margin-top: 12px;
 }

@@ -42,6 +42,42 @@ const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string
     })}$ / 1M Token`;
 };
 
+interface SectionHeadingProps {
+    title: React.ReactNode;
+    withSpacing?: boolean;
+    className?: string;
+    stacked?: boolean;
+}
+
+const SectionHeading = ({ title, withSpacing = false, className, stacked = true }: SectionHeadingProps) => {
+    const classes = [styles.sectionTitle, withSpacing ? styles.sectionTitleSpacing : "", stacked ? styles.sectionTitleStacked : "", className]
+        .filter(Boolean)
+        .join(" ");
+    return <strong className={classes}>{title}</strong>;
+};
+
+interface InfoRowProps {
+    label: React.ReactNode;
+    value: React.ReactNode;
+    tooltip?: React.ReactNode;
+    className?: string;
+    useDefaultSpacing?: boolean;
+    showSpacer?: boolean;
+}
+
+const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, showSpacer = true }: InfoRowProps) => {
+    const containerClass = [useDefaultSpacing ? styles.infoRow : undefined, className].filter(Boolean).join(" ") || undefined;
+
+    return (
+        <div className={containerClass}>
+            <strong className={styles.inlineLabel}>{label}</strong>
+            {tooltip}
+            {showSpacer && <span className={styles.inlineSpacer} aria-hidden="true" />}
+            {value}
+        </div>
+    );
+};
+
 export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
@@ -93,7 +129,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
 
     const maxOutputDesc = t("components.llmSelector.maxOutput_description");
     const maxInputDesc = t("components.llmSelector.maxInput_description");
-    const knowledgeDesc = t("components.llmSelector.knowledge_description");
     const inputPriceDesc = t("components.llmSelector.inputPrice__description");
     const outputPriceDesc = t("components.llmSelector.outputPrice_description");
     const title = t("components.llmSelector.title");
@@ -103,7 +138,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const capabilityVision = t("components.llmSelector.capability_vision", { defaultValue: "Vision" });
     const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
     const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
-    const features_description = t("components.llmSelector.features");
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -142,18 +176,35 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                     const outputPrice = parseCostPerToken(item.output_cost_per_token);
                                     const priceVal = averageCostPerToken(inputPrice, outputPrice);
 
-                                    const capabilityHighlights: string[] = [];
-                                    if (item.supports_reasoning) capabilityHighlights.push(capabilityReasoning);
-                                    if (item.supports_function_calling) capabilityHighlights.push(capabilityFunctionCalling);
-                                    if (item.supports_vision) capabilityHighlights.push(capabilityVision);
+                                    const capabilityBadges: { key: string; label: string }[] = [];
+                                    if (item.supports_reasoning) capabilityBadges.push({ key: "reasoning", label: capabilityReasoning });
+                                    if (item.supports_function_calling) capabilityBadges.push({ key: "function-calling", label: capabilityFunctionCalling });
+                                    if (item.supports_vision) capabilityBadges.push({ key: "vision", label: capabilityVision });
 
                                     const providerMeta: string[] = [];
-                                    if (item.litellm_provider) providerMeta.push(`${providerLabel}: ${item.litellm_provider}`);
-                                    if (item.inference_location) providerMeta.push(`${regionLabel}: ${item.inference_location}`);
+                                    const providerDisplay = item.litellm_provider?.trim();
+                                    const locationDisplay = item.inference_location?.trim();
+                                    if (providerDisplay) providerMeta.push(`${providerLabel}: ${providerDisplay}`);
+                                    if (locationDisplay) providerMeta.push(`${regionLabel}: ${locationDisplay}`);
 
-                                    const featureText = [...capabilityHighlights, ...providerMeta].join(" • ") || notAvailable;
-                                    const knowledgeText =
-                                        item.knowledge_cut_off && item.knowledge_cut_off.trim().length > 0 ? item.knowledge_cut_off : notAvailable;
+                                    const capabilityContent = capabilityBadges.length ? (
+                                        <div className={styles.badgeList}>
+                                            {capabilityBadges.map(badge => (
+                                                <span key={badge.key} className={styles.badge}>
+                                                    {badge.label}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    ) : null;
+
+                                    const knowledgeText = item.knowledge_cut_off?.trim() || "";
+                                    const knowledgeBadge = knowledgeText ? (
+                                        <div className={styles.badgeList}>
+                                            <span className={`${styles.badge} ${styles.badgeKnowledge}`}>
+                                                {t("components.llmSelector.knowledge")}: {knowledgeText}
+                                            </span>
+                                        </div>
+                                    ) : null;
                                     const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
                                     const inputTokensText =
                                         Number.isFinite(item.max_input_tokens) && item.max_input_tokens != null
@@ -176,78 +227,53 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                             onSelectionChange={() => handleSelectModel(item.llm_name)}
                                         >
                                             <div className={styles.cardContent}>
-                                                <div>
+                                                <div className={styles.cardHeader}>
                                                     <h2>{item.llm_name}</h2>
-                                                    <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.bestFor")}</strong>
-                                                    <span style={{ marginRight: 8 }}></span>
-                                                    {descriptionText}
+                                                    {capabilityContent && capabilityContent}
+                                                    {!capabilityContent && (
+                                                        <div className={styles.badgeList}>
+                                                            <span className={styles.badge}>{notAvailable}</span>
+                                                        </div>
+                                                    )}
+                                                    {knowledgeBadge}
+                                                    <p className={styles.bestForText}>{descriptionText}</p>
                                                 </div>
 
-                                                <div>
-                                                    <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.knowledge")}</strong>
-                                                    <Tooltip content={knowledgeDesc} relationship="description" positioning="above">
-                                                        <InfoRegular></InfoRegular>
-                                                    </Tooltip>
-                                                    <span style={{ marginRight: 8 }}></span>
-                                                    {knowledgeText}
+                                                <div className={styles.sectionGroup}>
+                                                    <SectionHeading title="Herkunft" />
+                                                    {providerDisplay && <InfoRow label={t("components.llmSelector.provider")} value={providerDisplay} />}
+                                                    {locationDisplay ? (
+                                                        <InfoRow label={t("components.llmSelector.location")} value={locationDisplay} />
+                                                    ) : (
+                                                        <div className={`${styles.infoRow} ${styles.locationPlaceholder}`} aria-hidden="true" />
+                                                    )}
                                                 </div>
-                                                <div>
-                                                    <div>
-                                                        <div>
-                                                            <strong>{t("components.llmSelector.features")}</strong>
-                                                            <Tooltip content={features_description} relationship="description" positioning="above">
-                                                                <InfoRegular></InfoRegular>
-                                                            </Tooltip>
-                                                        </div>
-                                                        <span style={{ marginRight: 8 }}></span>
-                                                        {featureText}
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <p>
-                                                        <div>
-                                                            <strong style={{ fontSize: 16 }}>Herkunft</strong>
-                                                        </div>
-                                                        <div className={styles.infoRow}>
-                                                            <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.provider")}</strong>
-                                                            <span style={{ marginRight: 8 }}></span>
-                                                            {item.litellm_provider || notAvailable}
-                                                        </div>
-                                                        <div className={styles.infoRow}>
-                                                            <strong style={{ marginLeft: 8 }}>{t("components.llmSelector.location")}</strong>
-                                                            <span style={{ marginRight: 8 }}></span>
-                                                            {item.inference_location || notAvailable}
-                                                        </div>
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p>
-                                                        <div>
-                                                            <strong style={{ fontSize: 16 }}>{t("components.llmSelector.context")}</strong>
-                                                        </div>
-                                                        <div className={styles.infoRow}>
-                                                            <strong>{t("components.llmSelector.maxInput")}</strong>
+                                                <div className={styles.sectionGroup}>
+                                                    <SectionHeading title={t("components.llmSelector.context")} />
+                                                    <InfoRow
+                                                        label={t("components.llmSelector.maxInput")}
+                                                        value={inputTokensText}
+                                                        tooltip={
                                                             <Tooltip content={maxInputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
-                                                            <span></span>
-                                                            {inputTokensText}
-                                                        </div>
-                                                        <div className={styles.infoRow}>
-                                                            <strong>{t("components.llmSelector.maxOutput")}</strong>
+                                                        }
+                                                    />
+                                                    <InfoRow
+                                                        label={t("components.llmSelector.maxOutput")}
+                                                        value={outputTokensText}
+                                                        tooltip={
                                                             <Tooltip content={maxOutputDesc} relationship="description" positioning="above">
                                                                 <InfoRegular></InfoRegular>
                                                             </Tooltip>
-                                                            <span></span>
-                                                            {outputTokensText}
-                                                        </div>
-                                                    </p>
+                                                        }
+                                                    />
                                                 </div>
-                                                <div>
+                                                <div className={styles.sectionGroup}>
                                                     <div>
                                                         <div>
                                                             <div className={styles.price} aria-label={`Price ${priceVal ?? ""}`}>
-                                                                <strong style={{ fontSize: 16, marginRight: 8 }}>{t("components.llmSelector.price")}</strong>
+                                                                <SectionHeading title={t("components.llmSelector.price")} withSpacing stacked={false} />
                                                                 {Array.from({ length: 3 }).map((_, i) => {
                                                                     const active = i < priceRating;
                                                                     const cls = active ? `${styles.money} ${styles.moneyActive}` : styles.money;
@@ -258,22 +284,24 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                                     );
                                                                 })}
                                                             </div>
-                                                            <div className={styles.infoRow}>
-                                                                <strong>{t("components.llmSelector.inputPrice")}</strong>
-                                                                <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
-                                                                    <InfoRegular></InfoRegular>
-                                                                </Tooltip>
-                                                                <span></span>
-                                                                {inputPriceText}
-                                                            </div>
-                                                            <div className={styles.infoRow}>
-                                                                <strong>{t("components.llmSelector.outputPrice")}</strong>
-                                                                <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
-                                                                    <InfoRegular></InfoRegular>
-                                                                </Tooltip>
-                                                                <span></span>
-                                                                {outputPriceText}
-                                                            </div>
+                                                            <InfoRow
+                                                                label={t("components.llmSelector.inputPrice")}
+                                                                value={inputPriceText}
+                                                                tooltip={
+                                                                    <Tooltip content={inputPriceDesc} relationship="description" positioning="above">
+                                                                        <InfoRegular></InfoRegular>
+                                                                    </Tooltip>
+                                                                }
+                                                            />
+                                                            <InfoRow
+                                                                label={t("components.llmSelector.outputPrice")}
+                                                                value={outputPriceText}
+                                                                tooltip={
+                                                                    <Tooltip content={outputPriceDesc} relationship="description" positioning="above">
+                                                                        <InfoRegular></InfoRegular>
+                                                                    </Tooltip>
+                                                                }
+                                                            />
                                                         </div>
                                                     </div>
                                                 </div>

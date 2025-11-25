@@ -218,10 +218,10 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
             <Dialog modalType="modal">
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={title} relationship="description" positioning="after">
-                        <div className={`${styles.container} ${styles.buttonContainer}`} role="button" tabIndex={0}>
+                        <button type="button" className={`${styles.container} ${styles.buttonContainer}`}>
                             <RocketRegular className={styles.iconRightMargin} />
                             <span className={styles.modelName}>{displayName}</span>
-                        </div>
+                        </button>
                     </Tooltip>
                 </DialogTrigger>
 

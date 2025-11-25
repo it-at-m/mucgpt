@@ -29,7 +29,7 @@ const averageCostPerToken = (input: number | null, output: number | null): numbe
     return input ?? output;
 };
 
-const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string): string => {
+const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string, tokenPluralLabel: string): string => {
     if (costPerToken === null) return fallbackLabel;
     const perMillion = costPerToken * TOKENS_PER_MILLION;
     if (!Number.isFinite(perMillion)) return fallbackLabel;
@@ -39,7 +39,16 @@ const formatCostPerMillion = (costPerToken: number | null, fallbackLabel: string
     return `${perMillion.toLocaleString(undefined, {
         minimumFractionDigits,
         maximumFractionDigits
-    })}$ / 1M Token`;
+    })}$ / 1M ${tokenPluralLabel}`;
+};
+
+const formatTokenCount = (value: unknown, fallbackLabel: string, tokenLabel: string, tokenPluralLabel: string): string => {
+    if (value === null || value === undefined) return fallbackLabel;
+    const numeric = typeof value === "number" ? value : Number(value);
+    if (!Number.isFinite(numeric)) return fallbackLabel;
+    const formatted = numeric.toLocaleString(undefined);
+    const isPlural = Math.abs(numeric) !== 1;
+    return `${formatted} ${isPlural ? tokenPluralLabel : tokenLabel}`;
 };
 
 interface SectionHeadingProps {
@@ -127,6 +136,24 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         return [min, max];
     }, [options]);
 
+    const [minContextTokens, maxContextTokens] = useMemo(() => {
+        let min = Number.POSITIVE_INFINITY;
+        let max = Number.NEGATIVE_INFINITY;
+
+        for (const o of options) {
+            const value = Number(o.max_input_tokens ?? NaN);
+            if (!Number.isFinite(value)) continue;
+            if (value < min) min = value;
+            if (value > max) max = value;
+        }
+
+        if (min === Number.POSITIVE_INFINITY) {
+            return [0, 0];
+        }
+
+        return [min, max];
+    }, [options]);
+
     const maxOutputDesc = t("components.llmSelector.maxOutput_description");
     const maxInputDesc = t("components.llmSelector.maxInput_description");
     const inputPriceDesc = t("components.llmSelector.inputPrice__description");
@@ -138,6 +165,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const capabilityVision = t("components.llmSelector.capability_vision", { defaultValue: "Vision" });
     const providerLabel = t("components.llmSelector.provider", { defaultValue: "Provider" });
     const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
+    const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
+    const tokenPluralLabel = t("components.llmSelector.tokens", { defaultValue: "Tokens" });
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -149,6 +178,18 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
         }
         const range = maxPrice - minPrice;
         const ratio = (p - minPrice) / range;
+        const v = Math.round(ratio * 2) + 1;
+        return Math.max(1, Math.min(3, v));
+    };
+
+    const getContextRating = (tokens?: number | string | null): number => {
+        const tokenCount = Number(tokens ?? NaN);
+        if (!Number.isFinite(tokenCount)) return 1;
+        if (maxContextTokens === minContextTokens) {
+            return maxContextTokens > 0 ? 3 : 1;
+        }
+        const range = maxContextTokens - minContextTokens;
+        const ratio = (tokenCount - minContextTokens) / range;
         const v = Math.round(ratio * 2) + 1;
         return Math.max(1, Math.min(3, v));
     };
@@ -206,16 +247,11 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                         </div>
                                     ) : null;
                                     const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
-                                    const inputTokensText =
-                                        Number.isFinite(item.max_input_tokens) && item.max_input_tokens != null
-                                            ? `${item.max_input_tokens} Token`
-                                            : notAvailable;
-                                    const outputTokensText =
-                                        Number.isFinite(item.max_output_tokens) && item.max_output_tokens != null
-                                            ? `${item.max_output_tokens} Token`
-                                            : notAvailable;
-                                    const inputPriceText = formatCostPerMillion(inputPrice, notAvailable);
-                                    const outputPriceText = formatCostPerMillion(outputPrice, notAvailable);
+                                    const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);
+                                    const outputTokensText = formatTokenCount(item.max_output_tokens, notAvailable, tokenLabel, tokenPluralLabel);
+                                    const inputPriceText = formatCostPerMillion(inputPrice, notAvailable, tokenPluralLabel);
+                                    const outputPriceText = formatCostPerMillion(outputPrice, notAvailable, tokenPluralLabel);
+                                    const contextRating = getContextRating(item.max_input_tokens);
 
                                     const priceRating = getPriceRating(priceVal ?? undefined);
                                     return (
@@ -249,7 +285,21 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                     )}
                                                 </div>
                                                 <div className={styles.sectionGroup}>
-                                                    <SectionHeading title={t("components.llmSelector.context")} />
+                                                    <div className={styles.contextHeadingRow}>
+                                                        <SectionHeading title={t("components.llmSelector.context")} stacked={false} />
+                                                        <div
+                                                            className={styles.contextMeter}
+                                                            aria-label={`${t("components.llmSelector.context")} rating ${contextRating} / 3`}
+                                                        >
+                                                            {Array.from({ length: 3 }).map((_, i) => (
+                                                                <span
+                                                                    key={i}
+                                                                    className={`${styles.contextBar} ${i < contextRating ? styles.contextBarActive : ""}`.trim()}
+                                                                    aria-hidden="true"
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                     <InfoRow
                                                         label={t("components.llmSelector.maxInput")}
                                                         value={inputTokensText}

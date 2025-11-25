@@ -262,3 +262,33 @@
 .rowSpacing {
     margin-top: 12px;
 }
+
+.contextHeadingRow {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.contextMeter {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.contextBar {
+    width: 18px;
+    height: 6px;
+    border-radius: 999px;
+    background-color: var(--colorNeutralStroke1, #c9d0dd);
+    opacity: 0.4;
+    transition:
+        background-color 140ms ease,
+        opacity 140ms ease;
+}
+
+.contextBarActive {
+    background-color: var(--colorAccentForeground, #4dd0a9);
+    opacity: 1;
+}

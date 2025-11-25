@@ -126,7 +126,7 @@
     margin: 4px 0 0 8px;
     font-size: 14px;
     color: var(--colorNeutralForeground2, #4a4a4a);
-    height: 48px;
+    height: 72px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;

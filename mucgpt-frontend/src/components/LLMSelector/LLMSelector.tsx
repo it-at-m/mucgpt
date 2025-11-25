@@ -51,6 +51,23 @@ const formatTokenCount = (value: unknown, fallbackLabel: string, tokenLabel: str
     return `${formatted} ${isPlural ? tokenPluralLabel : tokenLabel}`;
 };
 
+const formatKnowledgeDate = (value: string | null | undefined, fallbackLabel: string): string => {
+    if (!value) return fallbackLabel;
+    const trimmed = value.trim();
+    if (!trimmed) return fallbackLabel;
+    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+        const date = new Date(trimmed);
+        if (!Number.isNaN(date.getTime())) {
+            return new Intl.DateTimeFormat("de-DE", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            }).format(date);
+        }
+    }
+    return trimmed;
+};
+
 interface SectionHeadingProps {
     title: React.ReactNode;
     withSpacing?: boolean;
@@ -167,6 +184,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const regionLabel = t("components.llmSelector.region", { defaultValue: "Region" });
     const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
     const tokenPluralLabel = t("components.llmSelector.tokens", { defaultValue: "Tokens" });
+    const knowledgeTooltipText = t("components.llmSelector.knowledge_description");
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -239,12 +257,15 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                     ) : null;
 
                                     const knowledgeText = item.knowledge_cut_off?.trim() || "";
+                                    const knowledgeDisplay = knowledgeText ? formatKnowledgeDate(knowledgeText, notAvailable) : "";
                                     const knowledgeBadge = knowledgeText ? (
-                                        <div className={styles.badgeList}>
-                                            <span className={`${styles.badge} ${styles.badgeKnowledge}`}>
-                                                {t("components.llmSelector.knowledge")}: {knowledgeText}
-                                            </span>
-                                        </div>
+                                        <Tooltip content={knowledgeTooltipText} relationship="description" positioning="above">
+                                            <div className={styles.badgeList}>
+                                                <span className={`${styles.badge} ${styles.badgeKnowledge}`}>
+                                                    {t("components.llmSelector.knowledge")}: {knowledgeDisplay}
+                                                </span>
+                                            </div>
+                                        </Tooltip>
                                     ) : null;
                                     const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
                                     const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);

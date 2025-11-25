@@ -1,80 +1,16 @@
 import logging
-import textwrap
 
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
-from langchain_core.tools import tool
-from langgraph.config import get_stream_writer
+from langchain_core.tools.base import BaseTool
 
-from agent.tools.brainstorm import brainstorming
-from agent.tools.simplify import simplify
-from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
+from agent.tools import brainstorm, simplify
+from agent.tools.brainstorm import make_brainstorm_tool
+from agent.tools.mcp import McpLoader
+from agent.tools.simplify import make_simplify_tool
 from api.api_models import ToolInfo, ToolListResponse
+from core.auth import AuthenticationResult
 from core.logtools import getLogger
-
-# Centralized single-line summaries to avoid duplication across decorator, metadata and system prompt
-BRAINSTORMING_SUMMARY = "Generates or refines a detailed markdown mind map."  # one-line
-SIMPLIFY_SUMMARY = (
-    "Simplifies complex German text to A2 Easy Language (Leichte Sprache)."  # one-line
-)
-
-# Detailed instruction templates (dedented for clean system prompts)
-BRAINSTORMING_DETAILED = textwrap.dedent(
-    """
-    **Brainstorming**
-
-    Description: Generates or refines a detailed mind map (pure markdown; no code fences).
-
-    Use for:
-    • New idea exploration
-    • Organizing complex / hierarchical domains
-    • Structured refinement based on user feedback
-
-    Technical:
-    • Hierarchical markdown (headings + bullet lists)
-    • 4–7 main branches recommended; 2–4 nested levels where meaningful
-    • Bold only once for central concept line
-
-    Parameters:
-    - topic (required)
-    - context (optional) Supplemental info to integrate selectively
-    - existing_mindmap (optional) Full previous map for refinement
-    - feedback (optional) Specific change requests
-
-    Best Practices:
-    - In refinement: keep unchanged branches stable; modify only targeted areas
-    - Avoid generic placeholders (e.g., "Misc")
-    - Prefer parallel grammatical structure for sibling nodes
-    - Reference earlier output blocks shown as ```MUCGPTBrainstorming ...``` when refining.
-    """
-)
-
-SIMPLIFY_DETAILED = textwrap.dedent(
-    """
-    **Vereinfachen (Simplify)**
-
-    Description: Converts German text to A2 level (Leichte Sprache) while preserving meaning.
-
-    Use for:
-    • Accessibility
-    • Language learning support
-    • Plain-language rewrites
-
-    Technical:
-    • Short sentences (≤15 words), active voice, concrete vocabulary
-    • Blank lines separate logical units
-    • Preserve factual accuracy; no omissions
-
-    Parameter:
-    - text (required) Entire source text (single call; do not split)
-
-    Best Practices:
-    - Reject fragments; request full text if incomplete
-    - Keep proper nouns; explain only if ambiguous
-    - No idioms, passive voice, nested clauses
-    - Reference earlier output blocks shown as ```MUCGPTVereinfachen ...``` when user wants adjustments.
-    """
-)
 
 TOOL_INSTRUCTIONS_TEMPLATE = """
 # Tools
@@ -105,63 +41,6 @@ You can reference these outputs in your responses when needed. The markdown form
 
 """
 
-
-def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = None):
-    @tool(
-        "Brainstorming",
-        description=BRAINSTORMING_SUMMARY,
-    )
-    def brainstorm_tool(
-        topic: str,
-        context: str = None,
-        existing_mindmap: str = None,
-        feedback: str = None,
-    ):
-        writer = get_stream_writer()
-        if existing_mindmap:
-            writer(
-                ToolStreamChunk(
-                    state=ToolStreamState.STARTED,
-                    content=f"Verbessere Brainstorming für Thema: {topic} basierend auf Feedback",
-                    tool_name="Brainstorming",
-                ).model_dump_json()
-            )
-        else:
-            writer(
-                ToolStreamChunk(
-                    state=ToolStreamState.STARTED,
-                    content=f"Starte Brainstorming für Thema: {topic}",
-                    tool_name="Brainstorming",
-                ).model_dump_json()
-            )
-        result = brainstorming(
-            topic, context, model, logger, writer, existing_mindmap, feedback
-        )
-        writer(
-            ToolStreamChunk(
-                state=ToolStreamState.ENDED,
-                content="Brainstorming abgeschlossen.",
-                tool_name="Brainstorming",
-            ).model_dump_json()
-        )
-        return result
-
-    return brainstorm_tool
-
-
-def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = None):
-    @tool(
-        "Vereinfachen",
-        description=SIMPLIFY_SUMMARY,
-    )
-    def simplify_tool(text: str):
-        writer = get_stream_writer()
-        result = simplify(text, model, logger, writer=writer)
-        return result
-
-    return simplify_tool
-
-
 class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
@@ -172,33 +51,26 @@ class ToolCollection:
         self._simplify_tool = make_simplify_tool(self.model, self.logger)
 
     @property
-    def simplify(self):
+    def simplify(self) -> BaseTool:
         return self._simplify_tool
 
     @property
-    def brainstorm(self):
+    def brainstorm(self) -> BaseTool:
         return self._brainstorm_tool
 
-    def get_tools(self):
-        """Return a list of all tool callables."""
-        return [self._brainstorm_tool, self._simplify_tool]
-
-    def get_all(self, enabled_tools: list[str] = None) -> list:
-        """Return a list of tools, optionally filtered by enabled_tools."""
-        all_tools = [self._brainstorm_tool, self._simplify_tool]
+    async def get_tools(self, user_info: AuthenticationResult, enabled_tools: list[str] = None) -> list[BaseTool]:
+        """Return a list of all available tools, optionally filtered by enabled_tools."""
+        tools = [self._brainstorm_tool, self._simplify_tool] + await McpLoader.load_mcp_tools(user_info=user_info)
         if enabled_tools:
-            return self.filter_tools_by_names(enabled_tools)
-        return all_tools
-
-    def filter_tools_by_names(self, tool_names: list[str]) -> list:
-        """Return only tools whose name is in tool_names."""
-        return [tool for tool in self.get_all() if tool.name in tool_names]
+            return [tool for tool in tools if tool.name in enabled_tools]
+        return tools
 
     @staticmethod
-    def list_tool_metadata(lang: str = "Deutsch") -> ToolListResponse:
+    async def list_tool_metadata(user_info: AuthenticationResult, lang: str = "Deutsch") -> ToolListResponse:
         """
         Dynamically returns metadata for all available tools, including their name and description, without requiring a model.
         Args:
+            user_info (str): The authenticated user context.
             lang (str, optional): The language for the tool metadata. Defaults to "Deutsch".
         Returns:
             ToolListResponse: An object containing a list of ToolInfo instances, each representing a tool's id, name, and description.
@@ -219,7 +91,8 @@ class ToolCollection:
 
         dummy_logger = getLogger(
             name="dummy"
-        )  # Define tool metadata with languages as top-level keys
+        )
+        # Define tool metadata with languages as top-level keys
         tool_metadata = {
             "deutsch": {
                 "Brainstorming": {
@@ -287,38 +160,41 @@ class ToolCollection:
         # Create tool instances
         brainstorm_tool = make_brainstorm_tool(DummyModel(), dummy_logger)
         simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
+        mcp_tools = await McpLoader.load_mcp_tools(user_info=user_info)
+        tools = [brainstorm_tool, simplify_tool] + mcp_tools
 
         # Build the list using actual tool names for lookup
-        tools = []
-        for tool_id in [brainstorm_tool, simplify_tool]:
-            tool_name = tool_id.name
+        tools_info = []
+        for tool in tools:
+            tool_name = tool.name
             meta = tool_metadata.get(lang_key, {}).get(tool_name)
             if meta:
-                tools.append(
+                tools_info.append(
                     ToolInfo(
                         id=tool_name,
                         name=meta.get("name", tool_name),
-                        description=meta.get("description", tool_id.description),
+                        description=meta.get("description", tool.description),
                     )
                 )
             else:
                 # fallback to tool's own name/description
-                tools.append(
+                tools_info.append(
                     ToolInfo(
-                        id=tool_name, name=tool_name, description=tool_id.description
+                        id=tool_name, name=tool_name, description=tool.description
                     )
                 )
-        return ToolListResponse(tools=tools)
+        return ToolListResponse(tools=tools_info)
 
-    def add_instructions(self, messages, enabled_tools):
+    @staticmethod
+    def add_instructions(messages, enabled_tools: list[str], tools: list[BaseTool]):
         """Inject a system message describing available tools with concise summaries and detailed guidance."""
         if not enabled_tools:
             return messages
 
         # Map tool name to detailed block
         detailed_map = {
-            "Brainstorming": BRAINSTORMING_DETAILED,
-            "Vereinfachen": SIMPLIFY_DETAILED,
+            "Brainstorming": brainstorm.BRAINSTORMING_DETAILED,
+            "Vereinfachen": simplify.SIMPLIFY_DETAILED,
         }
 
         tool_descriptions = []  # single-line summaries
@@ -330,7 +206,7 @@ class ToolCollection:
                 tool_obj = t
             else:
                 tool_obj = next(
-                    (tool for tool in self.get_all() if tool.name == t), None
+                    (tool for tool in tools if tool.name == t), None
                 )
             if not tool_obj:
                 continue

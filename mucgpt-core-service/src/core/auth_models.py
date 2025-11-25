@@ -14,6 +14,7 @@ class AuthenticationResult(BaseModel):
         roles: List of roles assigned to the user
     """
 
+    token: str
     user_id: str
     department: str
     name: Optional[str] = None

@@ -3,8 +3,14 @@ import os  # noqa
 import uvicorn
 import logging
 
+from config.langfuse_provider import LangfuseProvider
+from config.model_provider import ModelProvider
+from config.settings import get_settings, get_langfuse_settings
 from core.log_utils import load_log_config
 from truststore import inject_into_ssl
+
+from core.logtools import getLogger
+from init_app import ModelOptions
 
 if os.getenv("TRUSTSTORE_DISABLE", "0") not in {"1", "true", "TRUE", "yes"}:
     try:
@@ -18,6 +24,23 @@ load_dotenv(find_dotenv(raise_error_if_not_found=False))  # noqa
 
 from backend import backend  # noqa
 
+def warmup_app():
+    settings = get_settings()
+    logger = getLogger()
+    # init model
+    options = ModelOptions()
+    ModelProvider.init_model(
+        models=settings.MODELS,
+        max_output_tokens=options.max_tokens,
+        n=1,
+        streaming=options.streaming,
+        temperature=options.temperature,
+        logger=logger,
+    )
+    # init langfuse
+    langfuse_settings = get_langfuse_settings()
+    LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--development", action="store_true")
@@ -26,6 +49,9 @@ if __name__ == "__main__":
 
     # Load and process the log configuration
     log_config = load_log_config(log_config_path)
+
+    # warmup by generating required classes
+    warmup_app()
 
     host = "localhost" if args.development else "0.0.0.0"
     uvicorn.run(backend, host=host, port=8080, log_config=log_config)

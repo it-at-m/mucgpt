@@ -26,4 +26,4 @@ async def list_tools(
     Args:
         lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
     """
-    return ToolCollection.list_tool_metadata(lang=lang)
+    return await ToolCollection.list_tool_metadata(lang=lang, user_info=user_info)

@@ -58,7 +58,7 @@ const formatKnowledgeDate = (value: string | null | undefined, fallbackLabel: st
     if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
         const date = new Date(trimmed);
         if (!Number.isNaN(date.getTime())) {
-            return new Intl.DateTimeFormat("de-DE", {
+            return new Intl.DateTimeFormat(undefined, {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric"
@@ -185,6 +185,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const tokenLabel = t("components.llmSelector.token", { defaultValue: "Token" });
     const tokenPluralLabel = t("components.llmSelector.tokens", { defaultValue: "Tokens" });
     const knowledgeTooltipText = t("components.llmSelector.knowledge_description");
+    const originHeading = t("components.llmSelector.origin", { defaultValue: "Herkunft" });
 
     // derive numeric rating (1..3) from item.price relative to min/max price
     const getPriceRating = (price?: number | string): number => {
@@ -214,7 +215,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
 
     return (
         <div>
-            <Dialog modalType="alert">
+            <Dialog modalType="modal">
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={title} relationship="description" positioning="after">
                         <div className={`${styles.container} ${styles.buttonContainer}`} role="button" tabIndex={0}>
@@ -297,7 +298,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                                 </div>
 
                                                 <div className={styles.sectionGroup}>
-                                                    <SectionHeading title="Herkunft" />
+                                                    <SectionHeading title={originHeading} />
                                                     {providerDisplay && <InfoRow label={t("components.llmSelector.provider")} value={providerDisplay} />}
                                                     {locationDisplay ? (
                                                         <InfoRow label={t("components.llmSelector.location")} value={locationDisplay} />
@@ -387,7 +388,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="primary" size="medium" onClick={() => handleSelectModel(selectedModel)} className={styles.acceptButton}>
                                     <Checkmark24Filled className={styles.checkIcon} />
-                                    Auswählen
+                                    {t("components.llmSelector.selectButton", { defaultValue: "Auswählen" })}
                                 </Button>
                             </DialogTrigger>
                         </DialogActions>

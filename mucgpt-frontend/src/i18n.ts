@@ -475,6 +475,7 @@ i18n
                             features: "Funktionen:",
                             features_description: "Funktionalitäten, die das Sprachmodell mitbringt.",
                             context: "Kontext",
+                            origin: "Herkunft",
                             token: "Token",
                             tokens: "Tokens",
                             maxInput: "Max. Eingabelänge:",
@@ -489,7 +490,8 @@ i18n
                             outputPrice: "Ausgabe Preis:",
                             outputPrice_description:
                                 "Preis pro eine Milionen Ausgabetoken.  Ein Token ist ein Wortbestandteil. Im Deutschen ist ein Wort ca 1,3 Token. Als Ausgabe gilt eine Nachricht, die generiert wird.",
-                            price: "Preis"
+                            price: "Preis",
+                            selectButton: "Auswählen"
                         }
                     },
                     ...tutorialsTranslations.DE,
@@ -951,6 +953,7 @@ i18n
                             features: "Features:",
                             features_description: "Functionalities that the language model offers.",
                             context: "Context",
+                            origin: "Origin",
                             token: "Token",
                             tokens: "Tokens",
                             maxInput: "Max. Input Length:",
@@ -965,7 +968,8 @@ i18n
                             outputPrice: "Output Price:",
                             outputPrice_description:
                                 "Price per 1 million output tokens. A token is a component of a word. In German, a word is approximately 1.3 tokens. A generated message counts as output.",
-                            price: "Price"
+                            price: "Price",
+                            selectButton: "Select"
                         }
                     },
                     ...tutorialsTranslations.EN,
@@ -1431,6 +1435,7 @@ i18n
                             features: "Funktionen:",
                             features_description: "Funktionalitäten, die des Sprachmodell mitbringt.",
                             context: "Kontext",
+                            origin: "Herkunft",
                             token: "Token",
                             tokens: "Tokens",
                             maxInput: "Max. Eingabeläng:",
@@ -1445,7 +1450,8 @@ i18n
                             outputPrice: "Ausgabe-Preis:",
                             outputPrice_description:
                                 "Preis pro 1 Million Ausgabetokens. A Token is a Wortbestandteil. Im Deutschen is a Wort ungefähr 1,3 Tokens. Eine generierte Nachricht gängan als Ausgabe.",
-                            price: "Preis"
+                            price: "Preis",
+                            selectButton: "Auswähln"
                         }
                     },
                     ...tutorialsTranslations.BA,
@@ -1913,6 +1919,7 @@ i18n
                             features: "Fonctionnalités :",
                             features_description: "Fonctionnalités que le modèle de langage offre.",
                             context: "Contexte",
+                            origin: "Origine",
                             token: "Jeton",
                             tokens: "Jetons",
                             maxInput: "Longueur maximale d'entrée:",
@@ -1927,7 +1934,8 @@ i18n
                             outputPrice: "Prix de sortie:",
                             outputPrice_description:
                                 "Prix par 1 million de tokens de sortie. Un token est une partie de mot. En français, un mot représente environ 1,3 tokens. Une message générée est considérée comme une sortie.",
-                            price: "Prix"
+                            price: "Prix",
+                            selectButton: "Sélectionner"
                         }
                     },
                     ...tutorialsTranslations.FR,
@@ -2391,6 +2399,7 @@ i18n
                             features: "Функції:",
                             features_description: "Функціональність, яку пропонує мовна модель.",
                             context: "Контекст",
+                            origin: "Походження",
                             token: "Токен",
                             tokens: "Токени",
                             maxInput: "Макс. довжина введення:",
@@ -2405,7 +2414,8 @@ i18n
                             outputPrice: "Ціна виведення:",
                             outputPrice_description:
                                 "Ціна за 1 мільйон токенів виведення. Токен - це частина слова. В українській мові слово приблизно дорівнює 1,3 токенам. Згенероване повідомлення вважається виведенням.",
-                            price: "Ціна"
+                            price: "Ціна",
+                            selectButton: "Обрати"
                         }
                     },
                     ...tutorialsTranslations.UK,

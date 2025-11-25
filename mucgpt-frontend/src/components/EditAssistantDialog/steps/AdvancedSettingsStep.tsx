@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import styles from "../EditAssistantDialog.module.css";
+import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../../constants";
 
 interface AdvancedSettingsStepProps {
     temperature: number;
@@ -25,7 +26,8 @@ export const AdvancedSettingsStep = ({
     const { LLM } = useContext(LLMContext);
 
     const min_max_tokens = 10;
-    const max_max_tokens = LLM.max_output_tokens;
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
+    const max_max_tokens = Math.max(llmMaxOutputTokens, maxOutputTokens, min_max_tokens);
     const min_temp = 0;
     const max_temp = 1;
 
@@ -42,11 +44,12 @@ export const AdvancedSettingsStep = ({
     const onMaxtokensChangeHandler = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             const value = Number(ev.target.value);
-            const maxTokens = value > LLM.max_output_tokens && LLM.max_output_tokens !== 0 ? LLM.max_output_tokens : value;
+            const limit = llmMaxOutputTokens;
+            const maxTokens = limit > 0 && value > limit ? limit : value;
             onMaxTokensChange(maxTokens);
             onHasChanged(true);
         },
-        [LLM.max_output_tokens, onMaxTokensChange, onHasChanged]
+        [llmMaxOutputTokens, onMaxTokensChange, onHasChanged]
     );
 
     return (

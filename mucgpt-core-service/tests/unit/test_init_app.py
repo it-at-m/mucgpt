@@ -42,6 +42,19 @@ class TestInitApp:
         assert isinstance(service, MUCGPTAgent)
 
     @patch("init_app.get_model")
+    def test_init_service_enriches_models(self, mock_get_model):
+        """Ensure init_service populates model metadata before usage."""
+
+        mock_get_model.return_value = self.mock_model
+        model_entry = MagicMock()
+        self.mock_settings.MODELS = [model_entry]
+
+        with patch("init_app.enrich_model_metadata") as mock_enrich:
+            init_service(MUCGPTAgent, self.mock_settings)
+
+        mock_enrich.assert_called_once_with(model_entry)
+
+    @patch("init_app.get_model")
     def test_init_service_with_custom_model(self, mock_get_model):
         """Test the init_service function with a custom model."""
         # Arrange

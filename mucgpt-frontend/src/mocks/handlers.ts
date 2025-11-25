@@ -15,14 +15,43 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "KICCGPT",
             max_input_tokens: 128000,
-            max_output_tokens: 128000,
-            description: "GPT build by KICC"
+            max_output_tokens: 12000,
+            description: "GPT build by KICC",
+            knowledge_cut_off: "2024-07-01",
+            input_cost_per_token: 3e-7,
+            output_cost_per_token: 9e-7,
+            supports_function_calling: true,
+            supports_reasoning: true,
+            supports_vision: false,
+            litellm_provider: "azure_openai",
+            inference_location: "westeurope"
         },
         {
             llm_name: "UnknownGPT",
             max_input_tokens: 128000,
             max_output_tokens: 128000,
-            description: "A young model that has to earn it's name, but with a lot of potential."
+            description: "A young model that has to earn it's name, but with a lot of potential.",
+            knowledge_cut_off: "2024-07-01",
+            input_cost_per_token: 1.71e-6,
+            output_cost_per_token: 6.84e-6,
+            supports_function_calling: true,
+            supports_reasoning: false,
+            supports_vision: false,
+            litellm_provider: "openai",
+            inference_location: "us-east-1"
+        },
+        {
+            llm_name: "AnnonymGPT",
+            max_input_tokens: 500000,
+            max_output_tokens: 12000,
+            description: "A GPT that tends to write reddit comments",
+            knowledge_cut_off: "2023-07-01",
+            input_cost_per_token: 3.5e-7,
+            output_cost_per_token: 1.37e-6,
+            supports_function_calling: false,
+            supports_reasoning: false,
+            supports_vision: false,
+            litellm_provider: "ollama"
         }
     ],
     env_name: "MUCGPT",

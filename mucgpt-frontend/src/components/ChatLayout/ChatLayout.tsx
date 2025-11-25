@@ -51,13 +51,25 @@ export const ChatLayout = ({
             <aside hidden={size === "none"} className={styles.sidebar}>
                 {sidebar}
             </aside>
-            <div hidden={size !== "none"} className={styles.sidebarOpener}>
-                <Button appearance="subtle" onClick={onToggleMinimized}>
-                    <ChevronDoubleRight20Regular />
-                </Button>
-                <Button disabled={clearChatDisabled} appearance="subtle" onClick={clearChat}>
-                    <ChatAdd24Regular />
-                </Button>
+
+            <div className={styles.llmContainer}>
+                <div hidden={size !== "none"} className={styles.sidebarOpener} role="toolbar" aria-label="Sidebar controls">
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <Button appearance="subtle" onClick={onToggleMinimized} aria-label="Toggle sidebar">
+                            <ChevronDoubleRight20Regular />
+                        </Button>
+
+                        <Button disabled={clearChatDisabled} appearance="subtle" onClick={clearChat} aria-label="New chat">
+                            <ChatAdd24Regular />
+                        </Button>
+                    </div>
+                </div>
+
+                {llmOptions && defaultLLM && onLLMSelectionChange && (
+                    <div aria-label="LLM selector container">
+                        <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
+                    </div>
+                )}
             </div>
             <div className={styles.chatRoot}>
                 <div className={styles.chatContainer}>
@@ -73,21 +85,11 @@ export const ChatLayout = ({
                                 ) : (
                                     <h2 className={styles.chatEmptyStateSubtitle}> {header}</h2>
                                 )}
-                                {llmOptions && defaultLLM && onLLMSelectionChange && (
-                                    <div>
-                                        <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
-                                    </div>
-                                )}
                             </div>
                             {examples}
                         </div>
                     ) : (
                         <>
-                            <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 0" }}>
-                                {llmOptions && defaultLLM && onLLMSelectionChange && (
-                                    <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
-                                )}
-                            </div>
                             <ul className={styles.allChatMessages} aria-description={messages_description}>
                                 {answers}
                             </ul>

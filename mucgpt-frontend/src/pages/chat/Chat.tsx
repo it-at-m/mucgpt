@@ -11,7 +11,7 @@ import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
-import { CHAT_STORE } from "../../constants";
+import { CHAT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
@@ -94,6 +94,7 @@ const Chat = () => {
         setHeader(headerTitle);
     }, [setHeader, headerTitle]);
     const { tools } = useToolsContext();
+    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -303,7 +304,8 @@ const Chat = () => {
 
     const onMaxTokensChanged = useCallback(
         (maxTokens: number) => {
-            const finalTokens = maxTokens > LLM.max_output_tokens && LLM.max_output_tokens !== 0 ? LLM.max_output_tokens : maxTokens;
+            const limit = llmMaxOutputTokens;
+            const finalTokens = limit > 1 && maxTokens > limit ? limit : maxTokens;
 
             dispatch({ type: "SET_MAX_TOKENS", payload: finalTokens });
 
@@ -313,7 +315,7 @@ const Chat = () => {
                 temperature: temperature
             });
         },
-        [LLM.max_output_tokens, systemPrompt, temperature, debouncedStorageUpdate]
+        [llmMaxOutputTokens, systemPrompt, temperature, debouncedStorageUpdate]
     );
 
     const onSystemPromptChanged = useCallback(
@@ -474,10 +476,10 @@ const Chat = () => {
 
     // Update max tokens if LLM changes
     useEffect(() => {
-        if (max_output_tokens > LLM.max_output_tokens && LLM.max_output_tokens !== 0) {
-            onMaxTokensChanged(LLM.max_output_tokens);
+        if (llmMaxOutputTokens > 1 && max_output_tokens > llmMaxOutputTokens) {
+            onMaxTokensChanged(llmMaxOutputTokens);
         }
-    }, [LLM.max_output_tokens, max_output_tokens, onMaxTokensChanged]);
+    }, [llmMaxOutputTokens, max_output_tokens, onMaxTokensChanged]);
 
     // Set up quick prompts
     useEffect(() => {

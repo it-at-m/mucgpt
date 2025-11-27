@@ -1,4 +1,6 @@
 name: Core service test
+permissions:
+  contents: read
 
 on: [push, workflow_dispatch]
 

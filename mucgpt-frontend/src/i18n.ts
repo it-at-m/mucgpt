@@ -2,6 +2,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { tutorialsTranslations } from "./i18n.tutorials";
 import { versionTranslations } from "./i18n.version";
+import { faqTranslation } from "./i18n.faq";
 
 i18n
     // pass the i18n instance to react-i18next.
@@ -160,6 +161,9 @@ i18n
                         },
                         versioninfo: {
                             tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
+                            core_version: "Core Version:",
+                            frontend_version: "Frontend Version:",
+                            assistant_version: "Assistenten Version:",
                             label: "Version:",
                             whats_new: "Was gibt's neues?"
                         },
@@ -333,7 +337,15 @@ i18n
                             save_assistant_failed: "Speichern der Assistenten-Konfiguration fehlgeschlagen",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
-                            assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen"
+                            assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
+                            example_one: "Beispiel 1: Übersetzer",
+                            example_two: "Beispiel 2: Email",
+                            example_three: "Beispiel 3: Synonyme",
+                            create_example_one: "Englisch Übersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.",
+                            create_example_two:
+                                "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.",
+                            create_example_three:
+                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme."
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -495,7 +507,8 @@ i18n
                         }
                     },
                     ...tutorialsTranslations.DE,
-                    ...versionTranslations.DE
+                    ...versionTranslations.DE,
+                    ...faqTranslation.DE
                 }
             },
             EN: {
@@ -642,6 +655,9 @@ i18n
                         },
                         versioninfo: {
                             tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
+                            core_version: "Core Version:",
+                            frontend_version: "Frontend Version:",
+                            assistant_version: "Assistant Version:",
                             label: "Version:",
                             whats_new: "What's new?"
                         },
@@ -815,7 +831,13 @@ i18n
                             save_assistant_failed: "Failed to save assistant configuration",
                             assistant_generated_success: "Assistant generated successfully!",
                             assistant_generated_message: "Your assistant configuration has been generated. You can now review and customize it.",
-                            assistant_generation_failed: "Failed to generate assistant configuration"
+                            assistant_generation_failed: "Failed to generate assistant configuration",
+                            example_one: "Example 1: Translator",
+                            example_two: "Example 2: Email",
+                            example_three: "Example 3: Synonyms",
+                            create_example_one: "English translator: The assistant translates the text entered into English.",
+                            create_example_two: "The assistant is an employee of the City of Munich and responds politely and individually to incoming emails.",
+                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered."
                         },
                         edit_assistant_dialog: {
                             title: "Edit Assistant",
@@ -973,7 +995,8 @@ i18n
                         }
                     },
                     ...tutorialsTranslations.EN,
-                    ...versionTranslations.EN
+                    ...versionTranslations.EN,
+                    ...faqTranslation.EN
                 }
             },
             BA: {
@@ -1121,6 +1144,9 @@ i18n
                         },
                         versioninfo: {
                             tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
+                            core_version: "Core Version:",
+                            frontend_version: "Frontend Version:",
+                            assistant_version: "Assistenten Version:",
                             label: "Version:",
                             whats_new: "Wos gibt's Nei's?"
                         },
@@ -1294,7 +1320,14 @@ i18n
                             save_assistant_failed: "Speichern vo da Assistenten-Konfiguration is fehlgschlogn",
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Dei Assistent-Konfiguration is generiert wordn. Du kannst sie jetzt überprüfn und anpassn.",
-                            assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn"
+                            assistant_generation_failed: "Generierung vo da Assistenten-Konfiguration is fehlgschlogn",
+                            example_one: "Beispui 1: Übersetzer",
+                            example_two: "Beispui 2: Email",
+                            example_three: "Beispui 3: Synonyme",
+                            create_example_one: "Englisch Übersetzer: Dea Assistent übersetzt den eingemen Text ins Englische.",
+                            create_example_two: "Der Assistent is a Mitarbatr dea Stod Minga und antwortet höflich sowie individuell af de eingehnden E-Mails.",
+                            create_example_three:
+                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme."
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -1455,7 +1488,8 @@ i18n
                         }
                     },
                     ...tutorialsTranslations.BA,
-                    ...versionTranslations.BA
+                    ...versionTranslations.BA,
+                    ...faqTranslation.BA
                 }
             },
             FR: {
@@ -1603,6 +1637,9 @@ i18n
                         versioninfo: {
                             tooltip:
                                 "Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
+                            core_version: "Version principale:",
+                            frontend_version: " version de la frontend:",
+                            assistant_version: "version de l'assistant:",
                             label: "Version:",
                             whats_new: "Quoi de neuf ?"
                         },
@@ -1777,7 +1814,14 @@ i18n
                             assistant_generated_success: "Assistant généré avec succès!",
                             assistant_generated_message:
                                 "La configuration de votre assistant a été générée. Vous pouvez maintenant la vérifier et la personnaliser.",
-                            assistant_generation_failed: "Échec de la génération de la configuration de l'assistant"
+                            assistant_generation_failed: "Échec de la génération de la configuration de l'assistant",
+                            example_one: "Exemple 1 : traducteur",
+                            example_two: "Exemple 2 : e-mail",
+                            example_three: "Exemple 3 : synonymes",
+                            create_example_one: "Traducteur anglais : l'assistant traduit le texte saisi en anglais.",
+                            create_example_two:
+                                "L'assistant est un employé de la ville de Munich et répond de manière polie et personnalisée aux e-mails reçus.",
+                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e)."
                         },
                         edit_assistant_dialog: {
                             title: "Modifier l'assistant",
@@ -1939,7 +1983,8 @@ i18n
                         }
                     },
                     ...tutorialsTranslations.FR,
-                    ...versionTranslations.FR
+                    ...versionTranslations.FR,
+                    ...faqTranslation.FR
                 }
             },
             UK: {
@@ -2086,6 +2131,9 @@ i18n
                         },
                         versioninfo: {
                             tooltip: "основна версія: {{core_version}}, версія інтерфейсу: {{frontend_version}}, версія помічника: {{assistant_version}}",
+                            core_version: "основна версія:",
+                            frontend_version: "версія інтерфейсу:",
+                            assistant_version: "версія помічника:",
                             label: "Версія:",
                             whats_new: "Що нового?"
                         },
@@ -2259,7 +2307,13 @@ i18n
                             save_assistant_failed: "Не вдалося зберегти конфігурацію асистента",
                             assistant_generated_success: "Асистента успішно згенеровано!",
                             assistant_generated_message: "Конфігурацію вашого асистента згенеровано. Тепер ви можете її переглянути та налаштувати.",
-                            assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента"
+                            assistant_generation_failed: "Не вдалося згенерувати конфігурацію асистента",
+                            example_one: "Приклад 1: Перекладач",
+                            example_two: "Приклад 2: Електронна пошта",
+                            example_three: "Приклад 3: Синоніми",
+                            create_example_one: "Перекладач англійської мови: Асистент перекладає введений текст англійською мовою.",
+                            create_example_two: "Асистент є співробітником міста Мюнхен і ввічливо та індивідуально відповідає на вхідні електронні листи.",
+                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення."
                         },
                         edit_assistant_dialog: {
                             title: "Редагувати асистента",
@@ -2419,7 +2473,8 @@ i18n
                         }
                     },
                     ...tutorialsTranslations.UK,
-                    ...versionTranslations.UK
+                    ...versionTranslations.UK,
+                    ...faqTranslation.UK
                 }
             }
         }

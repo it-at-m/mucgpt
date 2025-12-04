@@ -176,7 +176,7 @@ const Faq = () => {
                     <AccordionItem value="12">
                         <AccordionHeader>{t("faq.header_saving_input")}</AccordionHeader>
                         <AccordionPanel>
-                            <div className={styles.panel}>{t("faq.header_saving_input")}</div>
+                            <div className={styles.panel}>{t("faq.answer_saving_input")}</div>
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="13">
@@ -192,7 +192,7 @@ const Faq = () => {
                         </AccordionPanel>
                     </AccordionItem>
                     <AccordionItem value="15">
-                        <AccordionHeader>{t("header_data_usage")}</AccordionHeader>
+                        <AccordionHeader>{t("faq.header_data_usage")}</AccordionHeader>
                         <AccordionPanel>
                             <div className={styles.panel}>{t("faq.answer_data_usage")}</div>
                         </AccordionPanel>

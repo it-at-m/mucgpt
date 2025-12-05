@@ -1635,8 +1635,7 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip:
-                                "Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
+                            tooltip:"Version principale: {{core_version}}, version de la frontend: {{frontend_version}}, version de l'assistant: {{assistant_version}}",
                             core_version: "Version principale:",
                             frontend_version: " version de la frontend:",
                             assistant_version: "version de l'assistant:",

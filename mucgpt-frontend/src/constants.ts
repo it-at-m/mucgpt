@@ -83,10 +83,3 @@ export const COMMUNITY_ASSISTANT_STORE: IndexedDBStorage = {
     objectStore_name: "assistants",
     db_version: 1
 };
-
-// Create Assistant examples
-export const CREATE_ASSISTANT_EXAMPLE_1 = "Englischübersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.";
-export const CREATE_ASSISTANT_EXAMPLE_2 =
-    "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.";
-export const CREATE_ASSISTANT_EXAMPLE_3 =
-    "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.";

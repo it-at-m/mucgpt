@@ -19,9 +19,6 @@ import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { Assistant } from "../../api";
 import {
     ASSISTANT_STORE,
-    CREATE_ASSISTANT_EXAMPLE_1,
-    CREATE_ASSISTANT_EXAMPLE_2,
-    CREATE_ASSISTANT_EXAMPLE_3,
     DEFAULT_MAX_OUTPUT_TOKENS
 } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -176,14 +173,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             <DialogTitle>{t("components.create_assistant_dialog.what_function")}</DialogTitle>
             <DialogContent>
                 <div className={styles.exampleList}>
-                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_ASSISTANT_EXAMPLE_1)}>
-                        Beispiel 1: Übersetzer
+                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(t("components.create_assistant_dialog.create_example_one"))}>
+                        {t("components.create_assistant_dialog.example_one")}
                     </Button>
-                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_ASSISTANT_EXAMPLE_2)}>
-                        Beispiel 2: Email
+                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(t("components.create_assistant_dialog.create_example_two"))}>
+                        {t("components.create_assistant_dialog.example_two")}
                     </Button>
-                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(CREATE_ASSISTANT_EXAMPLE_3)}>
-                        Beispiel 3: Synonyme
+                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(t("components.create_assistant_dialog.create_example_three"))}>
+                        {t("components.create_assistant_dialog.example_three")}
                     </Button>
                 </div>
                 <Field size="large">

@@ -1,11 +1,12 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from agent.agent import MUCGPTAgent
-from agent.agent_executor import MUCGPTAgentExecutor
-from config.settings import LangfuseSettings, Settings
-from init_app import ModelOptions, init_agent, init_service
+from agent.tools.tools import ToolCollection
+from config.settings import Settings
+from core.auth_models import AuthenticationResult
+from init_app import ModelOptions, init_agent
 
 
 class TestInitApp:
@@ -18,102 +19,62 @@ class TestInitApp:
         self.mock_settings.MODELS = []
         self.mock_settings.VERSION = "1.0.0"
 
-        # Mock Langfuse settings
-        self.mock_langfuse = MagicMock(spec=LangfuseSettings)
-        self.mock_langfuse.HOST = "https://langfuse.example.com"
-        self.mock_langfuse.PUBLIC_KEY = "test-public-key"
-        self.mock_langfuse.SECRET_KEY = (
-            "test-secret-key"  # Create a mock model and service
-        )
+        # mock model
         self.mock_model = MagicMock()
         self.mock_agent = MagicMock(spec=MUCGPTAgent)
 
-    @patch("init_app.get_model")
-    def test_init_service(self, mock_get_model):
-        """Test the init_service function with default options."""
+        # mock user
+        self.mock_user = MagicMock(spec=AuthenticationResult)
+
+        # mock tool_collection
+        self.tool_collection = MagicMock(spec=ToolCollection)
+
+    @pytest.mark.asyncio
+    @patch("init_app._initialize_models_metadata")
+    @patch("config.model_provider.ModelProvider.get_model")
+    @patch("agent.tools.tools.ToolCollection")
+    @patch("agent.agent.MUCGPTAgent")
+    @patch("agent.agent_executor.MUCGPTAgentExecutor")
+    async def test_init_agent_calls_correct_components(
+            self,
+            mock_executor,
+            mock_agent,
+            mock_toolcollection,
+            mock_get_model,
+            mock_init_metadata,
+    ):
         # Arrange
-        mock_get_model.return_value = self.mock_model
+        cfg = Settings()
+        user_info = MagicMock()
+
+        mock_model = MagicMock()
+        mock_get_model.return_value = mock_model
+
+        mock_tool_collection_instance = MagicMock()
+        mock_tool_collection_instance.get_tools = AsyncMock(return_value=["t1", "t2"])
+        mock_toolcollection.return_value = mock_tool_collection_instance
+
+        mock_agent_instance = MagicMock()
+        mock_agent.return_value = mock_agent_instance
+
+        mock_executor_instance = MagicMock()
+        mock_executor.return_value = mock_executor_instance
 
         # Act
-        service = init_service(MUCGPTAgent, self.mock_settings)
+        result = await init_agent(cfg, user_info)
 
         # Assert
+        mock_init_metadata.assert_called_once_with(cfg)
         mock_get_model.assert_called_once()
-        assert isinstance(service, MUCGPTAgent)
 
-    @patch("init_app.get_model")
-    def test_init_service_enriches_models(self, mock_get_model):
-        """Ensure init_service populates model metadata before usage."""
+        mock_toolcollection.assert_called_once_with(model=mock_model)
+        mock_tool_collection_instance.get_tools.assert_awaited_once_with(user_info=user_info)
 
-        mock_get_model.return_value = self.mock_model
-        model_entry = MagicMock()
-        self.mock_settings.MODELS = [model_entry]
+        mock_agent.assert_called_once()
 
-        with patch("init_app.enrich_model_metadata") as mock_enrich:
-            init_service(MUCGPTAgent, self.mock_settings)
+        mock_executor.assert_called_once_with(agent=mock_agent_instance)
 
-        mock_enrich.assert_called_once_with(model_entry)
-
-    @patch("init_app.get_model")
-    def test_init_service_with_custom_model(self, mock_get_model):
-        """Test the init_service function with a custom model."""
-        # Arrange
-        custom_model = MagicMock()
-        options = ModelOptions(custom_model=custom_model)
-
-        # Act
-        service = init_service(MUCGPTAgent, self.mock_settings, options=options)
-
-        # Assert
-        mock_get_model.assert_not_called()
-        assert isinstance(service, MUCGPTAgent)
-
-    @patch("init_app.get_model")
-    def test_init_service_with_dict_options(self, mock_get_model):
-        """Test the init_service function with options as dictionary."""
-        # Arrange
-        mock_get_model.return_value = self.mock_model
-        options_dict = {"temperature": 0.5, "streaming": False}
-
-        # Act
-        service = init_service(MUCGPTAgent, self.mock_settings, options=options_dict)
-
-        # Assert
-        mock_get_model.assert_called_once()
-        assert isinstance(service, MUCGPTAgent)
-        # Verify options were passed correctly
-        args, kwargs = mock_get_model.call_args
-        assert kwargs["temperature"] == 0.5
-        assert kwargs["streaming"] is False
-
-    @patch("init_app.init_service")
-    def test_init_agent(self, mock_init_service):
-        """Test the init_agent function."""
-        # Arrange
-        mock_init_service.return_value = self.mock_agent
-
-        # Act
-        agent = init_agent(self.mock_settings, self.mock_langfuse)
-
-        # Assert
-        mock_init_service.assert_called_once()
-        assert isinstance(agent, MUCGPTAgentExecutor)
-
-    @patch("init_app.init_service")
-    def test_init_agent_with_options(self, mock_init_service):
-        """Test the init_agent function with custom options."""
-        # Arrange
-        mock_init_service.return_value = self.mock_agent
-        options = {"temperature": 0.3, "max_tokens": 2000}
-
-        # Act
-        agent = init_agent(self.mock_settings, self.mock_langfuse, options=options)
-
-        # Assert
-        mock_init_service.assert_called_once()  # Verify options were passed
-        args, kwargs = mock_init_service.call_args
-        assert kwargs["options"] == options
-        assert isinstance(agent, MUCGPTAgentExecutor)
+        assert result == mock_executor_instance
 
     def test_model_options_validates_temperature_too_high(self):
         """Test that ModelOptions validates temperature is not too high."""
@@ -138,20 +99,3 @@ class TestInitApp:
         # Act & Assert
         with pytest.raises(ValueError, match="Max tokens must be a positive integer"):
             ModelOptions(max_tokens=-100)
-
-    @patch("init_app.get_model")
-    def test_init_service_with_valid_options(self, mock_get_model):
-        """Test init_service with valid options."""
-        # Arrange
-        mock_get_model.return_value = self.mock_model
-        options = ModelOptions(temperature=0.7, max_tokens=100)
-
-        # Act
-        service = init_service(MUCGPTAgent, self.mock_settings, options=options)
-
-        # Assert
-        assert isinstance(service, MUCGPTAgent)
-        # Verify options were passed correctly
-        args, kwargs = mock_get_model.call_args
-        assert kwargs["temperature"] == 0.7
-        assert kwargs["max_output_tokens"] == 100

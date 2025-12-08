@@ -8,9 +8,9 @@ from src.config.settings import (
     Settings,
     enrich_model_metadata,
     get_langfuse_settings,
+    get_mcp_settings,
     get_settings,
     get_sso_settings,
-    get_mcp_settings,
 )
 
 
@@ -354,7 +354,7 @@ class TestSettings:
             mcp_settings = get_mcp_settings()
             assert len(mcp_settings.SOURCES.keys()) == 1
             assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
-            assert mcp_settings.SOURCES["test"].forward_token == True
+            assert mcp_settings.SOURCES["test"].forward_token
 
     def test_mcp_settings_default(self):
         """Test MCP settings default values."""

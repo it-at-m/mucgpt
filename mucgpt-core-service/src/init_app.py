@@ -7,7 +7,12 @@ from agent.agent_executor import MUCGPTAgentExecutor
 from agent.tools.tools import ToolCollection
 from config.langfuse_provider import LangfuseProvider
 from config.model_provider import ModelProvider
-from config.settings import Settings, enrich_model_metadata, get_settings, get_langfuse_settings
+from config.settings import (
+    Settings,
+    enrich_model_metadata,
+    get_langfuse_settings,
+    get_settings,
+)
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 

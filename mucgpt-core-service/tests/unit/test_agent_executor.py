@@ -5,7 +5,6 @@ from langchain_core.messages import AIMessage, ToolCall
 
 from agent.agent_executor import MUCGPTAgentExecutor
 from api.api_models import ChatCompletionMessage as InputMessage
-from config.settings import Settings
 
 
 class DummyLLM:

@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -32,7 +32,7 @@ class TestInitApp:
 
     @pytest.mark.asyncio
     @patch("config.model_provider.ModelProvider.get_model")
-    @patch("agent.tools.tools.ToolCollection.get_tools")
+    @patch("agent.tools.tools.ToolCollection.get_tools", new_callable=AsyncMock)
     async def test_init_agent_calls_correct_components(
             self,
             mock_get_tools,

@@ -1,3 +1,4 @@
+import asyncio
 import typing
 
 from httpx import Auth, Request, Response
@@ -10,7 +11,9 @@ from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger()
-# FIXME user global cache?
+_locks_lock = asyncio.Lock()
+_user_locks : dict[str, asyncio.Lock] = {}
+# FIXME use global cache?
 user_tools : dict[str, list[BaseTool]] = {}
 
 class McpLoader:
@@ -23,32 +26,37 @@ class McpLoader:
             return []
         # return tools if already loaded
         if user_info is None:
-            raise "No user_info provided for load_mcp_tools"
+            raise ValueError("No user_info provided for load_mcp_tools")
         uid = user_info.user_id
-        if user_tools.get(uid) is not None:
-            return user_tools.get(uid)
-        # map to mcp connection
-        mcp_connections = {}
-        for k, v in sources.items():
-            con = StreamableHttpConnection(transport="streamable_http", url=v.url)
-            # add auth if enabled and user_info present
-            if v.forward_token:
-                con["auth"] = McpBearerAuthProvider(uid=user_info.user_id, token=user_info.token)
-                mcp_connections[k] = con
-            else:
-                mcp_connections[k] = con
-        # create mcp client and get tools
-        logger.info(f"Loading mcp tools for user {user_info.user_id}")
-        mcp_client = MultiServerMCPClient(connections=mcp_connections)
-        tools = []
-        for source_id in sources.keys():
-            try:
-                tools += await mcp_client.get_tools(server_name=source_id)
-            except Exception as e:
-                logger.error(f"Exception while fetching MCP tools from '{source_id}'", exc_info=e)
-        # store user tools
-        user_tools[uid] = tools
-        return tools
+        async with _locks_lock:
+            if uid not in _user_locks:
+                _user_locks[uid] = asyncio.Lock()
+        # lock user mcp load
+        async with _user_locks[uid]:
+            if user_tools.get(uid) is not None:
+                return user_tools.get(uid)
+            # map to mcp connection
+            mcp_connections = {}
+            for k, v in sources.items():
+                con = StreamableHttpConnection(transport="streamable_http", url=v.url)
+                # add auth if enabled and user_info present
+                if v.forward_token:
+                    con["auth"] = McpBearerAuthProvider(uid=user_info.user_id, token=user_info.token)
+                    mcp_connections[k] = con
+                else:
+                    mcp_connections[k] = con
+            # create mcp client and get tools
+            logger.info(f"Loading mcp tools for user {user_info.user_id}")
+            mcp_client = MultiServerMCPClient(connections=mcp_connections)
+            tools = []
+            for source_id in sources.keys():
+                try:
+                    tools += await mcp_client.get_tools(server_name=source_id)
+                except Exception as e:
+                    logger.error(f"Exception while fetching MCP tools from '{source_id}'", exc_info=e)
+            # store user tools
+            user_tools[uid] = tools
+            return tools
 
 
 class McpBearerAuthProvider(Auth):
@@ -65,6 +73,6 @@ class McpBearerAuthProvider(Auth):
     def auth_flow(self, request: Request) -> typing.Generator[Request, Response, None]:
         token = McpBearerAuthProvider._tokens.get(self._uid)
         if token is None:
-            raise "Token is None but needed"
+            raise ValueError("Token is None but needed")
         request.headers["Authorization"] = f"Bearer {token}"
         yield request

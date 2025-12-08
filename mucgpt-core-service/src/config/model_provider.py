@@ -192,5 +192,5 @@ class ModelProvider:
     def get_model():
         """Returns a configured LLM that can be parametrized during runtime."""
         if ModelProvider._llm is None:
-            raise "Model not initialized"
+            raise RuntimeError("Model not initialized")
         return ModelProvider._llm

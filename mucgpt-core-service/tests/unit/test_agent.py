@@ -237,9 +237,9 @@ class TestAgentLifecycle:
     - Tool output validation
     - Final response generation
     """
-    def setup_method(self, lifecycle_llm):
+    def setup_method(self):
         self.user_info = MagicMock()
-        self.tool_collection = ToolCollection(lifecycle_llm)
+        self.tool_collection = ToolCollection(DummyLLM())
 
     @pytest.fixture
     def mock_stream_writer(self):

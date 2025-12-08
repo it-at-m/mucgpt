@@ -204,7 +204,7 @@ def brainstorming(
         logger.error("Brainstorm tool error: %s", str(e))
         return f"Error brainstorming for '{topic_clean}'"
 
-def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger = None) -> BaseTool:
+def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger) -> BaseTool:
     @tool(
         "Brainstorming",
         description=BRAINSTORMING_SUMMARY,

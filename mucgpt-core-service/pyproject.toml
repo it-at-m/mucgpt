@@ -31,7 +31,7 @@ dependencies = [
     "truststore>=0.10.4",
     "langfuse>=3.3.4",
     "httpx==0.28.1",
-    "langchain-mcp-adapters>=0.1.11",
+    "langchain-mcp-adapters==0.1.12",
 ]
 
 [tool.uv]

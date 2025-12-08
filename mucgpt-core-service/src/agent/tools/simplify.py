@@ -68,7 +68,7 @@ def simplify(
             )
         return f"Error simplifying text: {str(e)}"
 
-def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger = None) -> BaseTool:
+def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger) -> BaseTool:
     @tool(
         "Vereinfachen",
         description=SIMPLIFY_SUMMARY,

@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import List
 
@@ -21,6 +22,8 @@ from init_app import init_agent
 
 logger = getLogger()
 settings = get_settings()
+_lock_lock = asyncio.Lock()
+_agent_executors_lock : dict[str, asyncio.Lock] = {}
 agent_executors : dict[str, MUCGPTAgentExecutor] = {}
 router = APIRouter(prefix="/v1")
 
@@ -29,9 +32,13 @@ async def get_agent_executor(user_info: AuthenticationResult) -> MUCGPTAgentExec
     # FIXME global cache for multi instance?
     global agent_executors
     uid = user_info.user_id
-    if agent_executors.get(uid) is None:
-        agent_executor = await init_agent(cfg=settings, user_info=user_info)
-        agent_executors[uid] = agent_executor
+    async with _lock_lock:
+        if uid not in _agent_executors_lock:
+            _agent_executors_lock[uid] = asyncio.Lock()
+    async with _agent_executors_lock[uid]:
+        if agent_executors.get(uid) is None:
+            agent_executor = await init_agent(cfg=settings, user_info=user_info)
+            agent_executors[uid] = agent_executor
     return agent_executors[uid]
 
 @router.post(

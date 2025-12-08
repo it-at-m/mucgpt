@@ -50,13 +50,15 @@ class ModelsConfig(BaseModel):
     _metadata_enriched: bool = PrivateAttr(default=False)
 
     @field_validator("api_key", mode="before")
-    def parse_secret(cls, value):
+    @staticmethod
+    def parse_secret(value):
         if isinstance(value, str):
             return SecretStr(value)
         return value
 
     @model_validator(mode="before")
-    def bundle_model_info(cls, data):
+    @staticmethod
+    def bundle_model_info(data):
         if not isinstance(data, dict):
             return data
 
@@ -100,7 +102,8 @@ class ModelsConfig(BaseModel):
         return data
 
     @model_validator(mode="after")
-    def ensure_model_metadata(cls, model: "ModelsConfig") -> "ModelsConfig":
+    @staticmethod
+    def ensure_model_metadata(model: "ModelsConfig") -> "ModelsConfig":
         """Ensure model metadata is consistent before optional enrichment."""
 
         info = model.model_info

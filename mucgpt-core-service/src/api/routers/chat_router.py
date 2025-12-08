@@ -30,7 +30,7 @@ async def get_agent_executor(user_info: AuthenticationResult) -> MUCGPTAgentExec
     global agent_executors
     uid = user_info.user_id
     if agent_executors.get(uid) is None:
-        agent_executor = await init_agent(user_info=user_info)
+        agent_executor = await init_agent(cfg=settings, user_info=user_info)
         agent_executors[uid] = agent_executor
     return agent_executors[uid]
 

@@ -120,13 +120,13 @@ class LifecycleMockLLM:
                 return self.ValidationResponseLLM(is_valid=False)
         return self
 
-    def invoke(self, msgs):
+    async def ainvoke(self, msgs):
         """
         Mock invoke that returns different responses based on execution context.
         This allows simulation of the full agent lifecycle.
         """
         self.invoked_messages = msgs
-        self.execution_order.append("invoke")
+        self.execution_order.append("ainvoke")
 
         # If we have tools bound, simulate a tool call in the first response
         if self.tools:
@@ -151,7 +151,7 @@ class LifecycleMockLLM:
         def __init__(self, is_valid=True):
             self.is_valid = is_valid
 
-        def invoke(self, data):
+        async def ainvoke(self, data):
             if self.is_valid:
                 return ValidationResult(is_valid=True, reason="")
             else:
@@ -164,57 +164,64 @@ class LifecycleMockLLM:
 class TestAgent:
     def setup_method(self):
         self.llm = DummyLLM()
+        self.user_info = MagicMock()
+        self.tool_collection = ToolCollection(self.llm)
 
-    def test_agent_initialization_with_all_tools(self):
-        agent = MUCGPTAgent(self.llm)
-        all_tool_names = set(t.name for t in ToolCollection(self.llm).get_all())
+    @pytest.mark.asyncio
+    async def test_agent_initialization_with_all_tools(self):
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(self.llm, tools=tools, tool_collection=self.tool_collection)
+        all_tool_names = set(t.name for t in tools)
         agent_tool_names = set(t.name for t in agent.tools)
         assert agent_tool_names == all_tool_names, (
             f"Expected all tools enabled, got {agent_tool_names} vs {all_tool_names}"
         )
         assert agent.graph is not None, "graph should not be None"
 
-    def test_toolcollection_get_all_filters_tools_correctly(self):
-        dummy_llm = DummyLLM()
-        tool_collection = ToolCollection(dummy_llm)
-        all_tools = tool_collection.get_all()
+    @pytest.mark.asyncio
+    async def test_toolcollection_get_all_filters_tools_correctly(self):
+        all_tools = await self.tool_collection.get_tools(self.user_info)
         all_tool_names = set(t.name for t in all_tools)
 
         # Test with a valid subset
         subset = list(all_tool_names)[:2]
-        filtered_tools = tool_collection.get_all(subset)
+        filtered_tools = await self.tool_collection.get_tools(self.user_info, subset)
         filtered_names = set(t.name for t in filtered_tools)
         assert filtered_names == set(subset), (
             f"Expected {set(subset)}, got {filtered_names}"
         )
 
         # Test with an invalid tool name
-        filtered_tools = tool_collection.get_all(["not_a_real_tool"])
+        filtered_tools = await self.tool_collection.get_tools(self.user_info, ["not_a_real_tool"])
         assert filtered_tools == [], "Expected empty list for invalid tool name"
 
         # Test with mixed valid and invalid
         mixed = list(all_tool_names)[:1] + ["not_a_real_tool"]
-        filtered_tools = tool_collection.get_all(mixed)
+        filtered_tools = await self.tool_collection.get_tools(self.user_info, mixed)
         filtered_names = set(t.name for t in filtered_tools)
         assert filtered_names == set(list(all_tool_names)[:1]), (
             f"Expected only valid tool, got {filtered_names}"
         )  # Test that order does not matter
         reversed_subset = list(reversed(subset))
-        filtered_tools_reversed = tool_collection.get_all(reversed_subset)
+        filtered_tools_reversed = await self.tool_collection.get_tools(self.user_info, reversed_subset)
         filtered_names_reversed = set(t.name for t in filtered_tools_reversed)
         assert filtered_names_reversed == set(subset), (
             "Order of enabled_tools should not affect result"
         )
 
-    def test_call_model_returns_correct_structure(self):
-        agent = MUCGPTAgent(DummyLLM())
+    @pytest.mark.asyncio
+    async def test_call_model_returns_correct_structure(self):
+        tools = await self.tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(DummyLLM(), tools=tools, tool_collection=self.tool_collection)
         state = AgentState(
             messages=[AIMessage(content="hi")]
         )  # Use AgentState instead of dict
         config = RunnableConfig(
-            configurable={}
+            configurable={
+                "user_info": MagicMock(),
+            }
         )  # Use RunnableConfig with empty configurable
-        result = agent.call_model(state, config)
+        result = await agent.call_model(state, config)
         assert isinstance(result, dict), "call_model should return a dict"
         assert "messages" in result, "call_model result should have 'messages' key"
         assert isinstance(result["messages"], list), (
@@ -230,6 +237,9 @@ class TestAgentLifecycle:
     - Tool output validation
     - Final response generation
     """
+    def setup_method(self, lifecycle_llm):
+        self.user_info = MagicMock()
+        self.tool_collection = ToolCollection(lifecycle_llm)
 
     @pytest.fixture
     def mock_stream_writer(self):
@@ -240,38 +250,30 @@ class TestAgentLifecycle:
     @pytest.fixture
     def patch_get_stream_writer(self, mock_stream_writer):
         """Patch the get_stream_writer function to return our mock"""
-        with patch("agent.agent.get_stream_writer", return_value=mock_stream_writer):
-            with patch(
-                "agent.tools.tools.get_stream_writer", return_value=mock_stream_writer
-            ):
-                yield mock_stream_writer
+        with patch("langgraph.config.get_stream_writer", return_value=mock_stream_writer):
+            yield mock_stream_writer
 
-    @pytest.fixture
-    def lifecycle_llm(self):
-        """Create a lifecycle mock LLM for comprehensive testing"""
-        return LifecycleMockLLM()
-
-    @pytest.fixture
-    def agent_with_tools(self, lifecycle_llm, patch_get_stream_writer):
-        """Create an agent with the lifecycle LLM and tools enabled"""
-        agent = MUCGPTAgent(llm=lifecycle_llm)
-        # Instead of using agent.enable_tool(), we'll configure via the RunnableConfig
-        return agent
-
-    def test_full_agent_lifecycle(self, agent_with_tools, patch_get_stream_writer):
+    @pytest.mark.asyncio
+    async def test_full_agent_lifecycle(self, patch_get_stream_writer):
         """
         Test the complete agent lifecycle from initialization to final response,
         including tool calls and validation.
         """
         # Given an agent with tools enabled
-        agent = agent_with_tools
+        llm = LifecycleMockLLM()
+        tool_collection = ToolCollection(llm)
+        tools = await tool_collection.get_tools(self.user_info)
+        agent = MUCGPTAgent(llm=llm, tools=tools, tool_collection=tool_collection)
 
         # When we invoke the agent with a user message and enabled tools
         config = RunnableConfig(
-            configurable={"enabled_tools": ["simplify", "brainstorm"]}
+            configurable={
+                "enabled_tools": ["simplify", "brainstorm"],
+                "user_info": self.user_info,
+            }
         )
 
-        response = agent.graph.invoke(
+        response = await agent.graph.ainvoke(
             AgentState(
                 messages=[
                     SystemMessage(content="You are a helpful assistant."),
@@ -281,7 +283,7 @@ class TestAgentLifecycle:
             config=config,
         )  # Then the agent should have followed the complete lifecycle
         # 1. The lifecycle LLM should have been called to generate tool calls
-        assert "invoke" in agent.model.execution_order
+        assert "ainvoke" in agent.model.execution_order
 
         # 2. The lifecycle LLM should have been called to validate tool output
         assert "with_structured_output" in agent.model.execution_order
@@ -297,24 +299,29 @@ class TestAgentLifecycle:
 
         # In the actual implementation, the execution order might vary based on how the agent graph
         # is structured. Let's just verify that both key steps happened rather than their order.
-        assert set(["invoke", "with_structured_output"]).issubset(
+        assert set(["ainvoke", "with_structured_output"]).issubset(
             set(agent.model.execution_order)
         )
 
-    def test_agent_validation_logic(self, patch_get_stream_writer):
+    @pytest.mark.asyncio
+    async def test_agent_validation_logic(self, patch_get_stream_writer):
         """
         Test that the agent correctly handles validation of tool output,
         both for valid and invalid cases.
         """
+        tools = await self.tool_collection.get_tools(self.user_info)
         # Test with valid tool output
         valid_llm = LifecycleMockLLM(validation_result=True)
-        agent_valid = MUCGPTAgent(llm=valid_llm)
+        agent_valid = MUCGPTAgent(llm=valid_llm, tools=tools, tool_collection=self.tool_collection)
 
         # Configure with enabled tools
-        config = RunnableConfig(configurable={"enabled_tools": ["simplify"]})
+        config = RunnableConfig(configurable={
+            "enabled_tools": ["simplify"],
+            "user_info": self.user_info,
+        })
 
         # When we invoke the agent
-        response_valid = agent_valid.graph.invoke(
+        response_valid = await agent_valid.graph.ainvoke(
             AgentState(
                 messages=[
                     SystemMessage(content="You are a helpful assistant."),
@@ -331,10 +338,10 @@ class TestAgentLifecycle:
 
         # Test with invalid tool output
         invalid_llm = LifecycleMockLLM(validation_result=False)
-        agent_invalid = MUCGPTAgent(llm=invalid_llm)
+        agent_invalid = MUCGPTAgent(llm=invalid_llm, tools=tools, tool_collection=self.tool_collection)
 
         # When we invoke the agent with the same config
-        response_invalid = agent_invalid.graph.invoke(
+        response_invalid = await agent_invalid.graph.ainvoke(
             AgentState(
                 messages=[
                     SystemMessage(content="You are a helpful assistant."),
@@ -353,22 +360,27 @@ class TestAgentLifecycle:
         # Add specific assertions based on the expected behavior of your agent.
         assert "Final response" in response_invalid["messages"][-1].content
 
-    def test_agent_tool_error_handling(self, patch_get_stream_writer):
+    @pytest.mark.asyncio
+    async def test_agent_tool_error_handling(self, patch_get_stream_writer):
         """
         Test the agent's handling of errors during tool execution.
         This tests how the agent recovers when a tool fails.
         """
+        tools = await self.tool_collection.get_tools(self.user_info)
         # Create an LLM that will trigger an error during tool execution
         error_llm = LifecycleMockLLM()
         error_llm.tool_error = True  # Add this attribute to simulate tool error
 
-        agent = MUCGPTAgent(llm=error_llm)
+        agent = MUCGPTAgent(llm=error_llm, tools=tools, tool_collection=self.tool_collection)
 
         # Configure with enabled tools
-        config = RunnableConfig(configurable={"enabled_tools": ["simplify"]})
+        config = RunnableConfig(configurable={
+            "enabled_tools": ["simplify"],
+            "user_info": self.user_info,
+        })
 
         # When we invoke the agent
-        response = agent.graph.invoke(
+        response = await agent.graph.ainvoke(
             AgentState(
                 messages=[
                     SystemMessage(content="You are a helpful assistant."),

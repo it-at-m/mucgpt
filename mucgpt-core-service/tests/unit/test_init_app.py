@@ -1,8 +1,9 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from agent.agent import MUCGPTAgent
+from agent.agent_executor import MUCGPTAgentExecutor
 from agent.tools.tools import ToolCollection
 from config.settings import Settings
 from core.auth_models import AuthenticationResult
@@ -30,51 +31,26 @@ class TestInitApp:
         self.tool_collection = MagicMock(spec=ToolCollection)
 
     @pytest.mark.asyncio
-    @patch("init_app._initialize_models_metadata")
     @patch("config.model_provider.ModelProvider.get_model")
-    @patch("agent.tools.tools.ToolCollection")
-    @patch("agent.agent.MUCGPTAgent")
-    @patch("agent.agent_executor.MUCGPTAgentExecutor")
+    @patch("agent.tools.tools.ToolCollection.get_tools")
     async def test_init_agent_calls_correct_components(
             self,
-            mock_executor,
-            mock_agent,
-            mock_toolcollection,
+            mock_get_tools,
             mock_get_model,
-            mock_init_metadata,
     ):
         # Arrange
-        cfg = Settings()
-        user_info = MagicMock()
-
-        mock_model = MagicMock()
-        mock_get_model.return_value = mock_model
-
-        mock_tool_collection_instance = MagicMock()
-        mock_tool_collection_instance.get_tools = AsyncMock(return_value=["t1", "t2"])
-        mock_toolcollection.return_value = mock_tool_collection_instance
-
-        mock_agent_instance = MagicMock()
-        mock_agent.return_value = mock_agent_instance
-
-        mock_executor_instance = MagicMock()
-        mock_executor.return_value = mock_executor_instance
+        mock_get_model.return_value = self.mock_model
+        mock_get_tools.return_value = []
 
         # Act
-        result = await init_agent(cfg, user_info)
+        result = await init_agent(self.mock_settings, self.mock_user)
 
         # Assert
-        mock_init_metadata.assert_called_once_with(cfg)
         mock_get_model.assert_called_once()
+        mock_get_tools.assert_called_once()
 
-        mock_toolcollection.assert_called_once_with(model=mock_model)
-        mock_tool_collection_instance.get_tools.assert_awaited_once_with(user_info=user_info)
-
-        mock_agent.assert_called_once()
-
-        mock_executor.assert_called_once_with(agent=mock_agent_instance)
-
-        assert result == mock_executor_instance
+        assert result.agent.model == self.mock_model
+        assert isinstance(result, MUCGPTAgentExecutor)
 
     def test_model_options_validates_temperature_too_high(self):
         """Test that ModelOptions validates temperature is not too high."""

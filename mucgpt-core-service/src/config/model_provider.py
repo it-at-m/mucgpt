@@ -126,7 +126,7 @@ class ModelProvider:
             temperature: float = 0.7,
             streaming: bool = False,
             logger: Optional[logging.Logger] = None,
-    ):
+    ) -> None:
         """
         Init model based on provided configuration.
 
@@ -137,9 +137,6 @@ class ModelProvider:
             temperature: Temperature for generation (default: 0.7)
             streaming: Whether to stream the response (default: False)
             logger: Logger instance for logging messages (optional)
-
-        Returns:
-            RunnableSerializable: The configured LLM
 
         Raises:
             ModelsConfigurationException: If no models are configured
@@ -159,15 +156,16 @@ class ModelProvider:
         except Exception as e:
             raise ModelsConfigurationException(
                 f"Failed to initialize default model: {str(e)}"
-            )
+            ) from e
 
         # Add configurable fields to default model
         configurable_fields = ModelProvider._create_configurable_fields()
         llm = llm.configurable_fields(**configurable_fields)
 
         # Add alternative models
+        fake_llm = FakeListLLM(responses=["Test response"])
         alternatives: Dict[str, RunnableSerializable] = {
-            "fake": FakeListLLM(responses=["Test response"])
+            "fake": fake_llm.configurable_fields(**configurable_fields)
         }
 
         for model in models[1:]:

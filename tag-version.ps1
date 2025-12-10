@@ -10,8 +10,91 @@ param(
     [string]$VersionType
 )
 
-# Define available services
-$availableServices = @("frontend", "core", "assistant", "assistant-migrations")
+# Define available services and metadata
+$serviceConfig = @{
+    frontend = @{
+        Prefix = "mucgpt-frontend-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-frontend", "package.json")
+        ManifestType = "packageJson"
+    }
+    core = @{
+        Prefix = "mucgpt-core-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-core-service", "pyproject.toml")
+        ManifestType = "pyproject"
+    }
+    assistant = @{
+        Prefix = "mucgpt-assistant-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-assistant-service", "pyproject.toml")
+        ManifestType = "pyproject"
+    }
+    "assistant-migrations" = @{
+        Prefix = "mucgpt-assistant-migrations-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-assistant-service-migrations", "pyproject.toml")
+        ManifestType = "pyproject"
+    }
+}
+$availableServices = @($serviceConfig.Keys)
+
+function Read-YesNo {
+    param(
+        [Parameter(Mandatory=$true)][string]$Prompt
+    )
+
+    $options = @("y", "n")
+
+    while ($true) {
+        $input = Read-Host $Prompt
+
+        if ([string]::IsNullOrWhiteSpace($input)) {
+            Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+            continue
+        }
+
+        if ($options -contains $input) {
+            return $input
+        }
+
+        $matches = $options | Where-Object { $_ -like "$input*" }
+        if ($matches.Count -eq 1) {
+            Write-Host "Selected: $($matches[0])" -ForegroundColor Green
+            return $matches[0]
+        }
+
+        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+    }
+}
+
+function Update-ManifestVersion {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [Parameter(Mandatory=$true)][string]$ManifestType,
+        [Parameter(Mandatory=$true)][string]$NewVersion
+    )
+
+    if ($ManifestType -eq "pyproject") {
+        $content = Get-Content -Raw -Path $FilePath
+        $regex = [regex]::new('(?m)^(?<prefix>\s*version\s*=\s*")[^\"]+(?<suffix>")')
+
+        if (-not $regex.IsMatch($content)) {
+            throw "Could not find a version entry in $FilePath"
+        }
+
+        $updatedContent = $regex.Replace($content, { param($match) return $match.Groups['prefix'].Value + $NewVersion + $match.Groups['suffix'].Value }, 1)
+        Set-Content -Path $FilePath -Value $updatedContent -Encoding UTF8
+    }
+    elseif ($ManifestType -eq "packageJson") {
+        $jsonContent = Get-Content -Raw -Path $FilePath | ConvertFrom-Json
+        $jsonContent.version = $NewVersion
+        $jsonContent | ConvertTo-Json -Depth 100 | Set-Content -Path $FilePath -Encoding UTF8
+    }
+    else {
+        throw "Unsupported manifest type '$ManifestType'"
+    }
+}
 
 # Interactive service selection if not provided
 if (-not $Service) {
@@ -107,7 +190,7 @@ if (-not $VersionType) {
 }
 
 # Define the prefix based on the service
-$prefix = "mucgpt-$Service-"
+$prefix = $serviceConfig[$Service].Prefix
 
 # Get all tags that match the prefix
 Write-Host "Finding latest version for $Service service..."
@@ -204,6 +287,37 @@ Write-Host "New version:     $newVersion" -ForegroundColor Green
 Write-Host "New tag:         $newTag" -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Cyan
 
+$manifestPath = $null
+$manifestType = $null
+if ($serviceConfig[$Service].ManifestPath) {
+    $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath $serviceConfig[$Service].ManifestPath
+    $manifestType = $serviceConfig[$Service].ManifestType
+}
+
+if ($manifestPath) {
+    Write-Host "`nManifest file detected: $manifestPath" -ForegroundColor Cyan
+
+    if (-not (Test-Path $manifestPath)) {
+        Write-Host "  ⚠️ Unable to find manifest file. Skipping version file update." -ForegroundColor Yellow
+    }
+    else {
+        $updateManifest = Read-YesNo "Do you want to update this file to version $newVersion? (y/n)"
+
+        if ($updateManifest -eq "y") {
+            try {
+                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
+                Write-Host "Manifest version updated to $newVersion" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "Failed to update manifest version: $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+        else {
+            Write-Host "Manifest file left unchanged." -ForegroundColor Yellow
+        }
+    }
+}
+
 $options = @("y", "n")
 $confirmation = ""
 while ($confirmation -notin $options) {
@@ -286,19 +400,9 @@ if ($pushConfirmation -eq "y") {
             Write-Host "The corresponding workflow should now be triggered." -ForegroundColor Cyan
 
             # Show relevant link based on service
-            switch ($Service) {
-                "frontend" {
-                    Write-Host "You can check the new frontend version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend" -ForegroundColor Cyan
-                }
-                "core" {
-                    Write-Host "You can check the new core version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core" -ForegroundColor Cyan
-                }
-                "assistant" {
-                    Write-Host "You can check the new assistant version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant" -ForegroundColor Cyan
-                }
-                "assistant-migrations" {
-                    Write-Host "You can check the new migrations version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations" -ForegroundColor Cyan
-                }
+            $packageUrl = $serviceConfig[$Service].PackageUrl
+            if ($packageUrl) {
+                Write-Host "You can check the new $Service version at: $packageUrl" -ForegroundColor Cyan
             }
         } else {
             Write-Host "`n❌ ERROR PUSHING TAG" -ForegroundColor White -BackgroundColor Red

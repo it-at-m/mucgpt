@@ -1,4 +1,4 @@
-﻿{
+{
     "dependencies": {
         "@fluentui/react": "8.123.6",
         "@fluentui/react-components": "9.70.0",
@@ -13,7 +13,7 @@
         "markmap-view": "0.18.12",
         "mermaid": "11.11.0",
         "ndjson-readablestream": "1.4.0",
-        "prismjs": "\u003e=1.30.0",
+        "prismjs": ">=1.30.0",
         "react": "18.3.1",
         "react-dom": "18.3.1",
         "react-i18next": "15.7.3",
@@ -35,8 +35,8 @@
         "@types/react-dom": "18.3.7",
         "@types/react-syntax-highlighter": "15.5.13",
         "@vitejs/plugin-react": "5.0.2",
-        "brace-expansion": "\u003e=1.1.12",
-        "esbuild": "\u003e=0.25.0",
+        "brace-expansion": ">=1.1.12",
+        "esbuild": ">=0.25.0",
         "eslint": "9.35.0",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",
@@ -46,7 +46,7 @@
         "vite": "5.4.21"
     },
     "engines": {
-        "node": "\u003e=20.0.0"
+        "node": ">=20.0.0"
     },
     "homepage": "https://it-at-m.github.io/mucgpt/",
     "msw": {
@@ -57,18 +57,18 @@
     "name": "mucgpt",
     "private": true,
     "scripts": {
-        "build": "tsc \u0026\u0026 vite build --outDir dist ",
-        "build:ghpages": "tsc  \u0026\u0026 vite build --mode ghpages",
-        "buildlocal": "tsc \u0026\u0026 vite build",
+        "build": "tsc && vite build --outDir dist ",
+        "build:ghpages": "tsc  && vite build --mode ghpages",
+        "buildlocal": "tsc && vite build",
         "deploy": "gh-pages -d dist --remote origin",
         "dev": "vite",
         "dev-no-mock": "vite --mode development-no-mock",
-        "fix": "prettier . --write \u0026\u0026 eslint . --fix",
-        "lint": "prettier . --check \u0026\u0026 eslint . \u0026\u0026 tsc --noEmit",
+        "fix": "prettier . --write && eslint . --fix",
+        "lint": "prettier . --check && eslint . && tsc --noEmit",
         "predeploy": "npm run build:ghpages",
         "preview": "vite preview",
         "type-check": "tsc --noEmit",
-        "watch": "tsc \u0026\u0026 vite build --watch"
+        "watch": "tsc && vite build --watch"
     },
     "type": "module",
     "version": "0.6.2"

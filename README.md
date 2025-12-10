@@ -236,7 +236,7 @@ Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the
 }
 }%%
 timeline
-  title 🚀 MUCGPT Roadmap
+  title 🚀 MUCGPT Roadmap (24.11.2025)
 
   section 🎉 Open Source
     2024-06 : 🟢 Open Source : Public release for everyone!
@@ -251,11 +251,16 @@ timeline
 
   section 🌐 MUCGPT 2.0: Agent Mode
     2025-07 : 🧩 Microservices : API-Gateway, Core, Assistant-Service
-    2025-07 : ☁️ Share Assistants : Share & use tools (Summarize, Brainstorm, Simple Language)
-    2025-08 : 🔍 Websearch & Slides : Search the web, create presentations
-    2025-09 : 🧠 Deep Research : Advanced research tools
-    2025-10 : 📂 Knowledge Base : Assistants with their own KB & retrieval
-    2025-12 : 🛡️ MCP Tools : Connect many MCP tools (e.g., DLF)
+    2025-12 : ☁️ Share Assistants : Share & use tools (Summarize, Brainstorm, Simple Language)
+    2025-12 : 🛡️ MCP Tools : Connect MCP tools
+
+  section 💡 Knowledge and document processing
+    2026: 📃 Chat with your documents
+    2026: 📂 Shared Knowledge Base: Access shared information in chat and assistants (reuse F13 components)
+
+  section 🪚 Additional tools
+    2026: 🔍 Websearch: Search the Web
+    2026: ...
 ```
 
 ## 📃 Documentation

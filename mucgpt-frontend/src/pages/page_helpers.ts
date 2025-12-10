@@ -301,6 +301,10 @@ export const makeApiRequest = async (
             const updatedMessage = { user: question, response: updatedResponse };
             dispatch({ type: "UPDATE_LAST_ANSWER", payload: updatedMessage });
             includeActiveToolsInUpdate = false;
+
+            requestAnimationFrame(() => {
+                chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+            });
         }, 100);
     };
 

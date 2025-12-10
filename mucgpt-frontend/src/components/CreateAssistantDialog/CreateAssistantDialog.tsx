@@ -17,10 +17,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
 import { Assistant } from "../../api";
-import {
-    ASSISTANT_STORE,
-    DEFAULT_MAX_OUTPUT_TOKENS
-} from "../../constants";
+import { ASSISTANT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { createAssistantApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
@@ -173,13 +170,25 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             <DialogTitle>{t("components.create_assistant_dialog.what_function")}</DialogTitle>
             <DialogContent>
                 <div className={styles.exampleList}>
-                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(t("components.create_assistant_dialog.create_example_one"))}>
+                    <Button
+                        disabled={loading}
+                        className={styles.exampleBox}
+                        onClick={() => setInput(t("components.create_assistant_dialog.create_example_one"))}
+                    >
                         {t("components.create_assistant_dialog.example_one")}
                     </Button>
-                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(t("components.create_assistant_dialog.create_example_two"))}>
+                    <Button
+                        disabled={loading}
+                        className={styles.exampleBox}
+                        onClick={() => setInput(t("components.create_assistant_dialog.create_example_two"))}
+                    >
                         {t("components.create_assistant_dialog.example_two")}
                     </Button>
-                    <Button disabled={loading} className={styles.exampleBox} onClick={() => setInput(t("components.create_assistant_dialog.create_example_three"))}>
+                    <Button
+                        disabled={loading}
+                        className={styles.exampleBox}
+                        onClick={() => setInput(t("components.create_assistant_dialog.create_example_three"))}
+                    >
                         {t("components.create_assistant_dialog.example_three")}
                     </Button>
                 </div>

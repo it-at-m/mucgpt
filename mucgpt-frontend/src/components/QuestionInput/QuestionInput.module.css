@@ -16,14 +16,14 @@
 .toolBadgesLabel {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimary);
     margin-right: 8px;
     white-space: nowrap;
 }
 
 .questionInputContainer {
     border-radius: 8px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
     width: 100%;
     padding: 8px 4px 8px 16px;
     display: flex;
@@ -32,15 +32,15 @@
     gap: 8px;
     margin-bottom: 10px;
     box-shadow:
-        0px 2px 4px var(--colorBrandForeground2),
-        0px 0px 2px var(--colorBrandForeground2);
+        0px 2px 4px var(--onPrimaryContainer),
+        0px 0px 2px var(--onPrimaryContainer);
     transition: box-shadow 0.2s ease;
 }
 
 .questionInputContainer:focus-within {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    outline: 2px solid var(--colorBrandForeground2);
+    outline: 2px solid var(--onPrimaryContainer);
     outline-offset: 2px;
     transition:
         box-shadow 0.15s ease,
@@ -99,7 +99,7 @@
 .errorhint {
     font-style: italic;
     font-size: 0.75rem;
-    color: var(--colorNeutralForeground3);
+    color: var(--onPrimary);
     margin: 0;
     letter-spacing: 0.01em;
 }
@@ -116,6 +116,7 @@
     align-items: center;
     gap: 4px;
     position: relative;
+        color: red;
 }
 
 .toolHelpButton {
@@ -126,7 +127,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--colorNeutralForeground3);
+    color: var(--onPrimary);
     transition: all 0.2s ease;
     border-radius: 50%;
     width: 20px;
@@ -134,8 +135,8 @@
 }
 
 .toolHelpButton:hover {
-    color: var(--colorBrandForeground1);
-    background: var(--colorNeutralBackground1Hover);
+    color: var(--primary);
+    background: var(--primaryContainer);
 }
 
 .toolHelpButton:active {
@@ -143,9 +144,9 @@
 }
 
 .toolHelpButton:focus-visible {
-    outline: 2px solid var(--colorBrandStroke1);
+    outline: 2px solid var(--primary);
     outline-offset: 2px;
-    color: var(--colorBrandForeground1);
+    color: var(--primary);
 }
 
 @media (max-width: 768px) {

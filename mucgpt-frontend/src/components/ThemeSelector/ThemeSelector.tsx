@@ -47,7 +47,8 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
                 onClick={handleButtonClick}
                 aria-label={tooltipContent}
                 onKeyDown={handleKeyDown}
-                icon={currentIsLight ? <WeatherSunny24Regular /> : <WeatherMoon24Regular />}
+                icon={currentIsLight ? <WeatherSunny24Regular style={{ color: "var(--surface)" }} /> : <WeatherMoon24Regular style={{ color: "var(--surface)" }} />}
+                style={{ color: "var(--surface)" }}
             >
                 {currentIsLight ? t("components.theme_selector.light_short") : t("components.theme_selector.dark_short")}
             </Button>

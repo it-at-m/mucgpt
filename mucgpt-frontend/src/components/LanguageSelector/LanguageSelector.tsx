@@ -64,7 +64,12 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
         <Menu>
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={tooltipText} relationship="description" positioning="below">
-                    <MenuButton appearance={"subtle"} aria-label={tooltipText} icon={<LocalLanguage24Regular />}>
+                    <MenuButton
+                        appearance={"subtle"}
+                        aria-label={tooltipText}
+                        icon={<LocalLanguage24Regular style={{ color: "var(--surface)" }} />}
+                        style={{ color: "var(--surface)" }}
+                    >
                         {currentLanguage.code}
                     </MenuButton>
                 </Tooltip>

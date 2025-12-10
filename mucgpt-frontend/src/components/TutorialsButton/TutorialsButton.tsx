@@ -11,9 +11,10 @@ export const TutorialsButton = () => {
         <Tooltip content={t("menu.go_to_tutorials_tooltip", "Tutorials und Anleitungen zu Fragments und Tools")} relationship="description" positioning="below">
             <Button
                 appearance={"subtle"}
-                icon={<Book24Regular />}
+                icon={<Book24Regular style={{ color: "var(--surface)" }} />}
                 aria-label={t("menu.go_to_tutorials_aria", "Zu Tutorials und Anleitungen navigieren")}
                 onClick={() => navigate("/tutorials")}
+                style={{ color: "var(--surface)" }}
             >
                 {t("menu.go_to_tutorials", "Tutorials")}
             </Button>

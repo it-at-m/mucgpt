@@ -9,7 +9,8 @@ import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig } from "../../api";
 import { FluentProvider, Theme, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel } from "@fluentui/react-components";
-import { useStyles, STORAGE_KEYS, adjustTheme } from "./LayoutHelper";
+import { STORAGE_KEYS, adjustTheme, applyCssVariables } from "./LayoutHelper";
+import { lightThemeColors, darkThemeColors } from "./colors";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -32,9 +33,6 @@ const formatDate = (date: Date) => {
 };
 
 export const Layout = () => {
-    //style
-    const styles2 = useStyles();
-
     // navigate
     const navigate = useNavigate();
 
@@ -72,12 +70,21 @@ export const Layout = () => {
 
     const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
 
+    // Set initial CSS variables and data-theme attribute on mount
+    useEffect(() => {
+        const colors = isLight ? lightThemeColors : darkThemeColors;
+        applyCssVariables(colors);
+        document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+    }, [isLight]);
+
     // change theme
     const onThemeChange = useCallback(
         (light: boolean) => {
             setLight(light);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
             setTheme(adjustTheme(light, fontscaling));
+            // Set data-theme attribute for CSS custom properties
+            document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
         },
         [fontscaling, setLight, setTheme]
     );
@@ -151,64 +158,62 @@ export const Layout = () => {
                                 {t("common.skip_to_content", "Zum Hauptinhalt springen")}
                             </a>
 
-                            <header className={styles2.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
-                                <div className={styles.header}>
-                                    <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
-                                        <img
-                                            src={config.alternative_logo ? alternative_logo : isLight ? logo_black : logo}
-                                            alt="MUCGPT"
-                                            className={styles.logo}
-                                        />
-                                        <h1
-                                            className={styles.headerTitle}
-                                            aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name })}
-                                        >
-                                            {config.env_name}
-                                        </h1>
-                                    </Link>
+                            <header className={styles.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
+                                <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
+                                    <img
+                                        src={config.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
+                                        alt="MUCGPT"
+                                        className={styles.logo}
+                                    />
+                                    <h1
+                                        className={styles.headerTitle}
+                                        aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name })}
+                                    >
+                                        {config.env_name}
+                                    </h1>
+                                </Link>
 
-                                    {isMobile ? (
-                                        <Button
-                                            className={styles.mobileMenuButton}
-                                            icon={
-                                                mobileMenuOpen ? (
-                                                    <DismissRegular className={styles.iconSize24} />
-                                                ) : (
-                                                    <Navigation24Regular className={styles.iconSize24} />
-                                                )
-                                            }
-                                            onClick={toggleMobileMenu}
-                                            aria-label={mobileMenuOpen ? t("common.close_menu", "Menü schließen") : t("common.open_menu", "Menü öffnen")}
-                                            aria-expanded={mobileMenuOpen}
-                                            size="medium"
-                                        />
-                                    ) : (
-                                        <>
-                                            <nav className={styles.headerNavList} aria-label={t("common.page_navigation", "Seitennavigation")}>
-                                                <div className={styles.headerNavPageLink}>{header}</div>
-                                            </nav>
-                                            <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
-                                                <div className={styles.headerNavRightContainer}>
-                                                    <div className={styles.headerNavList}>
-                                                        <TutorialsButton />
-                                                    </div>
-                                                    <div className={styles.headerNavList}>
-                                                        <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
-                                                    </div>
-                                                    <div className={styles.headerNavList}>
-                                                        <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
-                                                    </div>
-                                                    <div className={styles.headerNavList}>
-                                                        <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
-                                                    </div>
-                                                    <div className={styles.headerNavList}>
-                                                        <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
-                                                    </div>
+                                {isMobile ? (
+                                    <Button
+                                        className={styles.mobileMenuButton}
+                                        icon={
+                                            mobileMenuOpen ? (
+                                                <DismissRegular className={styles.iconSize24} />
+                                            ) : (
+                                                <Navigation24Regular className={styles.iconSize24} />
+                                            )
+                                        }
+                                        onClick={toggleMobileMenu}
+                                        aria-label={mobileMenuOpen ? t("common.close_menu", "Menü schließen") : t("common.open_menu", "Menü öffnen")}
+                                        aria-expanded={mobileMenuOpen}
+                                        size="medium"
+                                    />
+                                ) : (
+                                    <>
+                                        <nav className={styles.headerNavList} aria-label={t("common.page_navigation", "Seitennavigation")}>
+                                            <div className={styles.headerNavPageLink}>{header}</div>
+                                        </nav>
+                                        <nav className={styles.headerNavList} aria-label={t("common.user_settings", "Benutzereinstellungen")}>
+                                            <div className={styles.headerNavRightContainer}>
+                                                <div className={styles.headerNavList}>
+                                                    <TutorialsButton />
                                                 </div>
-                                            </nav>
-                                        </>
-                                    )}
-                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <LanguageSelector defaultlang={language_pref} onSelectionChange={onLanguageSelectionChanged} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <ThemeSelector isLight={isLight} onThemeChange={onThemeChange} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <HelpButton url={import.meta.env.BASE_URL + "#/faq"} label={t("components.helpbutton.help")} />
+                                                </div>
+                                                <div className={styles.headerNavList}>
+                                                    <FeedbackButton emailAddress="itm.kicc@muenchen.de" subject="MUCGPT" />
+                                                </div>
+                                            </div>
+                                        </nav>
+                                    </>
+                                )}
 
                                 {isMobile && mobileMenuOpen && (
                                     <div className={styles.mobileMenu}>

@@ -17,7 +17,7 @@
     display: flex;
     align-items: center;
     margin-right: 20px;
-    color: var(--colorNeutralForeground1);
+    color: var(--surface);
     text-decoration: none;
     width: auto;
     left: 1em;
@@ -45,7 +45,7 @@
 }
 
 .headerNavPageLink {
-    color: var(--colorNeutralForeground1);
+    color: var(--surface);
     font-size: var(--fontSizeHero700);
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -94,7 +94,7 @@
     position: fixed;
     top: 0;
     width: 100%;
-    background-color: var(--colorNeutralBackground2);
+    background-color: var(--onSurface);
     height: 50px;
     z-index: 10;
     justify-content: space-between;
@@ -107,7 +107,7 @@
     top: 50px;
     left: 0;
     width: 100%;
-    background-color: var(--colorNeutralBackground2);
+    background-color: var(--onSurface);
     z-index: 9;
     padding: 8px 0;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -120,7 +120,7 @@
     padding: 8px 16px;
     display: flex;
     justify-content: center;
-    border-bottom: 1px solid var(--colorNeutralStroke1);
+    border-bottom: 1px solid var(--outline);
 }
 
 .mobileMenuAccordion {
@@ -144,7 +144,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid var(--colorNeutralStroke1);
+    border-bottom: 1px solid var(--outline);
 }
 
 .mobileMenuButtonContainer {
@@ -156,8 +156,8 @@
 
 .mobileMenuButton {
     border-radius: 4px;
-    background-color: var(--colorNeutralBackground3);
-    border: 1px solid var(--colorNeutralStroke1);
+    background-color: var(--primaryContainer);
+    border: 1px solid var(--outline);
     transition: all 0.2s ease;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     position: relative;
@@ -173,7 +173,7 @@
 }
 
 .mobileMenuButton:hover {
-    background-color: var(--colorNeutralBackground4);
+    background-color: var(--surface);
     transform: scale(1.05);
 }
 
@@ -205,8 +205,8 @@
     align-items: center;
     margin-top: auto;
     justify-content: space-between;
-    background-color: var(--colorNeutralBackground2);
-    color: var(--colorNeutralForeground1);
+    background-color: var(--onSurface);
+    color: var(--surface);
     padding: 8px 16px;
     font-size: 14px;
 }
@@ -221,7 +221,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--colorNeutralBackground1);
+    color: var(--surface);
     text-decoration: none;
     padding: 4px 8px;
     border-radius: 4px;
@@ -229,7 +229,7 @@
 }
 
 .footerLink:hover {
-    background-color: var(--colorBrandBackgroundHover);
+    background-color: var(--primary);
     text-decoration: none;
 }
 
@@ -244,8 +244,8 @@
     top: 0;
     z-index: 9999;
     padding: 12px 16px;
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--primary);
+    color: var(--onPrimary);
     text-decoration: none;
     font-weight: 600;
     border-radius: 0 0 4px 4px;

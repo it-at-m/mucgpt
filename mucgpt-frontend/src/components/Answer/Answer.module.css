@@ -1,11 +1,11 @@
 .answerContainer {
     padding: 1.25em;
     margin: 1em 0.5em; /* Reduced horizontal margin */
-    background: var(--colorNeutralBackground1Hover);
+    background: var(--primaryContainer);
     border-radius: 8px;
     box-shadow:
-        0px 2px 4px var(--colorBrandForeground2),
-        0px 0px 2px var(--colorBrandForeground2);
+        0px 2px 4px var(--onPrimaryContainer),
+        0px 0px 2px var(--onPrimaryContainer);
     border: transparent solid 1px;
     width: 98%; /* Increased from 95% to use more space */
     max-width: 100%;
@@ -13,10 +13,10 @@
 }
 
 .answerContainer:hover {
-    border-left: 3px solid var(--colorBrandForeground2);
+    border-left: 3px solid var(--onPrimaryContainer);
     box-shadow:
         0px 4px 8px rgba(0, 0, 0, 0.1),
-        0px 2px 4px var(--colorBrandForeground2);
+        0px 2px 4px var(--onPrimaryContainer);
 }
 
 .iconRightMargin {

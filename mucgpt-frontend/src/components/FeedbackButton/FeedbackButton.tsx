@@ -18,8 +18,9 @@ export const FeedbackButton = ({ emailAddress, subject = "Feedback" }: FeedbackB
                 as={"a"}
                 href={mailtoLink}
                 appearance={"subtle"}
-                icon={<Mail24Regular />}
+                icon={<Mail24Regular style={{ color: "var(--surface)" }} />}
                 aria-label={t("components.feedback.aria_label", "Send feedback via email")}
+                style={{ color: "var(--surface)" }}
             >
                 {t("components.feedback.label", "Feedback")}
             </Button>

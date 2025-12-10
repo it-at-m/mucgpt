@@ -74,6 +74,9 @@
     box-shadow: 0 2px 8px 0 rgba(30, 34, 90, 0.13);
     background: var(--colorNeutralBackground2, #f7f8fa);
 }
+.toolCard::checkmark {
+    background-color: var(--onPrimaryVariant);
+}
 .toolCardHeader {
     flex: 1;
     display: flex;

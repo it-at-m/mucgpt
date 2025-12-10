@@ -6,6 +6,20 @@
     margin-left: 10px;
 }
 
+.button {
+    background: var(--onSurface) !important;
+    color: var(--surface) !important;
+    border: none !important;
+}
+
+.button:hover {
+    background: var(--onSurfaceVariant) !important;
+}
+
+.button:active {
+    background: var(--onSurfaceVariant) !important;
+}
+
 .iconLeftMargin {
     margin-left: 5px;
 }

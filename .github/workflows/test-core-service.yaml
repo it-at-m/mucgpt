@@ -1,4 +1,6 @@
 name: Core service test
+permissions:
+  contents: read
 
 on: [push, workflow_dispatch]
 
@@ -13,7 +15,7 @@ jobs:
         os: ["ubuntu-22.04"]
         python_version: ["3.12"]
     steps:
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Install the latest version of uv
         uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39 # v3.2.4
         with:

@@ -47,21 +47,21 @@ function Read-YesNo {
     $options = @("y", "n")
 
     while ($true) {
-        $input = Read-Host $Prompt
+        $userInput = Read-Host $Prompt
 
-        if ([string]::IsNullOrWhiteSpace($input)) {
+        if ([string]::IsNullOrWhiteSpace($userInput)) {
             Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
             continue
         }
 
-        if ($options -contains $input) {
-            return $input
+        if ($options -contains $userInput) {
+            return $userInput
         }
 
-        $matches = $options | Where-Object { $_ -like "$input*" }
-        if ($matches.Count -eq 1) {
-            Write-Host "Selected: $($matches[0])" -ForegroundColor Green
-            return $matches[0]
+        $matchedOptions = $options | Where-Object { $_ -like "$userInput*" }
+        if ($matchedOptions.Count -eq 1) {
+            Write-Host "Selected: $($matchedOptions[0])" -ForegroundColor Green
+            return $matchedOptions[0]
         }
 
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
@@ -115,21 +115,21 @@ if (-not $Service) {
             }
         } else {
             # Handle autocomplete - find matches
-            $matches = $availableServices | Where-Object { $_ -like "$serviceInput*" }
+            $matchedOptions = $availableServices | Where-Object { $_ -like "$serviceInput*" }
 
-            if ($matches.Count -eq 0) {
+            if ($matchedOptions.Count -eq 0) {
                 Write-Host "No matches found. Please try again." -ForegroundColor Red
-            } elseif ($matches.Count -eq 1) {
+            } elseif ($matchedOptions.Count -eq 1) {
                 # Exact match found
-                $Service = $matches[0]
+                $Service = $matchedOptions[0]
                 $serviceIndex = $availableServices.IndexOf($Service) + 1
                 Write-Host "Selected service: $Service" -ForegroundColor Green
             } else {
                 # Multiple matches, show options
                 Write-Host "Multiple matches found:" -ForegroundColor Yellow
-                for ($i = 0; $i -lt $matches.Count; $i++) {
-                    $idx = $availableServices.IndexOf($matches[$i]) + 1
-                    Write-Host "$idx. $($matches[$i])" -ForegroundColor Green
+                for ($i = 0; $i -lt $matchedOptions.Count; $i++) {
+                    $idx = $availableServices.IndexOf($matchedOptions[$i]) + 1
+                    Write-Host "$idx. $($matchedOptions[$i])" -ForegroundColor Green
                 }
             }
         }
@@ -162,21 +162,21 @@ if (-not $VersionType) {
             }
         } else {
             # Handle autocomplete - find matches
-            $matches = $versionTypes | Where-Object { $_ -like "$versionInput*" }
+            $matchedOptions = $versionTypes | Where-Object { $_ -like "$versionInput*" }
 
-            if ($matches.Count -eq 0) {
+            if ($matchedOptions.Count -eq 0) {
                 Write-Host "No matches found. Please try again." -ForegroundColor Red
-            } elseif ($matches.Count -eq 1) {
+            } elseif ($matchedOptions.Count -eq 1) {
                 # Exact match found
-                $VersionType = $matches[0]
+                $VersionType = $matchedOptions[0]
                 $versionIndex = $versionTypes.IndexOf($VersionType) + 1
                 Write-Host "Selected version type: $VersionType" -ForegroundColor Green
             } else {
                 # Multiple matches, show options
                 Write-Host "Multiple matches found:" -ForegroundColor Yellow
-                for ($i = 0; $i -lt $matches.Count; $i++) {
-                    $idx = $versionTypes.IndexOf($matches[$i]) + 1
-                    Write-Host "$idx. $($matches[$i])" -ForegroundColor Green
+                for ($i = 0; $i -lt $matchedOptions.Count; $i++) {
+                    $idx = $versionTypes.IndexOf($matchedOptions[$i]) + 1
+                    Write-Host "$idx. $($matchedOptions[$i])" -ForegroundColor Green
                 }
             }
         }
@@ -321,25 +321,25 @@ if ($manifestPath) {
 $options = @("y", "n")
 $confirmation = ""
 while ($confirmation -notin $options) {
-    $input = Read-Host "Do you want to create this tag? (y/n)"
+    $userInput = Read-Host "Do you want to create this tag? (y/n)"
 
     # Handle empty input
-    if ([string]::IsNullOrWhiteSpace($input)) {
+    if ([string]::IsNullOrWhiteSpace($userInput)) {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
         continue
     }
 
     # Direct match
-    if ($input -eq "y" -or $input -eq "n") {
-        $confirmation = $input
+    if ($userInput -eq "y" -or $userInput -eq "n") {
+        $confirmation = $userInput
         continue
     }
 
     # Try autocomplete
-    $matches = $options | Where-Object { $_ -like "$input*" }
+    $matchedOptions = $options | Where-Object { $_ -like "$userInput*" }
 
-    if ($matches.Count -eq 1) {
-        $confirmation = $matches[0]
+    if ($matchedOptions.Count -eq 1) {
+        $confirmation = $matchedOptions[0]
         Write-Host "Selected: $confirmation" -ForegroundColor Green
     } else {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
@@ -358,25 +358,25 @@ Write-Host "Tag $newTag created locally." -ForegroundColor Green
 $pushOptions = @("y", "n")
 $pushConfirmation = ""
 while ($pushConfirmation -notin $pushOptions) {
-    $input = Read-Host "Do you want to push this tag to origin? (y/n)"
+    $userInput = Read-Host "Do you want to push this tag to origin? (y/n)"
 
     # Handle empty input
-    if ([string]::IsNullOrWhiteSpace($input)) {
+    if ([string]::IsNullOrWhiteSpace($userInput)) {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
         continue
     }
 
     # Direct match
-    if ($input -eq "y" -or $input -eq "n") {
-        $pushConfirmation = $input
+    if ($userInput -eq "y" -or $userInput -eq "n") {
+        $pushConfirmation = $userInput
         continue
     }
 
     # Try autocomplete
-    $matches = $pushOptions | Where-Object { $_ -like "$input*" }
+    $matchedOptions = $pushOptions | Where-Object { $_ -like "$userInput*" }
 
-    if ($matches.Count -eq 1) {
-        $pushConfirmation = $matches[0]
+    if ($matchedOptions.Count -eq 1) {
+        $pushConfirmation = $matchedOptions[0]
         Write-Host "Selected: $pushConfirmation" -ForegroundColor Green
     } else {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red

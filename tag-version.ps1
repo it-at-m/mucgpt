@@ -10,8 +10,91 @@ param(
     [string]$VersionType
 )
 
-# Define available services
-$availableServices = @("frontend", "core", "assistant", "assistant-migrations")
+# Define available services and metadata
+$serviceConfig = @{
+    frontend = @{
+        Prefix = "mucgpt-frontend-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-frontend", "package.json")
+        ManifestType = "packageJson"
+    }
+    core = @{
+        Prefix = "mucgpt-core-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-core-service", "pyproject.toml")
+        ManifestType = "pyproject"
+    }
+    assistant = @{
+        Prefix = "mucgpt-assistant-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-assistant-service", "pyproject.toml")
+        ManifestType = "pyproject"
+    }
+    "assistant-migrations" = @{
+        Prefix = "mucgpt-assistant-migrations-"
+        PackageUrl = "https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations"
+        ManifestPath = [System.IO.Path]::Combine("mucgpt-assistant-service-migrations", "pyproject.toml")
+        ManifestType = "pyproject"
+    }
+}
+$availableServices = @($serviceConfig.Keys)
+
+function Read-YesNo {
+    param(
+        [Parameter(Mandatory=$true)][string]$Prompt
+    )
+
+    $options = @("y", "n")
+
+    while ($true) {
+        $userInput = Read-Host $Prompt
+
+        if ([string]::IsNullOrWhiteSpace($userInput)) {
+            Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+            continue
+        }
+
+        if ($options -contains $userInput) {
+            return $userInput
+        }
+
+        $matchedOptions = $options | Where-Object { $_ -like "$userInput*" }
+        if ($matchedOptions.Count -eq 1) {
+            Write-Host "Selected: $($matchedOptions[0])" -ForegroundColor Green
+            return $matchedOptions[0]
+        }
+
+        Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
+    }
+}
+
+function Update-ManifestVersion {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [Parameter(Mandatory=$true)][string]$ManifestType,
+        [Parameter(Mandatory=$true)][string]$NewVersion
+    )
+
+    if ($ManifestType -eq "pyproject") {
+        $content = Get-Content -Raw -Path $FilePath
+        $regex = [regex]::new('(?m)^(?<prefix>\s*version\s*=\s*")[^\"]+(?<suffix>")')
+
+        if (-not $regex.IsMatch($content)) {
+            throw "Could not find a version entry in $FilePath"
+        }
+
+        $updatedContent = $regex.Replace($content, { param($match) return $match.Groups['prefix'].Value + $NewVersion + $match.Groups['suffix'].Value }, 1)
+        Set-Content -Path $FilePath -Value $updatedContent -Encoding UTF8
+    }
+    elseif ($ManifestType -eq "packageJson") {
+        $jsonContent = Get-Content -Raw -Path $FilePath | ConvertFrom-Json
+        $jsonContent.version = $NewVersion
+        $jsonContent | ConvertTo-Json -Depth 100 | Set-Content -Path $FilePath -Encoding UTF8
+    }
+    else {
+        throw "Unsupported manifest type '$ManifestType'"
+    }
+}
 
 # Interactive service selection if not provided
 if (-not $Service) {
@@ -32,21 +115,21 @@ if (-not $Service) {
             }
         } else {
             # Handle autocomplete - find matches
-            $matches = $availableServices | Where-Object { $_ -like "$serviceInput*" }
+            $matchedOptions = $availableServices | Where-Object { $_ -like "$serviceInput*" }
 
-            if ($matches.Count -eq 0) {
+            if ($matchedOptions.Count -eq 0) {
                 Write-Host "No matches found. Please try again." -ForegroundColor Red
-            } elseif ($matches.Count -eq 1) {
+            } elseif ($matchedOptions.Count -eq 1) {
                 # Exact match found
-                $Service = $matches[0]
+                $Service = $matchedOptions[0]
                 $serviceIndex = $availableServices.IndexOf($Service) + 1
                 Write-Host "Selected service: $Service" -ForegroundColor Green
             } else {
                 # Multiple matches, show options
                 Write-Host "Multiple matches found:" -ForegroundColor Yellow
-                for ($i = 0; $i -lt $matches.Count; $i++) {
-                    $idx = $availableServices.IndexOf($matches[$i]) + 1
-                    Write-Host "$idx. $($matches[$i])" -ForegroundColor Green
+                for ($i = 0; $i -lt $matchedOptions.Count; $i++) {
+                    $idx = $availableServices.IndexOf($matchedOptions[$i]) + 1
+                    Write-Host "$idx. $($matchedOptions[$i])" -ForegroundColor Green
                 }
             }
         }
@@ -79,21 +162,21 @@ if (-not $VersionType) {
             }
         } else {
             # Handle autocomplete - find matches
-            $matches = $versionTypes | Where-Object { $_ -like "$versionInput*" }
+            $matchedOptions = $versionTypes | Where-Object { $_ -like "$versionInput*" }
 
-            if ($matches.Count -eq 0) {
+            if ($matchedOptions.Count -eq 0) {
                 Write-Host "No matches found. Please try again." -ForegroundColor Red
-            } elseif ($matches.Count -eq 1) {
+            } elseif ($matchedOptions.Count -eq 1) {
                 # Exact match found
-                $VersionType = $matches[0]
+                $VersionType = $matchedOptions[0]
                 $versionIndex = $versionTypes.IndexOf($VersionType) + 1
                 Write-Host "Selected version type: $VersionType" -ForegroundColor Green
             } else {
                 # Multiple matches, show options
                 Write-Host "Multiple matches found:" -ForegroundColor Yellow
-                for ($i = 0; $i -lt $matches.Count; $i++) {
-                    $idx = $versionTypes.IndexOf($matches[$i]) + 1
-                    Write-Host "$idx. $($matches[$i])" -ForegroundColor Green
+                for ($i = 0; $i -lt $matchedOptions.Count; $i++) {
+                    $idx = $versionTypes.IndexOf($matchedOptions[$i]) + 1
+                    Write-Host "$idx. $($matchedOptions[$i])" -ForegroundColor Green
                 }
             }
         }
@@ -107,7 +190,7 @@ if (-not $VersionType) {
 }
 
 # Define the prefix based on the service
-$prefix = "mucgpt-$Service-"
+$prefix = $serviceConfig[$Service].Prefix
 
 # Get all tags that match the prefix
 Write-Host "Finding latest version for $Service service..."
@@ -204,28 +287,36 @@ Write-Host "New version:     $newVersion" -ForegroundColor Green
 Write-Host "New tag:         $newTag" -ForegroundColor Green
 Write-Host "=======================================" -ForegroundColor Cyan
 
+$manifestPath = $null
+$manifestType = $null
+if ($serviceConfig[$Service].ManifestPath) {
+    $manifestPath = Join-Path -Path $PSScriptRoot -ChildPath $serviceConfig[$Service].ManifestPath
+    $manifestType = $serviceConfig[$Service].ManifestType
+}
+$operationSucceeded = $false
+
 $options = @("y", "n")
 $confirmation = ""
 while ($confirmation -notin $options) {
-    $input = Read-Host "Do you want to create this tag? (y/n)"
+    $userInput = Read-Host "Do you want to create this tag? (y/n)"
 
     # Handle empty input
-    if ([string]::IsNullOrWhiteSpace($input)) {
+    if ([string]::IsNullOrWhiteSpace($userInput)) {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
         continue
     }
 
     # Direct match
-    if ($input -eq "y" -or $input -eq "n") {
-        $confirmation = $input
+    if ($userInput -eq "y" -or $userInput -eq "n") {
+        $confirmation = $userInput
         continue
     }
 
     # Try autocomplete
-    $matches = $options | Where-Object { $_ -like "$input*" }
+    $matchedOptions = $options | Where-Object { $_ -like "$userInput*" }
 
-    if ($matches.Count -eq 1) {
-        $confirmation = $matches[0]
+    if ($matchedOptions.Count -eq 1) {
+        $confirmation = $matchedOptions[0]
         Write-Host "Selected: $confirmation" -ForegroundColor Green
     } else {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
@@ -238,31 +329,45 @@ if ($confirmation -ne "y") {
 }
 
 # Create the tag
-git tag $newTag
+$tagCreationOutput = git tag $newTag 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "`n❌ ERROR CREATING TAG" -ForegroundColor White -BackgroundColor Red
+    Write-Host "-------------------------------------" -ForegroundColor Red
+    foreach ($line in $tagCreationOutput) {
+        Write-Host $line -ForegroundColor Red
+    }
+    Write-Host "-------------------------------------" -ForegroundColor Red
+    if ($manifestPath) {
+        Write-Host "Manifest update skipped because tag creation failed." -ForegroundColor Yellow
+    }
+    exit 1
+}
+
+$operationSucceeded = $true
 Write-Host "Tag $newTag created locally." -ForegroundColor Green
 
 $pushOptions = @("y", "n")
 $pushConfirmation = ""
 while ($pushConfirmation -notin $pushOptions) {
-    $input = Read-Host "Do you want to push this tag to origin? (y/n)"
+    $userInput = Read-Host "Do you want to push this tag to origin? (y/n)"
 
     # Handle empty input
-    if ([string]::IsNullOrWhiteSpace($input)) {
+    if ([string]::IsNullOrWhiteSpace($userInput)) {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
         continue
     }
 
     # Direct match
-    if ($input -eq "y" -or $input -eq "n") {
-        $pushConfirmation = $input
+    if ($userInput -eq "y" -or $userInput -eq "n") {
+        $pushConfirmation = $userInput
         continue
     }
 
     # Try autocomplete
-    $matches = $pushOptions | Where-Object { $_ -like "$input*" }
+    $matchedOptions = $pushOptions | Where-Object { $_ -like "$userInput*" }
 
-    if ($matches.Count -eq 1) {
-        $pushConfirmation = $matches[0]
+    if ($matchedOptions.Count -eq 1) {
+        $pushConfirmation = $matchedOptions[0]
         Write-Host "Selected: $pushConfirmation" -ForegroundColor Green
     } else {
         Write-Host "Please enter 'y' or 'n'" -ForegroundColor Red
@@ -286,20 +391,11 @@ if ($pushConfirmation -eq "y") {
             Write-Host "The corresponding workflow should now be triggered." -ForegroundColor Cyan
 
             # Show relevant link based on service
-            switch ($Service) {
-                "frontend" {
-                    Write-Host "You can check the new frontend version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-frontend" -ForegroundColor Cyan
-                }
-                "core" {
-                    Write-Host "You can check the new core version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-core" -ForegroundColor Cyan
-                }
-                "assistant" {
-                    Write-Host "You can check the new assistant version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant" -ForegroundColor Cyan
-                }
-                "assistant-migrations" {
-                    Write-Host "You can check the new migrations version at: https://github.com/it-at-m/mucgpt/pkgs/container/mucgpt%2Fmucgpt-assistant-migrations" -ForegroundColor Cyan
-                }
+            $packageUrl = $serviceConfig[$Service].PackageUrl
+            if ($packageUrl) {
+                Write-Host "You can check the new $Service version at: $packageUrl" -ForegroundColor Cyan
             }
+            $operationSucceeded = $true
         } else {
             Write-Host "`n❌ ERROR PUSHING TAG" -ForegroundColor White -BackgroundColor Red
             Write-Host "-------------------------------------" -ForegroundColor Red
@@ -310,6 +406,7 @@ if ($pushConfirmation -eq "y") {
             Write-Host "The tag was created locally but could not be pushed to remote repository." -ForegroundColor Yellow
             Write-Host "Check your internet connection or repository access permissions." -ForegroundColor Yellow
             Write-Host "To push later, use: git push origin $newTag" -ForegroundColor Cyan
+            $operationSucceeded = $false
         }
     } catch {
         Write-Host "`n❌ ERROR PUSHING TAG" -ForegroundColor White -BackgroundColor Red
@@ -319,8 +416,36 @@ if ($pushConfirmation -eq "y") {
         Write-Host "The tag was created locally but could not be pushed to remote repository." -ForegroundColor Yellow
         Write-Host "Check your internet connection or repository access permissions." -ForegroundColor Yellow
         Write-Host "To push later, use: git push origin $newTag" -ForegroundColor Cyan
+        $operationSucceeded = $false
     }
 }else {
     Write-Host "Tag was created locally but not pushed." -ForegroundColor Yellow
     Write-Host "To push later, use: git push origin $newTag" -ForegroundColor Cyan
+}
+
+if ($operationSucceeded -and $manifestPath) {
+    Write-Host "`nManifest file detected: $manifestPath" -ForegroundColor Cyan
+
+    if (-not (Test-Path $manifestPath)) {
+        Write-Host "  ⚠️ Unable to find manifest file. Skipping version file update." -ForegroundColor Yellow
+    }
+    else {
+        $updateManifest = Read-YesNo "Do you want to update this file to version $newVersion? (y/n)"
+
+        if ($updateManifest -eq "y") {
+            try {
+                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
+                Write-Host "Manifest version updated to $newVersion" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "Failed to update manifest version: $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+        else {
+            Write-Host "Manifest file left unchanged." -ForegroundColor Yellow
+        }
+    }
+}
+elseif ($manifestPath) {
+    Write-Host "`nSkipping manifest update because the tagging workflow did not complete successfully." -ForegroundColor Yellow
 }

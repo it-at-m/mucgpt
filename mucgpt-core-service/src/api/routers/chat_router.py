@@ -1,11 +1,9 @@
-import asyncio
 import json
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from agent.agent_executor import MUCGPTAgentExecutor
 from api.api_models import (
     ChatCompletionMessage,
     ChatCompletionRequest,
@@ -22,24 +20,7 @@ from init_app import init_agent
 
 logger = getLogger()
 settings = get_settings()
-_lock_lock = asyncio.Lock()
-_agent_executors_lock : dict[str, asyncio.Lock] = {}
-agent_executors : dict[str, MUCGPTAgentExecutor] = {}
 router = APIRouter(prefix="/v1")
-
-
-async def get_agent_executor(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
-    # FIXME global cache for multi instance?
-    global agent_executors
-    uid = user_info.user_id
-    async with _lock_lock:
-        if uid not in _agent_executors_lock:
-            _agent_executors_lock[uid] = asyncio.Lock()
-    async with _agent_executors_lock[uid]:
-        if agent_executors.get(uid) is None:
-            agent_executor = await init_agent(cfg=settings, user_info=user_info)
-            agent_executors[uid] = agent_executor
-    return agent_executors[uid]
 
 @router.post(
     "/chat/completions",
@@ -57,7 +38,7 @@ async def chat_completions(
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    ae = await get_agent_executor(user_info)
+    ae = await init_agent(cfg=settings, user_info=user_info)
     try:
         # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = request.enabled_tools or []
@@ -98,7 +79,7 @@ async def chat_completions(
 async def create_assistant(
     request: CreateAssistantRequest, user_info=Depends(authenticate_user)
 ) -> CreateAssistantResult:
-    ae = await get_agent_executor(user_info)
+    ae = await init_agent(cfg=settings, user_info=user_info)
     try:
         logger.info("createAssistant: reading system prompt generator")
         with open("create_assistant/prompt_for_systemprompt.md", encoding="utf-8") as f:
@@ -159,11 +140,11 @@ async def create_assistant(
         )
         title = title.choices[0].message.content
         logger.info("createAssistant: returning finished")
-        return {
-            "title": title,
-            "description": description,
-            "system_prompt": system_prompt,
-        }
+        return CreateAssistantResult(
+            title=title,
+            description=description,
+            system_prompt=system_prompt,
+        )
     except Exception as e:
         logger.exception("Exception in /create_assistant")
         msg = llm_exception_handler(ex=e, logger=logger)

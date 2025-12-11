@@ -12,14 +12,12 @@ from api.api_models import (
     CreateAssistantResult,
 )
 from api.exception import llm_exception_handler
-from config.settings import get_settings
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from init_app import init_agent
 
 logger = getLogger()
-settings = get_settings()
 router = APIRouter(prefix="/v1")
 
 @router.post(
@@ -38,7 +36,7 @@ async def chat_completions(
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    ae = await init_agent(cfg=settings, user_info=user_info)
+    ae = await init_agent(user_info=user_info)
     try:
         # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = request.enabled_tools or []
@@ -79,7 +77,7 @@ async def chat_completions(
 async def create_assistant(
     request: CreateAssistantRequest, user_info=Depends(authenticate_user)
 ) -> CreateAssistantResult:
-    ae = await init_agent(cfg=settings, user_info=user_info)
+    ae = await init_agent(user_info=user_info)
     try:
         logger.info("createAssistant: reading system prompt generator")
         with open("create_assistant/prompt_for_systemprompt.md", encoding="utf-8") as f:

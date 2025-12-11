@@ -83,7 +83,6 @@ def _initialize_models_metadata(cfg: Settings) -> None:
             raise
 
 async def init_agent(
-        cfg: Settings,
         user_info: AuthenticationResult
 ) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.

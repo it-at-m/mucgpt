@@ -51,6 +51,8 @@ class ModelOptions:
 
 def warmup_app():
     settings = get_settings()
+    # init model metadata
+    _initialize_models_metadata(settings)
     # init model
     options = ModelOptions()
     ModelProvider.init_model(
@@ -93,8 +95,6 @@ async def init_agent(
     Returns:
         Configured MUCGPTAgentExecutor
     """
-    _initialize_models_metadata(cfg)
-
     try:
         model = ModelProvider.get_model()
         tool_collection = ToolCollection(model=model)

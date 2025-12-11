@@ -163,9 +163,8 @@ class ModelProvider:
         llm = llm.configurable_fields(**configurable_fields)
 
         # Add alternative models
-        fake_llm = FakeListLLM(responses=["Test response"])
         alternatives: Dict[str, RunnableSerializable] = {
-            "fake": fake_llm.configurable_fields(**configurable_fields)
+            "fake": FakeListLLM(responses=["Test response"])
         }
 
         for model in models[1:]:

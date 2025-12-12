@@ -91,7 +91,20 @@ services:
     volumes:
       - "./keycloak/migration:/migration"
     networks:
-      - keycloak
+      - internal
+    security_opt: *security_settings
+
+  #
+  # #### Redis ####
+  #
+  redis:
+    image: redis:8.4.0
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=password
+    networks:
+      - internal
     security_opt: *security_settings
 
   #

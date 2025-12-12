@@ -6,7 +6,6 @@ import uvicorn
 from truststore import inject_into_ssl
 
 from core.log_utils import load_log_config
-from init_app import warmup_app
 
 if os.getenv("TRUSTSTORE_DISABLE", "0") not in {"1", "true", "TRUE", "yes"}:
     try:
@@ -29,9 +28,6 @@ if __name__ == "__main__":
 
     # Load and process the log configuration
     log_config = load_log_config(log_config_path)
-
-    # warmup by generating required classes
-    warmup_app()
 
     host = "localhost" if args.development else "0.0.0.0"
     uvicorn.run(backend, host=host, port=8080, log_config=log_config)

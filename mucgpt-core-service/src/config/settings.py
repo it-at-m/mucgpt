@@ -238,6 +238,17 @@ class MCPSettings(BaseSettings):
         url: str
         forward_token: bool = False
     SOURCES: dict[str, MCPSource] | None = None
+    CACHE_TTL: int = 12 * 60 * 60 # 12h in s
+
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="MUCGPT_REDIS_",
+        case_sensitive=False,
+    )
+    HOST: str | None = None
+    PORT: int = 6379
+    USERNAME: str | None = None
+    PASSWORD: str | None = None
 
 
 class Settings(BaseSettings):
@@ -565,3 +576,10 @@ def get_mcp_settings() -> MCPSettings:
     """Return cached MCP Settings instance."""
     mcp_settings = MCPSettings()
     return mcp_settings
+
+
+@lru_cache(maxsize=1)
+def get_redis_settings() -> RedisSettings:
+    """Return cached MCP Settings instance."""
+    redis_settings = RedisSettings()
+    return redis_settings

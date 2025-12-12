@@ -1,40 +1,50 @@
-import asyncio
 import typing
 
 from httpx import Auth, Request, Response
 from langchain_core.tools import BaseTool
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.sessions import StreamableHttpConnection
+from redis.asyncio import Redis
 
 from config.settings import get_mcp_settings
 from core.auth_models import AuthenticationResult
+from core.cache import RedisCache
 from core.logtools import getLogger
 
-logger = getLogger()
-_locks_lock = asyncio.Lock()
-_user_locks : dict[str, asyncio.Lock] = {}
-# FIXME use global cache?
-user_tools : dict[str, list[BaseTool]] = {}
+
 
 class McpLoader:
+    _CACHE_PREFIX= "mcp_tools"
+    _logger = getLogger()
+    _mcp_settings = get_mcp_settings()
+
     @staticmethod
     async def load_mcp_tools(user_info: AuthenticationResult) -> list[BaseTool]:
-        global user_tools
+        """
+        Get MCP tools for given user. Load and caches MCP tools from configured MCP sources.
+        :param user_info: The user to get the MCP tools for.
+        :return: The loaded or cached MCP tools.
+        """
+        redis: Redis = await RedisCache.get_redis()
         # return if no connections configured
-        sources = get_mcp_settings().SOURCES
+        sources = McpLoader._mcp_settings.SOURCES
         if sources is None or len(sources) == 0:
             return []
         # return tools if already loaded
         if user_info is None:
             raise ValueError("No user_info provided for load_mcp_tools")
         uid = user_info.user_id
-        async with _locks_lock:
-            if uid not in _user_locks:
-                _user_locks[uid] = asyncio.Lock()
+        cache_key = f"{McpLoader._CACHE_PREFIX}:{uid}"
+        # return if cached
+        tools_dump: list[BaseTool] | None = await RedisCache.get_object(cache_key)
+        if tools_dump is not None:
+            return tools_dump
         # lock user mcp load
-        async with _user_locks[uid]:
-            if user_tools.get(uid) is not None:
-                return user_tools.get(uid)
+        async with redis.lock(name=f"{cache_key}:lock"):
+            # check again if cached incase updated while waiting for lock
+            tools_dump: list[BaseTool] | None = await RedisCache.get_object(cache_key)
+            if tools_dump is not None:
+                return tools_dump
             # map to mcp connection
             mcp_connections = {}
             for k, v in sources.items():
@@ -46,20 +56,23 @@ class McpLoader:
                 else:
                     mcp_connections[k] = con
             # create mcp client and get tools
-            logger.info(f"Loading mcp tools for user {user_info.user_id}")
+            McpLoader._logger.info(f"Loading mcp tools for user {user_info.user_id}")
             mcp_client = MultiServerMCPClient(connections=mcp_connections)
             tools = []
             for source_id in sources.keys():
                 try:
                     tools += await mcp_client.get_tools(server_name=source_id)
                 except Exception as e:
-                    logger.error(f"Exception while fetching MCP tools from '{source_id}'", exc_info=e)
+                    McpLoader._logger.error(f"Exception while fetching MCP tools from '{source_id}'", exc_info=e)
             # store user tools
-            user_tools[uid] = tools
+            await RedisCache.set_object(key=cache_key, obj=tools, ttl=McpLoader._mcp_settings.CACHE_TTL)
             return tools
 
 
 class McpBearerAuthProvider(Auth):
+    """
+    Authentication scheme with updatable bearer token per user for MCP requests.
+    """
     _tokens : dict[str, str] = {}
 
     def __init__(self, uid: str, token: str) -> None:

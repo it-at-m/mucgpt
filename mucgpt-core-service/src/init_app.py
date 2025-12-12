@@ -14,6 +14,7 @@ from config.settings import (
     get_settings,
 )
 from core.auth_models import AuthenticationResult
+from core.cache import RedisCache
 from core.logtools import getLogger
 
 logger = getLogger()
@@ -49,7 +50,8 @@ class ModelOptions:
         self.max_tokens = max_tokens
         self.custom_model = custom_model
 
-def warmup_app():
+async def warmup_app():
+    logger.info("Warming up app context...")
     settings = get_settings()
     # init model metadata
     _initialize_models_metadata(settings)
@@ -66,6 +68,15 @@ def warmup_app():
     # init langfuse
     langfuse_settings = get_langfuse_settings()
     LangfuseProvider.init(version=settings.VERSION, langfuse_cfg=langfuse_settings)
+    # init redis
+    await RedisCache.init_redis()
+    logger.info("App context warmed up")
+
+async def destroy_app():
+    logger.info("Cleaning up app context...")
+    # close redis
+    redis = await RedisCache.get_redis()
+    await redis.close()
 
 def _initialize_models_metadata(cfg: Settings) -> None:
     """Ensure all configured models have complete metadata before use."""

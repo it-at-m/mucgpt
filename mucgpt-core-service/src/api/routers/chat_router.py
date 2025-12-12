@@ -12,17 +12,13 @@ from api.api_models import (
     CreateAssistantResult,
 )
 from api.exception import llm_exception_handler
-from config.settings import get_langfuse_settings, get_settings
 from core.auth import authenticate_user
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 from init_app import init_agent
 
 logger = getLogger()
-settings = get_settings()
-langfuse_settings = get_langfuse_settings()
-agent_executor = init_agent(cfg=settings, langfuse_cfg=langfuse_settings)
 router = APIRouter(prefix="/v1")
-
 
 @router.post(
     "/chat/completions",
@@ -35,24 +31,22 @@ router = APIRouter(prefix="/v1")
     },
 )
 async def chat_completions(
-    request: ChatCompletionRequest, user_info=Depends(authenticate_user)
+    request: ChatCompletionRequest, user_info: AuthenticationResult=Depends(authenticate_user)
 ) -> StreamingResponse | ChatCompletionResponse:
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
     """
-    global agent_executor
+    ae = await init_agent(user_info=user_info)
     try:
         # Use enabled_tools from request if provided, otherwise use no tool
-        enabled_tools = (
-            request.enabled_tools if request.enabled_tools is not None else []
-        )
+        enabled_tools = request.enabled_tools or []
         if request.stream:
-            gen = agent_executor.run_with_streaming(
+            gen = ae.run_with_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
                 model=request.model,
-                department=user_info.department,
+                user_info=user_info,
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
             )
@@ -63,12 +57,12 @@ async def chat_completions(
 
             return StreamingResponse(sse_generator(), media_type="text/event-stream")
         else:
-            return agent_executor.run_without_streaming(
+            return ae.run_without_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
                 max_output_tokens=request.max_tokens,
                 model=request.model,
-                department=user_info.department,
+                user_info=user_info,
                 enabled_tools=enabled_tools,
             )
     except Exception as e:
@@ -83,7 +77,7 @@ async def chat_completions(
 async def create_assistant(
     request: CreateAssistantRequest, user_info=Depends(authenticate_user)
 ) -> CreateAssistantResult:
-    global agent_executor
+    ae = await init_agent(user_info=user_info)
     try:
         logger.info("createAssistant: reading system prompt generator")
         with open("create_assistant/prompt_for_systemprompt.md", encoding="utf-8") as f:
@@ -93,12 +87,12 @@ async def create_assistant(
             ChatCompletionMessage(role="user", content="Funktion: " + request.input),
         ]
         logger.info("createAssistant: creating system prompt")
-        system_prompt = agent_executor.run_without_streaming(
+        system_prompt = ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
             max_output_tokens=request.max_tokens,
             model=request.model,
-            department=user_info.department,
+            user_info=user_info,
         )
         system_prompt = system_prompt.choices[0].message.content
         logger.info(system_prompt)
@@ -112,12 +106,12 @@ async def create_assistant(
             ),
         ]
         logger.info("createAssistant: creating description")
-        description = agent_executor.run_without_streaming(
+        description = ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
             max_output_tokens=request.max_tokens,
             model=request.model,
-            department=user_info.department,
+            user_info=user_info,
         )
         description = description.choices[0].message.content
         logger.info("createAssistant: creating title prompt")
@@ -135,20 +129,20 @@ async def create_assistant(
                 + "```",
             ),
         ]
-        title = agent_executor.run_without_streaming(
+        title = ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
             max_output_tokens=request.max_tokens,
             model=request.model,
-            department=user_info.department,
+            user_info=user_info,
         )
         title = title.choices[0].message.content
         logger.info("createAssistant: returning finished")
-        return {
-            "title": title,
-            "description": description,
-            "system_prompt": system_prompt,
-        }
+        return CreateAssistantResult(
+            title=title,
+            description=description,
+            system_prompt=system_prompt,
+        )
     except Exception as e:
         logger.exception("Exception in /create_assistant")
         msg = llm_exception_handler(ex=e, logger=logger)

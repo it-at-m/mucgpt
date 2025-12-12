@@ -61,7 +61,7 @@ class JsonFormatter(logging.Formatter):
         """
         log_data = {
             "time": datetime.fromtimestamp(record.created).strftime(
-                "%Y-%m-%d %H:%M:%S"
+                "%Y-%m-%d %H:%M:%S.%f"
             ),
             "level": record.levelname,
             "id": getattr(record, "correlation_id", None),

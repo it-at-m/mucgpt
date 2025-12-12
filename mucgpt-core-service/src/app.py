@@ -1,10 +1,11 @@
 import argparse  # noqa
-import os  # noqa
-import uvicorn
 import logging
+import os  # noqa
+
+import uvicorn
+from truststore import inject_into_ssl
 
 from core.log_utils import load_log_config
-from truststore import inject_into_ssl
 
 if os.getenv("TRUSTSTORE_DISABLE", "0") not in {"1", "true", "TRUE", "yes"}:
     try:
@@ -17,6 +18,7 @@ from dotenv import find_dotenv, load_dotenv  # noqa
 load_dotenv(find_dotenv(raise_error_if_not_found=False))  # noqa
 
 from backend import backend  # noqa
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -12,6 +12,7 @@ def override_authenticate_user():
 
     async def _get_test_user():
         return AuthenticationResult(
+            token="dummy_access_token",
             user_id="test_user_123",
             name="Test User",
             email="test@example.com",

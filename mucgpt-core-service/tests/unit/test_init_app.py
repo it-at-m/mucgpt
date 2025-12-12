@@ -5,7 +5,6 @@ import pytest
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
 from agent.tools.tools import ToolCollection
-from config.settings import Settings
 from core.auth_models import AuthenticationResult
 from init_app import ModelOptions, init_agent
 
@@ -15,11 +14,6 @@ class TestInitApp:
 
     def setup_method(self):
         """Set up test fixtures before each test method."""
-        # Use a mock Settings object
-        self.mock_settings = MagicMock(spec=Settings)
-        self.mock_settings.MODELS = []
-        self.mock_settings.VERSION = "1.0.0"
-
         # mock model
         self.mock_model = MagicMock()
         self.mock_agent = MagicMock(spec=MUCGPTAgent)
@@ -43,7 +37,7 @@ class TestInitApp:
         mock_get_tools.return_value = []
 
         # Act
-        result = await init_agent(self.mock_settings, self.mock_user)
+        result = await init_agent(self.mock_user)
 
         # Assert
         mock_get_model.assert_called_once()

@@ -12,7 +12,6 @@ from core.cache import RedisCache
 from core.logtools import getLogger
 
 
-
 class McpLoader:
     _CACHE_PREFIX= "mcp_tools"
     _logger = getLogger()
@@ -25,7 +24,6 @@ class McpLoader:
         :param user_info: The user to get the MCP tools for.
         :return: The loaded or cached MCP tools.
         """
-        redis: Redis = await RedisCache.get_redis()
         # return if no connections configured
         sources = McpLoader._mcp_settings.SOURCES
         if sources is None or len(sources) == 0:
@@ -40,6 +38,7 @@ class McpLoader:
         if tools_dump is not None:
             return tools_dump
         # lock user mcp load
+        redis: Redis = await RedisCache.get_redis()
         async with redis.lock(name=f"{cache_key}:lock"):
             # check again if cached incase updated while waiting for lock
             tools_dump: list[BaseTool] | None = await RedisCache.get_object(cache_key)

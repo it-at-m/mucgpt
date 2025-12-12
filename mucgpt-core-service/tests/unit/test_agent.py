@@ -4,7 +4,7 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolCall
 from langchain_core.runnables import RunnableConfig
 
-from agent.agent import AgentState, MUCGPTAgent, ValidationResult
+from agent.agent import AgentState, MUCGPTAgent
 from agent.tools.tools import ToolCollection
 
 
@@ -88,12 +88,11 @@ class LifecycleMockLLM:
     execution, allowing for a full simulation of the agent's behavior.
     """
 
-    def __init__(self, validation_result=True, tool_error=False):
+    def __init__(self, tool_error=False):
         self.invoked_messages = []
         self.tools = None
         self.config = None
         self.execution_order = []
-        self.validation_result = validation_result
         self.tool_error = tool_error
         self.__pregel_runtime = {}  # Required for langgraph
 
@@ -107,17 +106,6 @@ class LifecycleMockLLM:
     def bind_tools(self, tools):
         self.execution_order.append("bind_tools")
         self.tools = tools
-        return self
-
-    def with_structured_output(self, output_schema):
-        """Support validation model in MUCGPTAgent"""
-        self.execution_order.append("with_structured_output")
-        # If validation schema is requested, set up to return appropriate validation result
-        if output_schema.__name__ == "ValidationResult":
-            if self.validation_result:
-                return self.ValidationResponseLLM(is_valid=True)
-            else:
-                return self.ValidationResponseLLM(is_valid=False)
         return self
 
     async def ainvoke(self, msgs):
@@ -140,25 +128,10 @@ class LifecycleMockLLM:
                 )
                 return AIMessage(content="", tool_calls=[tool_call])
 
-        # If no tools or on the final response after validation
+        # If no tools or on the final response
         return AIMessage(
             content="Final response: The simplified text is easy to understand."
         )
-
-    class ValidationResponseLLM:
-        """Inner class to handle validation responses"""
-
-        def __init__(self, is_valid=True):
-            self.is_valid = is_valid
-
-        async def ainvoke(self, data):
-            if self.is_valid:
-                return ValidationResult(is_valid=True, reason="")
-            else:
-                return ValidationResult(
-                    is_valid=False,
-                    reason="The tool output does not provide sufficient simplification.",
-                )
 
 
 class TestAgent:
@@ -234,7 +207,6 @@ class TestAgentLifecycle:
     Tests for the complete lifecycle of the MUCGPTAgent, covering:
     - Initialization
     - Tool invocation
-    - Tool output validation
     - Final response generation
     """
     def setup_method(self):
@@ -257,7 +229,7 @@ class TestAgentLifecycle:
     async def test_full_agent_lifecycle(self, patch_get_stream_writer):
         """
         Test the complete agent lifecycle from initialization to final response,
-        including tool calls and validation.
+        including tool calls.
         """
         # Given an agent with tools enabled
         llm = LifecycleMockLLM()
@@ -285,10 +257,7 @@ class TestAgentLifecycle:
         # 1. The lifecycle LLM should have been called to generate tool calls
         assert "ainvoke" in agent.model.execution_order
 
-        # 2. The lifecycle LLM should have been called to validate tool output
-        assert "with_structured_output" in agent.model.execution_order
-
-        # 3. The agent should return the final response
+        # 2. The agent should return the final response
         assert "messages" in response
         assert len(response["messages"]) > 0
         assert "Final response" in response["messages"][-1].content
@@ -299,66 +268,9 @@ class TestAgentLifecycle:
 
         # In the actual implementation, the execution order might vary based on how the agent graph
         # is structured. Let's just verify that both key steps happened rather than their order.
-        assert set(["ainvoke", "with_structured_output"]).issubset(
+        assert set(["ainvoke"]).issubset(
             set(agent.model.execution_order)
         )
-
-    @pytest.mark.asyncio
-    async def test_agent_validation_logic(self, patch_get_stream_writer):
-        """
-        Test that the agent correctly handles validation of tool output,
-        both for valid and invalid cases.
-        """
-        tools = await self.tool_collection.get_tools(self.user_info)
-        # Test with valid tool output
-        valid_llm = LifecycleMockLLM(validation_result=True)
-        agent_valid = MUCGPTAgent(llm=valid_llm, tools=tools, tool_collection=self.tool_collection)
-
-        # Configure with enabled tools
-        config = RunnableConfig(configurable={
-            "enabled_tools": ["simplify"],
-            "user_info": self.user_info,
-        })
-
-        # When we invoke the agent
-        response_valid = await agent_valid.graph.ainvoke(
-            AgentState(
-                messages=[
-                    SystemMessage(content="You are a helpful assistant."),
-                    HumanMessage(content="Please simplify this text."),
-                ]
-            ),
-            config=config,
-        )
-
-        # The final response should contain the simplified text
-        assert "messages" in response_valid
-        assert len(response_valid["messages"]) > 0
-        assert "Final response" in response_valid["messages"][-1].content
-
-        # Test with invalid tool output
-        invalid_llm = LifecycleMockLLM(validation_result=False)
-        agent_invalid = MUCGPTAgent(llm=invalid_llm, tools=tools, tool_collection=self.tool_collection)
-
-        # When we invoke the agent with the same config
-        response_invalid = await agent_invalid.graph.ainvoke(
-            AgentState(
-                messages=[
-                    SystemMessage(content="You are a helpful assistant."),
-                    HumanMessage(content="Please simplify this text."),
-                ]
-            ),
-            config=config,
-        )
-
-        # The agent should still provide a final response
-        assert "messages" in response_invalid
-        assert len(response_invalid["messages"]) > 0
-
-        # NOTE: The exact behavior on validation failure depends on the agent implementation.
-        # The agent might retry, generate a different response, or include an error message.
-        # Add specific assertions based on the expected behavior of your agent.
-        assert "Final response" in response_invalid["messages"][-1].content
 
     @pytest.mark.asyncio
     async def test_agent_tool_error_handling(self, patch_get_stream_writer):
@@ -395,9 +307,6 @@ class TestAgentLifecycle:
         # The agent should still provide a final response even after tool error
         assert "messages" in response
         assert len(response["messages"]) > 0
-
-        # The error handling logic should have been triggered in the agent
-        assert "with_structured_output" in error_llm.execution_order
 
         # Verify that the stream writer was called with an error message
         assert patch_get_stream_writer.write.called or True, (

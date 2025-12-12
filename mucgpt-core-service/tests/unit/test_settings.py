@@ -348,6 +348,7 @@ class TestSettings:
             os.environ,
             {
                 "MUCGPT_MCP_SOURCES": mcp_json,
+                "MUCGPT_MCP_CACHE_TTL": "123",
             },
         ):
             get_mcp_settings.cache_clear()
@@ -355,6 +356,7 @@ class TestSettings:
             assert len(mcp_settings.SOURCES.keys()) == 1
             assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
             assert mcp_settings.SOURCES["test"].forward_token
+            assert mcp_settings.CACHE_TTL == 123
 
     def test_mcp_settings_default(self):
         """Test MCP settings default values."""
@@ -362,6 +364,7 @@ class TestSettings:
             get_mcp_settings.cache_clear()
             mcp_settings = get_mcp_settings()
             assert mcp_settings.SOURCES is None
+            assert mcp_settings.CACHE_TTL == 43200
 
     def teardown_method(self):
         """Clean up after each test."""

@@ -24,6 +24,7 @@ async def list_tools(
     Returns a list of all available tools with details, without requiring model initialization.
 
     Args:
-        lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
+        :param user_info: Authenticated user
+        :param lang: Language for tool metadata. Supported: deutsch, english, français, bairisch, українська
     """
     return await ToolCollection.list_tool_metadata(lang=lang, user_info=user_info)

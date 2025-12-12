@@ -268,7 +268,7 @@ class TestAgentLifecycle:
 
         # In the actual implementation, the execution order might vary based on how the agent graph
         # is structured. Let's just verify that both key steps happened rather than their order.
-        assert set(["ainvoke"]).issubset(
+        assert {"ainvoke"}.issubset(
             set(agent.model.execution_order)
         )
 

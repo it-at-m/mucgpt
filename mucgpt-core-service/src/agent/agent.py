@@ -48,7 +48,7 @@ class MUCGPTAgent:
             )
         # inject tool instructions into system message
         if enabled_tools:
-            messages = self.tool_collection.add_instructions(messages, enabled_tools, tools=self.tools)
+            messages = self.tool_collection.add_instructions(messages, enabled_tools, tools=tools_to_use)
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
         # invoke model

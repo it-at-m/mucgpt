@@ -20,8 +20,13 @@ class RedisCache:
                 username=RedisCache._redis_settings.USERNAME,
                 password=RedisCache._redis_settings.PASSWORD,
             )
-            await client.ping()
-            RedisCache._redis_client = client
+            try:
+                await client.ping()
+            except Exception as e:
+                await client.close()
+                raise e
+            else:
+                RedisCache._redis_client = client
 
     @staticmethod
     async def get_redis() -> Redis:

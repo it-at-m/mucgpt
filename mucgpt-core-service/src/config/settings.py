@@ -580,6 +580,6 @@ def get_mcp_settings() -> MCPSettings:
 
 @lru_cache(maxsize=1)
 def get_redis_settings() -> RedisSettings:
-    """Return cached MCP Settings instance."""
+    """Return cached RedisSettings instance."""
     redis_settings = RedisSettings()
     return redis_settings

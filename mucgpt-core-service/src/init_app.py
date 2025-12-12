@@ -75,8 +75,11 @@ async def warmup_app():
 async def destroy_app():
     logger.info("Cleaning up app context...")
     # close redis
-    redis = await RedisCache.get_redis()
-    await redis.close()
+    try:
+        redis = await RedisCache.get_redis()
+        await redis.aclose()
+    except RuntimeError:
+        pass
 
 def _initialize_models_metadata(cfg: Settings) -> None:
     """Ensure all configured models have complete metadata before use."""

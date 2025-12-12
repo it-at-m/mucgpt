@@ -186,9 +186,9 @@ Replace the placeholder values with your actual model configuration.
 
 #### MCP (optional)
 
-Beside static tools, MucGPT allows configuration of MCP sources, for which tools are fetched and can be called.
+Besides static tools, MucGPT allows configuration of MCP sources, for which tools are fetched and can be called.
 
-```
+```env
 MUCGPT_MCP_SOURCES='{
     "<source_id>": {
         "url": "...",

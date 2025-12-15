@@ -10,26 +10,25 @@
 .phaseContainer {
     margin: 24px 0;
     padding: 16px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
     border-radius: 8px;
-    border: 1px solid var(--colorNeutralStroke2);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--outline);
 }
 
 .phasesTitle {
     margin-bottom: 16px;
     text-align: center;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .phaseTabs {
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    border-bottom: 1px solid var(--outline);
     margin-bottom: 24px;
 }
 
 .phaseContent {
     padding: 16px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 6px;
 }
 
@@ -43,11 +42,13 @@
 }
 
 .trainingPhase {
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 95, 70, 0.05));
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
 }
 
 .inferencePhase {
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(49, 46, 129, 0.05));
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
 }
 
 .phaseIcon {
@@ -55,11 +56,11 @@
 }
 
 .trainingPhase .phaseIcon {
-    color: var(--colorSuccessBackground);
+    color: var(--primary);
 }
 
 .inferencePhase .phaseIcon {
-    color: var(--colorBrandBackground);
+    color: var(--primary);
 }
 
 .phaseDescription {
@@ -71,16 +72,16 @@
 .keyConcept {
     margin-top: 24px;
     padding: 16px;
-    background: rgba(249, 250, 251, 0.8);
+    background: var(--primaryContainer);
     border-radius: 6px;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
     display: flex;
     gap: 16px;
     align-items: flex-start;
 }
 
 .keyConceptIcon {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     flex-shrink: 0;
 }
 
@@ -107,7 +108,7 @@
 }
 
 .processArrow {
-    color: var(--colorNeutralForeground3);
+    color: var(--disabled);
     font-size: 18px;
     margin: 0 8px;
 }
@@ -152,8 +153,8 @@
 
 .tokenOutput {
     padding: 4px 10px;
-    background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    background: var(--primaryContainer);
+    color: var(--onPrimaryContainer);
     border-radius: 4px;
     font-family: monospace;
     font-weight: 500;
@@ -162,7 +163,7 @@
 .contentSection {
     margin-bottom: 32px;
     padding: 24px 0;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    border-bottom: 1px solid var(--outline);
 }
 
 .contentSection:last-child {
@@ -177,7 +178,7 @@
 }
 
 .sectionIcon {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     flex-shrink: 0;
     font-size: 20px;
 }
@@ -190,30 +191,30 @@
 .tutorialImage {
     max-width: 100%;
     border-radius: 6px;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
 }
 
 .highlightBox {
     margin: 16px 0;
     padding: 16px;
     border-radius: 6px;
-    background: var(--colorNeutralBackground3);
+    background: var(--primaryContainer);
 }
 
 .infoBox {
     margin: 16px 0;
     padding: 16px;
     border-radius: 6px;
-    background: var(--colorInfoBackground2);
-    border: 1px solid var(--colorInfoStroke1);
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
 }
 
 .limitationsBox {
     margin: 16px 0;
     padding: 16px;
     border-radius: 6px;
-    background: var(--colorWarningBackground2);
-    border: 1px solid var(--colorWarningStroke1);
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
 }
 
 .conceptGrid {
@@ -230,23 +231,18 @@
     min-height: 120px;
     border-radius: 8px;
     text-decoration: none;
-    opacity: 0.9;
-    background: var(--colorNeutralBackground4);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     display: flex;
     flex-direction: column;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
     cursor: default;
 }
 
 .conceptCard:hover {
-    opacity: 1;
-    box-shadow:
-        0px 8px 16px rgba(0, 0, 0, 0.14),
-        0px 0px 2px rgba(0, 0, 0, 0.12);
-    outline: 2px solid var(--colorNeutralForeground3Selected);
+    border-color: var(--primary);
+    background: var(--primaryContainer);
     transform: translateY(-2px);
 }
 
@@ -258,8 +254,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    background: var(--primaryContainer);
+    color: var(--onPrimaryContainer);
     margin-bottom: 12px;
 }
 
@@ -277,7 +273,7 @@
     top: 8px;
     bottom: 8px;
     width: 2px;
-    background: var(--colorNeutralStroke2);
+    background: var(--outline);
 }
 
 .timelineItem {
@@ -297,13 +293,13 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--colorBrandBackground);
-    border: 2px solid var(--colorBrandStroke1);
+    background: var(--primary);
+    border: 2px solid var(--primary);
 }
 
 .timelineYear {
     font-weight: bold;
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     margin-bottom: 4px;
 }
 
@@ -338,7 +334,7 @@
 }
 
 .exampleBox strong {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
 }
 
 /* Self-attention explanation styles */
@@ -374,14 +370,14 @@
     gap: 6px;
     margin-top: 10px;
     padding: 8px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 4px;
 }
 
 .token {
     padding: 4px 8px;
-    background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    background: var(--primary);
+    color: var(--onPrimary);
     border-radius: 4px;
     font-weight: 500;
     font-family: monospace;
@@ -400,14 +396,15 @@
     align-items: center;
     gap: 8px;
     padding: 6px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 4px;
     transition: transform 0.1s ease;
 }
 
 .prediction:hover {
     transform: translateX(5px);
-    background: var(--colorBrandBackground2);
+    background: var(--primary);
+    color: var(--onPrimary);
 }
 
 .predictionIcon {
@@ -417,15 +414,14 @@
 /* Comparison table */
 .comparisonTable {
     margin-top: 24px;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
     border-radius: 6px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .comparisonRow {
     display: flex;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    border-bottom: 1px solid var(--outline);
 }
 
 .comparisonRow:last-child {
@@ -435,7 +431,7 @@
 .comparisonHeader {
     padding: 12px 16px;
     font-weight: 600;
-    background: var(--colorNeutralBackground3);
+    background: var(--primaryContainer);
     flex: 1;
 }
 
@@ -445,17 +441,17 @@
 }
 
 .trainingColumn {
-    background: rgba(16, 185, 129, 0.05);
+    background: var(--primaryContainer);
 }
 
 .inferenceColumn {
-    background: rgba(79, 70, 229, 0.05);
+    background: var(--primaryContainer);
 }
 
 .finalNote {
     margin-top: 20px;
     padding: 12px 16px;
-    background: var(--colorBrandBackground2);
+    background: var(--primaryContainer);
     border-radius: 4px;
 }
 
@@ -472,7 +468,7 @@
     .comparisonCell,
     .comparisonHeader {
         border-left: none;
-        border-top: 1px solid var(--colorNeutralStroke2);
+        border-top: 1px solid var(--outline);
     }
 
     .comparisonHeader:first-child {
@@ -498,14 +494,15 @@
     gap: 20px;
     align-items: flex-start;
     padding: 24px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
     transition: all 0.2s ease;
 }
 
 .stepItem:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary);
+    background: var(--primaryContainer);
     transform: translateY(-1px);
 }
 
@@ -514,8 +511,8 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: var(--colorBrandBackground);
-    color: white;
+    background: var(--primary);
+    color: var(--onPrimary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -532,13 +529,13 @@
 
 .stepContent h4 {
     margin: 0 0 8px 0;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .stepContent p {
     margin: 0 0 16px 0;
     line-height: 1.6;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Token breakdown styling */
@@ -548,13 +545,13 @@
     gap: 12px;
     margin-top: 12px;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 8px;
 }
 
 .originalText {
     font-weight: 600;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
     font-size: 16px;
     margin-bottom: 8px;
 }
@@ -562,7 +559,7 @@
 .arrow {
     align-self: center;
     font-size: 24px;
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     margin: 8px 0;
 }
 
@@ -579,14 +576,14 @@
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
     border-radius: 6px;
 }
 
 .numbers {
     font-family: monospace;
-    color: var(--colorSuccessForeground1);
-    background: var(--colorSuccessBackground2);
+    color: var(--onPrimaryContainer);
+    background: var(--primaryContainer);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -596,7 +593,7 @@
 .attentionExample {
     margin-top: 12px;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 8px;
 }
 
@@ -614,14 +611,14 @@
 
 .word {
     padding: 8px 12px;
-    background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    background: var(--primary);
+    color: var(--onPrimary);
     border-radius: 6px;
     font-weight: 500;
 }
 
 .connectionLine {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     font-weight: bold;
 }
 
@@ -632,7 +629,7 @@
     gap: 8px;
     margin-top: 12px;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 8px;
 }
 
@@ -641,20 +638,20 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
     border-radius: 6px;
     transition: all 0.2s ease;
 }
 
 .prediction:hover {
-    background: var(--colorBrandBackground2);
+    background: var(--primaryContainer);
     transform: translateX(4px);
 }
 
 .probability {
     font-weight: bold;
-    color: var(--colorSuccessForeground1);
-    background: var(--colorSuccessBackground2);
+    color: var(--onPrimaryContainer);
+    background: var(--primary);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -667,39 +664,39 @@
     gap: 8px;
     margin-top: 12px;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 8px;
 }
 
 .sequence {
     padding: 8px 12px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
     border-radius: 6px;
     font-family: monospace;
     font-size: 14px;
 }
 
 .context {
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Analogy box styling */
 .analogyBox {
     margin: 32px 0;
     padding: 24px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 12px;
 }
 
 .analogyBox h4 {
     margin: 0 0 16px 0;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .analogyBox p {
     margin: 0 0 16px 0;
     line-height: 1.6;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 .analogyList {
@@ -774,27 +771,27 @@
 .tipItem {
     margin-bottom: 16px;
     padding: 16px;
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 8px;
 }
 
 .tipItem strong {
     display: block;
     margin-bottom: 8px;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .tipItem p {
     margin: 0;
     line-height: 1.5;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 .description {
     line-height: 1.6;
     margin-bottom: 16px;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Additional styles for inline style replacements */

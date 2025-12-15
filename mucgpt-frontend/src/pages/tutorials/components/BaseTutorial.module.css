@@ -10,7 +10,7 @@
 .tipsSection {
     margin-bottom: 32px;
     padding: 24px 0;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    border-bottom: 1px solid var(--outline);
 }
 
 .introSection:last-child,
@@ -29,7 +29,7 @@
 }
 
 .sectionIcon {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     flex-shrink: 0;
     font-size: 20px;
 }
@@ -37,13 +37,13 @@
 .sectionTitleText {
     font-size: 18px;
     font-weight: 600;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .description {
     line-height: 1.6;
     margin-bottom: 16px;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Features Section */
@@ -62,22 +62,20 @@
     border-radius: 8px;
     text-decoration: none;
     opacity: 0.9;
-    background: var(--colorNeutralBackground4);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     display: flex;
     flex-direction: column;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
     cursor: default;
 }
 
 .featureCard:hover {
     opacity: 1;
-    box-shadow:
-        0px 8px 16px rgba(0, 0, 0, 0.14),
-        0px 0px 2px rgba(0, 0, 0, 0.12);
-    outline: 2px solid var(--colorNeutralForeground3Selected);
+    outline: 2px solid var(--primary);
+    border-color: var(--primary);
+    background: var(--primaryContainer);
     transform: translateY(-2px);
 }
 
@@ -89,8 +87,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    background: var(--primaryContainer);
+    color: var(--onPrimaryContainer);
     margin-bottom: 12px;
 }
 
@@ -101,9 +99,9 @@
     align-items: center;
     margin: 20px 0;
     padding: 16px;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
     border-radius: 6px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
 }
 
 .stepContent {
@@ -112,14 +110,14 @@
 
 .stepCard {
     padding: 16px;
-    background: var(--colorNeutralBackground1);
+    background: var(--surface);
 }
 
 .stepNumber {
     width: 32px;
     height: 32px;
-    color: var(--colorNeutralBackground1);
-    background: var(--colorBrandBackground);
+    color: var(--onPrimary);
+    background: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -133,12 +131,12 @@
 }
 
 .examplePrompt {
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     padding: 12px;
     border-radius: 6px;
     font-family: var(--fontFamilyMonospace);
     margin: 16px 0;
-    border-left: 4px solid var(--colorBrandBackground);
+    border-left: 4px solid var(--primary);
     font-weight: 500;
 }
 
@@ -149,7 +147,7 @@
 
 .stepList li {
     margin: 8px 0;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
     line-height: 1.6;
 }
 
@@ -161,9 +159,9 @@
 
 .featureItem {
     padding: 12px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 6px;
-    border-left: 4px solid var(--colorBrandBackground);
+    border-left: 4px solid var(--primary);
 }
 
 .exportOptions {
@@ -174,9 +172,9 @@
 
 .exportOption {
     padding: 12px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 6px;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
 }
 
 /* Example Section */
@@ -208,7 +206,7 @@
 
 .markdownFeatures li {
     margin: 8px 0;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
     line-height: 1.6;
 }
 
@@ -217,11 +215,11 @@
 }
 
 .markdownDescription pre {
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 6px;
     padding: 12px;
     overflow-x: auto;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
 }
 
 .markdownDescription code {
@@ -244,21 +242,21 @@
 .tipItem {
     margin-bottom: 16px;
     padding: 16px;
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 8px;
 }
 
 .tipItem strong {
     display: block;
     margin-bottom: 8px;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .tipItem p {
     margin: 0;
     line-height: 1.5;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 .tutorialIcon {
@@ -270,8 +268,8 @@
     height: 48px;
     font-size: 24px;
     border-radius: 6px;
-    background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    background: var(--primaryContainer);
+    color: var(--onPrimaryContainer);
     margin-bottom: 12px;
 }
 
@@ -300,7 +298,6 @@
 
 .button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .button:active {
@@ -308,29 +305,30 @@
 }
 
 .hideButton {
-    background: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke1);
+    background: var(--surface);
+    color: var(--onSurface);
+    border: 1px solid var(--outline);
 }
 
 .hideButton:hover {
-    background: var(--colorNeutralBackground2);
-    border-color: var(--colorNeutralStroke2);
+    background: var(--primaryContainer);
+    border-color: var(--outline);
 }
 
 .showButton {
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--primary);
+    color: var(--onPrimary);
     border: none;
 }
 
 .showButton:hover {
-    background: var(--colorBrandBackgroundHover);
+    background: var(--primary);
+    opacity: 0.9;
 }
 
 .tryButton {
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--primary);
+    color: var(--onPrimary);
     border: none;
     display: flex;
     align-items: center;
@@ -338,7 +336,8 @@
 }
 
 .tryButton:hover {
-    background: var(--colorBrandBackgroundHover);
+    background: var(--primary);
+    opacity: 0.9;
 }
 
 .tryButtonIcon {

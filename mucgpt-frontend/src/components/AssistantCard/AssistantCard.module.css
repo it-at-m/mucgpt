@@ -13,7 +13,8 @@
     flex-direction: column;
     transition: all 0.2s ease;
     gap: 12px;
-    color: var(--primaryContainer);
+    background: var(--primaryContainer) !important;
+    border: 1px solid var(--outline);
 }
 
 .box:hover {

@@ -358,7 +358,7 @@
     -webkit-appearance: none;
     appearance: none;
     height: 6px;
-    background: var(--colorNeutralBackground4);
+    background: var(--primary);
     border-radius: 3px;
     outline: none;
     transition: all 0.2s ease;
@@ -369,7 +369,7 @@
     appearance: none;
     width: 20px;
     height: 20px;
-    background: var(--colorBrandBackground);
+    background: var(--primary);
     border-radius: 50%;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -384,6 +384,7 @@
 
 .rangeInput::-webkit-slider-thumb:active {
     transform: scale(1.2);
+        background: var(--primary);
 }
 
 .rangeInput::-moz-range-thumb {
@@ -404,7 +405,7 @@
 }
 
 .rangeInput:focus {
-    background: var(--colorNeutralBackground3);
+    background: var(--primary);
 }
 
 .rangeInput:focus::-webkit-slider-thumb {

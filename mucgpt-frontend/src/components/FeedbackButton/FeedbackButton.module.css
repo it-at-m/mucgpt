@@ -1,0 +1,16 @@
+.feedbackButton {
+    color: var(--surface) !important;
+}
+
+.feedbackButton:hover {
+    background-color: var(--primary) !important;
+    color: var(--onPrimary) !important;
+}
+
+.feedbackButton:hover .icon {
+    color: var(--onPrimary) !important;
+}
+
+.icon {
+    color: var(--surface);
+}

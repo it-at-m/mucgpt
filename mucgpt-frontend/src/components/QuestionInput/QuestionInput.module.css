@@ -86,6 +86,14 @@
     padding-bottom: 4px;
 }
 
+.questionInputButtons button {
+    color: var(--onSurface);
+}
+
+.questionInputButtons button svg {
+    color: var(--onSurface);
+}
+
 .errorhintSection {
     display: flex;
     flex-direction: column;
@@ -116,7 +124,6 @@
     align-items: center;
     gap: 4px;
     position: relative;
-        color: red;
 }
 
 .toolHelpButton {

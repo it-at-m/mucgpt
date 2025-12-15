@@ -33,7 +33,7 @@
 
 /* Assistant Info Section */
 .assistantInfoCard {
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border: 1px solid var(--colorNeutralStroke2);
     padding: 16px;
     border-radius: 6px;

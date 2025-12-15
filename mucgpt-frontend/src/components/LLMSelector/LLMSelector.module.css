@@ -98,12 +98,12 @@
 .card:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
-    background-color: var(--colorNeutralBackground2Hover, #eef0f6);
+    background-color: var(--primaryContainer, #eef0f6);
 }
 
 .card[data-selected="true"] {
     transform: translateY(-6px) scale(1.02);
-    background-color: var(--colorNeutralBackground2Hover, #eef0f6);
+    background-color: var(--primaryContainer, #eef0f6);
     border-color: rgba(0, 0, 0, 0.08);
 }
 

@@ -59,7 +59,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                 <li>
                                     <strong>Weiterverwendung der Ergebnisse:</strong> Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der
                                     MUCGPT Nutzer*in. Die Ergebnisse müssen als solche sowohl für intern, als auch für extern gekennzeichnet (z.B.: „Quelle:
-                                    MUCGPT") werden. Siehe Details und weitere Zitierstile hierzu in den{" "}
+                                    MUCGPT“) werden. Siehe Details und weitere Zitierstile hierzu in den{" "}
                                     <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
                                         FAQs
                                     </Link>

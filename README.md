@@ -192,8 +192,8 @@ Besides static tools, MucGPT allows configuration of MCP sources, for which tool
 MUCGPT_MCP_SOURCES='{
     "<source_id>": {
         "url": "...",
-        "forward_token": true
-        "transport": "sse"| "streamable_http"
+        "forward_token": true,
+        "transport": "sse"
     }
 }'
 ```
@@ -202,7 +202,7 @@ MUCGPT_MCP_SOURCES='{
   - `<source_id>`: Unique id of one MCP source.
     - `url`: URL of the mcp endpoint.
     - `forward_token`: If the oAuth 2.0 JWT token used for authentication should be forwarded to the MCP endpoint.
-    - `transport`: transport protocol, see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
+    - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
 - `MUCGPT_MCP_CACHE_TTL`: Time-to-live of cached MCP tools in s (default: 12h).
 
 ### 🐋 Run with Docker

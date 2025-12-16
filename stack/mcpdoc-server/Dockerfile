@@ -3,6 +3,7 @@ FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:28ec2f4662bdc4b0
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
+ARG NO_PROXY
 
 # Set proxy variables only for build time
 ENV HTTP_PROXY=${HTTP_PROXY} \

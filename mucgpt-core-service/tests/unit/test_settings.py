@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import pytest
 from src.config.settings import (
+    MCPTransport,
     Settings,
     enrich_model_metadata,
     get_langfuse_settings,
@@ -338,12 +339,15 @@ class TestSettings:
 
     def test_mcp_settings(self):
         """Test MCP settings configuration."""
-        mcp_json = json.dumps({
-            "test": {
-                "url": "https://example.com/mcp",
-                "forward_token": True
+        mcp_json = json.dumps(
+            {
+                "test": {
+                    "url": "https://example.com/mcp",
+                    "forward_token": True,
+                    "transport": MCPTransport.STREAMABLE_HTTP.value,
+                }
             }
-        })
+        )
         with patch.dict(
             os.environ,
             {
@@ -355,6 +359,9 @@ class TestSettings:
             mcp_settings = get_mcp_settings()
             assert len(mcp_settings.SOURCES.keys()) == 1
             assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
+            assert (
+                mcp_settings.SOURCES["test"].transport is MCPTransport.STREAMABLE_HTTP
+            )
             assert mcp_settings.SOURCES["test"].forward_token
             assert mcp_settings.CACHE_TTL == 123
 

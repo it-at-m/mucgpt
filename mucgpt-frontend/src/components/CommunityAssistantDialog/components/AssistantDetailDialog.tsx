@@ -122,7 +122,7 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                                 </Text>
                                 <div className={styles.toolsList}>
                                     {assistant.tools.map(tool => (
-                                        <Badge key={tool.id} size="medium" color="informative" className={styles.toolBadge}>
+                                        <Badge key={tool.id} size="medium" className={styles.toolBadge}>
                                             {tool.id}
                                         </Badge>
                                     ))}
@@ -153,8 +153,8 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                                     isOwned
                                         ? t("components.community_assistants.owned_assistant")
                                         : isAlreadySaved
-                                          ? t("components.community_assistants.assistant_already_saved")
-                                          : t("components.community_assistants.save")
+                                            ? t("components.community_assistants.assistant_already_saved")
+                                            : t("components.community_assistants.save")
                                 }
                                 relationship="description"
                                 positioning="above"

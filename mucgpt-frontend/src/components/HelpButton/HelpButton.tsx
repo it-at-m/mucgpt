@@ -2,6 +2,8 @@ import { Button, Tooltip } from "@fluentui/react-components";
 import { QuestionCircle24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
+import styles from "./HelpButton.module.css";
+
 interface HelpButtonProps {
     url: string;
     label?: string;
@@ -18,8 +20,9 @@ export const HelpButton = ({ url, label }: HelpButtonProps) => {
                 as={"a"}
                 href={url}
                 appearance={"subtle"}
-                icon={<QuestionCircle24Regular />}
+                icon={<QuestionCircle24Regular className={styles.icon} />}
                 aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}
+                className={styles.helpButton}
             >
                 {helpLabel}
             </Button>

@@ -3,9 +3,9 @@
 .progressContainer {
     margin: 16px 0;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 8px;
-    border: 1px solid var(--colorNeutralStroke2);
+    border: 1px solid var(--outline);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
 }
@@ -15,8 +15,8 @@
     position: sticky !important;
     z-index: 1000 !important;
     backdrop-filter: blur(10px);
-    background: var(--colorNeutralBackground2);
-    border-bottom: 2px solid var(--colorBrandStroke1);
+    background: var(--primaryContainer);
+    border-bottom: 2px solid var(--primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 0;
     margin: 0;
@@ -98,7 +98,7 @@
 }
 
 .progressStats {
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
     margin-top: 4px;
 }
 
@@ -112,21 +112,21 @@
 .progressBar {
     flex: 1;
     height: 8px;
-    background: var(--colorNeutralBackground3);
+    background: var(--outline);
     border-radius: 4px;
     overflow: hidden;
 }
 
 .progressFill {
     height: 100%;
-    background: linear-gradient(90deg, var(--colorBrandBackground), var(--colorBrandBackgroundPressed));
+    background: linear-gradient(90deg, var(--primary), var(--primary));
     transition: width 0.3s ease;
     border-radius: 4px;
 }
 
 .progressPercentage {
     font-weight: 600;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
     min-width: 35px;
     text-align: right;
 }
@@ -153,19 +153,19 @@
 }
 
 .sectionItem.completed {
-    background: rgba(16, 185, 129, 0.1);
-    border: 1px solid var(--colorSuccessStroke1);
+    background: var(--primary);
+    border: 1px solid var(--primary);
 }
 
 .sectionItem.current {
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid var(--colorBrandStroke1);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    background: var(--primaryContainer);
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 0 2px var(--outline);
 }
 
 .sectionItem.pending {
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     opacity: 0.7;
 }
 
@@ -181,17 +181,17 @@
 }
 
 .completed .sectionIcon {
-    color: var(--colorSuccessForeground1);
+    color: var(--onPrimary);
 }
 
 .current .sectionIcon {
-    background: var(--colorBrandBackground);
-    color: white;
+    background: var(--primary);
+    color: var(--onPrimary);
 }
 
 .pending .sectionIcon {
-    background: var(--colorNeutralBackground3);
-    color: var(--colorNeutralForeground2);
+    background: var(--surface);
+    color: var(--onPrimaryContainer);
 }
 
 .sectionNumber {
@@ -206,18 +206,18 @@
 }
 
 .completed .sectionLabel {
-    color: var(--colorSuccessForeground1);
+    color: var(--onPrimary);
     text-decoration: line-through;
     opacity: 0.8;
 }
 
 .current .sectionLabel {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     font-weight: 600;
 }
 
 .pending .sectionLabel {
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Responsive design */

@@ -17,7 +17,7 @@
     margin-left: 0;
     margin-top: 1em;
     margin-bottom: 1em;
-    background: var(--colorNeutralBackground2, #f4f4f4);
+    background: var(--primaryContainer);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     border-radius: 10px;
     padding: 1.5em 2em;
@@ -33,7 +33,7 @@
     font-size: 2.2em;
     margin: 1.5em 0 1em 0;
     text-align: center;
-    color: var(--colorBrandForeground1, #1a237e);
+    color: var(--onSurfaceVariant);
     display: flex;
     flex-direction: column;
     justify-content: center;

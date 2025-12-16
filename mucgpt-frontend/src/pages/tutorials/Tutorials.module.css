@@ -85,7 +85,7 @@
 
 .tutorialCard {
     cursor: pointer;
-    background: var(--colorNeutralBackground1);
+    background: var(--primaryContainer) !important;
     overflow: hidden;
     transition: border-color 0.2s ease;
 }
@@ -113,7 +113,7 @@
     font-size: 24px;
     border-radius: 6px;
     background: var(--colorBrandBackground2);
-    color: var(--colorBrandForeground1);
+    color: var(--onPrimaryContainer);
     margin-bottom: 12px;
 }
 

@@ -122,7 +122,7 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                                 </Text>
                                 <div className={styles.toolsList}>
                                     {assistant.tools.map(tool => (
-                                        <Badge key={tool.id} size="medium" color="informative" className={styles.toolBadge}>
+                                        <Badge key={tool.id} size="medium" className={styles.toolBadge}>
                                             {tool.id}
                                         </Badge>
                                     ))}

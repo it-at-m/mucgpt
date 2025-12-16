@@ -152,9 +152,18 @@ export const QuestionInput = ({
                                         className={styles.toolButton}
                                         onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
                                         disabled={!allowToolSelection}
-                                        icon={isSelected ? <Checkmark24Regular /> : undefined}
+                                        icon={isSelected ? <Checkmark24Regular style={{ color: "var(--surface)" }} /> : undefined}
+                                        style={
+                                            isSelected
+                                                ? {
+                                                      backgroundColor: "var(--onPrimary)"
+                                                  }
+                                                : {
+                                                      backgroundColor: "var(--surface)"
+                                                  }
+                                        }
                                     >
-                                        {tool.id}
+                                        <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>
                                     </Button>
                                     {hasTutorial && (
                                         <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">

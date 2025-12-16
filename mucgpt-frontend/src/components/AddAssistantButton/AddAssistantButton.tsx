@@ -13,7 +13,8 @@ export const AddAssistantButton = ({ onClick }: Props) => {
         <div className={styles.container}>
             <Tooltip content={t("components.add_assistant_button.add_assistant")} relationship="description" positioning="below">
                 <Button
-                    appearance="secondary"
+                    appearance="primary"
+                    className={styles.button}
                     aria-label={t("components.add_assistant_button.add_assistant")}
                     icon={<Add24Regular className={styles.iconLeftMargin} />}
                     onClick={onClick}

@@ -1,0 +1,16 @@
+.languageButton {
+    color: var(--surface) !important;
+}
+
+.languageButton:hover {
+    background-color: var(--primary) !important;
+    color: var(--onPrimary) !important;
+}
+
+.languageButton:hover .icon {
+    color: var(--onPrimary) !important;
+}
+
+.icon {
+    color: var(--surface);
+}

@@ -17,7 +17,8 @@
     margin-left: 0;
     margin-top: 1em;
     margin-bottom: 1em;
-    background: var(--colorNeutralBackground2, #f4f4f4);
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     border-radius: 10px;
     padding: 1.5em 2em;
@@ -25,7 +26,7 @@
 }
 
 .panel:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary);
 }
 
 .header {
@@ -33,7 +34,7 @@
     font-size: 2.2em;
     margin: 1.5em 0 1em 0;
     text-align: center;
-    color: var(--colorBrandForeground1, #1a237e);
+    color: var(--onSurface);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -58,8 +59,8 @@
 }
 
 .commandsContainer button:hover {
+    background: var(--primaryContainer);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    background: var(--colorBrandBackground2, #e3e3f3);
 }
 
 .faqRoot {

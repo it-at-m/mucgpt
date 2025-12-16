@@ -362,7 +362,7 @@
     margin: 0;
     padding: 16px 24px;
     width: 100%;
-    background-color: transparent;
+    background-color: var(--primaryContainer);
     border: none;
     border-radius: 0;
     align-items: center;
@@ -388,7 +388,7 @@
 .stepTitle {
     font-size: var(--fontSizeBase400);
     font-weight: 600;
-    color: var(--colorNeutralForeground1);
+    color: var(--onPrimaryContainer);
     flex: 1;
     text-align: center;
     margin: 0 20px;

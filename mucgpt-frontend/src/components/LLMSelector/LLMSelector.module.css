@@ -11,9 +11,9 @@
     justify-content: center;
     border-radius: 999px;
     padding: 6px 12px;
-    background-color: var(--colorNeutralBackground3, #d3d3d3);
-    color: var(--colorNeutralForeground1, #0b1220);
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    background-color: var(--primaryContainer);
+    color: var(--onSurface);
+    border: 1px solid var(--outline);
     box-shadow: 0 8px 8px rgba(2, 6, 18, 0.14);
     cursor: pointer;
     transition:
@@ -25,21 +25,21 @@
 .buttonContainer:hover {
     transform: translateY(-2px);
     box-shadow: 0 16px 10px rgba(2, 6, 18, 0.2);
-    background-color: rgba(0, 0, 0, 0.08);
-    outline: 1px solid rgb(0, 0, 0);
+    background-color: var(--surface);
+    outline: 1px solid var(--primary);
     border-radius: 999px;
 }
 
 .buttonContainer:focus,
 .buttonContainer:focus-visible {
-    outline: 3px solid rgba(0, 0, 0, 0.08);
+    outline: 3px solid var(--primary);
 }
 
 .iconRightMargin {
     margin-right: 8px;
     width: 18px;
     height: 18px;
-    color: var(--colorBrandForeground, #24b3eb);
+    color: var(--primary);
 }
 
 .modelName {
@@ -48,7 +48,7 @@
     border-radius: 6px;
     font-weight: 700;
     font-size: 12px;
-    color: var(--colorNeutralForeground1, #0b1220);
+    color: var(--onSurface);
     min-width: 28px;
     text-align: center;
 }
@@ -81,10 +81,10 @@
     display: flex;
     flex-direction: column;
     margin: 0;
-    border: 1px solid rgba(156, 156, 156, 0.12);
+    border: 1px solid var(--outline);
     border-radius: var(--borderRadiusSmall, 8px);
-    background-color: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForeground1);
+    background-color: var(--surface);
+    color: var(--onSurface);
     overflow: hidden;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.291);
     transition:
@@ -98,13 +98,13 @@
 .card:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
-    background-color: var(--colorNeutralBackground2Hover, #eef0f6);
+    background-color: var(--primaryContainer);
 }
 
 .card[data-selected="true"] {
     transform: translateY(-6px) scale(1.02);
-    background-color: var(--colorNeutralBackground2Hover, #eef0f6);
-    border-color: rgba(0, 0, 0, 0.08);
+    background-color: var(--primaryContainer);
+    border-color: var(--primary);
 }
 
 .cardContent {
@@ -125,7 +125,7 @@
 .bestForText {
     margin: 4px 0 0 8px;
     font-size: 14px;
-    color: var(--colorNeutralForeground2, #4a4a4a);
+    color: var(--onPrimaryContainer);
     height: 100px;
     overflow: hidden;
     display: -webkit-box;
@@ -138,8 +138,8 @@
 .dialogSurface {
     min-width: min(1240px, 96vw);
     max-width: 96vw;
-    background-color: var(--colorNeutralBackground2, #f7f7fb);
-    color: var(--colorNeutralForeground1, #101214);
+    background-color: var(--primaryContainer);
+    color: var(--onSurface);
     border: none;
     box-shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
     border-radius: var(--borderRadiusMedium, 8px);
@@ -152,7 +152,7 @@
     height: 28px;
     font-size: 20px;
     opacity: 0.56;
-    color: var(--colorNeutralForeground2, #4a4a4a);
+    color: var(--onPrimaryContainer);
     transition:
         color 140ms ease,
         opacity 140ms ease,
@@ -166,7 +166,7 @@
 .rocketActive,
 .moneyActive {
     opacity: 1;
-    color: var(--colorAccentForeground, #4dd0a9);
+    color: var(--primary);
     transform: translateY(-1px) scale(1.05);
 }
 
@@ -180,7 +180,7 @@
 .card[data-selected="true"] .rocketActive,
 .card[data-selected="true"] .moneyActive {
     opacity: 1;
-    color: var(--colorAccentForegroundHover, #4dd0a9);
+    color: var(--primary);
 }
 
 .infoRow {
@@ -232,15 +232,15 @@
 .badge {
     border-radius: 999px;
     padding: 2px 10px;
-    background-color: var(--colorNeutralBackground5, #e1e5ee);
-    color: var(--colorNeutralForeground2, #4a4a4a);
+    background-color: var(--primary);
+    color: var(--onPrimary);
     font-size: 12px;
     font-weight: 600;
 }
 
 .badgeKnowledge {
-    background-color: var(--colorBrandBackground2, #e9f2ff);
-    color: var(--colorBrandForeground2, #0b5cab);
+    background-color: var(--primaryContainer);
+    color: var(--onPrimaryContainer);
 }
 
 .featuresValue {
@@ -251,7 +251,7 @@
 
 .featuresMeta {
     font-size: 12px;
-    color: var(--colorNeutralForeground3, #6b6b6b);
+    color: var(--onPrimaryContainer);
     margin-top: 6px;
 }
 
@@ -281,7 +281,7 @@
     width: 18px;
     height: 6px;
     border-radius: 999px;
-    background-color: var(--colorNeutralStroke1, #c9d0dd);
+    background-color: var(--outline);
     opacity: 0.4;
     transition:
         background-color 140ms ease,
@@ -289,6 +289,6 @@
 }
 
 .contextBarActive {
-    background-color: var(--colorAccentForeground, #4dd0a9);
+    background-color: var(--primary);
     opacity: 1;
 }

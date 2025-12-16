@@ -43,6 +43,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                     (z.B. Name, Anschrift, E-Mail-Adressen etc.) oder als vertraulich klassifizierte Daten (siehe{" "}
                                     <Link
                                         inline
+                                        className={styles.link}
                                         href="https://wilma.muenchen.de/pages/informationssicherheit/apps/wiki/regelwerk-aktuell/list/view/0b6737b2-9712-4fba-9fd3-a86f9daf98c5"
                                     >
                                         Regelwerk Informationssicherheit
@@ -59,7 +60,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                     <strong>Weiterverwendung der Ergebnisse:</strong> Die Verantwortung für die Weiterverwendung der Ergebnisse trägt die/der
                                     MUCGPT Nutzer*in. Die Ergebnisse müssen als solche sowohl für intern, als auch für extern gekennzeichnet (z.B.: „Quelle:
                                     MUCGPT“) werden. Siehe Details und weitere Zitierstile hierzu in den{" "}
-                                    <Link inline href={import.meta.env.BASE_URL + "#/faq"}>
+                                    <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
                                         FAQs
                                     </Link>
                                     .
@@ -77,12 +78,16 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                 <li>
                                     <strong>Ansprechpartner*innen:</strong> Bei Fragen und Feedback, sowie zum Melden von unangemessenen Ergebnissen von MUCGPT
                                     bitte an{" "}
-                                    <Link inline href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
+                                    <Link inline className={styles.link} href="mailto:itm.kicc@muenchen.de?subject=MUCGPT">
                                         {" "}
                                         itm.kicc@muenchen.de
                                     </Link>{" "}
                                     wenden. Technische Fehler bitte an den{" "}
-                                    <Link inline href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/content/it-servicedesk-neu">
+                                    <Link
+                                        inline
+                                        className={styles.link}
+                                        href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/content/it-servicedesk-neu"
+                                    >
                                         {" "}
                                         zuständigen Servicedesk
                                     </Link>{" "}
@@ -91,7 +96,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                 <li>
                                     <strong>FAQs:</strong> Weitere Fragen und Antworten (u.a. zu Ziel und Einsatzzwecke von MUCGPT sowie zur Weiterverwendung
                                     der Eingaben und Ergebnisse) geben die{" "}
-                                    <Link inline href={import.meta.env.BASE_URL + "#/faq"}>
+                                    <Link inline className={styles.link} href={import.meta.env.BASE_URL + "#/faq"}>
                                         FAQs
                                     </Link>
                                     .
@@ -99,7 +104,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                 <li>
                                     <strong>Best-Practice Dokumentation/Wissensmanagement:</strong> Erfolgreiche Anwendungsfälle von MUCGPT sollen dokumentiert
                                     werden, um wertvolles Wissen für zukünftige Projekte zu generieren. Tragen Sie diese Beispiele gerne{" "}
-                                    <Link inline href="https://wilma.muenchen.de/workspaces/innovationcenter/apps/list/best-practices">
+                                    <Link inline className={styles.link} href="https://wilma.muenchen.de/workspaces/innovationcenter/apps/list/best-practices">
                                         hier
                                     </Link>{" "}
                                     ein.
@@ -108,7 +113,7 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                             <div className={styles.responsibleContainer}>
                                 Verantwortlich für die Nutzungsbedingungen ist RIT-I (STRAC). Bei Fragen oder Anmerkungen hierzu bitte an folgende E-Mail
                                 Adresse wenden:
-                                <Link inline href="mailto:it-vorschriften.strac.rit@muenchen.de?subject=MUCGPT">
+                                <Link inline className={styles.link} href="mailto:it-vorschriften.strac.rit@muenchen.de?subject=MUCGPT">
                                     {" "}
                                     it-vorschriften.strac.rit@muenchen.de
                                 </Link>

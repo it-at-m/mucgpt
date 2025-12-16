@@ -1,0 +1,16 @@
+.helpButton {
+    color: var(--surface) !important;
+}
+
+.helpButton:hover {
+    background-color: var(--primary) !important;
+    color: var(--onPrimary) !important;
+}
+
+.helpButton:hover .icon {
+    color: var(--onPrimary) !important;
+}
+
+.icon {
+    color: var(--surface);
+}

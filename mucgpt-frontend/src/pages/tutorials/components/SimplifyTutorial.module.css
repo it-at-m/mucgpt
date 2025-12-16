@@ -34,29 +34,29 @@
 }
 
 .hideButton {
-    background: var(--colorNeutralBackground1);
-    color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke1);
+    background: var(--surface);
+    color: var(--onSurface);
+    border: 1px solid var(--outline);
 }
 
 .hideButton:hover {
-    background: var(--colorNeutralBackground2);
-    border-color: var(--colorNeutralStroke2);
+    background: var(--primaryContainer);
+    border-color: var(--outline);
 }
 
 .showButton {
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--primary);
+    color: var(--onPrimary);
     border: none;
 }
 
 .showButton:hover {
-    background: var(--colorBrandBackgroundHover);
+    background: var(--primary);
 }
 
 .tryButton {
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--primary);
+    color: var(--onPrimary);
     border: none;
     display: flex;
     align-items: center;
@@ -64,7 +64,7 @@
 }
 
 .tryButton:hover {
-    background: var(--colorBrandBackgroundHover);
+    background: var(--primary);
 }
 
 .tryButtonIcon {
@@ -104,7 +104,7 @@
 .contentSection {
     margin-bottom: 32px;
     padding: 24px 0;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    border-bottom: 1px solid var(--outline);
 }
 
 .contentSection:last-child {
@@ -119,7 +119,7 @@
 }
 
 .sectionIcon {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     flex-shrink: 0;
     font-size: 20px;
 }
@@ -127,21 +127,21 @@
 .sectionTitleText {
     font-size: 18px;
     font-weight: 600;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .sectionText {
     line-height: 1.6;
     margin-bottom: 16px;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Highlight boxes */
 .highlightBox {
     margin: 16px 0;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
-    border-left: 4px solid var(--colorBrandBackground);
+    background: var(--primaryContainer);
+    border-left: 4px solid var(--primary);
     border-radius: 0 8px 8px 0;
 }
 
@@ -155,14 +155,14 @@
 
 .featureCard {
     padding: 20px;
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 8px;
     text-align: left;
 }
 
 .featureIcon {
-    color: var(--colorBrandForeground1);
+    color: var(--onSurface);
     margin-bottom: 12px;
     font-size: 24px;
 }
@@ -171,14 +171,14 @@
     margin: 0 0 8px 0;
     font-size: 16px;
     font-weight: 600;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .featureCard p {
     margin: 0;
     font-size: 14px;
     line-height: 1.5;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Tips container */
@@ -189,40 +189,40 @@
 .tipItem {
     margin-bottom: 16px;
     padding: 16px;
-    background: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--surface);
+    border: 1px solid var(--outline);
     border-radius: 8px;
 }
 
 .tipItem strong {
     display: block;
     margin-bottom: 8px;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .tipItem p {
     margin: 0;
     line-height: 1.5;
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimaryContainer);
 }
 
 /* Conclusion box */
 .conclusionBox {
     margin: 20px 0;
     padding: 20px;
-    background: var(--colorSuccessBackground2);
-    border: 1px solid var(--colorSuccessStroke1);
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
     border-radius: 8px;
 }
 
 .conclusionBox strong {
     display: block;
     margin-bottom: 8px;
-    color: var(--colorSuccessForeground1);
+    color: var(--onSurface);
 }
 
 .conclusionBox p {
     margin: 0;
     line-height: 1.5;
-    color: var(--colorNeutralForeground1);
+    color: var(--onPrimaryContainer);
 }

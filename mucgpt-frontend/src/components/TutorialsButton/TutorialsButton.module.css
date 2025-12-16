@@ -1,0 +1,16 @@
+.tutorialsButton {
+    color: var(--surface) !important;
+}
+
+.tutorialsButton:hover {
+    background-color: var(--primary) !important;
+    color: var(--onPrimary) !important;
+}
+
+.tutorialsButton:hover .icon {
+    color: var(--onPrimary) !important;
+}
+
+.icon {
+    color: var(--surface);
+}

@@ -244,8 +244,8 @@
     flex-direction: column;
     margin-bottom: 16px;
     padding: 16px;
-    background: var(--colorNeutralBackground2);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
     border-radius: var(--borderRadiusMedium);
 }
 
@@ -287,7 +287,7 @@
 }
 
 .sectionDescription {
-    color: var(--colorNeutralForeground2);
+    color: var(--onSurface);
     margin-top: 4px;
 }
 
@@ -315,8 +315,8 @@
 
 .markdownContent,
 .systemMessageContent {
-    background: var(--colorNeutralBackground2);
-    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--primaryContainer);
+    border: 1px solid var(--outline);
     border-radius: var(--borderRadiusMedium);
     padding: 16px;
     overflow-x: auto;

@@ -19,7 +19,7 @@
     justify-content: center;
     padding-top: 50px;
     width: 100%;
-    background: var(--colorBackgroundOverlay);
+    background: var(--primary);
 }
 
 .heading {
@@ -28,7 +28,7 @@
     text-align: center;
     margin-bottom: 50px;
     margin-top: 50px;
-    color: var(--colorNeutralForeground1);
+    color: var(--onPrimary);
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     letter-spacing: -0.5px;
     line-height: 1.2;
@@ -53,7 +53,7 @@
 .disclaimerText {
     text-align: center;
     font-size: 0.8rem;
-    color: #c0c0c0;
+    color: var(--onPrimary);
     margin-top: 10px;
     font-style: italic;
 }
@@ -67,8 +67,8 @@
 }
 
 .chatNavigationButton {
-    background: var(--colorBrandBackground);
-    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--onSurface);
+    color: var(--surface);
     padding: 12px 24px;
     border-radius: 6px;
     text-decoration: none;
@@ -86,7 +86,7 @@
 }
 
 .chatNavigationButton:hover {
-    background: var(--colorBrandBackgroundHover);
+    background: var(--onSurfaceVariant);
     text-decoration: none;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -113,7 +113,7 @@
     margin-top: 20px;
     margin-bottom: 12px;
     padding-left: 10px;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .row {
@@ -160,11 +160,11 @@
 .divider hr {
     flex: 1;
     border: none;
-    border-top: 1px solid var(--colorBrandStroke2);
+    border-top: 1px solid var(--onPrimary);
     margin: 0;
 }
 
 .divider span {
-    color: var(--colorNeutralForeground2);
+    color: var(--onPrimary);
     font-size: var(--fontSizeBase500);
 }

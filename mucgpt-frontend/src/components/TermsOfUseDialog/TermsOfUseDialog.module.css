@@ -88,7 +88,7 @@
 }
 
 .checkIcon {
-    color: var(--colorPaletteGreenForeground1);
+    color: var(--onPrimary);
 }
 
 li:not(:last-child) {
@@ -102,6 +102,10 @@ li:not(:last-child) {
     margin-top: 18px;
     color: #444;
     font-size: 0.98em;
+}
+
+.link {
+    color: var(--primary) !important;
 }
 
 @media (max-width: 700px) {

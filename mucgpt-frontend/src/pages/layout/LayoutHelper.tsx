@@ -1,12 +1,21 @@
-import { BrandVariants, createDarkTheme, createLightTheme, makeStyles } from "@fluentui/react-components";
-import { tokens } from "@fluentui/react-theme";
+import { BrandVariants, createDarkTheme, createLightTheme } from "@fluentui/react-components";
+import { lightThemeColors, darkThemeColors } from "./colors";
+import type { ThemeColors } from "./colors";
 
-export const useStyles = makeStyles({
-    header: {
-        backgroundColor: tokens.colorBrandBackground2,
-        color: tokens.colorBrandForeground2
-    }
-});
+// Apply CSS custom properties to document root
+export const applyCssVariables = (colors: ThemeColors) => {
+    const root = document.documentElement.style;
+    root.setProperty("--surface", colors.surface);
+    root.setProperty("--onSurface", colors.onSurface);
+    root.setProperty("--onSurfaceVariant", colors.onSurfaceVariant);
+    root.setProperty("--primary", colors.primary);
+    root.setProperty("--onPrimary", colors.onPrimary);
+    root.setProperty("--onPrimaryVariant", colors.onPrimaryVariant);
+    root.setProperty("--outline", colors.outline);
+    root.setProperty("--primaryContainer", colors.primaryContainer);
+    root.setProperty("--onPrimaryContainer", colors.onPrimaryContainer);
+    root.setProperty("--disabled", colors.disabled);
+};
 
 export const enum STORAGE_KEYS {
     TERMS_OF_USE_READ = "TERMS_OF_USE_READ",
@@ -26,7 +35,7 @@ const customBrandRamp: BrandVariants = {
     50: "#bababe",
     60: "#acacb1",
     70: "#9e9ea4",
-    80: "#909097",
+    80: "#909097", //Buttons
     90: "#82828a",
     100: "#74747d",
     110: "#666670",
@@ -36,8 +45,59 @@ const customBrandRamp: BrandVariants = {
     150: "#2e2e3c",
     160: "#212529"
 };
+const applyThemeColors = (theme: any, colors: ThemeColors) => {
+    // Surface Colors
+    theme.colorNeutralBackground1 = colors.surface; // Surface - Main background
+    theme.colorNeutralBackground2 = colors.onSurfaceVariant; // Header/Footer dark background
+    theme.colorNeutralBackground3 = colors.primaryContainer; // Cards background
+    theme.colorNeutralBackground4 = colors.surface; // Surface variant
+
+    // Brand/Primary Colors
+    theme.colorBrandBackground = colors.primary; // Primary
+    theme.colorBrandBackgroundHover = colors.primary; // Primary hover (could be adjusted)
+    theme.colorBrandBackgroundPressed = colors.primary; // Primary pressed (could be adjusted)
+    theme.colorBrandBackground2 = colors.primaryContainer; // Primary Container
+
+    // Text Colors - On Surface
+    theme.colorNeutralForeground1 = colors.onSurface; // On Surface - main text
+    theme.colorNeutralForeground2 = colors.onPrimaryContainer; // On Primary Container
+    theme.colorNeutralForeground3 = colors.disabled; // Disabled text
+    theme.colorNeutralForeground4 = colors.onSurface; // On Surface variant
+
+    // Text on Primary
+    theme.colorNeutralForegroundOnBrand = colors.onPrimaryVariant; // On Primary Variant (for selected tools)
+    theme.colorNeutralForegroundInverted = colors.surface; // Inverted (white on dark header)
+
+    // Brand foreground colors
+    theme.colorBrandForeground1 = colors.primary; // Primary color for links/accents
+    theme.colorBrandForeground2 = colors.onPrimaryContainer; // On Primary Container
+
+    // Surface Variants
+    theme.colorNeutralBackground1Hover = colors.primaryContainer; // Hover state
+    theme.colorNeutralBackground1Pressed = colors.primaryContainer; // Pressed state
+
+    // Borders/Strokes
+    theme.colorNeutralStroke1 = colors.outline; // Outline
+    theme.colorNeutralStroke2 = colors.outline; // Outline variant
+    theme.colorBrandStroke1 = colors.primary; // Primary outline
+    theme.colorBrandStroke2 = colors.outline; // Subtle brand outline
+
+    // Overlay for hero section background
+    theme.colorBackgroundOverlay = colors.primary; // Primary color for hero section
+
+    // Subtle button colors (for buttons in dark header)
+    theme.colorSubtleForeground = colors.surface; // Text for subtle buttons
+    theme.colorSubtleForegroundHover = colors.surface; // Hover text for subtle buttons
+    theme.colorSubtleForegroundPressed = colors.surface; // Pressed text for subtle buttons
+};
+
 export const adjustTheme = (isLight: boolean, scaling: number) => {
     const theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
+
+    // Apply custom color palette
+    const colors = isLight ? lightThemeColors : darkThemeColors;
+    applyThemeColors(theme, colors);
+
     theme.fontSizeBase100 = (parseFloat(theme.fontSizeBase100.replace("px", "")) * scaling).toString() + "px";
     theme.fontSizeBase200 = (parseFloat(theme.fontSizeBase200.replace("px", "")) * scaling).toString() + "px";
     theme.fontSizeBase300 = (parseFloat(theme.fontSizeBase300.replace("px", "")) * scaling).toString() + "px";

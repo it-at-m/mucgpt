@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from enum import Enum
 from functools import lru_cache
 from typing import Any, List
 from urllib.parse import urljoin
@@ -19,6 +20,13 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
+
+
+class MCPTransport(str, Enum):
+    SSE = "sse"
+    STREAMABLE_HTTP = "streamable_http"
+
+
 _logger = logging.getLogger(__name__)
 _positive_int_adapter = TypeAdapter(PositiveInt)
 _decimal_adapter = TypeAdapter(Decimal)
@@ -229,16 +237,18 @@ class LangfuseSettings(BaseSettings):
     SECRET_KEY: str | None = None
     HOST: str | None = None
 
+
 class MCPSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_MCP_",
-        case_sensitive=False
-    )
+    model_config = SettingsConfigDict(env_prefix="MUCGPT_MCP_", case_sensitive=False)
+
     class MCPSource(BaseModel):
         url: str
+        transport: MCPTransport
         forward_token: bool = False
+
     SOURCES: dict[str, MCPSource] | None = None
-    CACHE_TTL: int = 12 * 60 * 60 # 12h in s
+    CACHE_TTL: int = 12 * 60 * 60  # 12h in s
+
 
 class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(

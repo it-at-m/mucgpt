@@ -158,9 +158,9 @@ services:
       test: ["CMD-SHELL", "curl http://localhost:8080/actuator/health/liveness"]
     security_opt: *security_settings
 
-  #
-  # #### Application services ####
-  #
+  ##############################
+  #    Application services    #
+  ##############################
   core-service:
     build:
       context: ../mucgpt-core-service
@@ -246,6 +246,44 @@ services:
       - "8081:8080"
     networks:
       - internal
+
+  ##############################
+  #    MCP servers   #
+  ##############################
+
+  mcpdoc-server:
+    build:
+      context: ./mcpdoc-server
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    environment:
+      HTTP_PROXY: ${HTTP_PROXY}
+      HTTPS_PROXY: ${HTTPS_PROXY}
+    command:
+      - tool
+      - run
+      - --from
+      - mcpdoc
+      - mcpdoc
+      - --urls
+      - "KI in München:https://ki.muenchen.de/llms.txt"
+      - --transport
+      - sse
+      - --port
+      - "8088"
+      - --host
+      - 0.0.0.0
+    ports:
+      - "8088:8088"
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/sse || exit 1"]
+    security_opt: *security_settings
 
 networks:
   internal:

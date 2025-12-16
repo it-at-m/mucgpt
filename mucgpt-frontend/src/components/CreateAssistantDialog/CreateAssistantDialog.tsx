@@ -1,4 +1,4 @@
-import { ArrowRight24Regular, Checkmark24Filled, Dismiss24Regular, EditArrowBack24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -27,13 +27,16 @@ interface Props {
     setShowDialogInput: (showDialogInput: boolean) => void;
 }
 
+type DialogStep = 1 | 2;
+
 export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [input, setInput] = useState<string>("");
     const [description, setDescription] = useState<string>("");
     const [systemPrompt, setSystemPrompt] = useState<string>("");
     const [title, setTitle] = useState<string>("");
-    const [showOutputView, setShowOutputView] = useState<boolean>(false);
+    const [currentStep, setCurrentStep] = useState<DialogStep>(1);
+    const [selectedTemplate, setSelectedTemplate] = useState<string>("");
 
     // Context
     const { LLM } = useContext(LLMContext);
@@ -51,6 +54,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         } else {
             setInput("");
         }
+        // Reset template selection when user types manually
+        setSelectedTemplate("");
     }, []);
 
     // description change
@@ -117,19 +122,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         }
     }, [title, description, systemPrompt, llmMaxOutputTokens, storageService, showError, showSuccess, t]);
 
-    // back button clicked
-    const onBackButtonClicked = useCallback(() => {
-        setShowOutputView(false);
-        setSystemPrompt("");
-        setDescription("");
-        setTitle("");
-    }, []);
-
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
         setShowDialogInput(false);
         setInput("");
-        setShowOutputView(false);
+        setCurrentStep(1);
+        setSystemPrompt("");
+        setDescription("");
+        setTitle("");
+        setSelectedTemplate("");
     }, [setShowDialogInput]);
 
     // call Assistant api
@@ -141,9 +142,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 setSystemPrompt(result.system_prompt);
                 setDescription(result.description);
                 setTitle(result.title);
-                setShowOutputView(true);
-                // Keep dialog open
-                setShowDialogInput(true);
+                setCurrentStep(2);
                 showSuccess(
                     t("components.create_assistant_dialog.assistant_generated_success"),
                     t("components.create_assistant_dialog.assistant_generated_message")
@@ -156,92 +155,157 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 setLoading(false);
             }
         }
-    }, [input, LLM.llm_name, llmMaxOutputTokens, showError, showSuccess, t, setShowDialogInput]);
+    }, [input, LLM.llm_name, llmMaxOutputTokens, showError, showSuccess, t]);
 
-    const manuelAssistantCreation = useCallback(() => {
-        setShowOutputView(true);
-        // Keep dialog open
-        setShowDialogInput(true);
-        setInput("");
-    }, [setShowDialogInput]);
+    const handleTemplateSelect = useCallback((template: string, templateId: string) => {
+        // Toggle functionality: if already selected, deselect it
+        if (selectedTemplate === templateId) {
+            setInput("");
+            setSelectedTemplate("");
+        } else {
+            setInput(template);
+            setSelectedTemplate(templateId);
+        }
+    }, [selectedTemplate]);
 
-    const renderInputView = () => (
+    const handleContinueWithMucGPT = useCallback(async () => {
+        await createAssistant();
+    }, [createAssistant]);
+
+    const handleDefineMyself = useCallback(() => {
+        setDescription(input);
+        setCurrentStep(2);
+    }, [input]);
+
+    const renderStepIndicator = () => (
+        <div className={styles.stepIndicator}>
+            <div className={`${styles.step} ${currentStep === 1 ? styles.activeStep : styles.completedStep}`}>
+                <div className={styles.stepNumber}>{currentStep > 1 ? "✓" : "1"}</div>
+                <div className={styles.stepLabel}>{t("components.create_assistant_dialog.step1_label")}</div>
+            </div>
+            <div className={styles.stepConnector}></div>
+            <div className={`${styles.step} ${currentStep === 2 ? styles.activeStep : ""}`}>
+                <div className={styles.stepNumber}>2</div>
+                <div className={styles.stepLabel}>{t("components.create_assistant_dialog.step2_label")}</div>
+            </div>
+        </div>
+    );
+
+    const renderStep1 = () => (
         <>
-            <DialogTitle>{t("components.create_assistant_dialog.what_function")}</DialogTitle>
             <DialogContent>
-                <div className={styles.exampleList}>
-                    <Button
-                        disabled={loading}
-                        className={styles.exampleBox}
-                        onClick={() => setInput(t("components.create_assistant_dialog.create_example_one"))}
-                    >
-                        {t("components.create_assistant_dialog.example_one")}
-                    </Button>
-                    <Button
-                        disabled={loading}
-                        className={styles.exampleBox}
-                        onClick={() => setInput(t("components.create_assistant_dialog.create_example_two"))}
-                    >
-                        {t("components.create_assistant_dialog.example_two")}
-                    </Button>
-                    <Button
-                        disabled={loading}
-                        className={styles.exampleBox}
-                        onClick={() => setInput(t("components.create_assistant_dialog.create_example_three"))}
-                    >
-                        {t("components.create_assistant_dialog.example_three")}
-                    </Button>
-                </div>
-                <Field size="large">
+                {renderStepIndicator()}
+
+                <p className={styles.hintText}>
+                    {t("components.create_assistant_dialog.hint_text")}
+                </p>
+
+                <Field size="large" className={styles.fieldSection}>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.action_description")}</label>
                     <Textarea
-                        placeholder={t("components.create_assistant_dialog.describe")}
+                        placeholder={t("components.create_assistant_dialog.describe_placeholder")}
                         size="large"
-                        rows={10}
-                        required
+                        rows={3}
+                        resize="vertical"
                         value={input}
                         onChange={onInputChanged}
                         disabled={loading}
+                        className={styles.textareaField}
                     />
-                    <br />
-                    <p hidden={!loading}>{t("components.create_assistant_dialog.generating_prompt")}</p>
                 </Field>
+
+                <div className={styles.templateSection}>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.or_choose_template")}</label>
+                    <div className={styles.chipContainer}>
+                        <Button
+                            className={`${styles.templateChip} ${selectedTemplate === "example_one" ? styles.selected : ""}`}
+                            onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_one"), "example_one")}
+                            disabled={loading}
+                        >
+                            {t("components.create_assistant_dialog.example_one")}
+                        </Button>
+                        <Button
+                            className={`${styles.templateChip} ${selectedTemplate === "example_two" ? styles.selected : ""}`}
+                            onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_two"), "example_two")}
+                            disabled={loading}
+                        >
+                            {t("components.create_assistant_dialog.example_two")}
+                        </Button>
+                        <Button
+                            className={`${styles.templateChip} ${selectedTemplate === "example_three" ? styles.selected : ""}`}
+                            onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_three"), "example_three")}
+                            disabled={loading}
+                        >
+                            {t("components.create_assistant_dialog.example_three")}
+                        </Button>
+                    </div>
+                </div>
+
+                {loading && <p className={styles.loadingText}>{t("components.create_assistant_dialog.generating_prompt")}</p>}
             </DialogContent>
-            <DialogActions>
-                <Button disabled={loading} appearance="secondary" size="small" onClick={onCancelButtonClicked}>
-                    <Dismiss24Regular /> {t("components.create_assistant_dialog.dismiss")}
+            <DialogActions className={styles.dialogActions}>
+                <Button disabled={loading || input === ""} size="large" onClick={handleDefineMyself} className={styles.defineButton}>
+                    {t("components.create_assistant_dialog.define_myself")}
                 </Button>
-                <Button disabled={loading || input === ""} appearance="secondary" size="small" onClick={createAssistant}>
-                    <Checkmark24Filled /> {t("components.create_assistant_dialog.create")}
-                </Button>
-                <Button disabled={loading} appearance="secondary" size="small" onClick={manuelAssistantCreation}>
-                    <ArrowRight24Regular /> {t("components.create_assistant_dialog.skip")}
+                <Button disabled={loading || input === ""} size="large" onClick={handleContinueWithMucGPT} className={styles.continueButton}>
+                    {t("components.create_assistant_dialog.continue_with_mucgpt")}
                 </Button>
             </DialogActions>
         </>
     );
 
-    const renderOutputView = () => (
+    const renderStep2 = () => (
         <>
-            <DialogTitle>{t("components.create_assistant_dialog.prompt_title_desc")}</DialogTitle>
             <DialogContent>
-                <Field size="large">
-                    {t("create_assistant.title")}:
-                    <Textarea placeholder={t("create_assistant.title")} value={title} size="large" onChange={onTitleChanged} maxLength={100} />
+                {renderStepIndicator()}
+
+                <p className={styles.hintText}>
+                    {t("components.create_assistant_dialog.hint_text_step2")}
+                </p>
+
+                <Field size="large" className={styles.fieldSection}>
+                    <label className={styles.fieldLabel}>{t("create_assistant.title")}:</label>
+                    <Textarea
+                        placeholder={t("create_assistant.title")}
+                        value={title}
+                        size="large"
+                        rows={1}
+                        resize="vertical"
+                        onChange={onTitleChanged}
+                        maxLength={100}
+                        className={styles.textareaField}
+                    />
                 </Field>
-                <Field size="large">
-                    {t("create_assistant.description")}:
-                    <Textarea placeholder={t("create_assistant.description")} value={description} size="large" onChange={onDescriptionChanged} />
+                <Field size="large" className={styles.fieldSection}>
+                    <label className={styles.fieldLabel}>{t("create_assistant.description")}:</label>
+                    <Textarea
+                        placeholder={t("create_assistant.description")}
+                        value={description}
+                        size="large"
+                        rows={3}
+                        resize="vertical"
+                        onChange={onDescriptionChanged}
+                        className={styles.textareaField}
+                    />
                 </Field>
-                <Field size="large">
-                    {t("create_assistant.prompt")}:
-                    <Textarea placeholder={t("create_assistant.prompt")} rows={10} value={systemPrompt} size="large" onChange={onRefinedPromptChanged} />
+                <Field size="large" className={styles.fieldSection}>
+                    <label className={styles.fieldLabel}>{t("create_assistant.prompt")}:</label>
+                    <Textarea
+                        placeholder={t("create_assistant.prompt")}
+                        rows={7}
+                        resize="vertical"
+                        value={systemPrompt}
+                        size="large"
+                        onChange={onRefinedPromptChanged}
+                        className={styles.textareaField}
+                    />
                 </Field>
             </DialogContent>
             <DialogActions>
-                <Button appearance="secondary" size="small" onClick={onBackButtonClicked}>
-                    <EditArrowBack24Regular /> {t("components.create_assistant_dialog.back")}
+                <Button appearance="secondary" size="medium" onClick={() => setCurrentStep(1)}>
+                    {t("components.create_assistant_dialog.back")}
                 </Button>
-                <Button appearance="secondary" size="small" onClick={onPromptButtonClicked}>
+                <Button appearance="primary" size="medium" onClick={onPromptButtonClicked}>
                     <Checkmark24Filled /> {t("components.create_assistant_dialog.save")}
                 </Button>
             </DialogActions>
@@ -250,9 +314,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     return (
         <div>
-            <Dialog modalType={"non-modal"} open={showDialogInput} onOpenChange={(_event, data) => setShowDialogInput(data.open)}>
+            <Dialog modalType="modal" open={showDialogInput} onOpenChange={(_event, data) => setShowDialogInput(data.open)}>
                 <DialogSurface className={styles.dialog}>
-                    <DialogBody className={styles.dialogContent}>{showOutputView ? renderOutputView() : renderInputView()}</DialogBody>
+                    <DialogTitle className={styles.dialogTitle}>
+                        {t("components.create_assistant_dialog.dialog_title")}
+                    </DialogTitle>
+                    <DialogBody className={styles.dialogContent}>
+                        {currentStep === 1 ? renderStep1() : renderStep2()}
+                    </DialogBody>
                 </DialogSurface>
             </Dialog>
         </div>

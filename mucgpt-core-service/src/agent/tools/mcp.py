@@ -70,7 +70,7 @@ class McpLoader:
             McpLoader._logger.info(f"Loading mcp tools for user {user_info.user_id}")
             mcp_client = MultiServerMCPClient(connections=mcp_connections)
             tools = []
-            for source_id in sources.keys():
+            for source_id in mcp_connections.keys():
                 try:
                     tools += await mcp_client.get_tools(server_name=source_id)
                 except Exception as e:

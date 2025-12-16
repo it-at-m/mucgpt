@@ -157,16 +157,19 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         }
     }, [input, LLM.llm_name, llmMaxOutputTokens, showError, showSuccess, t]);
 
-    const handleTemplateSelect = useCallback((template: string, templateId: string) => {
-        // Toggle functionality: if already selected, deselect it
-        if (selectedTemplate === templateId) {
-            setInput("");
-            setSelectedTemplate("");
-        } else {
-            setInput(template);
-            setSelectedTemplate(templateId);
-        }
-    }, [selectedTemplate]);
+    const handleTemplateSelect = useCallback(
+        (template: string, templateId: string) => {
+            // Toggle functionality: if already selected, deselect it
+            if (selectedTemplate === templateId) {
+                setInput("");
+                setSelectedTemplate("");
+            } else {
+                setInput(template);
+                setSelectedTemplate(templateId);
+            }
+        },
+        [selectedTemplate]
+    );
 
     const handleContinueWithMucGPT = useCallback(async () => {
         await createAssistant();
@@ -196,9 +199,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             <DialogContent>
                 {renderStepIndicator()}
 
-                <p className={styles.hintText}>
-                    {t("components.create_assistant_dialog.hint_text")}
-                </p>
+                <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
 
                 <Field size="large" className={styles.fieldSection}>
                     <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.action_description")}</label>
@@ -259,9 +260,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             <DialogContent>
                 {renderStepIndicator()}
 
-                <p className={styles.hintText}>
-                    {t("components.create_assistant_dialog.hint_text_step2")}
-                </p>
+                <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text_step2")}</p>
 
                 <Field size="large" className={styles.fieldSection}>
                     <label className={styles.fieldLabel}>{t("create_assistant.title")}:</label>
@@ -316,12 +315,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <div>
             <Dialog modalType="modal" open={showDialogInput} onOpenChange={(_event, data) => setShowDialogInput(data.open)}>
                 <DialogSurface className={styles.dialog}>
-                    <DialogTitle className={styles.dialogTitle}>
-                        {t("components.create_assistant_dialog.dialog_title")}
-                    </DialogTitle>
-                    <DialogBody className={styles.dialogContent}>
-                        {currentStep === 1 ? renderStep1() : renderStep2()}
-                    </DialogBody>
+                    <DialogTitle className={styles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
+                    <DialogBody className={styles.dialogContent}>{currentStep === 1 ? renderStep1() : renderStep2()}</DialogBody>
                 </DialogSurface>
             </Dialog>
         </div>

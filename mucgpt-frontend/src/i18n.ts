@@ -323,8 +323,10 @@ i18n
                             dialog_title: "Neuen Assistent erstellen",
                             step1_label: "Funktion beschreiben",
                             step2_label: "Assistent erstellen",
-                            hint_text: "Hinweis: Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
-                            hint_text_step2: "Hinweis: Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
+                            hint_text:
+                                "Hinweis: Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
+                            hint_text_step2:
+                                "Hinweis: Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
                             action_description: "Funktionsbeschreibung",
                             describe_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             or_choose_template: "Alternativ könntest du auch die unteren vordefinierten Assistenten erstmal probieren:",

@@ -5,7 +5,7 @@
 
 .chatRoot {
     position: fixed;
-    top: var(--nav-height, 50px);   
+    top: var(--nav-height, 50px);
     left: calc(var(--sidebarWidth, 240px));
     right: 0;
     bottom: 0;

@@ -384,7 +384,7 @@
 
 .rangeInput::-webkit-slider-thumb:active {
     transform: scale(1.2);
-        background: var(--primary);
+    background: var(--primary);
 }
 
 .rangeInput::-moz-range-thumb {

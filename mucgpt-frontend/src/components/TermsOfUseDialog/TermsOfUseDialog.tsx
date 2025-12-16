@@ -83,7 +83,11 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                                         itm.kicc@muenchen.de
                                     </Link>{" "}
                                     wenden. Technische Fehler bitte an den{" "}
-                                    <Link inline className={styles.link} href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/content/it-servicedesk-neu">
+                                    <Link
+                                        inline
+                                        className={styles.link}
+                                        href="https://wilma.muenchen.de/pages/it-nutzung-support/apps/content/it-servicedesk-neu"
+                                    >
                                         {" "}
                                         zuständigen Servicedesk
                                     </Link>{" "}

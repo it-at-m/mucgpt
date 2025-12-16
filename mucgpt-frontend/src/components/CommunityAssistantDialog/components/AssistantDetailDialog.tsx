@@ -153,8 +153,8 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                                     isOwned
                                         ? t("components.community_assistants.owned_assistant")
                                         : isAlreadySaved
-                                            ? t("components.community_assistants.assistant_already_saved")
-                                            : t("components.community_assistants.save")
+                                          ? t("components.community_assistants.assistant_already_saved")
+                                          : t("components.community_assistants.save")
                                 }
                                 relationship="description"
                                 positioning="above"

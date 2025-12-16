@@ -74,7 +74,7 @@ export const Layout = () => {
     useEffect(() => {
         const colors = isLight ? lightThemeColors : darkThemeColors;
         applyCssVariables(colors);
-        document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+        document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
     }, [isLight]);
 
     // change theme
@@ -84,7 +84,7 @@ export const Layout = () => {
             localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
             setTheme(adjustTheme(light, fontscaling));
             // Set data-theme attribute for CSS custom properties
-            document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+            document.documentElement.setAttribute("data-theme", light ? "light" : "dark");
         },
         [fontscaling, setLight, setTheme]
     );
@@ -160,11 +160,7 @@ export const Layout = () => {
 
                             <header className={styles.header} role="banner" aria-label={t("common.main_navigation", "Hauptnavigation")}>
                                 <Link to="/" className={styles.headerTitleContainer} aria-label={t("common.home_link", "Zur Startseite")}>
-                                    <img
-                                        src={config.alternative_logo ? alternative_logo : isLight ? logo : logo_black}
-                                        alt="MUCGPT"
-                                        className={styles.logo}
-                                    />
+                                    <img src={config.alternative_logo ? alternative_logo : isLight ? logo : logo_black} alt="MUCGPT" className={styles.logo} />
                                     <h1
                                         className={styles.headerTitle}
                                         aria-label={t("common.environment_label", "Umgebung: {{env}}", { env: config.env_name })}

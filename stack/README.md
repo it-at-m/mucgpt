@@ -70,7 +70,7 @@ This directory contains the Docker Compose configuration for running the complet
 │                    │  │ service    │  │   │ └────────┘ │         │
 │                    │  │ :8084      │  │   │            │         │
 │                    │  └────────────┘  │   │ ┌────────┐ │         │
-│                    │                  │   │ │Redis   │ │         │
+│                    │                  │   │ │Valkey  │ │         │
 │                    │  ┌────────────┐  │   │ │:6379   │ │         │
 │                    │  │ assistant- │  │   │ └────────┘ │         │
 │                    │  │ migrations │  │   │            │         │
@@ -89,7 +89,7 @@ This directory contains the Docker Compose configuration for running the complet
 | **postgres** | 5432 | PostgreSQL 17.4 database |
 | **pg-admin** | 5050 | Database administration UI |
 | **keycloak** | 8100 | Identity and access management |
-| **redis** | 6379 | In-memory data store |
+| **valkey** | 6379 | In-memory data store (Redis-compatible) |
 | **refarch-gateway** | 8083 | API Gateway with OAuth2/OIDC |
 
 ### Application Services

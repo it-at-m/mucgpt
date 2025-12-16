@@ -95,14 +95,13 @@ services:
     security_opt: *security_settings
 
   #
-  # #### Redis ####
+  # #### Valkey ####
   #
-  redis:
-    image: redis:8.4.0
+  valkey:
+    image: valkey/valkey:8.0.1-alpine
     ports:
       - "6379:6379"
-    environment:
-      - REDIS_PASSWORD=password
+    command: ["valkey-server", "--requirepass", "password"]
     networks:
       - internal
     security_opt: *security_settings

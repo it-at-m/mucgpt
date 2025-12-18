@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "mucgpt-core-service"
 version = "0.4.0"
 description = "a web interface for large language models for the public administration"

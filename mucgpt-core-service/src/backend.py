@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 
 from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from fastapi import FastAPI, Request
@@ -14,14 +15,23 @@ from api.routers import (
 from config.settings import get_settings
 from core.auth_models import AuthError
 from core.logtools import getLogger
+from init_app import destroy_app, warmup_app
 
 logger = getLogger()
 
 # Initialize the application's services and settings.
 settings = get_settings()
 
+# setup lifespan hooks
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await warmup_app()
+    yield
+    await destroy_app()
+
+
 # serves static files and the api
-backend = FastAPI(title="MUCGPT", version=settings.VERSION)
+backend = FastAPI(title="MUCGPT", version=settings.VERSION, lifespan=lifespan)
 # serves the api
 api_app = FastAPI(
     title="MUCGPT-API",

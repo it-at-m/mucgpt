@@ -1,9 +1,10 @@
 # tests/integration/test_chat_router.py
 import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from fastapi.testclient import TestClient
 
+from agent.agent_executor import MUCGPTAgentExecutor
 from api.api_models import (
     ChatCompletionChoice,
     ChatCompletionChunk,
@@ -15,14 +16,16 @@ from api.api_models import (
     Usage,
 )
 
+DUMMY_USER_ID = "test_user_123"
+
 # No need to include the router again since it's already included in backend.py
 # We're testing the mounted application directly
 
 
 # These fixtures are imported from conftest.py
 class TestChatRouter:
-    @patch("api.routers.chat_router.agent_executor")
-    def test_non_streaming_completion(self, mock_chat_service, test_client: TestClient):
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_non_streaming_completion(self, mock_init_agent, test_client: TestClient):
         """Test the non-streaming chat completion endpoint."""
         # Mock the chat service response using proper models
         mock_response = ChatCompletionResponse(
@@ -40,9 +43,11 @@ class TestChatRouter:
             ],
             usage=Usage(prompt_tokens=10, completion_tokens=8, total_tokens=18),
         )
-        mock_chat_service.run_without_streaming.return_value = (
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.return_value = (
             mock_response.model_dump()
         )
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model, now with enabled_tools
         payload_model = ChatCompletionRequest(
@@ -83,8 +88,8 @@ class TestChatRouter:
         assert response.usage.completion_tokens > 0
         assert response.usage.total_tokens > 0
 
-    @patch("api.routers.chat_router.agent_executor")
-    def test_streaming_completion(self, mock_chat_service, test_client: TestClient):
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
+    def test_streaming_completion(self, mock_init_agent, test_client: TestClient):
         """Test the streaming chat completion endpoint."""
         # Mock streaming response - return an async generator that yields JSON strings
 
@@ -132,7 +137,9 @@ class TestChatRouter:
             )
             yield chunk3.model_dump()
 
-        mock_chat_service.run_with_streaming.return_value = mock_streaming_generator()
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_with_streaming.return_value = mock_streaming_generator()
+        mock_init_agent.return_value = mock_agent_executor
         # Create payload using proper model, now with enabled_tools
         payload_model = ChatCompletionRequest(
             model="gpt-4o-mini",
@@ -210,12 +217,14 @@ class TestChatRouter:
                 f"Combined content was: {content_buffer}"
             )
 
-    @patch("api.routers.chat_router.agent_executor")
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_invalid_model(
-        self, mock_chat_service, test_client: TestClient
+        self, mock_init_agent, test_client: TestClient
     ):
         """Test chat completion with invalid model."""
-        mock_chat_service.run_without_streaming.side_effect = Exception("Invalid model")
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.side_effect = Exception("Invalid model")
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(
@@ -235,14 +244,16 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 422
 
-    @patch("api.routers.chat_router.agent_executor")
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_empty_messages(
-        self, mock_chat_service, test_client: TestClient
+        self, mock_init_agent, test_client: TestClient
     ):
         """Test chat completion with empty messages array."""
-        mock_chat_service.run_without_streaming.side_effect = Exception(
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.side_effect = Exception(
             "Empty messages"
         )
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(
@@ -252,9 +263,9 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 500
 
-    @patch("api.routers.chat_router.agent_executor")
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_high_temperature(
-        self, mock_chat_service, test_client: TestClient
+        self, mock_init_agent, test_client: TestClient
     ):
         """Test chat completion with high temperature."""
         mock_response = ChatCompletionResponse(
@@ -272,9 +283,11 @@ class TestChatRouter:
             ],
             usage=Usage(prompt_tokens=5, completion_tokens=3, total_tokens=8),
         )
-        mock_chat_service.run_without_streaming.return_value = (
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.return_value = (
             mock_response.model_dump()
         )
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(
@@ -292,14 +305,16 @@ class TestChatRouter:
         assert response.id
         assert response.choices[0].message.content
 
-    @patch("api.routers.chat_router.agent_executor")
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_zero_max_tokens(
-        self, mock_chat_service, test_client: TestClient
+        self, mock_init_agent, test_client: TestClient
     ):
         """Test chat completion with zero max tokens."""
-        mock_chat_service.run_without_streaming.side_effect = Exception(
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.side_effect = Exception(
             "Zero max tokens"
         )
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(
@@ -313,12 +328,14 @@ class TestChatRouter:
         # Should either work with 0 tokens or return error
         assert resp.status_code in [200, 422, 500]
 
-    @patch("api.routers.chat_router.agent_executor")
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_service_exception(
-        self, mock_chat_service, test_client: TestClient
+        self, mock_init_agent, test_client: TestClient
     ):
         """Test chat completion when service raises exception."""
-        mock_chat_service.run_without_streaming.side_effect = Exception("Service error")
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.side_effect = Exception("Service error")
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(
@@ -330,9 +347,9 @@ class TestChatRouter:
         resp = test_client.post("/v1/chat/completions", json=payload)
         assert resp.status_code == 500
 
-    @patch("api.routers.chat_router.agent_executor")
+    @patch("api.routers.chat_router.init_agent", new_callable=AsyncMock)
     def test_chat_completion_different_message_roles(
-        self, mock_chat_service, test_client: TestClient
+        self, mock_init_agent, test_client: TestClient
     ):
         """Test chat completion with different message roles."""
         mock_response = ChatCompletionResponse(
@@ -351,9 +368,11 @@ class TestChatRouter:
             ],
             usage=Usage(prompt_tokens=25, completion_tokens=10, total_tokens=35),
         )
-        mock_chat_service.run_without_streaming.return_value = (
+        mock_agent_executor = Mock(MUCGPTAgentExecutor)
+        mock_agent_executor.run_without_streaming.return_value = (
             mock_response.model_dump()
         )
+        mock_init_agent.return_value = mock_agent_executor
 
         # Create payload using proper model
         payload_model = ChatCompletionRequest(

@@ -11,8 +11,6 @@ from langchain_core.messages import (
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
-from langfuse import Langfuse
-from langfuse.langchain import CallbackHandler
 
 from agent.agent import MUCGPTAgent
 from agent.tools.tool_chunk import ToolStreamChunk
@@ -27,7 +25,8 @@ from api.api_models import (
 )
 from api.api_models import ChatCompletionMessage as InputMessage
 from api.exception import llm_exception_handler
-from config.settings import LangfuseSettings
+from config.langfuse_provider import LangfuseProvider
+from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
 
 logger = getLogger(name="mucgpt-core-agent")
@@ -76,37 +75,13 @@ class MUCGPTAgentExecutor:
 
     def __init__(
         self,
-        version: str,
         agent: MUCGPTAgent = None,
-        langfuse_cfg: LangfuseSettings = None,
     ):
         self.logger = logger
         self.agent = agent
-        self.langfuse = None
-        self.langfuse_handler = None
 
-        if langfuse_cfg is not None:
-            if (
-                langfuse_cfg.HOST
-                and langfuse_cfg.SECRET_KEY
-                and langfuse_cfg.PUBLIC_KEY
-            ):
-                try:
-                    self.langfuse = Langfuse(
-                        public_key=langfuse_cfg.PUBLIC_KEY,
-                        host=langfuse_cfg.HOST,
-                        secret_key=langfuse_cfg.SECRET_KEY,
-                        release=version,
-                    )
-                    self.langfuse.auth_check()
-                    self.langfuse_handler = CallbackHandler(
-                        public_key=langfuse_cfg.PUBLIC_KEY,
-                    )
-                except Exception as e:
-                    self.logger.error(f"Error initializing Langfuse: {e}")
-                    self.langfuse = None
-                    self.langfuse_handler = None
-        callbacks = [self.langfuse_handler] if self.langfuse_handler else []
+        langfuse_handler = LangfuseProvider.get_callback_handler()
+        callbacks = [langfuse_handler] if langfuse_handler else []
         self.base_config: RunnableConfig = RunnableConfig(
             callbacks=callbacks,
             run_name="MUCGPTAgent",
@@ -121,7 +96,7 @@ class MUCGPTAgentExecutor:
         temperature: float,
         max_output_tokens: int,
         model: str,
-        department: Optional[str],
+        user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
@@ -144,6 +119,7 @@ class MUCGPTAgentExecutor:
                     "llm": model,
                     "llm_streaming": True,
                     "enabled_tools": enabled_tools,
+                    "user_info": user_info,
                 },
             ),
         )
@@ -239,7 +215,7 @@ class MUCGPTAgentExecutor:
         temperature: float,
         max_output_tokens: int,
         model: str,
-        department: Optional[str],
+        user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
     ) -> ChatCompletionResponse:
         logger.info(
@@ -256,6 +232,7 @@ class MUCGPTAgentExecutor:
                 "llm": model,
                 "llm_streaming": False,
                 "enabled_tools": enabled_tools,
+                "user_info": user_info,
             }
         )
         config = merge_configs(self.base_config, request_config)

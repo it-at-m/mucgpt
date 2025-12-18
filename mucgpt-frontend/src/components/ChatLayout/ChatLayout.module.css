@@ -33,7 +33,7 @@
     padding-top: 50px;
     padding-bottom: 60px;
     height: 100%;
-    width: var(--sidebarWidth);
+    width: min(var(--sidebarWidth), 100%);
     border-right: 1px solid;
 }
 

@@ -1,0 +1,103 @@
+.stepIndicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.stepWrapper {
+    display: flex;
+    align-items: center;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.stepNumber {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--fontSizeBase400);
+    background: var(--outline);
+    color: var(--onPrimary);
+}
+
+.pendingStep .stepNumber {
+    background: var(--outline);
+    color: var(--onSurface);
+}
+
+.pendingStep .stepLabel {
+    color: var(--outline);
+    font-weight: 500;
+}
+
+.activeStep .stepNumber {
+    background: var(--primary);
+    color: var(--onPrimary);
+}
+
+.activeStep .stepLabel {
+    color: var(--onSurface);
+    font-weight: 600;
+}
+
+.completedStep .stepNumber {
+    background: var(--primary);
+    color: var(--onPrimary);
+}
+
+.completedStep .stepLabel {
+    color: var(--onSurface);
+}
+
+.stepLabel {
+    color: var(--outline);
+    font-weight: 500;
+    font-size: var(--fontSizeBase300);
+}
+
+.stepConnector {
+    position: relative;
+    min-width: 100px;
+    max-width: 200px;
+    height: 2px;
+    background: var(--outline);
+    margin: 0 1rem;
+    margin-bottom: 28px;
+}
+
+.stepConnector.completed {
+    background: var(--primary);
+}
+
+/* Responsive Design */
+@media (max-width: 650px) {
+    .stepIndicator {
+        padding: 10px 0 5px 0;
+    }
+
+    .stepNumber {
+        width: 36px;
+        height: 36px;
+        font-size: var(--fontSizeBase300);
+    }
+
+    .stepLabel {
+        font-size: var(--fontSizeBase200);
+    }
+
+    .stepConnector {
+        min-width: 40px;
+        max-width: 120px;
+        margin: 0 0.5rem;
+        margin-bottom: 24px;
+    }
+}

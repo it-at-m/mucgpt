@@ -26,14 +26,15 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
     const { showSuccess } = useGlobalToastContext();
     const [publishDepartments, setPublishDepartments] = useState<string[]>(assistant.hierarchical_access || []);
 
-    // visibilityMode: 'public' | 'departments' | 'private'
     const initialVisibility = invisibleChecked ? "private" : (publishDepartments && publishDepartments.length > 0 ? "departments" : "public");
-    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility as any);
+    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
 
-    // keep parent checkbox state in sync
     useEffect(() => {
-        setInvisibleChecked(visibilityMode === "private");
-    }, [visibilityMode, setInvisibleChecked]);
+        setVisibilityMode(invisibleChecked ? "private" : (publishDepartments && publishDepartments.length > 0 ? "departments" : "public"));
+    }, [invisibleChecked, publishDepartments]);
+
+    const departmentsSelected = Array.isArray(publishDepartments) && publishDepartments.length > 0;
+    const publishDisabled = isPublishing || publishedAssistantId !== null || (visibilityMode === "departments" && !departmentsSelected);
 
     const handlePublishClick = useCallback(async () => {
         setIsPublishing(true);
@@ -168,21 +169,26 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                                     <div className={styles.radioDescription}>
                                                         {t("components.publish_assistant_dialog.departments_description")}
                                                     </div>
-                                                    {visibilityMode === "departments" && (
-                                                        <div className={styles.departmentSection}>
-                                                            <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
-                                                                {t("components.edit_assistant_dialog.departments")}
-                                                            </InfoLabel>
-                                                            <div className={styles.departmentDropdown}>
-                                                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
                                             }
                                         />
                                     </Field>
+                                    {visibilityMode === "departments" && (
+                                        <div className={styles.departmentSection}>
+                                            <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
+                                                {t("components.edit_assistant_dialog.departments")}
+                                            </InfoLabel>
+                                            <div className={styles.departmentDropdown}>
+                                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
+                                            </div>
 
+                                            {!departmentsSelected && (
+                                                <Text size={200} className={styles.noDepartmentsWarning}>
+                                                    {t("components.publish_assistant_dialog.no_departments_selected")}
+                                                </Text>
+                                            )}
+                                        </div>
+                                    )}
                                     <Field>
                                         <Radio
                                             value="private"
@@ -222,7 +228,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                     size="medium"
                                     onClick={handlePublishClick}
                                     className={styles.publishButton}
-                                    disabled={isPublishing}
+                                    disabled={publishDisabled}
                                 >
                                     <Checkmark24Filled />
                                     {isPublishing ? t("components.publish_assistant_dialog.publishing") : t("components.publish_assistant_dialog.confirm")}

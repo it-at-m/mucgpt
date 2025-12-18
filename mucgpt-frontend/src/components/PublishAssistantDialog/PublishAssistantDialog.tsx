@@ -30,7 +30,11 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
     const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
 
     useEffect(() => {
-        setVisibilityMode(invisibleChecked ? "private" : (publishDepartments && publishDepartments.length > 0 ? "departments" : "public"));
+        setVisibilityMode(invisibleChecked
+            ? "private"
+            : (publishDepartments && publishDepartments.length > 0 && !publishDepartments.includes("*")
+                ? "departments"
+                : "public"));
     }, [invisibleChecked, publishDepartments]);
 
     const departmentsSelected = Array.isArray(publishDepartments) && publishDepartments.length > 0;

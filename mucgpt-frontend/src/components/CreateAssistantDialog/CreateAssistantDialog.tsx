@@ -8,6 +8,7 @@ import {
     DialogSurface,
     DialogTitle,
     Field,
+    InfoLabel,
     Textarea,
     TextareaOnChangeData
 } from "@fluentui/react-components";
@@ -21,6 +22,7 @@ import { ASSISTANT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { createAssistantApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
+import { Stepper, Step } from "../Stepper";
 
 interface Props {
     showDialogInput: boolean;
@@ -60,29 +62,17 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // description change
     const onDescriptionChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) {
-            setDescription(newValue.value);
-        } else {
-            setDescription("");
-        }
+        setDescription(newValue?.value ?? "");
     }, []);
 
     // title change
     const onTitleChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) {
-            setTitle(newValue.value);
-        } else {
-            setTitle("Assistent");
-        }
+        setTitle(newValue?.value ?? "");
     }, []);
 
     // system prompt change
     const onRefinedPromptChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) {
-            setSystemPrompt(newValue.value);
-        } else {
-            setSystemPrompt("");
-        }
+        setSystemPrompt(newValue?.value ?? "");
     }, []);
 
     // save assistant
@@ -180,42 +170,37 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setCurrentStep(2);
     }, [input]);
 
-    const renderStepIndicator = () => (
-        <div className={styles.stepIndicator}>
-            <div className={`${styles.step} ${currentStep === 1 ? styles.activeStep : styles.completedStep}`}>
-                <div className={styles.stepNumber}>{currentStep > 1 ? "✓" : "1"}</div>
-                <div className={styles.stepLabel}>{t("components.create_assistant_dialog.step1_label")}</div>
-            </div>
-            <div className={styles.stepConnector}></div>
-            <div className={`${styles.step} ${currentStep === 2 ? styles.activeStep : ""}`}>
-                <div className={styles.stepNumber}>2</div>
-                <div className={styles.stepLabel}>{t("components.create_assistant_dialog.step2_label")}</div>
-            </div>
-        </div>
-    );
+    const steps: Step[] = [
+        {
+            label: t("components.create_assistant_dialog.step1_label"),
+            completedIcon: <Checkmark24Filled />
+        },
+        {
+            label: t("components.create_assistant_dialog.step2_label")
+        }
+    ];
 
     const renderStep1 = () => (
         <>
             <DialogContent>
-                {renderStepIndicator()}
+                <Stepper steps={steps} currentStep={currentStep} />
 
                 <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
 
                 <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.action_description")}</label>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
                     <Textarea
-                        placeholder={t("components.create_assistant_dialog.describe_placeholder")}
+                        placeholder={t("components.create_assistant_dialog.description_placeholder")}
                         size="large"
                         rows={3}
                         resize="vertical"
                         value={input}
                         onChange={onInputChanged}
                         disabled={loading}
-                        className={styles.textareaField}
                     />
                 </Field>
 
-                <div className={styles.templateSection}>
+                <div>
                     <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.or_choose_template")}</label>
                     <div className={styles.chipContainer}>
                         <Button
@@ -242,13 +227,13 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     </div>
                 </div>
 
-                {loading && <p className={styles.loadingText}>{t("components.create_assistant_dialog.generating_prompt")}</p>}
+                <p hidden={!loading}>{t("components.create_assistant_dialog.generating_prompt")}</p>
             </DialogContent>
             <DialogActions className={styles.dialogActions}>
-                <Button disabled={loading || input === ""} size="large" onClick={handleDefineMyself} className={styles.defineButton}>
+                <Button disabled={loading || input === ""} size="medium" onClick={handleDefineMyself} className={styles.defineButton}>
                     {t("components.create_assistant_dialog.define_myself")}
                 </Button>
-                <Button disabled={loading || input === ""} size="large" onClick={handleContinueWithMucGPT} className={styles.continueButton}>
+                <Button disabled={loading || input === ""} size="medium" onClick={handleContinueWithMucGPT} className={styles.continueButton}>
                     {t("components.create_assistant_dialog.continue_with_mucgpt")}
                 </Button>
             </DialogActions>
@@ -258,54 +243,69 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     const renderStep2 = () => (
         <>
             <DialogContent>
-                {renderStepIndicator()}
+                <Stepper steps={steps} currentStep={currentStep} />
 
                 <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text_step2")}</p>
 
                 <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("create_assistant.title")}:</label>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.title")}:</label>
                     <Textarea
-                        placeholder={t("create_assistant.title")}
+                        placeholder={t("components.create_assistant_dialog.title_placeholder")}
                         value={title}
                         size="large"
                         rows={1}
                         resize="vertical"
                         onChange={onTitleChanged}
                         maxLength={100}
-                        className={styles.textareaField}
                     />
                 </Field>
                 <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("create_assistant.description")}:</label>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
                     <Textarea
-                        placeholder={t("create_assistant.description")}
+                        placeholder={t("components.create_assistant_dialog.description_placeholder")}
                         value={description}
                         size="large"
                         rows={3}
                         resize="vertical"
                         onChange={onDescriptionChanged}
-                        className={styles.textareaField}
                     />
                 </Field>
                 <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("create_assistant.prompt")}:</label>
+                    <label className={styles.fieldLabel}>
+                        {t("components.create_assistant_dialog.prompt")}:
+                        <InfoLabel
+                            info={
+                                <div>
+                                    <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
+                                    {t("components.chattsettingsdrawer.system_prompt_info")}
+                                </div>
+                            }
+                        />
+                    </label>
                     <Textarea
-                        placeholder={t("create_assistant.prompt")}
+                        placeholder={t("components.create_assistant_dialog.prompt_placeholder")}
                         rows={7}
                         resize="vertical"
                         value={systemPrompt}
                         size="large"
                         onChange={onRefinedPromptChanged}
-                        className={styles.textareaField}
                     />
                 </Field>
             </DialogContent>
-            <DialogActions>
-                <Button appearance="secondary" size="medium" onClick={() => setCurrentStep(1)}>
-                    {t("components.create_assistant_dialog.back")}
+            <DialogActions className={styles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(1)} className={styles.backButton}>
+                    {t("common.back")}
                 </Button>
-                <Button appearance="primary" size="medium" onClick={onPromptButtonClicked}>
-                    <Checkmark24Filled /> {t("components.create_assistant_dialog.save")}
+                <Button size="medium" onClick={onCancelButtonClicked} className={styles.cancelButton}>
+                    {t("common.cancel")}
+                </Button>
+                <Button
+                    size="medium"
+                    onClick={onPromptButtonClicked}
+                    className={styles.createButton}
+                    disabled={title.trim() === "" || description.trim() === "" || systemPrompt.trim() === ""}
+                >
+                    {t("common.create")}
                 </Button>
             </DialogActions>
         </>

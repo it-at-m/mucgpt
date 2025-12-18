@@ -19,7 +19,6 @@
     padding: 24px 24px 16px 24px;
     font-size: var(--fontSizeHero800);
     font-weight: 600;
-    border-bottom: 1px solid var(--outline);
 }
 
 .dialogContent {
@@ -29,111 +28,34 @@
     min-height: 0;
 }
 
-/* Step Indicator Styles */
-.stepIndicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    padding: 20px 0 10px 0;
-}
-
-.step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.stepNumber {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: var(--fontSizeBase400);
-    background: var(--primary);
-}
-
-.activeStep .stepNumber {
-    background: var(--primary);
-    color: var(--onPrimary);
-}
-
-.completedStep .stepNumber {
-    background: var(--primary);
-    color: var(--onPrimary);
-}
-
-.stepLabel {
-    color: var(--outline);
-    font-weight: 500;
-}
-
-.activeStep .stepLabel {
-    color: var(--colorNeutralForeground1);
-    font-weight: 600;
-}
-
-.completedStep .stepLabel {
-    color: var(--colorNeutralForeground2);
-}
-
-.stepConnector {
-    width: 300px;
-    height: 2px;
-    background: var(--primary);
-    margin: 0 16px;
-    margin-bottom: 28px;
-}
-
 /* Field Styles */
 .fieldSection {
     margin-bottom: 24px;
 }
 
 .fieldLabel {
-    display: block;
     margin-bottom: 8px;
     font-weight: 600;
     font-size: var(--fontSizeBase400);
-    color: var(--colorNeutralForeground1);
-}
-
-.textareaField {
-    width: 100%;
-}
-
-/* Template Section Styles */
-.templateSection {
-    margin-top: 24px;
-    margin-bottom: 24px;
+    color: var(--onSurface);
 }
 
 .chipContainer {
     display: flex;
     gap: 12px;
-    flex-wrap: wrap;
     margin-top: 8px;
 }
 
 .templateChip {
     flex: 1;
     min-width: 150px;
-    padding: 12px 16px;
-    border-radius: 20px;
     font-size: var(--fontSizeBase300);
-    text-align: center;
-    transition: all 0.2s ease;
     background: var(--primaryContainer) !important;
     color: var(--onPrimaryContainer) !important;
     border: 1px solid var(--outline) !important;
 }
 
-.templateChip:hover:not(:disabled):not(.selected) {
-    transform: translateY(-2px);
+.templateChip:hover:not(:disabled) {
     box-shadow:
         0px 4px 8px rgba(0, 0, 0, 0.12),
         0px 0px 2px rgba(0, 0, 0, 0.08);
@@ -145,58 +67,52 @@
     border: 1px solid var(--onPrimary) !important;
 }
 
-.templateChip.selected:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow:
-        0px 4px 8px rgba(0, 0, 0, 0.12),
-        0px 0px 2px rgba(0, 0, 0, 0.08);
-}
-
-.loadingText {
-    text-align: center;
-    color: var(--colorNeutralForeground3);
-    font-style: italic;
-    margin-top: 16px;
-}
-
 /* Hint Text */
 .hintText {
-    margin: 0 0 20px 0;
     padding: 12px 16px;
-    background: var(--colorBrandBackground2);
-    border-left: 3px solid var(--colorBrandBackground);
+    background: var(--primaryContainer);
+    border-left: 3px solid var(--primary);
     font-size: var(--fontSizeBase300);
-    color: var(--colorNeutralForeground1);
-    line-height: 1.5;
+    color: var(--onPrimaryContainer);
 }
 
-/* Dialog Actions */
 .dialogActions {
-    justify-content: center;
-    padding: 16px 24px 24px 24px;
-    gap: 12px;
+    padding-top: 26px;
+    width: 100%;
+    grid-column: 1 / -1 !important;
+    justify-content: end;
 }
 
+.backButton {
+    margin-right: auto !important;
+}
+
+.backButton,
+.cancelButton,
 .defineButton {
     background: var(--primaryContainer) !important;
     color: var(--onPrimaryContainer) !important;
     border: 1px solid var(--outline) !important;
 }
 
+.createButton,
 .continueButton {
     background: var(--primary) !important;
     color: var(--onPrimary) !important;
-    border: 1px solid var(--outline) !important;
+    border: 1px solid var(--primary) !important;
 }
 
+.createButton:hover:not(:disabled),
+.backButton:not(:disabled),
+.cancelButton:not(:disabled),
 .defineButton:hover:not(:disabled),
 .continueButton:hover:not(:disabled) {
-    transform: translateY(-1px);
     box-shadow:
         0px 4px 12px rgba(0, 0, 0, 0.15),
         0px 0px 4px rgba(0, 0, 0, 0.1);
 }
 
+.createButton:disabled,
 .defineButton:disabled,
 .continueButton:disabled {
     background: var(--disabled) !important;

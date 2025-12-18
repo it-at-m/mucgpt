@@ -1,4 +1,4 @@
-import { Checkmark24Filled } from "@fluentui/react-icons";
+import { Checkmark24Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -10,7 +10,7 @@ import {
     Field,
     InfoLabel,
     Textarea,
-    TextareaOnChangeData
+    TextareaOnChangeData,
 } from "@fluentui/react-components";
 
 import styles from "./CreateAssistantDialog.module.css";
@@ -188,7 +188,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
 
                 <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.description")}: *</label>
                     <Textarea
                         placeholder={t("components.create_assistant_dialog.description_placeholder")}
                         size="large"
@@ -315,7 +315,16 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <div>
             <Dialog modalType="modal" open={showDialogInput} onOpenChange={(_event, data) => setShowDialogInput(data.open)}>
                 <DialogSurface className={styles.dialog}>
-                    <DialogTitle className={styles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
+                    <div className={styles.dialogHeader}>
+                        <DialogTitle className={styles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            onClick={onCancelButtonClicked}
+                            className={styles.closeButton}
+                            icon={<Dismiss24Regular />}
+                        />
+                    </div>
                     <DialogBody className={styles.dialogContent}>{currentStep === 1 ? renderStep1() : renderStep2()}</DialogBody>
                 </DialogSurface>
             </Dialog>

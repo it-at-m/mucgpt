@@ -40,6 +40,10 @@
     color: var(--onSurface);
 }
 
+.requiredSymbol {
+    color: var(--onSurface);
+}
+
 .chipContainer {
     display: flex;
     gap: 12px;
@@ -103,8 +107,8 @@
 }
 
 .createButton:hover:not(:disabled),
-.backButton:not(:disabled),
-.cancelButton:not(:disabled),
+.backButton:hover,
+.cancelButton:hover,
 .defineButton:hover:not(:disabled),
 .continueButton:hover:not(:disabled) {
     box-shadow:
@@ -118,4 +122,31 @@
     background: var(--disabled) !important;
     color: var(--onSurface) !important;
     cursor: not-allowed !important;
+}
+
+.closeButton {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    transition: all 0.2s ease;
+    color: var(--colorNeutralForeground2);
+}
+
+.dialogHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-right: 24px;
+    background-color: var(--colorNeutralBackground1);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }

@@ -84,7 +84,7 @@ function Update-ManifestVersion {
         }
 
         $updatedContent = $regex.Replace($content, { param($match) return $match.Groups['prefix'].Value + $NewVersion + $match.Groups['suffix'].Value }, 1)
-        Set-Content -Path $FilePath -Value $updatedContent -Encoding UTF8
+        [System.IO.File]::WriteAllText($FilePath, $updatedContent, (New-Object System.Text.UTF8Encoding $false))
     }
     elseif ($ManifestType -eq "packageJson") {
         $content = Get-Content -Raw -Path $FilePath
@@ -96,7 +96,7 @@ function Update-ManifestVersion {
 
         $replacement = { param($match) return $match.Groups[1].Value + $NewVersion + $match.Groups[2].Value }
         $updatedContent = $regex.Replace($content, $replacement, 1)
-        Set-Content -Path $FilePath -Value $updatedContent -Encoding UTF8
+        [System.IO.File]::WriteAllText($FilePath, $updatedContent, (New-Object System.Text.UTF8Encoding $false))
     }
     else {
         throw "Unsupported manifest type '$ManifestType'"

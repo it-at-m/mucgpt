@@ -1,5 +1,5 @@
-# syntax=docker/dockerfile:1.7
-FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:28ec2f4662bdc4b0d4893ef0d8aebf36a5165dfb1d1dc9f46319bd8a03ed3365
+# syntax=docker/dockerfile:1.20@sha256:26147acbda4f14c5add9946e2fd2ed543fc402884fd75146bd342a7f6271dc1d
+FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:67aafc6c9c44374e1baf340110d4c835457d59a0444c068ba9ac6431a6d9e7ac
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY

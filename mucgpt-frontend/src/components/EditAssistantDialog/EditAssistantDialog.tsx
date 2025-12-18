@@ -1,14 +1,14 @@
-import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Dialog, DialogActions, DialogBody, DialogSurface, DialogTitle, Button } from "@fluentui/react-components";
+import { Dismiss24Regular, Checkmark24Filled } from "@fluentui/react-icons";
+import { Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Button } from "@fluentui/react-components";
 
 import styles from "./EditAssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useState, useMemo, useEffect } from "react";
 import { Assistant, ToolInfo } from "../../api";
-import { StepperProgress } from "./StepperProgress";
+import { Stepper, Step } from "../Stepper";
 import { EditDialogActions } from "./EditDialogActions";
 import { useAssistantState } from "./useAssistantState";
-import { TitleStep, DescriptionStep, SystemPromptStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "./steps";
+import { BasicInfoStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "./steps";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import { AssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import { VisibilityStep } from "./steps/VisibilityStep";
@@ -34,32 +34,32 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const { title, description, systemPrompt, quickPrompts, examples, temperature, maxOutputTokens, tools, publish, hierarchicalAccess, isVisible } =
         assistantState;
 
-    // Conditionally adjust steps based on publish status
-    const totalSteps = publish ? 8 : 7;
-    const stepTitles = publish
-        ? [
-              "components.edit_assistant_dialog.step_title",
-              "components.edit_assistant_dialog.step_description",
-              "components.edit_assistant_dialog.step_system_prompt",
-              "components.edit_assistant_dialog.step_tools",
-              "components.edit_assistant_dialog.step_quick_prompts",
-              "components.edit_assistant_dialog.step_examples",
-              "components.edit_assistant_dialog.step_visibility",
-              "components.edit_assistant_dialog.step_advanced_settings"
-          ]
-        : [
-              "components.edit_assistant_dialog.step_title",
-              "components.edit_assistant_dialog.step_description",
-              "components.edit_assistant_dialog.step_system_prompt",
-              "components.edit_assistant_dialog.step_tools",
-              "components.edit_assistant_dialog.step_quick_prompts",
-              "components.edit_assistant_dialog.step_examples",
-              "components.edit_assistant_dialog.step_advanced_settings"
-          ];
-
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 
     const { t } = useTranslation();
+
+    // Conditionally adjust steps based on publish status
+    const totalSteps = publish ? 6 : 5;
+    const steps: Step[] = useMemo(
+        () =>
+            publish
+                ? [
+                      { label: t("components.create_assistant_dialog.step2_label"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_tools"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_quick_prompts"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_examples"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_visibility"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_advanced_settings"), completedIcon: <Checkmark24Filled /> }
+                  ]
+                : [
+                      { label: t("components.create_assistant_dialog.step2_label"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_tools"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_quick_prompts"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_examples"), completedIcon: <Checkmark24Filled /> },
+                      { label: t("components.edit_assistant_dialog.step_advanced_settings"), completedIcon: <Checkmark24Filled /> }
+                  ],
+        [publish, t]
+    );
     const { tools: availableTools } = useToolsContext();
 
     const selectedTools = useMemo(() => {
@@ -92,12 +92,8 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
 
     const canProceedToNext = () => {
         switch (currentStep) {
-            case 0: // Title
-                return title.trim() !== "";
-            case 1: // Description
-                return description.trim() !== "";
-            case 2: // System prompt
-                return systemPrompt.trim() !== "";
+            case 0: // Basic Info (Title, Description, System Prompt)
+                return title.trim() !== "" && description.trim() !== "" && systemPrompt.trim() !== "";
             default:
                 return true; // Tools, quick prompts, examples, and advanced settings are optional
         }
@@ -165,26 +161,19 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const getCurrentStepContent = useMemo(() => {
         switch (currentStep) {
             case 0:
-                return <TitleStep title={title} isOwner={isOwner} onTitleChange={assistantState.updateTitle} onHasChanged={assistantState.setHasChanged} />;
-            case 1:
                 return (
-                    <DescriptionStep
+                    <BasicInfoStep
+                        title={title}
                         description={description}
-                        isOwner={isOwner}
-                        onDescriptionChange={assistantState.updateDescription}
-                        onHasChanged={assistantState.setHasChanged}
-                    />
-                );
-            case 2:
-                return (
-                    <SystemPromptStep
                         systemPrompt={systemPrompt}
                         isOwner={isOwner}
+                        onTitleChange={assistantState.updateTitle}
+                        onDescriptionChange={assistantState.updateDescription}
                         onSystemPromptChange={assistantState.updateSystemPrompt}
                         onHasChanged={assistantState.setHasChanged}
                     />
                 );
-            case 3:
+            case 1:
                 return (
                     <ToolsStep
                         tools={tools}
@@ -194,7 +183,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                         onHasChanged={assistantState.setHasChanged}
                     />
                 );
-            case 4:
+            case 2:
                 return (
                     <QuickPromptsStep
                         quickPrompts={quickPrompts}
@@ -203,7 +192,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                         onHasChanged={assistantState.setHasChanged}
                     />
                 );
-            case 5:
+            case 3:
                 return (
                     <ExamplesStep
                         examples={examples}
@@ -212,7 +201,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                         onHasChanged={assistantState.setHasChanged}
                     />
                 );
-            case 6:
+            case 4:
                 if (publish) {
                     return (
                         <VisibilityStep
@@ -237,7 +226,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     );
                 }
 
-            case 7:
+            case 5:
                 return (
                     <AdvancedSettingsStep
                         temperature={temperature}
@@ -249,7 +238,18 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     />
                 );
             default:
-                return <TitleStep title={title} isOwner={isOwner} onTitleChange={assistantState.updateTitle} onHasChanged={assistantState.setHasChanged} />;
+                return (
+                    <BasicInfoStep
+                        title={title}
+                        description={description}
+                        systemPrompt={systemPrompt}
+                        isOwner={isOwner}
+                        onTitleChange={assistantState.updateTitle}
+                        onDescriptionChange={assistantState.updateDescription}
+                        onSystemPromptChange={assistantState.updateSystemPrompt}
+                        onHasChanged={assistantState.setHasChanged}
+                    />
+                );
         }
     }, [
         currentStep,
@@ -266,7 +266,8 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
         hierarchicalAccess,
         isVisible,
         isOwner,
-        assistantState
+        assistantState,
+        availableTools
     ]);
 
     return (
@@ -303,23 +304,20 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                             icon={<Dismiss24Regular />}
                         />
                     </div>
-                    <br />
-                    <div className={styles.stepperFullWidth}>
-                        <StepperProgress currentStep={currentStep} totalSteps={totalSteps} stepTitles={stepTitles} />
-                    </div>
+                    <DialogContent>
+                        <Stepper steps={steps} currentStep={currentStep + 1} />
+                    </DialogContent>
                     <DialogBody className={styles.scrollableDialogContent}>{getCurrentStepContent}</DialogBody>
                     <div className={styles.dialogActionsContainer}>
-                        <div className={styles.stepperActions}>
-                            <EditDialogActions
-                                currentStep={currentStep}
-                                totalSteps={totalSteps}
-                                canProceedToNext={canProceedToNext}
-                                onNextStep={nextStep}
-                                onPrevStep={prevStep}
-                                isOwner={isOwner}
-                                onSave={onSaveButtonClicked}
-                            />
-                        </div>
+                        <EditDialogActions
+                            currentStep={currentStep}
+                            totalSteps={totalSteps}
+                            canProceedToNext={canProceedToNext}
+                            onNextStep={nextStep}
+                            onPrevStep={prevStep}
+                            isOwner={isOwner}
+                            onSave={onSaveButtonClicked}
+                        />
                     </div>
                 </DialogSurface>
             </Dialog>

@@ -9,6 +9,7 @@ authors = [
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
     { name = "Lea-Sophie Riedl", email = "l.riedl@muenchen.de" },
     { name = "Simon Hirtreiter", email = "simon.hirtreiter@muenchen.de" },
+    { name = "Daniel Nischwitz", email = "daniel.nischwitz@muenchen.de" },
 ]
 maintainers = [
     { name = " ITM KICC", email = "itm.kicc@muenchen.de" },

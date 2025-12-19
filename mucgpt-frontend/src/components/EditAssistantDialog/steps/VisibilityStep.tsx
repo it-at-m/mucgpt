@@ -29,7 +29,7 @@ export const VisibilityStep = ({
         ? "private"
         : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public") as 'public' | 'departments' | 'private';
 
-    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
+    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility as 'public' | 'departments' | 'private');
 
     useEffect(() => {
         const derivedVisibility = invisibleChecked

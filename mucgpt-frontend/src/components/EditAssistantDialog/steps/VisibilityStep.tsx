@@ -35,12 +35,10 @@ export const VisibilityStep = ({
         const derivedVisibility = invisibleChecked
             ? "private"
             : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
-        setVisibilityMode(derivedVisibility as 'public' | 'departments' | 'private');
-    }, [invisibleChecked, publishDepartments]);
-
-    useEffect(() => {
-        setInvisibleChecked(visibilityMode === "private");
-    }, [visibilityMode, setInvisibleChecked]);
+        if (derivedVisibility !== visibilityMode) {
+            setVisibilityMode(derivedVisibility);
+        }
+    }, [invisibleChecked, publishDepartments, visibilityMode]);
 
     useEffect(() => {
         if (!mountedRef.current) {

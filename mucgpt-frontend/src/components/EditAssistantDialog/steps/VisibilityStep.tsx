@@ -25,11 +25,11 @@ export const VisibilityStep = ({
     const { t } = useTranslation();
     const mountedRef = useRef(false);
 
-    const initialVisibility = invisibleChecked
+    const initialVisibility: 'public' | 'departments' | 'private' = invisibleChecked
         ? "private"
-        : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public") as 'public' | 'departments' | 'private';
+        : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
 
-    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility as 'public' | 'departments' | 'private');
+    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
 
     useEffect(() => {
         const derivedVisibility = invisibleChecked
@@ -72,46 +72,41 @@ export const VisibilityStep = ({
             </div>
 
             <div className={styles.visibilityWrapper}>
-                <Field size="large" className={styles.rangeField} style={{ margin: 0, padding: 0 }}>
+                <Field size="large" className={styles.rangeField}>
                     <RadioGroup
                         value={visibilityMode}
                         onChange={onVisibilityChange}
                         layout="vertical"
                         disabled={!isOwner}
                     >
-                        <Field>
-                            <Radio
-                                value="public"
-                                disabled={!isOwner}
-                                label={
-                                    <div className={styles.radioContent}>
-                                        <div className={styles.radioLabel}>
-                                            <Eye24Regular /> <span>{t("components.publish_assistant_dialog.visibility_public")}</span>
-                                        </div>
-                                        <div className={styles.radioDescription}>
-                                            {t("components.publish_assistant_dialog.visibility_public_description")}
-                                        </div>
+                        <Radio
+                            value="public"
+                            disabled={!isOwner}
+                            label={
+                                <div className={styles.radioContent}>
+                                    <div className={styles.radioLabel}>
+                                        <Eye24Regular /> <span>{t("components.publish_assistant_dialog.visibility_public")}</span>
                                     </div>
-                                }
-                            />
-                        </Field>
-
-                        <Field>
-                            <Radio
-                                value="departments"
-                                disabled={!isOwner}
-                                label={
-                                    <div className={styles.radioContent}>
-                                        <div className={styles.radioLabel}>
-                                            <People24Regular /> <span>{t("components.publish_assistant_dialog.departments_title")}</span>
-                                        </div>
-                                        <div className={styles.radioDescription}>
-                                            {t("components.publish_assistant_dialog.departments_description")}
-                                        </div>
+                                    <div className={styles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.visibility_public_description")}
                                     </div>
-                                }
-                            />
-                        </Field>
+                                </div>
+                            }
+                        />
+                        <Radio
+                            value="departments"
+                            disabled={!isOwner}
+                            label={
+                                <div className={styles.radioContent}>
+                                    <div className={styles.radioLabel}>
+                                        <People24Regular /> <span>{t("components.publish_assistant_dialog.departments_title")}</span>
+                                    </div>
+                                    <div className={styles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.departments_description")}
+                                    </div>
+                                </div>
+                            }
+                        />
                         {visibilityMode === "departments" && (
                             <div className={styles.departmentSection}>
                                 <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
@@ -131,22 +126,20 @@ export const VisibilityStep = ({
                                 )}
                             </div>
                         )}
-                        <Field>
-                            <Radio
-                                value="private"
-                                disabled={!isOwner}
-                                label={
-                                    <div className={styles.radioContent}>
-                                        <div className={styles.radioLabel}>
-                                            <EyeOff24Regular /> <span>{t("components.publish_assistant_dialog.visibility_private")}</span>
-                                        </div>
-                                        <div className={styles.radioDescription}>
-                                            {t("components.publish_assistant_dialog.visibility_private_description")}
-                                        </div>
+                        <Radio
+                            value="private"
+                            disabled={!isOwner}
+                            label={
+                                <div className={styles.radioContent}>
+                                    <div className={styles.radioLabel}>
+                                        <EyeOff24Regular /> <span>{t("components.publish_assistant_dialog.visibility_private")}</span>
                                     </div>
-                                }
-                            />
-                        </Field>
+                                    <div className={styles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.visibility_private_description")}
+                                    </div>
+                                </div>
+                            }
+                        />
                     </RadioGroup>
                 </Field>
             </div>

@@ -573,6 +573,7 @@
 .departmentSection {
     display: flex;
     flex-direction: column;
+    margin-left: 40px;
     gap: 12px;
     background: var(--colorNeutralBackground1);
     margin-top: 8px;

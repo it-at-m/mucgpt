@@ -27,9 +27,16 @@ export const VisibilityStep = ({
 
     const initialVisibility = invisibleChecked
         ? "private"
-        : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
+        : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public") as 'public' | 'departments' | 'private';
 
-    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility as any);
+    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
+
+    useEffect(() => {
+        const derivedVisibility = invisibleChecked
+            ? "private"
+            : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
+        setVisibilityMode(derivedVisibility as 'public' | 'departments' | 'private');
+    }, [invisibleChecked, publishDepartments]);
 
     useEffect(() => {
         setInvisibleChecked(visibilityMode === "private");
@@ -43,7 +50,7 @@ export const VisibilityStep = ({
         onHasChanged(true);
     }, [visibilityMode, publishDepartments, onHasChanged]);
 
-    const onVisibilityChange = useCallback((_: any, data: any) => {
+    const onVisibilityChange = useCallback((_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
         setVisibilityMode(data.value as 'public' | 'departments' | 'private');
     }, []);
 
@@ -60,7 +67,7 @@ export const VisibilityStep = ({
         <DialogContent>
             <div className={styles.visibilityTitle}>
                 <span className={styles.formLabel}>
-                    {t("components.publish_assistant_dialog.publication_options_title") || "Visibility"}
+                    {t("components.publish_assistant_dialog.publication_options_title")}
                 </span>
             </div>
 

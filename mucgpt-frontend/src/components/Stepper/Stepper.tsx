@@ -27,7 +27,7 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
             const stepLeft = activeStepElement.offsetLeft;
             const stepWidth = activeStepElement.offsetWidth;
 
-            const scrollPosition = stepLeft - (containerWidth / 2) + (stepWidth / 2);
+            const scrollPosition = stepLeft - containerWidth / 2 + stepWidth / 2;
 
             container.scrollTo({
                 left: scrollPosition,
@@ -79,11 +79,7 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
     return (
         <div ref={containerRef} className={`${styles.stepIndicator} ${className || ""}`}>
             {steps.map((step, index) => (
-                <div
-                    key={index}
-                    ref={(el) => (stepRefs.current[index] = el)}
-                    className={styles.stepWrapper}
-                >
+                <div key={index} ref={el => (stepRefs.current[index] = el)} className={styles.stepWrapper}>
                     <div className={getStepClassName(index)}>
                         <div className={styles.stepNumber}>{renderStepNumber(index, step)}</div>
                         <div className={styles.stepLabel}>{step.label}</div>

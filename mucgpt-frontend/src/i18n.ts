@@ -329,7 +329,8 @@ i18n
                                 "Hinweis: Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             title_placeholder: "Zum Beispiel: Englisch Übersetzer",
-                            prompt_placeholder: "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
+                            prompt_placeholder:
+                                "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
                             or_choose_template: "Alternativ könntest du auch die unteren vordefinierten Assistenten erstmal probieren:",
                             continue_with_mucgpt: "Mit MUCGPT fortfahren",
                             define_myself: "Ich definiere selbst",
@@ -424,7 +425,8 @@ i18n
                             copy_link_aria: "Link kopieren",
                             departments_title: "Veröffentlichen für Abteilungen",
                             departments_description: "Wählen Sie die Abteilungen aus, für die der Assistent verfügbar sein soll:",
-                            no_departments_selected: "Keine Abteilungen ausgewählt – die Veröffentlichung wird verhindert, bis mindestens eine Abteilung ausgewählt wurde.",
+                            no_departments_selected:
+                                "Keine Abteilungen ausgewählt – die Veröffentlichung wird verhindert, bis mindestens eine Abteilung ausgewählt wurde.",
                             cancel: "Abbrechen",
                             confirm: "Bestätigen",
                             publishing: "Veröffentliche...",
@@ -829,7 +831,8 @@ i18n
                                 "Note: Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
                             description_placeholder: "For example: The assistant translates the entered text into English.",
                             title_placeholder: "For example: English Translator",
-                            prompt_placeholder: "# Requirement\n# Steps\n# Output Format\n# Examples\n\nFor example:\nEnsure that the translation maintains the original sentence structure and meaning. Pay attention to context-dependent words and cultural differences that may exist.",
+                            prompt_placeholder:
+                                "# Requirement\n# Steps\n# Output Format\n# Examples\n\nFor example:\nEnsure that the translation maintains the original sentence structure and meaning. Pay attention to context-dependent words and cultural differences that may exist.",
                             or_choose_template: "Alternatively, you could first try the predefined assistants below:",
                             continue_with_mucgpt: "Continue with MUCGPT",
                             define_myself: "Define myself",
@@ -1324,7 +1327,8 @@ i18n
                                 "Obacht: Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was’d eam gibst, ins Englische.",
                             title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
-                            prompt_placeholder: "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf’n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de ’s gebn ko.",
+                            prompt_placeholder:
+                                "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf’n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de ’s gebn ko.",
                             or_choose_template: "Alternativ kannst aa erst amoi de vordefinierten Assistenten dauntn ausprobiern:",
                             continue_with_mucgpt: "Mit MUCGPT weitermacha",
                             define_myself: "Des mach i selber",
@@ -1418,7 +1422,8 @@ i18n
                             copy_link_aria: "Link kopiern",
                             departments_title: "Veröffentlcha für Abteilungen",
                             departments_description: "Such de Abteilungen aus, für de da Assistent verfügbar sei soll:",
-                            no_departments_selected: "Koane Abteilungen ausgewählt – de Veröffentlichung werd verhindert, bis mindestens a Abteilung ausgewählt wurd.",
+                            no_departments_selected:
+                                "Koane Abteilungen ausgewählt – de Veröffentlichung werd verhindert, bis mindestens a Abteilung ausgewählt wurd.",
                             cancel: "Obbrecha",
                             confirm: "Bestätigen",
                             publishing: "Veröffentlche...",
@@ -1823,7 +1828,8 @@ i18n
                                 "Remarque : vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
                             description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
                             title_placeholder: "Par exemple : Traducteur anglais",
-                            prompt_placeholder: "# Exigences\n# Étapes\n# Format de sortie\n# Exemples\n\nPar exemple :\nAssurez-vous que la traduction conserve la structure de la phrase d'origine et sa signification. Faites attention aux mots dépendant du contexte et aux éventuelles différences culturelles.",
+                            prompt_placeholder:
+                                "# Exigences\n# Étapes\n# Format de sortie\n# Exemples\n\nPar exemple :\nAssurez-vous que la traduction conserve la structure de la phrase d'origine et sa signification. Faites attention aux mots dépendant du contexte et aux éventuelles différences culturelles.",
                             or_choose_template: "Alternativement, vous pouvez d'abord essayer les assistants prédéfinis ci-dessous :",
                             continue_with_mucgpt: "Continuer avec MUCGPT",
                             define_myself: "Je définis moi-même",
@@ -1918,7 +1924,8 @@ i18n
                             copy_link_aria: "Copier le lien",
                             departments_title: "Publier pour les départements",
                             departments_description: "Sélectionnez les départements pour lesquels l'assistant doit être disponible :",
-                            no_departments_selected: "Aucun département sélectionné — la publication sera bloquée jusqu'à ce qu'au moins un département soit choisi.",
+                            no_departments_selected:
+                                "Aucun département sélectionné — la publication sera bloquée jusqu'à ce qu'au moins un département soit choisi.",
                             cancel: "Annuler",
                             confirm: "Confirmer",
                             publishing: "Publication...",
@@ -2323,7 +2330,8 @@ i18n
                                 "Примітка: Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
                             description_placeholder: "Наприклад: Асистент перекладає введений текст англійською мовою.",
                             title_placeholder: "Наприклад: Перекладач на англійську",
-                            prompt_placeholder: "# Вимога\n# Кроки\n# Формат виводу\n# Приклади\n\nНаприклад:\nПереконайтеся, що переклад зберігає оригінальну структуру речення та зміст. Звертайте увагу на контекстуальні значення слів та можливі культурні особливості.",
+                            prompt_placeholder:
+                                "# Вимога\n# Кроки\n# Формат виводу\n# Приклади\n\nНаприклад:\nПереконайтеся, що переклад зберігає оригінальну структуру речення та зміст. Звертайте увагу на контекстуальні значення слів та можливі культурні особливості.",
                             or_choose_template: "Крім того, ви можете спочатку спробувати попередньо визначених асистентів нижче:",
                             continue_with_mucgpt: "Продовжити з MUCGPT",
                             define_myself: "Я визначу самостійно",

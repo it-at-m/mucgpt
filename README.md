@@ -184,37 +184,35 @@ MUCGPT_CORE_MODELS='[
 
 Replace the placeholder values with your actual model configuration.
 
+#### MCP (optional)
+
+Besides static tools, MucGPT allows configuration of MCP sources, for which tools are fetched and can be called.
+
+```env
+MUCGPT_MCP_SOURCES='{
+    "<source_id>": {
+        "url": "...",
+        "forward_token": true,
+        "transport": "sse"
+    }
+}'
+```
+
+- `MUCGPT_MCP_SOURCES`
+  - `<source_id>`: Unique id of one MCP source.
+    - `url`: URL of the mcp endpoint.
+    - `forward_token`: If the oAuth 2.0 JWT token used for authentication should be forwarded to the MCP endpoint.
+    - `transport`: Transport protocol (`"sse"` or `"streamable_http"`), see <https://modelcontextprotocol.io/specification/2025-06-18/basic/transports>
+- `MUCGPT_MCP_CACHE_TTL`: Time-to-live of cached MCP tools in s (default: 12h).
 
 ### 🐋 Run with Docker
 
-To start all required services using podman or docker run:
+See the [stack README](/stack/README.md) for complete Docker Compose setup instructions, including:
 
-Requires `keycloak` to be present in the `hosts` file (see [RefArch-Docs](https://refarch.oss.muenchen.de/templates/develop.html#container-engine)).
-
-```bash
-# in case of podman run
-podman compose  --build up
-# in case of docker run
-docker-compose  --build up
-```
-
-This command launches the following components:
-
-- **Frontend**: A modern web interface built with React, providing users with an intuitive and responsive experience directly in their browser.
-- **Core-Service**: Manages the agent to call LLMs. Also orchestrates tool usage.
-- **Assistant-Service**: Manages assistants. An assistant is a configuration for an MUCGPT agent.
-- **Assistant-Service-Migration**: Does database migrations on startup.
-- **API Gateway**: Serves as the unified entry point for all client requests, efficiently routing traffic to backend services while managing authentication and security.
-- **Keycloak**: A robust, open-source identity and access management system responsible for authentication, authorization, and user administration.
-- **PostgresDB**: A reliable PostgreSQL database used to securely store and manage app statistics.
-
-Once all services are running, you can access:
-
-- The frontend at `localhost:8083` (Username: `mucgpt-user`, Password: `mucgpt`)
-- The Keycloak admin panel at `localhost:8100` (Username: `admin`, Password: `admin`)
-- The PGAdmin panel at `localhost:5050` (Username: `admin`, Password: `admin`)
-
-Keycloak simulates a Single Sign-On (SSO) service, allowing you to log in to the frontend using the provided credentials (`mucgpt-user` / `mucgpt`).
+- Quick start guide
+- Service architecture and ports
+- Production and development modes
+- Common commands and troubleshooting
 
 ## 🛤️ Roadmap
 

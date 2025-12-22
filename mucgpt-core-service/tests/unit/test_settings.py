@@ -5,9 +5,11 @@ from unittest.mock import patch
 
 import pytest
 from src.config.settings import (
+    MCPTransport,
     Settings,
     enrich_model_metadata,
     get_langfuse_settings,
+    get_mcp_settings,
     get_settings,
     get_sso_settings,
 )
@@ -334,6 +336,42 @@ class TestSettings:
             assert langfuse_settings.PUBLIC_KEY is None
             assert langfuse_settings.SECRET_KEY is None
             assert langfuse_settings.HOST is None
+
+    def test_mcp_settings(self):
+        """Test MCP settings configuration."""
+        mcp_json = json.dumps(
+            {
+                "test": {
+                    "url": "https://example.com/mcp",
+                    "forward_token": True,
+                    "transport": MCPTransport.STREAMABLE_HTTP.value,
+                }
+            }
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_MCP_SOURCES": mcp_json,
+                "MUCGPT_MCP_CACHE_TTL": "123",
+            },
+        ):
+            get_mcp_settings.cache_clear()
+            mcp_settings = get_mcp_settings()
+            assert len(mcp_settings.SOURCES.keys()) == 1
+            assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
+            assert (
+                mcp_settings.SOURCES["test"].transport is MCPTransport.STREAMABLE_HTTP
+            )
+            assert mcp_settings.SOURCES["test"].forward_token
+            assert mcp_settings.CACHE_TTL == 123
+
+    def test_mcp_settings_default(self):
+        """Test MCP settings default values."""
+        with patch.dict(os.environ, {}, clear=True):
+            get_mcp_settings.cache_clear()
+            mcp_settings = get_mcp_settings()
+            assert mcp_settings.SOURCES is None
+            assert mcp_settings.CACHE_TTL == 43200
 
     def teardown_method(self):
         """Clean up after each test."""

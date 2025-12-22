@@ -5,7 +5,7 @@ services:
   # #### PostgreSQL ####
   #
   postgres:
-    image: postgres:17.4-alpine3.21@sha256:7062a2109c4b51f3c792c7ea01e83ed12ef9a980886e3b3d380a7d2e5f6ce3f5
+    image: postgres:17.7-alpine3.21@sha256:5bcb5623bb6999b2f7fbd2109f0bfc1f144d138b52ca35ede95d644d93585c2f
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=admin
@@ -23,10 +23,10 @@ services:
     security_opt: &security_settings
       - no-new-privileges:true
     networks:
-      - keycloak
+      - internal
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
   pg-admin:
-    image: dpage/pgadmin4:9.10.0@sha256:8c128407f45f1c582eda69e71da1a393237388469052e3cc1e6ae4a475e12b70
+    image: dpage/pgadmin4:9.11.0@sha256:50700ac17936d0227f9e3e4bb086a91efb67064debc4b4737c35545bf1564088
     environment:
       - PGADMIN_DEFAULT_EMAIL=admin@admin.com
       - PGADMIN_DEFAULT_PASSWORD=admin
@@ -47,7 +47,7 @@ services:
     user: root # see https://github.com/pgadmin-org/pgadmin4/issues/6257
     entrypoint: /bin/sh -c "chmod 600 /pgadmin4/pgpass; /entrypoint.sh;" # see https://www.postgresql.org/docs/current/libpq-pgpass.html#LIBPQ-PGPASS (last paragraph)
     networks:
-      - keycloak
+      - internal
 
   #
   # #### Keycloak ####
@@ -68,7 +68,7 @@ services:
     volumes:
       - ./keycloak/plugins:/opt/keycloak/providers/
     networks:
-      - keycloak
+      - internal
     healthcheck:
       <<: *healthcheck
       test:
@@ -78,7 +78,7 @@ services:
         ]
     security_opt: *security_settings
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.111@sha256:6fd84fd15813062bf2a9bb9492cb0f71d6d0d2b434b8fb68c8e7859a2e7aabfb
+    image: klg71/keycloakmigration:0.2.122@sha256:473c46318436b1b0a7e12424edb59d5871ea19c17ffd6553ca942dedb506ed3e
     depends_on:
       - keycloak
     environment:
@@ -91,7 +91,19 @@ services:
     volumes:
       - "./keycloak/migration:/migration"
     networks:
-      - keycloak
+      - internal
+    security_opt: *security_settings
+
+  #
+  # #### Valkey ####
+  #
+  valkey:
+    image: valkey/valkey:9.0.1@sha256:fb8d272e529ea567b9bf1302245796f21a2672b8368ca3fcb938ac334e613c8f
+    ports:
+      - "6379:6379"
+    command: ["valkey-server", "--requirepass", "password"]
+    networks:
+      - internal
     security_opt: *security_settings
 
   #
@@ -137,7 +149,7 @@ services:
     #  - SPRING_CLOUD_GATEWAY_HTTPCLIENT_WIRETAP=TRUE
     #  - SPRING_CLOUD_GATEWAY_HTTPSERVER_WIRETAP=TRUE
     networks:
-      - keycloak
+      - internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
@@ -145,9 +157,9 @@ services:
       test: ["CMD-SHELL", "curl http://localhost:8080/actuator/health/liveness"]
     security_opt: *security_settings
 
-  #
-  # #### Application services ####
-  #
+  ##############################
+  #    Application services    #
+  ##############################
   core-service:
     build:
       context: ../mucgpt-core-service
@@ -159,7 +171,7 @@ services:
     ports:
       - "39146:8000"
     networks:
-      - keycloak
+      - internal
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:8000/api/backend/health"]
@@ -188,7 +200,7 @@ services:
     env_file:
       - ./.env
     networks:
-      - keycloak
+      - internal
     restart: "no" # Run once and exit
 
   assistant-service:
@@ -205,7 +217,7 @@ services:
     ports:
       - "39147:8084"
     networks:
-      - keycloak
+      - internal
     environment:
       - LOG_LEVEL_ROOT=INFO
       - LOG_LEVEL_DEV=INFO
@@ -232,7 +244,47 @@ services:
     ports:
       - "8081:8080"
     networks:
-      - keycloak
+      - internal
+
+  ##############################
+  #    MCP servers   #
+  ##############################
+
+  mcpdoc-server:
+    build:
+      context: ./mcpdoc-server
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    environment:
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      http_proxy: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      https_proxy: ${HTTPS_PROXY:-}
+    command:
+      - tool
+      - run
+      - --from
+      - mcpdoc
+      - mcpdoc
+      - --urls
+      - "KI in München:https://ki.muenchen.de/llms.txt"
+      - --transport
+      - sse
+      - --port
+      - "8088"
+      - --host
+      - 0.0.0.0
+    ports:
+      - "8088:8088"
+    networks:
+      - internal
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/sse || exit 1"]
+    security_opt: *security_settings
 
 networks:
-  keycloak:
+  internal:

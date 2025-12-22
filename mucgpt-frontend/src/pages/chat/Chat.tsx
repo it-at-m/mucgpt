@@ -100,7 +100,7 @@ const Chat = () => {
     const [error, setError] = useState<unknown>();
     const [question, setQuestion] = useState<string>("");
     const [showSidebar, setShowSidebar] = useState<boolean>(
-        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? true : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
+        localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) === null ? false : localStorage.getItem(STORAGE_KEYS.SHOW_SIDEBAR) == "true"
     );
     const setAndStoreShowSidebar = (value: boolean) => {
         setShowSidebar(value);

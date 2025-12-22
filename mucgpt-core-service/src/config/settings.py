@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from enum import Enum
 from functools import lru_cache
 from typing import Any, List
 from urllib.parse import urljoin
@@ -19,6 +20,13 @@ from pydantic import (
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
+
+
+class MCPTransport(str, Enum):
+    SSE = "sse"
+    STREAMABLE_HTTP = "streamable_http"
+
+
 _logger = logging.getLogger(__name__)
 _positive_int_adapter = TypeAdapter(PositiveInt)
 _decimal_adapter = TypeAdapter(Decimal)
@@ -50,13 +58,15 @@ class ModelsConfig(BaseModel):
     _metadata_enriched: bool = PrivateAttr(default=False)
 
     @field_validator("api_key", mode="before")
-    def parse_secret(cls, value):
+    @staticmethod
+    def parse_secret(value):
         if isinstance(value, str):
             return SecretStr(value)
         return value
 
     @model_validator(mode="before")
-    def bundle_model_info(cls, data):
+    @staticmethod
+    def bundle_model_info(data):
         if not isinstance(data, dict):
             return data
 
@@ -100,7 +110,8 @@ class ModelsConfig(BaseModel):
         return data
 
     @model_validator(mode="after")
-    def ensure_model_metadata(cls, model: "ModelsConfig") -> "ModelsConfig":
+    @staticmethod
+    def ensure_model_metadata(model: "ModelsConfig") -> "ModelsConfig":
         """Ensure model metadata is consistent before optional enrichment."""
 
         info = model.model_info
@@ -225,6 +236,29 @@ class LangfuseSettings(BaseSettings):
     PUBLIC_KEY: str | None = None
     SECRET_KEY: str | None = None
     HOST: str | None = None
+
+
+class MCPSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="MUCGPT_MCP_", case_sensitive=False)
+
+    class MCPSource(BaseModel):
+        url: str
+        transport: MCPTransport
+        forward_token: bool = False
+
+    SOURCES: dict[str, MCPSource] | None = None
+    CACHE_TTL: int = 12 * 60 * 60  # 12h in s
+
+
+class RedisSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_prefix="MUCGPT_REDIS_",
+        case_sensitive=False,
+    )
+    HOST: str | None = None
+    PORT: int = 6379
+    USERNAME: str | None = None
+    PASSWORD: str | None = None
 
 
 class Settings(BaseSettings):
@@ -545,3 +579,17 @@ def get_sso_settings() -> SSOSettings:
     """Return cached SSO Settings instance."""
     sso_settings = SSOSettings()
     return sso_settings
+
+
+@lru_cache(maxsize=1)
+def get_mcp_settings() -> MCPSettings:
+    """Return cached MCP Settings instance."""
+    mcp_settings = MCPSettings()
+    return mcp_settings
+
+
+@lru_cache(maxsize=1)
+def get_redis_settings() -> RedisSettings:
+    """Return cached RedisSettings instance."""
+    redis_settings = RedisSettings()
+    return redis_settings

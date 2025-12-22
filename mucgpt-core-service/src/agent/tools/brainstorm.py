@@ -1,12 +1,50 @@
 import logging
+import textwrap
 from typing import List, Optional
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
+from langchain_core.tools import tool
+from langchain_core.tools.base import BaseTool
+from langgraph.config import get_stream_writer
 from langgraph.types import StreamWriter
 
 from agent.tools.tool_chunk import ToolStreamChunk, ToolStreamState
+
+# Centralized single-line summaries to avoid duplication across decorator, metadata and system prompt
+BRAINSTORMING_SUMMARY = "Generates or refines a detailed markdown mind map."  # one-line
+
+# Detailed instruction templates (dedented for clean system prompts)
+BRAINSTORMING_DETAILED = textwrap.dedent(
+    """
+    **Brainstorming**
+
+    Description: Generates or refines a detailed mind map (pure markdown; no code fences).
+
+    Use for:
+    • New idea exploration
+    • Organizing complex / hierarchical domains
+    • Structured refinement based on user feedback
+
+    Technical:
+    • Hierarchical markdown (headings + bullet lists)
+    • 4–7 main branches recommended; 2–4 nested levels where meaningful
+    • Bold only once for central concept line
+
+    Parameters:
+    - topic (required)
+    - context (optional) Supplemental info to integrate selectively
+    - existing_mindmap (optional) Full previous map for refinement
+    - feedback (optional) Specific change requests
+
+    Best Practices:
+    - In refinement: keep unchanged branches stable; modify only targeted areas
+    - Avoid generic placeholders (e.g., "Misc")
+    - Prefer parallel grammatical structure for sibling nodes
+    - Reference earlier output blocks shown as ```MUCGPTBrainstorming ...``` when refining.
+    """
+)
 
 BRAINSTORM_SYSTEM_MESSAGE = "You are a creative brainstorming assistant that creates and refines detailed mind maps in markdown format."
 
@@ -165,3 +203,45 @@ def brainstorming(
     except Exception as e:
         logger.error("Brainstorm tool error: %s", str(e))
         return f"Error brainstorming for '{topic_clean}'"
+
+def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger) -> BaseTool:
+    @tool(
+        "Brainstorming",
+        description=BRAINSTORMING_SUMMARY,
+    )
+    def brainstorm_tool(
+            topic: str,
+            context: str = None,
+            existing_mindmap: str = None,
+            feedback: str = None,
+    ):
+        writer = get_stream_writer()
+        if existing_mindmap:
+            writer(
+                ToolStreamChunk(
+                    state=ToolStreamState.STARTED,
+                    content=f"Verbessere Brainstorming für Thema: {topic} basierend auf Feedback",
+                    tool_name="Brainstorming",
+                ).model_dump_json()
+            )
+        else:
+            writer(
+                ToolStreamChunk(
+                    state=ToolStreamState.STARTED,
+                    content=f"Starte Brainstorming für Thema: {topic}",
+                    tool_name="Brainstorming",
+                ).model_dump_json()
+            )
+        result = brainstorming(
+            topic, context, model, logger, writer, existing_mindmap, feedback
+        )
+        writer(
+            ToolStreamChunk(
+                state=ToolStreamState.ENDED,
+                content="Brainstorming abgeschlossen.",
+                tool_name="Brainstorming",
+            ).model_dump_json()
+        )
+        return result
+
+    return brainstorm_tool

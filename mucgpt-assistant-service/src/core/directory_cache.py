@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Iterable, Sequence
 
 from fastapi import HTTPException, status
 
@@ -17,7 +17,7 @@ from core.organization import (
 
 logger = getLogger(__name__)
 
-_CACHE_TTL = timedelta(days=14)
+_CACHE_TTL = timedelta(minutes=5)
 
 
 def _simplify_node(node: OrganizationNode) -> dict[str, Any]:
@@ -35,6 +35,50 @@ def _simplify_node(node: OrganizationNode) -> dict[str, Any]:
         "name": node.name or node.dn or "",
         "children": children,
     }
+
+
+def _normalize_key(value: str | None) -> str | None:
+    if not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    return cleaned.lower() if cleaned else None
+
+
+def _match_node(segment: str, node: dict[str, Any]) -> bool:
+    target = _normalize_key(segment)
+    if target is None:
+        return False
+
+    shortname = _normalize_key(node.get("shortname"))
+    name = _normalize_key(node.get("name"))
+    return target == shortname or target == name
+
+
+def _find_node_by_path(
+    nodes: Iterable[dict[str, Any]], path: Sequence[str]
+) -> dict[str, Any]:
+    current_children: Iterable[dict[str, Any]] = nodes
+    current: dict[str, Any] | None = None
+
+    for segment in path:
+        match = next(
+            (node for node in current_children if _match_node(segment, node)), None
+        )
+        if match is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Directory path segment not found: {segment}",
+            )
+        current = match
+        current_children = match.get("children") or []
+
+    if current is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Directory path is empty",
+        )
+
+    return current
 
 
 def _load_directory_from_ldap() -> list[dict[str, Any]]:
@@ -119,3 +163,22 @@ async def get_simplified_directory_tree() -> list[dict[str, Any]]:
             )
             return cached_data
         raise
+
+
+async def get_directory_children_by_path(
+    path: Sequence[str] | None,
+) -> list[dict[str, Any]]:
+    """Return only the children for a path of org units (shortname or name).
+
+    An empty or missing path returns the roots. Matching is case-insensitive and
+    tries shortname first, then name. Raises 404 if any segment cannot be found.
+    """
+
+    tree = await get_simplified_directory_tree()
+
+    if not path:
+        return tree
+
+    node = _find_node_by_path(tree, path)
+    children = node.get("children")
+    return children if isinstance(children, list) else []

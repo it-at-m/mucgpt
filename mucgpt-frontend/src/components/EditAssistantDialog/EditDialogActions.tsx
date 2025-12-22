@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@fluentui/react-components";
+import { ChevronLeft24Regular, ChevronRight24Regular, Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import styles from "./EditAssistantDialog.module.css";
 
 interface DialogActionsProps {
     currentStep: number;
@@ -16,24 +16,18 @@ interface DialogActionsProps {
 export const EditDialogActions: React.FC<DialogActionsProps> = ({ currentStep, totalSteps, canProceedToNext, onPrevStep, onNextStep, onSave, isOwner }) => {
     const { t } = useTranslation();
 
-    const isFirstStep = currentStep === 0;
-    const isLastStep = currentStep === totalSteps - 1;
-
     return (
         <>
-            {!isFirstStep && (
-                <Button size="medium" onClick={onPrevStep} className={styles.backButton}>
-                    {t("common.back")}
-                </Button>
-            )}
-            <Button size="medium" onClick={onSave} className={styles.cancelButton}>
+            <Button appearance="secondary" size="small" onClick={onPrevStep} disabled={currentStep === 0}>
+                <ChevronLeft24Regular /> {t("components.edit_assistant_dialog.previous")}
+            </Button>
+            <Button appearance="secondary" size="small" onClick={onSave}>
+                {!isOwner ? <Dismiss24Regular /> : <Save24Filled />}{" "}
                 {!isOwner ? t("components.edit_assistant_dialog.close") : t("components.edit_assistant_dialog.save")}
             </Button>
-            {!isLastStep && (
-                <Button size="medium" onClick={onNextStep} disabled={!canProceedToNext()} className={styles.continueButton}>
-                    {t("components.edit_assistant_dialog.next")}
-                </Button>
-            )}
+            <Button appearance="primary" size="small" onClick={onNextStep} disabled={!canProceedToNext() || currentStep === totalSteps - 1}>
+                {t("components.edit_assistant_dialog.next")} <ChevronRight24Regular />
+            </Button>
         </>
     );
 };

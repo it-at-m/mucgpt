@@ -420,7 +420,7 @@
 
 .dialogActionsContainer {
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     padding: 16px 24px;
     border-top: 1px solid var(--colorNeutralStroke2);
     background-color: var(--colorNeutralBackground1);
@@ -430,7 +430,6 @@
     left: 0;
     right: 0;
     z-index: 10;
-    gap: 12px;
 }
 
 @media (max-width: 650px) {
@@ -539,35 +538,4 @@
 .toolSelectorContainer {
     width: 100%;
     margin-top: 8px;
-}
-
-.backButton {
-    margin-right: auto !important;
-}
-
-.backButton,
-.cancelButton {
-    background: var(--primaryContainer) !important;
-    color: var(--onPrimaryContainer) !important;
-    border: 1px solid var(--outline) !important;
-}
-
-.continueButton {
-    background: var(--primary) !important;
-    color: var(--onPrimary) !important;
-    border: 1px solid var(--primary) !important;
-}
-
-.continueButton:hover:not(:disabled),
-.backButton:hover:not(:disabled),
-.cancelButton:hover:not(:disabled) {
-    box-shadow:
-        0px 4px 12px rgba(0, 0, 0, 0.15),
-        0px 0px 4px rgba(0, 0, 0, 0.1);
-}
-
-.continueButton:disabled {
-    background: var(--disabled) !important;
-    color: var(--onSurface) !important;
-    cursor: not-allowed !important;
 }

@@ -359,7 +359,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 <Stepper steps={steps} currentStep={currentStep} />
                 <div className={styles.scrollableDialogContent}>
                     <ToolsStep
-                        tools={tools}
                         selectedTools={selectedTools}
                         availableTools={availableTools}
                         onToolsChange={setTools}

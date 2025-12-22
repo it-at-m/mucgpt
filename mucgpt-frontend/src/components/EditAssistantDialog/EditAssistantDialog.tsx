@@ -187,7 +187,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
             case 3:
                 return (
                     <ToolsStep
-                        tools={tools}
                         selectedTools={selectedTools}
                         availableTools={availableTools}
                         onToolsChange={assistantState.updateTools}

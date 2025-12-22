@@ -419,7 +419,8 @@ i18n
                             copy_link_aria: "Link kopieren",
                             departments_title: "Veröffentlichen für Abteilungen",
                             departments_description: "Wählen Sie die Abteilungen aus, für die der Assistent verfügbar sein soll:",
-                            no_departments_selected: "Keine Abteilungen ausgewählt – die Veröffentlichung wird verhindert, bis mindestens eine Abteilung ausgewählt wurde.",
+                            no_departments_selected:
+                                "Keine Abteilungen ausgewählt – die Veröffentlichung wird verhindert, bis mindestens eine Abteilung ausgewählt wurde.",
                             cancel: "Abbrechen",
                             confirm: "Bestätigen",
                             publishing: "Veröffentliche...",
@@ -1403,7 +1404,8 @@ i18n
                             copy_link_aria: "Link kopiern",
                             departments_title: "Veröffentlcha für Abteilungen",
                             departments_description: "Such de Abteilungen aus, für de da Assistent verfügbar sei soll:",
-                            no_departments_selected: "Koane Abteilungen ausgewählt – de Veröffentlichung werd verhindert, bis mindestens a Abteilung ausgewählt wurd.",
+                            no_departments_selected:
+                                "Koane Abteilungen ausgewählt – de Veröffentlichung werd verhindert, bis mindestens a Abteilung ausgewählt wurd.",
                             cancel: "Obbrecha",
                             confirm: "Bestätigen",
                             publishing: "Veröffentlche...",
@@ -1898,7 +1900,8 @@ i18n
                             copy_link_aria: "Copier le lien",
                             departments_title: "Publier pour les départements",
                             departments_description: "Sélectionnez les départements pour lesquels l'assistant doit être disponible :",
-                            no_departments_selected: "Aucun département sélectionné — la publication sera bloquée jusqu'à ce qu'au moins un département soit choisi.",
+                            no_departments_selected:
+                                "Aucun département sélectionné — la publication sera bloquée jusqu'à ce qu'au moins un département soit choisi.",
                             cancel: "Annuler",
                             confirm: "Confirmer",
                             publishing: "Publication...",

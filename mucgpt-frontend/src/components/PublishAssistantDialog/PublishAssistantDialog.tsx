@@ -1,8 +1,8 @@
 import { Field, InfoLabel, RadioGroup, Radio } from "@fluentui/react-components";
 import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger } from "@fluentui/react-dialog";
 import { useTranslation } from "react-i18next";
-import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
-import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
+import { Button, Text, Badge, Divider } from "@fluentui/react-components";
+import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "./PublishAssistantDialog.module.css";
 import { Assistant } from "../../api";
 import DepartmentDropdown from "../DepartmentDropdown/DepartmentDropdown";
@@ -15,26 +15,23 @@ interface Props {
     setOpen: (open: boolean) => void;
     assistant: Assistant;
     invisibleChecked: boolean;
-    setInvisibleChecked: (checked: boolean) => void;
     onDeleteAssistant: () => void;
 }
 
-export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChecked, setInvisibleChecked, onDeleteAssistant }: Props) => {
+export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChecked, onDeleteAssistant }: Props) => {
     const { t } = useTranslation();
     const [publishedAssistantId, setPublishedAssistantId] = useState<string | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
     const { showSuccess } = useGlobalToastContext();
     const [publishDepartments, setPublishDepartments] = useState<string[]>(assistant.hierarchical_access || []);
 
-    const initialVisibility = invisibleChecked ? "private" : (publishDepartments && publishDepartments.length > 0 ? "departments" : "public");
-    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
+    const initialVisibility = invisibleChecked ? "private" : publishDepartments && publishDepartments.length > 0 ? "departments" : "public";
+    const [visibilityMode, setVisibilityMode] = useState<"public" | "departments" | "private">(initialVisibility);
 
     useEffect(() => {
-        setVisibilityMode(invisibleChecked
-            ? "private"
-            : (publishDepartments && publishDepartments.length > 0 && !publishDepartments.includes("*")
-                ? "departments"
-                : "public"));
+        setVisibilityMode(
+            invisibleChecked ? "private" : publishDepartments && publishDepartments.length > 0 && !publishDepartments.includes("*") ? "departments" : "public"
+        );
     }, [invisibleChecked, publishDepartments]);
 
     const departmentsSelected = Array.isArray(publishDepartments) && publishDepartments.length > 0;
@@ -141,7 +138,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                             <div className={styles.visibilityOptions}>
                                 <RadioGroup
                                     value={visibilityMode}
-                                    onChange={(_, data) => setVisibilityMode(data.value as 'public' | 'departments' | 'private')}
+                                    onChange={(_, data) => setVisibilityMode(data.value as "public" | "departments" | "private")}
                                     layout="vertical"
                                 >
                                     <Field>
@@ -210,8 +207,6 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                         />
                                     </Field>
                                 </RadioGroup>
-
-
                             </div>
                         </div>
                     </DialogContent>

@@ -577,7 +577,8 @@
     gap: 12px;
     background: var(--colorNeutralBackground1);
     margin-top: 8px;
-    box-shadow: 0 6px 12px rgba(2,6,23,0.03);
+    box-shadow: 0 6px 12px rgba(2, 6, 23, 0.03);
+    width: 100%;
 }
 .noDepartmentsWarning {
     color: var(--colorPaletteRedForeground3, #b42318);

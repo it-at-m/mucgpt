@@ -181,6 +181,7 @@
     border: 1px solid var(--colorNeutralStroke2);
     border-radius: 6px;
     background: var(--colorNeutralBackground1);
+    width: 100%;
 }
 
 .departmentHeader {

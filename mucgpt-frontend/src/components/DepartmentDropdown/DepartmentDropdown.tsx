@@ -1,8 +1,10 @@
-import { useState, useEffect, useContext, useRef } from "react";
+import { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../pages/layout/UserContextProvider";
 import styles from "./DepartmentDropdown.module.css";
 import { useTranslation } from "react-i18next";
-import { getDepartments } from "../../api/core-client";
+import { getDirectoryChildren } from "../../api/assistant-client";
+import { DirectoryNode } from "../../api/models";
+import { ChevronRightRegular, ChevronDownRegular, SearchRegular, DismissRegular, CheckmarkRegular } from "@fluentui/react-icons";
 
 // Hilfsfunktion für Präfix-Matching
 function isDepartmentPrefixMatch(a: string, b: string) {
@@ -22,134 +24,204 @@ interface Props {
 
 export const DepartementDropdown = ({ publishDepartments, setPublishDepartments, disabled }: Props) => {
     const { t } = useTranslation();
-    const [departments, setDepartments] = useState<string[]>([]);
-    const [search, setSearch] = useState("");
-    const [show, setShow] = useState(false);
+    const [tree, setTree] = useState<Record<string, DirectoryNode[]>>({});
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
+    const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
+    const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
     const { user } = useContext(UserContext);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const dropdownRef = useRef<HTMLUListElement>(null);
+
+    const pathKey = (path: string[]) => path.join("||");
+
+    const labelFor = (node: DirectoryNode) => node.shortname || node.name;
+
+    const displayText = (node: DirectoryNode) =>
+        node.shortname && node.shortname !== node.name ? `${node.shortname} – ${node.name}` : node.shortname || node.name;
+
+    const fetchChildren = async (path: string[]) => {
+        const key = pathKey(path);
+        if (loadingPaths.has(key)) return;
+        setLoadingPaths(new Set(loadingPaths).add(key));
+        setError(null);
+        try {
+            const children = await getDirectoryChildren(path);
+            setTree(prev => ({ ...prev, [key]: children }));
+        } catch (e) {
+            console.error(e);
+            setError(
+                t("components.department_dropdown.load_error", {
+                    defaultValue: "Konnte Verzeichnis nicht laden"
+                })
+            );
+        } finally {
+            setLoadingPaths(prev => {
+                const next = new Set(prev);
+                next.delete(key);
+                return next;
+            });
+        }
+    };
 
     useEffect(() => {
-        if (departments.length > 0) return; // Nur einmal laden, wenn noch keine Daten vorhanden sind
-        getDepartments().then(data => {
-            setDepartments(data || []);
-        });
+        if (tree[pathKey([])]) return;
+        fetchChildren([]);
     }, []);
 
-    // Scroll to dropdown when it opens
-    useEffect(() => {
-        if (show && dropdownRef.current) {
-            setTimeout(() => {
-                dropdownRef.current?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "nearest",
-                    inline: "nearest"
-                });
-            }, 50); // Small delay to ensure the dropdown is rendered
+    const handleSelect = (value: string) => {
+        const isSelected = publishDepartments.includes(value);
+        if (isSelected) {
+            setPublishDepartments(publishDepartments.filter(sel => sel !== value));
+        } else {
+            const newSelected = publishDepartments.filter(sel => !isDepartmentPrefixMatch(sel, value));
+            setPublishDepartments([...newSelected, value]);
         }
-    }, [show]);
-
-    // First filter departments based on search and not already selected
-    const filteredDepartments = departments.filter(
-        d => d.toLowerCase().includes(search.toLowerCase()) && !publishDepartments.some(sel => isDepartmentPrefixMatch(sel, d))
-    );
-
-    // Sort with special cases
-    const filtered = filteredDepartments.sort((a, b) => {
-        // If one of the departments is the user's department, it comes first
-        if (a === user?.department) return -1;
-        if (b === user?.department) return 1;
-
-        // Then exact matches to search
-        if (search && a.toLowerCase() === search.toLowerCase()) return -1;
-        if (search && b.toLowerCase() === search.toLowerCase()) return 1;
-
-        // Then standard alphabetical sort
-        return a.localeCompare(b);
-    });
-
-    const handleSelect = (d: string) => {
-        const newSelected = publishDepartments.filter(sel => !isDepartmentPrefixMatch(sel, d));
-        setPublishDepartments([...newSelected, d]);
-        setSearch("");
-        setShow(false);
-        inputRef.current?.blur();
     };
 
     const handleRemove = (d: string) => {
         setPublishDepartments(publishDepartments.filter(sel => sel !== d));
     };
 
+    const toggleExpand = async (path: string[], e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        const key = pathKey(path);
+        const next = new Set(expanded);
+        if (expanded.has(key)) {
+            next.delete(key);
+            setExpanded(next);
+            return;
+        }
+
+        if (!tree[key]) {
+            await fetchChildren(path);
+        }
+        next.add(key);
+        setExpanded(next);
+    };
+
+    const filterNodes = (nodes: DirectoryNode[]): DirectoryNode[] => {
+        if (!searchQuery) return nodes;
+        const query = searchQuery.toLowerCase();
+        const result: DirectoryNode[] = [];
+
+        for (const node of nodes) {
+            const matches = node.name.toLowerCase().includes(query) || (node.shortname && node.shortname.toLowerCase().includes(query));
+            const filteredChildren = node.children ? filterNodes(node.children) : [];
+
+            if (matches || filteredChildren.length > 0) {
+                result.push({
+                    ...node,
+                    children: filteredChildren.length > 0 ? filteredChildren : undefined
+                });
+            }
+        }
+        return result;
+    };
+
+    const renderNodes = (nodes: DirectoryNode[], parentPath: string[]) => {
+        const filtered = filterNodes(nodes);
+
+        return (
+            <ul className={styles.treeList}>
+                {filtered.map(node => {
+                    const currentPath = [...parentPath, labelFor(node)];
+                    const key = pathKey(currentPath);
+                    const children = tree[key] || node.children || [];
+                    const isExpanded = expanded.has(key) || searchQuery.length > 0;
+                    const isLoading = loadingPaths.has(key);
+                    const isSelected = publishDepartments.includes(labelFor(node));
+                    const isUserDept = user?.department === node.shortname || user?.department === node.name;
+                    const canExpand = tree[key] ? tree[key].length > 0 : node.children ? node.children.length > 0 : true;
+
+                    return (
+                        <li key={key} className={styles.treeItem}>
+                            <div className={`${styles.treeRow} ${isSelected ? styles.treeRowSelected : ""}`} onClick={() => handleSelect(labelFor(node))}>
+                                {canExpand ? (
+                                    <button
+                                        type="button"
+                                        className={styles.toggleButton}
+                                        onClick={e => toggleExpand(currentPath, e)}
+                                        disabled={disabled}
+                                        aria-label={isExpanded ? t("collapse", "Einklappen") : t("expand", "Ausklappen")}
+                                        aria-expanded={isExpanded}
+                                    >
+                                        {isExpanded ? <ChevronDownRegular fontSize={20} /> : <ChevronRightRegular fontSize={20} />}
+                                    </button>
+                                ) : (
+                                    <div className={styles.togglePlaceholder} />
+                                )}
+                                <div className={styles.nodeLabel}>
+                                    <span className={styles.nodePrimary}>
+                                        {displayText(node)}
+                                        {isUserDept && <span className={styles.userBadge}>{t("me", "Ich")}</span>}
+                                    </span>
+                                    {node.shortname && node.shortname !== node.name && <span className={styles.nodeSecondary}>{node.name}</span>}
+                                </div>
+                                {isSelected && <CheckmarkRegular style={{ color: "#3182ce" }} />}
+                                {isLoading && <span className={styles.loadingText}>{t("loading", "...")}</span>}
+                            </div>
+                            {isExpanded && children.length > 0 && <div className={styles.treeChildren}>{renderNodes(children, currentPath)}</div>}
+                        </li>
+                    );
+                })}
+            </ul>
+        );
+    };
+
     return (
         <div className={styles.container}>
-            <div className={styles.selected_container}>
-                {publishDepartments.map(d => (
-                    <span key={d} className={styles.selected_item}>
-                        {d}
-                        <button
-                            onClick={() => handleRemove(d)}
-                            className={styles.selected_button}
-                            aria-label={`Remove ${d}`}
-                            type="button"
-                            disabled={disabled}
-                            hidden={disabled}
-                        >
-                            ×
-                        </button>
-                    </span>
-                ))}
+            <div className={styles.searchWrapper}>
+                <div className={styles.searchIcon}>
+                    <SearchRegular fontSize={16} />
+                </div>
+                <input
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder={t("search", "Abteilung suchen...")}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    disabled={disabled}
+                />
+                {searchQuery && (
+                    <button
+                        className={styles.selected_button}
+                        style={{ position: "absolute", right: "8px" }}
+                        onClick={() => setSearchQuery("")}
+                        disabled={disabled}
+                    >
+                        <DismissRegular fontSize={14} />
+                    </button>
+                )}
             </div>
 
-            <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                placeholder={t("components.department_dropdown.placeholder", "Suche Abteilung...")}
-                onFocus={() => setShow(true)}
-                onBlur={() => setShow(false)}
-                onChange={e => {
-                    setSearch(e.target.value);
-                    setShow(true);
-                }}
-                className={styles.inputField}
-                disabled={disabled}
-                hidden={disabled}
-            />
-            {show && (
-                <ul
-                    ref={dropdownRef}
-                    className={styles.dropdownList}
-                    onMouseDown={e => e.preventDefault()} // verhindert, dass onBlur vor handleSelect ausgelöst wird
-                >
-                    {filtered.length === 0 && <li className={styles.noMatches}>{t("components.department_dropdown.no_matches", "Keine Treffer")}</li>}
-
-                    {/* If user department exists and is in filtered list, display a separator */}
-                    {user?.department && filtered.some(d => d === user.department) && (
-                        <>
-                            <li
-                                key={user.department}
-                                className={`${styles.dropdownItem} ${styles.userDepartment}`}
-                                onMouseDown={() => user.department && handleSelect(user.department)}
+            <div className={styles.controlsRow}>
+                <div className={styles.selected_container}>
+                    {publishDepartments.map(d => (
+                        <span key={d} className={styles.selected_item}>
+                            {d}
+                            <button
+                                onClick={() => handleRemove(d)}
+                                className={styles.selected_button}
+                                aria-label={`Remove ${d}`}
+                                type="button"
+                                disabled={disabled}
+                                hidden={disabled}
                             >
-                                {user.department}
-                                <span className={styles.userDepartmentLabel}>
-                                    {t("components.department_dropdown.own_department_label", "(Ihre Abteilung)")}
-                                </span>
-                            </li>
-                            <li className={styles.dropdownDivider}></li>
-                        </>
-                    )}
+                                <DismissRegular fontSize={12} />
+                            </button>
+                        </span>
+                    ))}
+                </div>
+                {publishDepartments.length > 0 && (
+                    <button className={styles.clearButton} onClick={() => setPublishDepartments([])} disabled={disabled}>
+                        {t("clear_all", "Alle entfernen")}
+                    </button>
+                )}
+            </div>
 
-                    {/* Display all other departments */}
-                    {filtered
-                        .filter(d => d !== user?.department) // Filter out user department as it's already displayed
-                        .map(d => (
-                            <li key={d} className={styles.dropdownItem} onMouseDown={() => handleSelect(d)}>
-                                {d}
-                            </li>
-                        ))}
-                </ul>
-            )}
+            <div className={styles.treeContainer}>
+                {error && <div className={styles.errorText}>{error}</div>}
+                {tree[pathKey([])] ? renderNodes(tree[pathKey([])], []) : <div className={styles.loadingText}>{t("loading", "Lädt...")}</div>}
+            </div>
         </div>
     );
 };

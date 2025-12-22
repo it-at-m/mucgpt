@@ -1,6 +1,6 @@
-import { DialogContent, Field, InfoLabel, Checkbox, Text, CheckboxOnChangeData } from "@fluentui/react-components";
+import { DialogContent, Field, InfoLabel, Text, RadioGroup, Radio } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "../EditAssistantDialog.module.css";
 import DepartmentDropdown from "../../DepartmentDropdown/DepartmentDropdown";
@@ -23,63 +23,126 @@ export const VisibilityStep = ({
     onHasChanged
 }: VisibilityStepProps) => {
     const { t } = useTranslation();
+    const mountedRef = useRef(false);
 
-    // Invisible checkbox change
-    const onInvisibleChangeHandler = useCallback(
-        (_: React.ChangeEvent<HTMLInputElement>, data: CheckboxOnChangeData) => {
-            setInvisibleChecked(data.checked === true);
-            onHasChanged(true);
+    const initialVisibility: 'public' | 'departments' | 'private' = invisibleChecked
+        ? "private"
+        : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
+
+    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
+
+    useEffect(() => {
+        const derivedVisibility = invisibleChecked
+            ? "private"
+            : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
+        if (derivedVisibility !== visibilityMode) {
+            setVisibilityMode(derivedVisibility);
+        }
+    }, [invisibleChecked, publishDepartments, visibilityMode]);
+
+    useEffect(() => {
+        if (!mountedRef.current) {
+            mountedRef.current = true;
+            return;
+        }
+        onHasChanged(true);
+    }, [visibilityMode, publishDepartments, onHasChanged]);
+
+    const onVisibilityChange = useCallback((_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
+        setVisibilityMode(data.value as 'public' | 'departments' | 'private');
+    }, []);
+
+    const handleSetPublishDepartments = useCallback(
+        (deps: string[]) => {
+            setPublishDepartments(deps);
         },
-        [setInvisibleChecked, onHasChanged]
+        [setPublishDepartments]
     );
+
+    const departmentsSelected = Array.isArray(publishDepartments) && publishDepartments.length > 0;
 
     return (
         <DialogContent>
-            {/* Visibility Settings - only show when publishing */}
-            <Field
-                size="large"
-                className={styles.rangeField}
-                label={
-                    <Text size={400} weight="medium">
-                        Sichtbarkeit
-                    </Text>
-                }
-            >
-                <Checkbox
-                    label={
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            {invisibleChecked ? <EyeOff24Regular /> : <Eye24Regular />}
-                            <span>{invisibleChecked ? "Privat (nur über Link)" : "Öffentlich sichtbar"}</span>
-                        </div>
-                    }
-                    disabled={!isOwner}
-                    checked={invisibleChecked}
-                    onChange={onInvisibleChangeHandler}
-                />
-                <Text size={300} style={{ marginTop: "4px", color: "var(--colorNeutralForeground3)" }}>
-                    {invisibleChecked ? "Assistent ist nur über den direkten Link erreichbar" : "Assistent erscheint in der öffentlichen Assistenten-Liste"}
-                </Text>
-            </Field>
+            <div className={styles.visibilityTitle}>
+                <span className={styles.formLabel}>
+                    {t("components.publish_assistant_dialog.publication_options_title")}
+                </span>
+            </div>
 
-            {/* Department Selection - only show when publishing and not invisible */}
-            {!invisibleChecked && (
+            <div className={styles.visibilityWrapper}>
                 <Field size="large" className={styles.rangeField}>
-                    <label className={styles.formLabel}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                            <People24Regular />
-                            <Text size={400} weight="medium">
+                    <RadioGroup
+                        value={visibilityMode}
+                        onChange={onVisibilityChange}
+                        layout="vertical"
+                        disabled={!isOwner}
+                    >
+                        <Radio
+                            value="public"
+                            disabled={!isOwner}
+                            label={
+                                <div className={styles.radioContent}>
+                                    <div className={styles.radioLabel}>
+                                        <Eye24Regular /> <span>{t("components.publish_assistant_dialog.visibility_public")}</span>
+                                    </div>
+                                    <div className={styles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.visibility_public_description")}
+                                    </div>
+                                </div>
+                            }
+                        />
+                        <Radio
+                            value="departments"
+                            disabled={!isOwner}
+                            label={
+                                <div className={styles.radioContent}>
+                                    <div className={styles.radioLabel}>
+                                        <People24Regular /> <span>{t("components.publish_assistant_dialog.departments_title")}</span>
+                                    </div>
+                                    <div className={styles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.departments_description")}
+                                    </div>
+                                </div>
+                            }
+                        />
+                        {visibilityMode === "departments" && (
+                            <div className={styles.departmentSection}>
                                 <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
-                                    Veröffentlichen für Abteilungen
+                                    {t("components.edit_assistant_dialog.departments")}
                                 </InfoLabel>
-                            </Text>
-                        </div>
-                        <Text size={300} style={{ marginBottom: "8px", color: "var(--colorNeutralForeground3)" }}>
-                            Wählen Sie die Abteilungen aus, für die der Assistant verfügbar sein soll:
-                        </Text>
-                    </label>
-                    <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} disabled={!isOwner} />
+                                <div className={styles.departmentDropdown}>
+                                    <DepartmentDropdown
+                                        publishDepartments={publishDepartments}
+                                        setPublishDepartments={handleSetPublishDepartments}
+                                        disabled={!isOwner}
+                                    />
+                                </div>
+                                {!departmentsSelected && (
+                                    <Text size={200} className={styles.noDepartmentsWarning}>
+                                        {t("components.publish_assistant_dialog.no_departments_selected")}
+                                    </Text>
+                                )}
+                            </div>
+                        )}
+                        <Radio
+                            value="private"
+                            disabled={!isOwner}
+                            label={
+                                <div className={styles.radioContent}>
+                                    <div className={styles.radioLabel}>
+                                        <EyeOff24Regular /> <span>{t("components.publish_assistant_dialog.visibility_private")}</span>
+                                    </div>
+                                    <div className={styles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.visibility_private_description")}
+                                    </div>
+                                </div>
+                            }
+                        />
+                    </RadioGroup>
                 </Field>
-            )}
+            </div>
         </DialogContent>
     );
 };
+
+export default VisibilityStep;

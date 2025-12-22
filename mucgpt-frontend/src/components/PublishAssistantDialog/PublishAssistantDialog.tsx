@@ -1,4 +1,4 @@
-import { Checkbox, InfoLabel } from "@fluentui/react-components";
+import { Field, InfoLabel, RadioGroup, Radio } from "@fluentui/react-components";
 import { Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions, DialogTrigger } from "@fluentui/react-dialog";
 import { useTranslation } from "react-i18next";
 import { Button, Label, Tooltip, Text, Badge, Divider } from "@fluentui/react-components";
@@ -6,7 +6,7 @@ import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Link24Regular, Eye2
 import styles from "./PublishAssistantDialog.module.css";
 import { Assistant } from "../../api";
 import DepartmentDropdown from "../DepartmentDropdown/DepartmentDropdown";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { createCommunityAssistantApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
@@ -26,9 +26,37 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
     const { showSuccess } = useGlobalToastContext();
     const [publishDepartments, setPublishDepartments] = useState<string[]>(assistant.hierarchical_access || []);
 
+    const initialVisibility = invisibleChecked ? "private" : (publishDepartments && publishDepartments.length > 0 ? "departments" : "public");
+    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
+
+    useEffect(() => {
+        setVisibilityMode(invisibleChecked
+            ? "private"
+            : (publishDepartments && publishDepartments.length > 0 && !publishDepartments.includes("*")
+                ? "departments"
+                : "public"));
+    }, [invisibleChecked, publishDepartments]);
+
+    const departmentsSelected = Array.isArray(publishDepartments) && publishDepartments.length > 0;
+    const publishDisabled = isPublishing || publishedAssistantId !== null || (visibilityMode === "departments" && !departmentsSelected);
+
     const handlePublishClick = useCallback(async () => {
         setIsPublishing(true);
         try {
+            let hierarchical_access: string[] | undefined;
+            let is_visible: boolean;
+
+            if (visibilityMode === "private") {
+                hierarchical_access = [];
+                is_visible = false;
+            } else if (visibilityMode === "departments") {
+                hierarchical_access = publishDepartments;
+                is_visible = true;
+            } else {
+                hierarchical_access = ["*"];
+                is_visible = true;
+            }
+
             const response = await createCommunityAssistantApi({
                 name: assistant.title,
                 description: assistant.description,
@@ -40,8 +68,8 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 examples: assistant.examples?.map(e => ({ text: e.text, value: e.value })),
                 quick_prompts: assistant.quick_prompts?.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
                 tags: assistant.tags || [],
-                hierarchical_access: invisibleChecked ? [] : publishDepartments || ["*"], // Default to all departments if none selected
-                is_visible: !invisibleChecked
+                hierarchical_access,
+                is_visible
             });
 
             setPublishedAssistantId(response.id);
@@ -49,8 +77,8 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 t("components.publish_assistant_dialog.publish_assistant_success"),
                 t("components.publish_assistant_dialog.publish_assistant_success_message", { title: assistant.title })
             );
-            // Wenn der Assistant nicht unsichtbar ist, schließe den Dialog sofort
-            if (!invisibleChecked) {
+
+            if (is_visible) {
                 onDeleteAssistant();
                 setOpen(false);
             }
@@ -59,7 +87,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
         } finally {
             setIsPublishing(false);
         }
-    }, [assistant, invisibleChecked, publishDepartments, onDeleteAssistant, setOpen]);
+    }, [assistant, visibilityMode, publishDepartments, onDeleteAssistant, setOpen, showSuccess, t]);
 
     return (
         <Dialog modalType="alert" open={open}>
@@ -105,90 +133,91 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
 
                         <Divider className={styles.divider} />
 
-                        {/* Publication Options */}
                         <div className={styles.optionsSection}>
-                            <Text size={400} weight="medium" className={styles.sectionTitle}>
+                            <Text size={400} weight="medium">
                                 {t("components.publish_assistant_dialog.publication_options_title")}
                             </Text>
 
-                            <div className={styles.visibilityOption}>
-                                <Checkbox
-                                    label={
-                                        <div className={styles.checkboxLabel}>
-                                            {invisibleChecked ? <EyeOff24Regular /> : <Eye24Regular />}
-                                            <span>
-                                                {invisibleChecked
-                                                    ? t("components.publish_assistant_dialog.visibility_private")
-                                                    : t("components.publish_assistant_dialog.visibility_public")}
-                                            </span>
-                                        </div>
-                                    }
-                                    disabled={isPublishing || publishedAssistantId !== null}
-                                    checked={invisibleChecked}
-                                    onChange={(_, data) => setInvisibleChecked(!!data.checked)}
-                                />
-                                <Text size={300} className={styles.optionDescription}>
-                                    {invisibleChecked
-                                        ? t("components.publish_assistant_dialog.visibility_private_description")
-                                        : t("components.publish_assistant_dialog.visibility_public_description")}
-                                </Text>
-                            </div>
+                            <div className={styles.visibilityOptions}>
+                                <RadioGroup
+                                    value={visibilityMode}
+                                    onChange={(_, data) => setVisibilityMode(data.value as 'public' | 'departments' | 'private')}
+                                    layout="vertical"
+                                >
+                                    <Field>
+                                        <Radio
+                                            value="public"
+                                            disabled={isPublishing || publishedAssistantId !== null}
+                                            label={
+                                                <div className={styles.radioContent}>
+                                                    <div className={styles.radioLabel}>
+                                                        <Eye24Regular /> <span>{t("components.publish_assistant_dialog.visibility_public")}</span>
+                                                    </div>
+                                                    <div className={styles.radioDescription}>
+                                                        {t("components.publish_assistant_dialog.visibility_public_description")}
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                    </Field>
 
-                            {invisibleChecked && publishedAssistantId && (
-                                <div className={styles.linkCard}>
-                                    <div className={styles.linkPreview}>
-                                        <div className={styles.linkSection}>
-                                            <Label className={styles.linkLabel}>
-                                                <Link24Regular />
-                                                {t("components.publish_assistant_dialog.direct_link_label")}
-                                            </Label>
-                                            <div className={styles.linkContainer}>
-                                                <Text size={300} className={styles.linkText}>
-                                                    {`${window.location.origin}/#/communityassistant/${publishedAssistantId}`}
-                                                </Text>
-                                                <Tooltip content={t("components.publish_assistant_dialog.copy_link_tooltip")} relationship="description">
-                                                    <Button
-                                                        appearance="subtle"
-                                                        size="small"
-                                                        icon={<Link24Regular />}
-                                                        onClick={() => {
-                                                            navigator.clipboard.writeText(
-                                                                `${window.location.origin}/#/communityassistant/${publishedAssistantId}`
-                                                            );
-                                                        }}
-                                                        aria-label={t("components.publish_assistant_dialog.copy_link_aria")}
-                                                    />
-                                                </Tooltip>
+                                    <Field>
+                                        <Radio
+                                            value="departments"
+                                            disabled={isPublishing || publishedAssistantId !== null}
+                                            label={
+                                                <div className={styles.radioContent}>
+                                                    <div className={styles.radioLabel}>
+                                                        <People24Regular /> <span>{t("components.publish_assistant_dialog.departments_title")}</span>
+                                                    </div>
+                                                    <div className={styles.radioDescription}>
+                                                        {t("components.publish_assistant_dialog.departments_description")}
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                    </Field>
+                                    {visibilityMode === "departments" && (
+                                        <div className={styles.departmentSection}>
+                                            <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
+                                                {t("components.edit_assistant_dialog.departments")}
+                                            </InfoLabel>
+                                            <div className={styles.departmentDropdown}>
+                                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
 
-                            {!invisibleChecked && (
-                                <div className={styles.departmentSection}>
-                                    <div className={styles.departmentHeader}>
-                                        <People24Regular />
-                                        <Text size={400} weight="medium">
-                                            {t("components.publish_assistant_dialog.departments_title")}
-                                        </Text>
-                                    </div>
-                                    <Text size={300} className={styles.departmentDescription}>
-                                        {t("components.publish_assistant_dialog.departments_description")}
-                                    </Text>
-                                    <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
-                                        {t("components.edit_assistant_dialog.departments")}
-                                    </InfoLabel>
-                                    <div className={styles.departmentDropdown}>
-                                        <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
-                                    </div>
-                                </div>
-                            )}
+                                            {!departmentsSelected && (
+                                                <Text size={200} className={styles.noDepartmentsWarning}>
+                                                    {t("components.publish_assistant_dialog.no_departments_selected")}
+                                                </Text>
+                                            )}
+                                        </div>
+                                    )}
+                                    <Field>
+                                        <Radio
+                                            value="private"
+                                            disabled={isPublishing || publishedAssistantId !== null}
+                                            label={
+                                                <div className={styles.radioContent}>
+                                                    <div className={styles.radioLabel}>
+                                                        <EyeOff24Regular /> <span>{t("components.publish_assistant_dialog.visibility_private")}</span>
+                                                    </div>
+                                                    <div className={styles.radioDescription}>
+                                                        {t("components.publish_assistant_dialog.visibility_private_description")}
+                                                    </div>
+                                                </div>
+                                            }
+                                        />
+                                    </Field>
+                                </RadioGroup>
+
+
+                            </div>
                         </div>
                     </DialogContent>
 
                     <DialogActions className={styles.actions}>
-                        {!(publishedAssistantId && invisibleChecked) && (
+                        {!(publishedAssistantId && visibilityMode === "private") && (
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
                                     <Dismiss24Regular />
@@ -203,14 +232,14 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                     size="medium"
                                     onClick={handlePublishClick}
                                     className={styles.publishButton}
-                                    disabled={isPublishing}
+                                    disabled={publishDisabled}
                                 >
                                     <Checkmark24Filled />
                                     {isPublishing ? t("components.publish_assistant_dialog.publishing") : t("components.publish_assistant_dialog.confirm")}
                                 </Button>
                             </DialogTrigger>
                         )}
-                        {publishedAssistantId && invisibleChecked && (
+                        {publishedAssistantId && visibilityMode === "private" && (
                             <DialogTrigger disableButtonEnhancement>
                                 <Button
                                     appearance="primary"

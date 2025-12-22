@@ -5,7 +5,7 @@ import { Button, Text, Badge, Divider } from "@fluentui/react-components";
 import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "./PublishAssistantDialog.module.css";
 import { Assistant } from "../../api";
-import DepartmentDropdown from "../DepartmentDropdown/DepartmentDropdown";
+import DepartmentTreeDropdown from "../DepartmentTreeDropdown/DepartmentTreeDropdown";
 import { useCallback, useState, useEffect } from "react";
 import { createCommunityAssistantApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
@@ -180,7 +180,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                                 {t("components.edit_assistant_dialog.departments")}
                                             </InfoLabel>
                                             <div className={styles.departmentDropdown}>
-                                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
+                                                <DepartmentTreeDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
                                             </div>
 
                                             {!departmentsSelected && (

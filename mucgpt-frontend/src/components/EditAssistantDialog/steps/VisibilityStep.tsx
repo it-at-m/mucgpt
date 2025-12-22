@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "../EditAssistantDialog.module.css";
-import DepartmentDropdown from "../../DepartmentDropdown/DepartmentDropdown";
+import DepartmentTreeDropdown from "../../DepartmentTreeDropdown/DepartmentTreeDropdown";
 
 interface VisibilityStepProps {
     isOwner: boolean;
@@ -92,7 +92,7 @@ export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, 
                                     {t("components.edit_assistant_dialog.departments")}
                                 </InfoLabel>
                                 <div className={styles.departmentDropdown}>
-                                    <DepartmentDropdown
+                                    <DepartmentTreeDropdown
                                         publishDepartments={publishDepartments}
                                         setPublishDepartments={handleSetPublishDepartments}
                                         disabled={!isOwner}

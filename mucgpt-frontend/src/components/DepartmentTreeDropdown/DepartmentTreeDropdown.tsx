@@ -1,6 +1,6 @@
 import { useState, useEffect, useContext } from "react";
 import { UserContext } from "../../pages/layout/UserContextProvider";
-import styles from "./DepartmentDropdown.module.css";
+import styles from "./DepartmentTreeDropdown.module.css";
 import { useTranslation } from "react-i18next";
 import { getDirectoryChildren } from "../../api/assistant-client";
 import { DirectoryNode } from "../../api/models";
@@ -22,7 +22,7 @@ interface Props {
     disabled?: boolean;
 }
 
-export const DepartementDropdown = ({ publishDepartments, setPublishDepartments, disabled }: Props) => {
+export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartments, disabled }: Props) => {
     const { t } = useTranslation();
     const [tree, setTree] = useState<Record<string, DirectoryNode[]>>({});
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -226,4 +226,4 @@ export const DepartementDropdown = ({ publishDepartments, setPublishDepartments,
     );
 };
 
-export default DepartementDropdown;
+export default DepartmentTreeDropdown;

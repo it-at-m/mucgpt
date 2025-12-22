@@ -11,9 +11,17 @@ interface VisibilityStepProps {
     invisibleChecked: boolean;
     setPublishDepartments: (departments: string[]) => void;
     onHasChanged: (hasChanged: boolean) => void;
+    setInvisibleChecked: (invisible: boolean) => void;
 }
 
-export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, setPublishDepartments, onHasChanged }: VisibilityStepProps) => {
+export const VisibilityStep = ({
+    isOwner,
+    publishDepartments,
+    invisibleChecked,
+    setPublishDepartments,
+    onHasChanged,
+    setInvisibleChecked
+}: VisibilityStepProps) => {
     const { t } = useTranslation();
     const mountedRef = useRef(false);
 
@@ -38,7 +46,8 @@ export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, 
             return;
         }
         onHasChanged(true);
-    }, [visibilityMode, publishDepartments, onHasChanged]);
+        setInvisibleChecked(visibilityMode === "private");
+    }, [visibilityMode, publishDepartments, onHasChanged, setInvisibleChecked]);
 
     const onVisibilityChange = useCallback((_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
         setVisibilityMode(data.value as "public" | "departments" | "private");

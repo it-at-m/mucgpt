@@ -4,7 +4,7 @@ import styles from "./DepartmentTreeDropdown.module.css";
 import { useTranslation } from "react-i18next";
 import { getDirectoryChildren } from "../../api/assistant-client";
 import { DirectoryNode } from "../../api/models";
-import { ChevronRightRegular, ChevronDownRegular, SearchRegular, DismissRegular, CheckmarkRegular } from "@fluentui/react-icons";
+import { ChevronRightRegular, ChevronDownRegular, DismissRegular, CheckmarkRegular } from "@fluentui/react-icons";
 
 // Hilfsfunktion für Präfix-Matching
 function isDepartmentPrefixMatch(a: string, b: string) {
@@ -28,7 +28,6 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
     const [expanded, setExpanded] = useState<Set<string>>(new Set());
     const [loadingPaths, setLoadingPaths] = useState<Set<string>>(new Set());
     const [error, setError] = useState<string | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
     const { user } = useContext(UserContext);
 
     const pathKey = (path: string[]) => path.join("||");
@@ -98,39 +97,18 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
         setExpanded(next);
     };
 
-    const filterNodes = (nodes: DirectoryNode[]): DirectoryNode[] => {
-        if (!searchQuery) return nodes;
-        const query = searchQuery.toLowerCase();
-        const result: DirectoryNode[] = [];
-
-        for (const node of nodes) {
-            const matches = node.name.toLowerCase().includes(query) || (node.shortname && node.shortname.toLowerCase().includes(query));
-            const filteredChildren = node.children ? filterNodes(node.children) : [];
-
-            if (matches || filteredChildren.length > 0) {
-                result.push({
-                    ...node,
-                    children: filteredChildren.length > 0 ? filteredChildren : undefined
-                });
-            }
-        }
-        return result;
-    };
-
     const renderNodes = (nodes: DirectoryNode[], parentPath: string[]) => {
-        const filtered = filterNodes(nodes);
-
         return (
             <ul className={styles.treeList}>
-                {filtered.map(node => {
+                {nodes.map(node => {
                     const currentPath = [...parentPath, labelFor(node)];
                     const key = pathKey(currentPath);
-                    const children = tree[key] || node.children || [];
-                    const isExpanded = expanded.has(key) || searchQuery.length > 0;
+                    const children = node.children || tree[key] || [];
+                    const isExpanded = expanded.has(key);
                     const isLoading = loadingPaths.has(key);
                     const isSelected = publishDepartments.includes(labelFor(node));
                     const isUserDept = user?.department === node.shortname || user?.department === node.name;
-                    const canExpand = tree[key] ? tree[key].length > 0 : node.children ? node.children.length > 0 : true;
+                    const canExpand = children.length > 0 || (tree[key] ? tree[key].length > 0 : true);
 
                     return (
                         <li key={key} className={styles.treeItem}>
@@ -169,30 +147,6 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
 
     return (
         <div className={styles.container}>
-            <div className={styles.searchWrapper}>
-                <div className={styles.searchIcon}>
-                    <SearchRegular fontSize={16} />
-                </div>
-                <input
-                    type="text"
-                    className={styles.searchInput}
-                    placeholder={t("search", "Abteilung suchen...")}
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    disabled={disabled}
-                />
-                {searchQuery && (
-                    <button
-                        className={styles.selected_button}
-                        style={{ position: "absolute", right: "8px" }}
-                        onClick={() => setSearchQuery("")}
-                        disabled={disabled}
-                    >
-                        <DismissRegular fontSize={14} />
-                    </button>
-                )}
-            </div>
-
             <div className={styles.controlsRow}>
                 <div className={styles.selected_container}>
                     {publishDepartments.map(d => (

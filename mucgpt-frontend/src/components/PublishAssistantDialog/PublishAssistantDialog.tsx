@@ -15,10 +15,11 @@ interface Props {
     setOpen: (open: boolean) => void;
     assistant: Assistant;
     invisibleChecked: boolean;
+    setInvisibleChecked: (invisible: boolean) => void;
     onDeleteAssistant: () => void;
 }
 
-export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChecked, onDeleteAssistant }: Props) => {
+export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChecked, setInvisibleChecked, onDeleteAssistant }: Props) => {
     const { t } = useTranslation();
     const [publishedAssistantId, setPublishedAssistantId] = useState<string | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
@@ -138,7 +139,11 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                             <div className={styles.visibilityOptions}>
                                 <RadioGroup
                                     value={visibilityMode}
-                                    onChange={(_, data) => setVisibilityMode(data.value as "public" | "departments" | "private")}
+                                    onChange={(_, data) => {
+                                        const newMode = data.value as "public" | "departments" | "private";
+                                        setVisibilityMode(newMode);
+                                        setInvisibleChecked(newMode === "private");
+                                    }}
                                     layout="vertical"
                                 >
                                     <Field>

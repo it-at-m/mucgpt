@@ -1823,7 +1823,7 @@ i18n
                             step1_label: "Décrire la fonction",
                             step2_label: "Créer l'assistant",
                             hint_text:
-                                "Remarque : décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système oder si vous préférez le définir vous-même.",
+                                "Remarque : décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
                             hint_text_step2:
                                 "Remarque : vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
                             description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",

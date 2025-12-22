@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { ReactElement, useEffect, useRef } from "react";
 import styles from "./Stepper.module.css";
 
 export interface Step {
@@ -14,6 +14,28 @@ interface StepperProps {
 }
 
 export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+    useEffect(() => {
+        const activeStepIndex = currentStep - 1;
+        const activeStepElement = stepRefs.current[activeStepIndex];
+        const container = containerRef.current;
+
+        if (activeStepElement && container) {
+            const containerWidth = container.offsetWidth;
+            const stepLeft = activeStepElement.offsetLeft;
+            const stepWidth = activeStepElement.offsetWidth;
+
+            const scrollPosition = stepLeft - (containerWidth / 2) + (stepWidth / 2);
+
+            container.scrollTo({
+                left: scrollPosition,
+                behavior: "smooth"
+            });
+        }
+    }, [currentStep]);
+
     const renderStepNumber = (index: number, step: Step) => {
         const stepNumber = index + 1;
         const isActive = currentStep === stepNumber;
@@ -55,9 +77,13 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
     };
 
     return (
-        <div className={`${styles.stepIndicator} ${className || ""}`}>
+        <div ref={containerRef} className={`${styles.stepIndicator} ${className || ""}`}>
             {steps.map((step, index) => (
-                <div key={index} className={styles.stepWrapper}>
+                <div
+                    key={index}
+                    ref={(el) => (stepRefs.current[index] = el)}
+                    className={styles.stepWrapper}
+                >
                     <div className={getStepClassName(index)}>
                         <div className={styles.stepNumber}>{renderStepNumber(index, step)}</div>
                         <div className={styles.stepLabel}>{step.label}</div>

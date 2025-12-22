@@ -1,12 +1,22 @@
 .stepIndicator {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     margin-bottom: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 10px 20px 5px 20px;
+}
+
+.stepIndicator::-webkit-scrollbar {
+    display: none;
 }
 
 .stepWrapper {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .step {
@@ -14,6 +24,8 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .stepNumber {
@@ -66,38 +78,14 @@
 
 .stepConnector {
     position: relative;
-    min-width: 100px;
-    max-width: 200px;
+    width: clamp(30px, 6vw, 100px);
+    flex-shrink: 1;
     height: 2px;
     background: var(--outline);
-    margin: 0 1rem;
+    margin: 0 clamp(0.5rem, 1.2vw, 1rem);
     margin-bottom: 28px;
 }
 
 .stepConnector.completed {
     background: var(--primary);
-}
-
-/* Responsive Design */
-@media (max-width: 650px) {
-    .stepIndicator {
-        padding: 10px 0 5px 0;
-    }
-
-    .stepNumber {
-        width: 36px;
-        height: 36px;
-        font-size: var(--fontSizeBase300);
-    }
-
-    .stepLabel {
-        font-size: var(--fontSizeBase200);
-    }
-
-    .stepConnector {
-        min-width: 40px;
-        max-width: 120px;
-        margin: 0 0.5rem;
-        margin-bottom: 24px;
-    }
 }

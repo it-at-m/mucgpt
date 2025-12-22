@@ -97,6 +97,7 @@ i18n
                         create: "Erstellen",
                         back: "Zurück",
                         ok: "OK",
+                        next: "Weiter",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -321,7 +322,7 @@ i18n
                             prompt: "System-Prompt",
                             dialog_title: "Neuen Assistent erstellen",
                             step1_label: "Funktion beschreiben",
-                            step2_label: "Assistent erstellen",
+                            step2_label: "Assistent beschreiben",
                             hint_text:
                                 "Hinweis: Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
                             hint_text_step2:
@@ -595,6 +596,7 @@ i18n
                         create: "Create",
                         back: "Back",
                         ok: "OK",
+                        next: "Next",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -1082,6 +1084,7 @@ i18n
                         create: "Anlegn",
                         back: "Zruck",
                         ok: "OK",
+                        next: "Weida",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1584,6 +1587,7 @@ i18n
                         create: "Créer",
                         back: "Retour",
                         ok: "OK",
+                        next: "Suivant",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -2083,6 +2087,7 @@ i18n
                         create: "Створити",
                         back: "Назад",
                         ok: "OK",
+                        next: "Далі",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",

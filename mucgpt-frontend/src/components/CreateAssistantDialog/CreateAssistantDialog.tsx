@@ -15,21 +15,23 @@ import {
 
 import styles from "./CreateAssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { Assistant } from "../../api";
+import { Assistant, QuickPrompt, Example, Tool, ToolInfo } from "../../api";
 import { ASSISTANT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { createAssistantApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import { Stepper, Step } from "../Stepper";
+import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "../EditAssistantDialog/steps";
+import { useToolsContext } from "../ToolsProvider";
 
 interface Props {
     showDialogInput: boolean;
     setShowDialogInput: (showDialogInput: boolean) => void;
 }
 
-type DialogStep = 1 | 2;
+type DialogStep = 1 | 2 | 3 | 4 | 5 | 6;
 
 export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -43,11 +45,29 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     // Context
     const { LLM } = useContext(LLMContext);
     const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
+
+    // Additional states for new steps
+    const [tools, setTools] = useState<Tool[]>([]);
+    const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
+    const [examples, setExamples] = useState<Example[]>([]);
+    const [temperature, setTemperature] = useState<number>(0.6);
+    const [maxOutputTokens, setMaxOutputTokens] = useState<number>(llmMaxOutputTokens);
+    const [hasChanged, setHasChanged] = useState<boolean>(false);
     const { showError, showSuccess } = useGlobalToastContext();
+    const { tools: availableTools } = useToolsContext();
 
     const { t } = useTranslation();
 
     const storageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+
+    const selectedTools = useMemo(() => {
+        if (!availableTools) {
+            return [] as ToolInfo[];
+        }
+
+        const toolMap = new Map(availableTools.tools.map(tool => [tool.id, tool]));
+        return tools.map(tool => toolMap.get(tool.id)).filter(Boolean) as ToolInfo[];
+    }, [availableTools, tools]);
 
     // input change
     const onInputChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
@@ -83,15 +103,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 description: description === "" ? "Ein Assistent" : description,
                 system_message: systemPrompt,
                 publish: false,
-                temperature: 0.6,
-                max_output_tokens: llmMaxOutputTokens,
-                quick_prompts: [],
-                examples: [],
+                temperature: temperature,
+                max_output_tokens: maxOutputTokens,
+                quick_prompts: quickPrompts,
+                examples: examples,
                 version: "0",
                 owner_ids: [],
                 tags: [],
                 hierarchical_access: [],
-                tools: [],
+                tools: tools,
                 is_visible: true
             };
             const created_id = await storageService.createAssistantConfig(assistant);
@@ -110,7 +130,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, llmMaxOutputTokens, storageService, showError, showSuccess, t]);
+    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, storageService, showError, showSuccess, t]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -121,7 +141,13 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setDescription("");
         setTitle("");
         setSelectedTemplate("");
-    }, [setShowDialogInput]);
+        setTools([]);
+        setQuickPrompts([]);
+        setExamples([]);
+        setTemperature(0.6);
+        setMaxOutputTokens(llmMaxOutputTokens);
+        setHasChanged(false);
+    }, [setShowDialogInput, llmMaxOutputTokens]);
 
     // call Assistant api
     const createAssistant = useCallback(async () => {
@@ -132,7 +158,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 setSystemPrompt(result.system_prompt);
                 setDescription(result.description);
                 setTitle(result.title);
-                setCurrentStep(2);
+                setCurrentStep(2 as DialogStep);
                 showSuccess(
                     t("components.create_assistant_dialog.assistant_generated_success"),
                     t("components.create_assistant_dialog.assistant_generated_message")
@@ -176,7 +202,24 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             completedIcon: <Checkmark24Filled />
         },
         {
-            label: t("components.create_assistant_dialog.step2_label")
+            label: t("components.create_assistant_dialog.step2_label"),
+            completedIcon: <Checkmark24Filled />
+        },
+        {
+            label: t("components.edit_assistant_dialog.step_tools"),
+            completedIcon: <Checkmark24Filled />
+        },
+        {
+            label: t("components.edit_assistant_dialog.step_quick_prompts"),
+            completedIcon: <Checkmark24Filled />
+        },
+        {
+            label: t("components.edit_assistant_dialog.step_examples"),
+            completedIcon: <Checkmark24Filled />
+        },
+        {
+            label: t("components.edit_assistant_dialog.step_advanced_settings"),
+            completedIcon: <Checkmark24Filled />
         }
     ];
 
@@ -230,7 +273,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 <p hidden={!loading}>{t("components.create_assistant_dialog.generating_prompt")}</p>
             </DialogContent>
             <DialogActions className={styles.dialogActions}>
-                <Button disabled={loading || input === ""} size="medium" onClick={handleDefineMyself} className={styles.defineButton}>
+                <Button disabled={loading} size="medium" onClick={handleDefineMyself} className={styles.defineButton}>
                     {t("components.create_assistant_dialog.define_myself")}
                 </Button>
                 <Button disabled={loading || input === ""} size="medium" onClick={handleContinueWithMucGPT} className={styles.continueButton}>
@@ -248,7 +291,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text_step2")}</p>
 
                 <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.title")}:</label>
+                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.title")}:*</label>
                     <Textarea
                         placeholder={t("components.create_assistant_dialog.title_placeholder")}
                         value={title}
@@ -272,7 +315,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 </Field>
                 <Field size="large" className={styles.fieldSection}>
                     <label className={styles.fieldLabel}>
-                        {t("components.create_assistant_dialog.prompt")}:
+                        {t("components.create_assistant_dialog.prompt")}:*
                         <InfoLabel
                             info={
                                 <div>
@@ -296,6 +339,110 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 <Button size="medium" onClick={() => setCurrentStep(1)} className={styles.backButton}>
                     {t("common.back")}
                 </Button>
+                <Button
+                    size="medium"
+                    onClick={() => setCurrentStep(3)}
+                    className={styles.continueButton}
+                    disabled={title.trim() === "" || systemPrompt.trim() === ""}
+                >
+                    {t("common.next")}
+                </Button>
+            </DialogActions>
+        </>
+    );
+
+    const renderStep3 = () => (
+        <>
+            <DialogContent>
+                <Stepper steps={steps} currentStep={currentStep} />
+                <div className={styles.scrollableDialogContent}>
+                    <ToolsStep
+                        tools={tools}
+                        selectedTools={selectedTools}
+                        availableTools={availableTools}
+                        onToolsChange={setTools}
+                        onHasChanged={setHasChanged}
+                    />
+                </div>
+            </DialogContent>
+            <DialogActions className={styles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(2)} className={styles.backButton}>
+                    {t("common.back")}
+                </Button>
+                <Button size="medium" onClick={() => setCurrentStep(4)} className={styles.continueButton}>
+                    Weiter
+                </Button>
+            </DialogActions>
+        </>
+    );
+
+    const renderStep4 = () => (
+        <>
+            <DialogContent>
+                <Stepper steps={steps} currentStep={currentStep} />
+                <div className={styles.scrollableDialogContent}>
+                    <QuickPromptsStep
+                        quickPrompts={quickPrompts}
+                        isOwner={true}
+                        onQuickPromptsChange={setQuickPrompts}
+                        onHasChanged={setHasChanged}
+                    />
+                </div>
+            </DialogContent>
+            <DialogActions className={styles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(3)} className={styles.backButton}>
+                    {t("common.back")}
+                </Button>
+                <Button size="medium" onClick={() => setCurrentStep(5)} className={styles.continueButton}>
+                    Weiter
+                </Button>
+            </DialogActions>
+        </>
+    );
+
+    const renderStep5 = () => (
+        <>
+            <DialogContent>
+                <Stepper steps={steps} currentStep={currentStep} />
+                <div className={styles.scrollableDialogContent}>
+                    <ExamplesStep
+                        examples={examples}
+                        isOwner={true}
+                        onExamplesChange={setExamples}
+                        onHasChanged={setHasChanged}
+                    />
+                </div>
+            </DialogContent>
+            <DialogActions className={styles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(4)} className={styles.backButton}>
+                    {t("common.back")}
+                </Button>
+                <Button size="medium" onClick={() => setCurrentStep(6)} className={styles.continueButton}>
+                    Weiter
+                </Button>
+            </DialogActions>
+        </>
+    );
+
+    const renderStep6 = () => (
+        <>
+            <DialogContent>
+                <Stepper steps={steps} currentStep={currentStep} />
+                <div className={styles.scrollableDialogContent}>
+                    <AdvancedSettingsStep
+                        temperature={temperature}
+                        maxOutputTokens={maxOutputTokens}
+                        isOwner={true}
+                        onTemperatureChange={setTemperature}
+                        onMaxTokensChange={setMaxOutputTokens}
+                        onHasChanged={setHasChanged}
+                    />
+                </div>
+            </DialogContent>
+            <DialogActions className={styles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(5)} className={styles.backButton}>
+                    {t("common.back")}
+                </Button>
                 <Button size="medium" onClick={onCancelButtonClicked} className={styles.cancelButton}>
                     {t("common.cancel")}
                 </Button>
@@ -303,13 +450,31 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     size="medium"
                     onClick={onPromptButtonClicked}
                     className={styles.createButton}
-                    disabled={title.trim() === "" || description.trim() === "" || systemPrompt.trim() === ""}
                 >
                     {t("common.create")}
                 </Button>
             </DialogActions>
         </>
     );
+
+    const getCurrentStepContent = () => {
+        switch (currentStep) {
+            case 1:
+                return renderStep1();
+            case 2:
+                return renderStep2();
+            case 3:
+                return renderStep3();
+            case 4:
+                return renderStep4();
+            case 5:
+                return renderStep5();
+            case 6:
+                return renderStep6();
+            default:
+                return renderStep1();
+        }
+    };
 
     return (
         <div>
@@ -325,7 +490,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             icon={<Dismiss24Regular />}
                         />
                     </div>
-                    <DialogBody className={styles.dialogContent}>{currentStep === 1 ? renderStep1() : renderStep2()}</DialogBody>
+                    <DialogBody className={styles.dialogContent}>{getCurrentStepContent()}</DialogBody>
                 </DialogSurface>
             </Dialog>
         </div>

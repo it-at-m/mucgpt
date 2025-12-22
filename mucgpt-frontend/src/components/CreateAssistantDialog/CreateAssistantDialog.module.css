@@ -28,6 +28,19 @@
     min-height: 0;
 }
 
+.scrollableDialogContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 120px 24px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
 /* Field Styles */
 .fieldSection {
     margin-bottom: 24px;
@@ -107,8 +120,8 @@
 }
 
 .createButton:hover:not(:disabled),
-.backButton:hover,
-.cancelButton:hover,
+.backButton:hover:not(:disabled),
+.cancelButton:hover:not(:disabled),
 .defineButton:hover:not(:disabled),
 .continueButton:hover:not(:disabled) {
     box-shadow:

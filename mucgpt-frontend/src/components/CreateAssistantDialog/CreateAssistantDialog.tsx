@@ -391,7 +391,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     {t("common.back")}
                 </Button>
                 <Button size="medium" onClick={() => setCurrentStep(5)} className={styles.continueButton}>
-                    Weiter
+                    {t("common.next")}
                 </Button>
             </DialogActions>
         </>
@@ -410,7 +410,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     {t("common.back")}
                 </Button>
                 <Button size="medium" onClick={() => setCurrentStep(6)} className={styles.continueButton}>
-                    Weiter
+                    {t("common.next")}
                 </Button>
             </DialogActions>
         </>

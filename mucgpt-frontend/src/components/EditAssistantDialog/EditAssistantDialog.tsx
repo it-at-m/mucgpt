@@ -38,24 +38,24 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const totalSteps = publish ? 8 : 7;
     const stepTitles = publish
         ? [
-            "components.edit_assistant_dialog.step_title",
-            "components.edit_assistant_dialog.step_description",
-            "components.edit_assistant_dialog.step_system_prompt",
-            "components.edit_assistant_dialog.step_tools",
-            "components.edit_assistant_dialog.step_quick_prompts",
-            "components.edit_assistant_dialog.step_examples",
-            "components.edit_assistant_dialog.step_visibility",
-            "components.edit_assistant_dialog.step_advanced_settings"
-        ]
+              "components.edit_assistant_dialog.step_title",
+              "components.edit_assistant_dialog.step_description",
+              "components.edit_assistant_dialog.step_system_prompt",
+              "components.edit_assistant_dialog.step_tools",
+              "components.edit_assistant_dialog.step_quick_prompts",
+              "components.edit_assistant_dialog.step_examples",
+              "components.edit_assistant_dialog.step_visibility",
+              "components.edit_assistant_dialog.step_advanced_settings"
+          ]
         : [
-            "components.edit_assistant_dialog.step_title",
-            "components.edit_assistant_dialog.step_description",
-            "components.edit_assistant_dialog.step_system_prompt",
-            "components.edit_assistant_dialog.step_tools",
-            "components.edit_assistant_dialog.step_quick_prompts",
-            "components.edit_assistant_dialog.step_examples",
-            "components.edit_assistant_dialog.step_advanced_settings"
-        ];
+              "components.edit_assistant_dialog.step_title",
+              "components.edit_assistant_dialog.step_description",
+              "components.edit_assistant_dialog.step_system_prompt",
+              "components.edit_assistant_dialog.step_tools",
+              "components.edit_assistant_dialog.step_quick_prompts",
+              "components.edit_assistant_dialog.step_examples",
+              "components.edit_assistant_dialog.step_advanced_settings"
+          ];
 
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 
@@ -187,7 +187,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
             case 3:
                 return (
                     <ToolsStep
-                        tools={tools}
                         selectedTools={selectedTools}
                         availableTools={availableTools}
                         onToolsChange={assistantState.updateTools}
@@ -221,7 +220,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                             invisibleChecked={!isVisible}
                             onHasChanged={assistantState.setHasChanged}
                             setPublishDepartments={assistantState.updateHierarchicalAccess}
-                            setInvisibleChecked={(invisible: boolean) => assistantState.updateIsVisible(!invisible)}
                         />
                     );
                 } else {

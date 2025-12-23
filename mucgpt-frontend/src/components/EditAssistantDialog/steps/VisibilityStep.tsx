@@ -10,31 +10,23 @@ interface VisibilityStepProps {
     publishDepartments: string[];
     invisibleChecked: boolean;
     setPublishDepartments: (departments: string[]) => void;
-    setInvisibleChecked: (checked: boolean) => void;
     onHasChanged: (hasChanged: boolean) => void;
 }
 
-export const VisibilityStep = ({
-    isOwner,
-    publishDepartments,
-    invisibleChecked,
-    setPublishDepartments,
-    setInvisibleChecked,
-    onHasChanged
-}: VisibilityStepProps) => {
+export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, setPublishDepartments, onHasChanged }: VisibilityStepProps) => {
     const { t } = useTranslation();
     const mountedRef = useRef(false);
 
-    const initialVisibility: 'public' | 'departments' | 'private' = invisibleChecked
+    const initialVisibility: "public" | "departments" | "private" = invisibleChecked
         ? "private"
-        : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
+        : Array.isArray(publishDepartments) && publishDepartments.length > 0
+          ? "departments"
+          : "public";
 
-    const [visibilityMode, setVisibilityMode] = useState<'public' | 'departments' | 'private'>(initialVisibility);
+    const [visibilityMode, setVisibilityMode] = useState<"public" | "departments" | "private">(initialVisibility);
 
     useEffect(() => {
-        const derivedVisibility = invisibleChecked
-            ? "private"
-            : (Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public");
+        const derivedVisibility = invisibleChecked ? "private" : Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public";
         if (derivedVisibility !== visibilityMode) {
             setVisibilityMode(derivedVisibility);
         }
@@ -49,7 +41,7 @@ export const VisibilityStep = ({
     }, [visibilityMode, publishDepartments, onHasChanged]);
 
     const onVisibilityChange = useCallback((_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
-        setVisibilityMode(data.value as 'public' | 'departments' | 'private');
+        setVisibilityMode(data.value as "public" | "departments" | "private");
     }, []);
 
     const handleSetPublishDepartments = useCallback(
@@ -64,19 +56,12 @@ export const VisibilityStep = ({
     return (
         <DialogContent>
             <div className={styles.visibilityTitle}>
-                <span className={styles.formLabel}>
-                    {t("components.publish_assistant_dialog.publication_options_title")}
-                </span>
+                <span className={styles.formLabel}>{t("components.publish_assistant_dialog.publication_options_title")}</span>
             </div>
 
             <div className={styles.visibilityWrapper}>
                 <Field size="large" className={styles.rangeField}>
-                    <RadioGroup
-                        value={visibilityMode}
-                        onChange={onVisibilityChange}
-                        layout="vertical"
-                        disabled={!isOwner}
-                    >
+                    <RadioGroup value={visibilityMode} onChange={onVisibilityChange} layout="vertical" disabled={!isOwner}>
                         <Radio
                             value="public"
                             disabled={!isOwner}
@@ -85,9 +70,7 @@ export const VisibilityStep = ({
                                     <div className={styles.radioLabel}>
                                         <Eye24Regular /> <span>{t("components.publish_assistant_dialog.visibility_public")}</span>
                                     </div>
-                                    <div className={styles.radioDescription}>
-                                        {t("components.publish_assistant_dialog.visibility_public_description")}
-                                    </div>
+                                    <div className={styles.radioDescription}>{t("components.publish_assistant_dialog.visibility_public_description")}</div>
                                 </div>
                             }
                         />
@@ -99,9 +82,7 @@ export const VisibilityStep = ({
                                     <div className={styles.radioLabel}>
                                         <People24Regular /> <span>{t("components.publish_assistant_dialog.departments_title")}</span>
                                     </div>
-                                    <div className={styles.radioDescription}>
-                                        {t("components.publish_assistant_dialog.departments_description")}
-                                    </div>
+                                    <div className={styles.radioDescription}>{t("components.publish_assistant_dialog.departments_description")}</div>
                                 </div>
                             }
                         />
@@ -132,9 +113,7 @@ export const VisibilityStep = ({
                                     <div className={styles.radioLabel}>
                                         <EyeOff24Regular /> <span>{t("components.publish_assistant_dialog.visibility_private")}</span>
                                     </div>
-                                    <div className={styles.radioDescription}>
-                                        {t("components.publish_assistant_dialog.visibility_private_description")}
-                                    </div>
+                                    <div className={styles.radioDescription}>{t("components.publish_assistant_dialog.visibility_private_description")}</div>
                                 </div>
                             }
                         />

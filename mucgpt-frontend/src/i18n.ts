@@ -94,18 +94,15 @@ i18n
                         sidebar_show: "Sidebar anzeigen",
                         sidebar_hide: "Sidebar ausblenden",
                         cancel: "Abbrechen",
+                        create: "Erstellen",
+                        back: "Zurück",
                         ok: "OK",
+                        next: "Weiter",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
                             configuration_error: "Konfigurationsfehler"
                         }
-                    },
-                    create_assistant: {
-                        title: "Titel",
-                        description: "Beschreibung",
-                        prompt: "System-Prompt",
-                        create: "Erstellen"
                     },
                     components: {
                         assistant_chat: {
@@ -320,15 +317,24 @@ i18n
                             add_assistant: "Neuer Assistent"
                         },
                         create_assistant_dialog: {
-                            what_function: "Was soll dein Assistent können?",
+                            title: "Titel",
+                            description: "Funktionsbeschreibung",
+                            prompt: "System-Prompt",
+                            dialog_title: "Neuen Assistent erstellen",
+                            step1_label: "Funktion beschreiben",
+                            step2_label: "Assistent beschreiben",
+                            hint_text:
+                                "Hinweis: Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
+                            hint_text_step2:
+                                "Hinweis: Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
+                            description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
+                            title_placeholder: "Zum Beispiel: Englisch Übersetzer",
+                            prompt_placeholder:
+                                "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
+                            or_choose_template: "Alternativ könntest du auch die unteren vordefinierten Assistenten erstmal probieren:",
+                            continue_with_mucgpt: "Mit MUCGPT fortfahren",
+                            define_myself: "Ich definiere selbst",
                             generating_prompt: "Generiere Prompt...",
-                            dismiss: "Abbrechen",
-                            create: "Erstellen",
-                            prompt_title_desc: "Vorgeschlagener System-Prompt, Titel und Beschreibung:",
-                            back: "Zurück",
-                            save: "Speichern",
-                            describe: "Beschreibe die Funktion...",
-                            skip: "Überspringen",
                             assistant_saved_success: "Assistent erfolgreich gespeichert!",
                             assistant_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
                             assistant_creation_failed: "Assistent konnte nicht erstellt werden",
@@ -338,9 +344,9 @@ i18n
                             assistant_generated_success: "Assistent erfolgreich generiert!",
                             assistant_generated_message: "Die Konfiguration Ihres Assistenten wurde generiert. Sie können sie jetzt überprüfen und anpassen.",
                             assistant_generation_failed: "Generierung der Assistenten-Konfiguration fehlgeschlagen",
-                            example_one: "Beispiel 1: Übersetzer",
-                            example_two: "Beispiel 2: Email",
-                            example_three: "Beispiel 3: Synonyme",
+                            example_one: "Sprache übersetzen",
+                            example_two: "Email schreiben",
+                            example_three: "Synonyme finden",
                             create_example_one: "Englisch Übersetzer: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             create_example_two:
                                 "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.",
@@ -419,7 +425,8 @@ i18n
                             copy_link_aria: "Link kopieren",
                             departments_title: "Veröffentlichen für Abteilungen",
                             departments_description: "Wählen Sie die Abteilungen aus, für die der Assistent verfügbar sein soll:",
-                            no_departments_selected: "Keine Abteilungen ausgewählt – die Veröffentlichung wird verhindert, bis mindestens eine Abteilung ausgewählt wurde.",
+                            no_departments_selected:
+                                "Keine Abteilungen ausgewählt – die Veröffentlichung wird verhindert, bis mindestens eine Abteilung ausgewählt wurde.",
                             cancel: "Abbrechen",
                             confirm: "Bestätigen",
                             publishing: "Veröffentliche...",
@@ -589,18 +596,15 @@ i18n
                         sidebar_show: "Show sidebar",
                         sidebar_hide: "Hide sidebar",
                         cancel: "Cancel",
+                        create: "Create",
+                        back: "Back",
                         ok: "OK",
+                        next: "Next",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
                             configuration_error: "Configuration error"
                         }
-                    },
-                    create_assistant: {
-                        title: "Title",
-                        description: "Description",
-                        prompt: "System prompt",
-                        create: "Create"
                     },
                     components: {
                         assistant_chat: {
@@ -815,15 +819,24 @@ i18n
                             add_assistant: "New assistant"
                         },
                         create_assistant_dialog: {
-                            what_function: "What should your assistant be able to do?",
+                            title: "Title",
+                            description: "Description",
+                            prompt: "System prompt",
+                            dialog_title: "Create new assistant",
+                            step1_label: "Describe function",
+                            step2_label: "Create assistant",
+                            hint_text:
+                                "Note: Briefly describe what your assistant should do here. Then, decide whether you want MUCGPT to generate the system prompt or if you prefer to define it yourself.",
+                            hint_text_step2:
+                                "Note: Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
+                            description_placeholder: "For example: The assistant translates the entered text into English.",
+                            title_placeholder: "For example: English Translator",
+                            prompt_placeholder:
+                                "# Requirement\n# Steps\n# Output Format\n# Examples\n\nFor example:\nEnsure that the translation maintains the original sentence structure and meaning. Pay attention to context-dependent words and cultural differences that may exist.",
+                            or_choose_template: "Alternatively, you could first try the predefined assistants below:",
+                            continue_with_mucgpt: "Continue with MUCGPT",
+                            define_myself: "Define myself",
                             generating_prompt: "Generating prompt...",
-                            dismiss: "Cancel",
-                            create: "Create",
-                            prompt_title_desc: "Suggested system prompt, title, and description:",
-                            back: "Back",
-                            save: "Save",
-                            describe: "Describe the function...",
-                            skip: "Skip",
                             assistant_saved_success: "Assistant saved successfully!",
                             assistant_saved_message: 'Your assistant "{{title}}" has been created and saved.',
                             assistant_creation_failed: "Assistant could not be created",
@@ -1073,7 +1086,10 @@ i18n
                         sidebar_show: "Sidebar zoagn",
                         sidebar_hide: "Sidebar ausblenden",
                         cancel: "Abbrechen",
+                        create: "Anlegn",
+                        back: "Zruck",
                         ok: "OK",
+                        next: "Weida",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1085,12 +1101,6 @@ i18n
                         added: "Nei",
                         fixed: "Fehla beseitigt",
                         changed: "Änderunga"
-                    },
-                    create_assistant: {
-                        title: "Titel",
-                        description: "Beschreibung",
-                        prompt: "System Prompt",
-                        create: "Erstellen"
                     },
                     components: {
                         assistant_chat: {
@@ -1305,15 +1315,24 @@ i18n
                             add_assistant: "Neia Assistent"
                         },
                         create_assistant_dialog: {
-                            what_function: "Was soll dein Assistent können?",
+                            title: "Titel",
+                            description: "Was er kenna muass",
+                            prompt: "System-Vorgab (Prompt)",
+                            dialog_title: "An neia Assistentn o'legn",
+                            step1_label: "Sog ma, was er kenna muass",
+                            step2_label: "Assistentn ferti macha",
+                            hint_text:
+                                "Obacht: Do schreibst kurz her, was dei Assistent doa soi. Danach suachst da aus, ob da MUCGPT an System-Prompt für di schreim soi oder ob’st des liaba selber in d'Hand nimmst.",
+                            hint_text_step2:
+                                "Obacht: Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
+                            description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was’d eam gibst, ins Englische.",
+                            title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
+                            prompt_placeholder:
+                                "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf’n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de ’s gebn ko.",
+                            or_choose_template: "Alternativ kannst aa erst amoi de vordefinierten Assistenten dauntn ausprobiern:",
+                            continue_with_mucgpt: "Mit MUCGPT weitermacha",
+                            define_myself: "Des mach i selber",
                             generating_prompt: "Prompt wird erstellt...",
-                            dismiss: "Abbrechen",
-                            create: "Erstellen",
-                            prompt_title_desc: "Vorgeschlagener System-Prompt, Titel und Beschreibung:",
-                            back: "Zruck",
-                            save: "Speichern",
-                            describe: "Beschreib die Funktion...",
-                            skip: "Übaspringa",
                             assistant_saved_success: "Assistent erfolgreich gspeichert!",
                             assistant_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
                             assistant_creation_failed: "Assistent konnt ned erstellt werdn",
@@ -1403,7 +1422,8 @@ i18n
                             copy_link_aria: "Link kopiern",
                             departments_title: "Veröffentlcha für Abteilungen",
                             departments_description: "Such de Abteilungen aus, für de da Assistent verfügbar sei soll:",
-                            no_departments_selected: "Koane Abteilungen ausgewählt – de Veröffentlichung werd verhindert, bis mindestens a Abteilung ausgewählt wurd.",
+                            no_departments_selected:
+                                "Koane Abteilungen ausgewählt – de Veröffentlichung werd verhindert, bis mindestens a Abteilung ausgewählt wurd.",
                             cancel: "Obbrecha",
                             confirm: "Bestätigen",
                             publishing: "Veröffentlche...",
@@ -1572,18 +1592,15 @@ i18n
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale",
                         cancel: "Annuler",
+                        create: "Créer",
+                        back: "Retour",
                         ok: "OK",
+                        next: "Suivant",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
                             configuration_error: "Erreur de configuration"
                         }
-                    },
-                    create_assistant: {
-                        title: "Titre",
-                        description: "Description",
-                        prompt: "System prompt",
-                        create: "Créer"
                     },
                     components: {
                         assistant_chat: {
@@ -1799,15 +1816,24 @@ i18n
                             add_assistant: "nouvel assistant"
                         },
                         create_assistant_dialog: {
-                            what_function: "Que doit pouvoir faire votre assistant?",
+                            title: "Titre",
+                            description: "Description",
+                            prompt: "System prompt",
+                            dialog_title: "Créer un nouvel assistant",
+                            step1_label: "Décrire la fonction",
+                            step2_label: "Créer l'assistant",
+                            hint_text:
+                                "Remarque : décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
+                            hint_text_step2:
+                                "Remarque : vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
+                            description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
+                            title_placeholder: "Par exemple : Traducteur anglais",
+                            prompt_placeholder:
+                                "# Exigences\n# Étapes\n# Format de sortie\n# Exemples\n\nPar exemple :\nAssurez-vous que la traduction conserve la structure de la phrase d'origine et sa signification. Faites attention aux mots dépendant du contexte et aux éventuelles différences culturelles.",
+                            or_choose_template: "Alternativement, vous pouvez d'abord essayer les assistants prédéfinis ci-dessous :",
+                            continue_with_mucgpt: "Continuer avec MUCGPT",
+                            define_myself: "Je définis moi-même",
                             generating_prompt: "Génération du prompt...",
-                            dismiss: "Annuler",
-                            create: "Créer",
-                            prompt_title_desc: "Prompt système proposé, titre, et description :",
-                            back: "Retour",
-                            save: "Enregistrer",
-                            describe: "Décrivez la fonction...",
-                            skip: "Passer",
                             assistant_saved_success: "Assistant enregistré avec succès!",
                             assistant_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
                             assistant_creation_failed: "L'assistant n'a pas pu être créé",
@@ -1898,7 +1924,8 @@ i18n
                             copy_link_aria: "Copier le lien",
                             departments_title: "Publier pour les départements",
                             departments_description: "Sélectionnez les départements pour lesquels l'assistant doit être disponible :",
-                            no_departments_selected: "Aucun département sélectionné — la publication sera bloquée jusqu'à ce qu'au moins un département soit choisi.",
+                            no_departments_selected:
+                                "Aucun département sélectionné — la publication sera bloquée jusqu'à ce qu'au moins un département soit choisi.",
                             cancel: "Annuler",
                             confirm: "Confirmer",
                             publishing: "Publication...",
@@ -2068,18 +2095,15 @@ i18n
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель",
                         cancel: "Скасувати",
+                        create: "Створити",
+                        back: "Назад",
                         ok: "OK",
+                        next: "Далі",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
                             configuration_error: "Помилка конфігурації"
                         }
-                    },
-                    create_assistant: {
-                        title: "Заголовок",
-                        description: "Опис",
-                        prompt: "Системний запит",
-                        create: "Створити"
                     },
                     components: {
                         assistant_chat: {
@@ -2294,15 +2318,24 @@ i18n
                             add_assistant: "новий асистент"
                         },
                         create_assistant_dialog: {
-                            what_function: "Що має вміти ваш асистент?",
+                            title: "Заголовок",
+                            description: "Опис",
+                            prompt: "Системний запит",
+                            dialog_title: "Створити нового асистента",
+                            step1_label: "Описати функцію",
+                            step2_label: "Створити асистента",
+                            hint_text:
+                                "Примітка: Тут ви можете коротко описати, що саме має робити ваш асистент. Після цього ви можете обрати, чи згенерувати системний промт за допомогою MUCGPT, чи визначити його самостійно.",
+                            hint_text_step2:
+                                "Примітка: Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
+                            description_placeholder: "Наприклад: Асистент перекладає введений текст англійською мовою.",
+                            title_placeholder: "Наприклад: Перекладач на англійську",
+                            prompt_placeholder:
+                                "# Вимога\n# Кроки\n# Формат виводу\n# Приклади\n\nНаприклад:\nПереконайтеся, що переклад зберігає оригінальну структуру речення та зміст. Звертайте увагу на контекстуальні значення слів та можливі культурні особливості.",
+                            or_choose_template: "Крім того, ви можете спочатку спробувати попередньо визначених асистентів нижче:",
+                            continue_with_mucgpt: "Продовжити з MUCGPT",
+                            define_myself: "Я визначу самостійно",
                             generating_prompt: "Генерація запиту...",
-                            dismiss: "Скасувати",
-                            create: "Створити",
-                            prompt_title_desc: "Пропонований системний запит, заголовок та опис:",
-                            back: "Назад",
-                            save: "Зберегти",
-                            describe: "Опишіть функцію...",
-                            skip: "Пропустити",
                             assistant_saved_success: "Асистента успішно збережено!",
                             assistant_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
                             assistant_creation_failed: "Асистента не вдалося створити",

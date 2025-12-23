@@ -5,7 +5,6 @@ import { ToolsSelectorContent } from "../../ToolsSelector/ToolsSelector";
 import styles from "../EditAssistantDialog.module.css";
 
 interface ToolsStepProps {
-    tools: ToolBase[];
     selectedTools: ToolInfo[];
     availableTools?: ToolListResponse;
     onToolsChange: (tools: ToolBase[]) => void;

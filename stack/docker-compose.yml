@@ -115,7 +115,7 @@ services:
       init-keycloak:
         condition: service_completed_successfully
       keycloak:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8083:8080"
     env_file:

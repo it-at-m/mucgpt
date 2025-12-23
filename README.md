@@ -184,7 +184,6 @@ MUCGPT_CORE_MODELS='[
 
 Replace the placeholder values with your actual model configuration.
 
-
 #### LDAP integration
 
 Assistants can be published to specific departments. MUCGPT reads the organization’s department tree from the configured LDAP directory, so published assistants are scoped according to that hierarchy. Ensure LDAP integration is enabled and the relevant organizational units are exposed so departments can be targeted correctly.
@@ -218,6 +217,18 @@ MUCGPT_LDAP_READ_TIMEOUT=10.0
 - `MUCGPT_LDAP_ADDITIONAL_ATTRIBUTES` fetches extra attributes for display; `MUCGPT_LDAP_REQUIRED_ATTRIBUTES` are enforced and default to `lhmOULongname` and `lhmOUShortname`.
 - `MUCGPT_LDAP_IGNORED_OU_PREFIXES` / `_SUFFIXES` let you skip placeholder OUs (by default everything starting with `_` or ending with `-xxx`).
 - Pagination and robustness: `MUCGPT_LDAP_PAGE_SIZE` (default 500), `MUCGPT_LDAP_CONNECT_TIMEOUT` (default 5s), and `MUCGPT_LDAP_READ_TIMEOUT` (default 10s).
+
+#### SSO integration
+
+Authentication is performed in front of the services via the [refarch API Gateway](https://refarch.oss.muenchen.de/gateway.html). MUCGPT only accepts access tokens that contain a specific role and forwards the department claim for authorization checks.
+
+```env
+MUCGPT_SSO_ROLE=lhm-ab-mucgpt-user
+```
+
+- The role required to access MUCGPT defaults to `lhm-ab-mucgpt-user` (configurable via `MUCGPT_SSO_ROLE`).
+- The API Gateway handles OpenID Connect login, token issuance, and validation; services receive a validated access token.
+- The access token includes the user’s `department` claim, which is combined with the LDAP organization tree to scope assistant publishing and access.
 
 
 #### MCP (optional)

@@ -75,7 +75,7 @@ def _find_node_by_path(
     if current is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Directory path is empty",
+            detail="Unable to resolve directory path",
         )
 
     return current

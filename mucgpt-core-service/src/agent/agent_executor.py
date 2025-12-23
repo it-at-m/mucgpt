@@ -129,7 +129,9 @@ class MUCGPTAgentExecutor:
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
-        dept_prefix = self._extract_department_prefix(user_info.department)
+        dept_prefix = (
+            self._extract_department_prefix(user_info.department) if user_info else None
+        )
         llm_user = dept_prefix
         llm_extra_body = self._build_llm_extra_body(assistant_id)
         config = merge_configs(
@@ -144,6 +146,7 @@ class MUCGPTAgentExecutor:
                     "user_info": user_info,
                     "llm_user": llm_user,
                     "llm_extra_body": llm_extra_body,
+                    "assistant_id": assistant_id,
                 },
             ),
         )
@@ -250,7 +253,9 @@ class MUCGPTAgentExecutor:
             max_output_tokens,
         )
         msgs = _convert_to_langchain_messages(messages)
-        dept_prefix = self._extract_department_prefix(user_info.department)
+        dept_prefix = (
+            self._extract_department_prefix(user_info.department) if user_info else None
+        )
         llm_user = dept_prefix
         llm_extra_body = self._build_llm_extra_body(assistant_id)
         request_config = RunnableConfig(
@@ -263,6 +268,7 @@ class MUCGPTAgentExecutor:
                 "user_info": user_info,
                 "llm_user": llm_user,
                 "llm_extra_body": llm_extra_body,
+                "assistant_id": assistant_id,
             }
         )
         config = merge_configs(self.base_config, request_config)

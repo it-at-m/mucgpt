@@ -39,6 +39,7 @@ class MUCGPTAgent:
         user_info: AuthenticationResult = configurable.get("user_info")
         llm_user = configurable.get("llm_user")
         extra_body = configurable.get("llm_extra_body")
+        assistant_id = configurable.get("assistant_id")
 
         # update mcp OAuth token
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
@@ -47,7 +48,10 @@ class MUCGPTAgent:
         enabled_tools = configurable.get("enabled_tools") if config else None
         tools_to_use: list[BaseTool] = (
             await self.tool_collection.get_tools(
-                enabled_tools=enabled_tools, user_info=user_info
+                enabled_tools=enabled_tools,
+                user_info=user_info,
+                llm_user=llm_user,
+                assistant_id=assistant_id,
             )
             if enabled_tools
             else []

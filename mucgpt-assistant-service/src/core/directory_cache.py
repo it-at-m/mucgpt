@@ -121,7 +121,10 @@ async def _get_cached_tree(key: str) -> dict[str, Any] | None:
 async def _set_cached_tree(key: str, data: list[dict[str, Any]]) -> None:
     try:
         payload = {"data": data, "loaded_at": datetime.now(timezone.utc).isoformat()}
-        await RedisCache.set_object(key, payload, ttl=None)
+        # TTL slightly longer than freshness check to allow stale fallback
+        await RedisCache.set_object(
+            key, payload, ttl=int(_CACHE_TTL.total_seconds() * 1.5)
+        )
     except Exception:
         logger.warning("Failed to write directory tree to Redis cache", exc_info=True)
 

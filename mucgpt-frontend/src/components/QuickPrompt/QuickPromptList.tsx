@@ -6,10 +6,10 @@ import { QuickPromptContext } from "./QuickPromptProvider";
 import { useContext } from "react";
 
 interface Props {
-    setQuestion: (question: string) => void;
+    onSend: (prompt: string) => void;
 }
 
-export const QuickPromptList = ({ setQuestion }: Props) => {
+export const QuickPromptList = ({ onSend }: Props) => {
     const { t } = useTranslation();
     const { quickPrompts } = useContext(QuickPromptContext);
     return quickPrompts.length > 0 ? (
@@ -20,7 +20,7 @@ export const QuickPromptList = ({ setQuestion }: Props) => {
             <div className={styles.buttons}>
                 {quickPrompts.map(quickPrompt => (
                     <Tooltip content={quickPrompt.tooltip} relationship="description" positioning="above" key={quickPrompt.label}>
-                        <Button onClick={() => setQuestion(quickPrompt.prompt)} appearance="secondary" aria-label={quickPrompt.prompt} className={styles.item}>
+                        <Button onClick={() => onSend(quickPrompt.prompt)} appearance="secondary" aria-label={quickPrompt.prompt} className={styles.item}>
                             {quickPrompt.label}
                         </Button>
                     </Tooltip>

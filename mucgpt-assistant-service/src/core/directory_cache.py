@@ -113,7 +113,7 @@ async def _get_cached_tree(key: str) -> list[dict[str, Any]] | None:
             return cached
     except Exception:
         logger.warning(
-            "Redis cache unavailable; falling back to file load", exc_info=True
+            "Redis cache unavailable; falling back to LDAP load", exc_info=True
         )
     return None
 

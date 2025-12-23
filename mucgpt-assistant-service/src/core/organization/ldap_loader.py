@@ -86,7 +86,7 @@ class LDAPOrganizationLoader:
         )
 
     def _build_tls_context(self) -> Tls | None:
-        if not self.settings.USE_SSL and self.settings.VERIFY_SSL:
+        if not self.settings.USE_SSL and not self.settings.START_TLS:
             return None
 
         validate = ssl.CERT_REQUIRED if self.settings.VERIFY_SSL else ssl.CERT_NONE

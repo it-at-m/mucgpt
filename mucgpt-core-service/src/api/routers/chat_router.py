@@ -20,6 +20,7 @@ from init_app import init_agent
 logger = getLogger()
 router = APIRouter(prefix="/v1")
 
+
 @router.post(
     "/chat/completions",
     summary="Create chat completion",
@@ -31,7 +32,8 @@ router = APIRouter(prefix="/v1")
     },
 )
 async def chat_completions(
-    request: ChatCompletionRequest, user_info: AuthenticationResult=Depends(authenticate_user)
+    request: ChatCompletionRequest,
+    user_info: AuthenticationResult = Depends(authenticate_user),
 ) -> StreamingResponse | ChatCompletionResponse:
     """
     OpenAI-compatible chat completion endpoint (streaming or non-streaming)
@@ -64,6 +66,7 @@ async def chat_completions(
                 model=request.model,
                 user_info=user_info,
                 enabled_tools=enabled_tools,
+                assistant_id=request.assistant_id,
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")

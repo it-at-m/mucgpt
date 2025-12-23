@@ -184,6 +184,42 @@ MUCGPT_CORE_MODELS='[
 
 Replace the placeholder values with your actual model configuration.
 
+
+#### LDAP integration
+
+Assistants can be published to specific departments. MUCGPT reads the organization’s department tree from the configured LDAP directory, so published assistants are scoped according to that hierarchy. Ensure LDAP integration is enabled and the relevant organizational units are exposed so departments can be targeted correctly.
+
+```env
+MUCGPT_LDAP_ENABLED=true
+MUCGPT_LDAP_HOST=ldaps://ldap.example.de
+MUCGPT_LDAP_PORT=636
+MUCGPT_LDAP_USE_SSL=true
+MUCGPT_LDAP_START_TLS=false
+MUCGPT_LDAP_VERIFY_SSL=true
+MUCGPT_LDAP_CA_CERT_FILE="/path/to/ca-bundle.pem"
+MUCGPT_LDAP_BIND_DN="cn=mucgpt,ou=Service Accounts,o=Landeshauptstadt München,c=de"
+MUCGPT_LDAP_BIND_PASSWORD="<secret>"
+MUCGPT_LDAP_SEARCH_BASE="o=Landeshauptstadt München,c=de"
+MUCGPT_LDAP_SEARCH_FILTER="(objectClass=organizationalUnit)"
+MUCGPT_LDAP_DISPLAY_ATTRIBUTE="ou"
+MUCGPT_LDAP_PARENT_ATTRIBUTE="lhmParentOu" # optional
+MUCGPT_LDAP_ADDITIONAL_ATTRIBUTES='["lhmOULongname","lhmOUShortname"]'
+MUCGPT_LDAP_REQUIRED_ATTRIBUTES='["lhmOULongname","lhmOUShortname"]'
+MUCGPT_LDAP_IGNORED_OU_PREFIXES='["_"]'
+MUCGPT_LDAP_IGNORED_OU_SUFFIXES='["-xxx"]'
+MUCGPT_LDAP_PAGE_SIZE=500
+MUCGPT_LDAP_CONNECT_TIMEOUT=5.0
+MUCGPT_LDAP_READ_TIMEOUT=10.0
+```
+
+- `MUCGPT_LDAP_SEARCH_BASE` defaults to `o=Landeshauptstadt München,c=de` and defines the root of the organization tree.
+- Toggle `MUCGPT_LDAP_USE_SSL` / `MUCGPT_LDAP_START_TLS` / `MUCGPT_LDAP_VERIFY_SSL` depending on your directory security requirements; set `MUCGPT_LDAP_CA_CERT_FILE` if your LDAP server uses a custom CA.
+- `MUCGPT_LDAP_DISPLAY_ATTRIBUTE` (default `ou`) controls the label shown for each organizational unit; `MUCGPT_LDAP_PARENT_ATTRIBUTE` can be set if your LDAP schema exposes a parent reference.
+- `MUCGPT_LDAP_ADDITIONAL_ATTRIBUTES` fetches extra attributes for display; `MUCGPT_LDAP_REQUIRED_ATTRIBUTES` are enforced and default to `lhmOULongname` and `lhmOUShortname`.
+- `MUCGPT_LDAP_IGNORED_OU_PREFIXES` / `_SUFFIXES` let you skip placeholder OUs (by default everything starting with `_` or ending with `-xxx`).
+- Pagination and robustness: `MUCGPT_LDAP_PAGE_SIZE` (default 500), `MUCGPT_LDAP_CONNECT_TIMEOUT` (default 5s), and `MUCGPT_LDAP_READ_TIMEOUT` (default 10s).
+
+
 #### MCP (optional)
 
 Besides static tools, MucGPT allows configuration of MCP sources, for which tools are fetched and can be called.
@@ -274,11 +310,12 @@ MUCGPT uses a modern microservices architecture optimized for scalability and ma
 - **PostgreSQL**: Database for persistence
 - **Keycloak**: Authentication and user management
 
-<!-- HTML for dark mode compatibility - ignore MD033 warning -->
+<!-- markdownlint-disable MD033 -->
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.png">
   <img alt="MUCGPT Architecture Diagram" src="docs/architecture.png">
 </picture>
+<!-- markdownlint-enable MD033 -->
 
 The architecture of MUCGPT is structured into these primary components: the frontend, the core service for handling tools and the communication with the LLM, and the assistant service. Additionally, it features an API Gateway, a database, and integrates Single Sign-On (SSO) for authentication.
 

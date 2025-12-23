@@ -528,12 +528,10 @@ const Chat = () => {
                                     key={`answer-${index}`}
                                     answer={answer.response}
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
-                                    setQuestion={question => setQuestion(question)}
+                                    onQuickPromptSend={prompt => callApi(prompt, systemPrompt)}
                                 />
                             )}
-                            {index !== answers.length - 1 && (
-                                <Answer key={`answer-${index}`} answer={answer.response} setQuestion={question => setQuestion(question)} />
-                            )}
+                            {index !== answers.length - 1 && <Answer key={`answer-${index}`} answer={answer.response} />}
                         </>
                     );
                 }}

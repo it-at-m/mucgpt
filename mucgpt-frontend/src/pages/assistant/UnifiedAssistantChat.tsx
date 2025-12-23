@@ -497,10 +497,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                     key={index}
                                     answer={answer.response}
                                     onRegenerateResponseClicked={onRegenerateResponseClicked}
-                                    setQuestion={question => setQuestion(question)}
+                                    onQuickPromptSend={prompt => callApi(prompt)}
                                 />
                             )}
-                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} setQuestion={question => setQuestion(question)} />}
+                            {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
                         </>
                     );
                 }}

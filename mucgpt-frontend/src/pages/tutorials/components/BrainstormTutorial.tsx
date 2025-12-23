@@ -196,7 +196,7 @@ export const BrainstormTutorial = ({ onPreviousTutorial, onNextTutorial, onBackT
                                         <div className={styles.exampleContainer}>
                                             <AnswerList
                                                 answers={createBrainstormWorkflowExample()}
-                                                regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
+                                                regularAssistantMsg={answer => <Answer answer={answer.response} />}
                                                 onRollbackMessage={() => {}}
                                                 isLoading={false}
                                                 error={null}

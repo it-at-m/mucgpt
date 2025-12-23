@@ -140,7 +140,7 @@ export const SimplifyTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
                                     <div className={styles.exampleContainer}>
                                         <AnswerList
                                             answers={createSimplifyWorkflowExample()}
-                                            regularAssistantMsg={answer => <Answer answer={answer.response} setQuestion={() => {}} />}
+                                            regularAssistantMsg={answer => <Answer answer={answer.response} />}
                                             onRollbackMessage={() => {}}
                                             isLoading={false}
                                             error={null}

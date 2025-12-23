@@ -20,7 +20,7 @@ export const QuickPromptList = ({ setQuestion }: Props) => {
             <div className={styles.buttons}>
                 {quickPrompts.map(quickPrompt => (
                     <Tooltip content={quickPrompt.tooltip} relationship="description" positioning="above" key={quickPrompt.label}>
-                        <Button onClick={() => setQuestion(quickPrompt.prompt)} appearance="subtle" aria-label={quickPrompt.prompt} className={styles.item}>
+                        <Button onClick={() => setQuestion(quickPrompt.prompt)} appearance="secondary" aria-label={quickPrompt.prompt} className={styles.item}>
                             {quickPrompt.label}
                         </Button>
                     </Tooltip>

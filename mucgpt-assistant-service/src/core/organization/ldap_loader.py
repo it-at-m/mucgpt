@@ -91,7 +91,9 @@ class LDAPOrganizationLoader:
 
         validate = ssl.CERT_REQUIRED if self.settings.VERIFY_SSL else ssl.CERT_NONE
         if not self.settings.CA_CERT_FILE and validate == ssl.CERT_REQUIRED:
-            return None
+            raise LDAPOrganizationLoaderError(
+                "VERIFY_SSL is enabled but no CA_CERT_FILE was provided"
+            )
 
         return Tls(validate=validate, ca_certs_file=self.settings.CA_CERT_FILE)
 

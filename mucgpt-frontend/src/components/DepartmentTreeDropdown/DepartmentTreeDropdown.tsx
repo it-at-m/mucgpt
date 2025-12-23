@@ -47,11 +47,7 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
             setTree(prev => ({ ...prev, [key]: children }));
         } catch (e) {
             console.error(e);
-            setError(
-                t("components.department_dropdown.load_error", {
-                    defaultValue: "Konnte Verzeichnis nicht laden"
-                })
-            );
+            setError(t("components.department_dropdown.load_error"));
         } finally {
             setLoadingPaths(prev => {
                 const next = new Set(prev);
@@ -119,7 +115,7 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
                                         className={styles.toggleButton}
                                         onClick={e => toggleExpand(currentPath, e)}
                                         disabled={disabled}
-                                        aria-label={isExpanded ? t("collapse", "Einklappen") : t("expand", "Ausklappen")}
+                                        aria-label={isExpanded ? t("components.department_dropdown.collapse") : t("components.department_dropdown.expand")}
                                         aria-expanded={isExpanded}
                                     >
                                         {isExpanded ? <ChevronDownRegular fontSize={20} /> : <ChevronRightRegular fontSize={20} />}
@@ -130,12 +126,12 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
                                 <div className={styles.nodeLabel}>
                                     <span className={styles.nodePrimary}>
                                         {displayText(node)}
-                                        {isUserDept && <span className={styles.userBadge}>{t("me", "Ich")}</span>}
+                                        {isUserDept && <span className={styles.userBadge}>{t("components.department_dropdown.me")}</span>}
                                     </span>
                                     {node.shortname && node.shortname !== node.name && <span className={styles.nodeSecondary}>{node.name}</span>}
                                 </div>
                                 {isSelected && <CheckmarkRegular style={{ color: "#3182ce" }} />}
-                                {isLoading && <span className={styles.loadingText}>{t("loading", "...")}</span>}
+                                {isLoading && <span className={styles.loadingText}>{t("components.department_dropdown.loading_short")}</span>}
                             </div>
                             {isExpanded && children.length > 0 && <div className={styles.treeChildren}>{renderNodes(children, currentPath)}</div>}
                         </li>
@@ -155,7 +151,7 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
                             <button
                                 onClick={() => handleRemove(d)}
                                 className={styles.selected_button}
-                                aria-label={`Remove ${d}`}
+                                aria-label={t("components.department_dropdown.remove_department", { name: d })}
                                 type="button"
                                 disabled={disabled}
                                 hidden={disabled}
@@ -167,14 +163,18 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
                 </div>
                 {publishDepartments.length > 0 && (
                     <button className={styles.clearButton} onClick={() => setPublishDepartments([])} disabled={disabled}>
-                        {t("clear_all", "Alle entfernen")}
+                        {t("components.department_dropdown.clear_all")}
                     </button>
                 )}
             </div>
 
             <div className={styles.treeContainer}>
                 {error && <div className={styles.errorText}>{error}</div>}
-                {tree[pathKey([])] ? renderNodes(tree[pathKey([])], []) : <div className={styles.loadingText}>{t("loading", "Lädt...")}</div>}
+                {tree[pathKey([])] ? (
+                    renderNodes(tree[pathKey([])], [])
+                ) : (
+                    <div className={styles.loadingText}>{t("components.department_dropdown.loading")}</div>
+                )}
             </div>
         </div>
     );

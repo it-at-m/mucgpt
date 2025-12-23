@@ -55,8 +55,6 @@
 .questionInputTextArea {
     flex: 1;
     min-height: 24px;
-    max-height: 200px;
-    overflow-y: auto;
     resize: none !important;
     border: none !important;
     padding: 8px 0;

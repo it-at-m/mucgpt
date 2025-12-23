@@ -57,9 +57,19 @@ export const QuestionInput = ({
                 // Reset height first to get accurate scrollHeight
                 textarea.style.height = "auto";
 
-                // Calculate new height
-                const newHeight = textarea.scrollHeight;
+                // Calculate new height, capped at 200px
+                const maxHeight = 200;
+                const scrollHeight = textarea.scrollHeight;
+                const newHeight = Math.min(scrollHeight, maxHeight);
+
                 textarea.style.height = `${newHeight}px`;
+
+                // Enable scrolling if content exceeds max height
+                if (scrollHeight > maxHeight) {
+                    textarea.style.overflowY = "auto";
+                } else {
+                    textarea.style.overflowY = "hidden";
+                }
 
                 // Only restore focus and cursor position if textarea had focus before
                 if (hadFocus) {
@@ -76,6 +86,7 @@ export const QuestionInput = ({
             const textarea = textareaRef.current;
             if (textarea) {
                 textarea.style.height = "auto";
+                textarea.style.overflowY = "hidden";
             }
         }
     }, [question]);
@@ -156,11 +167,11 @@ export const QuestionInput = ({
                                         style={
                                             isSelected
                                                 ? {
-                                                      backgroundColor: "var(--onPrimary)"
-                                                  }
+                                                    backgroundColor: "var(--onPrimary)"
+                                                }
                                                 : {
-                                                      backgroundColor: "var(--surface)"
-                                                  }
+                                                    backgroundColor: "var(--surface)"
+                                                }
                                         }
                                     >
                                         <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>

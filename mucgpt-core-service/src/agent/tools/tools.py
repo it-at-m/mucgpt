@@ -41,32 +41,60 @@ You can reference these outputs in your responses when needed. The markdown form
 
 """
 
+
 class ToolCollection:
     """Collection of chat tools for brainstorming and simplification."""
 
     def __init__(self, model: RunnableSerializable, logger: logging.Logger = None):
         self.model = model
         self.logger = logger or getLogger(name="mucgpt-core-tools")
-        self._brainstorm_tool = make_brainstorm_tool(self.model, self.logger)
-        self._simplify_tool = make_simplify_tool(self.model, self.logger)
 
-    @property
-    def simplify(self) -> BaseTool:
-        return self._simplify_tool
+    def _bind_model(
+        self,
+        llm_user: str | None = None,
+        assistant_id: str | None = None,
+        tool_name: str | None = None,
+    ) -> RunnableSerializable:
+        model = self.model
+        if llm_user:
+            model = model.bind(user=llm_user)
+        extra_tags: list[str] = []
+        if assistant_id:
+            extra_tags.append(f"MUCGPT_ASSISTANT_ID:{assistant_id}")
+        if tool_name:
+            extra_tags.append(f"MUCGPT_TOOL_NAME:{tool_name}")
+        if extra_tags:
+            model = model.bind(extra_body={"metadata": {"tags": extra_tags}})
+        return model
 
-    @property
-    def brainstorm(self) -> BaseTool:
-        return self._brainstorm_tool
+    def _build_tools(self, model: RunnableSerializable) -> list[BaseTool]:
+        brainstorm_model = self._bind_model(tool_name="Brainstorming")
+        simplify_model = self._bind_model(tool_name="Vereinfachen")
+        return [
+            make_brainstorm_tool(brainstorm_model, self.logger),
+            make_simplify_tool(simplify_model, self.logger),
+        ]
 
-    async def get_tools(self, user_info: AuthenticationResult, enabled_tools: list[str] = None) -> list[BaseTool]:
-        """Return a list of all available tools, optionally filtered by enabled_tools."""
-        tools = [self._brainstorm_tool, self._simplify_tool] + await McpLoader.load_mcp_tools(user_info=user_info)
+    async def get_tools(
+        self,
+        user_info: AuthenticationResult,
+        enabled_tools: list[str] = None,
+        llm_user: str | None = None,
+        assistant_id: str | None = None,
+    ) -> list[BaseTool]:
+        """Return available tools, binding model per-request with user and assistant metadata."""
+        base_model = self._bind_model(llm_user=llm_user, assistant_id=assistant_id)
+        tools = self._build_tools(base_model) + await McpLoader.load_mcp_tools(
+            user_info=user_info
+        )
         if enabled_tools:
             return [tool for tool in tools if tool.name in enabled_tools]
         return tools
 
     @staticmethod
-    async def list_tool_metadata(user_info: AuthenticationResult, lang: str = "Deutsch") -> ToolListResponse:
+    async def list_tool_metadata(
+        user_info: AuthenticationResult, lang: str = "Deutsch"
+    ) -> ToolListResponse:
         """
         Dynamically returns metadata for all available tools, including their name and description, without requiring a model.
         Args:
@@ -89,9 +117,7 @@ class ToolCollection:
             def invoke(self, *args, **kwargs):
                 return type("DummyResponse", (), {"content": ""})()
 
-        dummy_logger = getLogger(
-            name="dummy"
-        )
+        dummy_logger = getLogger(name="dummy")
         # Define tool metadata with languages as top-level keys
         tool_metadata = {
             "deutsch": {
@@ -179,9 +205,7 @@ class ToolCollection:
             else:
                 # fallback to tool's own name/description
                 tools_info.append(
-                    ToolInfo(
-                        id=tool_name, name=tool_name, description=tool.description
-                    )
+                    ToolInfo(id=tool_name, name=tool_name, description=tool.description)
                 )
         return ToolListResponse(tools=tools_info)
 
@@ -205,9 +229,7 @@ class ToolCollection:
             if hasattr(t, "name") and hasattr(t, "description"):
                 tool_obj = t
             else:
-                tool_obj = next(
-                    (tool for tool in tools if tool.name == t), None
-                )
+                tool_obj = next((tool for tool in tools if tool.name == t), None)
             if not tool_obj:
                 continue
             summary = tool_obj.description.strip().replace("\n", " ")

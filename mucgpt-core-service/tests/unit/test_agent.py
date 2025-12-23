@@ -35,6 +35,10 @@ class DummyLLM:
         self.invoked_messages = []
         self.__pregel_runtime = {}  # Add this to avoid KeyError with langgraph
 
+    def bind(self, **kwargs):
+        """Support binding user/extra_body in tests."""
+        return self
+
     def with_config(self, configurable=None, **kwargs):
         if configurable:
             self.config = configurable
@@ -95,6 +99,10 @@ class LifecycleMockLLM:
         self.execution_order = []
         self.tool_error = tool_error
         self.__pregel_runtime = {}  # Required for langgraph
+
+    def bind(self, **kwargs):
+        """Support binding user/extra_body in tests."""
+        return self
 
     def with_config(self, configurable=None, **kwargs):
         if configurable:
@@ -165,7 +173,9 @@ class TestAgent:
         )
 
         # Test with an invalid tool name
-        filtered_tools = await self.tool_collection.get_tools(self.user_info, ["not_a_real_tool"])
+        filtered_tools = await self.tool_collection.get_tools(
+            self.user_info, ["not_a_real_tool"]
+        )
         assert filtered_tools == [], "Expected empty list for invalid tool name"
 
         # Test with mixed valid and invalid
@@ -176,7 +186,9 @@ class TestAgent:
             f"Expected only valid tool, got {filtered_names}"
         )  # Test that order does not matter
         reversed_subset = list(reversed(subset))
-        filtered_tools_reversed = await self.tool_collection.get_tools(self.user_info, reversed_subset)
+        filtered_tools_reversed = await self.tool_collection.get_tools(
+            self.user_info, reversed_subset
+        )
         filtered_names_reversed = set(t.name for t in filtered_tools_reversed)
         assert filtered_names_reversed == set(subset), (
             "Order of enabled_tools should not affect result"
@@ -185,7 +197,9 @@ class TestAgent:
     @pytest.mark.asyncio
     async def test_call_model_returns_correct_structure(self):
         tools = await self.tool_collection.get_tools(self.user_info)
-        agent = MUCGPTAgent(DummyLLM(), tools=tools, tool_collection=self.tool_collection)
+        agent = MUCGPTAgent(
+            DummyLLM(), tools=tools, tool_collection=self.tool_collection
+        )
         state = AgentState(
             messages=[AIMessage(content="hi")]
         )  # Use AgentState instead of dict
@@ -209,6 +223,7 @@ class TestAgentLifecycle:
     - Tool invocation
     - Final response generation
     """
+
     def setup_method(self):
         self.user_info = MagicMock()
         self.tool_collection = ToolCollection(DummyLLM())
@@ -222,7 +237,9 @@ class TestAgentLifecycle:
     @pytest.fixture
     def patch_get_stream_writer(self, mock_stream_writer):
         """Patch the get_stream_writer function to return our mock"""
-        with patch("langgraph.config.get_stream_writer", return_value=mock_stream_writer):
+        with patch(
+            "langgraph.config.get_stream_writer", return_value=mock_stream_writer
+        ):
             yield mock_stream_writer
 
     @pytest.mark.asyncio
@@ -268,9 +285,7 @@ class TestAgentLifecycle:
 
         # In the actual implementation, the execution order might vary based on how the agent graph
         # is structured. Let's just verify that both key steps happened rather than their order.
-        assert {"ainvoke"}.issubset(
-            set(agent.model.execution_order)
-        )
+        assert {"ainvoke"}.issubset(set(agent.model.execution_order))
 
     @pytest.mark.asyncio
     async def test_agent_tool_error_handling(self, patch_get_stream_writer):
@@ -283,13 +298,17 @@ class TestAgentLifecycle:
         error_llm = LifecycleMockLLM()
         error_llm.tool_error = True  # Add this attribute to simulate tool error
 
-        agent = MUCGPTAgent(llm=error_llm, tools=tools, tool_collection=self.tool_collection)
+        agent = MUCGPTAgent(
+            llm=error_llm, tools=tools, tool_collection=self.tool_collection
+        )
 
         # Configure with enabled tools
-        config = RunnableConfig(configurable={
-            "enabled_tools": ["simplify"],
-            "user_info": self.user_info,
-        })
+        config = RunnableConfig(
+            configurable={
+                "enabled_tools": ["simplify"],
+                "user_info": self.user_info,
+            }
+        )
 
         # When we invoke the agent
         response = await agent.graph.ainvoke(

@@ -14,6 +14,9 @@ class DummyLLM:
         self.respond_with_tool_call = respond_with_tool_call
         self.invoked_messages = []
 
+    def bind(self, **kwargs):
+        return self
+
     def with_config(self, configurable=None, **kwargs):
         if configurable:
             self.config = configurable

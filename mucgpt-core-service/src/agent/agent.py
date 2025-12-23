@@ -16,6 +16,7 @@ from core.logtools import getLogger
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
 
+
 class MUCGPTAgent:
     """
     Agent responsible for tool and agent construction, tool invocation, and postprocessing.
@@ -34,23 +35,51 @@ class MUCGPTAgent:
         """
         messages = state["messages"]
         model = self.model
-        user_info : AuthenticationResult = config["configurable"].get("user_info")
+        configurable = config.get("configurable", {}) if config else {}
+        user_info: AuthenticationResult = configurable.get("user_info")
+        if not user_info:
+            raise ValueError(
+                "user_info is required in config for MUCGPTAgent.call_model"
+            )
+        llm_user = configurable.get("llm_user")
+        extra_body = configurable.get("llm_extra_body")
+        assistant_id = configurable.get("assistant_id")
+
         # update mcp OAuth token
         McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
+
         # load tools
-        enabled_tools = config["configurable"].get("enabled_tools") if config else None
-        tools_to_use : list[BaseTool] = (
-            await self.tool_collection.get_tools(enabled_tools=enabled_tools, user_info=user_info) if enabled_tools else []
+        enabled_tools = configurable.get("enabled_tools") if config else None
+        tools_to_use: list[BaseTool] = (
+            await self.tool_collection.get_tools(
+                enabled_tools=enabled_tools,
+                user_info=user_info,
+                llm_user=llm_user,
+                assistant_id=assistant_id,
+            )
+            if enabled_tools
+            else []
         )
         if self.logger:
             self.logger.info(
                 f"MUCGPTAgent: Enabled tools: {enabled_tools if enabled_tools else 'None'}"
             )
+
+        # attach request-scoped extras (e.g., LiteLLM metadata tags)
+        if extra_body:
+            model = model.bind(extra_body=extra_body)
+        # attach request user (e.g., department identifier)
+        if llm_user:
+            model = model.bind(user=llm_user)
+
         # inject tool instructions into system message
         if enabled_tools:
-            messages = self.tool_collection.add_instructions(messages, enabled_tools, tools=tools_to_use)
+            messages = self.tool_collection.add_instructions(
+                messages, enabled_tools, tools=tools_to_use
+            )
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
+
         # invoke model
         response = await model.with_config(config).ainvoke(messages)
         return AgentState(
@@ -58,7 +87,14 @@ class MUCGPTAgent:
         )
 
     """Responsible for tool and agent construction only."""
-    def __init__(self, llm: RunnableSerializable, tool_collection: ToolCollection, tools: list[BaseTool], logger=None):
+
+    def __init__(
+        self,
+        llm: RunnableSerializable,
+        tool_collection: ToolCollection,
+        tools: list[BaseTool],
+        logger=None,
+    ):
         self.model = llm
         self.tool_collection = tool_collection
         self.tools = tools

@@ -1,4 +1,3 @@
-import pickle
 from typing import Any
 
 import cloudpickle
@@ -57,5 +56,5 @@ class RedisCache:
         dump: bytes = await redis.get(name=key)
         if dump is None:
             return None
-        obj = pickle.loads(dump)
+        obj = cloudpickle.loads(dump)
         return obj

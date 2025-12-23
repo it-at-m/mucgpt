@@ -17,7 +17,7 @@ from core.organization import (
 
 logger = getLogger(__name__)
 
-_CACHE_TTL = timedelta(minutes=5)
+_CACHE_TTL = timedelta(days=14)
 
 
 def _simplify_node(node: OrganizationNode) -> dict[str, Any]:

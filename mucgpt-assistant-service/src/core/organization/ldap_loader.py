@@ -161,7 +161,7 @@ class LDAPOrganizationLoader:
         return entries
 
     def _requested_attributes(self) -> list[str]:
-        attributes: set[str] = {"distinguishedName", self.settings.DISPLAY_ATTRIBUTE}
+        attributes: set[str] = {self.settings.DISPLAY_ATTRIBUTE}
         if self.settings.PARENT_ATTRIBUTE:
             attributes.add(self.settings.PARENT_ATTRIBUTE)
         if self.settings.ADDITIONAL_ATTRIBUTES:

@@ -105,7 +105,7 @@ def _load_directory_from_ldap() -> list[dict[str, Any]]:
     return [_simplify_node(root) for root in directory.roots]
 
 
-async def _get_cached_tree(key: str) -> list[dict[str, Any]] | None:
+async def _get_cached_tree(key: str) -> dict[str, Any] | None:
     try:
         await RedisCache.init_redis()
         cached = await RedisCache.get_object(key)

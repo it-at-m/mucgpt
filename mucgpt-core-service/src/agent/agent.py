@@ -37,6 +37,10 @@ class MUCGPTAgent:
         model = self.model
         configurable = config.get("configurable", {}) if config else {}
         user_info: AuthenticationResult = configurable.get("user_info")
+        if not user_info:
+            raise ValueError(
+                "user_info is required in config for MUCGPTAgent.call_model"
+            )
         llm_user = configurable.get("llm_user")
         extra_body = configurable.get("llm_extra_body")
         assistant_id = configurable.get("assistant_id")

@@ -187,7 +187,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
             case 3:
                 return (
                     <ToolsStep
-                        tools={tools}
                         selectedTools={selectedTools}
                         availableTools={availableTools}
                         onToolsChange={assistantState.updateTools}
@@ -221,7 +220,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                             invisibleChecked={!isVisible}
                             onHasChanged={assistantState.setHasChanged}
                             setPublishDepartments={assistantState.updateHierarchicalAccess}
-                            setInvisibleChecked={(invisible: boolean) => assistantState.updateIsVisible(!invisible)}
+                            setInvisibleChecked={value => assistantState.updateIsVisible(!value)}
                         />
                     );
                 } else {

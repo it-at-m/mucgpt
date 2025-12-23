@@ -355,7 +355,6 @@
     border-bottom: 1px solid var(--colorNeutralStroke2);
     flex-shrink: 0;
     position: relative;
-    z-index: 9;
 }
 
 .stepperContainer {

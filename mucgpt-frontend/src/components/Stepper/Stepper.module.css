@@ -1,0 +1,91 @@
+.stepIndicator {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 10px 20px 5px 20px;
+}
+
+.stepIndicator::-webkit-scrollbar {
+    display: none;
+}
+
+.stepWrapper {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.stepNumber {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: var(--fontSizeBase400);
+    background: var(--outline);
+    color: var(--onPrimary);
+}
+
+.pendingStep .stepNumber {
+    background: var(--outline);
+    color: var(--onSurface);
+}
+
+.pendingStep .stepLabel {
+    color: var(--outline);
+    font-weight: 500;
+}
+
+.activeStep .stepNumber {
+    background: var(--primary);
+    color: var(--onPrimary);
+}
+
+.activeStep .stepLabel {
+    color: var(--onSurface);
+    font-weight: 600;
+}
+
+.completedStep .stepNumber {
+    background: var(--primary);
+    color: var(--onPrimary);
+}
+
+.completedStep .stepLabel {
+    color: var(--onSurface);
+}
+
+.stepLabel {
+    color: var(--outline);
+    font-weight: 500;
+    font-size: var(--fontSizeBase300);
+}
+
+.stepConnector {
+    position: relative;
+    width: clamp(30px, 6vw, 100px);
+    flex-shrink: 1;
+    height: 2px;
+    background: var(--outline);
+    margin: 0 clamp(0.5rem, 1.2vw, 1rem);
+    margin-bottom: 28px;
+}
+
+.stepConnector.completed {
+    background: var(--primary);
+}

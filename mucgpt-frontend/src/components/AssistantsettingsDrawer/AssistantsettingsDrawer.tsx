@@ -141,7 +141,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 onDeleteAssistant={onDeleteAssistant}
             />
         ),
-        [showPublishDialog, setShowPublishDialog, assistant, invisibleChecked, setInvisibleChecked, onDeleteAssistant]
+        [showPublishDialog, setShowPublishDialog, assistant, invisibleChecked, onDeleteAssistant]
     );
 
     // Edit assistant dialog

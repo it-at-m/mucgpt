@@ -1,7 +1,12 @@
 .dialog {
     padding: 0 !important;
-    min-width: 80%;
+    min-width: 50%;
+    max-width: 650px;
+    max-height: 85vh !important;
     line-height: 1.5;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
 }
 
 @media (max-width: 650px) {
@@ -10,38 +15,151 @@
     }
 }
 
+.dialogTitle {
+    padding: 24px 24px 16px 24px;
+    font-size: var(--fontSizeHero800);
+    font-weight: 600;
+}
+
 .dialogContent {
-    padding: 20px;
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 
-.exampleList {
-    display: grid;
-    gap: 2%;
-    grid-template-columns: repeat(auto-fill, minmax(30%, 1fr));
+.scrollableDialogContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 120px 24px;
     width: 100%;
-    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
+    box-sizing: border-box;
 }
 
-.exampleBox {
-    flex: 1 1 30%;
-    text-align: center;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    height: 100px;
-    border-radius: 20px;
-    text-decoration: none;
-    opacity: 0.75;
+/* Field Styles */
+.fieldSection {
+    margin-bottom: 24px;
+}
+
+.fieldLabel {
+    margin-bottom: 8px;
+    font-weight: 600;
     font-size: var(--fontSizeBase400);
-    background: var(--colorNeutralBackground4);
+    color: var(--onSurface);
+}
+
+.requiredSymbol {
+    color: var(--onSurface);
+}
+
+.chipContainer {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.templateChip {
+    flex: 1;
+    min-width: 150px;
+    font-size: var(--fontSizeBase300);
+    background: var(--primaryContainer) !important;
+    color: var(--onPrimaryContainer) !important;
+    border: 1px solid var(--outline) !important;
+}
+
+.templateChip:hover:not(:disabled) {
+    box-shadow:
+        0px 4px 8px rgba(0, 0, 0, 0.12),
+        0px 0px 2px rgba(0, 0, 0, 0.08);
+}
+
+.templateChip.selected {
+    background: var(--primary) !important;
+    color: var(--onPrimary) !important;
+    border: 1px solid var(--onPrimary) !important;
+}
+
+/* Hint Text */
+.hintText {
+    padding: 12px 16px;
+    background: var(--primaryContainer);
+    border-left: 3px solid var(--primary);
+    font-size: var(--fontSizeBase300);
+    color: var(--onPrimaryContainer);
+}
+
+.dialogActions {
+    padding-top: 26px;
+    width: 100%;
+    grid-column: 1 / -1 !important;
+    justify-content: end;
+}
+
+.backButton {
+    margin-right: auto !important;
+}
+
+.backButton,
+.cancelButton,
+.defineButton {
+    background: var(--primaryContainer) !important;
+    color: var(--onPrimaryContainer) !important;
+    border: 1px solid var(--outline) !important;
+}
+
+.createButton,
+.continueButton {
+    background: var(--primary) !important;
+    color: var(--onPrimary) !important;
+    border: 1px solid var(--primary) !important;
+}
+
+.createButton:hover:not(:disabled),
+.backButton:hover:not(:disabled),
+.cancelButton:hover:not(:disabled),
+.defineButton:hover:not(:disabled),
+.continueButton:hover:not(:disabled) {
+    box-shadow:
+        0px 4px 12px rgba(0, 0, 0, 0.15),
+        0px 0px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createButton:disabled,
+.defineButton:disabled,
+.continueButton:disabled {
+    background: var(--disabled) !important;
+    color: var(--onSurface) !important;
+    cursor: not-allowed !important;
+}
+
+.closeButton {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    transition: all 0.2s ease;
+    color: var(--colorNeutralForeground2);
 }
 
-.exampleBox:hover {
-    opacity: 1;
-    box-shadow:
-        0px 8px 16px rgba(0, 0, 0, 0.14),
-        0px 0px 2px rgba(0, 0, 0, 0.12);
-    outline: 2px solid var(--colorNeutralForeground3Selected);
+.dialogHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-right: 24px;
+    background-color: var(--colorNeutralBackground1);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
 }

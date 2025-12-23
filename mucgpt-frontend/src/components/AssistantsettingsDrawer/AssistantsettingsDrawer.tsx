@@ -44,7 +44,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
-    const [invisibleChecked] = useState<boolean>(false);
+    const [invisibleChecked, setInvisibleChecked] = useState<boolean>(!assistant.is_visible);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
 
@@ -54,6 +54,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
         setDescription(assistant.description);
         setPublish(assistant.publish);
         setIsOwner(isOwned || !assistant.publish);
+        setInvisibleChecked(!assistant.is_visible);
     }, [assistant, isOwned]);
 
     // Toggle read-only mode
@@ -136,6 +137,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 setOpen={setShowPublishDialog}
                 assistant={assistant}
                 invisibleChecked={invisibleChecked}
+                setInvisibleChecked={setInvisibleChecked}
                 onDeleteAssistant={onDeleteAssistant}
             />
         ),

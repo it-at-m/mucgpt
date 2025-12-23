@@ -14,7 +14,6 @@ WORKDIR /app
 
 # Leverage layer cache
 COPY pyproject.toml uv.lock ./
-COPY departements.json* ./
 
 # Install build dependencies for packages with C extensions
 RUN microdnf install -y gcc python3-devel

@@ -249,12 +249,12 @@ class SimplifyAgent:
                 ).model_dump_json()
             )
 
-    def _start_stream_section(self, section_name: str, revision: str):
+    def _start_stream_section(self, section_name: str, revision: int):
         tag: str = f"<{section_name} revision={revision}>"
         self._stream_update(tag, ToolStreamState.APPEND)
 
     def _end_stream_section(self, section_name):
-        tag: str = f"</{section_name}"
+        tag: str = f"</{section_name}>"
         self._stream_update(tag, ToolStreamState.APPEND)
 
     def _build_graph(self):
@@ -297,7 +297,7 @@ class SimplifyAgent:
 
         # Stream the response
         self._start_stream_section(
-            section_name=GENERATE_SECTION, revision=state["revision"]
+            section_name=GENERATE_SECTION, revision=state.get("revisions", 0)
         )
         response_content = ""
         for chunk in llm.stream(messages):
@@ -331,7 +331,7 @@ class SimplifyAgent:
 
         critique = ""
         self._start_stream_section(
-            section_name=CRITIQUE_SECTION, revision=state["revision"]
+            section_name=CRITIQUE_SECTION, revision=state.get("revisions", 0)
         )
         for chunk in critique_llm.stream([HumanMessage(content=prompt)]):
             if isinstance(chunk, BaseMessage):
@@ -371,7 +371,7 @@ class SimplifyAgent:
             }
         )
         self._start_stream_section(
-            section_name=REFINE_SECTION, revision=state["revision"]
+            section_name=REFINE_SECTION, revision=state.get("revisions")
         )
         refined_text = ""
         for chunk in refine_llm.stream([HumanMessage(content=prompt)]):
@@ -379,7 +379,7 @@ class SimplifyAgent:
                 result = chunk.content
                 refined_text += result
                 self._stream_update(result, ToolStreamState.APPEND)
-        self._start_stream_section(section_name=REFINE_SECTION)
+        self._end_stream_section(section_name=REFINE_SECTION)
         return {
             **state,
             "simplified_text": refined_text.strip(),

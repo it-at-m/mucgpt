@@ -8,46 +8,53 @@ import { BaseFragmentProps } from "../types";
 
 // Constants
 const SIMPLE_LANGUAGE_TAG_REGEX = /<einfachesprache>([\s\S]*?)<\/einfachesprache>/i;
-const REVISION_REGEX = /\*\*Überarbeitung #\d+:.*?\*\*/g;
-const STATUS_REGEX = /(✓|⚠️|ℹ️|✅|❌).*$/gm;
+const SECTION_REGEX = /<(SIMPLIFY_[A-Z_]+)\s+revision=([^>]+)>([\s\S]*?)<\/\1>/g;
+const STATUS_REGEX =
+    /^(\*\*Vereinfachungsprozess gestartet\.\*\*|\*\*Ergebnis:.*\*\*|\*\*Textvereinfachung abgeschlossen\.\*\*|Maximale Anzahl an Überarbeitungen.*|Fehler beim Vereinfachen:.*)$/gim;
 const DOWNLOAD_FILENAME = "Vereinfachter_Text.txt";
 const MIME_TYPE_TEXT = "text/plain;charset=utf-8";
 
+type SimplifySection = {
+    name: string;
+    revision: string;
+    body: string;
+};
+
 export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
-    // Extract simplified text from the content - memoized for performance
+    // Extract structured sections (Generate / Critique / Refine)
+    const sections = useMemo(() => {
+        const parsed: SimplifySection[] = [];
+        let match: RegExpExecArray | null;
+        const regex = new RegExp(SECTION_REGEX);
+        while ((match = regex.exec(content)) !== null) {
+            parsed.push({ name: match[1], revision: match[2], body: match[3].trim() });
+        }
+        return parsed;
+    }, [content]);
+
+    // Extract simplified text from sections or legacy tags
     const simplifiedText = useMemo(() => {
-        // First try to match complete tags (opening + closing)
+        // Legacy simple language tags first
         const completeMatch = content.match(SIMPLE_LANGUAGE_TAG_REGEX);
         if (completeMatch) {
             return completeMatch[1].trim();
         }
 
-        // If no complete match, check for opening tag and extract content until end or closing tag
-        const openingTagIndex = content.indexOf("<einfachesprache>");
-        if (openingTagIndex !== -1) {
-            const contentStart = openingTagIndex + "<einfachesprache>".length;
-            const closingTagIndex = content.indexOf("</einfachesprache>", contentStart);
+        // Prefer the latest refine section, fallback to generate content
+        if (sections.length) {
+            const lastRefine = [...sections].reverse().find(s => s.name === "SIMPLIFY_REFINE");
+            if (lastRefine) return lastRefine.body;
 
-            if (closingTagIndex !== -1) {
-                // Closing tag found, extract content between tags
-                return content.substring(contentStart, closingTagIndex).trim();
-            } else {
-                // No closing tag yet, extract all content after opening tag
-                return content.substring(contentStart).trim();
-            }
+            const lastGenerate = [...sections].reverse().find(s => s.name === "SIMPLIFY_GENERATE");
+            if (lastGenerate) return lastGenerate.body;
         }
 
-        // No tags found, return original content
+        // Fallback to original content
         return content;
-    }, [content]);
+    }, [content, sections]);
 
-    // Extract processing info (revisions, status messages) - memoized for performance
-    const processingInfo = useMemo(() => {
-        const revisions = content.match(REVISION_REGEX) || [];
-        const statusMessages = content.match(STATUS_REGEX) || [];
-        const combined = [...revisions, ...statusMessages].join("\n");
-        return combined || null;
-    }, [content]);
+    // Extract status messages (start/end/errors)
+    const statusMessages = useMemo(() => content.match(STATUS_REGEX) || [], [content]);
 
     // Download simplified text as file
     const downloadText = useCallback(() => {
@@ -81,17 +88,53 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
                 {simplifiedText}
             </ReactMarkdown>
 
-            {processingInfo && (
+            {(sections.length > 0 || statusMessages.length > 0) && (
                 <div className={styles.processingSection}>
                     <div className={styles.processingTitle}>Verarbeitungsdetails</div>
                     <div className={styles.processingContent}>
-                        <ReactMarkdown
-                            components={{
-                                div: props => <div className={styles.processingMarkdown} {...props} />
-                            }}
-                        >
-                            {processingInfo}
-                        </ReactMarkdown>
+                        {sections.length > 0 && (
+                            <div className={styles.sectionsContainer}>
+                                {sections.map(section => {
+                                    const titleMap: Record<string, string> = {
+                                        SIMPLIFY_GENERATE: "Generierung",
+                                        SIMPLIFY_CRITIQUE: "Kritik",
+                                        SIMPLIFY_REFINE: "Überarbeitung"
+                                    };
+                                    const label = titleMap[section.name] || section.name.replace("SIMPLIFY_", "");
+                                    return (
+                                        <details
+                                            key={`${section.name}-${section.revision}`}
+                                            className={styles.sectionCard}
+                                            open={section.name === "SIMPLIFY_GENERATE"}
+                                        >
+                                            <summary className={styles.sectionHeader}>
+                                                <span className={styles.sectionTitle}>{label}</span>
+                                                <span className={styles.sectionRevision}>Revision {section.revision}</span>
+                                            </summary>
+                                            <div className={styles.sectionBody}>
+                                                <ReactMarkdown
+                                                    components={{
+                                                        div: props => <div className={styles.processingMarkdown} {...props} />
+                                                    }}
+                                                >
+                                                    {section.body}
+                                                </ReactMarkdown>
+                                            </div>
+                                        </details>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {statusMessages.length > 0 && (
+                            <div className={styles.statusList}>
+                                {statusMessages.map((status, idx) => (
+                                    <div key={idx} className={styles.statusItem}>
+                                        {status}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

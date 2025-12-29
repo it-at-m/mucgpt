@@ -299,72 +299,74 @@ export function generateSimplifyStreamChunks() {
         });
     };
 
-    const introPool = [
-        "On Sundays and public holidays most people should have a day off.",
-        "Sundays and official holidays are usually rest days.",
-        "Public holidays and Sundays are normally work-free.",
-        "These days are intended for rest, not regular work."
-    ];
-    const allowPool = [
-        "In special cases work is allowed.",
-        "Sometimes work may still happen.",
-        "There are exceptions where working is okay.",
-        "Certain situations permit necessary work."
-    ];
-    const examplesPool = [
-        "Emergency services",
-        "Hospitals",
-        "Fire department",
-        "Police",
-        "Hotels",
-        "Public events",
-        "Power supply",
-        "Agriculture",
-        "Cleaning staff",
-        "Research labs",
-        "Bakeries",
-        "Food production",
-        "Security staff"
-    ];
+    // Align mock with backend: sections with content (Generate -> Critique -> [Refine -> Critique] x2)
+    push("STARTED", "**Vereinfachungsprozess gestartet.**");
 
-    function pickList(base: string[], min: number, max: number) {
-        const count = Math.min(base.length, Math.floor(Math.random() * (max - min + 1)) + min);
-        const clone = [...base];
-        const out: string[] = [];
-        while (out.length < count && clone.length) {
-            out.push(clone.splice(Math.floor(Math.random() * clone.length), 1)[0]);
+    const revisionTags = ["1", "2", "3"]; // deterministic, readable revisions
+
+    const sourceText =
+        "Nach aktueller Arbeitsordnung sind Tätigkeiten an Sonn- und Feiertagen grundsätzlich nicht erlaubt, " +
+        "außer wenn zwingende betriebliche Gründe vorliegen; in solchen Fällen ist sicherzustellen, dass Ersatzruhezeiten gewährt werden.";
+
+    // Generate section: original, schwer verständlicher Text
+    push("APPEND", `<SIMPLIFY_GENERATE revision=${revisionTags[0]}>`);
+    push("APPEND", `Originaltext:\n${sourceText}`);
+    push("APPEND", `</SIMPLIFY_GENERATE>`);
+
+    // Initial critique for the original text
+    push("APPEND", `<SIMPLIFY_CRITIQUE revision=${revisionTags[0]}>`);
+    push(
+        "APPEND",
+        [
+            "- Sätze sind zu lang (über 20 Wörter).",
+            "- Enthält Fachwort 'betriebliche Gründe' ohne Erklärung.",
+            "- Kein Zeilenumbruch pro Aussage.",
+            "- Passivform erschwert Verständnis."
+        ].join("\n")
+    );
+    push("APPEND", `</SIMPLIFY_CRITIQUE>`);
+
+    // Two refine + critique cycles
+    for (let i = 1; i <= 2; i++) {
+        const rev = revisionTags[i] || `${i + 1}`;
+
+        const refinedText =
+            i === 1
+                ? [
+                      "Arbeiten an Sonn- und Feiertagen sind normalerweise verboten.",
+                      "Man darf nur arbeiten, wenn es sehr wichtige Gründe gibt.",
+                      "Das nennt man betriebliche Gründe. Das heißt: Die Firma braucht es dringend.",
+                      "Wer dann arbeitet, bekommt an einem anderen Tag frei."
+                  ].join("\n")
+                : [
+                      "An Sonn- und Feiertagen arbeitet man in der Regel nicht.",
+                      "Nur wenn es wirklich nötig ist, darf man arbeiten.",
+                      "Nötig heißt: Die Firma braucht die Arbeit dringend (betriebliche Gründe).",
+                      "Wer arbeitet, bekommt dafür an einem anderen Tag frei.",
+                      "Das nennt man Ausgleichszeit."
+                  ].join("\n");
+
+        push("APPEND", `<SIMPLIFY_REFINE revision=${rev}>`);
+        push("APPEND", refinedText);
+        push("APPEND", `</SIMPLIFY_REFINE>`);
+
+        push("APPEND", `<SIMPLIFY_CRITIQUE revision=${rev}>`);
+        if (i === 1) {
+            push(
+                "APPEND",
+                [
+                    "- Ein Satz hat noch 18 Wörter, bitte kürzen.",
+                    "- 'betriebliche Gründe' erklärt, aber Ausgleichszeit nicht benannt.",
+                    "- Mehr Klarheit bei 'sehr wichtige Gründe' notwendig."
+                ].join("\n")
+            );
+        } else {
+            push("APPEND", "No issues found.");
         }
-        return out;
+        push("APPEND", `</SIMPLIFY_CRITIQUE>`);
     }
 
-    const intro = randomOf(introPool);
-    const allow = randomOf(allowPool);
-    const examples = pickList(examplesPool, 6, 10);
-    const revCount = Math.floor(Math.random() * 3) + 3;
-
-    push("STARTED", "Initiating simplification protocol... (detangling jargon)");
-    push("APPEND", "Generating initial simplified draft...");
-    push("APPEND", "\n\n<einfachesprache>\n\n"); // keep tag for frontend compatibility
-    push("APPEND", intro + "  \n\n");
-    push("APPEND", allow + "  \n\n");
-    push("APPEND", "Here are examples:  \n\n");
-    examples.slice(0, Math.floor(examples.length / 2)).forEach(e => push("APPEND", `- ${e}  \n`));
-
-    const fullList = examples.map(e => `- ${e}`).join("\n");
-    const updateBody = `<einfachesprache>\n\n${intro}\n\n${allow}\n\nHere are examples:\n\n${fullList}\n\nSometimes others may also work if it is important.\n\n</einfachesprache>`;
-    push("UPDATE", updateBody);
-
-    for (let i = 1; i <= revCount; i++) {
-        push("APPEND", `\n\n**Revision #${i}: Reviewing clarity...**`);
-        if (Math.random() > 0.4) {
-            push("APPEND", `\nℹ️ Found wording to simplify (iteration ${i}).`);
-        }
-        if (Math.random() > 0.7) {
-            push("APPEND", `\n🔍 Removing redundancy (iteration ${i}).`);
-        }
-    }
-    push("APPEND", "\n\n✅ Simplification complete! (No sentences were harmed.)");
-    push("ENDED", "Text converted to easy language – variability enabled.");
+    push("ENDED", "**Textvereinfachung abgeschlossen.**");
 
     chunks.push({
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
@@ -372,6 +374,22 @@ export function generateSimplifyStreamChunks() {
         created: Math.floor(Date.now() / 1000),
         model: "KICCGPT",
         choices: [{ index: 0, delta: { content: "Simplification finished." }, finish_reason: null }]
+    });
+    chunks.push({
+        id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    content:
+                        "An Sonn- und Feiertagen arbeitet man in der Regel nicht. Nur wenn es wirklich nötig ist, darf man arbeiten. Wer arbeitet, bekommt später Ausgleichszeit."
+                },
+                finish_reason: null
+            }
+        ]
     });
     chunks.push({
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,

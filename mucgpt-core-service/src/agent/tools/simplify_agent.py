@@ -219,6 +219,9 @@ Revised Text:
 )
 
 MAX_REVISIONS = 5
+GENERATE_SECTION = "SIMPLIFY_GENERATE"
+CRITIQUE_SECTION = "SIMPLIFY_CRITIQUE"
+REFINE_SECTION = "SIMPLIFY_REFINE"
 
 
 class SimplifyAgent:
@@ -245,6 +248,14 @@ class SimplifyAgent:
                     tool_name="Simplify",
                 ).model_dump_json()
             )
+
+    def _start_stream_section(self, section_name: str, revision: str):
+        tag: str = f"<{section_name} revision={revision}>"
+        self._stream_update(tag, ToolStreamState.APPEND)
+
+    def _end_stream_section(self, section_name):
+        tag: str = f"</{section_name}"
+        self._stream_update(tag, ToolStreamState.APPEND)
 
     def _build_graph(self):
         workflow = StateGraph(ReflectiveSimplificationState)
@@ -285,14 +296,17 @@ class SimplifyAgent:
         )
 
         # Stream the response
+        self._start_stream_section(
+            section_name=GENERATE_SECTION, revision=state["revision"]
+        )
         response_content = ""
-        self._stream_update("<einfachesprache>", ToolStreamState.UPDATE)
         for chunk in llm.stream(messages):
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 response_content += result
                 self._stream_update(result, ToolStreamState.APPEND)
-        self._stream_update("</einfachesprache>", ToolStreamState.APPEND)
+
+        self._end_stream_section(section_name=GENERATE_SECTION)
 
         return {
             **state,
@@ -301,10 +315,6 @@ class SimplifyAgent:
 
     def _critique_node(self, state: ReflectiveSimplificationState):
         self.logger.info("Critiquing simplified text...")
-        self._stream_update(
-            f"\n\n**Überarbeitung #{state.get('revisions', 0) + 1}: Textqualität wird analysiert...**",
-            ToolStreamState.APPEND,
-        )
 
         prompt = CRITIQUE_PROMPT.format(
             original_text=state["original_text"],
@@ -320,21 +330,24 @@ class SimplifyAgent:
         )
 
         critique = ""
+        self._start_stream_section(
+            section_name=CRITIQUE_SECTION, revision=state["revision"]
+        )
         for chunk in critique_llm.stream([HumanMessage(content=prompt)]):
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 critique += result
-
-        self.logger.info("Kritik: %s", critique)
+                self._stream_update(result, ToolStreamState.APPEND)
+        self._end_stream_section(section_name=CRITIQUE_SECTION)
 
         if "no issues found" in critique.lower():
             self._stream_update(
-                "\n✓ Qualitätsprüfung bestanden! Keine Probleme gefunden.",
+                "\n**Ergebnis:** Qualitätsprüfung ohne Beanstandungen.",
                 ToolStreamState.APPEND,
             )
         else:
             self._stream_update(
-                "\n⚠️ Qualitätsprobleme erkannt. Text wird überarbeitet...",
+                "\n**Ergebnis:** Qualitätsprobleme erkannt. Text wird überarbeitet.",
                 ToolStreamState.APPEND,
             )
 
@@ -357,15 +370,16 @@ class SimplifyAgent:
                 "llm_streaming": True,  # Enable streaming
             }
         )
-
+        self._start_stream_section(
+            section_name=REFINE_SECTION, revision=state["revision"]
+        )
         refined_text = ""
-        self._stream_update("<einfachesprache>", ToolStreamState.UPDATE)
         for chunk in refine_llm.stream([HumanMessage(content=prompt)]):
             if isinstance(chunk, BaseMessage):
                 result = chunk.content
                 refined_text += result
                 self._stream_update(result, ToolStreamState.APPEND)
-        self._stream_update("</einfachesprache>", ToolStreamState.APPEND)
+        self._start_stream_section(section_name=REFINE_SECTION)
         return {
             **state,
             "simplified_text": refined_text.strip(),
@@ -381,7 +395,7 @@ class SimplifyAgent:
         if revisions >= MAX_REVISIONS:
             self.logger.warning("Max revisions reached. Ending.")
             self._stream_update(
-                f"\n\nℹ️ Maximale Anzahl an Überarbeitungen ({MAX_REVISIONS}) erreicht. Text wird finalisiert.",
+                f"\n\nMaximale Anzahl an Überarbeitungen ({MAX_REVISIONS}) erreicht. Text wird finalisiert.",
                 ToolStreamState.APPEND,
             )
             return "end"
@@ -389,7 +403,9 @@ class SimplifyAgent:
         return "refine"
 
     def run(self, original_text: str) -> str:
-        self._stream_update("Starte Vereinfachungsprozess...", ToolStreamState.STARTED)
+        self._stream_update(
+            "**Vereinfachungsprozess gestartet.**", ToolStreamState.STARTED
+        )
 
         initial_state = {
             "original_text": original_text,
@@ -402,11 +418,14 @@ class SimplifyAgent:
         try:
             final_state = self.graph.invoke(initial_state)
             self._stream_update(
-                "\n\n✅ Textvereinfachung abgeschlossen!", ToolStreamState.ENDED
+                "\n\n**Textvereinfachung abgeschlossen.**", ToolStreamState.ENDED
             )
             return final_state["simplified_text"]
         except Exception as e:
-            error_message = f"Error during simplification: {str(e)}"
+            error_message = f"Fehler während der Vereinfachung: {str(e)}"
             self.logger.error(error_message)
-            self._stream_update(f"\n\n❌ {error_message}", ToolStreamState.ENDED)
+            self._stream_update(
+                f"\n\nFehler beim Vereinfachen: {error_message}",
+                ToolStreamState.ENDED,
+            )
             return f"Fehler beim Vereinfachen des Textes: {str(e)}"

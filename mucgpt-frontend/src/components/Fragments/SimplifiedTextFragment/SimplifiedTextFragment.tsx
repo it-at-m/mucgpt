@@ -9,8 +9,6 @@ import { BaseFragmentProps } from "../types";
 // Constants
 const SIMPLE_LANGUAGE_TAG_REGEX = /<einfachesprache>([\s\S]*?)<\/einfachesprache>/i;
 const SECTION_REGEX = /<(SIMPLIFY_[A-Z_]+)\s+revision=([^>]+)>([\s\S]*?)<\/\1>/g;
-const STATUS_REGEX =
-    /^(\*\*Vereinfachungsprozess gestartet\.\*\*|\*\*Ergebnis:.*\*\*|\*\*Textvereinfachung abgeschlossen\.\*\*|Maximale Anzahl an Überarbeitungen.*|Fehler beim Vereinfachen:.*)$/gim;
 const DOWNLOAD_FILENAME = "Vereinfachter_Text.txt";
 const MIME_TYPE_TEXT = "text/plain;charset=utf-8";
 
@@ -29,7 +27,22 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
         while ((match = regex.exec(content)) !== null) {
             parsed.push({ name: match[1], revision: match[2], body: match[3].trim() });
         }
-        return parsed;
+
+        // Sort by revision number, then by section type order
+        const order: Record<string, number> = {
+            SIMPLIFY_GENERATE: 0,
+            SIMPLIFY_CRITIQUE: 1,
+            SIMPLIFY_REFINE: 2
+        };
+
+        return parsed.sort((a, b) => {
+            const numA = Number(a.revision);
+            const numB = Number(b.revision);
+            const revA = Number.isNaN(numA) ? 0 : numA;
+            const revB = Number.isNaN(numB) ? 0 : numB;
+            if (revA !== revB) return revA - revB;
+            return (order[a.name] ?? 99) - (order[b.name] ?? 99);
+        });
     }, [content]);
 
     // Extract simplified text from sections or legacy tags
@@ -52,9 +65,6 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
         // Fallback to original content
         return content;
     }, [content, sections]);
-
-    // Extract status messages (start/end/errors)
-    const statusMessages = useMemo(() => content.match(STATUS_REGEX) || [], [content]);
 
     // Download simplified text as file
     const downloadText = useCallback(() => {
@@ -80,61 +90,41 @@ export const SimplifiedTextFragment = ({ content }: BaseFragmentProps) => {
     // Fragment content
     const fragmentContent = (
         <div className={styles.simplifiedTextContent}>
-            <ReactMarkdown
-                components={{
-                    div: props => <div className={styles.markdownContent} {...props} />
-                }}
-            >
-                {simplifiedText}
-            </ReactMarkdown>
-
-            {(sections.length > 0 || statusMessages.length > 0) && (
+            {sections.length > 0 && (
                 <div className={styles.processingSection}>
                     <div className={styles.processingTitle}>Verarbeitungsdetails</div>
                     <div className={styles.processingContent}>
-                        {sections.length > 0 && (
-                            <div className={styles.sectionsContainer}>
-                                {sections.map(section => {
-                                    const titleMap: Record<string, string> = {
-                                        SIMPLIFY_GENERATE: "Generierung",
-                                        SIMPLIFY_CRITIQUE: "Kritik",
-                                        SIMPLIFY_REFINE: "Überarbeitung"
-                                    };
-                                    const label = titleMap[section.name] || section.name.replace("SIMPLIFY_", "");
-                                    return (
-                                        <details
-                                            key={`${section.name}-${section.revision}`}
-                                            className={styles.sectionCard}
-                                            open={section.name === "SIMPLIFY_GENERATE"}
-                                        >
-                                            <summary className={styles.sectionHeader}>
-                                                <span className={styles.sectionTitle}>{label}</span>
-                                                <span className={styles.sectionRevision}>Revision {section.revision}</span>
-                                            </summary>
-                                            <div className={styles.sectionBody}>
-                                                <ReactMarkdown
-                                                    components={{
-                                                        div: props => <div className={styles.processingMarkdown} {...props} />
-                                                    }}
-                                                >
-                                                    {section.body}
-                                                </ReactMarkdown>
-                                            </div>
-                                        </details>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {statusMessages.length > 0 && (
-                            <div className={styles.statusList}>
-                                {statusMessages.map((status, idx) => (
-                                    <div key={idx} className={styles.statusItem}>
-                                        {status}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <div className={styles.sectionsContainer}>
+                            {sections.map(section => {
+                                const titleMap: Record<string, string> = {
+                                    SIMPLIFY_GENERATE: "Generierung",
+                                    SIMPLIFY_CRITIQUE: "Kritik",
+                                    SIMPLIFY_REFINE: "Überarbeitung"
+                                };
+                                const label = titleMap[section.name] || section.name.replace("SIMPLIFY_", "");
+                                return (
+                                    <details
+                                        key={`${section.name}-${section.revision}`}
+                                        className={styles.sectionCard}
+                                        open={section.name === "SIMPLIFY_GENERATE"}
+                                    >
+                                        <summary className={styles.sectionHeader}>
+                                            <span className={styles.sectionTitle}>{label}</span>
+                                            <span className={styles.sectionRevision}>Revision {section.revision}</span>
+                                        </summary>
+                                        <div className={styles.sectionBody}>
+                                            <ReactMarkdown
+                                                components={{
+                                                    div: props => <div className={styles.processingMarkdown} {...props} />
+                                                }}
+                                            >
+                                                {section.body}
+                                            </ReactMarkdown>
+                                        </div>
+                                    </details>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             )}

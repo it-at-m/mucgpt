@@ -61,7 +61,7 @@ class LDAPOrganizationLoader:
             port = self._parse_int(self.settings.PORT, "MUCGPT_LDAP_PORT")
         except LDAPOrganizationLoaderError:
             raise
-        connect_timeout = self._parse_float(
+        connect_timeout = self._parse_int(
             self.settings.CONNECT_TIMEOUT, "MUCGPT_LDAP_CONNECT_TIMEOUT"
         )
 
@@ -102,7 +102,7 @@ class LDAPOrganizationLoader:
             if self.settings.BIND_PASSWORD
             else None
         )
-        receive_timeout = self._parse_float(
+        receive_timeout = self._parse_int(
             self.settings.READ_TIMEOUT, "MUCGPT_LDAP_READ_TIMEOUT"
         )
         logger.info(

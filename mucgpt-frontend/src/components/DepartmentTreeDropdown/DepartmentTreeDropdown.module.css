@@ -62,7 +62,6 @@
     width: 100%;
     max-height: 400px;
     overflow-y: auto;
-    border: 1px solid var(--outline);
     border-radius: 10px;
     background: var(--surface);
     padding: 8px;

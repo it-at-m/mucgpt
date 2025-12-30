@@ -220,6 +220,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                             invisibleChecked={!isVisible}
                             onHasChanged={assistantState.setHasChanged}
                             setPublishDepartments={assistantState.updateHierarchicalAccess}
+                            setInvisibleChecked={value => assistantState.updateIsVisible(!value)}
                         />
                     );
                 } else {

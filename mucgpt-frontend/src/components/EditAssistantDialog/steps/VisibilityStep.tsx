@@ -1,9 +1,9 @@
 import { DialogContent, Field, InfoLabel, Text, RadioGroup, Radio } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "../EditAssistantDialog.module.css";
-import DepartmentDropdown from "../../DepartmentDropdown/DepartmentDropdown";
+import DepartmentTreeDropdown from "../../DepartmentTreeDropdown/DepartmentTreeDropdown";
 
 interface VisibilityStepProps {
     isOwner: boolean;
@@ -11,11 +11,18 @@ interface VisibilityStepProps {
     invisibleChecked: boolean;
     setPublishDepartments: (departments: string[]) => void;
     onHasChanged: (hasChanged: boolean) => void;
+    setInvisibleChecked: (invisible: boolean) => void;
 }
 
-export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, setPublishDepartments, onHasChanged }: VisibilityStepProps) => {
+export const VisibilityStep = ({
+    isOwner,
+    publishDepartments,
+    invisibleChecked,
+    setPublishDepartments,
+    onHasChanged,
+    setInvisibleChecked
+}: VisibilityStepProps) => {
     const { t } = useTranslation();
-    const mountedRef = useRef(false);
 
     const initialVisibility: "public" | "departments" | "private" = invisibleChecked
         ? "private"
@@ -25,30 +32,25 @@ export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, 
 
     const [visibilityMode, setVisibilityMode] = useState<"public" | "departments" | "private">(initialVisibility);
 
-    useEffect(() => {
-        const derivedVisibility = invisibleChecked ? "private" : Array.isArray(publishDepartments) && publishDepartments.length > 0 ? "departments" : "public";
-        if (derivedVisibility !== visibilityMode) {
-            setVisibilityMode(derivedVisibility);
-        }
-    }, [invisibleChecked, publishDepartments, visibilityMode]);
-
-    useEffect(() => {
-        if (!mountedRef.current) {
-            mountedRef.current = true;
-            return;
-        }
-        onHasChanged(true);
-    }, [visibilityMode, publishDepartments, onHasChanged]);
-
-    const onVisibilityChange = useCallback((_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
-        setVisibilityMode(data.value as "public" | "departments" | "private");
-    }, []);
+    const onVisibilityChange = useCallback(
+        (_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
+            const newMode = data.value as "public" | "departments" | "private";
+            setVisibilityMode(newMode);
+            onHasChanged(true);
+            setInvisibleChecked(newMode === "private");
+            if (newMode !== "departments") {
+                setPublishDepartments([]);
+            }
+        },
+        [onHasChanged, setInvisibleChecked, setPublishDepartments]
+    );
 
     const handleSetPublishDepartments = useCallback(
         (deps: string[]) => {
             setPublishDepartments(deps);
+            onHasChanged(true);
         },
-        [setPublishDepartments]
+        [setPublishDepartments, onHasChanged]
     );
 
     const departmentsSelected = Array.isArray(publishDepartments) && publishDepartments.length > 0;
@@ -92,7 +94,7 @@ export const VisibilityStep = ({ isOwner, publishDepartments, invisibleChecked, 
                                     {t("components.edit_assistant_dialog.departments")}
                                 </InfoLabel>
                                 <div className={styles.departmentDropdown}>
-                                    <DepartmentDropdown
+                                    <DepartmentTreeDropdown
                                         publishDepartments={publishDepartments}
                                         setPublishDepartments={handleSetPublishDepartments}
                                         disabled={!isOwner}

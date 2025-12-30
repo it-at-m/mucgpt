@@ -1,5 +1,3 @@
-import json
-import os
 from typing import Any, Optional
 
 from agent.agent import MUCGPTAgent
@@ -50,6 +48,7 @@ class ModelOptions:
         self.max_tokens = max_tokens
         self.custom_model = custom_model
 
+
 async def warmup_app():
     logger.info("Warming up app context...")
     settings = get_settings()
@@ -72,6 +71,7 @@ async def warmup_app():
     await RedisCache.init_redis()
     logger.info("App context warmed up")
 
+
 async def destroy_app():
     logger.info("Cleaning up app context...")
     # close redis
@@ -80,6 +80,7 @@ async def destroy_app():
         await redis.aclose()
     except RuntimeError:
         pass
+
 
 def _initialize_models_metadata(cfg: Settings) -> None:
     """Ensure all configured models have complete metadata before use."""
@@ -96,9 +97,8 @@ def _initialize_models_metadata(cfg: Settings) -> None:
             )
             raise
 
-async def init_agent(
-        user_info: AuthenticationResult
-) -> MUCGPTAgentExecutor:
+
+async def init_agent(user_info: AuthenticationResult) -> MUCGPTAgentExecutor:
     """Initialize a MUCGPTAgentExecutor with configuration.
 
     Args:
@@ -117,21 +117,3 @@ async def init_agent(
         logger.error("Failed to initialize MUCGPTAgent: %s", e)
         raise
     return MUCGPTAgentExecutor(agent=agent)
-
-
-def init_departments() -> list:
-    """Initialize departments from the json file.
-
-    Returns:
-        list: The departments
-    """
-    departments_path = os.path.join(os.path.dirname(__file__), "departements.json")
-    try:
-        with open(departments_path, encoding="utf-8") as f:
-            data = json.load(f)
-            departments = data.get("departements", [])
-        logger.info("Loaded %d departments from departements.json", len(departments))
-    except Exception as e:
-        logger.error("Failed to load departements.json: %s", e)
-        departments = []
-    return departments

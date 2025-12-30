@@ -30,6 +30,34 @@ class ExampleModel(BaseModel):
     )
 
 
+class DirectoryNode(BaseModel):
+    """Simplified organization unit for frontend consumption."""
+
+    shortname: str | None = Field(
+        None,
+        description="Short identifier (e.g., lhmOUShortname)",
+        example="S-III-U/BNF21",
+    )
+    name: str = Field(
+        ..., description="Human readable name of the org unit", example="Team 2.1A"
+    )
+    children: list[DirectoryNode] | None = Field(
+        default=None, description="Child organization units"
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "shortname": "S-III-U/BNF21",
+                "name": "NQ Tollkirschenweg 6",
+                "children": [
+                    {"shortname": "S-III-U/BNF21A", "name": "Team 2.1A", "children": []}
+                ],
+            }
+        }
+    )
+
+
 class QuickPrompt(BaseModel):
     label: str = Field(
         ...,

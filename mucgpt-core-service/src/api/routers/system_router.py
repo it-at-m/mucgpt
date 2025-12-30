@@ -3,11 +3,9 @@ from fastapi import APIRouter, Depends
 from api.api_models import ConfigResponse, ModelsDTO
 from config.settings import get_settings
 from core.auth import authenticate_user
-from init_app import init_departments
 
 router = APIRouter()
 settings = get_settings()
-departments = init_departments()
 
 
 @router.get(
@@ -47,11 +45,6 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         )
         response.models.append(dto)
     return response
-
-
-@router.get("/departments")
-async def get_departments(user_info=Depends(authenticate_user)):
-    return departments
 
 
 @router.get(

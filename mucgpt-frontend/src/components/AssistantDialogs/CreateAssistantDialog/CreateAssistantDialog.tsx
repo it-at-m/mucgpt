@@ -93,9 +93,12 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     }, [availableTools, tools]);
 
     // input change
-    const onInputChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        updateInput(newValue?.value || "");
-    }, [updateInput]);
+    const onInputChanged = useCallback(
+        (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
+            updateInput(newValue?.value || "");
+        },
+        [updateInput]
+    );
 
     // save assistant
     const onPromptButtonClicked = useCallback(async () => {

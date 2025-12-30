@@ -70,16 +70,19 @@ export const useCreateAssistantState = () => {
         setTools(newTools);
     }, []);
 
-    const updateTemplate = useCallback((template: string, templateId: string) => {
-        // Toggle functionality: if already selected, deselect it
-        if (selectedTemplate === templateId) {
-            setInput("");
-            setSelectedTemplate("");
-        } else {
-            setInput(template);
-            setSelectedTemplate(templateId);
-        }
-    }, [selectedTemplate]);
+    const updateTemplate = useCallback(
+        (template: string, templateId: string) => {
+            // Toggle functionality: if already selected, deselect it
+            if (selectedTemplate === templateId) {
+                setInput("");
+                setSelectedTemplate("");
+            } else {
+                setInput(template);
+                setSelectedTemplate(templateId);
+            }
+        },
+        [selectedTemplate]
+    );
 
     const setGeneratedAssistant = useCallback((generatedTitle: string, generatedDescription: string, generatedSystemPrompt: string) => {
         setTitle(generatedTitle);

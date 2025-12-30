@@ -167,11 +167,11 @@ export const QuestionInput = ({
                                         style={
                                             isSelected
                                                 ? {
-                                                    backgroundColor: "var(--onPrimary)"
-                                                }
+                                                      backgroundColor: "var(--onPrimary)"
+                                                  }
                                                 : {
-                                                    backgroundColor: "var(--surface)"
-                                                }
+                                                      backgroundColor: "var(--surface)"
+                                                  }
                                         }
                                     >
                                         <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>

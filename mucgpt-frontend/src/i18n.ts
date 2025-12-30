@@ -101,7 +101,9 @@ i18n
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
-                            configuration_error: "Konfigurationsfehler"
+                            configuration_error: "Konfigurationsfehler",
+                            unauthorized_title: "Zugriff verweigert",
+                            unauthorized_message: "Hallo {{name}}, Sie haben keine Berechtigung, auf diese Anwendung zuzugreifen."
                         }
                     },
                     components: {
@@ -603,7 +605,9 @@ i18n
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
-                            configuration_error: "Configuration error"
+                            configuration_error: "Configuration error",
+                            unauthorized_title: "Access Denied",
+                            unauthorized_message: "Hello {{name}}, you do not have permission to access this application."
                         }
                     },
                     components: {

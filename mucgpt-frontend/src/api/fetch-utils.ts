@@ -1,4 +1,16 @@
 /**
+ * ApiError class to handle API errors with status code
+ */
+export class ApiError extends Error {
+    status: number;
+    constructor(message: string, status: number) {
+        super(message);
+        this.status = status;
+        this.name = "ApiError";
+    }
+}
+
+/**
  * Returns a default GET-Config for fetch
  */
 export function getConfig(): RequestInit {
@@ -145,12 +157,15 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `${defaultErrorMessage}: ${response.statusText}`);
+            throw new ApiError(errorData.message || `${defaultErrorMessage}: ${response.statusText}`, response.status);
         }
 
         const parsedResponse = await handleResponse(response);
         return parsedResponse;
     } catch (error) {
+        if (error instanceof ApiError) {
+            throw error;
+        }
         if (error instanceof Error) {
             throw error;
         }

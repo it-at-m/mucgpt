@@ -21,6 +21,7 @@ import OwnedCommunityAssistant from "./pages/assistant/OwnedCommunityAssistant";
 import CommunityAssistant from "./pages/assistant/CommunityAssistant";
 import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToastContext";
 import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
+import Unauthorized from "./pages/Unauthorized";
 initializeIcons();
 
 const router = createHashRouter([
@@ -32,6 +33,11 @@ const router = createHashRouter([
             {
                 index: true,
                 element: <Menu />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "unauthorized",
+                element: <Unauthorized />,
                 errorElement: <div>Fehler</div>
             },
             {

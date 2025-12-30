@@ -104,7 +104,7 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
                     const isLoading = loadingPaths.has(key);
                     const isSelected = publishDepartments.includes(labelFor(node));
                     const isUserDept = user?.department === node.shortname || user?.department === node.name;
-                    const canExpand = children.length > 0 || (tree[key] ? tree[key].length > 0 : true);
+                    const canExpand = node.children || tree[key] ? children.length > 0 : true;
 
                     return (
                         <li key={key} className={styles.treeItem}>

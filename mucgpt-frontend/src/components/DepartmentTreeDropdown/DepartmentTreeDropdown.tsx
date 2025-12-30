@@ -58,8 +58,24 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
     };
 
     useEffect(() => {
-        if (tree[pathKey([])]) return;
-        fetchChildren([]);
+        const init = async () => {
+            try {
+                const roots = await getDirectoryChildren([]);
+                setTree(prev => ({ ...prev, [pathKey([])]: roots }));
+
+                await Promise.all(
+                    roots.map(async root => {
+                        const path = [labelFor(root)];
+                        const children = await getDirectoryChildren(path);
+                        setTree(prev => ({ ...prev, [pathKey(path)]: children }));
+                    })
+                );
+            } catch (e) {
+                console.error(e);
+                setError(t("components.department_dropdown.load_error"));
+            }
+        };
+        init();
     }, []);
 
     const handleSelect = (value: string) => {
@@ -171,7 +187,17 @@ export const DepartmentTreeDropdown = ({ publishDepartments, setPublishDepartmen
             <div className={styles.treeContainer}>
                 {error && <div className={styles.errorText}>{error}</div>}
                 {tree[pathKey([])] ? (
-                    renderNodes(tree[pathKey([])], [])
+                    tree[pathKey([])].map(root => {
+                        const path = [labelFor(root)];
+                        const children = tree[pathKey(path)];
+                        if (!children)
+                            return (
+                                <div key={pathKey(path)} className={styles.loadingText}>
+                                    {t("components.department_dropdown.loading_short")}
+                                </div>
+                            );
+                        return <div key={pathKey(path)}>{renderNodes(children, path)}</div>;
+                    })
                 ) : (
                     <div className={styles.loadingText}>{t("components.department_dropdown.loading")}</div>
                 )}

@@ -8,63 +8,80 @@ import {
     DialogSurface,
     DialogTitle,
     Field,
-    InfoLabel,
     Textarea,
-    TextareaOnChangeData
+    TextareaOnChangeData,
+    Tooltip
 } from "@fluentui/react-components";
 
 import styles from "./CreateAssistantDialog.module.css";
+import sharedStyles from "../shared/AssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
-import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { Assistant, ToolInfo, ToolBase } from "../../api";
-import { ASSISTANT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
-import { AssistantStorageService } from "../../service/assistantstorage";
-import { createAssistantApi } from "../../api/core-client";
-import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
-import { Stepper, Step } from "../Stepper";
-import { ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep } from "../EditAssistantDialog/steps";
-import { useToolsContext } from "../ToolsProvider";
-import { ExampleModel } from "../Example";
-import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
+import { LLMContext } from "../../LLMSelector/LLMContextProvider";
+import { Assistant, ToolInfo } from "../../../api";
+import { ASSISTANT_STORE } from "../../../constants";
+import { AssistantStorageService } from "../../../service/assistantstorage";
+import { createAssistantApi } from "../../../api/core-client";
+import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
+import { Stepper, Step } from "../../Stepper";
+import {
+    CombinedDetailsStep,
+    ToolsStep,
+    QuickPromptsStep,
+    ExamplesStep,
+    AdvancedSettingsStep,
+    DEFAULT_ASSISTANT_TITLE,
+    DEFAULT_ASSISTANT_DESCRIPTION,
+    useCreateAssistantState
+} from "../shared";
+import { CloseConfirmationDialog } from "../shared/CloseConfirmationDialog";
+import { useToolsContext } from "../../ToolsProvider";
 
 interface Props {
     showDialogInput: boolean;
     setShowDialogInput: (showDialogInput: boolean) => void;
 }
 
-type DialogStep = 1 | 2 | 3 | 4 | 5 | 6;
-
 export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
-    const [input, setInput] = useState<string>("");
-    const [description, setDescription] = useState<string>("");
-    const [systemPrompt, setSystemPrompt] = useState<string>("");
-    const [title, setTitle] = useState<string>("");
-    const [currentStep, setCurrentStep] = useState<DialogStep>(1);
-    const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+    const [currentStep, setCurrentStep] = useState<number>(1);
+    const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 
     // Context
     const { LLM } = useContext(LLMContext);
-    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
-
-    // Additional states for new steps
-    const [tools, setTools] = useState<ToolBase[]>([]);
-    const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
-    const [examples, setExamples] = useState<ExampleModel[]>([]);
-    const [temperature, setTemperature] = useState<number>(0.6);
-    const [maxOutputTokens, setMaxOutputTokens] = useState<number>(llmMaxOutputTokens);
     const { showError, showSuccess } = useGlobalToastContext();
     const { tools: availableTools } = useToolsContext();
-
     const { t } = useTranslation();
 
-    // Handler for tracking changes in step components
-    const handleHasChanged = useCallback(() => {
-        // Currently not used in CreateAssistantDialog, but required by step components
-    }, []);
-
     const storageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+
+    // Use the custom hook for state management
+    const {
+        input,
+        title,
+        description,
+        systemPrompt,
+        selectedTemplate,
+        tools,
+        quickPrompts,
+        examples,
+        temperature,
+        maxOutputTokens,
+        hasChanges,
+        llmMaxOutputTokens,
+        updateInput,
+        updateTitle,
+        updateDescription,
+        updateSystemPrompt,
+        updateTemperature,
+        updateMaxTokens,
+        updateTools,
+        updateTemplate,
+        setQuickPrompts,
+        setExamples,
+        setGeneratedAssistant,
+        resetAll
+    } = useCreateAssistantState();
 
     const selectedTools = useMemo(() => {
         if (!availableTools) {
@@ -77,36 +94,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // input change
     const onInputChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        if (newValue?.value) {
-            setInput(newValue.value);
-        } else {
-            setInput("");
-        }
-        // Reset template selection when user types manually
-        setSelectedTemplate("");
-    }, []);
-
-    // description change
-    const onDescriptionChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        setDescription(newValue?.value ?? "");
-    }, []);
-
-    // title change
-    const onTitleChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        setTitle(newValue?.value ?? "");
-    }, []);
-
-    // system prompt change
-    const onRefinedPromptChanged = useCallback((_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-        setSystemPrompt(newValue?.value ?? "");
-    }, []);
+        updateInput(newValue?.value || "");
+    }, [updateInput]);
 
     // save assistant
     const onPromptButtonClicked = useCallback(async () => {
         try {
             const assistant: Assistant = {
-                title: title === "" ? "Assistent" : title,
-                description: description === "" ? "Ein Assistent" : description,
+                title: title === "" ? DEFAULT_ASSISTANT_TITLE : title,
+                description: description === "" ? DEFAULT_ASSISTANT_DESCRIPTION : description,
                 system_message: systemPrompt,
                 publish: false,
                 temperature: temperature,
@@ -141,18 +137,9 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
         setShowDialogInput(false);
-        setInput("");
         setCurrentStep(1);
-        setSystemPrompt("");
-        setDescription("");
-        setTitle("");
-        setSelectedTemplate("");
-        setTools([]);
-        setQuickPrompts([]);
-        setExamples([]);
-        setTemperature(0.6);
-        setMaxOutputTokens(llmMaxOutputTokens);
-    }, [setShowDialogInput, llmMaxOutputTokens]);
+        resetAll();
+    }, [setShowDialogInput, resetAll]);
 
     // call Assistant api
     const createAssistant = useCallback(async () => {
@@ -160,10 +147,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             setLoading(true);
             try {
                 const result = await (await createAssistantApi({ input: input, model: LLM.llm_name, max_output_tokens: llmMaxOutputTokens })).json();
-                setSystemPrompt(result.system_prompt);
-                setDescription(result.description);
-                setTitle(result.title);
-                setCurrentStep(2 as DialogStep);
+                setGeneratedAssistant(result.title, result.description, result.system_prompt);
+                setCurrentStep(2);
                 showSuccess(
                     t("components.create_assistant_dialog.assistant_generated_success"),
                     t("components.create_assistant_dialog.assistant_generated_message")
@@ -176,20 +161,13 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 setLoading(false);
             }
         }
-    }, [input, LLM.llm_name, llmMaxOutputTokens, showError, showSuccess, t]);
+    }, [input, LLM.llm_name, llmMaxOutputTokens, setGeneratedAssistant, showError, showSuccess, t]);
 
     const handleTemplateSelect = useCallback(
         (template: string, templateId: string) => {
-            // Toggle functionality: if already selected, deselect it
-            if (selectedTemplate === templateId) {
-                setInput("");
-                setSelectedTemplate("");
-            } else {
-                setInput(template);
-                setSelectedTemplate(templateId);
-            }
+            updateTemplate(template, templateId);
         },
-        [selectedTemplate]
+        [updateTemplate]
     );
 
     const handleContinueWithMucGPT = useCallback(async () => {
@@ -197,9 +175,9 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     }, [createAssistant]);
 
     const handleDefineMyself = useCallback(() => {
-        setDescription(input);
+        updateDescription(input);
         setCurrentStep(2);
-    }, [input]);
+    }, [input, updateDescription]);
 
     const steps: Step[] = [
         {
@@ -233,10 +211,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />
 
-                <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
+                <p className={sharedStyles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
 
-                <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.description")}: *</label>
+                <Field size="large" className={sharedStyles.fieldSection}>
+                    <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
                     <Textarea
                         placeholder={t("components.create_assistant_dialog.description_placeholder")}
                         size="large"
@@ -249,7 +227,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 </Field>
 
                 <div>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.or_choose_template")}</label>
+                    <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.or_choose_template")}</label>
                     <div className={styles.chipContainer}>
                         <Button
                             className={`${styles.templateChip} ${selectedTemplate === "example_one" ? styles.selected : ""}`}
@@ -277,13 +255,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
                 <p hidden={!loading}>{t("components.create_assistant_dialog.generating_prompt")}</p>
             </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button disabled={loading} size="medium" onClick={handleDefineMyself} className={styles.defineButton}>
+            <DialogActions className={sharedStyles.dialogActions}>
+                <Button disabled={loading} size="medium" onClick={handleDefineMyself} className={sharedStyles.defineButton}>
                     {t("components.create_assistant_dialog.define_myself")}
                 </Button>
-                <Button disabled={loading || input === ""} size="medium" onClick={handleContinueWithMucGPT} className={styles.continueButton}>
-                    {t("components.create_assistant_dialog.continue_with_mucgpt")}
-                </Button>
+                <Tooltip content={input === "" ? t("components.create_assistant_dialog.description_required") : ""} relationship="label" positioning="above">
+                    <Button disabled={loading || input === ""} size="medium" onClick={handleContinueWithMucGPT} className={sharedStyles.continueButton}>
+                        {t("components.create_assistant_dialog.continue_with_mucgpt")}
+                    </Button>
+                </Tooltip>
             </DialogActions>
         </>
     );
@@ -292,62 +272,24 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <>
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />
-
-                <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text_step2")}</p>
-
-                <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.title")}:*</label>
-                    <Textarea
-                        placeholder={t("components.create_assistant_dialog.title_placeholder")}
-                        value={title}
-                        size="large"
-                        rows={1}
-                        resize="vertical"
-                        onChange={onTitleChanged}
-                        maxLength={100}
-                    />
-                </Field>
-                <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
-                    <Textarea
-                        placeholder={t("components.create_assistant_dialog.description_placeholder")}
-                        value={description}
-                        size="large"
-                        rows={3}
-                        resize="vertical"
-                        onChange={onDescriptionChanged}
-                    />
-                </Field>
-                <Field size="large" className={styles.fieldSection}>
-                    <label className={styles.fieldLabel}>
-                        {t("components.create_assistant_dialog.prompt")}:*
-                        <InfoLabel
-                            info={
-                                <div>
-                                    <i>{t("components.chattsettingsdrawer.system_prompt")}s </i>
-                                    {t("components.chattsettingsdrawer.system_prompt_info")}
-                                </div>
-                            }
-                        />
-                    </label>
-                    <Textarea
-                        placeholder={t("components.create_assistant_dialog.prompt_placeholder")}
-                        rows={7}
-                        resize="vertical"
-                        value={systemPrompt}
-                        size="large"
-                        onChange={onRefinedPromptChanged}
-                    />
-                </Field>
+                <CombinedDetailsStep
+                    title={title}
+                    description={description}
+                    systemPrompt={systemPrompt}
+                    isOwner={true}
+                    onTitleChange={updateTitle}
+                    onDescriptionChange={updateDescription}
+                    onSystemPromptChange={updateSystemPrompt}
+                />
             </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(1)} className={styles.backButton}>
+            <DialogActions className={sharedStyles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(1)} className={sharedStyles.backButton}>
                     {t("common.back")}
                 </Button>
                 <Button
                     size="medium"
                     onClick={() => setCurrentStep(3)}
-                    className={styles.continueButton}
+                    className={sharedStyles.continueButton}
                     disabled={title.trim() === "" || systemPrompt.trim() === ""}
                 >
                     {t("common.next")}
@@ -360,15 +302,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <>
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />
-                <div className={styles.scrollableDialogContent}>
-                    <ToolsStep selectedTools={selectedTools} availableTools={availableTools} onToolsChange={setTools} onHasChanged={handleHasChanged} />
+                <div className={sharedStyles.scrollableDialogContent}>
+                    <ToolsStep selectedTools={selectedTools} availableTools={availableTools} onToolsChange={updateTools} />
                 </div>
             </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(2)} className={styles.backButton}>
+            <DialogActions className={sharedStyles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(2)} className={sharedStyles.backButton}>
                     {t("common.back")}
                 </Button>
-                <Button size="medium" onClick={() => setCurrentStep(4)} className={styles.continueButton}>
+                <Button size="medium" onClick={() => setCurrentStep(4)} className={sharedStyles.continueButton}>
                     {t("common.next")}
                 </Button>
             </DialogActions>
@@ -379,15 +321,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <>
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />
-                <div className={styles.scrollableDialogContent}>
-                    <QuickPromptsStep quickPrompts={quickPrompts} isOwner={true} onQuickPromptsChange={setQuickPrompts} onHasChanged={handleHasChanged} />
+                <div className={sharedStyles.scrollableDialogContent}>
+                    <QuickPromptsStep quickPrompts={quickPrompts} isOwner={true} onQuickPromptsChange={setQuickPrompts} />
                 </div>
             </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(3)} className={styles.backButton}>
+            <DialogActions className={sharedStyles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(3)} className={sharedStyles.backButton}>
                     {t("common.back")}
                 </Button>
-                <Button size="medium" onClick={() => setCurrentStep(5)} className={styles.continueButton}>
+                <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.continueButton}>
                     {t("common.next")}
                 </Button>
             </DialogActions>
@@ -398,15 +340,15 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <>
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />
-                <div className={styles.scrollableDialogContent}>
-                    <ExamplesStep examples={examples} isOwner={true} onExamplesChange={setExamples} onHasChanged={handleHasChanged} />
+                <div className={sharedStyles.scrollableDialogContent}>
+                    <ExamplesStep examples={examples} isOwner={true} onExamplesChange={setExamples} />
                 </div>
             </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(4)} className={styles.backButton}>
+            <DialogActions className={sharedStyles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(4)} className={sharedStyles.backButton}>
                     {t("common.back")}
                 </Button>
-                <Button size="medium" onClick={() => setCurrentStep(6)} className={styles.continueButton}>
+                <Button size="medium" onClick={() => setCurrentStep(6)} className={sharedStyles.continueButton}>
                     {t("common.next")}
                 </Button>
             </DialogActions>
@@ -417,25 +359,34 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         <>
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />
-                <div className={styles.scrollableDialogContent}>
+                <div className={sharedStyles.scrollableDialogContent}>
                     <AdvancedSettingsStep
                         temperature={temperature}
                         maxOutputTokens={maxOutputTokens}
                         isOwner={true}
-                        onTemperatureChange={setTemperature}
-                        onMaxTokensChange={setMaxOutputTokens}
-                        onHasChanged={handleHasChanged}
+                        onTemperatureChange={updateTemperature}
+                        onMaxTokensChange={updateMaxTokens}
                     />
                 </div>
             </DialogContent>
-            <DialogActions className={styles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(5)} className={styles.backButton}>
+            <DialogActions className={sharedStyles.dialogActions}>
+                <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.backButton}>
                     {t("common.back")}
                 </Button>
-                <Button size="medium" onClick={onCancelButtonClicked} className={styles.cancelButton}>
+                <Button
+                    size="medium"
+                    onClick={() => {
+                        if (hasChanges) {
+                            setCloseDialogOpen(true);
+                        } else {
+                            onCancelButtonClicked();
+                        }
+                    }}
+                    className={sharedStyles.cancelButton}
+                >
                     {t("common.cancel")}
                 </Button>
-                <Button size="medium" onClick={onPromptButtonClicked} className={styles.createButton}>
+                <Button size="medium" onClick={onPromptButtonClicked} className={sharedStyles.createButton}>
                     {t("common.create")}
                 </Button>
             </DialogActions>
@@ -444,34 +395,65 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     const getCurrentStepContent = () => {
         switch (currentStep) {
-            case 1:
+            case 1: // Step 1: Describe function
                 return renderStep1();
-            case 2:
+            case 2: // Step 2: Create assistant (Title, Description, System Prompt)
                 return renderStep2();
-            case 3:
+            case 3: // Step 3: Tools
                 return renderStep3();
-            case 4:
+            case 4: // Step 4: Quick Prompts
                 return renderStep4();
-            case 5:
+            case 5: // Step 5: Examples
                 return renderStep5();
-            case 6:
+            case 6: // Step 6: Advanced Settings
                 return renderStep6();
             default:
+                console.error(`Invalid step: ${currentStep}. This should not happen.`);
                 return renderStep1();
         }
     };
 
+    const handleConfirmClose = useCallback(() => {
+        onCancelButtonClicked();
+    }, [onCancelButtonClicked]);
+
     return (
         <div>
-            <Dialog modalType="modal" open={showDialogInput} onOpenChange={(_event, data) => setShowDialogInput(data.open)}>
-                <DialogSurface className={styles.dialog}>
-                    <div className={styles.dialogHeader}>
-                        <DialogTitle className={styles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
-                        <Button appearance="subtle" size="small" onClick={onCancelButtonClicked} className={styles.closeButton} icon={<Dismiss24Regular />} />
+            <Dialog
+                modalType="alert"
+                open={showDialogInput && !closeDialogOpen}
+                onOpenChange={(_event, data) => {
+                    if (!data.open && hasChanges) {
+                        setCloseDialogOpen(true);
+                    } else {
+                        setShowDialogInput(data.open);
+                        if (!data.open) {
+                            setCurrentStep(1);
+                        }
+                    }
+                }}
+            >
+                <DialogSurface className={sharedStyles.dialog}>
+                    <div className={sharedStyles.dialogHeader}>
+                        <DialogTitle className={sharedStyles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
+                        <Button
+                            appearance="subtle"
+                            size="small"
+                            onClick={() => {
+                                if (hasChanges) {
+                                    setCloseDialogOpen(true);
+                                } else {
+                                    onCancelButtonClicked();
+                                }
+                            }}
+                            className={sharedStyles.closeButton}
+                            icon={<Dismiss24Regular />}
+                        />
                     </div>
-                    <DialogBody className={styles.dialogContent}>{getCurrentStepContent()}</DialogBody>
+                    <DialogBody className={sharedStyles.dialogContent}>{getCurrentStepContent()}</DialogBody>
                 </DialogSurface>
             </Dialog>
+            <CloseConfirmationDialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen} onConfirmClose={handleConfirmClose} />
         </div>
     );
 };

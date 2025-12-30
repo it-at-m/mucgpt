@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Assistant, ToolBase } from "../../api";
-import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
-import { ExampleModel } from "../Example";
+import { Assistant, ToolBase } from "../../../../api";
+import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
+import { ExampleModel } from "../../../Example";
+import { DEFAULT_ASSISTANT_TITLE, DEFAULT_ASSISTANT_DESCRIPTION } from "../constants";
 
 export const useAssistantState = (initialAssistant: Assistant) => {
     // All state variables
@@ -121,8 +122,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
 
         return {
             id: assistantId,
-            title: title === "" ? "Assistent" : title,
-            description: description === "" ? "Ein Assistent" : description,
+            title: title === "" ? DEFAULT_ASSISTANT_TITLE : title,
+            description: description === "" ? DEFAULT_ASSISTANT_DESCRIPTION : description,
             system_message: systemPrompt,
             publish: publish,
             owner_ids: ownerIds,

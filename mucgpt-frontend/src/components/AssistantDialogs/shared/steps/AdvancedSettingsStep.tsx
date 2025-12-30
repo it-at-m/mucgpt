@@ -1,9 +1,9 @@
 import { DialogContent, Field, InfoLabel } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
-import { LLMContext } from "../../LLMSelector/LLMContextProvider";
-import styles from "../EditAssistantDialog.module.css";
-import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../../constants";
+import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
+import sharedStyles from "../AssistantDialog.module.css";
+import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../../../constants";
 
 interface AdvancedSettingsStepProps {
     temperature: number;
@@ -11,7 +11,7 @@ interface AdvancedSettingsStepProps {
     isOwner: boolean;
     onTemperatureChange: (temperature: number) => void;
     onMaxTokensChange: (maxTokens: number) => void;
-    onHasChanged: (hasChanged: boolean) => void;
+    onHasChanged?: (hasChanged: boolean) => void;
 }
 
 export const AdvancedSettingsStep = ({
@@ -35,7 +35,7 @@ export const AdvancedSettingsStep = ({
     const onTemperatureChangeHandler = useCallback(
         (ev: React.ChangeEvent<HTMLInputElement>) => {
             onTemperatureChange(Number(ev.target.value));
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [onTemperatureChange, onHasChanged]
     );
@@ -47,15 +47,15 @@ export const AdvancedSettingsStep = ({
             const limit = llmMaxOutputTokens;
             const maxTokens = limit > 0 && value > limit ? limit : value;
             onMaxTokensChange(maxTokens);
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [llmMaxOutputTokens, onMaxTokensChange, onHasChanged]
     );
 
     return (
         <DialogContent>
-            <Field size="large" className={styles.rangeField}>
-                <label className={styles.formLabel}>
+            <Field size="large" className={sharedStyles.rangeField}>
+                <label className={sharedStyles.formLabel}>
                     <InfoLabel
                         info={
                             <div>
@@ -75,12 +75,12 @@ export const AdvancedSettingsStep = ({
                     value={temperature}
                     onChange={onTemperatureChangeHandler}
                     disabled={!isOwner}
-                    className={styles.rangeInput}
+                    className={sharedStyles.rangeInput}
                 />
-                <div className={styles.rangeValue}>{temperature}</div>
+                <div className={sharedStyles.rangeValue}>{temperature}</div>
             </Field>
-            <Field size="large" className={styles.rangeField}>
-                <label className={styles.formLabel}>
+            <Field size="large" className={sharedStyles.rangeField}>
+                <label className={sharedStyles.formLabel}>
                     <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>
                         {t("components.edit_assistant_dialog.max_output_tokens")}
                     </InfoLabel>
@@ -93,9 +93,9 @@ export const AdvancedSettingsStep = ({
                     value={maxOutputTokens}
                     onChange={onMaxtokensChangeHandler}
                     disabled={!isOwner}
-                    className={styles.rangeInput}
+                    className={sharedStyles.rangeInput}
                 />
-                <div className={styles.rangeValue}>{maxOutputTokens}</div>
+                <div className={sharedStyles.rangeValue}>{maxOutputTokens}</div>
             </Field>
         </DialogContent>
     );

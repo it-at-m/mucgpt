@@ -334,6 +334,7 @@ i18n
                             or_choose_template: "Alternativ könntest du auch die unteren vordefinierten Assistenten erstmal probieren:",
                             continue_with_mucgpt: "Mit MUCGPT fortfahren",
                             define_myself: "Ich definiere selbst",
+                            description_required: "Bitte geben Sie eine Beschreibung ein, damit MUCGPT den Assistenten generieren kann",
                             generating_prompt: "Generiere Prompt...",
                             assistant_saved_success: "Assistent erfolgreich gespeichert!",
                             assistant_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
@@ -382,8 +383,6 @@ i18n
                             no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
                             no_examples_selected: "Keine Beispiele hinzugefügt",
                             remove: "Entfernen",
-                            close: "Schließen",
-                            back: "Zurück",
                             save: "Speichern",
                             saved_successfully: "Erfolgreich gespeichert!",
                             assistant_saved_description: "Der Assistent {{assistantName}} wurde erfolgreich gespeichert.",
@@ -401,8 +400,7 @@ i18n
                             previous: "Zurück",
                             // Close dialog
                             close_dialog_title: "Dialog schließen",
-                            close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren.",
-                            cancel: "Abbrechen"
+                            close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren."
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlichen",
@@ -590,12 +588,12 @@ i18n
                         footer_info: "Footer information",
                         clear_chat: "New chat",
                         settings: "Settings",
-                        close: "Close",
                         messages: "Messages",
                         examples: "Examples",
                         sidebar_show: "Show sidebar",
                         sidebar_hide: "Hide sidebar",
                         cancel: "Cancel",
+                        close: "Close",
                         create: "Create",
                         back: "Back",
                         ok: "OK",
@@ -836,6 +834,7 @@ i18n
                             or_choose_template: "Alternatively, you could first try the predefined assistants below:",
                             continue_with_mucgpt: "Continue with MUCGPT",
                             define_myself: "Define myself",
+                            description_required: "Please enter a description so MUCGPT can generate the assistant",
                             generating_prompt: "Generating prompt...",
                             assistant_saved_success: "Assistant saved successfully!",
                             assistant_saved_message: 'Your assistant "{{title}}" has been created and saved.',
@@ -882,8 +881,6 @@ i18n
                             no_quick_prompts_selected: "No quick prompts added",
                             no_examples_selected: "No examples added",
                             remove: "Remove",
-                            close: "Close",
-                            back: "Back",
                             save: "Save",
                             saved_successfully: "Succesfully saved!",
                             assistant_saved_description: "The assistant {{assistantName}} has been successfully saved.",
@@ -898,8 +895,7 @@ i18n
                             next: "Next",
                             previous: "Previous",
                             close_dialog_title: "Close Dialog",
-                            close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost.",
-                            cancel: "Cancel"
+                            close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost."
                         },
                         publish_assistant_dialog: {
                             title: "Publish Assistant",
@@ -1080,12 +1076,12 @@ i18n
                         footer_info: "Fußzeilen-Info",
                         clear_chat: "Neia Chat",
                         settings: "Konfiguration",
-                        close: "Schließen",
                         messages: "Nochrichten",
                         examples: "Beispui",
                         sidebar_show: "Sidebar zoagn",
                         sidebar_hide: "Sidebar ausblenden",
-                        cancel: "Abbrechen",
+                        cancel: "Obbrecha",
+                        close: "Schließn",
                         create: "Anlegn",
                         back: "Zruck",
                         ok: "OK",
@@ -1332,6 +1328,7 @@ i18n
                             or_choose_template: "Alternativ kannst aa erst amoi de vordefinierten Assistenten dauntn ausprobiern:",
                             continue_with_mucgpt: "Mit MUCGPT weitermacha",
                             define_myself: "Des mach i selber",
+                            description_required: "Bittschön gib a Beschreibung ei, damit MUCGPT den Assistentn generieren ko",
                             generating_prompt: "Prompt wird erstellt...",
                             assistant_saved_success: "Assistent erfolgreich gspeichert!",
                             assistant_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
@@ -1379,8 +1376,6 @@ i18n
                             no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
                             no_examples_selected: "Koane Beispui hinzugfügt",
                             remove: "Entfernen",
-                            close: "Schließen",
-                            back: "Zruck",
                             save: "Speichan",
                             saved_successfully: "Erfolgreich gspeichert!",
                             assistant_saved_description: "Der Assistent {{assistantName}} is jetzt erfolgreich g'speichert.",
@@ -1398,8 +1393,7 @@ i18n
                             previous: "Zruck",
                             // Close dialog
                             close_dialog_title: "Dialog schließn",
-                            close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn.",
-                            cancel: "Obbrecha"
+                            close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn."
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlcha",
@@ -1586,12 +1580,12 @@ i18n
                         footer_info: "Informations du pied de page",
                         clear_chat: "Nouveau chat",
                         settings: "Paramètres",
-                        close: "Fermer",
                         messages: "Messages",
                         examples: "Exemples",
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale",
                         cancel: "Annuler",
+                        close: "Fermer",
                         create: "Créer",
                         back: "Retour",
                         ok: "OK",
@@ -1833,6 +1827,7 @@ i18n
                             or_choose_template: "Alternativement, vous pouvez d'abord essayer les assistants prédéfinis ci-dessous :",
                             continue_with_mucgpt: "Continuer avec MUCGPT",
                             define_myself: "Je définis moi-même",
+                            description_required: "Veuillez saisir une description pour que MUCGPT puisse générer l'assistant",
                             generating_prompt: "Génération du prompt...",
                             assistant_saved_success: "Assistant enregistré avec succès!",
                             assistant_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
@@ -1881,8 +1876,6 @@ i18n
                             no_quick_prompts_selected: "Aucun prompt rapide ajouté",
                             no_examples_selected: "Aucun exemple ajouté",
                             remove: "Supprimer",
-                            close: "Fermer",
-                            back: "Retour",
                             save: "Enregistrer",
                             saved_successfully: "Enregistré avec succès!",
                             assistant_saved_description: "L'assistant {{assistantName}} a été enregistré avec succès.",
@@ -1900,8 +1893,7 @@ i18n
                             previous: "Précédent",
                             // Close dialog
                             close_dialog_title: "Fermer le dialogue",
-                            close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues.",
-                            cancel: "Annuler"
+                            close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues."
                         },
                         publish_assistant_dialog: {
                             title: "Publier l'assistant",
@@ -2089,12 +2081,12 @@ i18n
                         footer_info: "Інформація у футері",
                         clear_chat: "Новий чат",
                         settings: "Налаштування",
-                        close: "Закрити",
                         messages: "Повідомлення",
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель",
                         cancel: "Скасувати",
+                        close: "Закрити",
                         create: "Створити",
                         back: "Назад",
                         ok: "OK",
@@ -2335,6 +2327,7 @@ i18n
                             or_choose_template: "Крім того, ви можете спочатку спробувати попередньо визначених асистентів нижче:",
                             continue_with_mucgpt: "Продовжити з MUCGPT",
                             define_myself: "Я визначу самостійно",
+                            description_required: "Будь ласка, введіть опис, щоб MUCGPT міг згенерувати асистента",
                             generating_prompt: "Генерація запиту...",
                             assistant_saved_success: "Асистента успішно збережено!",
                             assistant_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
@@ -2380,8 +2373,6 @@ i18n
                             no_quick_prompts_selected: "Швидкі запити не додано",
                             no_examples_selected: "Приклади не додано",
                             remove: "Видалити",
-                            close: "Закрити",
-                            back: "Назад",
                             save: "Зберегти",
                             saved_successfully: "Успішно збережено!",
                             assistant_saved_description: "Асистент {{assistantName}} був успішно збережений.",
@@ -2399,8 +2390,7 @@ i18n
                             previous: "Назад",
                             // Close dialog
                             close_dialog_title: "Закрити діалог",
-                            close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені.",
-                            cancel: "Скасувати"
+                            close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені."
                         },
                         publish_assistant_dialog: {
                             title: "Опублікувати асистента",

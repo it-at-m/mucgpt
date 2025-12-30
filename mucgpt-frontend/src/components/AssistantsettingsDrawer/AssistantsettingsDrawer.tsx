@@ -18,7 +18,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
-import { EditAssistantDialog } from "../EditAssistantDialog/EditAssistantDialog";
+import { EditAssistantDialog } from "../AssistantDialogs";
 import PublishAssistantDialog from "../PublishAssistantDialog/PublishAssistantDialog";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { ASSISTANT_STORE } from "../../constants";

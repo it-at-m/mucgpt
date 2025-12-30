@@ -12,24 +12,45 @@ import {
 
 const DIRECTORY_TREE = [
     {
-        shortname: "BAU",
-        name: "Baureferat",
+        shortname: null,
+        name: "Landeshauptstadt München",
         children: [
             {
-                shortname: "BAU-BEURL",
-                name: "Beurlaubte des Baureferates",
+                shortname: "BAU",
+                name: "Baureferat",
                 children: [
-                    { shortname: "BAU-BEURL-TECH", name: "Technik", children: [] },
-                    { shortname: null, name: "Allgemein", children: [] }
+                    {
+                        shortname: "BAU-BEURL",
+                        name: "Beurlaubte des Baureferates",
+                        children: [
+                            { shortname: "BAU-BEURL-TECH", name: "Technik", children: [] },
+                            { shortname: null, name: "Allgemein", children: [] }
+                        ]
+                    },
+                    { shortname: "BAU-G", name: "HA Gartenbau", children: [] }
                 ]
             },
-            { shortname: "BAU-G", name: "HA Gartenbau", children: [] }
+            {
+                shortname: "RIT",
+                name: "IT-Referat",
+                children: [
+                    { shortname: "RIT-AI", name: "Ur future AI Overlords ", children: [] },
+                    {
+                        shortname: "ITM",
+                        name: "IT@M",
+                        children: [{ shortname: "ITM-KM-DI", name: "Data & Innovation", children: [] }]
+                    }
+                ]
+            },
+            {
+                shortname: "POR",
+                name: "Personal- und Organisationsreferat",
+                children: [
+                    { shortname: "POR-P", name: "Personalbereich", children: [] },
+                    { shortname: "POR-O", name: "Organisationsbereich", children: [] }
+                ]
+            }
         ]
-    },
-    {
-        shortname: "RIT",
-        name: "IT-Referat",
-        children: [{ shortname: "RIT-AI", name: "KI-Team", children: [] }]
     }
 ];
 

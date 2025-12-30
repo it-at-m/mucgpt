@@ -51,11 +51,30 @@ changes:
         user_name:
           - herbert.hr
         lhmObjectID:
-          - 23242424
+          - 232424245
         telephoneNumber:
           - "089-99998000"
         department:
           - "POR"
   - updateUserPassword:
       name: mucgpt-hr-user
+      password: "mucgpt"
+  - addUser:
+      name: mucgpt-not-allowed-user
+      lastName: Bond
+      firstName: James
+      enabled: true
+      emailVerified: true
+      email: bond@007.com
+      attributes:
+        user_name:
+          - james.bond
+        lhmObjectID:
+          - 232424246
+        telephoneNumber:
+          - "089-99998000"
+        department:
+          - "MI7"
+  - updateUserPassword:
+      name: mucgpt-not-allowed-user
       password: "mucgpt"

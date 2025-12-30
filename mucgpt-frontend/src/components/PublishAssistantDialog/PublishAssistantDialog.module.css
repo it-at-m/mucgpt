@@ -1,7 +1,9 @@
 /* Dialog Container */
 .dialog {
-    max-width: 560px;
-    width: 90vw;
+    min-width: 90%;
+    max-width: 90%;
+    min-height: 90%;
+    max-height: 90%;
 }
 
 .dialogContent {
@@ -178,8 +180,6 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    border: 1px solid var(--colorNeutralStroke2);
-    border-radius: 6px;
     background: var(--colorNeutralBackground1);
     width: 100%;
 }
@@ -211,7 +211,6 @@
 /* Actions */
 .actions {
     padding: 16px 24px 24px 24px;
-    border-top: 1px solid var(--colorNeutralStroke2);
     gap: 12px;
 }
 

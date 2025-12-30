@@ -48,7 +48,10 @@ export async function getCommunityAssistantVersionApi(id: string, version: strin
 }
 
 export async function getDirectoryChildren(path: string[] = []): Promise<DirectoryNode[]> {
-    const params = path.map(segment => `path=${encodeURIComponent(segment)}`).join("&");
-    const url = params ? `/api/directory/children?${params}` : `/api/directory/children`;
+    let url = "/api/directory/children";
+    if (path.length > 0) {
+        const jsonPath = JSON.stringify(path);
+        url += `?path=${encodeURIComponent(jsonPath)}`;
+    }
     return handleApiRequest(() => fetch(url, getConfig()), "Failed to get directory children");
 }

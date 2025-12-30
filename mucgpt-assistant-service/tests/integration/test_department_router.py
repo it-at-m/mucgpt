@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock
 
 import pytest
@@ -71,3 +72,20 @@ def test_get_directory_children_not_found(test_client, monkeypatch):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Path segment not found"
+
+
+@pytest.mark.integration
+def test_get_directory_children_json_path(test_client, monkeypatch):
+    """Test the /directory/children endpoint with JSON path."""
+    mock_children = [{"shortname": "SUB1", "name": "Sub Department 1", "children": []}]
+
+    mock_get_children = AsyncMock(return_value=mock_children)
+    monkeypatch.setattr(
+        "core.directory_cache.get_directory_children_by_path", mock_get_children
+    )
+
+    path_param = json.dumps(["DEPT1", "SUB1"])
+    response = test_client.get(f"directory/children?path={path_param}", headers=headers)
+
+    assert response.status_code == 200
+    mock_get_children.assert_called_once_with(["DEPT1", "SUB1"])

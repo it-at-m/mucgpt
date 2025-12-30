@@ -122,11 +122,26 @@ export const handlers = [
     }),
     http.get("/api/directory/children", ({ request }) => {
         const url = new URL(request.url);
-        const path = url.searchParams.getAll("path");
-        if (path.length === 0) {
+        const pathParam = url.searchParams.get("path");
+        let pathSegments: string[] = [];
+
+        if (pathParam) {
+            try {
+                const parsed = JSON.parse(pathParam);
+                if (Array.isArray(parsed)) {
+                    pathSegments = parsed.map(String);
+                } else {
+                    pathSegments = [String(parsed)];
+                }
+            } catch {
+                pathSegments = [pathParam];
+            }
+        }
+
+        if (pathSegments.length === 0) {
             return HttpResponse.json(DIRECTORY_TREE);
         }
-        const node = findNode(path);
+        const node = findNode(pathSegments);
         if (!node) {
             return new HttpResponse(null, { status: 404 });
         }

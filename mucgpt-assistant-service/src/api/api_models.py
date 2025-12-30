@@ -41,8 +41,8 @@ class DirectoryNode(BaseModel):
     name: str = Field(
         ..., description="Human readable name of the org unit", example="Team 2.1A"
     )
-    children: list[DirectoryNode] = Field(
-        default_factory=list, description="Child organization units"
+    children: list[DirectoryNode] | None = Field(
+        default=None, description="Child organization units"
     )
 
     model_config = ConfigDict(

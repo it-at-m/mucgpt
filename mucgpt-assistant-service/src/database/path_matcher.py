@@ -1,3 +1,27 @@
+"""
+Path Matcher Module
+
+This module implements the logic for verifying access permissions based on organizational
+hierarchy (Directory Tree).
+
+Concepts:
+1. Directory Tree: A hierarchical representation of the organization (e.g., Departments, Units).
+   Each node has a 'name' and 'shortname'.
+2. Access Path: A string identifier (name or shortname) representing a node in the tree.
+   This node defines the root of a subtree that has access to a resource.
+3. User Department: A string identifier (name or shortname) representing the user's position
+   in the tree.
+4. Ancestry Check: Access is granted if the 'Access Path' node is an ancestor of (or the same as)
+   the 'User Department' node. This means permissions flow downwards in the hierarchy.
+
+Implementation Details:
+- _DirectoryIndex: An optimized in-memory structure that maps names/shortnames to internal
+  node IDs and stores parent pointers for efficient O(h) ancestry lookups (where h is tree height).
+- Caching: The directory tree is fetched from a cache service (Redis/LDAP) or a local fallback file.
+  The built index is cached in memory for a short duration (_INDEX_TTL) to reduce overhead.
+- Normalization: All comparisons are case-insensitive and ignore leading/trailing whitespace.
+"""
+
 from __future__ import annotations
 
 import json

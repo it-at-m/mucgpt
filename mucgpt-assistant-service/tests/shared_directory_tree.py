@@ -193,6 +193,4 @@ TEST_TREE = [
         {"shortname": f"DEPT-{i}", "name": f"DEPT-{i}", "children": []}
         for i in range(20)
     ],
-    {"shortname": "HR-DEPT", "name": "HR-DEPT", "children": []},
-    {"shortname": "FINANCE", "name": "FINANCE", "children": []},
 ]

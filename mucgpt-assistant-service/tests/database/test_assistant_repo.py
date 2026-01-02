@@ -33,7 +33,7 @@ def directory_index_multiple_paths(monkeypatch):
                 {"shortname": "itm-km-team1", "name": "ITM-KM-TEAM1", "children": []}
             ],
         },
-        {"shortname": "hr-dept", "name": "HR-DEPT", "children": []},
+        {"shortname": "HR-DEPT", "name": "HR-DEPT", "children": []},
         {"shortname": "finance", "name": "FINANCE", "children": []},
         {
             "shortname": "ORG",

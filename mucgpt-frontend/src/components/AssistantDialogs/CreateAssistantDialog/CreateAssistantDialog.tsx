@@ -24,16 +24,7 @@ import { AssistantStorageService } from "../../../service/assistantstorage";
 import { createAssistantApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { Stepper, Step } from "../../Stepper";
-import {
-    CombinedDetailsStep,
-    ToolsStep,
-    QuickPromptsStep,
-    ExamplesStep,
-    AdvancedSettingsStep,
-    DEFAULT_ASSISTANT_TITLE,
-    DEFAULT_ASSISTANT_DESCRIPTION,
-    useCreateAssistantState
-} from "../shared";
+import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, useCreateAssistantState } from "../shared";
 import { CloseConfirmationDialog } from "../shared/CloseConfirmationDialog";
 import { useToolsContext } from "../../ToolsProvider";
 
@@ -104,8 +95,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     const onPromptButtonClicked = useCallback(async () => {
         try {
             const assistant: Assistant = {
-                title: title === "" ? DEFAULT_ASSISTANT_TITLE : title,
-                description: description === "" ? DEFAULT_ASSISTANT_DESCRIPTION : description,
+                title: title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title,
+                description: description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description,
                 system_message: systemPrompt,
                 publish: false,
                 temperature: temperature,

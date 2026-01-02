@@ -7,5 +7,3 @@ export { VisibilityStep } from "./steps/VisibilityStep";
 
 export { useAssistantState } from "./hooks/useAssistantState";
 export { useCreateAssistantState } from "./hooks/useCreateAssistantState";
-
-export { DEFAULT_ASSISTANT_TITLE, DEFAULT_ASSISTANT_DESCRIPTION } from "./constants";

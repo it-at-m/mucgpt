@@ -24,6 +24,8 @@ interface Props {
 export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAssistantChanged, isOwner, strategy }: Props) => {
     // Toast setup
     const { showSuccess } = useGlobalToastContext();
+    const { t } = useTranslation();
+    const { tools: availableTools } = useToolsContext();
 
     // Stepper state (1-based indexing)
     const [currentStep, setCurrentStep] = useState<number>(1);
@@ -33,9 +35,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
         assistantState;
 
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
-
-    const { t } = useTranslation();
-    const { tools: availableTools } = useToolsContext();
 
     // Create steps array for Stepper component (matching CreateAssistantDialog structure)
     const steps: Step[] = useMemo(() => {

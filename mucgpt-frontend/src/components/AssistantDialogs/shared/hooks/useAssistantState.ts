@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Assistant, ToolBase } from "../../../../api";
 import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
 import { ExampleModel } from "../../../Example";
-import { DEFAULT_ASSISTANT_TITLE, DEFAULT_ASSISTANT_DESCRIPTION } from "../constants";
 
 export const useAssistantState = (initialAssistant: Assistant) => {
+    const { t } = useTranslation();
+
     // All state variables
     const [assistantId, setAssistantId] = useState<string | undefined>(initialAssistant.id);
     const [title, setTitle] = useState<string>(initialAssistant.title);
@@ -122,8 +124,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
 
         return {
             id: assistantId,
-            title: title === "" ? DEFAULT_ASSISTANT_TITLE : title,
-            description: description === "" ? DEFAULT_ASSISTANT_DESCRIPTION : description,
+            title: title === "" ? t("components.edit_assistant_dialog.default_assistant_title") : title,
+            description: description === "" ? t("components.edit_assistant_dialog.default_assistant_description") : description,
             system_message: systemPrompt,
             publish: publish,
             owner_ids: ownerIds,
@@ -158,7 +160,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         tools,
         hierarchicalAccess,
         tags,
-        isVisible
+        isVisible,
+        t
     ]);
 
     return {

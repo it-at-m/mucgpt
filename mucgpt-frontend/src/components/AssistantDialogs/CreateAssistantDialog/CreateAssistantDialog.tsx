@@ -173,34 +173,40 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setCurrentStep(2);
     }, [input, updateDescription]);
 
-    const steps: Step[] = [
-        {
-            label: t("components.create_assistant_dialog.step1_label"),
-            completedIcon: <Checkmark24Filled />
-        },
-        {
-            label: t("components.create_assistant_dialog.step2_label"),
-            completedIcon: <Checkmark24Filled />
-        },
-        {
-            label: t("components.edit_assistant_dialog.step_tools"),
-            completedIcon: <Checkmark24Filled />
-        },
-        {
-            label: t("components.edit_assistant_dialog.step_quick_prompts"),
-            completedIcon: <Checkmark24Filled />
-        },
-        {
-            label: t("components.edit_assistant_dialog.step_examples"),
-            completedIcon: <Checkmark24Filled />
-        },
-        {
-            label: t("components.edit_assistant_dialog.step_advanced_settings"),
-            completedIcon: <Checkmark24Filled />
-        }
-    ];
+    const steps: Step[] = useMemo(
+        () => [
+            {
+                label: t("components.create_assistant_dialog.step1_label"),
+                completedIcon: <Checkmark24Filled />
+            },
+            {
+                label: t("components.create_assistant_dialog.step2_label"),
+                completedIcon: <Checkmark24Filled />
+            },
+            {
+                label: t("components.edit_assistant_dialog.step_tools"),
+                completedIcon: <Checkmark24Filled />
+            },
+            {
+                label: t("components.edit_assistant_dialog.step_quick_prompts"),
+                completedIcon: <Checkmark24Filled />
+            },
+            {
+                label: t("components.edit_assistant_dialog.step_examples"),
+                completedIcon: <Checkmark24Filled />
+            },
+            {
+                label: t("components.edit_assistant_dialog.step_advanced_settings"),
+                completedIcon: <Checkmark24Filled />
+            }
+        ],
+        [t]
+    );
 
-    const renderStep1 = () => (
+    const currentStepContent = useMemo(() => {
+        switch (currentStep) {
+            case 1: // Step 1: Describe function
+                return (
         <>
             <DialogContent>
                 <Stepper steps={steps} currentStep={currentStep} />

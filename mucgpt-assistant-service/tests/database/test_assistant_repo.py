@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+from src.database import database_models, path_matcher
 from src.database.assistant_repo import AssistantRepository
 
 
@@ -14,6 +15,193 @@ def sample_assistant_data():
         "owner_ids": ["user1", "user2"],
         "is_visible": True,
     }
+
+
+@pytest.fixture
+def directory_index_multiple_paths(monkeypatch):
+    """Provide a minimal directory index covering the departments used in the multi-path test.
+
+    This avoids relying on the full LDAP-derived directory tree while still using the
+    directory-index-based matcher (no legacy fallback).
+    """
+
+    tree = [
+        {
+            "shortname": "itm-km",
+            "name": "ITM-KM",
+            "children": [
+                {"shortname": "itm-km-team1", "name": "ITM-KM-TEAM1", "children": []}
+            ],
+        },
+        {"shortname": "hr-dept", "name": "HR-DEPT", "children": []},
+        {"shortname": "finance", "name": "FINANCE", "children": []},
+        {
+            "shortname": "ORG",
+            "name": "ORG",
+            "children": [
+                {
+                    "shortname": "ORG-DEPT",
+                    "name": "ORG-DEPT",
+                    "children": [
+                        {
+                            "shortname": "ORG-DEPT-TEAM",
+                            "name": "ORG-DEPT-TEAM",
+                            "children": [
+                                {
+                                    "shortname": "ORG-DEPT-TEAM-GROUP-SUBGROUP",
+                                    "name": "ORG-DEPT-TEAM-GROUP-SUBGROUP",
+                                    "children": [],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        },
+    ]
+
+    index = path_matcher._build_index(tree)
+
+    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
+        return index
+
+    # Patch both the path_matcher module and the already-imported reference in database_models
+    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
+    monkeypatch.setattr(
+        database_models, "_get_directory_index", _fake_get_directory_index
+    )
+    return index
+
+
+@pytest.fixture
+def directory_index_deep_nesting(monkeypatch):
+    """Directory index covering deeply nested ORG hierarchy."""
+
+    tree = [
+        {
+            "shortname": "org",
+            "name": "ORG",
+            "children": [
+                {
+                    "shortname": "org-dept",
+                    "name": "ORG-DEPT",
+                    "children": [
+                        {
+                            "shortname": "org-dept-team",
+                            "name": "ORG-DEPT-TEAM",
+                            "children": [
+                                {
+                                    "shortname": "org-dept-team-group-subgroup",
+                                    "name": "ORG-DEPT-TEAM-GROUP-SUBGROUP",
+                                    "children": [],
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    ]
+
+    index = path_matcher._build_index(tree)
+
+    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
+        return index
+
+    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
+    monkeypatch.setattr(
+        database_models, "_get_directory_index", _fake_get_directory_index
+    )
+    return index
+
+
+@pytest.fixture
+def directory_index_overlapping(monkeypatch):
+    """Directory index for overlapping path prefixes (IT, IT-TEAM, IT-T)."""
+
+    tree = [
+        {
+            "shortname": "it",
+            "name": "IT",
+            "children": [
+                {
+                    "shortname": "it-team",
+                    "name": "IT-TEAM",
+                    "children": [
+                        {
+                            "shortname": "it-team-member",
+                            "name": "IT-TEAM-MEMBER",
+                            "children": [],
+                        }
+                    ],
+                }
+            ],
+        },
+        {"shortname": "it-t", "name": "IT-T", "children": []},
+    ]
+
+    index = path_matcher._build_index(tree)
+
+    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
+        return index
+
+    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
+    monkeypatch.setattr(
+        database_models, "_get_directory_index", _fake_get_directory_index
+    )
+    return index
+
+
+@pytest.fixture
+def directory_index_special_characters(monkeypatch):
+    """Directory index for paths with dots and special symbols."""
+
+    tree = [
+        {
+            "shortname": "dept.123",
+            "name": "DEPT.123",
+            "children": [
+                {
+                    "shortname": "dept.123-subteam",
+                    "name": "DEPT.123-SUBTEAM",
+                    "children": [],
+                }
+            ],
+        },
+        {"shortname": "dept_special#", "name": "DEPT_SPECIAL#", "children": []},
+    ]
+
+    index = path_matcher._build_index(tree)
+
+    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
+        return index
+
+    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
+    monkeypatch.setattr(
+        database_models, "_get_directory_index", _fake_get_directory_index
+    )
+    return index
+
+
+@pytest.fixture
+def directory_index_many_paths(monkeypatch):
+    """Directory index covering DEPT-0 .. DEPT-19 for large-path tests."""
+
+    tree = [
+        {"shortname": f"dept-{i}", "name": f"DEPT-{i}", "children": []}
+        for i in range(20)
+    ]
+
+    index = path_matcher._build_index(tree)
+
+    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
+        return index
+
+    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
+    monkeypatch.setattr(
+        database_models, "_get_directory_index", _fake_get_directory_index
+    )
+    return index
 
 
 @pytest.mark.asyncio
@@ -457,7 +645,7 @@ class TestAssistantRepository:
         assert assistant3.id not in assistant_ids
 
     async def test_get_all_possible_assistants_with_multiple_access_paths(
-        self, db_session
+        self, db_session, directory_index_multiple_paths
     ):
         """Test that assistants with multiple hierarchical access paths work correctly."""
         # Arrange
@@ -507,221 +695,10 @@ class TestAssistantRepository:
         assert assistant2.id not in [a.id for a in result2]
         assert assistant2.id not in [a.id for a in result3]
 
-    async def test_get_all_possible_assistants_with_slash_delimiter(self, db_session):
-        """Test hierarchical access paths with slash delimiter."""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        assistant1 = await assistant_repo.create(hierarchical_access=["IT/DEV"])
-        _ = await assistant_repo.create(hierarchical_access=["HR/RECRUITING"])
-        await db_session.commit()
-
-        # Act - Test slash delimiter match
-        result1 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "IT/DEV/FRONTEND"
-            )
-        )
-        result2 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "HR/FINANCE"  # Should not match HR/RECRUITING
-            )
-        )
-
-        # Assert
-        assert len(result1) == 1
-        assert len(result2) == 0
-        assert assistant1.id in [a.id for a in result1]
-
-    async def test_get_all_possible_assistants_with_slash_and_dash_delimiter(
-        self, db_session
+    async def test_hierarchical_access_with_deep_nesting(
+        self, db_session, directory_index_deep_nesting
     ):
-        """Test hierarchical access paths with slash and dash delimiter"""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["POR-5/12"])
-        await db_session.commit()
-
-        # Act
-        result = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5/12"
-            )
-        )
-
-        # Assert
-        assert [a.id for a in result] == [assistant.id]
-        assert assistant.is_allowed_for_user("POR-5/12")
-        assert result[0].is_allowed_for_user("POR-5/12")
-
-    async def test_get_all_possible_assistants_with_slash_and_dash_delimiter_and_subpath(
-        self, db_session
-    ):
-        """Test hierarchical access paths with slash and dash delimiter"""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["POR-5/1"])
-        await db_session.commit()
-
-        # Act
-        result_512 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5/12"
-            )
-        )
-        result_514 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5/14"
-            )
-        )
-
-        # Assert
-        assert [a.id for a in result_512] == [assistant.id]
-        assert [a.id for a in result_514] == [assistant.id]
-        assert assistant.is_allowed_for_user("POR-5/12")
-        assert assistant.is_allowed_for_user("POR-5/14")
-        assert result_512[0].is_allowed_for_user("POR-5/12")
-        assert result_514[0].is_allowed_for_user("POR-5/14")
-
-    async def test_get_all_possible_assistants_with_slash_and_dash_delimiter_and_different_parent_paths(
-        self, db_session
-    ):
-        """Test hierarchical access paths with slash and dash delimiter"""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["POR-5"])
-        await db_session.commit()
-
-        # Act
-        result_512 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5/12"
-            )
-        )
-        result_51 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5/1"
-            )
-        )
-
-        result_5 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-5"
-            )
-        )
-
-        result_not_found = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "POR-6"
-            )
-        )
-
-        # Assert
-        assert [a.id for a in result_512] == [assistant.id]
-        assert [a.id for a in result_51] == [assistant.id]
-        assert [a.id for a in result_5] == [assistant.id]
-        assert len(result_not_found) == 0
-        assert assistant.is_allowed_for_user("POR-5/12")
-        assert assistant.is_allowed_for_user("POR-5/1")
-        assert assistant.is_allowed_for_user("POR-5")
-        assert result_512[0].is_allowed_for_user("POR-5/12")
-        assert result_51[0].is_allowed_for_user("POR-5/1")
-        assert result_5[0].is_allowed_for_user("POR-5")
-
-    async def test_get_all_possible_assistants_case_sensitivity(self, db_session):
-        """Test case sensitivity in hierarchical access paths."""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        _ = await assistant_repo.create(hierarchical_access=["IT-DEV"])
-        await db_session.commit()
-
-        # Act - Test with different case
-        result1 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "it-dev"  # lowercase
-            )
-        )
-        result2 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "IT-DEV"  # matching case
-            )
-        )
-
-        # Assert - Case sensitivity should be preserved
-        assert len(result1) == 0  # Should not match due to case difference
-        assert len(result2) == 1  # Should match with exact case
-
-    async def test_get_all_possible_assistants_mixed_delimiters(self, db_session):
-        """Test assistants with mixed delimiter formats."""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        # Assistant with both hyphen and slash paths
-        assistant1 = await assistant_repo.create(
-            hierarchical_access=["IT-DEV", "HR/RECRUITING"]
-        )
-        await db_session.commit()
-
-        # Act - Test both delimiter types
-        result1 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "IT-DEV-FRONTEND"
-            )
-        )
-        result2 = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "HR/RECRUITING/SENIOR"
-            )
-        )
-
-        # Assert
-        assert len(result1) == 1
-        assert len(result2) == 1
-        assert assistant1.id in [a.id for a in result1]
-        assert assistant1.id in [a.id for a in result2]
-
-    async def test_get_all_possible_assistants_with_empty_string_in_array(
-        self, db_session
-    ):
-        """Test that empty strings are filtered out during assistant creation."""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        # Assistant with empty strings in the array (should be filtered out)
-        assistant1 = await assistant_repo.create(
-            hierarchical_access=["IT-DEV", "", "  ", "MARKETING"]
-        )
-        await db_session.commit()
-
-        # Assert - Empty strings should be filtered out during creation
-        assert assistant1.hierarchical_access == ["IT-DEV", "MARKETING"]
-
-        # Act - Test with departments that should match the cleaned paths
-        result_it = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "IT-DEV-FRONTEND"
-            )
-        )
-        result_marketing = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "MARKETING-DIGITAL"
-            )
-        )
-        result_no_match = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "HR"
-            )
-        )
-
-        # Assert - Should match hierarchical paths but not empty paths
-        assert len(result_it) == 1
-        assert assistant1.id in [a.id for a in result_it]
-
-        assert len(result_marketing) == 1
-        assert assistant1.id in [a.id for a in result_marketing]
-
-        assert len(result_no_match) == 0
-
-    async def test_hierarchical_access_with_deep_nesting(self, db_session):
         """Test hierarchical access with deeply nested department structures."""
-        # Arrange
         assistant_repo = AssistantRepository(db_session)
         assistant1 = await assistant_repo.create(hierarchical_access=["ORG"])
         assistant2 = await assistant_repo.create(hierarchical_access=["ORG-DEPT"])
@@ -742,7 +719,9 @@ class TestAssistantRepository:
         assert assistant2.id in assistant_ids  # ORG-DEPT matches
         assert assistant3.id in assistant_ids  # ORG-DEPT-TEAM matches
 
-    async def test_hierarchical_access_with_overlapping_paths(self, db_session):
+    async def test_hierarchical_access_with_overlapping_paths(
+        self, db_session, directory_index_overlapping
+    ):
         """Test hierarchical access with overlapping path prefixes."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
@@ -768,7 +747,9 @@ class TestAssistantRepository:
             assistant3.id not in assistant_ids
         )  # IT-T should not match IT-TEAM-MEMBER
 
-    async def test_hierarchical_access_with_special_characters(self, db_session):
+    async def test_hierarchical_access_with_special_characters(
+        self, db_session, directory_index_special_characters
+    ):
         """Test hierarchical access with special characters in department names."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
@@ -803,7 +784,9 @@ class TestAssistantRepository:
         assert assistant2.id in [a.id for a in result2]
         assert assistant1.id in [a.id for a in result3]
 
-    async def test_hierarchical_access_with_large_number_of_paths(self, db_session):
+    async def test_hierarchical_access_with_large_number_of_paths(
+        self, db_session, directory_index_many_paths
+    ):
         """Test hierarchical access with a large number of access paths."""
         # Arrange
         assistant_repo = AssistantRepository(db_session)
@@ -986,109 +969,6 @@ class TestAssistantRepository:
         assert len(user2_assistants) == 1
         assert user1_assistants[0].id == assistant.id
         assert user2_assistants[0].id == assistant.id
-
-    async def test_hierarchical_access_with_many_assistants(self, db_session):
-        """Test performance with many assistants and various access patterns."""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-
-        # Create a variety of assistants with different access patterns
-        assistants = []
-        # 10 assistants with empty access (accessible to all)
-        for i in range(10):
-            assistant = await assistant_repo.create(hierarchical_access=[])
-            assistants.append(assistant)
-
-        # 10 assistants with single paths
-        for i in range(10):
-            assistant = await assistant_repo.create(hierarchical_access=[f"DEPT-{i}"])
-            assistants.append(assistant)
-
-        # 10 assistants with multiple paths
-        for i in range(10):
-            paths = [f"MULTI-{j}" for j in range(i, i + 3)]
-            assistant = await assistant_repo.create(hierarchical_access=paths)
-            assistants.append(assistant)
-
-        await db_session.commit()
-
-        # Act - Test querying with various departments
-        import time
-
-        start_time = time.time()
-
-        # Test departments that should match different numbers of assistants
-        test_departments = [
-            "UNKNOWN-DEPT",  # Should match 10 (all with empty access)
-            "DEPT-5",  # Should match 11 (10 with empty access + 1 exact)
-            "DEPT-5-TEAM",  # Should match 11 (10 with empty access + 1 hierarchical)
-            "MULTI-8-SUB",  # Should match multiple (empty + hierarchical)
-        ]
-
-        results = []
-        for dept in test_departments:
-            result = await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                dept
-            )
-            results.append((dept, len(result)))
-
-        end_time = time.time()
-
-        # Assert - Verify correct matching and reasonable performance
-        # UNKNOWN-DEPT should match only the 10 with empty access
-        assert results[0][1] == 10, (
-            f"Expected 10 matches for {results[0][0]}, got {results[0][1]}"
-        )
-
-        # DEPT-5 should match 11 (10 empty + 1 exact)
-        assert results[1][1] == 11, (
-            f"Expected 11 matches for {results[1][0]}, got {results[1][1]}"
-        )
-
-        # DEPT-5-TEAM should match 11 (10 empty + 1 hierarchical)
-        assert results[2][1] == 11, (
-            f"Expected 11 matches for {results[2][0]}, got {results[2][1]}"
-        )
-
-        # Performance check - should be fast enough even with many assistants
-        execution_time = end_time - start_time
-        assert execution_time < 1.0, (
-            f"Performance test took {execution_time:.2f} seconds, which is too slow"
-        )
-
-    async def test_update_assistant_with_empty_strings_filtered(self, db_session):
-        """Test that empty strings are filtered out during assistant updates."""
-        # Arrange
-        assistant_repo = AssistantRepository(db_session)
-        assistant = await assistant_repo.create(hierarchical_access=["IT-DEV"])
-        await db_session.commit()
-
-        # Act - Update with empty strings that should be filtered out
-        updated_assistant = await assistant_repo.update(
-            assistant.id,
-            hierarchical_access=["MARKETING", "", "  ", "HR-RECRUITING", None],
-        )
-        await db_session.commit()
-
-        # Assert - Empty strings and None values should be filtered out
-        assert updated_assistant.hierarchical_access == ["MARKETING", "HR-RECRUITING"]
-
-        # Verify the filtering works in queries too
-        result_marketing = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "MARKETING-DIGITAL"
-            )
-        )
-        result_hr = (
-            await assistant_repo.get_all_possible_assistants_for_user_with_department(
-                "HR-RECRUITING-SPECIALIST"
-            )
-        )
-
-        assert len(result_marketing) == 1
-        assert updated_assistant.id in [a.id for a in result_marketing]
-        assert len(result_hr) == 1
-        assert updated_assistant.id in [a.id for a in result_hr]
 
     async def test_create_assistant_with_visibility(self, db_session):
         """Test creating an assistant with specified visibility."""

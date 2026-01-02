@@ -24,9 +24,7 @@ Implementation Details:
 
 from __future__ import annotations
 
-import json
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 from core import directory_cache
@@ -104,33 +102,12 @@ _INDEX_CACHE: dict[str, Any] = {"index": None, "expires_at": None}
 _INDEX_TTL = timedelta(minutes=10)
 
 
-def _load_local_directory_tree() -> list[dict[str, Any]] | None:
-    """Fallback: load directory tree from bundled JSON if available."""
-
-    repo_root = Path(__file__).resolve().parents[2]
-    candidate = repo_root / "department_directory.json"
-    if not candidate.exists():
-        return None
-
-    try:
-        with candidate.open("r", encoding="utf-8") as f:
-            payload = json.load(f)
-        roots = payload.get("roots") if isinstance(payload, Mapping) else None
-        if isinstance(roots, list):
-            return roots  # Already simplified structure (shortname, name, children)
-    except Exception:
-        logger.warning(
-            "Failed to load bundled department_directory.json", exc_info=True
-        )
-    return None
-
-
 async def _get_directory_index(
     directory_tree: list[dict[str, Any]] | None = None,
     *,
     prebuilt_index: _DirectoryIndex | None = None,
 ) -> _DirectoryIndex | None:
-    """Return cached directory index, refreshing from LDAP/Redis or local file."""
+    """Return cached directory index, refreshing from LDAP/Redis."""
 
     if prebuilt_index is not None:
         return prebuilt_index
@@ -148,12 +125,7 @@ async def _get_directory_index(
     try:
         tree = await directory_cache.get_simplified_directory_tree()
     except Exception:
-        logger.warning(
-            "Unable to fetch directory tree from cache; using fallback", exc_info=True
-        )
-
-    if tree is None:
-        tree = _load_local_directory_tree()
+        logger.warning("Unable to fetch directory tree from cache", exc_info=True)
 
     if tree is None:
         return None

@@ -3,7 +3,7 @@
 import asyncio
 
 import pytest
-from src.database import database_models, path_matcher
+from src.database import path_matcher
 from src.database.assistant_repo import AssistantRepository
 
 
@@ -62,13 +62,15 @@ def directory_index_multiple_paths(monkeypatch):
 
     index = path_matcher._build_index(tree)
 
-    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
-        return index
+    async def _fake_get_tree():
+        return tree
 
-    # Patch both the path_matcher module and the already-imported reference in database_models
-    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
     monkeypatch.setattr(
-        database_models, "_get_directory_index", _fake_get_directory_index
+        path_matcher.directory_cache, "get_simplified_directory_tree", _fake_get_tree
+    )
+    # Clear the cache to ensure the new tree is used
+    monkeypatch.setattr(
+        path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
     )
     return index
 
@@ -105,12 +107,14 @@ def directory_index_deep_nesting(monkeypatch):
 
     index = path_matcher._build_index(tree)
 
-    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
-        return index
+    async def _fake_get_tree():
+        return tree
 
-    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
     monkeypatch.setattr(
-        database_models, "_get_directory_index", _fake_get_directory_index
+        path_matcher.directory_cache, "get_simplified_directory_tree", _fake_get_tree
+    )
+    monkeypatch.setattr(
+        path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
     )
     return index
 
@@ -142,12 +146,14 @@ def directory_index_overlapping(monkeypatch):
 
     index = path_matcher._build_index(tree)
 
-    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
-        return index
+    async def _fake_get_tree():
+        return tree
 
-    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
     monkeypatch.setattr(
-        database_models, "_get_directory_index", _fake_get_directory_index
+        path_matcher.directory_cache, "get_simplified_directory_tree", _fake_get_tree
+    )
+    monkeypatch.setattr(
+        path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
     )
     return index
 
@@ -173,12 +179,14 @@ def directory_index_special_characters(monkeypatch):
 
     index = path_matcher._build_index(tree)
 
-    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
-        return index
+    async def _fake_get_tree():
+        return tree
 
-    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
     monkeypatch.setattr(
-        database_models, "_get_directory_index", _fake_get_directory_index
+        path_matcher.directory_cache, "get_simplified_directory_tree", _fake_get_tree
+    )
+    monkeypatch.setattr(
+        path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
     )
     return index
 
@@ -194,14 +202,70 @@ def directory_index_many_paths(monkeypatch):
 
     index = path_matcher._build_index(tree)
 
-    async def _fake_get_directory_index(directory_tree=None, *, prebuilt_index=None):
-        return index
+    async def _fake_get_tree():
+        return tree
 
-    monkeypatch.setattr(path_matcher, "_get_directory_index", _fake_get_directory_index)
     monkeypatch.setattr(
-        database_models, "_get_directory_index", _fake_get_directory_index
+        path_matcher.directory_cache, "get_simplified_directory_tree", _fake_get_tree
+    )
+    monkeypatch.setattr(
+        path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
     )
     return index
+
+
+@pytest.fixture(autouse=True)
+def default_directory_tree(monkeypatch):
+    """Default directory tree for all tests to prevent Redis calls."""
+    tree = [
+        {
+            "shortname": "itm",
+            "name": "ITM",
+            "children": [
+                {
+                    "shortname": "itm-km",
+                    "name": "ITM-KM",
+                    "children": [
+                        {
+                            "shortname": "itm-km-di",
+                            "name": "ITM-KM-DI",
+                            "children": [],
+                        },
+                        {
+                            "shortname": "itm-km-team1",
+                            "name": "ITM-KM-TEAM1",
+                            "children": [],
+                        },
+                    ],
+                },
+                {
+                    "shortname": "itm-ab",
+                    "name": "ITM-AB",
+                    "children": [
+                        {"shortname": "itm-ab-di", "name": "ITM-AB-DI", "children": []}
+                    ],
+                },
+                {"shortname": "itm-test", "name": "ITM-TEST", "children": []},
+                {"shortname": "itm-test1", "name": "ITM-TEST1", "children": []},
+                {"shortname": "itm-test2", "name": "ITM-TEST2", "children": []},
+                {"shortname": "itm-test3", "name": "ITM-TEST3", "children": []},
+                {"shortname": "itm-temp", "name": "ITM-TEMP", "children": []},
+                {"shortname": "itm-new", "name": "ITM-NEW", "children": []},
+                {"shortname": "itm-old", "name": "ITM-OLD", "children": []},
+            ],
+        }
+    ]
+
+    async def _fake_get_tree():
+        return tree
+
+    monkeypatch.setattr(
+        path_matcher.directory_cache, "get_simplified_directory_tree", _fake_get_tree
+    )
+    monkeypatch.setattr(
+        path_matcher, "_INDEX_CACHE", {"index": None, "expires_at": None}
+    )
+    return tree
 
 
 @pytest.mark.asyncio

@@ -5,7 +5,7 @@ import { Button, Text, Badge, Divider } from "@fluentui/react-components";
 import { Checkmark24Filled, Dismiss24Regular, Info16Regular, Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import styles from "./PublishAssistantDialog.module.css";
 import { Assistant } from "../../api";
-import DepartmentDropdown from "../DepartmentDropdown/DepartmentDropdown";
+import DepartmentTreeDropdown from "../DepartmentTreeDropdown/DepartmentTreeDropdown";
 import { useCallback, useState, useEffect } from "react";
 import { createCommunityAssistantApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
@@ -15,10 +15,11 @@ interface Props {
     setOpen: (open: boolean) => void;
     assistant: Assistant;
     invisibleChecked: boolean;
+    setInvisibleChecked: (invisible: boolean) => void;
     onDeleteAssistant: () => void;
 }
 
-export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChecked, onDeleteAssistant }: Props) => {
+export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChecked, setInvisibleChecked, onDeleteAssistant }: Props) => {
     const { t } = useTranslation();
     const [publishedAssistantId, setPublishedAssistantId] = useState<string | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
@@ -138,7 +139,11 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                             <div className={styles.visibilityOptions}>
                                 <RadioGroup
                                     value={visibilityMode}
-                                    onChange={(_, data) => setVisibilityMode(data.value as "public" | "departments" | "private")}
+                                    onChange={(_, data) => {
+                                        const newMode = data.value as "public" | "departments" | "private";
+                                        setVisibilityMode(newMode);
+                                        setInvisibleChecked(newMode === "private");
+                                    }}
                                     layout="vertical"
                                 >
                                     <Field>
@@ -180,7 +185,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                                                 {t("components.edit_assistant_dialog.departments")}
                                             </InfoLabel>
                                             <div className={styles.departmentDropdown}>
-                                                <DepartmentDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
+                                                <DepartmentTreeDropdown publishDepartments={publishDepartments} setPublishDepartments={setPublishDepartments} />
                                             </div>
 
                                             {!departmentsSelected && (

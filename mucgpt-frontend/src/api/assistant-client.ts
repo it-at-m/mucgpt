@@ -1,5 +1,5 @@
 import { getConfig, handleApiRequest, postConfig, deleteConfig } from "./fetch-utils";
-import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Assistant, CommunityAssistant } from "./models";
+import { AssistantCreateInput, AssistantCreateResponse, AssistantResponse, AssistantUpdateInput, Assistant, CommunityAssistant, DirectoryNode } from "./models";
 
 /**
  * Get all assistants the user is subscribed to (ID and name only).
@@ -45,4 +45,13 @@ export async function deleteCommunityAssistantApi(id: string): Promise<{ message
 
 export async function getCommunityAssistantVersionApi(id: string, version: string): Promise<Assistant> {
     return handleApiRequest(() => fetch(`/api/assistant/${id}/version/${version}`, getConfig()), "Failed to get community assistant version");
+}
+
+export async function getDirectoryChildren(path: string[] = []): Promise<DirectoryNode[]> {
+    let url = "/api/directory/children";
+    if (path.length > 0) {
+        const jsonPath = JSON.stringify(path);
+        url += `?path=${encodeURIComponent(jsonPath)}`;
+    }
+    return handleApiRequest(() => fetch(url, getConfig()), "Failed to get directory children");
 }

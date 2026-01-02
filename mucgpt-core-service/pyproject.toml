@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "0.4.0"
+version = "0.5.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.10"
@@ -17,7 +17,7 @@ maintainers = [
 dependencies = [
     "fastapi[standard]==0.118.0",
     "langchain==0.3.27",
-    "langchain-core==0.3.80",
+    "langchain-core==0.3.81",
     "langchain_community==0.3.31",
     "langchain-openai==0.3.35",
     "openai==1.109.1",

@@ -149,7 +149,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Suche Abteilung...",
                             no_matches: "Keine Treffer",
-                            own_department_label: "(Ihre Abteilung)"
+                            own_department_label: "(Ihre Abteilung)",
+                            load_error: "Konnte Verzeichnis nicht laden",
+                            collapse: "Einklappen",
+                            expand: "Ausklappen",
+                            me: "Ich",
+                            loading: "Lädt...",
+                            loading_short: "...",
+                            clear_all: "Alle entfernen",
+                            remove_department: "Abteilung {{name}} entfernen"
                         },
                         terms_of_use: {
                             tooltip: "Nutzungsbedingungen anzeigen",
@@ -653,7 +661,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Search department...",
                             no_matches: "No matches",
-                            own_department_label: "(Your department)"
+                            own_department_label: "(Your department)",
+                            load_error: "Could not load directory",
+                            collapse: "Collapse",
+                            expand: "Expand",
+                            me: "Me",
+                            loading: "Loading...",
+                            loading_short: "...",
+                            clear_all: "Clear all",
+                            remove_department: "Remove department {{name}}"
                         },
                         terms_of_use: {
                             tooltip: "Show terms of use",
@@ -1151,7 +1167,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Suach Abteilung...",
                             no_matches: "Koin Treffer",
-                            own_department_label: "(Dei Abteilung)"
+                            own_department_label: "(Dei Abteilung)",
+                            load_error: "Konnte Verzeichnis ned lodn",
+                            collapse: "Zammklappn",
+                            expand: "Aufklappn",
+                            me: "I",
+                            loading: "Lodt...",
+                            loading_short: "...",
+                            clear_all: "Ois wecka",
+                            remove_department: "Abteilung {{name}} wecka"
                         },
                         terms_of_use: {
                             tooltip: "Nutzungsbedingunga zeig'n",
@@ -1653,7 +1677,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Rechercher un département...",
                             no_matches: "Aucune correspondance",
-                            own_department_label: "(Votre département)"
+                            own_department_label: "(Votre département)",
+                            load_error: "Impossible de charger le répertoire",
+                            collapse: "Réduire",
+                            expand: "Développer",
+                            me: "Moi",
+                            loading: "Chargement...",
+                            loading_short: "...",
+                            clear_all: "Tout effacer",
+                            remove_department: "Supprimer le département {{name}}"
                         },
                         terms_of_use: {
                             tooltip: "Afficher les conditions d'utilisation",
@@ -2158,7 +2190,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Пошук відділу...",
                             no_matches: "Немає збігів",
-                            own_department_label: "(Ваш відділ)"
+                            own_department_label: "(Ваш відділ)",
+                            load_error: "Не вдалося завантажити каталог",
+                            collapse: "Згорнути",
+                            expand: "Розгорнути",
+                            me: "Я",
+                            loading: "Завантаження...",
+                            loading_short: "...",
+                            clear_all: "Очистити все",
+                            remove_department: "Видалити відділ {{name}}"
                         },
                         terms_of_use: {
                             tooltip: "Показати умови використання",

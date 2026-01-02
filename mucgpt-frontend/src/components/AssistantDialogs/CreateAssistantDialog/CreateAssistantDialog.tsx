@@ -33,6 +33,8 @@ interface Props {
     setShowDialogInput: (showDialogInput: boolean) => void;
 }
 
+const storageService = new AssistantStorageService(ASSISTANT_STORE);
+
 export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(1);
@@ -43,8 +45,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     const { showError, showSuccess } = useGlobalToastContext();
     const { tools: availableTools } = useToolsContext();
     const { t } = useTranslation();
-
-    const storageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
     // Use the custom hook for state management
     const {
@@ -126,7 +126,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, storageService, showError, showSuccess, t]);
+    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, showError, showSuccess, t]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -207,211 +207,236 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         switch (currentStep) {
             case 1: // Step 1: Describe function
                 return (
-        <>
-            <DialogContent>
-                <Stepper steps={steps} currentStep={currentStep} />
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
 
-                <p className={sharedStyles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
+                            <p className={sharedStyles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
 
-                <Field size="large" className={sharedStyles.fieldSection}>
-                    <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
-                    <Textarea
-                        placeholder={t("components.create_assistant_dialog.description_placeholder")}
-                        size="large"
-                        rows={3}
-                        resize="vertical"
-                        value={input}
-                        onChange={onInputChanged}
-                        disabled={loading}
-                    />
-                </Field>
+                            <Field size="large" className={sharedStyles.fieldSection}>
+                                <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>
+                                <Textarea
+                                    placeholder={t("components.create_assistant_dialog.description_placeholder")}
+                                    size="large"
+                                    rows={3}
+                                    resize="vertical"
+                                    value={input}
+                                    onChange={onInputChanged}
+                                    disabled={loading}
+                                />
+                            </Field>
 
-                <div>
-                    <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.or_choose_template")}</label>
-                    <div className={styles.chipContainer}>
-                        <Button
-                            className={`${styles.templateChip} ${selectedTemplate === "example_one" ? styles.selected : ""}`}
-                            onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_one"), "example_one")}
-                            disabled={loading}
-                        >
-                            {t("components.create_assistant_dialog.example_one")}
-                        </Button>
-                        <Button
-                            className={`${styles.templateChip} ${selectedTemplate === "example_two" ? styles.selected : ""}`}
-                            onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_two"), "example_two")}
-                            disabled={loading}
-                        >
-                            {t("components.create_assistant_dialog.example_two")}
-                        </Button>
-                        <Button
-                            className={`${styles.templateChip} ${selectedTemplate === "example_three" ? styles.selected : ""}`}
-                            onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_three"), "example_three")}
-                            disabled={loading}
-                        >
-                            {t("components.create_assistant_dialog.example_three")}
-                        </Button>
-                    </div>
-                </div>
+                            <div>
+                                <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.or_choose_template")}</label>
+                                <div className={styles.chipContainer}>
+                                    <Button
+                                        className={`${styles.templateChip} ${selectedTemplate === "example_one" ? styles.selected : ""}`}
+                                        onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_one"), "example_one")}
+                                        disabled={loading}
+                                    >
+                                        {t("components.create_assistant_dialog.example_one")}
+                                    </Button>
+                                    <Button
+                                        className={`${styles.templateChip} ${selectedTemplate === "example_two" ? styles.selected : ""}`}
+                                        onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_two"), "example_two")}
+                                        disabled={loading}
+                                    >
+                                        {t("components.create_assistant_dialog.example_two")}
+                                    </Button>
+                                    <Button
+                                        className={`${styles.templateChip} ${selectedTemplate === "example_three" ? styles.selected : ""}`}
+                                        onClick={() => handleTemplateSelect(t("components.create_assistant_dialog.create_example_three"), "example_three")}
+                                        disabled={loading}
+                                    >
+                                        {t("components.create_assistant_dialog.example_three")}
+                                    </Button>
+                                </div>
+                            </div>
 
-                <p hidden={!loading}>{t("components.create_assistant_dialog.generating_prompt")}</p>
-            </DialogContent>
-            <DialogActions className={sharedStyles.dialogActions}>
-                <Button disabled={loading} size="medium" onClick={handleDefineMyself} className={sharedStyles.defineButton}>
-                    {t("components.create_assistant_dialog.define_myself")}
-                </Button>
-                <Tooltip content={input === "" ? t("components.create_assistant_dialog.description_required") : ""} relationship="label" positioning="above">
-                    <Button disabled={loading || input === ""} size="medium" onClick={handleContinueWithMucGPT} className={sharedStyles.continueButton}>
-                        {t("components.create_assistant_dialog.continue_with_mucgpt")}
-                    </Button>
-                </Tooltip>
-            </DialogActions>
-        </>
-    );
-
-    const renderStep2 = () => (
-        <>
-            <DialogContent>
-                <Stepper steps={steps} currentStep={currentStep} />
-                <CombinedDetailsStep
-                    title={title}
-                    description={description}
-                    systemPrompt={systemPrompt}
-                    isOwner={true}
-                    onTitleChange={updateTitle}
-                    onDescriptionChange={updateDescription}
-                    onSystemPromptChange={updateSystemPrompt}
-                />
-            </DialogContent>
-            <DialogActions className={sharedStyles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(1)} className={sharedStyles.backButton}>
-                    {t("common.back")}
-                </Button>
-                <Button
-                    size="medium"
-                    onClick={() => setCurrentStep(3)}
-                    className={sharedStyles.continueButton}
-                    disabled={title.trim() === "" || systemPrompt.trim() === ""}
-                >
-                    {t("common.next")}
-                </Button>
-            </DialogActions>
-        </>
-    );
-
-    const renderStep3 = () => (
-        <>
-            <DialogContent>
-                <Stepper steps={steps} currentStep={currentStep} />
-                <div className={sharedStyles.scrollableDialogContent}>
-                    <ToolsStep selectedTools={selectedTools} availableTools={availableTools} onToolsChange={updateTools} />
-                </div>
-            </DialogContent>
-            <DialogActions className={sharedStyles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(2)} className={sharedStyles.backButton}>
-                    {t("common.back")}
-                </Button>
-                <Button size="medium" onClick={() => setCurrentStep(4)} className={sharedStyles.continueButton}>
-                    {t("common.next")}
-                </Button>
-            </DialogActions>
-        </>
-    );
-
-    const renderStep4 = () => (
-        <>
-            <DialogContent>
-                <Stepper steps={steps} currentStep={currentStep} />
-                <div className={sharedStyles.scrollableDialogContent}>
-                    <QuickPromptsStep quickPrompts={quickPrompts} isOwner={true} onQuickPromptsChange={setQuickPrompts} />
-                </div>
-            </DialogContent>
-            <DialogActions className={sharedStyles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(3)} className={sharedStyles.backButton}>
-                    {t("common.back")}
-                </Button>
-                <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.continueButton}>
-                    {t("common.next")}
-                </Button>
-            </DialogActions>
-        </>
-    );
-
-    const renderStep5 = () => (
-        <>
-            <DialogContent>
-                <Stepper steps={steps} currentStep={currentStep} />
-                <div className={sharedStyles.scrollableDialogContent}>
-                    <ExamplesStep examples={examples} isOwner={true} onExamplesChange={setExamples} />
-                </div>
-            </DialogContent>
-            <DialogActions className={sharedStyles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(4)} className={sharedStyles.backButton}>
-                    {t("common.back")}
-                </Button>
-                <Button size="medium" onClick={() => setCurrentStep(6)} className={sharedStyles.continueButton}>
-                    {t("common.next")}
-                </Button>
-            </DialogActions>
-        </>
-    );
-
-    const renderStep6 = () => (
-        <>
-            <DialogContent>
-                <Stepper steps={steps} currentStep={currentStep} />
-                <div className={sharedStyles.scrollableDialogContent}>
-                    <AdvancedSettingsStep
-                        temperature={temperature}
-                        maxOutputTokens={maxOutputTokens}
-                        isOwner={true}
-                        onTemperatureChange={updateTemperature}
-                        onMaxTokensChange={updateMaxTokens}
-                    />
-                </div>
-            </DialogContent>
-            <DialogActions className={sharedStyles.dialogActions}>
-                <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.backButton}>
-                    {t("common.back")}
-                </Button>
-                <Button
-                    size="medium"
-                    onClick={() => {
-                        if (hasChanges) {
-                            setCloseDialogOpen(true);
-                        } else {
-                            onCancelButtonClicked();
-                        }
-                    }}
-                    className={sharedStyles.cancelButton}
-                >
-                    {t("common.cancel")}
-                </Button>
-                <Button size="medium" onClick={onPromptButtonClicked} className={sharedStyles.createButton}>
-                    {t("common.create")}
-                </Button>
-            </DialogActions>
-        </>
-    );
-
-    const getCurrentStepContent = () => {
-        switch (currentStep) {
-            case 1: // Step 1: Describe function
-                return renderStep1();
+                            <p hidden={!loading}>{t("components.create_assistant_dialog.generating_prompt")}</p>
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button disabled={loading} size="medium" onClick={handleDefineMyself} className={sharedStyles.defineButton}>
+                                {t("components.create_assistant_dialog.define_myself")}
+                            </Button>
+                            <Tooltip
+                                content={input === "" ? t("components.create_assistant_dialog.description_required") : ""}
+                                relationship="label"
+                                positioning="above"
+                            >
+                                <Button
+                                    disabled={loading || input === ""}
+                                    size="medium"
+                                    onClick={handleContinueWithMucGPT}
+                                    className={sharedStyles.continueButton}
+                                >
+                                    {t("components.create_assistant_dialog.continue_with_mucgpt")}
+                                </Button>
+                            </Tooltip>
+                        </DialogActions>
+                    </>
+                );
             case 2: // Step 2: Create assistant (Title, Description, System Prompt)
-                return renderStep2();
+                return (
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
+                            <CombinedDetailsStep
+                                title={title}
+                                description={description}
+                                systemPrompt={systemPrompt}
+                                isOwner={true}
+                                onTitleChange={updateTitle}
+                                onDescriptionChange={updateDescription}
+                                onSystemPromptChange={updateSystemPrompt}
+                            />
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button size="medium" onClick={() => setCurrentStep(1)} className={sharedStyles.backButton}>
+                                {t("common.back")}
+                            </Button>
+                            <Button
+                                size="medium"
+                                onClick={() => setCurrentStep(3)}
+                                className={sharedStyles.continueButton}
+                                disabled={title.trim() === "" || systemPrompt.trim() === ""}
+                            >
+                                {t("common.next")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                );
             case 3: // Step 3: Tools
-                return renderStep3();
+                return (
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
+                            <div className={sharedStyles.scrollableDialogContent}>
+                                <ToolsStep selectedTools={selectedTools} availableTools={availableTools} onToolsChange={updateTools} />
+                            </div>
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button size="medium" onClick={() => setCurrentStep(2)} className={sharedStyles.backButton}>
+                                {t("common.back")}
+                            </Button>
+                            <Button size="medium" onClick={() => setCurrentStep(4)} className={sharedStyles.continueButton}>
+                                {t("common.next")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                );
             case 4: // Step 4: Quick Prompts
-                return renderStep4();
+                return (
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
+                            <div className={sharedStyles.scrollableDialogContent}>
+                                <QuickPromptsStep quickPrompts={quickPrompts} isOwner={true} onQuickPromptsChange={setQuickPrompts} />
+                            </div>
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button size="medium" onClick={() => setCurrentStep(3)} className={sharedStyles.backButton}>
+                                {t("common.back")}
+                            </Button>
+                            <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.continueButton}>
+                                {t("common.next")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                );
             case 5: // Step 5: Examples
-                return renderStep5();
+                return (
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
+                            <div className={sharedStyles.scrollableDialogContent}>
+                                <ExamplesStep examples={examples} isOwner={true} onExamplesChange={setExamples} />
+                            </div>
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button size="medium" onClick={() => setCurrentStep(4)} className={sharedStyles.backButton}>
+                                {t("common.back")}
+                            </Button>
+                            <Button size="medium" onClick={() => setCurrentStep(6)} className={sharedStyles.continueButton}>
+                                {t("common.next")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                );
             case 6: // Step 6: Advanced Settings
-                return renderStep6();
+                return (
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
+                            <div className={sharedStyles.scrollableDialogContent}>
+                                <AdvancedSettingsStep
+                                    temperature={temperature}
+                                    maxOutputTokens={maxOutputTokens}
+                                    isOwner={true}
+                                    onTemperatureChange={updateTemperature}
+                                    onMaxTokensChange={updateMaxTokens}
+                                />
+                            </div>
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.backButton}>
+                                {t("common.back")}
+                            </Button>
+                            <Button
+                                size="medium"
+                                onClick={() => {
+                                    if (hasChanges) {
+                                        setCloseDialogOpen(true);
+                                    } else {
+                                        onCancelButtonClicked();
+                                    }
+                                }}
+                                className={sharedStyles.cancelButton}
+                            >
+                                {t("common.cancel")}
+                            </Button>
+                            <Button size="medium" onClick={onPromptButtonClicked} className={sharedStyles.createButton}>
+                                {t("common.create")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                );
             default:
                 console.error(`Invalid step: ${currentStep}. This should not happen.`);
-                return renderStep1();
+                return null;
         }
-    };
+    }, [
+        currentStep,
+        steps,
+        t,
+        input,
+        loading,
+        selectedTemplate,
+        handleTemplateSelect,
+        handleDefineMyself,
+        handleContinueWithMucGPT,
+        onInputChanged,
+        title,
+        description,
+        systemPrompt,
+        updateTitle,
+        updateDescription,
+        updateSystemPrompt,
+        selectedTools,
+        availableTools,
+        updateTools,
+        quickPrompts,
+        setQuickPrompts,
+        examples,
+        setExamples,
+        temperature,
+        maxOutputTokens,
+        updateTemperature,
+        updateMaxTokens,
+        hasChanges,
+        onCancelButtonClicked,
+        onPromptButtonClicked
+    ]);
 
     const handleConfirmClose = useCallback(() => {
         onCancelButtonClicked();
@@ -450,7 +475,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             icon={<Dismiss24Regular />}
                         />
                     </div>
-                    <DialogBody className={sharedStyles.dialogContent}>{getCurrentStepContent()}</DialogBody>
+                    <DialogBody className={sharedStyles.dialogContent}>{currentStepContent}</DialogBody>
                 </DialogSurface>
             </Dialog>
             <CloseConfirmationDialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen} onConfirmClose={handleConfirmClose} />

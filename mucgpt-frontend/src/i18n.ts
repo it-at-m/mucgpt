@@ -103,7 +103,8 @@ i18n
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
                             configuration_error: "Konfigurationsfehler",
                             unauthorized_title: "Zugriff verweigert",
-                            unauthorized_message: "Hallo {{name}}, Sie haben keine Berechtigung, auf diese Anwendung zuzugreifen."
+                            unauthorized_message: "Hallo {{name}}, Sie haben keine Berechtigung, auf diese Anwendung zuzugreifen.",
+                            unauthorized_link_text: "Zugriff beantragen "
                         }
                     },
                     components: {
@@ -607,7 +608,8 @@ i18n
                             failed_to_load_config: "Failed to load configuration.",
                             configuration_error: "Configuration error",
                             unauthorized_title: "Access Denied",
-                            unauthorized_message: "Hello {{name}}, you do not have permission to access this application."
+                            unauthorized_message: "Hello {{name}}, you do not have permission to access this application.",
+                            unauthorized_link_text: "Get permission"
                         }
                     },
                     components: {
@@ -1097,7 +1099,10 @@ i18n
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
-                            configuration_error: "Konfigurationsfehler"
+                            configuration_error: "Konfigurationsfehler",
+                            unauthorized_title: "Zugriff verweigert",
+                            unauthorized_message: "Servus {{name}}, du host koa Berechtigung, dass du auf desah Applikation zugreifen kannst.",
+                            unauthorized_link_text: "Berechtigung holn"
                         }
                     },
                     version: {
@@ -1603,7 +1608,10 @@ i18n
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
-                            configuration_error: "Erreur de configuration"
+                            configuration_error: "Erreur de configuration",
+                            unauthorized_title: "Accès refusé",
+                            unauthorized_message: "Bonjour {{name}}, vous n'avez pas la permission d'accéder à cette application.",
+                            unauthorized_link_text: "Obtenir la permission"
                         }
                     },
                     components: {
@@ -2106,7 +2114,10 @@ i18n
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
-                            configuration_error: "Помилка конфігурації"
+                            configuration_error: "Помилка конфігурації",
+                            unauthorized_title: "Доступ заборонено",
+                            unauthorized_message: "Привіт, {{name}}, у вас немає дозволу на доступ до цього додатку.",
+                            unauthorized_link_text: "Отримати дозвіл"
                         }
                     },
                     components: {

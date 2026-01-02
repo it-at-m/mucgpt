@@ -4,7 +4,11 @@ import styles from "./Unauthorized.module.css";
 import { UserContext } from "./layout/UserContextProvider";
 import { Spinner } from "@fluentui/react-components";
 
-const Unauthorized = () => {
+interface UnauthorizedProps {
+    redirectUrl?: string;
+}
+
+const Unauthorized = ({ redirectUrl }: UnauthorizedProps) => {
     const { t } = useTranslation();
     const { user, isLoading } = useContext(UserContext);
 
@@ -24,6 +28,11 @@ const Unauthorized = () => {
             <p className={styles.message}>
                 {t("common.errors.unauthorized_message", "Sie haben keine Berechtigung, auf diese Anwendung zuzugreifen.", { name: userName })}
             </p>
+            {redirectUrl && (
+                <a href={redirectUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                    {t("common.errors.unauthorized_link_text", "Zugriff beantragen")}
+                </a>
+            )}
         </div>
     );
 };

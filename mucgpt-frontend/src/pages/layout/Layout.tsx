@@ -55,6 +55,7 @@ export const Layout = () => {
     const [, setModels] = useState(config.models);
     const [isLoadingConfig, setIsLoadingConfig] = useState<boolean>(true);
     const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
+    const [unauthorizedRedirectUrl, setUnauthorizedRedirectUrl] = useState<string | undefined>(undefined);
 
     // Mobile menu state
     const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -112,6 +113,7 @@ export const Layout = () => {
             .catch(error => {
                 if (error instanceof ApiError && error.status === 401) {
                     setIsUnauthorized(true);
+                    setUnauthorizedRedirectUrl(error.redirectUrl);
                     setIsLoadingConfig(false);
                     return;
                 }
@@ -167,7 +169,7 @@ export const Layout = () => {
                             <Spinner size="large" label={t("common.loading", "Lade Konfiguration...")} />
                         </div>
                     ) : isUnauthorized ? (
-                        <Unauthorized />
+                        <Unauthorized redirectUrl={unauthorizedRedirectUrl} />
                     ) : (
                         <ToolsProvider>
                             <div className={styles.layout}>

@@ -3,9 +3,11 @@
  */
 export class ApiError extends Error {
     status: number;
-    constructor(message: string, status: number) {
+    redirectUrl?: string;
+    constructor(message: string, status: number, redirectUrl?: string) {
         super(message);
         this.status = status;
+        this.redirectUrl = redirectUrl;
         this.name = "ApiError";
     }
 }
@@ -157,7 +159,19 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new ApiError(errorData.message || `${defaultErrorMessage}: ${response.statusText}`, response.status);
+            let message = errorData.message || `${defaultErrorMessage}: ${response.statusText}`;
+            let redirectUrl = undefined;
+
+            if (errorData.detail) {
+                if (typeof errorData.detail === "string") {
+                    message = errorData.detail;
+                } else if (typeof errorData.detail === "object") {
+                    message = errorData.detail.message || message;
+                    redirectUrl = errorData.detail.redirect_url;
+                }
+            }
+
+            throw new ApiError(message, response.status, redirectUrl);
         }
 
         const parsedResponse = await handleResponse(response);

@@ -3,9 +3,6 @@ from contextlib import asynccontextmanager
 
 from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from fastapi import FastAPI, Request
-from fastapi.responses import (
-    RedirectResponse,
-)
 
 from api.routers import (
     chat_router,
@@ -13,7 +10,6 @@ from api.routers import (
     tools_router,
 )
 from config.settings import get_settings
-from core.auth_models import AuthError
 from core.logtools import getLogger
 from init_app import destroy_app, warmup_app
 
@@ -21,6 +17,7 @@ logger = getLogger()
 
 # Initialize the application's services and settings.
 settings = get_settings()
+
 
 # setup lifespan hooks
 @asynccontextmanager
@@ -60,18 +57,6 @@ api_app.add_middleware(CorrelationIdMiddleware)
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
-
-
-@api_app.exception_handler(AuthError)
-async def handleAuthError(request, exc: AuthError):
-    """
-    Exception handler for authentication errors.
-    Redirects the user to the unauthorized user redirect URL.
-    """
-    # return error.error, error.status_code
-    return RedirectResponse(
-        url=settings.UNAUTHORIZED_USER_REDIRECT_URL, status_code=302
-    )
 
 
 @api_app.middleware("http")

@@ -3,14 +3,14 @@ import json
 
 from fastapi import Depends, Header, HTTPException
 
-from config.settings import SSOSettings, get_sso_settings
-from core.auth_models import AuthenticationResult, AuthError
+from config.settings import Settings, SSOSettings, get_settings, get_sso_settings
+from core.auth_models import AuthenticationResult, AuthError, AuthErrorResponse
 from core.logtools import getLogger
 
 logger = getLogger("mucgpt-core")
 
 
-ACCESS_DENIED_MESSAGE = "Sie haben noch keinen Zugang zu MUCGPT freigeschalten.  Wie das geht, erfahren sie in im folgendem WILMA Artikel: https://wilma.muenchen.de/pages/it-steuerung-management/apps/wiki/kuenstliche-intelligenz/list/view/91f43afa-3315-478f-a9a4-7f50ae2a32f2."
+ACCESS_DENIED_MESSAGE = "Sie haben noch keinen Zugang zu MUCGPT freigeschalten."
 ROLE_PREFIX = "ROLE_"
 
 
@@ -70,7 +70,9 @@ class AuthenticationHelper:
             raise AuthError("Missing Authorization header", status_code=401)
 
         token_payload = self.parse_jwt_payload(auth_header)
-        access_token = auth_header[7:] if auth_header.startswith("Bearer ") else auth_header
+        access_token = (
+            auth_header[7:] if auth_header.startswith("Bearer ") else auth_header
+        )
 
         try:
             roles = self.getRoles(token_payload)
@@ -150,8 +152,9 @@ class AuthenticationHelper:
 def authenticate_user(
     authorization: str = Header(...),
     sso_settings: SSOSettings = Depends(get_sso_settings),
+    settings: Settings = Depends(get_settings),
 ) -> AuthenticationResult:
-    """Dependency to authenticate users based on access token."""  # Load configuration
+    """Dependency to authenticate users based on access token."""
     logger.debug("Loading configuration for authentication")
     auth_helper = AuthenticationHelper(
         role=sso_settings.ROLE,
@@ -166,7 +169,35 @@ def authenticate_user(
         return user_info
     except AuthError as e:
         logger.error(f"Authentication failed: {e.error}")
-        raise HTTPException(status_code=e.status_code, detail=e.error)
+
+        error_body = AuthErrorResponse(
+            message=e.error,
+            redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
+        )
+
+        headers = None
+        if settings.UNAUTHORIZED_USER_REDIRECT_URL:
+            headers = {"Location": settings.UNAUTHORIZED_USER_REDIRECT_URL}
+
+        raise HTTPException(
+            status_code=e.status_code,
+            detail=error_body.model_dump(exclude_none=True),
+            headers=headers,
+        )
     except Exception as e:
         logger.error("Authentication failed", exc_info=e)
-        raise HTTPException(status_code=401, detail="Authentication failed")
+
+        error_body = AuthErrorResponse(
+            message="Authentication failed",
+            redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
+        )
+
+        headers = None
+        if settings.UNAUTHORIZED_USER_REDIRECT_URL:
+            headers = {"Location": settings.UNAUTHORIZED_USER_REDIRECT_URL}
+
+        raise HTTPException(
+            status_code=401,
+            detail=error_body.model_dump(exclude_none=True),
+            headers=headers,
+        )

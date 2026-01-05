@@ -214,6 +214,7 @@
     background-color: var(--colorNeutralBackground1);
     position: relative;
     box-sizing: border-box;
+    left: auto !important;
 }
 
 .dynamicFieldInputs {

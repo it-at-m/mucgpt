@@ -2,8 +2,8 @@ import { DialogContent, Field, InfoLabel, Text, RadioGroup, Radio } from "@fluen
 import { useTranslation } from "react-i18next";
 import { useCallback, useState } from "react";
 import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
-import styles from "../EditAssistantDialog.module.css";
-import DepartmentTreeDropdown from "../../DepartmentTreeDropdown/DepartmentTreeDropdown";
+import sharedStyles from "../AssistantDialog.module.css";
+import DepartmentTreeDropdown from "../../../DepartmentTreeDropdown/DepartmentTreeDropdown";
 
 interface VisibilityStepProps {
     isOwner: boolean;
@@ -57,22 +57,24 @@ export const VisibilityStep = ({
 
     return (
         <DialogContent>
-            <div className={styles.visibilityTitle}>
-                <span className={styles.formLabel}>{t("components.publish_assistant_dialog.publication_options_title")}</span>
+            <div className={sharedStyles.visibilityTitle}>
+                <span className={sharedStyles.formLabel}>{t("components.publish_assistant_dialog.publication_options_title")}</span>
             </div>
 
-            <div className={styles.visibilityWrapper}>
-                <Field size="large" className={styles.rangeField}>
+            <div className={sharedStyles.visibilityWrapper}>
+                <Field size="large" className={sharedStyles.rangeField}>
                     <RadioGroup value={visibilityMode} onChange={onVisibilityChange} layout="vertical" disabled={!isOwner}>
                         <Radio
                             value="public"
                             disabled={!isOwner}
                             label={
-                                <div className={styles.radioContent}>
-                                    <div className={styles.radioLabel}>
+                                <div className={sharedStyles.radioContent}>
+                                    <div className={sharedStyles.radioLabel}>
                                         <Eye24Regular /> <span>{t("components.publish_assistant_dialog.visibility_public")}</span>
                                     </div>
-                                    <div className={styles.radioDescription}>{t("components.publish_assistant_dialog.visibility_public_description")}</div>
+                                    <div className={sharedStyles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.visibility_public_description")}
+                                    </div>
                                 </div>
                             }
                         />
@@ -80,20 +82,20 @@ export const VisibilityStep = ({
                             value="departments"
                             disabled={!isOwner}
                             label={
-                                <div className={styles.radioContent}>
-                                    <div className={styles.radioLabel}>
+                                <div className={sharedStyles.radioContent}>
+                                    <div className={sharedStyles.radioLabel}>
                                         <People24Regular /> <span>{t("components.publish_assistant_dialog.departments_title")}</span>
                                     </div>
-                                    <div className={styles.radioDescription}>{t("components.publish_assistant_dialog.departments_description")}</div>
+                                    <div className={sharedStyles.radioDescription}>{t("components.publish_assistant_dialog.departments_description")}</div>
                                 </div>
                             }
                         />
                         {visibilityMode === "departments" && (
-                            <div className={styles.departmentSection}>
+                            <div className={sharedStyles.departmentSection}>
                                 <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
                                     {t("components.edit_assistant_dialog.departments")}
                                 </InfoLabel>
-                                <div className={styles.departmentDropdown}>
+                                <div className={sharedStyles.departmentDropdown}>
                                     <DepartmentTreeDropdown
                                         publishDepartments={publishDepartments}
                                         setPublishDepartments={handleSetPublishDepartments}
@@ -101,7 +103,7 @@ export const VisibilityStep = ({
                                     />
                                 </div>
                                 {!departmentsSelected && (
-                                    <Text size={200} className={styles.noDepartmentsWarning}>
+                                    <Text size={200} className={sharedStyles.noDepartmentsWarning}>
                                         {t("components.publish_assistant_dialog.no_departments_selected")}
                                     </Text>
                                 )}
@@ -111,11 +113,13 @@ export const VisibilityStep = ({
                             value="private"
                             disabled={!isOwner}
                             label={
-                                <div className={styles.radioContent}>
-                                    <div className={styles.radioLabel}>
+                                <div className={sharedStyles.radioContent}>
+                                    <div className={sharedStyles.radioLabel}>
                                         <EyeOff24Regular /> <span>{t("components.publish_assistant_dialog.visibility_private")}</span>
                                     </div>
-                                    <div className={styles.radioDescription}>{t("components.publish_assistant_dialog.visibility_private_description")}</div>
+                                    <div className={sharedStyles.radioDescription}>
+                                        {t("components.publish_assistant_dialog.visibility_private_description")}
+                                    </div>
                                 </div>
                             }
                         />

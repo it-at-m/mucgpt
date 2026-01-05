@@ -2,14 +2,15 @@ import { DialogContent, Field, Button, Input, Textarea } from "@fluentui/react-c
 import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useRef } from "react";
-import styles from "../EditAssistantDialog.module.css";
-import { ExampleModel } from "../../Example";
+
+import sharedStyles from "../AssistantDialog.module.css";
+import { ExampleModel } from "../../../Example";
 
 interface ExamplesStepProps {
     examples: ExampleModel[];
     isOwner: boolean;
     onExamplesChange: (examples: ExampleModel[]) => void;
-    onHasChanged: (hasChanged: boolean) => void;
+    onHasChanged?: (hasChanged: boolean) => void;
 }
 
 export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged }: ExamplesStepProps) => {
@@ -21,7 +22,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
         const hasEmpty = examples.some(ex => !ex.text.trim() || !ex.value.trim());
         if (!hasEmpty) {
             onExamplesChange([...examples, { id: crypto.randomUUID(), text: "", value: "" }]);
-            onHasChanged(true);
+            onHasChanged?.(true);
             // Scroll to bottom after adding
             setTimeout(() => {
                 buttonRef.current?.scrollIntoView({
@@ -42,7 +43,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                 text: newValue
             };
             onExamplesChange(updated);
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [examples, onExamplesChange, onHasChanged]
     );
@@ -56,7 +57,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                 value: newValue
             };
             onExamplesChange(updated);
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [examples, onExamplesChange, onHasChanged]
     );
@@ -64,46 +65,46 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
     const removeExample = useCallback(
         (index: number) => {
             onExamplesChange(examples.filter((_, i) => i !== index));
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [examples, onExamplesChange, onHasChanged]
     );
 
     return (
         <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_assistant_dialog.examples")}</label>
-                <div className={styles.dynamicFieldContainer}>
-                    <div className={styles.dynamicFieldList}>
+            <Field size="large" className={sharedStyles.formField}>
+                <label className={sharedStyles.formLabel}>{t("components.edit_assistant_dialog.examples")}</label>
+                <div className={sharedStyles.dynamicFieldContainer}>
+                    <div className={sharedStyles.dynamicFieldList}>
                         {examples.length > 0 ? (
                             examples.map((ex, index) => (
-                                <div key={ex.id || index} className={styles.dynamicFieldItem}>
-                                    <div className={styles.dynamicFieldInputs}>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Text:</span>
+                                <div key={ex.id || index} className={sharedStyles.dynamicFieldItem}>
+                                    <div className={sharedStyles.dynamicFieldInputs}>
+                                        <div className={sharedStyles.dynamicFieldInputRow}>
+                                            <span className={sharedStyles.dynamicFieldInputLabel}>Text:</span>
                                             <Input
                                                 placeholder={t("components.edit_assistant_dialog.example_text_placeholder")}
                                                 value={ex.text}
                                                 onChange={onChangeExampleText(index)}
                                                 disabled={!isOwner}
-                                                className={styles.dynamicFieldInput}
+                                                className={sharedStyles.dynamicFieldInput}
                                             />
                                         </div>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Value:</span>
+                                        <div className={sharedStyles.dynamicFieldInputRow}>
+                                            <span className={sharedStyles.dynamicFieldInputLabel}>Value:</span>
                                             <Textarea
                                                 placeholder={t("components.edit_assistant_dialog.example_value_placeholder")}
                                                 value={ex.value}
                                                 onChange={onChangeExampleValue(index)}
                                                 disabled={!isOwner}
                                                 rows={2}
-                                                className={styles.dynamicFieldInput}
+                                                className={sharedStyles.dynamicFieldInput}
                                             />
                                         </div>
                                     </div>
                                     {isOwner && (
                                         <button
-                                            className={styles.removeFieldButton}
+                                            className={sharedStyles.removeFieldButton}
                                             onClick={() => removeExample(index)}
                                             disabled={!isOwner}
                                             title={t("components.edit_assistant_dialog.remove")}
@@ -114,12 +115,12 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                                 </div>
                             ))
                         ) : (
-                            <div className={styles.noToolsText}>{t("components.edit_assistant_dialog.no_examples_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.edit_assistant_dialog.no_examples_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
-                            <Button appearance="subtle" onClick={addExample} disabled={!isOwner} className={styles.addFieldButton}>
+                            <Button appearance="subtle" onClick={addExample} disabled={!isOwner} className={sharedStyles.addFieldButton}>
                                 <Add24Regular /> {t("components.edit_assistant_dialog.add_example")}
                             </Button>
                         </div>

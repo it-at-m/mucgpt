@@ -6,7 +6,7 @@ import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData } from "@f
 import { useContext, useEffect, useState } from "react";
 
 import { AddAssistantButton } from "../../components/AddAssistantButton";
-import { CreateAssistantDialog } from "../../components/CreateAssistantDialog/CreateAssistantDialog";
+import { CreateAssistantDialog } from "../../components/AssistantDialogs";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantResponse, Assistant, CommunityAssistant } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";

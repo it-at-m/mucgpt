@@ -190,6 +190,7 @@
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    position: relative;
 }
 
 .dynamicFieldList {
@@ -200,16 +201,19 @@
     flex: 1;
     min-height: 200px;
     overflow: visible;
+    position: relative;
 }
 
 .dynamicFieldItem {
     display: flex;
     gap: 12px;
-    align-items: flex-start;
+    align-items: center;
     padding: 12px;
     border: 1px solid var(--colorNeutralStroke2);
     border-radius: 6px;
     background-color: var(--colorNeutralBackground1);
+    position: relative;
+    box-sizing: border-box;
 }
 
 .dynamicFieldInputs {
@@ -259,6 +263,30 @@
     border-color: var(--colorBrandStroke1);
     color: var(--colorBrandForeground1);
     background-color: var(--colorNeutralBackground1Hover);
+}
+
+.dragHandle {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-color: transparent;
+    border: none;
+    color: var(--colorNeutralForeground3);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.dragHandle:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+}
+
+.dragHandle:active {
+    cursor: grabbing;
 }
 
 .removeFieldButton {

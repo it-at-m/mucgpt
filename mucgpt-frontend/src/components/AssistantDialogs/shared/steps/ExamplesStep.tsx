@@ -3,6 +3,7 @@ import { Add24Regular, Delete24Regular, Reorder20Regular } from "@fluentui/react
 import { useTranslation } from "react-i18next";
 import { useCallback, useRef } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { createPortal } from "react-dom";
 
 import sharedStyles from "../AssistantDialog.module.css";
 import { ExampleModel } from "../../../Example";
@@ -99,59 +100,76 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                                     {examples.length > 0 ? (
                                         <>
                                             {examples.map((ex, index) => (
-                                                <Draggable key={ex.id || index} draggableId={ex.id || `example-${index}`} index={index} isDragDisabled={!isOwner}>
+                                                <Draggable
+                                                    key={ex.id}
+                                                    draggableId={ex.id}
+                                                    index={index}
+                                                    isDragDisabled={!isOwner}
+                                                >
                                                     {(provided, snapshot) => {
-                                                        // Fix for positioning offset during drag
-                                                        const draggableStyle = provided.draggableProps.style;
-                                                        const style: React.CSSProperties = {
-                                                            ...draggableStyle,
-                                                            opacity: snapshot.isDragging ? 0.8 : 1,
-                                                            left: draggableStyle?.left ?? 'auto',
-                                                            top: draggableStyle?.top ?? 'auto'
-                                                        };
+                                                        const draggable = (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                style={{
+                                                                    ...provided.draggableProps.style,
+                                                                    zIndex: snapshot.isDragging ? 2000000 : "auto",
+                                                                    opacity: snapshot.isDragging ? 0.85 : 1,
+                                                                }}
+                                                                className={sharedStyles.dynamicFieldItem}
+                                                            >
+                                                                {isOwner && (
+                                                                    <div
+                                                                        {...provided.dragHandleProps}
+                                                                        className={sharedStyles.dragHandle}
+                                                                        title={t("components.edit_assistant_dialog.drag_to_reorder")}
+                                                                    >
+                                                                        <Reorder20Regular />
+                                                                    </div>
+                                                                )}
 
-                                                        return (
-                                                            <div ref={provided.innerRef} {...provided.draggableProps} style={style} className={sharedStyles.dynamicFieldItem}>
-                                                            {isOwner && (
-                                                                <div {...provided.dragHandleProps} className={sharedStyles.dragHandle} title={t("components.edit_assistant_dialog.drag_to_reorder")}>
-                                                                    <Reorder20Regular />
+                                                                <div className={sharedStyles.dynamicFieldInputs}>
+                                                                    <div className={sharedStyles.dynamicFieldInputRow}>
+                                                                        <span className={sharedStyles.dynamicFieldInputLabel}>Text:</span>
+                                                                        <Input
+                                                                            placeholder={t("components.edit_assistant_dialog.example_text_placeholder")}
+                                                                            value={ex.text}
+                                                                            onChange={onChangeExampleText(index)}
+                                                                            disabled={!isOwner}
+                                                                            className={sharedStyles.dynamicFieldInput}
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className={sharedStyles.dynamicFieldInputRow}>
+                                                                        <span className={sharedStyles.dynamicFieldInputLabel}>Value:</span>
+                                                                        <Textarea
+                                                                            placeholder={t("components.edit_assistant_dialog.example_value_placeholder")}
+                                                                            value={ex.value}
+                                                                            onChange={onChangeExampleValue(index)}
+                                                                            disabled={!isOwner}
+                                                                            rows={2}
+                                                                            className={sharedStyles.dynamicFieldInput}
+                                                                        />
+                                                                    </div>
                                                                 </div>
-                                                            )}
-                                                            <div className={sharedStyles.dynamicFieldInputs}>
-                                                                <div className={sharedStyles.dynamicFieldInputRow}>
-                                                                    <span className={sharedStyles.dynamicFieldInputLabel}>Text:</span>
-                                                                    <Input
-                                                                        placeholder={t("components.edit_assistant_dialog.example_text_placeholder")}
-                                                                        value={ex.text}
-                                                                        onChange={onChangeExampleText(index)}
-                                                                        disabled={!isOwner}
-                                                                        className={sharedStyles.dynamicFieldInput}
-                                                                    />
-                                                                </div>
-                                                                <div className={sharedStyles.dynamicFieldInputRow}>
-                                                                    <span className={sharedStyles.dynamicFieldInputLabel}>Value:</span>
-                                                                    <Textarea
-                                                                        placeholder={t("components.edit_assistant_dialog.example_value_placeholder")}
-                                                                        value={ex.value}
-                                                                        onChange={onChangeExampleValue(index)}
-                                                                        disabled={!isOwner}
-                                                                        rows={2}
-                                                                        className={sharedStyles.dynamicFieldInput}
-                                                                    />
-                                                                </div>
+
+                                                                {isOwner && (
+                                                                    <button
+                                                                        type="button"
+                                                                        className={sharedStyles.removeFieldButton}
+                                                                        onClick={() => removeExample(index)}
+                                                                        title={t("components.edit_assistant_dialog.remove")}
+                                                                    >
+                                                                        <Delete24Regular />
+                                                                    </button>
+                                                                )}
                                                             </div>
-                                                            {isOwner && (
-                                                                <button
-                                                                    className={sharedStyles.removeFieldButton}
-                                                                    onClick={() => removeExample(index)}
-                                                                    disabled={!isOwner}
-                                                                    title={t("components.edit_assistant_dialog.remove")}
-                                                                >
-                                                                    <Delete24Regular />
-                                                                </button>
-                                                            )}
-                                                        </div>
                                                         );
+
+                                                        // 🔑 DAS ist der entscheidende Teil
+                                                        return snapshot.isDragging
+                                                            ? createPortal(draggable, document.body)
+                                                            : draggable;
                                                     }}
                                                 </Draggable>
                                             ))}

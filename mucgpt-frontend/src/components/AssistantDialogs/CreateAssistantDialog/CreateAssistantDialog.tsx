@@ -452,11 +452,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 onOpenChange={(_event, data) => {
                     if (!data.open && hasChanges) {
                         setCloseDialogOpen(true);
+                    } else if (!data.open) {
+                        onCancelButtonClicked();
                     } else {
                         setShowDialogInput(data.open);
-                        if (!data.open) {
-                            setCurrentStep(1);
-                        }
                     }
                 }}
             >

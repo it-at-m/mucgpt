@@ -98,6 +98,7 @@ i18n
                         back: "Zurück",
                         ok: "OK",
                         next: "Weiter",
+                        loading: "Lade Konfiguration...",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -603,6 +604,7 @@ i18n
                         back: "Back",
                         ok: "OK",
                         next: "Next",
+                        loading: "Loading...",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -1096,6 +1098,7 @@ i18n
                         back: "Zruck",
                         ok: "OK",
                         next: "Weida",
+                        loading: "Lade Konfiguration...",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1605,6 +1608,7 @@ i18n
                         back: "Retour",
                         ok: "OK",
                         next: "Suivant",
+                        loading: "Chargement de la configuration...",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -2111,6 +2115,7 @@ i18n
                         back: "Назад",
                         ok: "OK",
                         next: "Далі",
+                        loading: "Завантаження конфігурації...",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",

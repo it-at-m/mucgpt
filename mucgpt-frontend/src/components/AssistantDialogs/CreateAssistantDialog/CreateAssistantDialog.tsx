@@ -27,7 +27,7 @@ import { Stepper, Step } from "../../Stepper";
 import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, useCreateAssistantState } from "../shared";
 import { CloseConfirmationDialog } from "../shared/CloseConfirmationDialog";
 import { useToolsContext } from "../../ToolsProvider";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 interface Props {
     showDialogInput: boolean;

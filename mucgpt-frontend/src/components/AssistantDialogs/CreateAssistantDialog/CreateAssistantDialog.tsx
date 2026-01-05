@@ -128,7 +128,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, showError, showSuccess, t]);
+    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {

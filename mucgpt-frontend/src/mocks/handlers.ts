@@ -10,6 +10,71 @@ import {
     generateSimplifyStreamChunks
 } from "./data/generators";
 
+const DIRECTORY_TREE = [
+    {
+        shortname: null,
+        name: "Landeshauptstadt München",
+        children: [
+            {
+                shortname: "BAU",
+                name: "Baureferat",
+                children: [
+                    {
+                        shortname: "BAU-BEURL",
+                        name: "Beurlaubte des Baureferates",
+                        children: [
+                            { shortname: "BAU-BEURL-TECH", name: "Technik", children: [] },
+                            { shortname: null, name: "Allgemein", children: [] }
+                        ]
+                    },
+                    { shortname: "BAU-G", name: "HA Gartenbau", children: [] }
+                ]
+            },
+            {
+                shortname: "RIT",
+                name: "IT-Referat",
+                children: [
+                    { shortname: "RIT-AI", name: "Ur future AI Overlords ", children: [] },
+                    {
+                        shortname: "ITM",
+                        name: "IT@M",
+                        children: [{ shortname: "ITM-KM-DI", name: "Data & Innovation", children: [] }]
+                    }
+                ]
+            },
+            {
+                shortname: "POR",
+                name: "Personal- und Organisationsreferat",
+                children: [
+                    { shortname: "POR-P", name: "Personalbereich", children: [] },
+                    { shortname: "POR-O", name: "Organisationsbereich", children: [] }
+                ]
+            }
+        ]
+    }
+];
+
+function normalize(value: string | null) {
+    return value?.trim().toLowerCase() || null;
+}
+
+function matchNode(segment: string, node: any) {
+    const target = normalize(segment);
+    if (!target) return false;
+    return target === normalize(node.shortname) || target === normalize(node.name);
+}
+
+function findNode(pathSegments: string[]) {
+    let currentList: any[] = DIRECTORY_TREE;
+    let current: any | null = null;
+    for (const segment of pathSegments) {
+        current = currentList.find(node => matchNode(segment, node)) || null;
+        if (!current) return null;
+        currentList = current.children || [];
+    }
+    return current;
+}
+
 const CONFIG_RESPONSE: ApplicationConfig = {
     models: [
         {
@@ -75,6 +140,33 @@ function chooseStreamType(enabledTools?: string[]) {
 export const handlers = [
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
+    }),
+    http.get("/api/directory/children", ({ request }) => {
+        const url = new URL(request.url);
+        const pathParam = url.searchParams.get("path");
+        let pathSegments: string[] = [];
+
+        if (pathParam) {
+            try {
+                const parsed = JSON.parse(pathParam);
+                if (Array.isArray(parsed)) {
+                    pathSegments = parsed.map(String);
+                } else {
+                    pathSegments = [String(parsed)];
+                }
+            } catch {
+                pathSegments = [pathParam];
+            }
+        }
+
+        if (pathSegments.length === 0) {
+            return HttpResponse.json(DIRECTORY_TREE);
+        }
+        const node = findNode(pathSegments);
+        if (!node) {
+            return new HttpResponse(null, { status: 404 });
+        }
+        return HttpResponse.json(node.children || []);
     }),
     http.get("/api/backend/v1/tools", ({ request }) => {
         const url = new URL(request.url);

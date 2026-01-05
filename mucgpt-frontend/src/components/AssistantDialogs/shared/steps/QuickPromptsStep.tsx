@@ -2,14 +2,15 @@ import { DialogContent, Field, Button, Input, Textarea } from "@fluentui/react-c
 import { Add24Regular, Delete24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { useCallback, useRef } from "react";
-import styles from "../EditAssistantDialog.module.css";
-import { QuickPrompt } from "../../QuickPrompt/QuickPrompt";
+
+import sharedStyles from "../AssistantDialog.module.css";
+import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
 
 interface QuickPromptsStepProps {
     quickPrompts: QuickPrompt[];
     isOwner: boolean;
     onQuickPromptsChange: (quickPrompts: QuickPrompt[]) => void;
-    onHasChanged: (hasChanged: boolean) => void;
+    onHasChanged?: (hasChanged: boolean) => void;
 }
 
 export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, onHasChanged }: QuickPromptsStepProps) => {
@@ -21,7 +22,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
         const hasEmpty = quickPrompts.some(ex => !ex.label.trim() || !ex.prompt.trim());
         if (!hasEmpty) {
             onQuickPromptsChange([...quickPrompts, { id: crypto.randomUUID(), label: "", prompt: "", tooltip: "" }]);
-            onHasChanged(true);
+            onHasChanged?.(true);
             // Scroll to bottom after adding
             setTimeout(() => {
                 buttonRef.current?.scrollIntoView({
@@ -42,7 +43,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                 label: newValue
             };
             onQuickPromptsChange(updated);
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [quickPrompts, onQuickPromptsChange, onHasChanged]
     );
@@ -69,7 +70,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                 prompt: newValue
             };
             onQuickPromptsChange(updated);
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [quickPrompts, onQuickPromptsChange, onHasChanged]
     );
@@ -77,47 +78,47 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
     const removeQuickPrompt = useCallback(
         (index: number) => {
             onQuickPromptsChange(quickPrompts.filter((_, i) => i !== index));
-            onHasChanged(true);
+            onHasChanged?.(true);
         },
         [quickPrompts, onQuickPromptsChange, onHasChanged]
     );
 
     return (
         <DialogContent>
-            <Field size="large" className={styles.formField}>
-                <label className={styles.formLabel}>{t("components.edit_assistant_dialog.quick_prompts")}</label>
-                <div className={styles.dynamicFieldContainer}>
-                    <div className={styles.dynamicFieldList}>
+            <Field size="large" className={sharedStyles.formField}>
+                <label className={sharedStyles.formLabel}>{t("components.edit_assistant_dialog.quick_prompts")}</label>
+                <div className={sharedStyles.dynamicFieldContainer}>
+                    <div className={sharedStyles.dynamicFieldList}>
                         {quickPrompts.length > 0 ? (
                             quickPrompts.map((qp, index) => (
-                                <div key={qp.id || index} className={styles.dynamicFieldItem}>
-                                    <div className={styles.dynamicFieldInputs}>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Label:</span>
+                                <div key={qp.id || index} className={sharedStyles.dynamicFieldItem}>
+                                    <div className={sharedStyles.dynamicFieldInputs}>
+                                        <div className={sharedStyles.dynamicFieldInputRow}>
+                                            <span className={sharedStyles.dynamicFieldInputLabel}>Label:</span>
                                             <Input
                                                 placeholder={t("components.edit_assistant_dialog.quick_prompt_label_placeholder")}
                                                 value={qp.label}
                                                 onChange={onChangeQuickPromptLabel(index)}
                                                 onBlur={onBlurQuickPromptLabel(index)}
                                                 disabled={!isOwner}
-                                                className={styles.dynamicFieldInput}
+                                                className={sharedStyles.dynamicFieldInput}
                                             />
                                         </div>
-                                        <div className={styles.dynamicFieldInputRow}>
-                                            <span className={styles.dynamicFieldInputLabel}>Prompt:</span>
+                                        <div className={sharedStyles.dynamicFieldInputRow}>
+                                            <span className={sharedStyles.dynamicFieldInputLabel}>Prompt:</span>
                                             <Textarea
                                                 placeholder={t("components.edit_assistant_dialog.quick_prompt_text_placeholder")}
                                                 value={qp.prompt}
                                                 onChange={onChangeQuickPromptPrompt(index)}
                                                 disabled={!isOwner}
                                                 rows={2}
-                                                className={styles.dynamicFieldInput}
+                                                className={sharedStyles.dynamicFieldInput}
                                             />
                                         </div>
                                     </div>
                                     {isOwner && (
                                         <button
-                                            className={styles.removeFieldButton}
+                                            className={sharedStyles.removeFieldButton}
                                             onClick={() => removeQuickPrompt(index)}
                                             disabled={!isOwner}
                                             title={t("components.edit_assistant_dialog.remove")}
@@ -128,12 +129,12 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                                 </div>
                             ))
                         ) : (
-                            <div className={styles.noToolsText}>{t("components.edit_assistant_dialog.no_quick_prompts_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.edit_assistant_dialog.no_quick_prompts_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
-                            <Button appearance="subtle" onClick={addQuickPrompt} disabled={!isOwner} className={styles.addFieldButton}>
+                            <Button appearance="subtle" onClick={addQuickPrompt} disabled={!isOwner} className={sharedStyles.addFieldButton}>
                                 <Add24Regular /> {t("components.edit_assistant_dialog.add_quick_prompt")}
                             </Button>
                         </div>

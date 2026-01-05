@@ -78,7 +78,7 @@ services:
         ]
     security_opt: *security_settings
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.122@sha256:473c46318436b1b0a7e12424edb59d5871ea19c17ffd6553ca942dedb506ed3e
+    image: klg71/keycloakmigration:0.2.111
     depends_on:
       - keycloak
     environment:
@@ -98,7 +98,7 @@ services:
   # #### Valkey ####
   #
   valkey:
-    image: valkey/valkey:9.0.1@sha256:fb8d272e529ea567b9bf1302245796f21a2672b8368ca3fcb938ac334e613c8f
+    image: valkey/valkey:9.0.1@sha256:546304417feac0874c3dd576e0952c6bb8f06bb4093ea0c9ca303c73cf458f63
     ports:
       - "6379:6379"
     command: ["valkey-server", "--requirepass", "password"]
@@ -115,7 +115,7 @@ services:
       init-keycloak:
         condition: service_completed_successfully
       keycloak:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "8083:8080"
     env_file:
@@ -133,7 +133,7 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0=RewritePath=/api/backend/(?<urlsegments>.*), /api/$\{urlsegments}
       - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**, /api/directory/**
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**

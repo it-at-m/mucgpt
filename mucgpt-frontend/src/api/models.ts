@@ -114,9 +114,11 @@ export type CountTokenResponse = {
     count: number;
 };
 
-export type DepartementsResponse = {
-    departments: string[];
-};
+export interface DirectoryNode {
+    shortname?: string | null;
+    name: string;
+    children?: DirectoryNode[];
+}
 
 export type Assistant = {
     title: string;

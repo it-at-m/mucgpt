@@ -1,0 +1,26 @@
+.chipContainer {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.templateChip {
+    flex: 1;
+    min-width: 150px;
+    font-size: var(--fontSizeBase300);
+    background: var(--primaryContainer) !important;
+    color: var(--onPrimaryContainer) !important;
+    border: 1px solid var(--outline) !important;
+}
+
+.templateChip:hover:not(:disabled) {
+    box-shadow:
+        0px 4px 8px rgba(0, 0, 0, 0.12),
+        0px 0px 2px rgba(0, 0, 0, 0.08);
+}
+
+.templateChip.selected {
+    background: var(--primary) !important;
+    color: var(--onPrimary) !important;
+    border: 1px solid var(--onPrimary) !important;
+}

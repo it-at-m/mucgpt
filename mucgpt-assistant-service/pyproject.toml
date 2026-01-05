@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-assistant-service"
-version = "0.1.0"
+version = "0.2.0"
 description = "Add your description here"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
@@ -23,6 +23,9 @@ dependencies = [
     "requests>=2.32.5",
     "sqlalchemy>=2.0.43",
     "uvicorn>=0.35.0",
+    "ldap3==2.9.1",
+    "redis==7.1.0",
+    "cloudpickle==3.1.2",
 ]
 
 [tool.uv]

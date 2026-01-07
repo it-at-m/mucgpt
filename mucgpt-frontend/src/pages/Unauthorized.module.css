@@ -22,7 +22,7 @@
 .link {
     margin-top: 1rem;
     font-size: 1.1rem;
-    color: var(--colorBrandForeground1);
+    color: var(--onPrimary);
     text-decoration: none;
 }
 

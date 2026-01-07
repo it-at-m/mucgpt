@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from api.routers import (
     chat_router,
@@ -10,6 +11,7 @@ from api.routers import (
     tools_router,
 )
 from config.settings import get_settings
+from core.auth_models import AuthError, AuthErrorResponse
 from core.logtools import getLogger
 from init_app import destroy_app, warmup_app
 
@@ -57,6 +59,30 @@ api_app.add_middleware(CorrelationIdMiddleware)
 api_app.include_router(chat_router.router, prefix="", tags=["Chat"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
 api_app.include_router(tools_router.router, prefix="", tags=["Tools"])
+
+
+@api_app.exception_handler(AuthError)
+async def auth_exception_handler(request: Request, exc: AuthError):
+    """
+    Exception handler for authentication errors.
+    Returns a proper error response with redirect details.
+    """
+    logger.error(f"Authentication failed: {exc.error}")
+
+    error_body = AuthErrorResponse(
+        message=exc.error,
+        redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
+    )
+
+    headers = {}
+    if settings.UNAUTHORIZED_USER_REDIRECT_URL:
+        headers["Location"] = settings.UNAUTHORIZED_USER_REDIRECT_URL
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_body.model_dump(exclude_none=True),
+        headers=headers,
+    )
 
 
 @api_app.middleware("http")

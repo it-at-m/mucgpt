@@ -1,10 +1,10 @@
 import base64
 import json
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header
 
 from config.settings import Settings, SSOSettings, get_settings, get_sso_settings
-from core.auth_models import AuthenticationResult, AuthError, AuthErrorResponse
+from core.auth_models import AuthenticationResult, AuthError
 from core.logtools import getLogger
 
 logger = getLogger("mucgpt-core")
@@ -81,7 +81,7 @@ class AuthenticationHelper:
             logger.warning("Authentication failed: No roles found in token")
             raise AuthError(
                 ACCESS_DENIED_MESSAGE,
-                status_code=401,
+                status_code=403,
             )
 
         if self.role not in roles:
@@ -90,7 +90,7 @@ class AuthenticationHelper:
             )
             raise AuthError(
                 ACCESS_DENIED_MESSAGE,
-                status_code=401,
+                status_code=403,
             )
 
         return AuthenticationResult(
@@ -167,37 +167,8 @@ def authenticate_user(
             f"User authenticated successfully: {user_info.name} from {user_info.department}"
         )
         return user_info
-    except AuthError as e:
-        logger.error(f"Authentication failed: {e.error}")
-
-        error_body = AuthErrorResponse(
-            message=e.error,
-            redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
-        )
-
-        headers = None
-        if settings.UNAUTHORIZED_USER_REDIRECT_URL:
-            headers = {"Location": settings.UNAUTHORIZED_USER_REDIRECT_URL}
-
-        raise HTTPException(
-            status_code=e.status_code,
-            detail=error_body.model_dump(exclude_none=True),
-            headers=headers,
-        )
+    except AuthError:
+        raise
     except Exception as e:
         logger.error("Authentication failed", exc_info=e)
-
-        error_body = AuthErrorResponse(
-            message="Authentication failed",
-            redirect_url=(settings.UNAUTHORIZED_USER_REDIRECT_URL or None),
-        )
-
-        headers = None
-        if settings.UNAUTHORIZED_USER_REDIRECT_URL:
-            headers = {"Location": settings.UNAUTHORIZED_USER_REDIRECT_URL}
-
-        raise HTTPException(
-            status_code=401,
-            detail=error_body.model_dump(exclude_none=True),
-            headers=headers,
-        )
+        raise AuthError(error="Authentication failed", status_code=401)

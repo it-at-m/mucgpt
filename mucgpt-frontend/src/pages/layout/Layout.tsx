@@ -111,7 +111,7 @@ export const Layout = () => {
                 setIsLoadingConfig(false);
             })
             .catch(error => {
-                if (error instanceof ApiError && error.status === 401) {
+                if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
                     setIsUnauthorized(true);
                     setUnauthorizedRedirectUrl(error.redirectUrl);
                     setIsLoadingConfig(false);

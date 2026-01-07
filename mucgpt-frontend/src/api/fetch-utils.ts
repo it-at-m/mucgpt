@@ -160,14 +160,14 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             let message = errorData.message || `${defaultErrorMessage}: ${response.statusText}`;
-            let redirectUrl = undefined;
+            let redirectUrl = errorData.redirect_url;
 
             if (errorData.detail) {
                 if (typeof errorData.detail === "string") {
                     message = errorData.detail;
                 } else if (typeof errorData.detail === "object") {
                     message = errorData.detail.message || message;
-                    redirectUrl = errorData.detail.redirect_url;
+                    redirectUrl = errorData.detail.redirect_url || redirectUrl;
                 }
             }
 

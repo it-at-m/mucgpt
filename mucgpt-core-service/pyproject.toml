@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "0.6.0"
+version = "0.6.1"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.10"

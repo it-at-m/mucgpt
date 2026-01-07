@@ -1,0 +1,494 @@
+/* Common Dialog Styles */
+.dialog {
+    padding: 0 !important;
+    min-width: 50%;
+    max-width: 650px;
+    max-height: 85vh !important;
+    line-height: 1.5;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+@media (max-width: 650px) {
+    .dialog {
+        min-width: 400px;
+    }
+}
+
+@media (max-width: 450px) {
+    .dialog {
+        min-width: 95vw;
+        max-width: 95vw;
+    }
+}
+
+/* Dialog Header */
+.dialogHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-right: 24px;
+    background-color: var(--colorNeutralBackground1);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+}
+
+.dialogTitle {
+    padding: 24px 24px 16px 24px;
+    font-size: var(--fontSizeHero800);
+    font-weight: 600;
+}
+
+.closeButton {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    transition: all 0.2s ease;
+    color: var(--colorNeutralForeground2);
+}
+
+.closeButton:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+}
+
+/* Dialog Content */
+.dialogContent {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.scrollableDialogContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 24px 120px 24px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+/* Dialog Actions */
+.dialogActions {
+    padding-top: 26px;
+    width: 100%;
+    grid-column: 1 / -1 !important;
+    justify-content: end;
+}
+
+/* Common Button Styles */
+.backButton {
+    margin-right: auto !important;
+}
+
+.backButton,
+.cancelButton,
+.defineButton {
+    background: var(--primaryContainer) !important;
+    color: var(--onPrimaryContainer) !important;
+    border: 1px solid var(--outline) !important;
+}
+
+.saveButton,
+.createButton,
+.continueButton {
+    background: var(--primary) !important;
+    color: var(--onPrimary) !important;
+    border: 1px solid var(--primary) !important;
+}
+
+.saveButton:hover:not(:disabled),
+.createButton:hover:not(:disabled),
+.backButton:hover:not(:disabled),
+.cancelButton:hover:not(:disabled),
+.defineButton:hover:not(:disabled),
+.continueButton:hover:not(:disabled) {
+    box-shadow:
+        0px 4px 12px rgba(0, 0, 0, 0.15),
+        0px 0px 4px rgba(0, 0, 0, 0.1);
+}
+
+.createButton:disabled,
+.defineButton:disabled,
+.continueButton:disabled {
+    background: var(--disabled) !important;
+    color: var(--onSurface) !important;
+    cursor: not-allowed !important;
+}
+
+/* Common Field Styles */
+.fieldSection {
+    margin-bottom: 24px;
+}
+
+.fieldLabel {
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: var(--fontSizeBase400);
+    color: var(--onSurface);
+}
+
+.requiredSymbol {
+    color: var(--onSurface);
+}
+
+.formLabel {
+    font-weight: 600;
+    font-size: var(--fontSizeBase400);
+    margin-bottom: 8px;
+    display: block;
+    color: var(--colorNeutralForeground1);
+}
+
+/* Hint Text */
+.hintText {
+    padding: 12px 16px;
+    background: var(--primaryContainer);
+    border-left: 3px solid var(--primary);
+    font-size: var(--fontSizeBase300);
+    color: var(--onPrimaryContainer);
+}
+
+/* Help Text */
+.helpText {
+    font-size: var(--fontSizeBase200);
+    color: var(--colorNeutralForeground3);
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Textarea and Input Placeholder Styles */
+.fieldSection textarea::placeholder,
+.fieldSection input::placeholder,
+.dynamicFieldInput::placeholder {
+    color: var(--colorNeutralForeground4) !important;
+    opacity: 0.6 !important;
+    font-style: italic;
+}
+
+/* Dynamic Field Styles (shared by QuickPromptsStep and ExamplesStep) */
+.dynamicFieldContainer {
+    margin-bottom: 20px;
+    min-height: 200px;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.dynamicFieldList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    flex: 1;
+    min-height: 200px;
+    overflow: visible;
+}
+
+.dynamicFieldItem {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    background-color: var(--colorNeutralBackground1);
+}
+
+.dynamicFieldInputs {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    flex-direction: column;
+}
+
+.dynamicFieldInputRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.dynamicFieldInput {
+    flex: 1;
+    min-width: 0;
+}
+
+.dynamicFieldInputLabel {
+    flex: 0 0 80px;
+    font-size: 12px;
+    color: var(--colorNeutralForeground2);
+    font-weight: 500;
+}
+
+.addFieldButton {
+    width: 100%;
+    border: 1px dashed var(--colorNeutralStroke2);
+    background-color: transparent;
+    color: var(--colorNeutralForeground2);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: var(--fontSizeBase300);
+    transition: all 0.2s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 12px 12px 12px;
+    flex-shrink: 0;
+}
+
+.addFieldButton:hover {
+    border-color: var(--colorBrandStroke1);
+    color: var(--colorBrandForeground1);
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.removeFieldButton {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--colorPaletteRedBackground2);
+    border: none;
+    color: var(--colorPaletteRedForeground2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.removeFieldButton:hover {
+    background-color: var(--colorPaletteRedBackground3);
+    color: var(--colorPaletteRedForeground1);
+}
+
+/* Range Input Styles (for AdvancedSettingsStep) */
+.rangeField {
+    margin-bottom: 20px;
+    padding: 16px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 6px;
+    background-color: var(--colorNeutralBackground1);
+}
+
+.rangeInput {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.rangeValue {
+    text-align: center;
+    font-weight: 600;
+    font-size: var(--fontSizeBase300);
+    color: var(--onPrimaryContainer) !important;
+    background-color: var(--primaryContainer);
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    min-width: 60px;
+}
+
+/* Visibility Step Styles */
+.visibilityTitle {
+    margin-bottom: 12px;
+}
+
+.visibilityWrapper {
+    display: flex;
+    flex-direction: column;
+}
+
+.radioContent {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+}
+
+.radioLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.radioDescription {
+    color: var(--colorNeutralForeground2);
+    font-size: 13px;
+    line-height: 1.4;
+    margin-left: 34px;
+}
+
+.departmentSection {
+    display: flex;
+    flex-direction: column;
+    margin-left: 40px;
+    gap: 12px;
+    background: var(--colorNeutralBackground1);
+    margin-top: 8px;
+    box-shadow: 0 6px 12px rgba(2, 6, 23, 0.03);
+}
+
+.noDepartmentsWarning {
+    color: var(--colorPaletteRedForeground3, #b42318);
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+/* Tool Selector Styles */
+.toolSelectorContainer {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.toolDescription {
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-style: italic;
+    margin-left: 8px;
+}
+
+.noToolsText {
+    color: var(--onPrimaryContainer);
+    font-style: italic;
+    font-size: var(--fontSizeBase300);
+    padding: 32px 16px;
+    text-align: center;
+    border: 1px dashed var(--outline);
+    border-radius: 6px;
+    background-color: var(--primaryContainer);
+    margin: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 650px) {
+    .dialogHeader {
+        padding: 12px 20px 0 20px;
+    }
+
+    .dialogActions {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px 20px;
+    }
+
+    .dialogActions > button {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .backButton {
+        margin-right: 0 !important;
+    }
+
+    .nextButton {
+        margin-left: 0;
+    }
+
+    .scrollableDialogContent {
+        padding: 20px 20px 24px 20px;
+    }
+
+    .dynamicFieldContainer {
+        max-height: 40vh;
+        min-height: 150px;
+    }
+
+    .radioDescription {
+        margin-left: 0;
+    }
+
+    .departmentDropdown {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 550px) {
+    .dynamicFieldInputRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .dynamicFieldInputLabel {
+        flex: 0 0 auto;
+        width: auto;
+    }
+
+    .dynamicFieldInput {
+        width: 100%;
+    }
+}
+
+@media (max-width: 400px) {
+    .dynamicFieldItem {
+        flex-direction: column;
+        gap: 8px;
+        position: relative;
+        padding-top: 40px;
+    }
+
+    .removeFieldButton {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+    }
+
+    .dynamicFieldInputs {
+        width: 100%;
+    }
+}
+
+@media (max-width: 450px) {
+    .dialogHeader {
+        padding: 12px 12px 0 12px;
+    }
+
+    .dialogTitle {
+        padding: 16px 12px 12px 12px;
+        font-size: var(--fontSizeHero700);
+        max-width: calc(100% - 48px);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .closeButton {
+        position: absolute;
+        right: 12px;
+        top: 16px;
+    }
+
+    .scrollableDialogContent {
+        padding: 16px 12px 20px 12px;
+    }
+
+    .dialogActions {
+        padding: 12px 12px 16px 12px;
+    }
+}

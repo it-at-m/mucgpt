@@ -2,7 +2,7 @@
 FROM registry.access.redhat.com/ubi10/ubi-minimal:latest@sha256:67aafc6c9c44374e1baf340110d4c835457d59a0444c068ba9ac6431a6d9e7ac
 
 
-COPY --from=ghcr.io/astral-sh/uv:latest@sha256:5713fa8217f92b80223bc83aac7db36ec80a84437dbc0d04bbc659cae030d8c9 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:latest@sha256:2320e6c239737dc73cccce393a8bb89eba2383d17018ee91a59773df802c20e6 /uv /uvx /bin/
 
 # Enable bytecode compilation
 ENV UV_COMPILE_BYTECODE=1
@@ -14,7 +14,6 @@ WORKDIR /app
 
 # Leverage layer cache
 COPY pyproject.toml uv.lock ./
-COPY departements.json* ./
 
 # Install build dependencies for packages with C extensions
 RUN microdnf install -y gcc python3-devel

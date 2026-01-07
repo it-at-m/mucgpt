@@ -53,7 +53,7 @@ export function buildAssistant(): AssistantCreateResponse {
         id,
         created_at: created,
         updated_at: created,
-        hierarchical_access: ["IT", "IT-KI"],
+        hierarchical_access: ["POR-O"],
         owner_ids: ["user-mock-456"],
         latest_version: {
             id: versionId,
@@ -62,7 +62,7 @@ export function buildAssistant(): AssistantCreateResponse {
             name,
             description: randomParagraph(3),
             system_prompt: `You are ${name}. ${randomSentence()} Antworte strukturiert und prägnant.`,
-            hierarchical_access: ["IT", "IT-KI"],
+            hierarchical_access: ["POR-O"],
             temperature: +(Math.random() * 1).toFixed(1),
             max_output_tokens: 4000,
             is_visible: true,
@@ -118,7 +118,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
         id: overrides.id || `assistant-mock-${Math.random().toString(36).slice(2, 10)}`,
         created_at: overrides.created_at || new Date().toISOString(),
         updated_at: overrides.updated_at || new Date().toISOString(),
-        hierarchical_access: overrides.hierarchical_access || ["IT", randomOf(["IT-KI", "IT-Entwicklung", "IT-Support"])],
+        hierarchical_access: overrides.hierarchical_access || ["BAU", randomOf(["ITM-KM", "ITM-KM-DI", "RIT"])],
         owner_ids: overrides.owner_ids || [`user-mock-${Math.random().toString(36).slice(2, 10)}`],
         latest_version: {
             id: overrides.latest_version?.id || `version-${Math.random().toString(36).slice(2, 8)}`,
@@ -127,7 +127,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
             name,
             description,
             system_prompt: overrides.latest_version?.system_prompt || `You are the ${name}. Provide excellent, clear, and structured assistance.`,
-            hierarchical_access: overrides.latest_version?.hierarchical_access || ["IT", "IT-KI"],
+            hierarchical_access: overrides.latest_version?.hierarchical_access || ["ITM"],
             temperature: overrides.latest_version?.temperature ?? Number((Math.random() * 1.5).toFixed(2)),
             max_output_tokens: overrides.latest_version?.max_output_tokens || 4000,
             is_visible: overrides.latest_version?.is_visible !== undefined ? overrides.latest_version.is_visible : true,
@@ -299,72 +299,51 @@ export function generateSimplifyStreamChunks() {
         });
     };
 
-    const introPool = [
-        "On Sundays and public holidays most people should have a day off.",
-        "Sundays and official holidays are usually rest days.",
-        "Public holidays and Sundays are normally work-free.",
-        "These days are intended for rest, not regular work."
-    ];
-    const allowPool = [
-        "In special cases work is allowed.",
-        "Sometimes work may still happen.",
-        "There are exceptions where working is okay.",
-        "Certain situations permit necessary work."
-    ];
-    const examplesPool = [
-        "Emergency services",
-        "Hospitals",
-        "Fire department",
-        "Police",
-        "Hotels",
-        "Public events",
-        "Power supply",
-        "Agriculture",
-        "Cleaning staff",
-        "Research labs",
-        "Bakeries",
-        "Food production",
-        "Security staff"
-    ];
+    // Align mock with backend: sections with content (Generate -> Critique -> [Refine -> Critique] x2)
+    push("STARTED", "**Vereinfachungsprozess gestartet.**");
 
-    function pickList(base: string[], min: number, max: number) {
-        const count = Math.min(base.length, Math.floor(Math.random() * (max - min + 1)) + min);
-        const clone = [...base];
-        const out: string[] = [];
-        while (out.length < count && clone.length) {
-            out.push(clone.splice(Math.floor(Math.random() * clone.length), 1)[0]);
-        }
-        return out;
-    }
+    const revisionTags = ["0", "1", "2"]; // match provided example revisions
 
-    const intro = randomOf(introPool);
-    const allow = randomOf(allowPool);
-    const examples = pickList(examplesPool, 6, 10);
-    const revCount = Math.floor(Math.random() * 3) + 3;
+    // Generate section with provided example text
+    push(
+        "APPEND",
+        `<SIMPLIFY_GENERATE revision=${revisionTags[0]}>Ansprache an die Bürger und Mitarbeiter in München\n\nLiebe Bürger und Bürgerinnen von München.\n\nLiebe Mitarbeiter und Mitarbeiterinnen von der Stadt-Verwaltung.\n\nIch spreche heute zu Ihnen.\n\nIch freue mich sehr.\n\nIch bin Ihnen sehr dankbar.\n\nSie arbeiten jeden Tag sehr viel für München.\n\nSie geben sich viel Mühe.\n\nSie wollen immer alles sehr gut machen.\n\nDas ist sehr wichtig für uns alle.\n\nSo geht es München gut.\n\nSo gibt es in München viele schöne Dinge.\n\nSie machen München zu einer besonderen Stadt.\n\nMünchen ist lebendig und schön.\n\nMünchen hat eine gute Zukunft.\n\nIch bin sehr stolz auf Sie.\n\nIch finde Ihre Arbeit sehr gut.\n\nUnsere Schlösser in München sind sehr bekannt und schön.\n\nIch möchte, dass München noch schöner wird.\n\nIch wünsche mir ein neues, großes Schloss.\n\nDas Schloss soll sehr besonders sein.\n\nDas Schloss soll schöner als alle anderen sein.\n\nDas Schloss soll zeigen, wie schön München ist.\n\nDas Schloss soll zeigen, wie wichtig Kunst und Kultur für uns sind.\n\nDas neue Schloss soll auch für die Zukunft wichtig sein.\n\nWir bauen das Schloss zusammen.\n\nSie haben viel Erfahrung.\n\nSie sind begeistert von Ihrer Arbeit.\n\nIch weiß: Sie schaffen das.\n\nSo wird München noch schöner.\n\nIch danke Ihnen sehr für Ihre Arbeit.\n\nIch vertraue Ihnen.\n\nIch weiß, Sie können das Ziel erreichen.\n\nMit besten Grüßen,\n\nIhr Ludwig der Zweite</SIMPLIFY_GENERATE>`
+    );
 
-    push("STARTED", "Initiating simplification protocol... (detangling jargon)");
-    push("APPEND", "Generating initial simplified draft...");
-    push("APPEND", "\n\n<einfachesprache>\n\n"); // keep tag for frontend compatibility
-    push("APPEND", intro + "  \n\n");
-    push("APPEND", allow + "  \n\n");
-    push("APPEND", "Here are examples:  \n\n");
-    examples.slice(0, Math.floor(examples.length / 2)).forEach(e => push("APPEND", `- ${e}  \n`));
+    // Initial critique
+    push(
+        "APPEND",
+        `<SIMPLIFY_CRITIQUE revision=${revisionTags[0]}>Critique:\n\n1. Überschrift ist zu allgemein. Es fehlen klare, kurze Überschriften für Abschnitte (Regel 4).\n\n2. Es gibt keine inhaltliche Gliederung in sinnvolle Abschnitte mit eigenen Überschriften (Regel 4).\n\n3. Die Anrede „Liebe Bürger und Bürgerinnen von München. Liebe Mitarbeiter und Mitarbeiterinnen von der Stadt-Verwaltung.“ steht ohne erklärende Überschrift oder Einleitung (Regel 4).\n\n4. Einige Sätze sind unnötig inhaltlich doppelt:\n   - „Sie arbeiten jeden Tag sehr viel für München. Sie geben sich viel Mühe. Sie wollen immer alles sehr gut machen." \n   Diese Sätze könnten in einer Liste zusammengefasst werden (Regel 4: Listen nutzen).\n\n5. Der Satz „So gibt es in München viele schöne Dinge." ist inhaltlich vage und nicht anschaulich (Regel 2.1: anschauliche, konkrete Sprache).\n\n6. Die Formulierung „Sie machen München zu einer besonderen Stadt." und „München ist lebendig und schön." sind sprachlich zu abstrakt und wenig anschaulich (Regel 2.1).\n\n7. Der Satz „Unsere Schlösser in München sind sehr bekannt und schön." ist zwar einfach, aber „bekannt" ist kein Grundwortschatz und könnte erklärt werden (Regel 2.1 und 2.2).\n\n8. Der Satz „Das Schloss soll zeigen, wie wichtig Kunst und Kultur für uns sind." verwendet „Kunst" und „Kultur", beides sind keine Alltagswörter und sollten erklärt werden (Regel 2.1 und 2.2).\n\n9. „Das neue Schloss soll auch für die Zukunft wichtig sein." – „Zukunft" ist abstrakt und sollte ggf. erklärt werden (Regel 2.1 und 2.2).\n\n10. Der Satz „Sie sind begeistert von Ihrer Arbeit." verwendet „begeistert", was kein Grundwortschatz ist. Besser wäre: „Sie arbeiten sehr gern." (Regel 2.1).\n\n11. Der Satz „Ich weiß: Sie schaffen das." ist korrekt, aber „schaffen" kann im Kontext mehrdeutig sein und sollte ggf. erklärt werden (Regel 2.1 und 2.2).\n\n12. Die Sätze „Ich vertraue Ihnen." und „Ich weiß, Sie können das Ziel erreichen." verwenden „vertrauen" und „Ziel erreichen". Beide Begriffe sind abstrakt und sollten mit einfachen Worten erklärt werden (Regel 2.1 und 2.2).\n\n13. Die Abschlussformel „Ihr Ludwig der Zweite" verwendet keine arabische Ziffer wie vorgeschrieben („Ludwig 2.") (Regel 2.5).\n\n14. Es fehlen Hervorhebungen von wichtigen Begriffen oder Erklärungen (Regel 2.2, 5).\n\n15. Die Satzlänge ist meist korrekt, aber einige Sätze enthalten mehr als eine Aussage (z. B. „München ist lebendig und schön." → 2 Aussagen) (Regel 3).\n\n16. Es werden keine Aufzählungen oder Listen genutzt, obwohl sich der Inhalt dafür anbietet (Regel 4).\n\n17. Es werden keine Fettdruck-Hervorhebungen genutzt (Regel 5).\n\n18. Die Textstruktur ist ein reiner Fließtext und nicht optimal strukturiert für Leichte Sprache (Regel 4, 5).\n\n19. Die Begriffe „Stadt-Verwaltung" und „Schloss" werden nicht erklärt (Regel 2.2).\n\n20. „Kunst" und „Kultur" werden nicht erklärt (Regel 2.2).\n\nZusammenfassung: \nDer Text ist grundsätzlich einfach und verständlich. Es gibt jedoch viele kleinere Regelverstöße, insbesondere fehlende Erklärungen von schwierigen Wörtern, fehlende Abschnitte und Überschriften sowie das Fehlen von Listen und Hervorhebungen. Die Abschlussformel verwendet keine arabische Ziffer. Insgesamt ist der Text nicht ausreichend nach den Regeln für Leichte Sprache gestaltet.</SIMPLIFY_CRITIQUE>`
+    );
+    push("APPEND", "**Ergebnis:** Qualitätsprobleme erkannt. Text wird überarbeitet.");
 
-    const fullList = examples.map(e => `- ${e}`).join("\n");
-    const updateBody = `<einfachesprache>\n\n${intro}\n\n${allow}\n\nHere are examples:\n\n${fullList}\n\nSometimes others may also work if it is important.\n\n</einfachesprache>`;
-    push("UPDATE", updateBody);
+    // First refine
+    push(
+        "APPEND",
+        `<SIMPLIFY_REFINE revision=${revisionTags[1]}>**Ansprache von Ludwig 2.**\n\n---\n\n**An wen ist der Text?**\n\nAn alle Bürger und Bürgerinnen von München.\n\nAn alle Mitarbeiter und Mitarbeiterinnen von der Stadt-Verwaltung.\n\n*Stadt-Verwaltung* bedeutet:  \nDie Stadt-Verwaltung macht Regeln und organisiert viele Dinge in der Stadt.\n\n---\n\n**Dank an alle Menschen in München**\n\nIch spreche heute zu Ihnen.\n\nIch sage:  \nDanke an Sie alle.\n\nSie arbeiten jeden Tag für München.\n\nSie machen viele wichtige Dinge.  \nZum Beispiel:\n\n- Sie helfen anderen Menschen.  \n- Sie sorgen dafür, dass die Straßen sauber sind.  \n- Sie passen auf die Gebäude auf.  \n- Sie kümmern sich um die Parks.  \n- Sie beraten Menschen im Rathaus.\n\nIch finde Ihre Arbeit sehr gut.\n\nSie geben sich viel Mühe.\n\nDas ist wichtig für München.\n\n---\n\n**München ist eine besondere Stadt**\n\nDurch Ihre Arbeit geht es München gut.\n\nIn München gibt es viele schöne Dinge.  \nZum Beispiel:\n\n- große Parks  \n- alte Gebäude  \n- viele Veranstaltungen\n\nMünchen ist besonders.  \nDas heißt: München ist anders als andere Städte.\n\nMünchen ist lebendig.  \nDas heißt: In München ist viel los.  \nMenschen treffen sich und erleben viel.\n\nMünchen ist schön.  \nEs gibt viele Blumen, Bäume und schöne Häuser.\n\nIch bin stolz auf Sie alle.\n\n---\n\n**Die Schlösser in München**\n\nIn München gibt es mehrere Schlösser.\n\nEin *Schloss* ist ein großes, schönes Haus.  \nFrüher haben dort Könige und Königinnen gewohnt.\n\nDie Schlösser in München sind bekannt.  \nDas heißt: Viele Menschen kennen die Schlösser.  \nViele Menschen besuchen die Schlösser.\n\nDie Schlösser sind sehr schön.\n\n---\n\n**Ein neues Schloss für München**\n\nIch wünsche mir ein neues, großes Schloss.\n\nDas neue Schloss soll besonders schön sein.\n\nEs soll zeigen, wie schön München ist.\n\nDas Schloss soll zeigen, wie wichtig *Kunst* und *Kultur* für uns sind.\n\n*Kunst* ist zum Beispiel:  \n- Bilder  \n- Musik  \n- Theater\n\n*Kultur* ist zum Beispiel:  \n- Feste  \n- Traditionen  \n- besondere Bräuche in München\n\nDas neue Schloss soll auch für die Zukunft wichtig sein.\n\n*Zukunft* bedeutet: Die Zeit, die noch kommt.\n\n---\n\n**Gemeinsam das Schloss bauen**\n\nWir bauen das Schloss zusammen.\n\nSie haben viel Erfahrung.  \nDas heißt: Sie wissen, wie man gut arbeitet.\n\nSie arbeiten sehr gern.\n\nIch glaube an Sie.\n\nDas heißt: Ich bin mir sicher, Sie schaffen das.\n\n*schaffen* bedeutet: Sie können das gut machen.\n\nSo wird München noch schöner.\n\n---\n\n**Mein Dank am Schluss**\n\nDanke für Ihre Arbeit.\n\nIch glaube an Sie.\n\nDas heißt: Ich bin mir sicher, Sie schaffen unser Ziel.\n\n*Ziel* bedeutet:  \nDas, was wir gemeinsam erreichen wollen.\n\n---\n\nMit besten Grüßen\n\nIhr Ludwig 2.</SIMPLIFY_REFINE>`
+    );
 
-    for (let i = 1; i <= revCount; i++) {
-        push("APPEND", `\n\n**Revision #${i}: Reviewing clarity...**`);
-        if (Math.random() > 0.4) {
-            push("APPEND", `\nℹ️ Found wording to simplify (iteration ${i}).`);
-        }
-        if (Math.random() > 0.7) {
-            push("APPEND", `\n🔍 Removing redundancy (iteration ${i}).`);
-        }
-    }
-    push("APPEND", "\n\n✅ Simplification complete! (No sentences were harmed.)");
-    push("ENDED", "Text converted to easy language – variability enabled.");
+    // Critique after first refine
+    push(
+        "APPEND",
+        `<SIMPLIFY_CRITIQUE revision=${revisionTags[1]}>**Kritikpunkt für den Text in Leichter Sprache:**\n\n1. **Zahlen und Zählweise**\n   - „Ludwig 2." sollte „Ludwig 2" geschrieben werden. Es ist korrekt, dass arabische Ziffern genutzt werden, aber „2." als Abkürzung für „Zweiter" ist nicht Leichte Sprache. Besser: „Ludwig der Zweite" (falls nötig, erklären).\n2. **Satzlänge**\n   - „Sie passen auf die Gebäude auf." und „Sie kümmern sich um die Parks." sind korrekt.\n   - Einige Sätze sind zu lang, zum Beispiel:  \n     - „Das heißt: Sie wissen, wie man gut arbeitet." (14 Wörter, noch akzeptabel, aber nah an der Grenze.)\n     - „Das heißt: Ich bin mir sicher, Sie schaffen das." (13 Wörter, noch akzeptabel, aber sehr lang.)\n     - „Das heißt: Das, was wir gemeinsam erreichen wollen." (8 Wörter, korrekt.)\n   - Die meisten Sätze sind kurz genug.\n3. **Satzstruktur**\n   - Keine Passiv-Konstruktionen gefunden.\n   - Nebensätze werden meist vermieden, Ausnahme:  \n     - „Das heißt: Die Zeit, die noch kommt." (Nebensatz, aber grammatisch einfach.)\n4. **Wortwahl**\n   - „Stadt-Verwaltung", „Kunst", „Kultur", „Traditionen", „Bräuche", „Zukunft", „Erfahrung", „Ziel" werden erklärt, was gut ist.\n   - „besonderes"/„besonders" wird mehrfach genutzt, aber ist allgemeinverständlich.\n   - „Meisterwerk" aus dem Original wurde korrekt vermieden.\n   - „Errungenschaften" aus dem Original wird nicht übernommen, das ist gut.\n   - „noble Ziel" aus dem Original wurde weggelassen, das ist in Leichter Sprache besser.\n   - Das Wort „Schloss" wird erklärt.\n5. **Metaphern/Bildsprache**\n   - Keine Metaphern, Ironien oder bildhafte Sprache im Text.\n6. **Abschnitte und Überschriften**\n   - Gute Gliederung mit vielen Überschriften.\n7. **Typografie**\n   - Gliederung ist übersichtlich.\n   - Fettdruck wird sparsam und korrekt eingesetzt.\n8. **Erklärung von Fachbegriffen**\n   - Alle schwierigen Begriffe werden erklärt.\n9. **Direkte Ansprache**\n   - Die Leser werden direkt angesprochen („Ich danke Ihnen.", „Sie arbeiten...").\n10. **Synonyme**\n    - Begriffe werden konsistent verwendet.\n11. **Reihenfolge der Informationen**\n    - Die Reihenfolge ist klar und folgt dem Originaltext.\n12. **Keine URLs oder Links**\n    - Es gibt keine Links im Text.\n\n**Fazit:**\n- Der Text hält sich fast vollständig an die Regeln der Leichten Sprache.\n- Die wenigen längeren Sätze liegen noch im erlaubten Rahmen, könnten aber notfalls noch weiter vereinfacht werden.\n- Die Formulierung „Ludwig 2." könnte für die Zielgruppe unklar sein. Besser: „Ludwig der Zweite".\n\n**Insgesamt:**  \nSehr wenige, kleine Verstöße. Der Text ist fast regelkonform.\n\n**Empfehlung:**  \n- „Ludwig 2." ersetzen durch „Ludwig der Zweite".\n- Lange Sätze, die nah an 15 Wörtern sind, überprüfen und ggf. weiter kürzen.\n\n**Ansonsten:**  \nKeine weiteren Probleme gefunden.</SIMPLIFY_CRITIQUE>`
+    );
+    push("APPEND", "**Ergebnis:** Qualitätsprobleme erkannt. Text wird überarbeitet.");
+
+    // Second refine
+    push(
+        "APPEND",
+        `<SIMPLIFY_REFINE revision=${revisionTags[2]}>**Ansprache von Ludwig der Zweite**\n\n---\n\n**An wen ist der Text?**\n\nAn alle Bürger und Bürgerinnen von München.\n\nAn alle Mitarbeiter und Mitarbeiterinnen von der Stadt-Verwaltung.\n\n*Stadt-Verwaltung* bedeutet:  \nDie Stadt-Verwaltung macht Regeln.  \nSie organisiert viele Dinge in der Stadt.\n\n---\n\n**Dank an alle Menschen in München**\n\nIch spreche heute zu Ihnen.\n\nIch sage:  \nDanke an Sie alle.\n\nSie arbeiten jeden Tag für München.\n\nSie machen viele wichtige Dinge.  \nZum Beispiel:\n\n- große Parks  \n- alte Gebäude  \n- viele Veranstaltungen\n\nMünchen ist besonders.  \nDas heißt: München ist anders als andere Städte.\n\nMünchen ist lebendig.  \nDas heißt: In München ist viel los.  \nMenschen treffen sich.  \nMenschen erleben viel.\n\nMünchen ist schön.  \nEs gibt viele Blumen und Bäume.  \nEs gibt auch viele schöne Häuser.\n\nIch bin stolz auf Sie alle.\n\n---\n\n**Die Schlösser in München**\n\nIn München gibt es mehrere Schlösser.\n\nEin *Schloss* ist ein großes, schönes Haus.  \nFrüher haben dort Könige und Königinnen gewohnt.\n\nDie Schlösser in München sind bekannt.  \nDas heißt: Viele Menschen kennen die Schlösser.  \nViele Menschen besuchen die Schlösser.\n\nDie Schlösser sind sehr schön.\n\n---\n\n**Ein neues Schloss für München**\n\nIch wünsche mir ein neues, großes Schloss.\n\nDas neue Schloss soll besonders schön sein.\n\nDas Schloss soll zeigen:  \nMünchen ist schön.\n\nDas Schloss soll auch zeigen:  \nKunst und Kultur sind wichtig für uns.\n\n*Kunst* ist zum Beispiel:  \n- Bilder  \n- Musik  \n- Theater\n\n*Kultur* ist zum Beispiel:  \n- Feste  \n- Traditionen  \n- besondere Bräuche in München\n\nDas neue Schloss soll auch für die Zukunft wichtig sein.\n\n*Zukunft* bedeutet: Die Zeit, die noch kommt.\n\n---\n\n**Gemeinsam das Schloss bauen**\n\nWir bauen das Schloss zusammen.\n\nSie haben viel Erfahrung.  \nDas heißt: Sie wissen viel über Ihre Arbeit.\n\nSie arbeiten sehr gern.\n\nIch glaube an Sie.\n\nDas heißt: Ich bin sicher, Sie können das gut machen.\n\nSo wird München noch schöner.\n\n---\n\n**Mein Dank am Schluss**\n\nDanke für Ihre Arbeit.\n\nIch glaube an Sie.\n\nDas heißt: Ich bin sicher, Sie schaffen unser Ziel.\n\n*Ziel* bedeutet:  \nDas, was wir gemeinsam erreichen wollen.\n\n---\n\nMit besten Grüßen\n\nIhr Ludwig der Zweite  \n(König von Bayern)</SIMPLIFY_REFINE>`
+    );
+
+    // Final critique
+    push(
+        "APPEND",
+        `<SIMPLIFY_CRITIQUE revision=${revisionTags[2]}>Critique:\n\n1. **Satzlänge**  \n   - Mehrere Sätze sind länger als 15 Wörter. Beispiele:  \n     - „Die Stadt-Verwaltung macht Regeln. Sie organisiert viele Dinge in der Stadt." (Zwei Aussagen, aber korrekt getrennt. Kein Problem.)  \n     - „Das heißt: München ist anders als andere Städte." (14 Wörter, aber noch im Rahmen.)  \n     - „Das neue Schloss soll auch für die Zukunft wichtig sein." (9 Wörter, in Ordnung.)  \n   → Insgesamt halten die meisten Sätze die Längenregel ein. Nur wenige Sätze sind an der Grenze, überschreiten diese aber nicht deutlich.\n\n2. **Nebensätze und Satzstruktur**  \n   - Der Text verwendet an mehreren Stellen das Muster „Das heißt: ...", um Nebensätze zu vermeiden.  \n   - Die Satzstruktur ist einfach und korrekt.\n\n3. **Fremd- und Fachwörter**  \n   - Die Erklärung von „Stadt-Verwaltung", „Schloss", „Kunst", „Kultur", „Zukunft", und „Ziel" erfolgt direkt im Text und ist gut gelöst.\n   - Das Wort „Erfahrung" wird mit „Das heißt: Sie wissen viel über Ihre Arbeit." gut erklärt.\n   - Das Wort „Kompetenz" aus dem Original wird zu „Erfahrung"; das ist angemessen.\n   - Das Wort „Enthusiasmus" aus dem Original wird sinngemäß durch „Sie arbeiten sehr gern." ersetzt; das ist gut.\n\n4. **Gleiches gleich benennen**  \n   - Es wird meistens das gleiche Wort für gleiche Dinge genutzt. Beispiel: „Schloss", „München", „Arbeit".\n\n5. **Metaphern und bildhafte Sprache**  \n   - Der Text verzichtet auf Metaphern und bildhafte Sprache.\n\n6. **Abkürzungen**  \n   - Es werden keine unerklärten Abkürzungen verwendet.\n\n7. **Typographie und Layout**  \n   - Der Text ist in kurze Abschnitte mit Überschriften gegliedert.\n   - Listen werden eingesetzt.\n   - Es ist nicht zu erkennen, ob eine große, gut lesbare Schrift und ausreichender Kontrast verwendet werden, da es sich um einen reinen Text handelt.\n\n8. **Direkte Ansprache**  \n   - Die Leser werden direkt angesprochen („Ich glaube an Sie.").\n\n9. **Passiv und Konjunktiv**  \n   - Der Konjunktiv wird vermieden („Ich bin sicher, Sie können das gut machen." statt „Ich wäre sicher, Sie könnten das gut machen.").\n   - Passiv wird nicht verwendet.\n\n10. **Zahlen**  \n    - „Der Zweite" als Name ist korrekt ausgeschrieben; es werden keine anderen Zahlen verwendet.\n\n11. **Fehlende Informationen / Auslassungen**  \n    - Die inhaltliche Abdeckung ist vollständig, keine relevanten Informationen aus dem Original fehlen.\n\n12. **Link-Regeln**\n    - Keine Links im Text, daher kein Problem.\n\n13. **Absatzlänge und Lesbarkeit**  \n    - Die Absätze sind kurz und übersichtlich.\n    - Jeder Satz steht in einer eigenen Zeile.\n\n14. **Synonyme**\n    - „Mitarbeiter und Mitarbeiterinnen" und „Menschen" werden beide verwendet, sind aber im Kontext klar und verständlich.\n\n**Fazit:**  \nDer Text hält alle Regeln für Leichte Sprache ein.  \nKeine Regelverletzungen festgestellt.\n\nNo issues found.</SIMPLIFY_CRITIQUE>`
+    );
+    push("APPEND", "**Ergebnis:** Qualitätsprüfung ohne Beanstandungen.");
+
+    push("ENDED", "**Textvereinfachung abgeschlossen.**");
 
     chunks.push({
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
@@ -372,6 +351,22 @@ export function generateSimplifyStreamChunks() {
         created: Math.floor(Date.now() / 1000),
         model: "KICCGPT",
         choices: [{ index: 0, delta: { content: "Simplification finished." }, finish_reason: null }]
+    });
+    chunks.push({
+        id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,
+        object: "chat.completion.chunk",
+        created: Math.floor(Date.now() / 1000),
+        model: "KICCGPT",
+        choices: [
+            {
+                index: 0,
+                delta: {
+                    content:
+                        "**Ansprache von Ludwig der Zweite**\n\nAn alle Bürger und Bürgerinnen von München. An alle Mitarbeiter und Mitarbeiterinnen von der Stadt-Verwaltung.\n\nDie Stadt-Verwaltung macht Regeln. Sie organisiert viele Dinge in der Stadt.\n\nIch sage: Danke an Sie alle. Sie arbeiten jeden Tag für München.\n\nIn München gibt es viele schöne Dinge. Zum Beispiel: große Parks, alte Gebäude, viele Veranstaltungen.\n\nMünchen ist lebendig und schön. Es gibt viele Blumen, Bäume und schöne Häuser.\n\nIch wünsche mir ein neues, großes Schloss. Das Schloss soll zeigen: München ist schön. Kunst und Kultur sind wichtig.\n\nKunst ist zum Beispiel Bilder, Musik, Theater. Kultur ist zum Beispiel Feste, Traditionen, besondere Bräuche in München.\n\nWir bauen das Schloss zusammen. Sie haben viel Erfahrung. Sie arbeiten sehr gern. Ich bin sicher, Sie können das gut machen.\n\nDanke für Ihre Arbeit. Ich bin sicher, Sie schaffen unser Ziel.\n\nMit besten Grüßen\nIhr Ludwig der Zweite"
+                },
+                finish_reason: null
+            }
+        ]
     });
     chunks.push({
         id: `chatcmpl-simplify-${Math.random().toString(36).slice(2, 8)}`,

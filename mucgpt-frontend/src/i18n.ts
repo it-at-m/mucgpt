@@ -153,7 +153,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Suche Abteilung...",
                             no_matches: "Keine Treffer",
-                            own_department_label: "(Ihre Abteilung)"
+                            own_department_label: "(Ihre Abteilung)",
+                            load_error: "Konnte Verzeichnis nicht laden",
+                            collapse: "Einklappen",
+                            expand: "Ausklappen",
+                            me: "Ich",
+                            loading: "Lädt...",
+                            loading_short: "...",
+                            clear_all: "Alle entfernen",
+                            remove_department: "Abteilung {{name}} entfernen"
                         },
                         terms_of_use: {
                             tooltip: "Nutzungsbedingungen anzeigen",
@@ -325,6 +333,8 @@ i18n
                             description: "Funktionsbeschreibung",
                             prompt: "System-Prompt",
                             dialog_title: "Neuen Assistent erstellen",
+                            default_assistant_title: "Assistent",
+                            default_assistant_description: "Ein Assistent",
                             step1_label: "Funktion beschreiben",
                             step2_label: "Assistent beschreiben",
                             hint_text:
@@ -338,6 +348,7 @@ i18n
                             or_choose_template: "Alternativ könntest du auch die unteren vordefinierten Assistenten erstmal probieren:",
                             continue_with_mucgpt: "Mit MUCGPT fortfahren",
                             define_myself: "Ich definiere selbst",
+                            description_required: "Bitte geben Sie eine Beschreibung ein, damit MUCGPT den Assistenten generieren kann",
                             generating_prompt: "Generiere Prompt...",
                             assistant_saved_success: "Assistent erfolgreich gespeichert!",
                             assistant_saved_message: 'Ihr Assistent "{{title}}" wurde erfolgreich erstellt und gespeichert.',
@@ -362,6 +373,8 @@ i18n
                             assistant_title: "Titel",
                             assistant_description: "Beschreibung",
                             system_prompt: "System-Prompt",
+                            default_assistant_title: "Assistent",
+                            default_assistant_description: "Ein Assistent",
                             advanced_settings: "Erweiterte Einstellungen",
                             hide_advanced_settings: "Erweiterte Einstellungen ausblenden",
                             collapse: "Einklappen",
@@ -386,8 +399,6 @@ i18n
                             no_quick_prompts_selected: "Keine vorgeschlagenen Antworten hinzugefügt",
                             no_examples_selected: "Keine Beispiele hinzugefügt",
                             remove: "Entfernen",
-                            close: "Schließen",
-                            back: "Zurück",
                             save: "Speichern",
                             saved_successfully: "Erfolgreich gespeichert!",
                             assistant_saved_description: "Der Assistent {{assistantName}} wurde erfolgreich gespeichert.",
@@ -405,8 +416,7 @@ i18n
                             previous: "Zurück",
                             // Close dialog
                             close_dialog_title: "Dialog schließen",
-                            close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren.",
-                            cancel: "Abbrechen"
+                            close_dialog_message: "Sind Sie sicher, dass Sie den Dialog schließen möchten? Alle nicht gespeicherten Änderungen gehen verloren."
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlichen",
@@ -594,12 +604,12 @@ i18n
                         footer_info: "Footer information",
                         clear_chat: "New chat",
                         settings: "Settings",
-                        close: "Close",
                         messages: "Messages",
                         examples: "Examples",
                         sidebar_show: "Show sidebar",
                         sidebar_hide: "Hide sidebar",
                         cancel: "Cancel",
+                        close: "Close",
                         create: "Create",
                         back: "Back",
                         ok: "OK",
@@ -659,7 +669,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Search department...",
                             no_matches: "No matches",
-                            own_department_label: "(Your department)"
+                            own_department_label: "(Your department)",
+                            load_error: "Could not load directory",
+                            collapse: "Collapse",
+                            expand: "Expand",
+                            me: "Me",
+                            loading: "Loading...",
+                            loading_short: "...",
+                            clear_all: "Clear all",
+                            remove_department: "Remove department {{name}}"
                         },
                         terms_of_use: {
                             tooltip: "Show terms of use",
@@ -831,6 +849,8 @@ i18n
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Create new assistant",
+                            default_assistant_title: "Assistant",
+                            default_assistant_description: "An assistant",
                             step1_label: "Describe function",
                             step2_label: "Create assistant",
                             hint_text:
@@ -844,6 +864,7 @@ i18n
                             or_choose_template: "Alternatively, you could first try the predefined assistants below:",
                             continue_with_mucgpt: "Continue with MUCGPT",
                             define_myself: "Define myself",
+                            description_required: "Please enter a description so MUCGPT can generate the assistant",
                             generating_prompt: "Generating prompt...",
                             assistant_saved_success: "Assistant saved successfully!",
                             assistant_saved_message: 'Your assistant "{{title}}" has been created and saved.',
@@ -866,6 +887,8 @@ i18n
                             assistant_title: "Title",
                             assistant_description: "Description",
                             system_prompt: "System Prompt",
+                            default_assistant_title: "Assistant",
+                            default_assistant_description: "An assistant",
                             advanced_settings: "Advanced Settings",
                             hide_advanced_settings: "Hide Advanced Settings",
                             collapse: "Collapse",
@@ -890,8 +913,6 @@ i18n
                             no_quick_prompts_selected: "No quick prompts added",
                             no_examples_selected: "No examples added",
                             remove: "Remove",
-                            close: "Close",
-                            back: "Back",
                             save: "Save",
                             saved_successfully: "Succesfully saved!",
                             assistant_saved_description: "The assistant {{assistantName}} has been successfully saved.",
@@ -906,8 +927,7 @@ i18n
                             next: "Next",
                             previous: "Previous",
                             close_dialog_title: "Close Dialog",
-                            close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost.",
-                            cancel: "Cancel"
+                            close_dialog_message: "Are you sure you want to close the dialog? All unsaved changes will be lost."
                         },
                         publish_assistant_dialog: {
                             title: "Publish Assistant",
@@ -1088,12 +1108,12 @@ i18n
                         footer_info: "Fußzeilen-Info",
                         clear_chat: "Neia Chat",
                         settings: "Konfiguration",
-                        close: "Schließen",
                         messages: "Nochrichten",
                         examples: "Beispui",
                         sidebar_show: "Sidebar zoagn",
                         sidebar_hide: "Sidebar ausblenden",
-                        cancel: "Abbrechen",
+                        cancel: "Obbrecha",
+                        close: "Schließn",
                         create: "Anlegn",
                         back: "Zruck",
                         ok: "OK",
@@ -1159,7 +1179,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Suach Abteilung...",
                             no_matches: "Koin Treffer",
-                            own_department_label: "(Dei Abteilung)"
+                            own_department_label: "(Dei Abteilung)",
+                            load_error: "Konnte Verzeichnis ned lodn",
+                            collapse: "Zammklappn",
+                            expand: "Aufklappn",
+                            me: "I",
+                            loading: "Lodt...",
+                            loading_short: "...",
+                            clear_all: "Ois wecka",
+                            remove_department: "Abteilung {{name}} wecka"
                         },
                         terms_of_use: {
                             tooltip: "Nutzungsbedingunga zeig'n",
@@ -1331,6 +1359,8 @@ i18n
                             description: "Was er kenna muass",
                             prompt: "System-Vorgab (Prompt)",
                             dialog_title: "An neia Assistentn o'legn",
+                            default_assistant_title: "Assistent",
+                            default_assistant_description: "A Assistent",
                             step1_label: "Sog ma, was er kenna muass",
                             step2_label: "Assistentn ferti macha",
                             hint_text:
@@ -1344,6 +1374,7 @@ i18n
                             or_choose_template: "Alternativ kannst aa erst amoi de vordefinierten Assistenten dauntn ausprobiern:",
                             continue_with_mucgpt: "Mit MUCGPT weitermacha",
                             define_myself: "Des mach i selber",
+                            description_required: "Bittschön gib a Beschreibung ei, damit MUCGPT den Assistentn generieren ko",
                             generating_prompt: "Prompt wird erstellt...",
                             assistant_saved_success: "Assistent erfolgreich gspeichert!",
                             assistant_saved_message: 'Dei Assistent "{{title}}" is erfolgreich erstellt und gspeichert wordn.',
@@ -1367,6 +1398,8 @@ i18n
                             assistant_title: "Titel",
                             assistant_description: "Beschreibung",
                             system_prompt: "System-Prompt",
+                            default_assistant_title: "Assistent",
+                            default_assistant_description: "A Assistent",
                             advanced_settings: "Erweiterte Einstellungen",
                             hide_advanced_settings: "Erweiterte Einstellungen vaberg",
                             collapse: "Eiklappn",
@@ -1391,8 +1424,6 @@ i18n
                             no_quick_prompts_selected: "Koane vorgeschlagene Antworn hinzugfügt",
                             no_examples_selected: "Koane Beispui hinzugfügt",
                             remove: "Entfernen",
-                            close: "Schließen",
-                            back: "Zruck",
                             save: "Speichan",
                             saved_successfully: "Erfolgreich gspeichert!",
                             assistant_saved_description: "Der Assistent {{assistantName}} is jetzt erfolgreich g'speichert.",
@@ -1410,8 +1441,7 @@ i18n
                             previous: "Zruck",
                             // Close dialog
                             close_dialog_title: "Dialog schließn",
-                            close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn.",
-                            cancel: "Obbrecha"
+                            close_dialog_message: "Bist da sicha, dass'd den Dialog schließn willst? Olle ned gspeicherten Änderungen gehen verlorn."
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlcha",
@@ -1598,12 +1628,12 @@ i18n
                         footer_info: "Informations du pied de page",
                         clear_chat: "Nouveau chat",
                         settings: "Paramètres",
-                        close: "Fermer",
                         messages: "Messages",
                         examples: "Exemples",
                         sidebar_show: "Afficher la barre latérale",
                         sidebar_hide: "Masquer la barre latérale",
                         cancel: "Annuler",
+                        close: "Fermer",
                         create: "Créer",
                         back: "Retour",
                         ok: "OK",
@@ -1663,7 +1693,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Rechercher un département...",
                             no_matches: "Aucune correspondance",
-                            own_department_label: "(Votre département)"
+                            own_department_label: "(Votre département)",
+                            load_error: "Impossible de charger le répertoire",
+                            collapse: "Réduire",
+                            expand: "Développer",
+                            me: "Moi",
+                            loading: "Chargement...",
+                            loading_short: "...",
+                            clear_all: "Tout effacer",
+                            remove_department: "Supprimer le département {{name}}"
                         },
                         terms_of_use: {
                             tooltip: "Afficher les conditions d'utilisation",
@@ -1836,6 +1874,8 @@ i18n
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Créer un nouvel assistant",
+                            default_assistant_title: "Assistant",
+                            default_assistant_description: "Un assistant",
                             step1_label: "Décrire la fonction",
                             step2_label: "Créer l'assistant",
                             hint_text:
@@ -1849,6 +1889,7 @@ i18n
                             or_choose_template: "Alternativement, vous pouvez d'abord essayer les assistants prédéfinis ci-dessous :",
                             continue_with_mucgpt: "Continuer avec MUCGPT",
                             define_myself: "Je définis moi-même",
+                            description_required: "Veuillez saisir une description pour que MUCGPT puisse générer l'assistant",
                             generating_prompt: "Génération du prompt...",
                             assistant_saved_success: "Assistant enregistré avec succès!",
                             assistant_saved_message: 'Votre assistant "{{title}}" a été créé et enregistré avec succès.',
@@ -1873,6 +1914,8 @@ i18n
                             assistant_title: "Titre",
                             assistant_description: "Description",
                             system_prompt: "Prompt système",
+                            default_assistant_title: "Assistant",
+                            default_assistant_description: "Un assistant",
                             advanced_settings: "Paramètres avancés",
                             hide_advanced_settings: "Masquer les paramètres avancés",
                             collapse: "Réduire",
@@ -1897,8 +1940,6 @@ i18n
                             no_quick_prompts_selected: "Aucun prompt rapide ajouté",
                             no_examples_selected: "Aucun exemple ajouté",
                             remove: "Supprimer",
-                            close: "Fermer",
-                            back: "Retour",
                             save: "Enregistrer",
                             saved_successfully: "Enregistré avec succès!",
                             assistant_saved_description: "L'assistant {{assistantName}} a été enregistré avec succès.",
@@ -1916,8 +1957,7 @@ i18n
                             previous: "Précédent",
                             // Close dialog
                             close_dialog_title: "Fermer le dialogue",
-                            close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues.",
-                            cancel: "Annuler"
+                            close_dialog_message: "Êtes-vous sûr de vouloir fermer le dialogue ? Toutes les modifications non enregistrées seront perdues."
                         },
                         publish_assistant_dialog: {
                             title: "Publier l'assistant",
@@ -2105,12 +2145,12 @@ i18n
                         footer_info: "Інформація у футері",
                         clear_chat: "Новий чат",
                         settings: "Налаштування",
-                        close: "Закрити",
                         messages: "Повідомлення",
                         examples: "Приклади",
                         sidebar_show: "Показати бічну панель",
                         sidebar_hide: "Сховати бічну панель",
                         cancel: "Скасувати",
+                        close: "Закрити",
                         create: "Створити",
                         back: "Назад",
                         ok: "OK",
@@ -2170,7 +2210,15 @@ i18n
                         department_dropdown: {
                             placeholder: "Пошук відділу...",
                             no_matches: "Немає збігів",
-                            own_department_label: "(Ваш відділ)"
+                            own_department_label: "(Ваш відділ)",
+                            load_error: "Не вдалося завантажити каталог",
+                            collapse: "Згорнути",
+                            expand: "Розгорнути",
+                            me: "Я",
+                            loading: "Завантаження...",
+                            loading_short: "...",
+                            clear_all: "Очистити все",
+                            remove_department: "Видалити відділ {{name}}"
                         },
                         terms_of_use: {
                             tooltip: "Показати умови використання",
@@ -2342,6 +2390,8 @@ i18n
                             description: "Опис",
                             prompt: "Системний запит",
                             dialog_title: "Створити нового асистента",
+                            default_assistant_title: "Асистент",
+                            default_assistant_description: "Асистент",
                             step1_label: "Описати функцію",
                             step2_label: "Створити асистента",
                             hint_text:
@@ -2355,6 +2405,7 @@ i18n
                             or_choose_template: "Крім того, ви можете спочатку спробувати попередньо визначених асистентів нижче:",
                             continue_with_mucgpt: "Продовжити з MUCGPT",
                             define_myself: "Я визначу самостійно",
+                            description_required: "Будь ласка, введіть опис, щоб MUCGPT міг згенерувати асистента",
                             generating_prompt: "Генерація запиту...",
                             assistant_saved_success: "Асистента успішно збережено!",
                             assistant_saved_message: 'Ваш асистент "{{title}}" був успішно створений і збережений.',
@@ -2377,6 +2428,8 @@ i18n
                             assistant_title: "Заголовок",
                             assistant_description: "Опис",
                             system_prompt: "Системний запит",
+                            default_assistant_title: "Асистент",
+                            default_assistant_description: "Асистент",
                             advanced_settings: "Розширені налаштування",
                             hide_advanced_settings: "Приховати розширені налаштування",
                             collapse: "Згорнути",
@@ -2400,8 +2453,6 @@ i18n
                             no_quick_prompts_selected: "Швидкі запити не додано",
                             no_examples_selected: "Приклади не додано",
                             remove: "Видалити",
-                            close: "Закрити",
-                            back: "Назад",
                             save: "Зберегти",
                             saved_successfully: "Успішно збережено!",
                             assistant_saved_description: "Асистент {{assistantName}} був успішно збережений.",
@@ -2419,8 +2470,7 @@ i18n
                             previous: "Назад",
                             // Close dialog
                             close_dialog_title: "Закрити діалог",
-                            close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені.",
-                            cancel: "Скасувати"
+                            close_dialog_message: "Ви впевнені, що хочете закрити діалог? Всі незбережені зміни будуть втрачені."
                         },
                         publish_assistant_dialog: {
                             title: "Опублікувати асистента",

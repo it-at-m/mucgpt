@@ -6,7 +6,12 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import JSONResponse
 
 from api.exceptions import AuthenticationException
-from api.routers import assistants_router, system_router, users_router
+from api.routers import (
+    assistants_router,
+    department_router,
+    system_router,
+    users_router,
+)
 from core.auth import AuthError
 from core.logtools import getLogger
 
@@ -47,6 +52,10 @@ api_app = FastAPI(
             "name": "Subscriptions",
             "description": "Operations for managing subscriptions to AI assistants",
         },
+        {
+            "name": "Directory",
+            "description": "Operations for browsing the organization directory",
+        },
     ],
 )
 
@@ -54,6 +63,7 @@ api_app = FastAPI(
 api_app.include_router(assistants_router)
 api_app.include_router(users_router)
 api_app.include_router(system_router)
+api_app.include_router(department_router)
 # Add correlation ID middleware for tracking requests
 api_app.add_middleware(CorrelationIdMiddleware)
 

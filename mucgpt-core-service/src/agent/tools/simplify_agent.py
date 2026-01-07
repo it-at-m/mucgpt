@@ -395,7 +395,7 @@ class SimplifyAgent:
         if revisions >= MAX_REVISIONS:
             self.logger.warning("Max revisions reached. Ending.")
             self._stream_update(
-                f"\n\nMaximale Anzahl an Überarbeitungen ({MAX_REVISIONS}) erreicht. Text wird finalisiert.",
+                f"\n\nMaximale Anzahl an Überarbeitungen ({MAX_REVISIONS}) erreicht.",
                 ToolStreamState.APPEND,
             )
             return "end"

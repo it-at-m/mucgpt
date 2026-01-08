@@ -79,7 +79,7 @@
 .scrollableDialogContent {
     flex: 1;
     overflow-y: auto;
-    padding: 24px 24px 120px 24px;
+    padding: 24px 24px 24px 24px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -91,7 +91,7 @@
 
 /* Dialog Actions */
 .dialogActions {
-    padding-top: 26px;
+    padding-top: 12px;
     width: 100%;
     grid-column: 1 / -1 !important;
     justify-content: end;
@@ -212,11 +212,12 @@
 .dynamicFieldItem {
     display: flex;
     gap: 12px;
-    align-items: flex-start;
+    align-items: center;
     padding: 12px;
     border: 1px solid var(--colorNeutralStroke2);
     border-radius: 6px;
     background-color: var(--colorNeutralBackground1);
+    box-sizing: border-box;
 }
 
 .dynamicFieldInputs {
@@ -266,6 +267,113 @@
     border-color: var(--colorBrandStroke1);
     color: var(--colorBrandForeground1);
     background-color: var(--colorNeutralBackground1Hover);
+}
+
+.dragHandle {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-color: transparent;
+    border: none;
+    color: var(--colorNeutralForeground3);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.dragHandle:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+}
+
+.dragHandle:active {
+    cursor: grabbing;
+}
+
+/* Pragmatic DnD Styles */
+.dragHandleButton {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    background-color: transparent;
+    border: none;
+    color: var(--colorNeutralForeground3);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.dragHandleButton:hover {
+    background-color: var(--colorNeutralBackground1Hover);
+    color: var(--colorNeutralForeground1);
+}
+
+.dragHandleButton:active {
+    cursor: grabbing;
+}
+
+.dragHandleButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
+.draggableItem {
+    position: relative;
+}
+
+.draggableItem.isDragging {
+    opacity: 0.5;
+}
+
+.dropIndicator {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--colorBrandBackground);
+    border-radius: 1px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.dropIndicator::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--colorBrandBackground);
+    border-radius: 50%;
+}
+
+.dropIndicator.top {
+    top: -7px;
+}
+
+.dropIndicator.bottom {
+    bottom: -7px;
+}
+
+.dndFieldContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.dndListContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
 }
 
 .removeFieldButton {

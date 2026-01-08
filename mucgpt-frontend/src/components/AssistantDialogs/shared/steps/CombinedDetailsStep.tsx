@@ -53,7 +53,9 @@ export const CombinedDetailsStep = ({
 
     return (
         <DialogContent>
-            <p className={styles.hintText}>{t("components.create_assistant_dialog.hint_text_step2")}</p>
+            <p className={styles.hintText}>
+                <strong>{t("common.hint")}</strong> {t("components.create_assistant_dialog.hint_text_step2")}
+            </p>
 
             <Field size="large" className={styles.fieldSection}>
                 <label className={styles.fieldLabel}>{t("components.create_assistant_dialog.title")}:*</label>

@@ -69,6 +69,8 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     }, [isActionsExpanded]);
 
     const exportAssistant = useCallback(() => {
+        const sanitizeFilename = (name: string) => name.replace(/[/\\:*?"<>|]/g, "_");
+
         // Extract only exportable fields, exclude sensitive/system data
         const exportableData = {
             title: assistant.title,
@@ -87,7 +89,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
 
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${assistant.title}.json`;
+        link.download = `${sanitizeFilename(assistant.title)}.json`;
 
         document.body.appendChild(link);
         link.click();

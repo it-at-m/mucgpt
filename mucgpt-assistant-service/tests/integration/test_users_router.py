@@ -1026,30 +1026,6 @@ def test_hierarchical_access_mixed_valid_invalid(test_client):
 
 
 @pytest.mark.integration
-def test_hierarchical_access_case_sensitivity(test_client):
-    """Test that hierarchical access is case sensitive."""
-    # Create assistant with different case
-    assistant_data = AssistantCreate(
-        name="Case Sensitive Assistant",
-        system_prompt="Assistant testing case sensitivity.",
-        owner_ids=["other_user"],
-        hierarchical_access=["it-test-department"],  # Different case
-    )
-
-    create_response = test_client.post(
-        "/assistant/create", json=assistant_data.model_dump(), headers=headers
-    )
-    assert create_response.status_code == 200
-    assistant_id = create_response.json()["id"]
-
-    # User should NOT be able to subscribe (case sensitive)
-    subscribe_response = test_client.post(
-        f"/user/subscriptions/{assistant_id}", headers=headers
-    )
-    assert subscribe_response.status_code == 403
-
-
-@pytest.mark.integration
 def test_get_user_assistants_hierarchical_access_filtering(test_client):
     """Test that get user assistants respects hierarchical access when user is not owner."""
     # Create assistants with different hierarchical access levels

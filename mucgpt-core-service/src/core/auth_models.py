@@ -33,6 +33,22 @@ class AuthenticationResult(BaseModel):
     )
 
 
+class AuthErrorResponse(BaseModel):
+    """Payload returned to clients on authentication failures."""
+
+    message: str
+    redirect_url: Optional[str] = None
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "message": "Sie haben noch keinen Zugang zu MUCGPT freigeschalten.",
+                "redirect_url": "https://example.org/unauthorized",
+            }
+        }
+    )
+
+
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error

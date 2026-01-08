@@ -20,10 +20,10 @@ import remarkMath from "remark-math";
 interface Props {
     answer: AskResponse;
     onRegenerateResponseClicked?: () => void;
-    setQuestion: (question: string) => void;
+    onQuickPromptSend?: (prompt: string) => void;
 }
 
-export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Props) => {
+export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend }: Props) => {
     const { t } = useTranslation();
 
     const [copied, setCopied] = useState<boolean>(false);
@@ -136,9 +136,9 @@ export const Answer = ({ answer, onRegenerateResponseClicked, setQuestion }: Pro
                     </div>
                 )}
             </Stack.Item>
-            {onRegenerateResponseClicked && (
+            {onRegenerateResponseClicked && onQuickPromptSend && (
                 <Stack.Item>
-                    <QuickPromptList setQuestion={question => setQuestion(question)} />
+                    <QuickPromptList onSend={prompt => onQuickPromptSend(prompt)} />
                 </Stack.Item>
             )}
         </Stack>

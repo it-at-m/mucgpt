@@ -1,4 +1,18 @@
 /**
+ * ApiError class to handle API errors with status code
+ */
+export class ApiError extends Error {
+    status: number;
+    redirectUrl?: string;
+    constructor(message: string, status: number, redirectUrl?: string) {
+        super(message);
+        this.status = status;
+        this.redirectUrl = redirectUrl;
+        this.name = "ApiError";
+    }
+}
+
+/**
  * Returns a default GET-Config for fetch
  */
 export function getConfig(): RequestInit {
@@ -145,12 +159,27 @@ export async function handleApiRequest<T>(request: () => Promise<Response>, defa
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `${defaultErrorMessage}: ${response.statusText}`);
+            let message = errorData.message || `${defaultErrorMessage}: ${response.statusText}`;
+            let redirectUrl = errorData.redirect_url;
+
+            if (errorData.detail) {
+                if (typeof errorData.detail === "string") {
+                    message = errorData.detail;
+                } else if (typeof errorData.detail === "object") {
+                    message = errorData.detail.message || message;
+                    redirectUrl = errorData.detail.redirect_url || redirectUrl;
+                }
+            }
+
+            throw new ApiError(message, response.status, redirectUrl);
         }
 
         const parsedResponse = await handleResponse(response);
         return parsedResponse;
     } catch (error) {
+        if (error instanceof ApiError) {
+            throw error;
+        }
         if (error instanceof Error) {
             throw error;
         }

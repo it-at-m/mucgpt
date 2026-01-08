@@ -69,7 +69,15 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     }, [isActionsExpanded]);
 
     const exportAssistant = useCallback(() => {
-        const sanitizeFilename = (name: string) => name.replace(/[/\\:*?"<>|]/g, "_");
+        const sanitizeFilename = (name: string) => {
+            const sanitized = name.replace(/[/\\:*?"<>|]/g, "_");
+            const cleaned = sanitized.trim();
+            // Fallback if empty, only underscores, or no alphanumeric characters
+            if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
+                return "assistant";
+            }
+            return cleaned;
+        };
 
         // Extract only exportable fields, exclude sensitive/system data
         const exportableData = {
@@ -84,7 +92,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
             tags: assistant.tags
         };
 
-        const blob = new Blob([JSON.stringify(exportableData)], { type: "application/json" });
+        const blob = new Blob([JSON.stringify(exportableData, null, 2)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
 
         const link = document.createElement("a");

@@ -42,6 +42,12 @@
     font-weight: 600;
 }
 
+.dialogHeaderActions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .closeButton {
     border: none;
     background: transparent;
@@ -98,7 +104,8 @@
 
 .backButton,
 .cancelButton,
-.defineButton {
+.defineButton,
+.importButton {
     background: var(--primaryContainer) !important;
     color: var(--onPrimaryContainer) !important;
     border: 1px solid var(--outline) !important;

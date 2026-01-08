@@ -1,4 +1,4 @@
-import { Checkmark24Filled, Dismiss24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled, ArrowImport24Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -177,6 +177,70 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         updateDescription(input);
         setCurrentStep(2);
     }, [input, updateDescription]);
+
+    // Import assistant from JSON file
+    const importAssistant = useCallback(() => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".json";
+
+        fileInput.onchange = async (e: Event) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            try {
+                // Read and parse file
+                const content = await file.text();
+                const importedData = JSON.parse(content);
+
+                // Basic validation - check required fields
+                if (!importedData.title || !importedData.system_message) {
+                    throw new Error(t("components.create_assistant_dialog.import_invalid_format"));
+                }
+
+                // Create assistant object with imported data
+                const assistant: Assistant = {
+                    title: importedData.title,
+                    description: importedData.description || "",
+                    system_message: importedData.system_message,
+                    publish: false,
+                    temperature: importedData.temperature || 0.7,
+                    max_output_tokens: importedData.max_output_tokens || 2000,
+                    quick_prompts: importedData.quick_prompts || [],
+                    examples: importedData.examples || [],
+                    version: "0",
+                    owner_ids: [],
+                    tags: importedData.tags || [],
+                    hierarchical_access: [],
+                    tools: importedData.tools || [],
+                    is_visible: true
+                };
+
+                const created_id = await storageService.createAssistantConfig(assistant);
+
+                if (created_id) {
+                    setShowDialogInput(false);
+                    resetAll();
+
+                    showSuccess(
+                        t("components.create_assistant_dialog.import_success"),
+                        t("components.create_assistant_dialog.import_success_message", { title: assistant.title })
+                    );
+
+                    navigate(`/assistant/${created_id}`);
+                } else {
+                    throw new Error(t("components.create_assistant_dialog.import_save_failed"));
+                }
+            } catch (error) {
+                console.error("Failed to import assistant", error);
+                const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.import_failed");
+                showError(t("components.create_assistant_dialog.import_error"), errorMessage);
+            }
+        };
+
+        // Trigger file picker
+        fileInput.click();
+    }, [t, showSuccess, showError, navigate, setShowDialogInput, resetAll]);
 
     const steps: Step[] = useMemo(
         () => [
@@ -467,19 +531,26 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 <DialogSurface className={sharedStyles.dialog}>
                     <div className={sharedStyles.dialogHeader}>
                         <DialogTitle className={sharedStyles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
-                        <Button
-                            appearance="subtle"
-                            size="small"
-                            onClick={() => {
-                                if (hasChanges) {
-                                    setCloseDialogOpen(true);
-                                } else {
-                                    onCancelButtonClicked();
-                                }
-                            }}
-                            className={sharedStyles.closeButton}
-                            icon={<Dismiss24Regular />}
-                        />
+                        <div className={sharedStyles.dialogHeaderActions}>
+                            {currentStep === 1 && (
+                                <Button size="medium" icon={<ArrowImport24Filled />} onClick={importAssistant} className={sharedStyles.importButton}>
+                                    {t("components.create_assistant_dialog.import")}
+                                </Button>
+                            )}
+                            <Button
+                                appearance="subtle"
+                                size="small"
+                                onClick={() => {
+                                    if (hasChanges) {
+                                        setCloseDialogOpen(true);
+                                    } else {
+                                        onCancelButtonClicked();
+                                    }
+                                }}
+                                className={sharedStyles.closeButton}
+                                icon={<Dismiss24Regular />}
+                            />
+                        </div>
                     </div>
                     <DialogBody className={sharedStyles.dialogContent}>{currentStepContent}</DialogBody>
                 </DialogSurface>

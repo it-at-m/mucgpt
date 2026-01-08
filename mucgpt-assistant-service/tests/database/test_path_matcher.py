@@ -1,77 +1,103 @@
-"""Unit tests for the path_matcher module."""
+"""Unit tests for the path_matcher module using the LDAP directory tree semantics."""
 
+import pytest
 from src.database.path_matcher import path_matches_department
 
+TEST_TREE = [
+    {
+        "shortname": "RIT",
+        "name": "IT-Referat",
+        "children": [
+            {
+                "shortname": "ITM",
+                "name": "ITM",
+                "children": [
+                    {
+                        "shortname": "ITM-KM",
+                        "name": "ITM-KM",
+                        "children": [
+                            {
+                                "shortname": "ITM-KM-DI",
+                                "name": "ITM-KM-DI",
+                                "children": [],
+                            }
+                        ],
+                    },
+                    {"shortname": "ITM-AB", "name": "ITM-AB", "children": []},
+                ],
+            }
+        ],
+    },
+    {
+        "shortname": "POR",
+        "name": "Personal- und Organisationsreferat",
+        "children": [
+            {
+                "shortname": "POR-5",
+                "name": "POR-5",
+                "children": [
+                    {
+                        "shortname": "POR-5/1",
+                        "name": "POR-5/1",
+                        "children": [
+                            {
+                                "shortname": "POR-5/12",
+                                "name": "POR-5/12",
+                                "children": [],
+                            },
+                            {
+                                "shortname": "POR-5/14",
+                                "name": "POR-5/14",
+                                "children": [],
+                            },
+                        ],
+                    },
+                    {"shortname": "POR-5-AB", "name": "POR-5-AB", "children": []},
+                ],
+            }
+        ],
+    },
+]
 
-class TestPathMatcher:
-    """Test cases for the path matching logic."""
 
-    def test_exact_match(self):
-        """Test exact path matching."""
-        assert path_matches_department("ITM-KM", "ITM-KM")
-        assert path_matches_department("POR-5/12", "POR-5/12")
+@pytest.mark.asyncio
+async def test_tree_exact_and_ancestor_match():
+    assert await path_matches_department("ITM-KM", "ITM-KM", directory_tree=TEST_TREE)
+    assert await path_matches_department(
+        "RIT", "ITM-KM-DI", directory_tree=TEST_TREE
+    )  # ancestor
+    assert await path_matches_department(
+        "ITM-KM", "ITM-KM-DI", directory_tree=TEST_TREE
+    )
 
-    def test_hierarchical_dash_match(self):
-        """Test hierarchical matching with dash delimiter."""
-        assert path_matches_department("ITM", "ITM-KM")
-        assert path_matches_department("ITM-KM", "ITM-KM-DI")
-        assert path_matches_department("ITM", "ITM-KM-DI")
 
-    def test_hierarchical_slash_match(self):
-        """Test hierarchical matching with slash delimiter."""
-        assert path_matches_department("IT/DEV", "IT/DEV/FRONTEND")
-        assert path_matches_department("IT/DEV/TEST", "IT/DEV/TEST/BLUB/BLA")
+@pytest.mark.asyncio
+async def test_tree_sibling_mismatch():
+    assert not await path_matches_department(
+        "ITM-KM", "ITM-AB", directory_tree=TEST_TREE
+    )
+    assert not await path_matches_department(
+        "POR-5/1", "POR-5-AB", directory_tree=TEST_TREE
+    )
 
-    def test_numeric_slash_prefix_match(self):
-        """Test numeric prefix matching with slash delimiter."""
-        assert path_matches_department("POR-5/1", "POR-5/12")
-        assert path_matches_department("POR-5/1", "POR-5/14")
-        assert path_matches_department("POR-5/1", "POR-5/1")
 
-    def test_mixed_delimiters(self):
-        """Test paths with both slash and dash delimiters."""
-        assert path_matches_department("POR-5", "POR-5/12")
-        assert path_matches_department("POR-5", "POR-5/1")
-        assert path_matches_department("POR-5", "POR-5-AB")
-        assert path_matches_department("POR-5", "POR-5/5-AB")
+@pytest.mark.asyncio
+async def test_tree_numeric_branches():
+    assert await path_matches_department(
+        "POR-5/1", "POR-5/12", directory_tree=TEST_TREE
+    )
+    assert await path_matches_department("POR-5", "POR-5/12", directory_tree=TEST_TREE)
+    assert not await path_matches_department(
+        "POR-5/2", "POR-5/12", directory_tree=TEST_TREE
+    )
 
-    def test_no_match(self):
-        """Test cases that should not match."""
-        assert not path_matches_department("ITM-KM", "ITM-AB")
-        assert not path_matches_department("IT/DEV", "HR/RECRUITING")
-        assert not path_matches_department("POR-5/2", "POR-5/12")
-        assert not path_matches_department("POR-6", "POR-5/12")
 
-    def test_empty_access_path(self):
-        """Test that empty access path matches everything."""
-        assert path_matches_department("", "ANY-DEPT")
-        assert path_matches_department("", "ANY-DEPT/6-12")
-        # None is converted to empty string, which matches everything
-        assert path_matches_department("", "")
+@pytest.mark.asyncio
+async def test_case_insensitive_tree_match():
+    assert await path_matches_department("rit", "itm-km-di", directory_tree=TEST_TREE)
 
-    def test_no_match_different_branches(self):
-        """Test that different branches don't match."""
-        assert not path_matches_department("ITM-KM", "ITM-AB-DI")
-        assert not path_matches_department("IT-T", "IT-TEAM-MEMBER")
 
-    def test_case_sensitivity(self):
-        """Test that matching is case-sensitive."""
-        assert not path_matches_department("itm-km", "ITM-KM")
-        assert not path_matches_department("ITM-KM", "itm-km-di")
-
-    def test_numeric_non_prefix_no_match(self):
-        """Test that non-prefix numeric values don't match."""
-        assert not path_matches_department("POR-5/2", "POR-5/12")
-        assert not path_matches_department("POR-5/3", "POR-5/1")
-
-    def test_deep_hierarchical_match(self):
-        """Test deeply nested hierarchical paths."""
-        assert path_matches_department("ORG", "ORG-DEPT-TEAM-GROUP")
-        assert path_matches_department("ORG-DEPT", "ORG-DEPT-TEAM-GROUP")
-        assert path_matches_department("ORG-DEPT-TEAM", "ORG-DEPT-TEAM-GROUP")
-
-    def test_special_characters_in_paths(self):
-        """Test paths with special characters."""
-        assert path_matches_department("DEPT.123", "DEPT.123")
-        assert path_matches_department("DEPT.123", "DEPT.123-SUBTEAM")
-        assert path_matches_department("DEPT_SPECIAL#", "DEPT_SPECIAL#")
+@pytest.mark.asyncio
+async def test_empty_access_path_allows_all():
+    assert await path_matches_department("", "ANY-DEPT", directory_tree=TEST_TREE)
+    assert await path_matches_department("", "", directory_tree=TEST_TREE)

@@ -8,10 +8,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from backend import api_app
+from core import directory_cache
 from core.auth import authenticate_user
 from core.auth_models import AuthenticationResult
 from database.database_models import Base
 from database.session import get_db_session
+from tests.shared_directory_tree import TEST_TREE
 
 
 @pytest.fixture
@@ -23,7 +25,7 @@ def mock_assistant():
     assistant.updated_at = "2025-06-23T10:00:00Z"
     assistant.hierarchical_access = "IT"
     assistant.is_owner.return_value = True
-    assistant.is_allowed_for_user.return_value = True
+    assistant.is_allowed_for_user = AsyncMock(return_value=True)
 
     # Mock owners relationship
     owner_mock = MagicMock()
@@ -144,3 +146,24 @@ def test_client(override_get_db_session, override_authenticate_user):
 
     # Clear overrides after test
     api_app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mock_directory_cache():
+    """Force directory cache to return a deterministic tree for access checks."""
+
+    mp = pytest.MonkeyPatch()
+
+    async def _get_tree():
+        return TEST_TREE
+
+    mp.setattr(directory_cache, "get_simplified_directory_tree", _get_tree)
+    yield
+    mp.undo()
+    try:
+        from database import path_matcher
+
+        path_matcher._INDEX_CACHE["index"] = None
+        path_matcher._INDEX_CACHE["expires_at"] = None
+    except Exception:
+        pass

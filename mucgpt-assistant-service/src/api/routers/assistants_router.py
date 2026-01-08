@@ -436,7 +436,7 @@ async def getAssistant(
         raise AssistantNotFoundException(
             id
         )  # Check if the user is allowed to access this assistant
-    if not assistant.is_allowed_for_user(
+    if not await assistant.is_allowed_for_user(
         user_info.department
     ) and not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotAllowedToAccessException(id)
@@ -518,7 +518,7 @@ async def get_assistant_version(
     if not assistant:
         raise AssistantNotFoundException(id)
 
-    if not assistant.is_allowed_for_user(
+    if not await assistant.is_allowed_for_user(
         user_info.department
     ) and not await assistant_repo.is_owner(id, user_info.user_id):
         raise NotAllowedToAccessException(id)

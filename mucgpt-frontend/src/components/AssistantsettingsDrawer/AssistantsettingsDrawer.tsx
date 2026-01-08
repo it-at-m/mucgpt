@@ -70,7 +70,17 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
 
     const exportAssistant = useCallback(() => {
         // Extract only exportable fields, exclude sensitive/system data
-        const { id, publish, owner_ids, hierarchical_access, version, is_visible, ...exportableData } = assistant;
+        const exportableData = {
+            title: assistant.title,
+            description: assistant.description,
+            system_message: assistant.system_message,
+            temperature: assistant.temperature,
+            max_output_tokens: assistant.max_output_tokens,
+            examples: assistant.examples,
+            quick_prompts: assistant.quick_prompts,
+            tools: assistant.tools,
+            tags: assistant.tags
+        };
 
         const blob = new Blob([JSON.stringify(exportableData)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
@@ -84,7 +94,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
 
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        console.log(Date.now())
+        console.log(Date.now());
     }, [assistant]);
 
     const saveLocal = useCallback(async () => {
@@ -268,11 +278,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                                 {t("components.assistantsettingsdrawer.publish")}
                             </Button>
                         )}
-                        <Button
-                            icon={<ArrowExportUp24Filled />}
-                            onClick={() => exportAssistant()}
-                            className={styles.actionButton}
-                        >
+                        <Button icon={<ArrowExportUp24Filled />} onClick={() => exportAssistant()} className={styles.actionButton}>
                             {t("components.assistantsettingsdrawer.export")}
                         </Button>
                     </div>

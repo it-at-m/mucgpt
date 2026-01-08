@@ -528,12 +528,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                         <DialogTitle className={sharedStyles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
                         <div className={sharedStyles.dialogHeaderActions}>
                             {currentStep === 1 && (
-                                <Button
-                                    size="medium"
-                                    icon={<ArrowImport24Filled />}
-                                    onClick={importAssistant}
-                                    className={sharedStyles.importButton}
-                                >
+                                <Button size="medium" icon={<ArrowImport24Filled />} onClick={importAssistant} className={sharedStyles.importButton}>
                                     {t("components.create_assistant_dialog.import")}
                                 </Button>
                             )}

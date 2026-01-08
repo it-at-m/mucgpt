@@ -101,7 +101,7 @@
     position: fixed;
     top: 53px;
     left: max(var(--sidebarWidth), 90px);
-    z-index: 1000;
+    z-index: 5;
     align-items: center;
     gap: 90px;
     padding: 8px;

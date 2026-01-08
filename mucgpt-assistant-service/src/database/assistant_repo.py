@@ -22,6 +22,7 @@ from .database_models import (
     ToolAssociation,
     assistant_owners,
 )
+from .path_matcher import _get_directory_index
 from .repo import Repository
 
 logger = getLogger("assistant_repo")
@@ -141,11 +142,15 @@ class AssistantRepository(Repository[Assistant]):
         )
         all_assistants = list(all_assistants_query.scalars().all())
 
-        matching_assistants = [
-            assistant
-            for assistant in all_assistants
-            if assistant.is_allowed_for_user(department)
-        ]
+        matching_assistants: list[Assistant] = []
+        directory_index = await _get_directory_index()
+
+        for assistant in all_assistants:
+            if await assistant.is_allowed_for_user(
+                department,
+                directory_index=directory_index,
+            ):
+                matching_assistants.append(assistant)
 
         logger.info(
             f"Returning {len(matching_assistants)} assistants for department: {department}"

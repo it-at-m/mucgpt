@@ -19,7 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.types import JSON
 
-from .path_matcher import path_matches_department
+from .path_matcher import _get_directory_index, path_matches_department
 
 Base = declarative_base()
 ModelType = TypeVar("ModelType", bound=Base)  # type: ignore # Define a TypeVar for the model
@@ -142,15 +142,30 @@ class Assistant(Base):
         """Check if the given user_id is an owner of this assistant."""
         return any(owner.user_id == user_id for owner in self.owners)
 
-    def is_allowed_for_user(self, department: str) -> bool:
-        """Check if a user with a given department is allowed to use this assistant."""
-        # If no hierarchical access restrictions are set, allow everyone
+    async def is_allowed_for_user(
+        self,
+        department: str,
+        directory_index=None,
+    ) -> bool:
+        """Check if a user with a given department is allowed to use this assistant.
+
+        Uses the LDAP-backed directory tree to validate whether the assistant's
+        access path is an ancestor of the user's department. Falls back to the
+        legacy string matcher if the tree cannot be resolved.
+        """
+
         if not self.hierarchical_access or len(self.hierarchical_access) == 0:
             return True
 
-        # Check if department matches any of the hierarchical access paths
+        if directory_index is None:
+            directory_index = await _get_directory_index()
+
         for access_path in self.hierarchical_access:
-            if access_path and path_matches_department(access_path, department):
+            if access_path and await path_matches_department(
+                access_path,
+                department,
+                directory_index=directory_index,
+            ):
                 return True
 
         return False

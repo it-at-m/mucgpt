@@ -1,6 +1,7 @@
+import re
 import time
 import uuid
-from typing import AsyncGenerator, List, Optional
+from typing import Any, AsyncGenerator, List, Optional
 
 from langchain_core.messages import (
     AIMessage,
@@ -90,6 +91,24 @@ class MUCGPTAgentExecutor:
             },
         )
 
+    @staticmethod
+    def _extract_department_prefix(department: Optional[str]) -> Optional[str]:
+        """Return leading alphabetic prefix of department (e.g., POR from POR/3 or POR_Han)."""
+        if not department:
+            return None
+        match = re.match(r"[A-Za-z]+", department)
+        return match.group(0) if match else None
+
+    def _build_llm_extra_body(
+        self, assistant_id: Optional[str]
+    ) -> Optional[dict[str, Any]]:
+        tags: list[str] = []
+        if assistant_id:
+            tags.append(f"MUCGPT_ASSISTANT_ID:{assistant_id}")
+        if not tags:
+            return None
+        return {"metadata": {"tags": tags}}
+
     async def run_with_streaming(
         self,
         messages: List[InputMessage],
@@ -110,6 +129,11 @@ class MUCGPTAgentExecutor:
         id_ = str(uuid.uuid4())
         created = int(time.time())
         logger.debug("Stream ID: %s, created: %s", id_, created)
+        dept_prefix = (
+            self._extract_department_prefix(user_info.department) if user_info else None
+        )
+        llm_user = dept_prefix
+        llm_extra_body = self._build_llm_extra_body(assistant_id)
         config = merge_configs(
             self.base_config,
             RunnableConfig(
@@ -120,6 +144,9 @@ class MUCGPTAgentExecutor:
                     "llm_streaming": True,
                     "enabled_tools": enabled_tools,
                     "user_info": user_info,
+                    "llm_user": llm_user,
+                    "llm_extra_body": llm_extra_body,
+                    "assistant_id": assistant_id,
                 },
             ),
         )
@@ -217,6 +244,7 @@ class MUCGPTAgentExecutor:
         model: str,
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
+        assistant_id: Optional[str] = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s, max_tokens %s",
@@ -225,6 +253,11 @@ class MUCGPTAgentExecutor:
             max_output_tokens,
         )
         msgs = _convert_to_langchain_messages(messages)
+        dept_prefix = (
+            self._extract_department_prefix(user_info.department) if user_info else None
+        )
+        llm_user = dept_prefix
+        llm_extra_body = self._build_llm_extra_body(assistant_id)
         request_config = RunnableConfig(
             configurable={
                 "llm_max_tokens": max_output_tokens,
@@ -233,6 +266,9 @@ class MUCGPTAgentExecutor:
                 "llm_streaming": False,
                 "enabled_tools": enabled_tools,
                 "user_info": user_info,
+                "llm_user": llm_user,
+                "llm_extra_body": llm_extra_body,
+                "assistant_id": assistant_id,
             }
         )
         config = merge_configs(self.base_config, request_config)

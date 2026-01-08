@@ -27,6 +27,7 @@ import { Stepper, Step } from "../../Stepper";
 import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, useCreateAssistantState } from "../shared";
 import { CloseConfirmationDialog } from "../shared/CloseConfirmationDialog";
 import { useToolsContext } from "../../ToolsProvider";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
     showDialogInput: boolean;
@@ -45,6 +46,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     const { showError, showSuccess } = useGlobalToastContext();
     const { tools: availableTools } = useToolsContext();
     const { t } = useTranslation();
+    const navigate = useNavigate();
 
     // Use the custom hook for state management
     const {
@@ -116,7 +118,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     t("components.create_assistant_dialog.assistant_saved_success"),
                     t("components.create_assistant_dialog.assistant_saved_message", { title: assistant.title })
                 );
-                window.location.href = import.meta.env.BASE_URL + "#assistant/" + created_id;
+                navigate(`/assistant/${created_id}`);
             } else {
                 console.error("Assistant could not be created");
                 showError(t("components.create_assistant_dialog.assistant_creation_failed"), t("components.create_assistant_dialog.save_config_failed"));
@@ -126,7 +128,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, showError, showSuccess, t]);
+    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -452,11 +454,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 onOpenChange={(_event, data) => {
                     if (!data.open && hasChanges) {
                         setCloseDialogOpen(true);
+                    } else if (!data.open) {
+                        onCancelButtonClicked();
                     } else {
                         setShowDialogInput(data.open);
-                        if (!data.open) {
-                            setCurrentStep(1);
-                        }
                     }
                 }}
             >

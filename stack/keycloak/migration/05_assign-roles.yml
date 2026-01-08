@@ -14,3 +14,4 @@ changes:
       user: mucgpt-hr-user
       role: lhm-ab-mucgpt-user
       clientId: mucgpt
+  # mucgpt-not-allowed-user intentionally has no role assigned

@@ -145,7 +145,7 @@ async def subscribe_to_assistant(
     assistant = await assistant_repo.get(assistant_id)
     if not assistant:
         raise AssistantNotFoundException(assistant_id)
-    if not assistant.is_allowed_for_user(user_info.department):
+    if not await assistant.is_allowed_for_user(user_info.department):
         raise NotAllowedToAccessException(assistant_id)
 
     is_subscribed = await assistant_repo.is_user_subscribed(

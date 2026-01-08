@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Any, Iterable, Sequence
+from typing import Iterable, Sequence, TypeAlias, TypedDict
 
 from fastapi import HTTPException, status
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from config.settings import get_ldap_settings
 from core.cache import RedisCache
@@ -20,7 +21,48 @@ logger = getLogger(__name__)
 _CACHE_TTL = timedelta(days=14)
 
 
-def _simplify_node(node: OrganizationNode) -> dict[str, Any]:
+class DirectoryTreeNode(TypedDict, total=False):
+    shortname: str | None
+    name: str
+    children: list[DirectoryTreeNode]
+
+
+DirectoryTree: TypeAlias = list[DirectoryTreeNode]
+
+
+class _DirectoryTreeNodeModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    shortname: str | None = None
+    name: str
+    children: list[_DirectoryTreeNodeModel] = Field(default_factory=list)
+
+
+class _CacheEnvelopeModel(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    data: list[_DirectoryTreeNodeModel]
+    loaded_at: datetime
+
+
+_TREE_ADAPTER = TypeAdapter(list[_DirectoryTreeNodeModel])
+
+
+def _dump_tree(nodes: list[_DirectoryTreeNodeModel]) -> DirectoryTree:
+    return [node.model_dump(mode="python", exclude_none=True) for node in nodes]
+
+
+def _validate_tree(raw: object) -> DirectoryTree:
+    nodes = _TREE_ADAPTER.validate_python(raw)
+    return _dump_tree(nodes)
+
+
+class _CacheEnvelope(TypedDict):
+    data: list[DirectoryTreeNode]
+    loaded_at: str
+
+
+def _simplify_node(node: OrganizationNode) -> DirectoryTreeNode:
     attrs = node.attributes or {}
     shortname = None
     shortnames = attrs.get("lhmOUShortname") or attrs.get("lhmOUShortName")
@@ -44,7 +86,7 @@ def _normalize_key(value: str | None) -> str | None:
     return cleaned.lower() if cleaned else None
 
 
-def _match_node(segment: str, node: dict[str, Any]) -> bool:
+def _match_node(segment: str, node: DirectoryTreeNode) -> bool:
     target = _normalize_key(segment)
     if target is None:
         return False
@@ -55,10 +97,10 @@ def _match_node(segment: str, node: dict[str, Any]) -> bool:
 
 
 def _find_node_by_path(
-    nodes: Iterable[dict[str, Any]], path: Sequence[str]
-) -> dict[str, Any]:
-    current_children: Iterable[dict[str, Any]] = nodes
-    current: dict[str, Any] | None = None
+    nodes: Iterable[DirectoryTreeNode], path: Sequence[str]
+) -> DirectoryTreeNode:
+    current_children: Iterable[DirectoryTreeNode] = nodes
+    current: DirectoryTreeNode | None = None
 
     for segment in path:
         match = next(
@@ -81,7 +123,7 @@ def _find_node_by_path(
     return current
 
 
-def _load_directory_from_ldap() -> list[dict[str, Any]]:
+def _load_directory_from_ldap() -> DirectoryTree:
     ldap_settings = get_ldap_settings()
     if not ldap_settings.ENABLED:
         logger.error(
@@ -102,10 +144,12 @@ def _load_directory_from_ldap() -> list[dict[str, Any]]:
             detail="Failed to load directory from LDAP",
         ) from exc
 
-    return [_simplify_node(root) for root in directory.roots]
+    raw_nodes = [_simplify_node(root) for root in directory.roots]
+    validated_nodes = _TREE_ADAPTER.validate_python(raw_nodes)
+    return _dump_tree(validated_nodes)
 
 
-async def _get_cached_tree(key: str) -> dict[str, Any] | None:
+async def _get_cached_tree(key: str) -> _CacheEnvelope | None:
     try:
         await RedisCache.init_redis()
         cached = await RedisCache.get_object(key)
@@ -118,9 +162,13 @@ async def _get_cached_tree(key: str) -> dict[str, Any] | None:
     return None
 
 
-async def _set_cached_tree(key: str, data: list[dict[str, Any]]) -> None:
+async def _set_cached_tree(key: str, data: DirectoryTree) -> None:
     try:
-        payload = {"data": data, "loaded_at": datetime.now(timezone.utc).isoformat()}
+        validated_nodes = _TREE_ADAPTER.validate_python(data)
+        envelope = _CacheEnvelopeModel(
+            data=validated_nodes, loaded_at=datetime.now(timezone.utc)
+        )
+        payload = envelope.model_dump(mode="json")
         # TTL slightly longer than freshness check to allow stale fallback
         await RedisCache.set_object(
             key, payload, ttl=int(_CACHE_TTL.total_seconds() * 1.5)
@@ -129,24 +177,19 @@ async def _set_cached_tree(key: str, data: list[dict[str, Any]]) -> None:
         logger.warning("Failed to write directory tree to Redis cache", exc_info=True)
 
 
-async def get_simplified_directory_tree() -> list[dict[str, Any]]:
+async def get_simplified_directory_tree() -> DirectoryTree:
     cache_key = "mucgpt:directory-tree:v1"
     cached_wrapper = await _get_cached_tree(cache_key)
 
-    cached_data: list[dict[str, Any]] | None = None
+    cached_data: list[DirectoryTreeNode] | None = None
     cached_loaded_at: datetime | None = None
     if isinstance(cached_wrapper, dict):
-        cached_data = (
-            cached_wrapper.get("data")
-            if isinstance(cached_wrapper.get("data"), list)
-            else None
-        )
-        loaded_at_raw = cached_wrapper.get("loaded_at")
-        if isinstance(loaded_at_raw, str):
-            try:
-                cached_loaded_at = datetime.fromisoformat(loaded_at_raw)
-            except ValueError:
-                cached_loaded_at = None
+        try:
+            envelope = _CacheEnvelopeModel.model_validate(cached_wrapper)
+            cached_data = _dump_tree(envelope.data)
+            cached_loaded_at = envelope.loaded_at
+        except Exception:
+            logger.warning("Discarding invalid cached directory tree", exc_info=True)
 
     # If we have fresh cached data, return it
     if cached_data is not None and cached_loaded_at is not None:
@@ -170,7 +213,7 @@ async def get_simplified_directory_tree() -> list[dict[str, Any]]:
 
 async def get_directory_children_by_path(
     path: Sequence[str] | None,
-) -> list[dict[str, Any]]:
+) -> list[DirectoryTreeNode]:
     """Return only the children for a path of org units (shortname or name).
 
     An empty or missing path returns the roots. Matching is case-insensitive and

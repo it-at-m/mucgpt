@@ -4,7 +4,7 @@
 
 .markdownContent {
     line-height: 1.7;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
     font-size: var(--fontSizeBase400);
 }
 
@@ -21,7 +21,7 @@
 .markdownContent h2,
 .markdownContent h3 {
     margin: 24px 0 12px 0;
-    color: var(--colorNeutralForeground1);
+    color: var(--onSurface);
 }
 
 .markdownContent h1:first-child,
@@ -43,13 +43,13 @@
 .processingSection {
     margin-top: 32px;
     padding-top: 20px;
-    border-top: 1px solid var(--colorNeutralStroke2);
+    border-top: 1px solid var(--outline);
 }
 
 .processingTitle {
     font-size: var(--fontSizeBase300);
     font-weight: var(--fontWeightSemibold);
-    color: var(--colorNeutralForeground2);
+    color: var(--onSurfaceVariant);
     margin-bottom: 12px;
     display: flex;
     align-items: center;
@@ -68,7 +68,7 @@
 .processingMarkdown {
     font-family: var(--fontFamilyMonospace);
     font-size: var(--fontSizeBase200);
-    color: var(--colorNeutralForeground2);
+    color: var(--onSurfaceVariant);
     line-height: 1.5;
 }
 
@@ -78,4 +78,53 @@
 
 .processingMarkdown p:last-child {
     margin-bottom: 0;
+}
+
+.sectionsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sectionCard {
+    border: 1px solid var(--outline);
+    border-radius: 8px;
+    background: var(--surface);
+    padding: 8px 12px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: var(--fontWeightSemibold);
+    color: var(--onSurface);
+}
+
+.sectionTitle {
+    font-size: var(--fontSizeBase200);
+}
+
+.sectionRevision {
+    font-size: var(--fontSizeBase200);
+    color: var(--onSurfaceVariant);
+}
+
+.sectionBody {
+    margin-top: 8px;
+}
+
+.statusList {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.statusItem {
+    font-family: var(--fontFamilyMonospace);
+    font-size: var(--fontSizeBase200);
+    color: var(--onSurfaceVariant);
 }

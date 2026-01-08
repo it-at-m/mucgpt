@@ -211,7 +211,9 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                         <DialogContent>
                             <Stepper steps={steps} currentStep={currentStep} />
 
-                            <p className={sharedStyles.hintText}>{t("components.create_assistant_dialog.hint_text")}</p>
+                            <p className={sharedStyles.hintText}>
+                                <strong>{t("common.hint")}</strong> {t("components.create_assistant_dialog.hint_text")}
+                            </p>
 
                             <Field size="large" className={sharedStyles.fieldSection}>
                                 <label className={sharedStyles.fieldLabel}>{t("components.create_assistant_dialog.description")}:</label>

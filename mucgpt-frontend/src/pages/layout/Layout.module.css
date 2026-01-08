@@ -137,6 +137,10 @@
     box-sizing: border-box;
 }
 
+.mobileMenuAccordion :global(.fui-AccordionHeader) {
+    color: var(--surface);
+}
+
 .accordionPanel {
     padding: 12px 0;
 }
@@ -153,6 +157,7 @@
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid var(--outline);
+    color: var(--surface);
 }
 
 .mobileMenuButtonContainer {

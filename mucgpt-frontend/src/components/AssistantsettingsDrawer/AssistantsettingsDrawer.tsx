@@ -94,7 +94,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
 
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-        console.log(Date.now());
     }, [assistant]);
 
     const saveLocal = useCallback(async () => {

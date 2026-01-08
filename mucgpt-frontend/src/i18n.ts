@@ -98,6 +98,7 @@ i18n
                         back: "Zurück",
                         ok: "OK",
                         next: "Weiter",
+                        hint: "Hinweis:",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -334,9 +335,9 @@ i18n
                             step1_label: "Funktion beschreiben",
                             step2_label: "Assistent beschreiben",
                             hint_text:
-                                "Hinweis: Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
+                                "Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
                             hint_text_step2:
-                                "Hinweis: Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
+                                "Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             title_placeholder: "Zum Beispiel: Englisch Übersetzer",
                             prompt_placeholder:
@@ -384,6 +385,7 @@ i18n
                             quick_prompt_label_placeholder: "Geben Sie das Label ein...",
                             quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
                             add_quick_prompt: "Vorgeschlagene Antwort hinzufügen",
+                            dnd_reorder_hint: "Ziehen Sie die Elemente am Griff, um die Reihenfolge zu ändern.",
                             examples: "Beispiele",
                             examples_placeholder: "Fügen Sie Beispiele hinzu, eine pro Zeile (Text|Wert)",
                             example_text_placeholder: "Geben Sie den Beispiel-Text ein...",
@@ -611,6 +613,7 @@ i18n
                         back: "Back",
                         ok: "OK",
                         next: "Next",
+                        hint: "Hint:",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -847,9 +850,9 @@ i18n
                             step1_label: "Describe function",
                             step2_label: "Create assistant",
                             hint_text:
-                                "Note: Briefly describe what your assistant should do here. Then, decide whether you want MUCGPT to generate the system prompt or if you prefer to define it yourself.",
+                                "Briefly describe what your assistant should do here. Then, decide whether you want MUCGPT to generate the system prompt or if you prefer to define it yourself.",
                             hint_text_step2:
-                                "Note: Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
+                                "Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
                             description_placeholder: "For example: The assistant translates the entered text into English.",
                             title_placeholder: "For example: English Translator",
                             prompt_placeholder:
@@ -895,6 +898,7 @@ i18n
                             quick_prompt_label_placeholder: "Enter the label...",
                             quick_prompt_text_placeholder: "Enter the prompt text...",
                             add_quick_prompt: "Add Quick Prompt",
+                            dnd_reorder_hint: "Drag items by the handle to change their order.",
                             examples: "Examples",
                             examples_placeholder: "Add examples, one per line (text|value)",
                             example_text_placeholder: "Enter the example text...",
@@ -1112,6 +1116,7 @@ i18n
                         back: "Zruck",
                         ok: "OK",
                         next: "Weida",
+                        hint: "Hinweis:",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1354,9 +1359,9 @@ i18n
                             step1_label: "Sog ma, was er kenna muass",
                             step2_label: "Assistentn ferti macha",
                             hint_text:
-                                "Obacht: Do schreibst kurz her, was dei Assistent doa soi. Danach suachst da aus, ob da MUCGPT an System-Prompt für di schreim soi oder ob’st des liaba selber in d'Hand nimmst.",
+                                "Do schreibst kurz her, was dei Assistent doa soi. Danach suachst da aus, ob da MUCGPT an System-Prompt für di schreim soi oder ob'st des liaba selber in d'Hand nimmst.",
                             hint_text_step2:
-                                "Obacht: Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
+                                "Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was’d eam gibst, ins Englische.",
                             title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
                             prompt_placeholder:
@@ -1403,6 +1408,7 @@ i18n
                             quick_prompt_label_placeholder: "Gib des Label ei...",
                             quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
                             add_quick_prompt: "Vorgeschlagene Antwort hinzufügn",
+                            dnd_reorder_hint: "Ziag de Elementa am Griff, um de Reihenfoig zum ändern.",
                             examples: "Beispui",
                             examples_placeholder: "Füg Beispui hinzu, oans pro Zeile (Text|Wert)",
                             example_text_placeholder: "Gib den Beispui-Text ei...",
@@ -1629,6 +1635,7 @@ i18n
                         back: "Retour",
                         ok: "OK",
                         next: "Suivant",
+                        hint: "Conseil :",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -1866,9 +1873,9 @@ i18n
                             step1_label: "Décrire la fonction",
                             step2_label: "Créer l'assistant",
                             hint_text:
-                                "Remarque : décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
+                                "Décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
                             hint_text_step2:
-                                "Remarque : vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
+                                "Vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
                             description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
                             title_placeholder: "Par exemple : Traducteur anglais",
                             prompt_placeholder:
@@ -1916,6 +1923,7 @@ i18n
                             quick_prompt_label_placeholder: "Entrez le label...",
                             quick_prompt_text_placeholder: "Entrez le texte du prompt...",
                             add_quick_prompt: "Ajouter un prompt rapide",
+                            dnd_reorder_hint: "Faites glisser les éléments par la poignée pour changer leur ordre.",
                             examples: "Exemples",
                             examples_placeholder: "Ajoutez des exemples, un par ligne (texte|valeur)",
                             example_text_placeholder: "Entrez le texte de l'exemple...",
@@ -2143,6 +2151,7 @@ i18n
                         back: "Назад",
                         ok: "OK",
                         next: "Далі",
+                        hint: "Підказка:",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
@@ -2379,9 +2388,9 @@ i18n
                             step1_label: "Описати функцію",
                             step2_label: "Створити асистента",
                             hint_text:
-                                "Примітка: Тут ви можете коротко описати, що саме має робити ваш асистент. Після цього ви можете обрати, чи згенерувати системний промт за допомогою MUCGPT, чи визначити його самостійно.",
+                                "Тут ви можете коротко описати, що саме має робити ваш асистент. Після цього ви можете обрати, чи згенерувати системний промт за допомогою MUCGPT, чи визначити його самостійно.",
                             hint_text_step2:
-                                "Примітка: Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
+                                "Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
                             description_placeholder: "Наприклад: Асистент перекладає введений текст англійською мовою.",
                             title_placeholder: "Наприклад: Перекладач на англійську",
                             prompt_placeholder:
@@ -2426,6 +2435,7 @@ i18n
                             quick_prompt_label_placeholder: "Введіть мітку...",
                             quick_prompt_text_placeholder: "Введіть текст запиту...",
                             add_quick_prompt: "Додати швидкий запит",
+                            dnd_reorder_hint: "Перетягніть елементи за ручку, щоб змінити їхній порядок.",
                             examples: "Приклади",
                             examples_placeholder: "Додайте приклади, по одному на рядок (текст|значення)",
                             example_text_placeholder: "Введіть текст прикладу...",

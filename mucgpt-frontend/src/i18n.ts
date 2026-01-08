@@ -99,6 +99,7 @@ i18n
                         ok: "OK",
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
+                        hint: "Hinweis:",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -279,6 +280,7 @@ i18n
                             "remove-assistant": "Assistent entfernen",
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
+                            export: "Exportieren",
                             deleted_warning: "Dieser Assistent wurde aus der Community gelöscht und ist nicht mehr verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschen",
@@ -333,14 +335,15 @@ i18n
                             description: "Funktionsbeschreibung",
                             prompt: "System-Prompt",
                             dialog_title: "Neuen Assistent erstellen",
+                            import: "Assistenten importieren",
                             default_assistant_title: "Assistent",
                             default_assistant_description: "Ein Assistent",
                             step1_label: "Funktion beschreiben",
                             step2_label: "Assistent beschreiben",
                             hint_text:
-                                "Hinweis: Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
+                                "Hier beschreibst du kurz, was dein Assistent machen soll. Anschließend entscheidest du, ob du den System-Prompt von MUCGPT generieren lässt oder selbst definieren möchtest.",
                             hint_text_step2:
-                                "Hinweis: Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
+                                "Hier solltest du überprüfen, ob die von MUCGPT erstellten Konfigurationen zu deinem Wunsch passen. Du könntest die Details jederzeit anpassen.",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
                             title_placeholder: "Zum Beispiel: Englisch Übersetzer",
                             prompt_placeholder:
@@ -366,7 +369,13 @@ i18n
                             create_example_two:
                                 "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme."
+                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.",
+                            import_success: "Import erfolgreich",
+                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
+                            import_error: "Import fehlgeschlagen",
+                            import_failed: "Die Datei konnte nicht importiert werden",
+                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
+                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -388,11 +397,16 @@ i18n
                             quick_prompt_label_placeholder: "Geben Sie das Label ein...",
                             quick_prompt_text_placeholder: "Geben Sie den Prompt-Text ein...",
                             add_quick_prompt: "Vorgeschlagene Antwort hinzufügen",
+                            dnd_reorder_hint: "Ziehen Sie die Elemente am Griff, um die Reihenfolge zu ändern.",
                             examples: "Beispiele",
                             examples_placeholder: "Fügen Sie Beispiele hinzu, eine pro Zeile (Text|Wert)",
                             example_text_placeholder: "Geben Sie den Beispiel-Text ein...",
                             example_value_placeholder: "Geben Sie den Beispiel-Wert ein...",
                             add_example: "Beispiel hinzufügen",
+                            drag_to_reorder: "Ziehen zum Neu-Anordnen",
+                            dnd_aria_label: "Element {{position}} von {{total}} neu anordnen",
+                            move_up: "Nach oben",
+                            move_down: "Nach unten",
                             tools: "Werkzeuge",
                             select_tools: "Werkzeuge auswählen",
                             no_tools_selected: "Keine Werkzeuge ausgewählt",
@@ -615,6 +629,7 @@ i18n
                         ok: "OK",
                         next: "Next",
                         loading: "Loading...",
+                        hint: "Hint:",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -795,6 +810,7 @@ i18n
                             "remove-assistant": "Remove Assistant",
                             publish: "Publish",
                             unpublish: "Unpublish",
+                            export: "Export",
                             deleted_warning: "This assistant has been deleted from the community and is no longer available.",
                             deleteDialog: {
                                 title: "Delete Assistant",
@@ -849,14 +865,15 @@ i18n
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Create new assistant",
+                            import: "Import assistant",
                             default_assistant_title: "Assistant",
                             default_assistant_description: "An assistant",
                             step1_label: "Describe function",
                             step2_label: "Create assistant",
                             hint_text:
-                                "Note: Briefly describe what your assistant should do here. Then, decide whether you want MUCGPT to generate the system prompt or if you prefer to define it yourself.",
+                                "Briefly describe what your assistant should do here. Then, decide whether you want MUCGPT to generate the system prompt or if you prefer to define it yourself.",
                             hint_text_step2:
-                                "Note: Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
+                                "Here you should check whether the configurations created by MUCGPT match your requirements. You can adjust the details at any time.",
                             description_placeholder: "For example: The assistant translates the entered text into English.",
                             title_placeholder: "For example: English Translator",
                             prompt_placeholder:
@@ -880,7 +897,13 @@ i18n
                             example_three: "Example 3: Synonyms",
                             create_example_one: "English translator: The assistant translates the text entered into English.",
                             create_example_two: "The assistant is an employee of the City of Munich and responds politely and individually to incoming emails.",
-                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered."
+                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered.",
+                            import_success: "Import successful",
+                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
+                            import_error: "Import failed",
+                            import_failed: "The file could not be imported",
+                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
+                            import_save_failed: "Error saving imported assistant"
                         },
                         edit_assistant_dialog: {
                             title: "Edit Assistant",
@@ -902,11 +925,16 @@ i18n
                             quick_prompt_label_placeholder: "Enter the label...",
                             quick_prompt_text_placeholder: "Enter the prompt text...",
                             add_quick_prompt: "Add Quick Prompt",
+                            dnd_reorder_hint: "Drag items by the handle to change their order.",
                             examples: "Examples",
                             examples_placeholder: "Add examples, one per line (text|value)",
                             example_text_placeholder: "Enter the example text...",
                             example_value_placeholder: "Enter the example value...",
                             add_example: "Add Example",
+                            drag_to_reorder: "Drag to reorder",
+                            dnd_aria_label: "Reorder item {{position}} of {{total}}",
+                            move_up: "Move up",
+                            move_down: "Move down",
                             tools: "Tools",
                             select_tools: "Select Tools",
                             no_tools_selected: "No tools selected",
@@ -1119,6 +1147,7 @@ i18n
                         ok: "OK",
                         next: "Weida",
                         loading: "Lade Konfiguration...",
+                        hint: "Hinweis:",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1305,6 +1334,7 @@ i18n
                             "remove-assistant": "Assistent entfern'n",
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
+                            export: "Exportier'n",
                             deleted_warning: "Der Assistent is aus da Community glöscht wordn und is nimma verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschn",
@@ -1359,14 +1389,15 @@ i18n
                             description: "Was er kenna muass",
                             prompt: "System-Vorgab (Prompt)",
                             dialog_title: "An neia Assistentn o'legn",
+                            import: "Assistentn importier'n",
                             default_assistant_title: "Assistent",
                             default_assistant_description: "A Assistent",
                             step1_label: "Sog ma, was er kenna muass",
                             step2_label: "Assistentn ferti macha",
                             hint_text:
-                                "Obacht: Do schreibst kurz her, was dei Assistent doa soi. Danach suachst da aus, ob da MUCGPT an System-Prompt für di schreim soi oder ob’st des liaba selber in d'Hand nimmst.",
+                                "Do schreibst kurz her, was dei Assistent doa soi. Danach suachst da aus, ob da MUCGPT an System-Prompt für di schreim soi oder ob'st des liaba selber in d'Hand nimmst.",
                             hint_text_step2:
-                                "Obacht: Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
+                                "Schau am besten nomoi drüber, ob des, was MUCGPT higschrim hod, aa wirklich passt. Du kannst de Details nachher jaderzeit no amoi ändern.",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was’d eam gibst, ins Englische.",
                             title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
                             prompt_placeholder:
@@ -1391,7 +1422,13 @@ i18n
                             create_example_one: "Englisch Übersetzer: Dea Assistent übersetzt den eingemen Text ins Englische.",
                             create_example_two: "Der Assistent is a Mitarbatr dea Stod Minga und antwortet höflich sowie individuell af de eingehnden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme."
+                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme.",
+                            import_success: "Import erfolgreich",
+                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
+                            import_error: "Import fehlgschlogn",
+                            import_failed: "De Datei konnt ned importiert werdn",
+                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
+                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -1413,11 +1450,16 @@ i18n
                             quick_prompt_label_placeholder: "Gib des Label ei...",
                             quick_prompt_text_placeholder: "Gib den Prompt-Text ei...",
                             add_quick_prompt: "Vorgeschlagene Antwort hinzufügn",
+                            dnd_reorder_hint: "Ziag de Elementa am Griff, um de Reihenfoig zum ändern.",
                             examples: "Beispui",
                             examples_placeholder: "Füg Beispui hinzu, oans pro Zeile (Text|Wert)",
                             example_text_placeholder: "Gib den Beispui-Text ei...",
                             example_value_placeholder: "Gib den Beispui-Wert ei...",
                             add_example: "Beispui hinzufügn",
+                            drag_to_reorder: "Ziagn zum Nei-Ordna",
+                            dnd_aria_label: "Element {{position}} vo {{total}} nei ordna",
+                            move_up: "Nach obm",
+                            move_down: "Nach untn",
                             tools: "Werkzeig",
                             select_tools: "Werkzeig aussuachn",
                             no_tools_selected: "Koane Werkzeig ausgsuacht",
@@ -1639,6 +1681,7 @@ i18n
                         ok: "OK",
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
+                        hint: "Conseil :",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -1820,6 +1863,7 @@ i18n
                             "remove-assistant": "Retirer l'assistant",
                             publish: "Publier",
                             unpublish: "Dépublier",
+                            export: "Exporter",
                             deleted_warning: "Cet assistant a été supprimé de la communauté et n'est plus disponible.",
                             deleteDialog: {
                                 title: "Supprimer l'Assistant",
@@ -1874,14 +1918,15 @@ i18n
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Créer un nouvel assistant",
+                            import: "Importer un assistant",
                             default_assistant_title: "Assistant",
                             default_assistant_description: "Un assistant",
                             step1_label: "Décrire la fonction",
                             step2_label: "Créer l'assistant",
                             hint_text:
-                                "Remarque : décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
+                                "Décrivez ici brièvement ce que votre assistant doit faire. Ensuite, décidez si vous souhaitez laisser MUCGPT générer le prompt système ou si vous préférez le définir vous-même.",
                             hint_text_step2:
-                                "Remarque : vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
+                                "Vous devriez vérifier ici si les configurations créées par MUCGPT correspondent à vos attentes. Vous pouvez ajuster les détails à tout moment.",
                             description_placeholder: "Par exemple : l'assistant traduit le texte saisi en anglais.",
                             title_placeholder: "Par exemple : Traducteur anglais",
                             prompt_placeholder:
@@ -1907,7 +1952,13 @@ i18n
                             create_example_one: "Traducteur anglais : l'assistant traduit le texte saisi en anglais.",
                             create_example_two:
                                 "L'assistant est un employé de la ville de Munich et répond de manière polie et personnalisée aux e-mails reçus.",
-                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e)."
+                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e).",
+                            import_success: "Importation réussie",
+                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
+                            import_error: "Échec de l'importation",
+                            import_failed: "Le fichier n'a pas pu être importé",
+                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
+                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
                         },
                         edit_assistant_dialog: {
                             title: "Modifier l'assistant",
@@ -1929,11 +1980,16 @@ i18n
                             quick_prompt_label_placeholder: "Entrez le label...",
                             quick_prompt_text_placeholder: "Entrez le texte du prompt...",
                             add_quick_prompt: "Ajouter un prompt rapide",
+                            dnd_reorder_hint: "Faites glisser les éléments par la poignée pour changer leur ordre.",
                             examples: "Exemples",
                             examples_placeholder: "Ajoutez des exemples, un par ligne (texte|valeur)",
                             example_text_placeholder: "Entrez le texte de l'exemple...",
                             example_value_placeholder: "Entrez la valeur de l'exemple...",
                             add_example: "Ajouter un exemple",
+                            drag_to_reorder: "Faire glisser pour réorganiser",
+                            dnd_aria_label: "Réorganiser l'élément {{position}} sur {{total}}",
+                            move_up: "Monter",
+                            move_down: "Descendre",
                             tools: "Outils",
                             select_tools: "Sélectionner des outils",
                             no_tools_selected: "Aucun outil sélectionné",
@@ -2156,6 +2212,7 @@ i18n
                         ok: "OK",
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
+                        hint: "Підказка:",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
@@ -2336,6 +2393,7 @@ i18n
                             "remove-assistant": "Видалити асистента",
                             publish: "Опублікувати",
                             unpublish: "Скасувати публікацію",
+                            export: "Експортувати",
                             deleted_warning: "Цей асистент був видалений з спільноти і більше не доступний.",
                             deleteDialog: {
                                 title: "Видалити Бота",
@@ -2390,14 +2448,15 @@ i18n
                             description: "Опис",
                             prompt: "Системний запит",
                             dialog_title: "Створити нового асистента",
+                            import: "Імпортувати асистента",
                             default_assistant_title: "Асистент",
                             default_assistant_description: "Асистент",
                             step1_label: "Описати функцію",
                             step2_label: "Створити асистента",
                             hint_text:
-                                "Примітка: Тут ви можете коротко описати, що саме має робити ваш асистент. Після цього ви можете обрати, чи згенерувати системний промт за допомогою MUCGPT, чи визначити його самостійно.",
+                                "Тут ви можете коротко описати, що саме має робити ваш асистент. Після цього ви можете обрати, чи згенерувати системний промт за допомогою MUCGPT, чи визначити його самостійно.",
                             hint_text_step2:
-                                "Примітка: Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
+                                "Тут варто перевірити, чи відповідають конфігурації, створені MUCGPT, вашим побажанням. Ви можете змінити деталі в будь-який момент.",
                             description_placeholder: "Наприклад: Асистент перекладає введений текст англійською мовою.",
                             title_placeholder: "Наприклад: Перекладач на англійську",
                             prompt_placeholder:
@@ -2421,7 +2480,13 @@ i18n
                             example_three: "Приклад 3: Синоніми",
                             create_example_one: "Перекладач англійської мови: Асистент перекладає введений текст англійською мовою.",
                             create_example_two: "Асистент є співробітником міста Мюнхен і ввічливо та індивідуально відповідає на вхідні електронні листи.",
-                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення."
+                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення.",
+                            import_success: "Імпорт успішний",
+                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
+                            import_error: "Помилка імпорту",
+                            import_failed: "Не вдалося імпортувати файл",
+                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
+                            import_save_failed: "Помилка збереження імпортованого асистента"
                         },
                         edit_assistant_dialog: {
                             title: "Редагувати асистента",
@@ -2442,11 +2507,16 @@ i18n
                             quick_prompt_label_placeholder: "Введіть мітку...",
                             quick_prompt_text_placeholder: "Введіть текст запиту...",
                             add_quick_prompt: "Додати швидкий запит",
+                            dnd_reorder_hint: "Перетягніть елементи за ручку, щоб змінити їхній порядок.",
                             examples: "Приклади",
                             examples_placeholder: "Додайте приклади, по одному на рядок (текст|значення)",
                             example_text_placeholder: "Введіть текст прикладу...",
                             example_value_placeholder: "Введіть значення прикладу...",
                             add_example: "Додати приклад",
+                            drag_to_reorder: "Перетягніть для зміни порядку",
+                            dnd_aria_label: "Переупорядкувати елемент {{position}} з {{total}}",
+                            move_up: "Вгору",
+                            move_down: "Вниз",
                             tools: "Інструменти",
                             select_tools: "Вибрати інструменти",
                             no_tools_selected: "Інструменти не вибрано",

@@ -96,6 +96,9 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
     // save assistant
     const onPromptButtonClicked = useCallback(async () => {
         try {
+            const validQuickPrompts = quickPrompts.filter(qp => qp.label?.trim() && qp.prompt?.trim());
+            const validExamples = examples.filter(ex => ex.text?.trim() && ex.value?.trim());
+
             const assistant: Assistant = {
                 title: title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title,
                 description: description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description,
@@ -103,8 +106,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 publish: false,
                 temperature: temperature,
                 max_output_tokens: maxOutputTokens,
-                quick_prompts: quickPrompts,
-                examples: examples,
+                quick_prompts: validQuickPrompts,
+                examples: validExamples,
                 version: "0",
                 owner_ids: [],
                 tags: [],

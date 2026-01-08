@@ -7,7 +7,8 @@ import {
     CloudArrowUp24Filled,
     ChevronDown20Regular,
     ChevronRight20Regular,
-    Settings24Regular
+    Settings24Regular,
+    ArrowExportUp24Filled
 } from "@fluentui/react-icons";
 import { Button, Tooltip, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
 
@@ -66,6 +67,25 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     const toggleActionsVisibility = useCallback(() => {
         setIsActionsExpanded(!isActionsExpanded);
     }, [isActionsExpanded]);
+
+    const exportAssistant = useCallback(() => {
+        // Extract only exportable fields, exclude sensitive/system data
+        const { id, publish, owner_ids, hierarchical_access, version, is_visible, ...exportableData } = assistant;
+
+        const blob = new Blob([JSON.stringify(exportableData)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${assistant.title}.json`;
+
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log(Date.now())
+    }, [assistant]);
 
     const saveLocal = useCallback(async () => {
         if (!assistant.id) return;
@@ -248,6 +268,13 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                                 {t("components.assistantsettingsdrawer.publish")}
                             </Button>
                         )}
+                        <Button
+                            icon={<ArrowExportUp24Filled />}
+                            onClick={() => exportAssistant()}
+                            className={styles.actionButton}
+                        >
+                            {t("components.assistantsettingsdrawer.export")}
+                        </Button>
                     </div>
                 </Collapse>
             </div>

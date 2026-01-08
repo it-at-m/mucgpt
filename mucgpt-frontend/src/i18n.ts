@@ -279,6 +279,7 @@ i18n
                             "remove-assistant": "Assistent entfernen",
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
+                            export: "Exportieren",
                             deleted_warning: "Dieser Assistent wurde aus der Community gelöscht und ist nicht mehr verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschen",
@@ -795,6 +796,7 @@ i18n
                             "remove-assistant": "Remove Assistant",
                             publish: "Publish",
                             unpublish: "Unpublish",
+                            export: "Export",
                             deleted_warning: "This assistant has been deleted from the community and is no longer available.",
                             deleteDialog: {
                                 title: "Delete Assistant",
@@ -1305,6 +1307,7 @@ i18n
                             "remove-assistant": "Assistent entfern'n",
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
+                            export: "Exportier'n",
                             deleted_warning: "Der Assistent is aus da Community glöscht wordn und is nimma verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschn",
@@ -1820,6 +1823,7 @@ i18n
                             "remove-assistant": "Retirer l'assistant",
                             publish: "Publier",
                             unpublish: "Dépublier",
+                            export: "Exporter",
                             deleted_warning: "Cet assistant a été supprimé de la communauté et n'est plus disponible.",
                             deleteDialog: {
                                 title: "Supprimer l'Assistant",
@@ -2336,6 +2340,7 @@ i18n
                             "remove-assistant": "Видалити асистента",
                             publish: "Опублікувати",
                             unpublish: "Скасувати публікацію",
+                            export: "Експортувати",
                             deleted_warning: "Цей асистент був видалений з спільноти і більше не доступний.",
                             deleteDialog: {
                                 title: "Видалити Бота",

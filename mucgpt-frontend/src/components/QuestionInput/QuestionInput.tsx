@@ -152,44 +152,46 @@ export const QuestionInput = ({
                 {tools && tools.tools && tools.tools.length > 0 && (
                     <div className={styles.toolBadgesHeader}>
                         <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
-                        {tools.tools.map(tool => {
-                            const isSelected = selectedTools.includes(tool.id);
-                            const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
-                            return (
-                                <div key={tool.id} className={styles.toolButtonWrapper}>
-                                    <Button
-                                        appearance={isSelected ? "primary" : "secondary"}
-                                        size="medium"
-                                        className={styles.toolButton}
-                                        onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
-                                        disabled={!allowToolSelection}
-                                        icon={isSelected ? <Checkmark24Regular style={{ color: "var(--surface)" }} /> : undefined}
-                                        style={
-                                            isSelected
-                                                ? {
-                                                      backgroundColor: "var(--onPrimary)"
-                                                  }
-                                                : {
-                                                      backgroundColor: "var(--surface)"
-                                                  }
-                                        }
-                                    >
-                                        <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>
-                                    </Button>
-                                    {hasTutorial && (
-                                        <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
-                                            <button
-                                                className={styles.toolHelpButton}
-                                                onClick={e => openTutorial(tool.id, e)}
-                                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
-                                            >
-                                                <QuestionCircle16Regular />
-                                            </button>
-                                        </Tooltip>
-                                    )}
-                                </div>
-                            );
-                        })}
+                        <div className={styles.toolButtonsRow}>
+                            {tools.tools.map(tool => {
+                                const isSelected = selectedTools.includes(tool.id);
+                                const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
+                                return (
+                                    <div key={tool.id} className={styles.toolButtonWrapper}>
+                                        <Button
+                                            appearance={isSelected ? "primary" : "secondary"}
+                                            size="medium"
+                                            className={styles.toolButton}
+                                            onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
+                                            disabled={!allowToolSelection}
+                                            icon={isSelected ? <Checkmark24Regular style={{ color: "var(--surface)" }} /> : undefined}
+                                            style={
+                                                isSelected
+                                                    ? {
+                                                          backgroundColor: "var(--onPrimary)"
+                                                      }
+                                                    : {
+                                                          backgroundColor: "var(--surface)"
+                                                      }
+                                            }
+                                        >
+                                            <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>
+                                        </Button>
+                                        {hasTutorial && (
+                                            <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
+                                                <button
+                                                    className={styles.toolHelpButton}
+                                                    onClick={e => openTutorial(tool.id, e)}
+                                                    aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
+                                                >
+                                                    <QuestionCircle16Regular />
+                                                </button>
+                                            </Tooltip>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
 

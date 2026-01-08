@@ -1,0 +1,31 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    text-align: center;
+    padding: 20px;
+}
+
+.title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--colorNeutralForeground1);
+}
+
+.message {
+    font-size: 1.2rem;
+    color: var(--colorNeutralForeground2);
+}
+
+.link {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    color: var(--onPrimary);
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}

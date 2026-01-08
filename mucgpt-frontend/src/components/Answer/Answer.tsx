@@ -7,15 +7,10 @@ import styles from "./Answer.module.css";
 import { AskResponse } from "../../api";
 import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeExternalLinks from "rehype-external-links";
-import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { QuickPromptList } from "../QuickPrompt/QuickPromptList";
-import rehypeKatex from "rehype-katex";
-import remarkMath from "remark-math";
+import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 interface Props {
     answer: AskResponse;
@@ -53,16 +48,6 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
         );
     }, [answer.answer]); // Run this effect only when the message changes
 
-    const remarkMathOptions = {
-        singleDollarTextMath: false
-    };
-    const rehypeKatexOptions = {
-        output: "mathml"
-    };
-    const rehypeExternalLinksOptions = {
-        target: "_blank",
-        rel: ["nofollow", "noopener", "noreferrer"]
-    };
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
             <Stack.Item>
@@ -116,18 +101,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
             <Stack.Item className={styles.growItem} grow>
                 {formatted && (
                     <div className={styles.answerText}>
-                        <Markdown
-                            remarkPlugins={[[remarkMath, remarkMathOptions], remarkGfm]}
-                            rehypePlugins={[
-                                [rehypeKatex, rehypeKatexOptions],
-                                [rehypeExternalLinks, rehypeExternalLinksOptions]
-                            ]}
-                            components={{
-                                code: CodeBlockRenderer
-                            }}
-                        >
-                            {processedText}
-                        </Markdown>
+                        <MarkdownRenderer>{processedText}</MarkdownRenderer>
                     </div>
                 )}
                 {!formatted && (

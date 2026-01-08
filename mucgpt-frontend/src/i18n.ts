@@ -110,6 +110,10 @@ i18n
                         }
                     },
                     components: {
+                        table_renderer: {
+                            download_csv: "Als CSV herunterladen",
+                            table_aria_label: "Datentabelle"
+                        },
                         assistant_chat: {
                             actions: "Aktionen",
 
@@ -632,6 +636,10 @@ i18n
                         }
                     },
                     components: {
+                        table_renderer: {
+                            download_csv: "Download as CSV",
+                            table_aria_label: "Data table"
+                        },
                         assistant_chat: {
                             actions: "Actions",
 
@@ -1148,6 +1156,10 @@ i18n
                         changed: "Änderunga"
                     },
                     components: {
+                        table_renderer: {
+                            download_csv: "Als CSV runterladn",
+                            table_aria_label: "Datentabell"
+                        },
                         assistant_chat: {
                             actions: "Aktionen",
 
@@ -1668,6 +1680,10 @@ i18n
                         }
                     },
                     components: {
+                        table_renderer: {
+                            download_csv: "Télécharger en CSV",
+                            table_aria_label: "Table de données"
+                        },
                         assistant_chat: {
                             actions: "Actions",
 
@@ -2191,6 +2207,10 @@ i18n
                         }
                     },
                     components: {
+                        table_renderer: {
+                            download_csv: "Завантажити у форматі CSV",
+                            table_aria_label: "Таблиця даних"
+                        },
                         assistant_chat: {
                             actions: "Дії",
 

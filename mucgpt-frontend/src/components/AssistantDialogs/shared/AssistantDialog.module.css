@@ -312,6 +312,12 @@
     cursor: grabbing;
 }
 
+.dragHandleButton:focus-visible {
+    outline: 2px solid var(--colorBrandStroke1);
+    outline-offset: 2px;
+    background-color: var(--colorNeutralBackground1Hover);
+}
+
 .draggableItem {
     position: relative;
 }

@@ -281,7 +281,7 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                         {quickPrompts.length > 0 ? (
                             quickPrompts.map((qp, index) => (
                                 <DraggableQuickPromptItem
-                                    key={qp.id || index}
+                                    key={qp.id}
                                     qp={qp}
                                     index={index}
                                     totalCount={quickPrompts.length}

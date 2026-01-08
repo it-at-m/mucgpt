@@ -266,7 +266,7 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                         {examples.length > 0 ? (
                             examples.map((ex, index) => (
                                 <DraggableExampleItem
-                                    key={ex.id || index}
+                                    key={ex.id}
                                     example={ex}
                                     index={index}
                                     totalCount={examples.length}

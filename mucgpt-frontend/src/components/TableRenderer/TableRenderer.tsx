@@ -1,6 +1,6 @@
 import { Button, Tooltip } from "@fluentui/react-components";
 import { ArrowDownload24Regular, Checkmark24Regular } from "@fluentui/react-icons";
-import { ClassAttributes, HTMLAttributes, useCallback, useRef, useState } from "react";
+import { ClassAttributes, HTMLAttributes, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ExtraProps } from "react-markdown";
 import styles from "./TableRenderer.module.css";
@@ -13,6 +13,7 @@ export default function TableRenderer(props: TableRendererProps) {
     const { t } = useTranslation();
     const { children, className, ...rest } = props;
     const tableRef = useRef<HTMLTableElement>(null);
+    const downloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [downloadSuccess, setDownloadSuccess] = useState(false);
 
     const downloadAsCsv = useCallback(() => {
@@ -50,13 +51,25 @@ export default function TableRenderer(props: TableRendererProps) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-URL.revokeObjectURL(url);
+        URL.revokeObjectURL(url);
 
         // Show success feedback
         setDownloadSuccess(true);
-        setTimeout(() => {
+        if (downloadTimeoutRef.current) {
+            clearTimeout(downloadTimeoutRef.current);
+        }
+        downloadTimeoutRef.current = setTimeout(() => {
             setDownloadSuccess(false);
+            downloadTimeoutRef.current = null;
         }, FEEDBACK_TIMEOUT);
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (downloadTimeoutRef.current) {
+                clearTimeout(downloadTimeoutRef.current);
+            }
+        };
     }, []);
 
     return (

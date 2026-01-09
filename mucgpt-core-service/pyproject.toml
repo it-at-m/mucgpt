@@ -23,7 +23,7 @@ dependencies = [
     "openai==1.109.1",
     "langsmith==0.4.33",
     "joserfc",
-    "pypdf==6.4.0",
+    "pypdf==6.6.0",
     "uvicorn==0.37.0",
     "asgi-correlation-id==4.3.4",
     "pydantic-settings>=2.8.1",

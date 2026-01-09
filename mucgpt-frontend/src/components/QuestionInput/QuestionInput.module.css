@@ -21,6 +21,13 @@
     white-space: nowrap;
 }
 
+.toolButtonsRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
 .questionInputContainer {
     border-radius: 8px;
     background: var(--surface);

@@ -50,6 +50,7 @@ export default function TableRenderer(props: TableRendererProps) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+URL.revokeObjectURL(url);
 
         // Show success feedback
         setDownloadSuccess(true);

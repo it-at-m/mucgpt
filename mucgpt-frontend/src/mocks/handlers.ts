@@ -284,7 +284,11 @@ export const handlers = [
                     } else if (streamType === "simplify") {
                         chunks = generateSimplifyStreamChunks();
                     } else {
-                        const reply = buildChatMessage();
+                        let reply = buildChatMessage();
+                        if (Math.random() > 0.7) {
+                            reply +=
+                                "\n\nHier ist eine beispielhafte Tabelle:\n\n| Name | Kategorie | Wert |\n| :--- | :---: | ---: |\n| Element A | Gruppe 1 | 123.45 |\n| Element B | Gruppe 2 | 67.89 |\n| Element C | Gruppe 1 | 99.99 |\n| Element D | Gruppe 3 | 10.00 |\n\n";
+                        }
                         chunks = generateChatStreamChunks(reply);
                     }
                     for (const chunk of chunks) {

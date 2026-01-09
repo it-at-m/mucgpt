@@ -1,0 +1,54 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    overflow-x: auto;
+    margin: 1em 0;
+    gap: 8px;
+}
+
+.tableWrapper {
+    flex: 1;
+    overflow-x: auto;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 4px;
+}
+
+/* Basic table styling defaults if not inherited */
+.tableWrapper table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+}
+
+.tableWrapper th,
+.tableWrapper td {
+    text-align: left;
+    padding: 8px;
+}
+
+.tableWrapper th {
+    background-color: var(--primary);
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 4px;
+}
+
+@media (max-width: 650px) {
+    .container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        padding-top: 0;
+        padding-bottom: 4px;
+    }
+}

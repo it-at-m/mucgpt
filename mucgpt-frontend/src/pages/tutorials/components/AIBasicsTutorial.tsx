@@ -11,10 +11,7 @@ import {
     BookInformation24Regular,
     LearningApp24Regular
 } from "@fluentui/react-icons";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import CodeBlockRenderer from "../../../components/CodeBlockRenderer/CodeBlockRenderer";
-import remarkMath from "remark-math";
+import { MarkdownRenderer } from "../../../components/MarkdownRenderer/MarkdownRenderer";
 
 import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress from "./TutorialProgress";
@@ -129,14 +126,7 @@ export const AIBasicsTutorial = ({ onPreviousTutorial, onNextTutorial, onBackToT
         const markdownContent = "```mermaid\n" + mermaidCode + "\n```";
         return (
             <div className={styles.mermaidContainer}>
-                <Markdown
-                    remarkPlugins={[remarkMath, remarkGfm]}
-                    components={{
-                        code: CodeBlockRenderer
-                    }}
-                >
-                    {markdownContent}
-                </Markdown>
+                <MarkdownRenderer>{markdownContent}</MarkdownRenderer>
             </div>
         );
     };

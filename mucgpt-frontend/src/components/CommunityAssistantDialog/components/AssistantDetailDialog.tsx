@@ -16,9 +16,7 @@ import {
 import { Dismiss24Regular, Save24Filled } from "@fluentui/react-icons";
 import { Assistant } from "../../../api";
 import { useTranslation } from "react-i18next";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import CodeBlockRenderer from "../../CodeBlockRenderer/CodeBlockRenderer";
+import { MarkdownRenderer } from "../../MarkdownRenderer/MarkdownRenderer";
 import styles from "../CommunityAssistantDialog.module.css";
 
 interface AssistantDetailDialogProps {
@@ -106,9 +104,7 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                                 {t("components.community_assistants.description")}
                             </Text>
                             <div className={styles.markdownContent}>
-                                <Markdown remarkPlugins={[remarkGfm]} components={{ code: CodeBlockRenderer }}>
-                                    {assistant.description}
-                                </Markdown>
+                                <MarkdownRenderer>{assistant.description}</MarkdownRenderer>
                             </div>
                         </div>
 
@@ -138,7 +134,7 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                                 {t("components.community_assistants.system_message")}
                             </Text>
                             <div className={styles.systemMessageContent}>
-                                <Markdown remarkPlugins={[remarkGfm]}>{assistant.system_message}</Markdown>
+                                <MarkdownRenderer>{assistant.system_message}</MarkdownRenderer>
                             </div>
                         </div>
                     </DialogContent>

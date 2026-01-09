@@ -3,6 +3,8 @@
         "@fluentui/react": "8.125.3",
         "@fluentui/react-components": "9.72.9",
         "@fluentui/react-icons": "2.0.316",
+        "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
+        "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@react-spring/web": "10.0.3",
         "dompurify": "3.3.1",
         "i18next": "25.7.3",
@@ -18,8 +20,8 @@
         "react-dom": "18.3.1",
         "react-i18next": "15.7.4",
         "react-markdown": "10.1.0",
-        "react-router-dom": "7.11.0",
-        "react-syntax-highlighter": "15.6.6",
+        "react-router-dom": "7.12.0",
+        "react-syntax-highlighter": "16.1.0",
         "rehype-external-links": "^3.0.0",
         "rehype-katex": "7.0.1",
         "remark": "15.0.1",
@@ -43,7 +45,7 @@
         "msw": "2.12.4",
         "prettier": "3.7.4",
         "typescript": "5.9.3",
-        "vite": "5.4.21"
+        "vite": "7.3.1"
     },
     "engines": {
         "node": ">=20.0.0"
@@ -71,5 +73,5 @@
         "watch": "tsc && vite build --watch"
     },
     "type": "module",
-    "version": "0.10.0"
+    "version": "0.12.2"
 }

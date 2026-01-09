@@ -174,7 +174,7 @@ services:
       - internal
     healthcheck:
       <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:8000/api/backend/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8000/api/health"]
     environment:
       - SSL_CERT_FILE=${SSL_CERT_FILE:-}
       - LOG_LEVEL_ROOT=INFO
@@ -233,7 +233,7 @@ services:
       - LOG_LEVEL_AUTH=INFO
     healthcheck:
       <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:8084/api/backend/health"]
+      test: ["CMD-SHELL", "curl http://localhost:8084/api/health"]
 
   frontend:
     build:

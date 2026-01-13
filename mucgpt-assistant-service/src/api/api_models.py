@@ -156,6 +156,11 @@ class AssistantBase(BaseModel):
         gt=0,
         example=1000,
     )
+    default_model: str | None = Field(
+        None,
+        description="The default AI model to use for this assistant",
+        example="gpt-4",
+    )
     examples: list[ExampleModel] | None = Field(
         [],
         description="Example conversations starters",
@@ -216,6 +221,7 @@ class AssistantBase(BaseModel):
                 ],
                 "temperature": 0.7,
                 "max_output_tokens": 1000,
+                "default_model": "gpt-4",
                 "tools": [
                     {
                         "id": "WEB_SEARCH",
@@ -259,6 +265,7 @@ class AssistantCreate(AssistantBase):
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
                 "temperature": 0.5,
                 "max_output_tokens": 800,
+                "default_model": "gpt-4",
                 "tools": [
                     {
                         "id": "WEB_SEARCH",
@@ -333,6 +340,11 @@ class AssistantUpdate(BaseModel):
         description="Maximum number of tokens the assistant can generate in a single response",
         gt=0,
         example=1000,
+    )
+    default_model: str | None = Field(
+        None,
+        description="The default AI model to use for this assistant",
+        example="gpt-4",
     )
     examples: list[ExampleModel] | None = Field(
         None,
@@ -477,6 +489,7 @@ class AssistantResponse(BaseModel):
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
                     "temperature": 0.7,
                     "max_output_tokens": 1000,
+                    "default_model": "gpt-4",
                     "tools": [
                         {
                             "id": "WEB_SEARCH",

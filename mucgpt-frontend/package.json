@@ -7,7 +7,7 @@
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@react-spring/web": "10.0.3",
         "dompurify": "3.3.1",
-        "i18next": "25.7.3",
+        "i18next": "25.7.4",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",
         "markmap-lib": "0.18.12",
@@ -27,12 +27,12 @@
         "remark": "15.0.1",
         "remark-gfm": "4.0.1",
         "remark-math": "6.0.0",
-        "typescript-eslint": "8.50.1",
+        "typescript-eslint": "8.52.0",
         "uuid": "13.0.0"
     },
     "devDependencies": {
         "@types/dompurify": "3.2.0",
-        "@types/node": "22.19.3",
+        "@types/node": "22.19.5",
         "@types/react": "18.3.27",
         "@types/react-dom": "18.3.7",
         "@types/react-syntax-highlighter": "15.5.13",
@@ -42,7 +42,7 @@
         "eslint": "9.39.2",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",
-        "msw": "2.12.4",
+        "msw": "2.12.7",
         "prettier": "3.7.4",
         "typescript": "5.9.3",
         "vite": "7.3.1"

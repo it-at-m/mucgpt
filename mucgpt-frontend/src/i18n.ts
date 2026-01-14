@@ -131,7 +131,11 @@ i18n
                             update_assistant_success: "Assistent wurde aktualisiert",
                             update_assistant_success_message: "Der Assistent '{{title}}' wurde erfolgreich aktualisiert",
                             update_assistant_failed: "Assistent konnte nicht aktualisiert werden",
-                            update_assistant_failed_message: "Beim Aktualisieren des Assistenten ist ein Fehler aufgetreten"
+                            update_assistant_failed_message: "Beim Aktualisieren des Assistenten ist ein Fehler aufgetreten",
+
+                            default_model_unavailable: "Standard-Modell nicht verfügbar",
+                            default_model_unavailable_message:
+                                "Das konfigurierte Standard-Modell '{{modelName}}' ist nicht mehr verfügbar. Bitte wählen Sie ein anderes Modell aus."
                         },
                         assistant_stats: {
                             title: "Assistenten-Statistiken",
@@ -393,6 +397,11 @@ i18n
                             collapse: "Einklappen",
                             temperature: "Temperatur",
                             max_output_tokens: "Maximale Ausgabe-Token",
+                            default_model: "Standard-Modell",
+                            default_model_info:
+                                "Das Standard-Modell, das für diesen Assistenten verwendet wird. Wenn kein Modell ausgewählt ist, wird das Benutzer-ausgewählte Modell verwendet.",
+                            default_model_placeholder: "Wählen Sie ein Standard-Modell...",
+                            no_default_model: "Kein Standard-Modell (Benutzer wählt)",
                             departments: "Abteilungen",
                             departments_info:
                                 "Dies sind die Abteilungen, die Zugriff auf den Assistenten haben. Alle Abteilungen in der Hierarchie unter den ausgewählten Abteilungen haben ebenfalls Zugriff.",
@@ -665,7 +674,11 @@ i18n
                             update_assistant_success: "Assistant has been updated",
                             update_assistant_success_message: "The assistant '{{title}}' has been successfully updated",
                             update_assistant_failed: "Assistant could not be updated",
-                            update_assistant_failed_message: "An error occurred while updating the assistant"
+                            update_assistant_failed_message: "An error occurred while updating the assistant",
+
+                            default_model_unavailable: "Default model unavailable",
+                            default_model_unavailable_message:
+                                "The configured default model '{{modelName}}' is no longer available. Please select a different model."
                         },
                         assistant_stats: {
                             title: "Assistant Statistics",
@@ -925,6 +938,10 @@ i18n
                             collapse: "Collapse",
                             temperature: "Temperature",
                             max_output_tokens: "Max Output Tokens",
+                            default_model: "Default Model",
+                            default_model_info: "The default model to use for this assistant. If no model is selected, the user-selected model will be used.",
+                            default_model_placeholder: "Select a default model...",
+                            no_default_model: "No default model (user chooses)",
                             departments: "Departments",
                             departments_info:
                                 "These are the departments that have access to the assistant. All departments in the hierarchy below the selected departments also have access.",
@@ -1193,7 +1210,9 @@ i18n
                             update_assistant_success: "Assistent is aktualisiert worden",
                             update_assistant_success_message: "Da Assistent '{{title}}' is erfolgreich aktualisiert worden",
                             update_assistant_failed: "Assistent konnt ned aktualisiert werd'n",
-                            update_assistant_failed_message: "Beim Aktualisieren vom Assistenten is a Fehler aufgetreten"
+                            update_assistant_failed_message: "Beim Aktualisiern vom Assistent'n is a Fehla aufg'reng",
+                            default_model_unavailable: "Standard-Modell ned verfügbar",
+                            default_model_unavailable_message: "Des eigstellt Standard-Modell '{{modelName}}' gibts nimma. Bitte such da a anders Modell aus."
                         },
                         assistant_stats: {
                             title: "Assistenten-Statistikn",
@@ -1454,6 +1473,11 @@ i18n
                             collapse: "Eiklappn",
                             temperature: "Temperatur",
                             max_output_tokens: "Maximale Ausgabe-Token",
+                            default_model: "Standard-Modell",
+                            default_model_info:
+                                "Des Standard-Modell, des da Assistent hernimmt. Wenn koa Modell ausgewählt is, nimmt ma des, wos da Nutzer aussucht.",
+                            default_model_placeholder: "Such da a Standard-Modell aus...",
+                            no_default_model: "Koan Standard-Modell (da Nutzer entscheidet)",
                             departments: "Abteilungen",
                             departments_info:
                                 "Des san de Abteilungen, de Zugriff auf den Assistenten ham. Olle Abteilungen in da Hierarchie unter de ausgsuachten Abteilungen ham a Zugriff.",
@@ -1725,7 +1749,10 @@ i18n
                             update_assistant_success: "L'assistant a été mis à jour",
                             update_assistant_success_message: "L'assistant '{{title}}' a été mis à jour avec succès",
                             update_assistant_failed: "L'assistant n'a pas pu être mis à jour",
-                            update_assistant_failed_message: "Une erreur s'est produite lors de la mise à jour de l'assistant"
+                            update_assistant_failed_message: "Une erreur s'est produite lors de la mise à jour de l'assistant",
+                            default_model_unavailable: "Modèle par défaut non disponible",
+                            default_model_unavailable_message:
+                                "Le modèle par défaut configuré '{{modelName}}' n'est plus disponible. Veuillez choisir un autre modèle."
                         },
                         assistant_stats: {
                             title: "Statistiques de l'Assistant",
@@ -1988,6 +2015,11 @@ i18n
                             collapse: "Réduire",
                             temperature: "Température",
                             max_output_tokens: "Tokens de sortie max",
+                            default_model: "Modèle par défaut",
+                            default_model_info:
+                                "Le modèle par défaut utilisé pour cet assistant. Si aucun modèle n'est sélectionné, celui choisi par l'utilisateur sera utilisé.",
+                            default_model_placeholder: "Choisissez un modèle par défaut...",
+                            no_default_model: "Aucun modèle par défaut (l'utilisateur choisit)",
                             departments: "Départements",
                             departments_info:
                                 "Ce sont les départements qui ont accès à l'assistant. Tous les départements dans la hiérarchie sous les départements sélectionnés ont également accès.",
@@ -2260,7 +2292,10 @@ i18n
                             update_assistant_success: "Асистента було оновлено",
                             update_assistant_success_message: "Асистента '{{title}}' було успішно оновлено",
                             update_assistant_failed: "Не вдалося оновити асистента",
-                            update_assistant_failed_message: "Сталася помилка під час оновлення асистента"
+                            update_assistant_failed_message: "Під час оновлення асистента виникла помилка",
+                            default_model_unavailable: "Стандартна модель недоступна",
+                            default_model_unavailable_message:
+                                "Налаштована стандартна модель '{{modelName}}' більше недоступна. Будь ласка, виберіть іншу модель."
                         },
                         assistant_stats: {
                             title: "Статистика Бота",
@@ -2520,6 +2555,11 @@ i18n
                             collapse: "Згорнути",
                             temperature: "Температура",
                             max_output_tokens: "Макс. токени виводу",
+                            default_model: "Стандартна модель",
+                            default_model_info:
+                                "Стандартна модель, яку використовує цей асистент. Якщо модель не вибрана, буде використана модель, яку обрав користувач.",
+                            default_model_placeholder: "Виберіть стандартну модель...",
+                            no_default_model: "Немає стандартної моделі (користувач обирає)",
                             departments: "Відділи",
                             departments_info: "Це відділи, які мають доступ до асистента. Всі відділи в ієрархії під вибраними відділами також мають доступ.",
                             quick_prompts: "Швидкі запити",

@@ -143,6 +143,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             setQuickPrompts(assistant.quick_prompts || []);
                             setSelectedTools(assistant.tools ? assistant.tools.map(tool => tool.id) : []);
 
+                            // If assistant has a default model, check if it's available
+                            if (assistant.default_model) {
+                                const defaultModelConfig = availableLLMs.find(m => m.llm_name === assistant.default_model);
+                                if (defaultModelConfig) {
+                                    setLLM(defaultModelConfig);
+                                } else {
+                                    // Model is not available anymore - show error and let user choose
+                                    showError(
+                                        t("components.assistant_chat.default_model_unavailable"),
+                                        t("components.assistant_chat.default_model_unavailable_message", { modelName: assistant.default_model })
+                                    );
+                                }
+                            }
+
                             return assistantStorageService
                                 .getNewestChatForAssistant(assistant_id)
                                 .then(existingChat => {
@@ -524,8 +538,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
     );
 
-    const layout = useMemo(
-        () => (
+    const layout = useMemo(() => {
+        // Determine which models to show in the selector
+        let modelsToShow = availableLLMs;
+        if (assistantConfig.default_model) {
+            const defaultModelExists = availableLLMs.some(m => m.llm_name === assistantConfig.default_model);
+            if (defaultModelExists) {
+                // Only show the default model if it exists
+                modelsToShow = availableLLMs.filter(m => m.llm_name === assistantConfig.default_model);
+            }
+            // If default model doesn't exist, show all models (user needs to choose)
+        }
+
+        return (
             <>
                 <ChatLayout
                     sidebar={sidebar}
@@ -537,33 +562,34 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? sidebarSize : "none"}
-                    llmOptions={availableLLMs}
+                    llmOptions={modelsToShow}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
+                    persistLLMSelection={!assistantConfig.default_model}
                     onToggleMinimized={toggleSidebar}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
-        ),
-        [
-            sidebar,
-            examplesComponent,
-            answerList,
-            inputComponent,
-            lastQuestionRef.current,
-            t,
-            sidebarSize,
-            toolStatuses,
-            availableLLMs,
-            LLM.llm_name,
-            onLLMSelectionChange,
-            showSidebar,
-            clearChat,
-            isLoadingRef.current
-        ]
-    );
+        );
+    }, [
+        sidebar,
+        examplesComponent,
+        answerList,
+        inputComponent,
+        lastQuestionRef.current,
+        t,
+        sidebarSize,
+        toolStatuses,
+        availableLLMs,
+        assistantConfig.default_model,
+        LLM.llm_name,
+        onLLMSelectionChange,
+        showSidebar,
+        clearChat,
+        isLoadingRef.current
+    ]);
 
     return (
         <>

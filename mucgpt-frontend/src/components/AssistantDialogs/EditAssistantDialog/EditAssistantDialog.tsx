@@ -192,9 +192,11 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                         <AdvancedSettingsStep
                             temperature={temperature}
                             maxOutputTokens={maxOutputTokens}
+                            defaultModel={assistantState.defaultModel}
                             isOwner={isOwner}
                             onTemperatureChange={assistantState.updateTemperature}
                             onMaxTokensChange={assistantState.updateMaxTokens}
+                            onDefaultModelChange={assistantState.updateDefaultModel}
                             onHasChanged={assistantState.setHasChanged}
                         />
                     );
@@ -205,9 +207,11 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     <AdvancedSettingsStep
                         temperature={temperature}
                         maxOutputTokens={maxOutputTokens}
+                        defaultModel={assistantState.defaultModel}
                         isOwner={isOwner}
                         onTemperatureChange={assistantState.updateTemperature}
                         onMaxTokensChange={assistantState.updateMaxTokens}
+                        onDefaultModelChange={assistantState.updateDefaultModel}
                         onHasChanged={assistantState.setHasChanged}
                     />
                 );

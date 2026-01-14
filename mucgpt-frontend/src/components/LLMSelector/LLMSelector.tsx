@@ -12,6 +12,7 @@ interface Props {
     onSelectionChange: (nextLLM: string) => void;
     defaultLLM: string;
     options: Model[];
+    persistSelection?: boolean;
 }
 
 const TOKENS_PER_MILLION = 1_000_000;
@@ -104,7 +105,7 @@ const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, s
     );
 };
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
+export const LLMSelector = ({ onSelectionChange, defaultLLM, options, persistSelection = true }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
     const { t } = useTranslation();
@@ -112,10 +113,12 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     const handleSelectModel = useCallback(
         (modelName: string) => {
             setSelectedModel(modelName);
-            try {
-                localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, modelName);
-            } catch {
-                /* ignore storage errors in environments without localStorage */
+            if (persistSelection) {
+                try {
+                    localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, modelName);
+                } catch {
+                    /* ignore storage errors in environments without localStorage */
+                }
             }
             onSelectionChange(modelName);
         },

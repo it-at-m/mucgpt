@@ -26,6 +26,7 @@ interface Props {
     clearChatDisabled: boolean;
     llmOptions?: Model[];
     defaultLLM?: string;
+    persistLLMSelection?: boolean;
 }
 
 export const ChatLayout = ({
@@ -43,7 +44,8 @@ export const ChatLayout = ({
     onLLMSelectionChange,
     onToggleMinimized,
     clearChat,
-    clearChatDisabled
+    clearChatDisabled,
+    persistLLMSelection
 }: Props) => {
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
@@ -67,7 +69,12 @@ export const ChatLayout = ({
 
                 {llmOptions && defaultLLM && onLLMSelectionChange && (
                     <div aria-label="LLM selector container">
-                        <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
+                        <LLMSelector
+                            onSelectionChange={onLLMSelectionChange}
+                            defaultLLM={defaultLLM}
+                            options={llmOptions}
+                            persistSelection={persistLLMSelection}
+                        />
                     </div>
                 )}
             </div>

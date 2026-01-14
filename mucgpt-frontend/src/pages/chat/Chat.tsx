@@ -373,6 +373,20 @@ const Chat = () => {
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
 
+    const hasRestoredLLMRef = useRef(false);
+
+    useEffect(() => {
+        if (hasRestoredLLMRef.current) return;
+        const storedLLM = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM);
+        if (storedLLM) {
+            const preferredModel = availableLLMs.find(m => m.llm_name === storedLLM);
+            if (preferredModel && preferredModel.llm_name !== LLM.llm_name) {
+                setLLM(preferredModel);
+            }
+        }
+        hasRestoredLLMRef.current = true;
+    }, [availableLLMs, setLLM, LLM.llm_name]);
+
     // Initialisierung beim ersten Laden
     useEffect(() => {
         if (!isFirstRender.current) return;

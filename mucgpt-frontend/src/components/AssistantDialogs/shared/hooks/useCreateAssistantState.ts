@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useContext } from "react";
+import { useState, useCallback, useMemo, useContext, useEffect } from "react";
 import { ToolBase } from "../../../../api";
 import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
 import { ExampleModel } from "../../../Example";
@@ -21,6 +21,7 @@ export const useCreateAssistantState = () => {
     const [examples, setExamples] = useState<ExampleModel[]>([]);
     const [temperature, setTemperature] = useState<number>(0.6);
     const [maxOutputTokens, setMaxOutputTokens] = useState<number>(llmMaxOutputTokens);
+    const [defaultModel, setDefaultModel] = useState<string | undefined>(LLM.llm_name);
 
     // Track if user has made any changes
     const hasChanges = useMemo(() => {
@@ -33,9 +34,14 @@ export const useCreateAssistantState = () => {
             quickPrompts.length > 0 ||
             examples.length > 0 ||
             temperature !== 0.6 ||
-            maxOutputTokens !== llmMaxOutputTokens
+            maxOutputTokens !== llmMaxOutputTokens ||
+            (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, temperature, maxOutputTokens, llmMaxOutputTokens]);
+    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, temperature, maxOutputTokens, llmMaxOutputTokens, defaultModel]);
+
+    useEffect(() => {
+        setDefaultModel(LLM.llm_name);
+    }, [LLM.llm_name]);
 
     // Change handlers that automatically track changes
     const updateInput = useCallback((newInput: string) => {
@@ -64,6 +70,10 @@ export const useCreateAssistantState = () => {
 
     const updateMaxTokens = useCallback((newTokens: number) => {
         setMaxOutputTokens(newTokens);
+    }, []);
+
+    const updateDefaultModel = useCallback((newModel: string | undefined) => {
+        setDefaultModel(newModel);
     }, []);
 
     const updateTools = useCallback((newTools: ToolBase[]) => {
@@ -102,6 +112,7 @@ export const useCreateAssistantState = () => {
         setExamples([]);
         setTemperature(0.6);
         setMaxOutputTokens(llmMaxOutputTokens);
+        setDefaultModel(LLM.llm_name);
     }, [llmMaxOutputTokens]);
 
     return {
@@ -116,6 +127,7 @@ export const useCreateAssistantState = () => {
         examples,
         temperature,
         maxOutputTokens,
+        defaultModel,
         hasChanges,
         llmMaxOutputTokens,
 
@@ -130,6 +142,7 @@ export const useCreateAssistantState = () => {
         updateSystemPrompt,
         updateTemperature,
         updateMaxTokens,
+        updateDefaultModel,
         updateTools,
         updateTemplate,
         setGeneratedAssistant,

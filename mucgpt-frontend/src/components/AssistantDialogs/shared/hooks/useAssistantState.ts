@@ -17,6 +17,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [temperature, setTemperature] = useState<number>(initialAssistant.temperature);
     const [maxOutputTokens, setMaxOutputTokens] = useState<number>(initialAssistant.max_output_tokens);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
+    const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
     const [version, setVersion] = useState<string>(initialAssistant.version || "0");
     const [tools, setTools] = useState<ToolBase[]>(initialAssistant.tools || []);
     const [publish, setPublish] = useState<boolean>(initialAssistant.publish || false);
@@ -53,6 +54,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
+        setDefaultModelCleared(false);
     }, [initialAssistant, ensureIds]);
 
     // Change handlers
@@ -82,6 +84,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
 
     const updateDefaultModel = useCallback((model: string | undefined) => {
         setDefaultModel(model);
+        setDefaultModelCleared(model === undefined);
         setHasChanged(true);
     }, []);
 
@@ -122,6 +125,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
+        setDefaultModelCleared(false);
     }, [initialAssistant, ensureIds]);
 
     // Create assistant object for saving
@@ -138,7 +142,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             owner_ids: ownerIds,
             temperature: temperature,
             max_output_tokens: maxOutputTokens,
-            default_model: defaultModel,
+            default_model: defaultModelCleared ? "" : defaultModel,
             quick_prompts: validQuickPrompts.map(({ id: _omitId, ...rest }) => {
                 void _omitId;
                 return rest;
@@ -162,6 +166,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         temperature,
         maxOutputTokens,
         defaultModel,
+        defaultModelCleared,
         quickPrompts,
         examples,
         version,

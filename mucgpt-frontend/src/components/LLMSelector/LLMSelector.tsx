@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Model } from "../../api";
-import { STORAGE_KEYS } from "../../pages/layout/LayoutHelper";
 import { RocketRegular, Checkmark24Filled, Money24Filled, MoneyRegular } from "@fluentui/react-icons";
 import styles from "./LLMSelector.module.css";
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
@@ -12,7 +11,6 @@ interface Props {
     onSelectionChange: (nextLLM: string) => void;
     defaultLLM: string;
     options: Model[];
-    persistSelection?: boolean;
 }
 
 const TOKENS_PER_MILLION = 1_000_000;
@@ -105,7 +103,7 @@ const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, s
     );
 };
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options, persistSelection = true }: Props) => {
+export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
     const { t } = useTranslation();
@@ -113,13 +111,6 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options, persistSel
     const handleSelectModel = useCallback(
         (modelName: string) => {
             setSelectedModel(modelName);
-            if (persistSelection) {
-                try {
-                    localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, modelName);
-                } catch {
-                    /* ignore storage errors in environments without localStorage */
-                }
-            }
             onSelectionChange(modelName);
         },
         [onSelectionChange]

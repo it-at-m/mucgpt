@@ -369,9 +369,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
             const found = availableLLMs.find(m => m.llm_name === nextLLM);
-            if (found) setLLM(found);
+            if (found) {
+                setLLM(found);
+                //don't update, if we have a default model
+                if (!assistantConfig.default_model) {
+                    try {
+                        localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, nextLLM);
+                    } catch {
+                        // ignore storage errors
+                    }
+                }
+            }
         },
-        [availableLLMs, setLLM]
+        [availableLLMs, setLLM, assistantConfig.default_model]
     );
 
     // History component
@@ -565,7 +575,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     llmOptions={modelsToShow}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    persistLLMSelection={!assistantConfig.default_model}
                     onToggleMinimized={toggleSidebar}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}

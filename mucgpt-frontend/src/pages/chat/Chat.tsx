@@ -384,6 +384,8 @@ const Chat = () => {
 
     useEffect(() => {
         if (hasRestoredLLMRef.current) return;
+        if (!availableLLMs || availableLLMs.length === 0) return;
+
         const storedLLM = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM);
         if (storedLLM) {
             const preferredModel = availableLLMs.find(m => m.llm_name === storedLLM);

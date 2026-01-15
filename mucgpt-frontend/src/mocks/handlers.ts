@@ -128,6 +128,78 @@ const CONFIG_RESPONSE: ApplicationConfig = {
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
 
+// Add a specific assistant with a default model
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-with-default-model",
+        latest_version: {
+            id: "version-default-model-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+            name: "KICC Research Assistant",
+            description: "A specialized research assistant that always uses the KICCGPT model for consistent, high-quality responses.",
+            system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
+            hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
+            temperature: 0.3,
+            max_output_tokens: 8000,
+            default_model: "KICCGPT",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: true } },
+                { id: "Vereinfachen", config: { enabled: false } }
+            ],
+            owner_ids: ["user-mock-123"],
+            examples: [
+                {
+                    text: "What are the latest developments in AI?",
+                    value: "I can help you research recent AI developments. Let me provide a comprehensive overview..."
+                }
+            ],
+            quick_prompts: [
+                { label: "Research Topic", prompt: "Please research this topic in detail:", tooltip: "Deep research" },
+                { label: "Summarize Paper", prompt: "Summarize this research paper:", tooltip: "Academic summary" }
+            ],
+            tags: ["research", "academic", "kiccgpt"]
+        }
+    })
+);
+
+// Add an assistant with a deprecated/unavailable default model
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-with-deprecated-model",
+        latest_version: {
+            id: "version-deprecated-model-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+            name: "Legacy Document Assistant",
+            description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
+            system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
+            hierarchical_access: ["BAU", "POR"],
+            temperature: 0.7,
+            max_output_tokens: 4000,
+            default_model: "gpt-3.5-turbo",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: false } },
+                { id: "Vereinfachen", config: { enabled: true } }
+            ],
+            owner_ids: ["user-mock-456"],
+            examples: [
+                {
+                    text: "How can you help with documents?",
+                    value: "I can help you summarize documents, extract key information, and answer questions about their content."
+                }
+            ],
+            quick_prompts: [
+                { label: "Summarize", prompt: "Please summarize this document:", tooltip: "Quick summary" },
+                { label: "Key Points", prompt: "Extract the key points from this text:", tooltip: "Main ideas" }
+            ],
+            tags: ["documents", "legacy", "deprecated"]
+        }
+    })
+);
+
 // Helper to choose stream type basierend auf enabled_tools
 function chooseStreamType(enabledTools?: string[]) {
     const options: Array<"mindmap" | "simplify"> = [];
@@ -357,6 +429,8 @@ export const handlers = [
                 hierarchical_access: body.hierarchical_access || current.latest_version.hierarchical_access,
                 temperature: body.temperature ?? current.latest_version.temperature,
                 max_output_tokens: body.max_output_tokens || current.latest_version.max_output_tokens,
+                default_model:
+                    body.default_model !== undefined ? (body.default_model === "" ? undefined : body.default_model) : current.latest_version.default_model,
                 tools: body.tools || current.latest_version.tools,
                 owner_ids: body.owner_ids || current.latest_version.owner_ids,
                 examples: body.examples || current.latest_version.examples,
@@ -415,5 +489,20 @@ export const handlers = [
             description: assistant.latest_version.description
         }));
         return HttpResponse.json(subscriptions);
+    }),
+
+    http.post("/api/user/subscriptions/:assistantId", async ({ params }) => {
+        await delay(300);
+        const assistant = DYNAMIC_ASSISTANTS.find(a => a.id === params.assistantId);
+        if (!assistant) {
+            return new HttpResponse(null, { status: 404 });
+        }
+        // In a real implementation, this would add the subscription to a database
+        // For the mock, we just return success
+        return HttpResponse.json({
+            id: assistant.id,
+            title: assistant.latest_version.name,
+            description: assistant.latest_version.description
+        });
     })
 ];

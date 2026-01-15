@@ -16,6 +16,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [examples, setExamples] = useState<ExampleModel[]>(initialAssistant.examples || []);
     const [temperature, setTemperature] = useState<number>(initialAssistant.temperature);
     const [maxOutputTokens, setMaxOutputTokens] = useState<number>(initialAssistant.max_output_tokens);
+    const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
+    const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
     const [version, setVersion] = useState<string>(initialAssistant.version || "0");
     const [tools, setTools] = useState<ToolBase[]>(initialAssistant.tools || []);
     const [publish, setPublish] = useState<boolean>(initialAssistant.publish || false);
@@ -43,6 +45,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
         setMaxOutputTokens(initialAssistant.max_output_tokens || 1024);
+        setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version || "0");
         setTools(initialAssistant.tools || []);
         setPublish(initialAssistant.publish || false);
@@ -51,6 +54,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
+        setDefaultModelCleared(false);
     }, [initialAssistant, ensureIds]);
 
     // Change handlers
@@ -73,9 +77,14 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTemperature(newTemp);
         setHasChanged(true);
     }, []);
-
     const updateMaxTokens = useCallback((newTokens: number) => {
         setMaxOutputTokens(newTokens);
+        setHasChanged(true);
+    }, []);
+
+    const updateDefaultModel = useCallback((model: string | undefined) => {
+        setDefaultModel(model);
+        setDefaultModelCleared(model === undefined);
         setHasChanged(true);
     }, []);
 
@@ -107,6 +116,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
         setMaxOutputTokens(initialAssistant.max_output_tokens);
+        setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version);
         setTools(initialAssistant.tools || []);
         setPublish(initialAssistant.publish || false);
@@ -115,6 +125,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTags(initialAssistant.tags || []);
         setHasChanged(false);
         setIsVisible(initialAssistant.is_visible !== undefined ? initialAssistant.is_visible : true);
+        setDefaultModelCleared(false);
     }, [initialAssistant, ensureIds]);
 
     // Create assistant object for saving
@@ -131,6 +142,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             owner_ids: ownerIds,
             temperature: temperature,
             max_output_tokens: maxOutputTokens,
+            default_model: defaultModelCleared ? "" : defaultModel,
             quick_prompts: validQuickPrompts.map(({ id: _omitId, ...rest }) => {
                 void _omitId;
                 return rest;
@@ -150,10 +162,11 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         title,
         description,
         systemPrompt,
-        publish,
         ownerIds,
         temperature,
         maxOutputTokens,
+        defaultModel,
+        defaultModelCleared,
         quickPrompts,
         examples,
         version,
@@ -174,6 +187,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         examples,
         temperature,
         maxOutputTokens,
+        defaultModel,
         version,
         tools,
         publish,
@@ -195,6 +209,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         updateSystemPrompt,
         updateTemperature,
         updateMaxTokens,
+        updateDefaultModel,
         updateTools,
         updateIsVisible,
         updateHierarchicalAccess,

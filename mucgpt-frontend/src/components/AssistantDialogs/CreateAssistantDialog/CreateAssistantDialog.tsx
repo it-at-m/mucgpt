@@ -60,6 +60,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         examples,
         temperature,
         maxOutputTokens,
+        defaultModel,
         hasChanges,
         llmMaxOutputTokens,
         updateInput,
@@ -68,6 +69,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         updateSystemPrompt,
         updateTemperature,
         updateMaxTokens,
+        updateDefaultModel,
         updateTools,
         updateTemplate,
         setQuickPrompts,
@@ -106,6 +108,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 publish: false,
                 temperature: temperature,
                 max_output_tokens: maxOutputTokens,
+                default_model: defaultModel,
                 quick_prompts: validQuickPrompts,
                 examples: validExamples,
                 version: "0",
@@ -131,7 +134,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, temperature, maxOutputTokens, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [title, description, systemPrompt, temperature, maxOutputTokens, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -206,6 +209,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     publish: false,
                     temperature: importedData.temperature || 0.7,
                     max_output_tokens: importedData.max_output_tokens || 2000,
+                    default_model: importedData.default_model ?? defaultModel,
                     quick_prompts: importedData.quick_prompts || [],
                     examples: importedData.examples || [],
                     version: "0",
@@ -443,9 +447,11 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                                 <AdvancedSettingsStep
                                     temperature={temperature}
                                     maxOutputTokens={maxOutputTokens}
+                                    defaultModel={defaultModel}
                                     isOwner={true}
                                     onTemperatureChange={updateTemperature}
                                     onMaxTokensChange={updateMaxTokens}
+                                    onDefaultModelChange={updateDefaultModel}
                                 />
                             </div>
                         </DialogContent>

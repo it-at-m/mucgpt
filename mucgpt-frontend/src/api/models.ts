@@ -128,6 +128,7 @@ export type Assistant = {
     id?: string;
     temperature: number;
     max_output_tokens: number;
+    default_model?: string;
     examples?: ExampleModel[];
     quick_prompts?: QuickPrompt[];
     version: string;
@@ -155,6 +156,7 @@ export interface AssistantCreateInput {
     hierarchical_access?: string[];
     temperature?: number;
     max_output_tokens: number;
+    default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
     examples?: ExampleModelInput[];
@@ -162,7 +164,6 @@ export interface AssistantCreateInput {
     tags?: string[];
     is_visible: boolean;
 }
-
 export interface AssistantVersionResponse {
     id: string;
     version: number;
@@ -173,6 +174,7 @@ export interface AssistantVersionResponse {
     hierarchical_access?: string[];
     temperature: number;
     max_output_tokens: number;
+    default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
     examples?: ExampleModelInput[];
@@ -197,6 +199,7 @@ export interface AssistantUpdateInput {
     hierarchical_access?: string[];
     temperature?: number;
     max_output_tokens?: number;
+    default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
     examples?: ExampleModelInput[];

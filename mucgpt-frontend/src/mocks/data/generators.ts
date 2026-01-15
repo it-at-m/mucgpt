@@ -65,6 +65,7 @@ export function buildAssistant(): AssistantCreateResponse {
             hierarchical_access: ["POR-O"],
             temperature: +(Math.random() * 1).toFixed(1),
             max_output_tokens: 4000,
+            default_model: undefined,
             is_visible: true,
             tools: [
                 { id: "brainstorm", config: { enabled: Math.random() > 0.3 } },
@@ -130,6 +131,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
             hierarchical_access: overrides.latest_version?.hierarchical_access || ["ITM"],
             temperature: overrides.latest_version?.temperature ?? Number((Math.random() * 1.5).toFixed(2)),
             max_output_tokens: overrides.latest_version?.max_output_tokens || 4000,
+            default_model: overrides.latest_version?.default_model,
             is_visible: overrides.latest_version?.is_visible !== undefined ? overrides.latest_version.is_visible : true,
             tools: overrides.latest_version?.tools || [
                 { id: "Brainstorming", config: { enabled: Math.random() > 0.4 } },

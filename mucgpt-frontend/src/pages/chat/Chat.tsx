@@ -362,7 +362,14 @@ const Chat = () => {
     const onLLMSelectionChange = useCallback(
         (nextLLM: string) => {
             const found = availableLLMs.find((m: Model) => m.llm_name === nextLLM);
-            if (found) setLLM(found);
+            if (found) {
+                setLLM(found);
+                try {
+                    localStorage.setItem(STORAGE_KEYS.SETTINGS_LLM, nextLLM);
+                } catch {
+                    // ignore storage errors
+                }
+            }
         },
         [availableLLMs, setLLM]
     );
@@ -372,6 +379,22 @@ const Chat = () => {
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
+
+    const hasRestoredLLMRef = useRef(false);
+
+    useEffect(() => {
+        if (hasRestoredLLMRef.current) return;
+        if (!availableLLMs || availableLLMs.length === 0) return;
+
+        const storedLLM = localStorage.getItem(STORAGE_KEYS.SETTINGS_LLM);
+        if (storedLLM) {
+            const preferredModel = availableLLMs.find(m => m.llm_name === storedLLM);
+            if (preferredModel && preferredModel.llm_name !== LLM.llm_name) {
+                setLLM(preferredModel);
+            }
+        }
+        hasRestoredLLMRef.current = true;
+    }, [availableLLMs, setLLM, LLM.llm_name]);
 
     // Initialisierung beim ersten Laden
     useEffect(() => {

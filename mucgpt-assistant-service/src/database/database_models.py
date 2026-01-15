@@ -76,6 +76,7 @@ class AssistantVersion(Base):
     system_prompt = Column(Text, nullable=False)
     temperature = Column(Float, default=0.7)
     max_output_tokens = Column(Integer, default=1000)
+    default_model = Column(String(255), nullable=True)
     examples = Column(JSON, nullable=True)
     quick_prompts = Column(JSON, nullable=True)
     tags = Column(JSON, nullable=True)
@@ -102,6 +103,7 @@ class AssistantVersion(Base):
             "system_prompt": self.system_prompt,
             "temperature": self.temperature,
             "max_output_tokens": self.max_output_tokens,
+            "default_model": self.default_model,
             "examples": self.examples,
             "quick_prompts": self.quick_prompts,
             "tags": self.tags,

@@ -447,6 +447,69 @@ def test_create_assistant_owner_auto_inclusion(test_client):
     assert "other_user_456" in assistant_response.owner_ids
 
 
+@pytest.mark.integration
+def test_create_assistant_with_default_model(test_client):
+    """Test creating assistant with a default model specified."""
+    assistant_data = AssistantCreate(
+        name="Assistant with Default Model",
+        system_prompt="You are an assistant with a default model.",
+        default_model="gpt-4",
+    )
+
+    response = test_client.post(
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
+    )
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assistant_response = AssistantResponse.model_validate(response_data)
+
+    assert assistant_response.latest_version.default_model == "gpt-4"
+
+
+@pytest.mark.integration
+def test_create_assistant_without_default_model(test_client):
+    """Test creating assistant without specifying a default model (should be None)."""
+    assistant_data = AssistantCreate(
+        name="Assistant without Default Model",
+        system_prompt="You are an assistant without a default model.",
+    )
+
+    response = test_client.post(
+        "assistant/create", json=assistant_data.model_dump(), headers=headers
+    )
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assistant_response = AssistantResponse.model_validate(response_data)
+
+    # default_model should be None when not specified
+    assert assistant_response.latest_version.default_model is None
+
+
+@pytest.mark.integration
+def test_create_assistant_with_different_models(test_client):
+    """Test creating assistants with different model values."""
+    test_models = ["gpt-4", "gpt-3.5-turbo", "gpt-4-turbo", "claude-3-opus"]
+
+    for model_name in test_models:
+        assistant_data = AssistantCreate(
+            name=f"Assistant with {model_name}",
+            system_prompt=f"You are an assistant using {model_name}.",
+            default_model=model_name,
+        )
+
+        response = test_client.post(
+            "assistant/create", json=assistant_data.model_dump(), headers=headers
+        )
+
+        assert response.status_code == 200
+        response_data = response.json()
+        assistant_response = AssistantResponse.model_validate(response_data)
+
+        assert assistant_response.latest_version.default_model == model_name
+
+
 @pytest.fixture
 def created_assistant_id(test_client):
     """Fixture that creates an assistant and returns its ID for testing deletion."""
@@ -1105,6 +1168,151 @@ def test_update_assistant_multiple_consecutive_updates(
     updated_response_2 = AssistantResponse.model_validate(response_data_2)
     assert updated_response_2.latest_version.version == 3
     assert updated_response_2.latest_version.name == "Second Update"
+
+
+@pytest.mark.integration
+def test_update_assistant_with_default_model(created_assistant_for_update, test_client):
+    """Test updating assistant to add a default model."""
+    assistant = created_assistant_for_update
+
+    update_data = AssistantUpdate(
+        version=1,
+        default_model="gpt-4-turbo",
+    )
+
+    response = test_client.post(
+        f"assistant/{assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    response_data = response.json()
+    updated_response = AssistantResponse.model_validate(response_data)
+
+    # Verify default_model was added
+    assert updated_response.latest_version.default_model == "gpt-4-turbo"
+    assert updated_response.latest_version.version == 2
+
+
+@pytest.mark.integration
+def test_update_assistant_change_default_model(test_client):
+    """Test updating assistant to change the default model."""
+    # Create assistant with initial default model
+    create_data = AssistantCreate(
+        name="Model Change Test",
+        system_prompt="You are a test assistant.",
+        default_model="gpt-3.5-turbo",
+    )
+
+    create_response = test_client.post(
+        "assistant/create", json=create_data.model_dump(), headers=headers
+    )
+
+    assert create_response.status_code == 200
+    created_assistant = AssistantResponse.model_validate(create_response.json())
+    assert created_assistant.latest_version.default_model == "gpt-3.5-turbo"
+
+    # Update to a different model
+    update_data = AssistantUpdate(
+        version=1,
+        default_model="gpt-4",
+    )
+
+    update_response = test_client.post(
+        f"assistant/{created_assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated_response = AssistantResponse.model_validate(update_response.json())
+
+    # Verify model was changed
+    assert updated_response.latest_version.default_model == "gpt-4"
+    assert updated_response.latest_version.version == 2
+
+
+@pytest.mark.integration
+def test_update_assistant_preserve_default_model(
+    created_assistant_for_update, test_client
+):
+    """Test that default_model is preserved when not specified in update."""
+    assistant = created_assistant_for_update
+
+    # First, set a default model
+    update_data_1 = AssistantUpdate(
+        version=1,
+        default_model="gpt-4",
+    )
+
+    response_1 = test_client.post(
+        f"assistant/{assistant.id}/update",
+        json=update_data_1.model_dump(),
+        headers=headers,
+    )
+
+    assert response_1.status_code == 200
+    updated_1 = AssistantResponse.model_validate(response_1.json())
+    assert updated_1.latest_version.default_model == "gpt-4"
+
+    # Second update without specifying default_model
+    update_data_2 = AssistantUpdate(
+        version=2,
+        name="Updated Name Only",
+    )
+
+    response_2 = test_client.post(
+        f"assistant/{assistant.id}/update",
+        json=update_data_2.model_dump(),
+        headers=headers,
+    )
+
+    assert response_2.status_code == 200
+    updated_2 = AssistantResponse.model_validate(response_2.json())
+
+    # Verify default_model was preserved
+    assert updated_2.latest_version.default_model == "gpt-4"
+    assert updated_2.latest_version.name == "Updated Name Only"
+    assert updated_2.latest_version.version == 3
+
+
+@pytest.mark.integration
+def test_update_assistant_clear_default_model(test_client):
+    """Test updating assistant to clear the default model by sending empty string."""
+    # Create assistant with a default model
+    create_data = AssistantCreate(
+        name="Model Clearing Test",
+        system_prompt="You are a test assistant.",
+        default_model="gpt-4",
+    )
+
+    create_response = test_client.post(
+        "assistant/create", json=create_data.model_dump(), headers=headers
+    )
+
+    assert create_response.status_code == 200
+    created_assistant = AssistantResponse.model_validate(create_response.json())
+    assert created_assistant.latest_version.default_model == "gpt-4"
+
+    # Update with empty string to clear the model
+    update_data = AssistantUpdate(
+        version=1,
+        default_model="",  # Empty string should clear the field
+    )
+
+    update_response = test_client.post(
+        f"assistant/{created_assistant.id}/update",
+        json=update_data.model_dump(),
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    updated_response = AssistantResponse.model_validate(update_response.json())
+
+    # Verify model was cleared (set to None)
+    assert updated_response.latest_version.default_model is None
+    assert updated_response.latest_version.version == 2
 
 
 @pytest.mark.integration

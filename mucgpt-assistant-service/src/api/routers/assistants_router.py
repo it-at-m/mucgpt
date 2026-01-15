@@ -76,6 +76,7 @@ async def createAssistant(
             system_prompt=assistant.system_prompt,
             temperature=assistant.temperature,
             max_output_tokens=assistant.max_output_tokens,
+            default_model=assistant.default_model,
             examples=assistant.examples or [],
             quick_prompts=assistant.quick_prompts or [],
             tags=assistant.tags or [],
@@ -118,6 +119,7 @@ async def createAssistant(
             hierarchical_access=new_assistant.hierarchical_access or [],
             temperature=latest_version.temperature,
             max_output_tokens=latest_version.max_output_tokens,
+            default_model=latest_version.default_model,
             examples=latest_version.examples or [],
             quick_prompts=latest_version.quick_prompts or [],
             tags=latest_version.tags or [],
@@ -269,6 +271,15 @@ async def updateAssistant(
         max_output_tokens=assistant_update.max_output_tokens
         if assistant_update.max_output_tokens is not None
         else latest_version.max_output_tokens,
+        default_model=(
+            None
+            if assistant_update.default_model == ""
+            else (
+                assistant_update.default_model
+                if assistant_update.default_model is not None
+                else latest_version.default_model
+            )
+        ),
         examples=assistant_update.examples
         if assistant_update.examples is not None
         else latest_version.examples,
@@ -307,6 +318,7 @@ async def updateAssistant(
         hierarchical_access=assistant.hierarchical_access or [],
         temperature=latest_version.temperature,
         max_output_tokens=latest_version.max_output_tokens,
+        default_model=latest_version.default_model,
         examples=latest_version.examples or [],
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
@@ -380,6 +392,7 @@ async def getAllAssistants(
                 hierarchical_access=assistant.hierarchical_access or [],
                 temperature=latest_version.temperature,
                 max_output_tokens=latest_version.max_output_tokens,
+                default_model=latest_version.default_model,
                 examples=latest_version.examples or [],
                 quick_prompts=latest_version.quick_prompts or [],
                 tags=latest_version.tags or [],
@@ -462,6 +475,7 @@ async def getAssistant(
         hierarchical_access=assistant.hierarchical_access or [],
         temperature=latest_version.temperature,
         max_output_tokens=latest_version.max_output_tokens,
+        default_model=latest_version.default_model,
         examples=latest_version.examples or [],
         quick_prompts=latest_version.quick_prompts or [],
         tags=latest_version.tags or [],
@@ -542,6 +556,7 @@ async def get_assistant_version(
         hierarchical_access=assistant.hierarchical_access or [],
         temperature=assistant_version.temperature,
         max_output_tokens=assistant_version.max_output_tokens,
+        default_model=assistant_version.default_model,
         examples=assistant_version.examples or [],
         quick_prompts=assistant_version.quick_prompts or [],
         tags=assistant_version.tags or [],

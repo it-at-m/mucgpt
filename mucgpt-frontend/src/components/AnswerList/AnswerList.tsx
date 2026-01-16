@@ -17,6 +17,7 @@ interface Props {
     chatMessageStreamEnd: React.RefObject<HTMLDivElement>;
     lastQuestionRef: React.MutableRefObject<string>;
     onRollbackError?: () => void;
+    lastAnswerRef?: React.Ref<HTMLDivElement>;
 }
 
 export const AnswerList = ({
@@ -28,7 +29,8 @@ export const AnswerList = ({
     makeApiRequest,
     chatMessageStreamEnd,
     lastQuestionRef,
-    onRollbackError
+    onRollbackError,
+    lastAnswerRef
 }: Props) => {
     const { t } = useTranslation();
 
@@ -40,17 +42,21 @@ export const AnswerList = ({
             shownAnswers = answers.slice(0, -1); // Exclude the last answer if there is an error
         }
         setAnswersComponent(
-            shownAnswers.map((answer, index) => (
-                <ChatTurnComponent
-                    key={index}
-                    usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
-                    usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
-                    assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
-                    assistantmsg={regularAssistantMsg(answer, index)}
-                ></ChatTurnComponent>
-            ))
+            shownAnswers.map((answer, index) => {
+                const isLastAnswer = index === shownAnswers.length - 1;
+                return (
+                    <ChatTurnComponent
+                        key={index}
+                        innerRef={isLastAnswer ? lastAnswerRef : undefined}
+                        usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
+                        usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
+                        assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
+                        assistantmsg={regularAssistantMsg(answer, index)}
+                    ></ChatTurnComponent>
+                );
+            })
         );
-    }, [answers, isLoading, error]);
+    }, [answers, isLoading, error, lastAnswerRef]);
 
     const answerList = useMemo(() => {
         return (

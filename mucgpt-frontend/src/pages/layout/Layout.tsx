@@ -1,9 +1,9 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import logo from "../../assets/mucgpt_logo.png";
+import logo from "../../assets/mucgpt_frost.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
-import logo_black from "../../assets/mucgpt_black.png";
+import logo_black from "../../assets/mucgpt_frost.png";
 import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";

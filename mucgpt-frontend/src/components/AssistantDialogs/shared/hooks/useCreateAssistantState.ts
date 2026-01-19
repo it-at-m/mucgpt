@@ -3,7 +3,6 @@ import { ToolBase } from "../../../../api";
 import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
 import { ExampleModel } from "../../../Example";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
-import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../../../constants";
 
 export const useCreateAssistantState = () => {
     // Context
@@ -105,7 +104,7 @@ export const useCreateAssistantState = () => {
         setExamples([]);
         setTemperature(0.6);
         setDefaultModel(LLM.llm_name);
-    },[]);
+    }, []);
 
     return {
         // State

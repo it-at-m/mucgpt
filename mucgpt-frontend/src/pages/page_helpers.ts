@@ -423,14 +423,7 @@ export const makeApiRequest = async (
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
     } else {
         // Create a new chat with generated name
-        const chatname = await createChatName(
-            question,
-            finalResponse.answer,
-            language,
-            options.temperature,
-            options.system ?? "",
-            LLM.llm_name
-        );
+        const chatname = await createChatName(question, finalResponse.answer, language, options.temperature, options.system ?? "", LLM.llm_name);
 
         // Create chat with assistant-specific ID if assistant_id is provided, otherwise use regular UUID
         const id = assistant_id

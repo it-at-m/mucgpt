@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
-import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../../../constants";
 
 interface AdvancedSettingsStepProps {
     temperature: number;
@@ -23,8 +22,8 @@ export const AdvancedSettingsStep = ({
     onHasChanged
 }: AdvancedSettingsStepProps) => {
     const { t } = useTranslation();
-    const { LLM, availableLLMs } = useContext(LLMContext);
-    
+    const { availableLLMs } = useContext(LLMContext);
+
     const min_temp = 0;
     const max_temp = 1;
 

@@ -396,7 +396,6 @@ i18n
                             hide_advanced_settings: "Erweiterte Einstellungen ausblenden",
                             collapse: "Einklappen",
                             temperature: "Temperatur",
-                            max_output_tokens: "Maximale Ausgabe-Token",
                             default_model: "Standard-Modell",
                             default_model_info:
                                 "Das Standard-Modell, das für diesen Assistenten verwendet wird. Wenn kein Modell ausgewählt ist, wird das Benutzer-ausgewählte Modell verwendet.",
@@ -937,7 +936,6 @@ i18n
                             hide_advanced_settings: "Hide Advanced Settings",
                             collapse: "Collapse",
                             temperature: "Temperature",
-                            max_output_tokens: "Max Output Tokens",
                             default_model: "Default Model",
                             default_model_info: "The default model to use for this assistant. If no model is selected, the user-selected model will be used.",
                             default_model_placeholder: "Select a default model...",
@@ -1472,7 +1470,6 @@ i18n
                             hide_advanced_settings: "Erweiterte Einstellungen vaberg",
                             collapse: "Eiklappn",
                             temperature: "Temperatur",
-                            max_output_tokens: "Maximale Ausgabe-Token",
                             default_model: "Standard-Modell",
                             default_model_info:
                                 "Des Standard-Modell, des da Assistent hernimmt. Wenn koa Modell ausgewählt is, nimmt ma des, wos da Nutzer aussucht.",
@@ -2014,7 +2011,6 @@ i18n
                             hide_advanced_settings: "Masquer les paramètres avancés",
                             collapse: "Réduire",
                             temperature: "Température",
-                            max_output_tokens: "Tokens de sortie max",
                             default_model: "Modèle par défaut",
                             default_model_info:
                                 "Le modèle par défaut utilisé pour cet assistant. Si aucun modèle n'est sélectionné, celui choisi par l'utilisateur sera utilisé.",
@@ -2554,7 +2550,6 @@ i18n
                             hide_advanced_settings: "Приховати розширені налаштування",
                             collapse: "Згорнути",
                             temperature: "Температура",
-                            max_output_tokens: "Макс. токени виводу",
                             default_model: "Стандартна модель",
                             default_model_info:
                                 "Стандартна модель, яку використовує цей асистент. Якщо модель не вибрана, буде використана модель, яку обрав користувач.",

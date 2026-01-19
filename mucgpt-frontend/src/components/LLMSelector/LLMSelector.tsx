@@ -264,7 +264,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                                     ) : null;
                                     const descriptionText = item.description && item.description.trim().length > 0 ? item.description : notAvailable;
                                     const inputTokensText = formatTokenCount(item.max_input_tokens, notAvailable, tokenLabel, tokenPluralLabel);
-                                    const outputTokensText = formatTokenCount(null, notAvailable, tokenLabel, tokenPluralLabel);
+                                    const outputTokensText = formatTokenCount(item.max_output_tokens, notAvailable, tokenLabel, tokenPluralLabel);
                                     const inputPriceText = formatCostPerMillion(inputPrice, notAvailable, tokenPluralLabel);
                                     const outputPriceText = formatCostPerMillion(outputPrice, notAvailable, tokenPluralLabel);
                                     const contextRating = getContextRating(item.max_input_tokens);

@@ -11,7 +11,7 @@ import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
-import { CHAT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
+import { CHAT_STORE } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
@@ -240,17 +240,7 @@ const Chat = () => {
             }
             isLoadingRef.current = false;
         },
-        [
-            isLoadingRef.current,
-            answers,
-            language,
-            temperature,
-            activeChatRef.current,
-            LLM.llm_name,
-            storageService,
-            fetchHistory,
-            selectedTools
-        ]
+        [isLoadingRef.current, answers, language, temperature, activeChatRef.current, LLM.llm_name, storageService, fetchHistory, selectedTools]
     );
 
     // Regenerate-Funktion
@@ -294,7 +284,6 @@ const Chat = () => {
         },
         [systemPrompt, debouncedStorageUpdate]
     );
-
 
     const onSystemPromptChanged = useCallback(
         (newSystemPrompt: string) => {

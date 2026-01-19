@@ -54,13 +54,7 @@ export interface Model {
     llm_name: string;
     max_input_tokens?: number | null;
     description?: string | null;
-    /**
-     * Not currently provided by the backend but kept for UI continuity.
-     */
-    speed?: string | null;
-    /**
-     * Not currently provided by the backend but kept for UI continuity.
-     */
+    max_output_tokens?: number | null;
     knowledge_cut_off?: string | null;
     input_cost_per_token?: number | null;
     output_cost_per_token?: number | null;

@@ -2,9 +2,8 @@ import { Dismiss24Regular } from "@fluentui/react-icons";
 import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { LLMContext } from "../LLMSelector/LLMContextProvider";
 
 interface Props {
     temperature: number;
@@ -15,7 +14,6 @@ interface Props {
 
 export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt, setSystemPrompt }: Props) => {
     const { t } = useTranslation();
-    const { LLM } = useContext(LLMContext);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");

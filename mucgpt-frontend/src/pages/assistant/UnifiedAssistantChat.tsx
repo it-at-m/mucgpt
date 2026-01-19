@@ -442,7 +442,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <>
                 <AssistantsettingsDrawer
                     assistant={assistantConfig}
-                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => { }}
+                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
                     onDeleteAssistant={onDeleteAssistant}
                     isOwned={strategy.isOwned}
                     strategy={strategy}
@@ -482,8 +482,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                }
+                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                  }
                 : tools;
 
         return (

@@ -80,6 +80,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "KICCGPT",
             max_input_tokens: 128000,
+            max_output_tokens: 12000,
             description: "GPT build by KICC",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
@@ -93,6 +94,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "UnknownGPT",
             max_input_tokens: 128000,
+            max_output_tokens: 128000,
             description: "A young model that has to earn it's name, but with a lot of potential.",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
@@ -106,6 +108,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "AnnonymGPT",
             max_input_tokens: 500000,
+            max_output_tokens: 12000,
             description: "A GPT that tends to write reddit comments",
             knowledge_cut_off: "2023-07-01",
             input_cost_per_token: 3.5e-7,

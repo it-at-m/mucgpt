@@ -33,7 +33,7 @@ export const useCreateAssistantState = () => {
             temperature !== 0.6 ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, temperature, defaultModel]);
+    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, temperature, defaultModel, LLM.llm_name]);
 
     useEffect(() => {
         setDefaultModel(LLM.llm_name);
@@ -104,7 +104,7 @@ export const useCreateAssistantState = () => {
         setExamples([]);
         setTemperature(0.6);
         setDefaultModel(LLM.llm_name);
-    }, []);
+    }, [LLM.llm_name]);
 
     return {
         // State

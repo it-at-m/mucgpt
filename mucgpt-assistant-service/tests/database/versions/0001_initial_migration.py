@@ -49,7 +49,6 @@ def upgrade() -> None:
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("system_prompt", sa.String(), nullable=False),
         sa.Column("temperature", sa.Float(), nullable=False),
-        sa.Column("max_output_tokens", sa.Integer(), nullable=False),
         sa.Column("examples", sa.JSON(), nullable=True),
         sa.Column("quick_prompts", sa.JSON(), nullable=True),
         sa.Column("tags", sa.JSON(), nullable=True),

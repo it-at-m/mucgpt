@@ -7,31 +7,24 @@ import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../../../constants";
 
 interface AdvancedSettingsStepProps {
     temperature: number;
-    maxOutputTokens: number;
     defaultModel?: string;
     isOwner: boolean;
     onTemperatureChange: (temperature: number) => void;
-    onMaxTokensChange: (maxTokens: number) => void;
     onDefaultModelChange?: (model: string | undefined) => void;
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
 export const AdvancedSettingsStep = ({
     temperature,
-    maxOutputTokens,
     defaultModel,
     isOwner,
     onTemperatureChange,
-    onMaxTokensChange,
     onDefaultModelChange,
     onHasChanged
 }: AdvancedSettingsStepProps) => {
     const { t } = useTranslation();
     const { LLM, availableLLMs } = useContext(LLMContext);
-
-    const min_max_tokens = 10;
-    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
-    const max_max_tokens = Math.max(llmMaxOutputTokens, maxOutputTokens, min_max_tokens);
+    
     const min_temp = 0;
     const max_temp = 1;
 
@@ -42,18 +35,6 @@ export const AdvancedSettingsStep = ({
             onHasChanged?.(true);
         },
         [onTemperatureChange, onHasChanged]
-    );
-
-    // Token change
-    const onMaxtokensChangeHandler = useCallback(
-        (ev: React.ChangeEvent<HTMLInputElement>) => {
-            const value = Number(ev.target.value);
-            const limit = llmMaxOutputTokens;
-            const maxTokens = limit > 0 && value > limit ? limit : value;
-            onMaxTokensChange(maxTokens);
-            onHasChanged?.(true);
-        },
-        [llmMaxOutputTokens, onMaxTokensChange, onHasChanged]
     );
 
     // Model change
@@ -92,24 +73,6 @@ export const AdvancedSettingsStep = ({
                     className={sharedStyles.rangeInput}
                 />
                 <div className={sharedStyles.rangeValue}>{temperature}</div>
-            </Field>
-            <Field size="large" className={sharedStyles.rangeField}>
-                <label className={sharedStyles.formLabel}>
-                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>
-                        {t("components.edit_assistant_dialog.max_output_tokens")}
-                    </InfoLabel>
-                </label>
-                <input
-                    type="range"
-                    min={min_max_tokens}
-                    max={max_max_tokens}
-                    step={100}
-                    value={maxOutputTokens}
-                    onChange={onMaxtokensChangeHandler}
-                    disabled={!isOwner}
-                    className={sharedStyles.rangeInput}
-                />
-                <div className={sharedStyles.rangeValue}>{maxOutputTokens}</div>
             </Field>
             <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>

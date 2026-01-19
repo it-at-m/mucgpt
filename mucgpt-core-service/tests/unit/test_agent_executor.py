@@ -199,7 +199,6 @@ class TestMUCGPTAgentExecutor:
             model="test-model",
             user_info=None,
         )
-        assert llm.config["llm_max_tokens"] == 20
         assert llm.config["llm_temperature"] == 0.5
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False

@@ -57,15 +57,3 @@ class TestInitApp:
         # Act & Assert
         with pytest.raises(ValueError, match="Temperature must be between 0 and 1"):
             ModelOptions(temperature=-0.1)
-
-    def test_model_options_validates_max_tokens_zero(self):
-        """Test that ModelOptions validates max_tokens is not zero."""
-        # Act & Assert
-        with pytest.raises(ValueError, match="Max tokens must be a positive integer"):
-            ModelOptions(max_tokens=0)
-
-    def test_model_options_validates_max_tokens_negative(self):
-        """Test that ModelOptions validates max_tokens is not negative."""
-        # Act & Assert
-        with pytest.raises(ValueError, match="Max tokens must be a positive integer"):
-            ModelOptions(max_tokens=-100)

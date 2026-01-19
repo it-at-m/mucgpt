@@ -9,7 +9,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
         {
             llm_name: "KICC GPT",
             max_input_tokens: 128000,
-            max_output_tokens: 12000,
             description: "",
             speed: "",
             knowledge_cut_off: "",
@@ -24,7 +23,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
         {
             llm_name: "Unknown GPT",
             max_input_tokens: 128000,
-            max_output_tokens: 12000,
             description: "",
             speed: "",
             knowledge_cut_off: "",
@@ -39,7 +37,6 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
         {
             llm_name: "AnnonymGPT",
             max_input_tokens: 128000,
-            max_output_tokens: 128000,
             description: "",
             speed: "",
             knowledge_cut_off: "",

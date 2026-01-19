@@ -148,7 +148,6 @@ MUCGPT_CORE_MODELS='[
     "api_key": "<your-sk>",
     "model_info": {
       "auto_enrich_from_model_info_endpoint": true,
-      "max_output_tokens": "<number>",
       "max_input_tokens": "<number>",
       "description": "<description>",
       "input_cost_per_token": "<price>",
@@ -173,7 +172,6 @@ MUCGPT_CORE_MODELS='[
 **`model_info` fields:**
 
 - `auto_enrich_from_model_info_endpoint`: If `true` (default), missing metadata is fetched from `<endpoint>/model/info` (as it is available in litellm). Set to `false` to require manual values.
-- `max_output_tokens`: Maximum number of tokens the model can generate in a response.
 - `max_input_tokens`: Maximum number of tokens accepted as input.
 - `description`: A human-readable description of the model.
 - `knowledge_cut_off`: Optional ISO date string describing the model's latest training data cutoff.

@@ -29,7 +29,6 @@ def sample_assistant_create():
         system_prompt="You are a helpful test assistant.",
         hierarchical_access=["IT"],
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[{"text": "Test Example", "value": "This is a test example"}],
         quick_prompts=[
             {
@@ -94,10 +93,6 @@ def test_create_assistant_success(sample_assistant_create, test_client):
     assert (
         assistant_response.latest_version.temperature
         == sample_assistant_create.temperature
-    )
-    assert (
-        assistant_response.latest_version.max_output_tokens
-        == sample_assistant_create.max_output_tokens
     )
 
     # Check examples with proper model access

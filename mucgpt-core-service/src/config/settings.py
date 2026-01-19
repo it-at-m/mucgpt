@@ -34,7 +34,6 @@ _decimal_adapter = TypeAdapter(Decimal)
 
 class ModelInfo(BaseModel):
     auto_enrich_from_model_info_endpoint: bool = True
-    max_output_tokens: PositiveInt | None = None
     max_input_tokens: PositiveInt | None = None
     description: str | None = None
     input_cost_per_token: Decimal | None = None
@@ -73,7 +72,6 @@ class ModelsConfig(BaseModel):
         info_fields = {
             "auto_enrich_from_model_info_endpoint",
             "auto_enrich",
-            "max_output_tokens",
             "max_input_tokens",
             "description",
             "input_cost_per_token",
@@ -129,13 +127,6 @@ class ModelsConfig(BaseModel):
 
         return model
 
-    @property
-    def max_output_tokens(self) -> PositiveInt | None:
-        return self.model_info.max_output_tokens
-
-    @max_output_tokens.setter
-    def max_output_tokens(self, value: PositiveInt | None) -> None:
-        self.model_info.max_output_tokens = value
 
     @property
     def max_input_tokens(self) -> PositiveInt | None:
@@ -303,8 +294,8 @@ def enrich_model_metadata(model: ModelsConfig) -> None:
         entry = _fetch_remote_model_entry(model)
     except RuntimeError as exc:  # pragma: no cover - defended via unit tests
         raise ValueError(
-            "Unable to enrich model configuration. Provide max_input_tokens, "
-            "max_output_tokens, and description directly or ensure the model info "
+            "Unable to enrich model configuration. Provide max_input_tokens "
+            "and description directly or ensure the model info "
             f"endpoint at {model.endpoint} is reachable."
         ) from exc
 
@@ -329,16 +320,13 @@ def enrich_model_metadata(model: ModelsConfig) -> None:
 
 def _has_complete_metadata(model_info: ModelInfo) -> bool:
     return (
-        model_info.max_output_tokens is not None
-        and model_info.max_input_tokens is not None
+        model_info.max_input_tokens is not None
         and bool((model_info.description or "").strip())
     )
 
 
 def _missing_metadata_fields(model_info: ModelInfo) -> List[str]:
     missing = []
-    if model_info.max_output_tokens is None:
-        missing.append("max_output_tokens")
     if model_info.max_input_tokens is None:
         missing.append("max_input_tokens")
     if not (model_info.description or "").strip():
@@ -350,11 +338,6 @@ def _apply_model_info(model: ModelsConfig, entry: dict[str, Any]) -> None:
     model_info = entry.get("model_info") or {}
     litellm_params = entry.get("litellm_params") or {}
     info = model.model_info
-
-    if info.max_output_tokens is None:
-        info.max_output_tokens = _coerce_positive_int(
-            model_info.get("max_output_tokens") or model_info.get("max_tokens")
-        )
 
     if info.max_input_tokens is None:
         info.max_input_tokens = _coerce_positive_int(

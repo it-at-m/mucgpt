@@ -291,7 +291,6 @@ class SimplifyAgent:
             {
                 "llm_temperature": 0.0,
                 "llm_streaming": True,  # Enable streaming
-                "llm_max_tokens": 5000,
             }
         )
 

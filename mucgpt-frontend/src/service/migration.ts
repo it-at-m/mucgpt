@@ -15,7 +15,6 @@ interface LegacyChatObject {
     Options: {
         favorite: boolean;
         system: string;
-        maxTokens: number;
         temperature: number;
     };
 }
@@ -27,7 +26,6 @@ export interface LegacyAssistant {
     publish: boolean;
     id: number;
     temperature: number;
-    max_output_tokens: number;
 }
 export async function migrate_old_assistants() {
     const legacy_store = new StorageService<any, any>(LEGACY_ASSISTANT_STORE);
@@ -44,7 +42,6 @@ export async function migrate_old_assistants() {
                 system_message: oldassistant.system_message,
                 publish: oldassistant.publish,
                 temperature: oldassistant.temperature,
-                max_output_tokens: oldassistant.max_output_tokens,
                 version: "0", // Set a default version for new assistants
                 is_visible: true
             };
@@ -78,7 +75,6 @@ export async function migrateChats(
                         }),
                         config: {
                             system: chat.Options.system,
-                            maxTokens: chat.Options.maxTokens,
                             temperature: chat.Options.temperature
                         },
                         _last_edited: chat.Data.LastEdited,

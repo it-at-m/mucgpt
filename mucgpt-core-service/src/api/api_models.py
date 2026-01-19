@@ -66,7 +66,6 @@ class ChatCompletionRequest(BaseModel):
         ..., description="Sequence of messages in the conversation"
     )
     temperature: Optional[float] = Field(0.7, description="Sampling temperature")
-    max_tokens: Optional[int] = Field(4096, description="Maximum tokens to generate")
     stream: Optional[bool] = Field(
         False, description="Whether to stream partial responses back"
     )
@@ -85,7 +84,6 @@ class ChatCompletionRequest(BaseModel):
                     {"role": "user", "content": "Explain test driven development."},
                 ],
                 "temperature": 0.5,
-                "max_tokens": 300,
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
@@ -285,15 +283,11 @@ class CreateAssistantRequest(BaseModel):
     model: str = Field(
         "gpt-4o-mini", description="The model to use for assistant creation."
     )
-    max_tokens: int = Field(
-        4096, description="The maximum number of output tokens for the assistant."
-    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "input": "Create an assistant that answers questions about internal IT policies.",
                 "model": "gpt-4o-mini",
-                "max_tokens": 1024,
             }
         }
     )
@@ -318,9 +312,6 @@ class CreateAssistantResult(BaseModel):
 
 class ModelsDTO(BaseModel):
     llm_name: str = Field(..., description="Identifier of the model/deployment")
-    max_output_tokens: PositiveInt | None = Field(
-        None, description="Maximum tokens the model can generate"
-    )
     max_input_tokens: PositiveInt | None = Field(
         None, description="Maximum tokens the model can receive as input"
     )

@@ -29,7 +29,6 @@ export type ChatRequest = {
     history: ChatTurn[];
     temperature?: number;
     language?: string;
-    max_output_tokens?: number;
     system_message?: string;
     shouldStream?: boolean;
     model?: string;
@@ -39,7 +38,6 @@ export type ChatRequest = {
 
 export type CreateAssistantRequest = {
     input: string;
-    max_output_tokens: number;
     model?: string;
 };
 
@@ -54,7 +52,6 @@ export interface ApplicationConfig {
 
 export interface Model {
     llm_name: string;
-    max_output_tokens?: number | null;
     max_input_tokens?: number | null;
     description?: string | null;
     /**
@@ -127,7 +124,6 @@ export type Assistant = {
     publish: boolean;
     id?: string;
     temperature: number;
-    max_output_tokens: number;
     default_model?: string;
     examples?: ExampleModel[];
     quick_prompts?: QuickPrompt[];
@@ -155,7 +151,6 @@ export interface AssistantCreateInput {
     system_prompt: string;
     hierarchical_access?: string[];
     temperature?: number;
-    max_output_tokens: number;
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
@@ -173,7 +168,6 @@ export interface AssistantVersionResponse {
     system_prompt: string;
     hierarchical_access?: string[];
     temperature: number;
-    max_output_tokens: number;
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
@@ -198,7 +192,6 @@ export interface AssistantUpdateInput {
     system_prompt?: string;
     hierarchical_access?: string[];
     temperature?: number;
-    max_output_tokens?: number;
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];

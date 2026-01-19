@@ -46,7 +46,6 @@ def mock_assistant_version():
     version.description = "A test AI assistant"
     version.system_prompt = "You are a helpful test assistant."
     version.temperature = 0.7
-    version.max_output_tokens = 1000
     version.examples = []
     version.quick_prompts = []
     version.tags = []

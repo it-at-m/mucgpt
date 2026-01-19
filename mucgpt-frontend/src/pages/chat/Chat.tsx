@@ -55,7 +55,6 @@ export type ChatMessage = DBMessage<ChatResponse>;
 
 export interface ChatOptions {
     system: string;
-    maxTokens: number;
     temperature: number;
 }
 
@@ -94,7 +93,6 @@ const Chat = () => {
         setHeader(headerTitle);
     }, [setHeader, headerTitle]);
     const { tools } = useToolsContext();
-    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
 
     // Independent states
     const [error, setError] = useState<unknown>();
@@ -113,14 +111,13 @@ const Chat = () => {
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
         temperature: 0.7,
-        max_output_tokens: 4000,
         systemPrompt: "",
         active_chat: undefined,
         allChats: []
     });
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, temperature, systemPrompt, active_chat, allChats } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -179,7 +176,6 @@ const Chat = () => {
                 if (chat) {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_TEMPERATURE", payload: chat.config.temperature });
-                    dispatch({ type: "SET_MAX_TOKENS", payload: chat.config.maxTokens });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
@@ -219,7 +215,6 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                maxTokens: max_output_tokens,
                 temperature: temperature
             };
             try {
@@ -250,7 +245,6 @@ const Chat = () => {
             answers,
             language,
             temperature,
-            max_output_tokens,
             activeChatRef.current,
             LLM.llm_name,
             storageService,
@@ -295,28 +289,12 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: systemPrompt,
-                maxTokens: max_output_tokens,
                 temperature: temp
             });
         },
-        [systemPrompt, max_output_tokens, debouncedStorageUpdate]
+        [systemPrompt, debouncedStorageUpdate]
     );
 
-    const onMaxTokensChanged = useCallback(
-        (maxTokens: number) => {
-            const limit = llmMaxOutputTokens;
-            const finalTokens = limit > 1 && maxTokens > limit ? limit : maxTokens;
-
-            dispatch({ type: "SET_MAX_TOKENS", payload: finalTokens });
-
-            debouncedStorageUpdate({
-                system: systemPrompt,
-                maxTokens: finalTokens,
-                temperature: temperature
-            });
-        },
-        [llmMaxOutputTokens, systemPrompt, temperature, debouncedStorageUpdate]
-    );
 
     const onSystemPromptChanged = useCallback(
         (newSystemPrompt: string) => {
@@ -324,11 +302,10 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: newSystemPrompt,
-                maxTokens: max_output_tokens,
                 temperature: temperature
             });
         },
-        [max_output_tokens, temperature, debouncedStorageUpdate]
+        [temperature, debouncedStorageUpdate]
     );
 
     const clearNavigationQueryParams = useCallback(() => {
@@ -447,7 +424,6 @@ const Chat = () => {
                     if (existingData) {
                         dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
                         dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
-                        dispatch({ type: "SET_MAX_TOKENS", payload: existingData.config.maxTokens });
                         dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
                         dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
 
@@ -496,13 +472,6 @@ const Chat = () => {
             }
         };
     }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
-
-    // Update max tokens if LLM changes
-    useEffect(() => {
-        if (llmMaxOutputTokens > 1 && max_output_tokens > llmMaxOutputTokens) {
-            onMaxTokensChanged(llmMaxOutputTokens);
-        }
-    }, [llmMaxOutputTokens, max_output_tokens, onMaxTokensChanged]);
 
     // Set up quick prompts
     useEffect(() => {
@@ -638,13 +607,11 @@ const Chat = () => {
             <ChatsettingsDrawer
                 temperature={temperature}
                 setTemperature={onTemperatureChanged}
-                max_output_tokens={max_output_tokens}
-                setMaxTokens={onMaxTokensChanged}
                 systemPrompt={systemPrompt}
                 setSystemPrompt={onSystemPromptChanged}
             />
         ),
-        [temperature, max_output_tokens, systemPrompt, onTemperatureChanged, onMaxTokensChanged, onSystemPromptChanged]
+        [temperature, systemPrompt, onTemperatureChanged, onSystemPromptChanged]
     );
 
     const sidebar = useMemo(

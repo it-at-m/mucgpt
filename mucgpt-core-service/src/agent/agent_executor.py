@@ -113,17 +113,15 @@ class MUCGPTAgentExecutor:
         self,
         messages: List[InputMessage],
         temperature: float,
-        max_output_tokens: int,
         model: str,
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
         logger.info(
-            "Chat streaming started with temperature %s, model %s, max_tokens %s",
+            "Chat streaming started with temperature %s, model %s",
             temperature,
             model,
-            max_output_tokens,
         )
         msgs = _convert_to_langchain_messages(messages)
         id_ = str(uuid.uuid4())
@@ -138,7 +136,6 @@ class MUCGPTAgentExecutor:
             self.base_config,
             RunnableConfig(
                 configurable={
-                    "llm_max_tokens": max_output_tokens,
                     "llm_temperature": temperature,
                     "llm": model,
                     "llm_streaming": True,
@@ -240,17 +237,15 @@ class MUCGPTAgentExecutor:
         self,
         messages: List[InputMessage],
         temperature: float,
-        max_output_tokens: int,
         model: str,
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
     ) -> ChatCompletionResponse:
         logger.info(
-            "Chat non-streaming started with temperature %s, model %s, max_tokens %s",
+            "Chat non-streaming started with temperature %s, model %s",
             temperature,
             model,
-            max_output_tokens,
         )
         msgs = _convert_to_langchain_messages(messages)
         dept_prefix = (
@@ -260,7 +255,6 @@ class MUCGPTAgentExecutor:
         llm_extra_body = self._build_llm_extra_body(assistant_id)
         request_config = RunnableConfig(
             configurable={
-                "llm_max_tokens": max_output_tokens,
                 "llm_temperature": temperature,
                 "llm": model,
                 "llm_streaming": False,

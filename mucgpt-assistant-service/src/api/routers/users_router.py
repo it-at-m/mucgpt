@@ -59,7 +59,6 @@ async def _build_assistant_response_list(
                 if isinstance(assistant.hierarchical_access, list)
                 else [],
                 temperature=getattr(latest_version, "temperature", 0.0),
-                max_output_tokens=getattr(latest_version, "max_output_tokens", 1024),
                 default_model=getattr(latest_version, "default_model", None),
                 examples=latest_version.examples or [],
                 quick_prompts=latest_version.quick_prompts or [],

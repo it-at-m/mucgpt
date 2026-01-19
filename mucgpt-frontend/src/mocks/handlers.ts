@@ -80,7 +80,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "KICCGPT",
             max_input_tokens: 128000,
-            max_output_tokens: 12000,
             description: "GPT build by KICC",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 3e-7,
@@ -94,7 +93,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "UnknownGPT",
             max_input_tokens: 128000,
-            max_output_tokens: 128000,
             description: "A young model that has to earn it's name, but with a lot of potential.",
             knowledge_cut_off: "2024-07-01",
             input_cost_per_token: 1.71e-6,
@@ -108,7 +106,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
         {
             llm_name: "AnnonymGPT",
             max_input_tokens: 500000,
-            max_output_tokens: 12000,
             description: "A GPT that tends to write reddit comments",
             knowledge_cut_off: "2023-07-01",
             input_cost_per_token: 3.5e-7,
@@ -141,7 +138,6 @@ DYNAMIC_ASSISTANTS.push(
             system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
             temperature: 0.3,
-            max_output_tokens: 8000,
             default_model: "KICCGPT",
             is_visible: true,
             tools: [
@@ -177,7 +173,6 @@ DYNAMIC_ASSISTANTS.push(
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
             hierarchical_access: ["BAU", "POR"],
             temperature: 0.7,
-            max_output_tokens: 4000,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
             tools: [
@@ -428,7 +423,6 @@ export const handlers = [
                 system_prompt: body.system_prompt || current.latest_version.system_prompt,
                 hierarchical_access: body.hierarchical_access || current.latest_version.hierarchical_access,
                 temperature: body.temperature ?? current.latest_version.temperature,
-                max_output_tokens: body.max_output_tokens || current.latest_version.max_output_tokens,
                 default_model:
                     body.default_model !== undefined ? (body.default_model === "" ? undefined : body.default_model) : current.latest_version.default_model,
                 tools: body.tools || current.latest_version.tools,

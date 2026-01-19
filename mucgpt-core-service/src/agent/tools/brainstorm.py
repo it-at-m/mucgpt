@@ -172,7 +172,6 @@ def brainstorming(
         llm = model.with_config(
             {
                 "llm_temperature": 0.8,
-                "llm_max_tokens": 2000,
                 "llm_streaming": False,
             }
         )

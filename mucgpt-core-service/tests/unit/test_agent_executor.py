@@ -103,7 +103,6 @@ class TestMUCGPTAgentExecutor:
         async for chunk in self.runner.run_with_streaming(
             messages=messages,
             temperature=0.7,
-            max_output_tokens=10,
             model="test",
             user_info=None,
         ):
@@ -124,7 +123,6 @@ class TestMUCGPTAgentExecutor:
         async for chunk in runner.run_with_streaming(
             messages=messages,
             temperature=0.7,
-            max_output_tokens=10,
             model="test",
             user_info=None,
         ):
@@ -146,7 +144,6 @@ class TestMUCGPTAgentExecutor:
         async for chunk in self.runner.run_with_streaming(
             messages=messages,
             temperature=0.7,
-            max_output_tokens=10,
             model="test",
             user_info=None,
         ):
@@ -162,7 +159,6 @@ class TestMUCGPTAgentExecutor:
         response = runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
-            max_output_tokens=10,
             model="test",
             user_info=None,
         )
@@ -179,7 +175,6 @@ class TestMUCGPTAgentExecutor:
         runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
-            max_output_tokens=10,
             model="test",
             user_info=None,
             enabled_tools=enabled_tools,
@@ -195,11 +190,9 @@ class TestMUCGPTAgentExecutor:
         runner.run_without_streaming(
             messages=messages,
             temperature=0.5,
-            max_output_tokens=20,
             model="test-model",
             user_info=None,
         )
-        assert llm.config["llm_max_tokens"] == 20
         assert llm.config["llm_temperature"] == 0.5
         assert llm.config["llm"] == "test-model"
         assert llm.config["llm_streaming"] is False
@@ -212,7 +205,6 @@ class TestMUCGPTAgentExecutor:
         response = runner.run_without_streaming(
             messages=messages,
             temperature=0.7,
-            max_output_tokens=10,
             model="test",
             user_info=None,
         )

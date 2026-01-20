@@ -141,7 +141,6 @@ DYNAMIC_ASSISTANTS.push(
             system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
             temperature: 0.3,
-            max_output_tokens: 8000,
             default_model: "KICCGPT",
             is_visible: true,
             tools: [
@@ -177,7 +176,6 @@ DYNAMIC_ASSISTANTS.push(
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
             hierarchical_access: ["BAU", "POR"],
             temperature: 0.7,
-            max_output_tokens: 4000,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
             tools: [
@@ -428,7 +426,6 @@ export const handlers = [
                 system_prompt: body.system_prompt || current.latest_version.system_prompt,
                 hierarchical_access: body.hierarchical_access || current.latest_version.hierarchical_access,
                 temperature: body.temperature ?? current.latest_version.temperature,
-                max_output_tokens: body.max_output_tokens || current.latest_version.max_output_tokens,
                 default_model:
                     body.default_model !== undefined ? (body.default_model === "" ? undefined : body.default_model) : current.latest_version.default_model,
                 tools: body.tools || current.latest_version.tools,

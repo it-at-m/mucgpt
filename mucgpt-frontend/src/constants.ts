@@ -1,17 +1,13 @@
 import { ApplicationConfig } from "./api";
 import { IndexedDBStorage } from "./service/indexedDBStorage";
 
-export const DEFAULT_MAX_OUTPUT_TOKENS = 4000;
-
 //APP Config
 export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     models: [
         {
             llm_name: "KICC GPT",
             max_input_tokens: 128000,
-            max_output_tokens: 12000,
             description: "",
-            speed: "",
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
@@ -24,9 +20,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
         {
             llm_name: "Unknown GPT",
             max_input_tokens: 128000,
-            max_output_tokens: 12000,
             description: "",
-            speed: "",
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,
@@ -39,9 +33,7 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
         {
             llm_name: "AnnonymGPT",
             max_input_tokens: 128000,
-            max_output_tokens: 128000,
             description: "",
-            speed: "",
             knowledge_cut_off: "",
             input_cost_per_token: 1,
             output_cost_per_token: 1,

@@ -46,7 +46,6 @@ async def chat_completions(
             gen = ae.run_with_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
-                max_output_tokens=request.max_tokens,
                 model=request.model,
                 user_info=user_info,
                 enabled_tools=enabled_tools,
@@ -62,7 +61,6 @@ async def chat_completions(
             return ae.run_without_streaming(
                 messages=request.messages,
                 temperature=request.temperature,
-                max_output_tokens=request.max_tokens,
                 model=request.model,
                 user_info=user_info,
                 enabled_tools=enabled_tools,
@@ -93,7 +91,6 @@ async def create_assistant(
         system_prompt = ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
-            max_output_tokens=request.max_tokens,
             model=request.model,
             user_info=user_info,
         )
@@ -112,7 +109,6 @@ async def create_assistant(
         description = ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
-            max_output_tokens=request.max_tokens,
             model=request.model,
             user_info=user_info,
         )
@@ -135,7 +131,6 @@ async def create_assistant(
         title = ae.run_without_streaming(
             messages=messages,
             temperature=1.0,
-            max_output_tokens=request.max_tokens,
             model=request.model,
             user_info=user_info,
         )

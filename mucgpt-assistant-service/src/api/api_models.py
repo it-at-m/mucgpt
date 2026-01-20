@@ -150,12 +150,6 @@ class AssistantBase(BaseModel):
         le=2.0,
         example=0.7,
     )
-    max_output_tokens: int = Field(
-        1000,
-        description="Maximum number of tokens the assistant can generate in a single response",
-        gt=0,
-        example=1000,
-    )
     default_model: str | None = Field(
         None,
         description="The default AI model to use for this assistant",
@@ -220,7 +214,6 @@ class AssistantBase(BaseModel):
                     "anotherdepartment-underdepartment",
                 ],
                 "temperature": 0.7,
-                "max_output_tokens": 1000,
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -264,7 +257,6 @@ class AssistantCreate(AssistantBase):
                 "description": "AI assistant for handling customer inquiries",
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
                 "temperature": 0.5,
-                "max_output_tokens": 800,
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -334,12 +326,6 @@ class AssistantUpdate(BaseModel):
         ge=0.0,
         le=2.0,
         example=0.7,
-    )
-    max_output_tokens: int | None = Field(
-        None,
-        description="Maximum number of tokens the assistant can generate in a single response",
-        gt=0,
-        example=1000,
     )
     default_model: str | None = Field(
         None,
@@ -488,7 +474,6 @@ class AssistantResponse(BaseModel):
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
                     "temperature": 0.7,
-                    "max_output_tokens": 1000,
                     "default_model": "gpt-4",
                     "tools": [
                         {

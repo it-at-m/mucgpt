@@ -25,7 +25,6 @@ class ModelOptions:
         self,
         streaming: bool = True,
         temperature: float = 0.7,
-        max_tokens: int = 4000,
         custom_model: Optional[Any] = None,
     ):
         """Initialize model options with validation.
@@ -33,19 +32,14 @@ class ModelOptions:
         Args:
             streaming: Whether to enable streaming responses
             temperature: Model temperature (0-1)
-            max_tokens: Maximum number of output tokens
             custom_model: Optional pre-configured model (for testing)
         """
         # Validate parameters
         if not isinstance(temperature, (int, float)) or not 0 <= temperature <= 1:
             raise ValueError(f"Temperature must be between 0 and 1, got {temperature}")
 
-        if not isinstance(max_tokens, int) or max_tokens <= 0:
-            raise ValueError(f"Max tokens must be a positive integer, got {max_tokens}")
-
         self.streaming = streaming
         self.temperature = temperature
-        self.max_tokens = max_tokens
         self.custom_model = custom_model
 
 
@@ -58,7 +52,6 @@ async def warmup_app():
     options = ModelOptions()
     ModelProvider.init_model(
         models=settings.MODELS,
-        max_output_tokens=options.max_tokens,
         n=1,
         streaming=options.streaming,
         temperature=options.temperature,

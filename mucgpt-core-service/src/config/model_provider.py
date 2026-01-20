@@ -30,11 +30,6 @@ class ModelProvider:
                 name="LLM Temperature",
                 description="The temperature of the LLM (0.0-1.0). Higher values make output more random, lower values more deterministic.",
             ),
-            "max_tokens": ConfigurableField(
-                id="llm_max_tokens",
-                name="LLM Max Tokens",
-                description="The maximum number of tokens to generate in the output.",
-            ),
             "streaming": ConfigurableField(
                 id="llm_streaming",
                 name="Streaming",
@@ -50,7 +45,6 @@ class ModelProvider:
     @staticmethod
     def _create_llm_instance(
         model_config: ModelsConfig,
-        max_output_tokens: int,
         n: int,
         temperature: float,
         streaming: bool,
@@ -60,7 +54,6 @@ class ModelProvider:
 
         Args:
             model_config: Configuration for the model
-            max_output_tokens: Maximum number of tokens in the output
             n: Number of completions to generate
             temperature: Temperature for generation
             streaming: Whether to stream the response
@@ -80,10 +73,6 @@ class ModelProvider:
             _logger.warning(
                 f"Temperature value {temperature} is outside recommended range [0.0-1.0]"
             )
-
-        if max_output_tokens <= 0:
-            raise ValueError(f"max_output_tokens must be positive, got {max_output_tokens}")
-
         try:
             if model_config.type == "AZURE":
                 return AzureChatOpenAI(
@@ -91,7 +80,6 @@ class ModelProvider:
                     openai_api_key=model_config.api_key,
                     azure_endpoint=model_config.endpoint.unicode_string(),
                     openai_api_version=model_config.api_version,
-                    max_tokens=max_output_tokens,
                     n=n,
                     streaming=streaming,
                     temperature=temperature,
@@ -103,7 +91,6 @@ class ModelProvider:
                     model=model_config.llm_name,
                     api_key=model_config.api_key,
                     openai_api_base=model_config.endpoint.unicode_string(),
-                    max_tokens=max_output_tokens,
                     n=n,
                     streaming=streaming,
                     temperature=temperature,
@@ -121,7 +108,6 @@ class ModelProvider:
     @staticmethod
     def init_model(
             models: List[ModelsConfig],
-            max_output_tokens: int,
             n: int = 1,
             temperature: float = 0.7,
             streaming: bool = False,
@@ -132,7 +118,6 @@ class ModelProvider:
 
         Args:
             models: List of model configurations
-            max_output_tokens: Maximum number of tokens in the output
             n: Number of completions to generate (default: 1)
             temperature: Temperature for generation (default: 0.7)
             streaming: Whether to stream the response (default: False)
@@ -151,7 +136,7 @@ class ModelProvider:
 
         try:
             llm = ModelProvider._create_llm_instance(
-                default_model, max_output_tokens, n, temperature, streaming, logger=_logger
+                default_model, n, temperature, streaming, logger=_logger
             )
         except Exception as e:
             raise ModelsConfigurationException(
@@ -170,7 +155,7 @@ class ModelProvider:
         for model in models[1:]:
             try:
                 alternative = ModelProvider._create_llm_instance(
-                    model, max_output_tokens, n, temperature, streaming, logger=_logger
+                    model, n, temperature, streaming, logger=_logger
                 )
                 # Add configurable fields to alternative model
                 alternative = alternative.configurable_fields(**configurable_fields)

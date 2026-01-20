@@ -29,7 +29,6 @@ def sample_assistant_create():
         system_prompt="You are a helpful test assistant.",
         hierarchical_access=["IT"],
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[{"text": "Test Example", "value": "This is a test example"}],
         quick_prompts=[
             {
@@ -94,10 +93,6 @@ def test_create_assistant_success(sample_assistant_create, test_client):
     assert (
         assistant_response.latest_version.temperature
         == sample_assistant_create.temperature
-    )
-    assert (
-        assistant_response.latest_version.max_output_tokens
-        == sample_assistant_create.max_output_tokens
     )
 
     # Check examples with proper model access
@@ -308,7 +303,6 @@ def test_create_assistant_with_boundary_values(test_client):
         name="Boundary Values Assistant",
         system_prompt="You are an assistant with boundary values.",
         temperature=0.0,  # Minimum temperature
-        max_output_tokens=1,  # Minimum tokens
     )
 
     response = test_client.post(
@@ -320,7 +314,6 @@ def test_create_assistant_with_boundary_values(test_client):
     assistant_response = AssistantResponse.model_validate(response_data)
 
     assert assistant_response.latest_version.temperature == 0.0
-    assert assistant_response.latest_version.max_output_tokens == 1
 
 
 @pytest.mark.integration
@@ -747,7 +740,6 @@ def created_assistant_for_update(test_client):
         description="Original description",
         system_prompt="You are an assistant that will be updated.",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[{"text": "Original Example", "value": "Original Value"}],
         quick_prompts=[
             {
@@ -1025,7 +1017,6 @@ def test_update_assistant_boundary_values(created_assistant_for_update, test_cli
     update_data = AssistantUpdate(
         version=1,
         temperature=0.0,  # Minimum
-        max_output_tokens=1,  # Minimum
     )
 
     response = test_client.post(
@@ -1039,7 +1030,6 @@ def test_update_assistant_boundary_values(created_assistant_for_update, test_cli
     updated_response = AssistantResponse.model_validate(response_data)
 
     assert updated_response.latest_version.temperature == 0.0
-    assert updated_response.latest_version.max_output_tokens == 1
 
 
 @pytest.mark.integration
@@ -1052,7 +1042,6 @@ def test_update_assistant_max_boundary_values(
     update_data = AssistantUpdate(
         version=1,
         temperature=2.0,  # Maximum
-        max_output_tokens=8192,  # High value
     )
 
     response = test_client.post(
@@ -1066,7 +1055,6 @@ def test_update_assistant_max_boundary_values(
     updated_response = AssistantResponse.model_validate(response_data)
 
     assert updated_response.latest_version.temperature == 2.0
-    assert updated_response.latest_version.max_output_tokens == 8192
 
 
 @pytest.mark.integration
@@ -1396,7 +1384,6 @@ async def test_update_assistant_not_owner_exception(test_client, test_db_session
         system_prompt="You are a helpful test assistant.",
         description="A test AI assistant",
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=[],
@@ -1442,7 +1429,6 @@ async def test_update_assistant_modify_owners(test_client, test_db_session):
         system_prompt="You are a helpful test assistant.",
         description="A test AI assistant",
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=[],
@@ -1509,7 +1495,6 @@ async def test_update_assistant_multiple_owners_can_update(
         system_prompt="You are a helpful test assistant.",
         description="A test AI assistant with multiple owners",
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=["multi-owner"],
@@ -1614,7 +1599,6 @@ async def test_get_all_assistants_single_assistant(test_client, test_db_session)
         system_prompt="You are a single test assistant.",
         description="A single test AI assistant",
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[{"text": "Example", "value": "Value"}],
         quick_prompts=[{"label": "Label", "prompt": "Prompt", "tooltip": "Tooltip"}],
         tags=["single", "test"],
@@ -1666,7 +1650,6 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
         system_prompt="You are the first assistant.",
         description="First assistant description",
         temperature=0.5,
-        max_output_tokens=800,
         examples=[],
         quick_prompts=[],
         tags=["first"],
@@ -1678,7 +1661,6 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
         system_prompt="You are the second assistant.",
         description="Second assistant description",
         temperature=0.8,
-        max_output_tokens=1200,
         examples=[],
         quick_prompts=[],
         tags=["second"],
@@ -1690,7 +1672,6 @@ async def test_get_all_assistants_multiple_assistants(test_client, test_db_sessi
         system_prompt="You are the third assistant.",
         description="Third assistant description",
         temperature=0.3,
-        max_output_tokens=600,
         examples=[],
         quick_prompts=[],
         tags=["third"],
@@ -1757,7 +1738,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
         system_prompt="Exact match",
         description="",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=[],
@@ -1769,7 +1749,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
         system_prompt="Parent department",
         description="",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=[],
@@ -1781,7 +1760,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
         system_prompt="Different department",
         description="",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=[],
@@ -1793,7 +1771,6 @@ async def test_get_all_assistants_hierarchical_access_filtering(
         system_prompt="Public access",
         description="",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=[],
@@ -1838,7 +1815,6 @@ async def test_get_all_assistants_with_complex_data(test_client, test_db_session
         system_prompt="You are a complex assistant with many features.",
         description="A very detailed assistant with lots of features",
         temperature=0.8,
-        max_output_tokens=2000,
         examples=[
             {"text": "Example 1", "value": "Value 1"},
             {"text": "Example 2", "value": "Value 2"},
@@ -1892,7 +1868,6 @@ async def test_get_all_assistants_with_complex_data(test_client, test_db_session
     # Check basic info
     assert assistant_response.latest_version.name == "Complex Assistant"
     assert assistant_response.latest_version.temperature == 0.8
-    assert assistant_response.latest_version.max_output_tokens == 2000  # Check examples
     assert len(assistant_response.latest_version.examples) == 3
     example_texts = [ex.text for ex in assistant_response.latest_version.examples]
     assert "Example 1" in example_texts
@@ -1937,7 +1912,6 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
         system_prompt="Version 1 prompt",
         description="Version 1 description",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=["v1"],
@@ -1948,7 +1922,6 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
         system_prompt="Version 2 prompt",
         description="Version 2 description",
         temperature=0.7,
-        max_output_tokens=1500,
         examples=[],
         quick_prompts=[],
         tags=["v2"],
@@ -1959,7 +1932,6 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
         system_prompt="Latest version prompt",
         description="Latest version description",
         temperature=0.9,
-        max_output_tokens=2000,
         examples=[],
         quick_prompts=[],
         tags=["latest"],
@@ -1979,7 +1951,6 @@ async def test_get_all_assistants_with_multiple_versions(test_client, test_db_se
     assert assistant_response.latest_version.name == "Latest Version Name"
     assert assistant_response.latest_version.version == 3
     assert assistant_response.latest_version.temperature == 0.9
-    assert assistant_response.latest_version.max_output_tokens == 2000
     assert assistant_response.latest_version.tags == ["latest"]
 
 
@@ -2020,7 +1991,6 @@ async def test_get_all_assistants_performance_with_many_assistants(
             system_prompt=f"You are assistant number {i}.",
             description=f"Description for assistant {i}",
             temperature=0.5 + (i * 0.01),  # Vary temperature slightly
-            max_output_tokens=1000 + (i * 10),  # Vary token count
             examples=[{"text": f"Example {i}", "value": f"Value {i}"}],
             quick_prompts=[
                 {"label": f"Label {i}", "prompt": f"Prompt {i}", "tooltip": f"Tip {i}"}
@@ -2065,7 +2035,6 @@ def test_get_assistant_success(test_client):
         system_prompt="You are a test assistant for get operations.",
         description="A test AI assistant for testing get operations",
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[{"text": "Example", "value": "Value"}],
         quick_prompts=[
             {"label": "Test", "prompt": "Test prompt", "tooltip": "Test tooltip"}
@@ -2096,7 +2065,6 @@ def test_get_assistant_success(test_client):
         == "A test AI assistant for testing get operations"
     )
     assert assistant_response.latest_version.temperature == 0.7
-    assert assistant_response.latest_version.max_output_tokens == 1000
 
     # Verify complex data
     assert len(assistant_response.latest_version.examples) == 1
@@ -2158,7 +2126,6 @@ def test_get_assistant_with_unicode_content(test_client):
         system_prompt="You are a helpful assistant. Vous êtes très utile! 您好!",
         description="An assistant with émojis and spëcial characters: 中文",
         temperature=0.7,
-        max_output_tokens=1000,
         examples=[{"text": "Beispiel 🔍", "value": "Wert 📚"}],
         quick_prompts=[
             {"label": "翻译", "prompt": "请翻译这段文字", "tooltip": "快速翻译"}
@@ -2203,7 +2170,6 @@ def test_get_assistant_empty_fields(test_client):
         system_prompt="You are a minimal assistant.",
         description="",  # Empty description
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],  # Empty examples
         quick_prompts=[],  # Empty quick prompts
         tags=[],  # Empty tags
@@ -2306,7 +2272,6 @@ def assistant_with_multiple_versions(test_client):
         description="Original description",
         system_prompt="You are version 1 assistant.",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[{"text": "V1 Example", "value": "Version 1 example"}],
         quick_prompts=[
             {
@@ -2352,7 +2317,6 @@ def assistant_with_multiple_versions(test_client):
         description="Final description for version 3",
         system_prompt="You are version 3 assistant.",
         temperature=0.9,
-        max_output_tokens=2000,
         examples=[
             {"text": "V3 Example 1", "value": "Version 3 example 1"},
             {"text": "V3 Example 2", "value": "Version 3 example 2"},
@@ -2404,7 +2368,6 @@ def test_get_assistant_version_success(assistant_with_multiple_versions, test_cl
     assert version_response.description == "Original description"
     assert version_response.system_prompt == "You are version 1 assistant."
     assert version_response.temperature == 0.5
-    assert version_response.max_output_tokens == 1000
     assert len(version_response.examples) == 1
     assert version_response.examples[0].text == "V1 Example"
     assert len(version_response.quick_prompts) == 1
@@ -2445,7 +2408,6 @@ def test_get_assistant_version_specific_versions(
     assert version_v3.description == "Final description for version 3"
     assert version_v3.system_prompt == "You are version 3 assistant."
     assert version_v3.temperature == 0.9
-    assert version_v3.max_output_tokens == 2000
     assert len(version_v3.examples) == 2
     assert len(version_v3.quick_prompts) == 2
     assert version_v3.tags == ["v3", "final"]
@@ -2535,7 +2497,6 @@ async def test_get_assistant_version_access_control(test_client, test_db_session
         system_prompt="You are restricted.",
         description="This should not be accessible",
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],
         quick_prompts=[],
         tags=["restricted"],
@@ -2667,7 +2628,6 @@ async def test_get_assistant_version_with_empty_fields(test_client, test_db_sess
         system_prompt="You are minimal.",
         description="",  # Empty description
         temperature=0.5,
-        max_output_tokens=1000,
         examples=[],  # Empty examples
         quick_prompts=[],  # Empty quick prompts
         tags=[],  # Empty tags
@@ -2766,7 +2726,6 @@ def test_get_assistant_owner_access_without_hierarchical_permission(test_client)
         system_prompt="You are an assistant accessible only to owners.",
         description="Testing owner access without hierarchical permissions",
         temperature=0.6,
-        max_output_tokens=1200,
         examples=[{"text": "Owner Example", "value": "Only owners can see this"}],
         quick_prompts=[
             {
@@ -2811,7 +2770,6 @@ def test_get_assistant_owner_access_without_hierarchical_permission(test_client)
 
     # Verify all the data is accessible
     assert assistant_response.latest_version.temperature == 0.6
-    assert assistant_response.latest_version.max_output_tokens == 1200
     assert len(assistant_response.latest_version.examples) == 1
     assert assistant_response.latest_version.examples[0].text == "Owner Example"
     assert len(assistant_response.latest_version.quick_prompts) == 1
@@ -2833,7 +2791,6 @@ def test_get_assistant_version_owner_access_without_hierarchical_permission(
         system_prompt="You are version 1 of an owner-only assistant.",
         description="Testing version access for owners without hierarchical permissions",
         temperature=0.5,
-        max_output_tokens=1000,
         hierarchical_access=[
             "FINANCE-Department"
         ],  # Different from user's IT-Test-Department

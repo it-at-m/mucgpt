@@ -59,16 +59,13 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         quickPrompts,
         examples,
         temperature,
-        maxOutputTokens,
         defaultModel,
         hasChanges,
-        llmMaxOutputTokens,
         updateInput,
         updateTitle,
         updateDescription,
         updateSystemPrompt,
         updateTemperature,
-        updateMaxTokens,
         updateDefaultModel,
         updateTools,
         updateTemplate,
@@ -107,7 +104,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 system_message: systemPrompt,
                 publish: false,
                 temperature: temperature,
-                max_output_tokens: maxOutputTokens,
                 default_model: defaultModel,
                 quick_prompts: validQuickPrompts,
                 examples: validExamples,
@@ -134,7 +130,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, temperature, maxOutputTokens, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [title, description, systemPrompt, temperature, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -148,7 +144,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         if (input !== "") {
             setLoading(true);
             try {
-                const result = await (await createAssistantApi({ input: input, model: LLM.llm_name, max_output_tokens: llmMaxOutputTokens })).json();
+                const result = await (await createAssistantApi({ input: input, model: LLM.llm_name })).json();
                 setGeneratedAssistant(result.title, result.description, result.system_prompt);
                 setCurrentStep(2);
                 showSuccess(
@@ -163,7 +159,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 setLoading(false);
             }
         }
-    }, [input, LLM.llm_name, llmMaxOutputTokens, setGeneratedAssistant, showError, showSuccess, t]);
+    }, [input, LLM.llm_name, setGeneratedAssistant, showError, showSuccess, t]);
 
     const handleTemplateSelect = useCallback(
         (template: string, templateId: string) => {
@@ -208,7 +204,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     system_message: importedData.system_message,
                     publish: false,
                     temperature: importedData.temperature || 0.7,
-                    max_output_tokens: importedData.max_output_tokens || 2000,
                     default_model: importedData.default_model ?? defaultModel,
                     quick_prompts: importedData.quick_prompts || [],
                     examples: importedData.examples || [],
@@ -446,11 +441,9 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             <div className={sharedStyles.scrollableDialogContent}>
                                 <AdvancedSettingsStep
                                     temperature={temperature}
-                                    maxOutputTokens={maxOutputTokens}
                                     defaultModel={defaultModel}
                                     isOwner={true}
                                     onTemperatureChange={updateTemperature}
-                                    onMaxTokensChange={updateMaxTokens}
                                     onDefaultModelChange={updateDefaultModel}
                                 />
                             </div>
@@ -507,9 +500,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         examples,
         setExamples,
         temperature,
-        maxOutputTokens,
         updateTemperature,
-        updateMaxTokens,
         hasChanges,
         onCancelButtonClicked,
         onPromptButtonClicked

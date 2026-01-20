@@ -55,6 +55,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const activeChatRef = useRef(active_chat);
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
+    const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isLoadingRef = useRef(false);
 
     // useEffect für den Chat-Status
@@ -253,7 +254,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     fetchHistory,
                     assistant_id,
                     selectedTools,
-                    setToolStatuses
+                    setToolStatuses,
+                    lastAnswerRef
                 );
             } catch (e) {
                 setError(e);
@@ -273,7 +275,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             assistantChatStorage,
             chatMessageStreamEnd,
             fetchHistory,
-            selectedTools
+            selectedTools,
+            lastAnswerRef
         ]
     );
 
@@ -538,9 +541,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     lastQuestionRef.current = answers.length > 1 ? answers[answers.length - 1].user : "";
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                 }}
+                lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, onRegenerateResponseClicked, onRollbackMessage, isLoadingRef.current, error, callApi, chatMessageStreamEnd, lastQuestionRef.current]
+        [
+            answers,
+            onRegenerateResponseClicked,
+            onRollbackMessage,
+            isLoadingRef.current,
+            error,
+            callApi,
+            chatMessageStreamEnd,
+            lastQuestionRef.current,
+            lastAnswerRef
+        ]
     );
 
     const layout = useMemo(() => {

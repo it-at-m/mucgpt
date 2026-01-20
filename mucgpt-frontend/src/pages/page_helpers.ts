@@ -229,7 +229,8 @@ export const makeApiRequest = async (
     fetchHistory?: () => void,
     assistant_id?: string,
     enabled_tools?: string[],
-    onToolStatusUpdate?: (statuses: ToolStatus[]) => void
+    onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
+    answerTopRef?: MutableRefObject<HTMLElement | null>
 ) => {
     // Create conversation history for the API request
     const history: ChatTurn[] = answers.map((a: { user: any; response: { answer: any } }) => ({ user: a.user, assistant: a.response.answer }));
@@ -414,7 +415,11 @@ export const makeApiRequest = async (
 
     // Auto-scroll to show the latest message
     requestAnimationFrame(() => {
-        chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        if (answerTopRef?.current) {
+            answerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+            chatMessageStreamEnd.current?.scrollIntoView({ behavior: "smooth" });
+        }
     });
 
     // Save the chat to storage

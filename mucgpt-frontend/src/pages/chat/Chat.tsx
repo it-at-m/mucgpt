@@ -122,6 +122,7 @@ const Chat = () => {
     // Refs
     const lastQuestionRef = useRef<string>("");
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
+    const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isFirstRender = useRef(true);
     const activeChatRef = useRef(active_chat);
     const isLoadingRef = useRef(false);
@@ -233,14 +234,15 @@ const Chat = () => {
                     fetchHistory,
                     undefined,
                     selectedTools,
-                    setToolStatuses
+                    setToolStatuses,
+                    lastAnswerRef
                 );
             } catch (e) {
                 setError(e);
             }
             isLoadingRef.current = false;
         },
-        [isLoadingRef.current, answers, language, temperature, activeChatRef.current, LLM.llm_name, storageService, fetchHistory, selectedTools]
+        [answers, temperature, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
     );
 
     // Regenerate-Funktion
@@ -531,9 +533,21 @@ const Chat = () => {
                     lastQuestionRef.current = answers.length > 1 ? answers[answers.length - 1].user : "";
                     dispatch({ type: "SET_ANSWERS", payload: answers.slice(0, -1) });
                 }}
+                lastAnswerRef={lastAnswerRef}
             />
         ),
-        [answers, onRegenerateResponseClicked, onRollbackMessage, error, callApi, systemPrompt, isLoadingRef.current, lastQuestionRef, chatMessageStreamEnd]
+        [
+            answers,
+            onRegenerateResponseClicked,
+            onRollbackMessage,
+            error,
+            callApi,
+            systemPrompt,
+            isLoadingRef.current,
+            lastQuestionRef,
+            chatMessageStreamEnd,
+            lastAnswerRef
+        ]
     );
 
     const examplesComponent = useMemo(() => <ExampleList examples={CHAT_EXAMPLES} onExampleClicked={onExampleClicked} />, [onExampleClicked]);

@@ -6,11 +6,12 @@ interface Props {
     assistantmsg: ReactNode;
     usermsglabel: string;
     assistantmsglabel: string;
+    innerRef?: React.Ref<HTMLDivElement>;
 }
 
-export const ChatTurnComponent = ({ usermsg, assistantmsg, usermsglabel, assistantmsglabel }: Props) => {
+export const ChatTurnComponent = ({ usermsg, assistantmsg, usermsglabel, assistantmsglabel, innerRef }: Props) => {
     return (
-        <div className={styles.chatMessageStream}>
+        <div className={styles.chatMessageStream} ref={innerRef}>
             <li className={styles.chatMessageUser} aria-description={usermsglabel}>
                 {usermsg}
             </li>

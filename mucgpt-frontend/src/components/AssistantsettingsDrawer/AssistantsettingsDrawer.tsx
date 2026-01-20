@@ -85,7 +85,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
             description: assistant.description,
             system_message: assistant.system_message,
             temperature: assistant.temperature,
-            max_output_tokens: assistant.max_output_tokens,
             default_model: assistant.default_model,
             examples: assistant.examples,
             quick_prompts: assistant.quick_prompts,

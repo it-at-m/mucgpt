@@ -15,7 +15,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>(initialAssistant.quick_prompts || []);
     const [examples, setExamples] = useState<ExampleModel[]>(initialAssistant.examples || []);
     const [temperature, setTemperature] = useState<number>(initialAssistant.temperature);
-    const [maxOutputTokens, setMaxOutputTokens] = useState<number>(initialAssistant.max_output_tokens);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
     const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
     const [version, setVersion] = useState<string>(initialAssistant.version || "0");
@@ -44,7 +43,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setQuickPrompts(quickPromptsWithIds);
         setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
-        setMaxOutputTokens(initialAssistant.max_output_tokens || 1024);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version || "0");
         setTools(initialAssistant.tools || []);
@@ -77,11 +75,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setTemperature(newTemp);
         setHasChanged(true);
     }, []);
-    const updateMaxTokens = useCallback((newTokens: number) => {
-        setMaxOutputTokens(newTokens);
-        setHasChanged(true);
-    }, []);
-
     const updateDefaultModel = useCallback((model: string | undefined) => {
         setDefaultModel(model);
         setDefaultModelCleared(model === undefined);
@@ -115,7 +108,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setQuickPrompts(quickPromptsWithIds);
         setExamples(examplesWithIds);
         setTemperature(initialAssistant.temperature);
-        setMaxOutputTokens(initialAssistant.max_output_tokens);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version);
         setTools(initialAssistant.tools || []);
@@ -141,7 +133,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             publish: publish,
             owner_ids: ownerIds,
             temperature: temperature,
-            max_output_tokens: maxOutputTokens,
             default_model: defaultModelCleared ? "" : defaultModel,
             quick_prompts: validQuickPrompts.map(({ id: _omitId, ...rest }) => {
                 void _omitId;
@@ -164,7 +155,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         systemPrompt,
         ownerIds,
         temperature,
-        maxOutputTokens,
         defaultModel,
         defaultModelCleared,
         quickPrompts,
@@ -186,7 +176,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         quickPrompts,
         examples,
         temperature,
-        maxOutputTokens,
         defaultModel,
         version,
         tools,
@@ -208,7 +197,6 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         updateDescription,
         updateSystemPrompt,
         updateTemperature,
-        updateMaxTokens,
         updateDefaultModel,
         updateTools,
         updateIsVisible,

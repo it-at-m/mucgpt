@@ -60,7 +60,6 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 description: assistant.description,
                 system_prompt: assistant.system_message,
                 temperature: assistant.temperature,
-                max_output_tokens: assistant.max_output_tokens,
                 tools: assistant.tools || [],
                 owner_ids: assistant.owner_ids ? assistant.owner_ids : ["0"],
                 examples: assistant.examples?.map(e => ({ text: e.text, value: e.value })),

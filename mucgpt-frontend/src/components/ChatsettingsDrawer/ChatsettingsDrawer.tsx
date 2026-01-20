@@ -8,13 +8,11 @@ import { useTranslation } from "react-i18next";
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
-    max_output_tokens: number;
-    setMaxTokens: (maxTokens: number) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
 }
 
-export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, systemPrompt, setSystemPrompt }: Props) => {
     const { t } = useTranslation();
 
     // State for collapsible sections
@@ -57,8 +55,6 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, max_output_tok
                         <ChatSettingsContent
                             temperature={temperature}
                             setTemperature={setTemperature}
-                            max_output_tokens={max_output_tokens}
-                            setMaxTokens={setMaxTokens}
                             systemPrompt={systemPrompt}
                             setSystemPrompt={setSystemPrompt}
                         />

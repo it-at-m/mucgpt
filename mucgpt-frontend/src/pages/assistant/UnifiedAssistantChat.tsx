@@ -8,7 +8,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE, DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
+import { ASSISTANT_STORE } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
@@ -41,7 +41,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
         temperature: 0.7,
-        max_output_tokens: 4000,
         systemPrompt: "",
         active_chat: undefined,
         allChats: []
@@ -50,7 +49,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { showError, showSuccess } = useGlobalToastContext();
 
     // Destructuring for easier access
-    const { answers, temperature, max_output_tokens, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, temperature, systemPrompt, active_chat, allChats } = chatState;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -69,7 +68,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
-    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
@@ -99,7 +97,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         title: "Titel",
         description: "Beschreibung",
         publish: false,
-        max_output_tokens: llmMaxOutputTokens,
         system_message: "",
         temperature: 0.7,
         quick_prompts: [],
@@ -139,7 +136,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
                             dispatch({ type: "SET_TEMPERATURE", payload: assistant.temperature });
-                            dispatch({ type: "SET_MAX_TOKENS", payload: assistant.max_output_tokens });
                             setQuickPrompts(assistant.quick_prompts || []);
                             setSelectedTools(assistant.tools ? assistant.tools.map(tool => tool.id) : []);
 
@@ -239,7 +235,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
                 system: systemPrompt ?? "",
-                maxTokens: max_output_tokens,
                 temperature: temperature
             };
             try {

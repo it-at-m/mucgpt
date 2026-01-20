@@ -2,33 +2,23 @@ import { Dismiss24Regular } from "@fluentui/react-icons";
 import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { LLMContext } from "../LLMSelector/LLMContextProvider";
-import { DEFAULT_MAX_OUTPUT_TOKENS } from "../../constants";
 
 interface Props {
     temperature: number;
     setTemperature: (temp: number) => void;
-    max_output_tokens: number;
-    setMaxTokens: (maxTokens: number) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
 }
 
-export const ChatSettingsContent = ({ temperature, setTemperature, max_output_tokens, setMaxTokens, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt, setSystemPrompt }: Props) => {
     const { t } = useTranslation();
-    const { LLM } = useContext(LLMContext);
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
-    const max_tokens_headerID = useId("header-max_tokens");
-    const max_tokensID = useId("input-max_tokens");
     const systemPromptID = useId("header-system-prompt");
 
-    const min_max_tokens = 10;
-    const llmMaxOutputTokens = LLM.max_output_tokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
-    const max_max_tokens = Math.max(llmMaxOutputTokens, max_output_tokens, min_max_tokens);
     const min_temp = 0;
     const max_temp = 1;
 
@@ -38,17 +28,6 @@ export const ChatSettingsContent = ({ temperature, setTemperature, max_output_to
             setTemperature(Number(ev.target.value));
         },
         [setTemperature]
-    );
-
-    // Max tokens change - simplified to match AdvancedSettingsStep
-    const onMaxTokensChangeHandler = useCallback(
-        (ev: React.ChangeEvent<HTMLInputElement>) => {
-            const value = Number(ev.target.value);
-            const limit = llmMaxOutputTokens;
-            const maxTokens = limit > 0 && value > limit ? limit : value;
-            setMaxTokens(maxTokens);
-        },
-        [llmMaxOutputTokens, setMaxTokens]
     );
 
     // System prompt change
@@ -143,34 +122,6 @@ export const ChatSettingsContent = ({ temperature, setTemperature, max_output_to
                             aria-labelledby={temperature_headerID}
                         />
                         <div className={styles.rangeValue}>{temperature.toFixed(2)}</div>
-                    </Field>
-                </div>
-            </div>
-
-            {/* Max Tokens Section */}
-            <div className={styles.sectionContainer}>
-                <div className={styles.header} role="heading" aria-level={3} id={max_tokens_headerID}>
-                    <div className={styles.headerContent}>
-                        <InfoLabel info={<div>{t("components.chattsettingsdrawer.max_lenght_info")}</div>}>
-                            {t("components.chattsettingsdrawer.max_lenght")}
-                        </InfoLabel>
-                    </div>
-                </div>
-
-                <div>
-                    <Field size="large" className={styles.rangeField}>
-                        <input
-                            type="range"
-                            min={min_max_tokens}
-                            max={max_max_tokens}
-                            step={100}
-                            value={max_output_tokens}
-                            onChange={onMaxTokensChangeHandler}
-                            className={styles.rangeInput}
-                            id={max_tokensID}
-                            aria-labelledby={max_tokens_headerID}
-                        />
-                        <div className={styles.rangeValue}>{max_output_tokens} Tokens</div>
                     </Field>
                 </div>
             </div>

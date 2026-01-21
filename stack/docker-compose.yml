@@ -286,5 +286,18 @@ services:
       test: ["CMD-SHELL", "curl -f http://localhost:8088/sse || exit 1"]
     security_opt: *security_settings
 
+  kreuzberg-full:
+    image: ghcr.io/kreuzberg-dev/kreuzberg:latest
+    ports:
+      - "8086:8000"
+    environment:
+      - KREUZBERG_CORS_ORIGINS=https://localhost
+    volumes:
+      - cache-data:/app/.kreuzberg
+    restart: unless-stopped
+
+volumes:
+  cache-data:
+    
 networks:
   internal:

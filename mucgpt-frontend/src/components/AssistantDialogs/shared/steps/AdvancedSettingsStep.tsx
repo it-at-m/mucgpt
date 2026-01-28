@@ -5,35 +5,32 @@ import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
 
 interface AdvancedSettingsStepProps {
-    temperature: number;
+    creativity: string;
     defaultModel?: string;
     isOwner: boolean;
-    onTemperatureChange: (temperature: number) => void;
+    onCreativityChange: (creativity: string) => void;
     onDefaultModelChange?: (model: string | undefined) => void;
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
 export const AdvancedSettingsStep = ({
-    temperature,
+    creativity,
     defaultModel,
     isOwner,
-    onTemperatureChange,
+    onCreativityChange,
     onDefaultModelChange,
     onHasChanged
 }: AdvancedSettingsStepProps) => {
     const { t } = useTranslation();
     const { availableLLMs } = useContext(LLMContext);
 
-    const min_temp = 0;
-    const max_temp = 1;
-
-    // Temperature change
-    const onTemperatureChangeHandler = useCallback(
-        (ev: React.ChangeEvent<HTMLInputElement>) => {
-            onTemperatureChange(Number(ev.target.value));
+    // Creativity change
+    const onCreativityChangeHandler = useCallback(
+        (_ev: any, data: any) => {
+            onCreativityChange(data.optionValue);
             onHasChanged?.(true);
         },
-        [onTemperatureChange, onHasChanged]
+        [onCreativityChange, onHasChanged]
     );
 
     // Model change
@@ -48,30 +45,35 @@ export const AdvancedSettingsStep = ({
 
     return (
         <DialogContent>
-            <Field size="large" className={sharedStyles.rangeField}>
+            <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>
                     <InfoLabel
                         info={
                             <div>
-                                {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
-                                {t("components.chattsettingsdrawer.temperature_info")}
+                                {t("components.chattsettingsdrawer.creativity_info")}
                             </div>
                         }
                     >
-                        {t("components.edit_assistant_dialog.temperature")}
+                        {t("components.edit_assistant_dialog.creativity")}
                     </InfoLabel>
                 </label>
-                <input
-                    type="range"
-                    min={min_temp}
-                    max={max_temp}
-                    step={0.05}
-                    value={temperature}
-                    onChange={onTemperatureChangeHandler}
+                <Dropdown
+                    placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
+                    value={creativity}
+                    selectedOptions={[creativity]}
+                    onOptionSelect={onCreativityChangeHandler}
                     disabled={!isOwner}
-                    className={sharedStyles.rangeInput}
-                />
-                <div className={sharedStyles.rangeValue}>{temperature}</div>
+                >
+                    <Option key="aus" value="aus">
+                        {t("components.edit_assistant_dialog.creativity_aus")}
+                    </Option>
+                    <Option key="normal" value="normal">
+                        {t("components.edit_assistant_dialog.creativity_normal")}
+                    </Option>
+                    <Option key="hoch" value="hoch">
+                        {t("components.edit_assistant_dialog.creativity_hoch")}
+                    </Option>
+                </Dropdown>
             </Field>
             <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>

@@ -14,7 +14,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
     const [systemPrompt, setSystemPrompt] = useState<string>(initialAssistant.system_message);
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>(initialAssistant.quick_prompts || []);
     const [examples, setExamples] = useState<ExampleModel[]>(initialAssistant.examples || []);
-    const [temperature, setTemperature] = useState<number>(initialAssistant.temperature);
+    const [creativity, setCreativity] = useState<string>(initialAssistant.creativity);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(initialAssistant.default_model);
     const [defaultModelCleared, setDefaultModelCleared] = useState<boolean>(false);
     const [version, setVersion] = useState<string>(initialAssistant.version || "0");
@@ -42,7 +42,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setSystemPrompt(initialAssistant.system_message);
         setQuickPrompts(quickPromptsWithIds);
         setExamples(examplesWithIds);
-        setTemperature(initialAssistant.temperature);
+        setCreativity(initialAssistant.temperature);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version || "0");
         setTools(initialAssistant.tools || []);
@@ -71,8 +71,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(true);
     }, []);
 
-    const updateTemperature = useCallback((newTemp: number) => {
-        setTemperature(newTemp);
+    const updateCreativity = useCallback((newCreativity: string) => {
+        setCreativity(newCreativity);
         setHasChanged(true);
     }, []);
     const updateDefaultModel = useCallback((model: string | undefined) => {
@@ -107,7 +107,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setSystemPrompt(initialAssistant.system_message);
         setQuickPrompts(quickPromptsWithIds);
         setExamples(examplesWithIds);
-        setTemperature(initialAssistant.temperature);
+        setCreativity(initialAssistant.temperature);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version);
         setTools(initialAssistant.tools || []);
@@ -196,7 +196,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         updateTitle,
         updateDescription,
         updateSystemPrompt,
-        updateTemperature,
+        updateCreativity,
         updateDefaultModel,
         updateTools,
         updateIsVisible,

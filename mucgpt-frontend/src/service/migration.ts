@@ -19,6 +19,15 @@ interface LegacyChatObject {
     };
 }
 
+/**
+ * Convert legacy chat options with temperature to creativity
+ */
+function convertChatOptionsToCreativity(temperature: number): string {
+    if (temperature < 0.4) return "aus";
+    if (temperature >= 0.8) return "hoch";
+    return "normal";
+}
+
 export interface LegacyAssistant {
     title: string;
     description: string;
@@ -27,6 +36,16 @@ export interface LegacyAssistant {
     id: number;
     temperature: number;
 }
+
+/**
+ * Convert old temperature values (0.0-1.0) to creativity levels
+ */
+function convertTemperatureToCreativity(temperature: number): string {
+    if (temperature < 0.4) return "aus";
+    if (temperature >= 0.8) return "hoch";
+    return "normal";
+}
+
 export async function migrate_old_assistants() {
     const legacy_store = new StorageService<any, any>(LEGACY_ASSISTANT_STORE);
     const db = await legacy_store.connectToDB();
@@ -41,7 +60,7 @@ export async function migrate_old_assistants() {
                 description: oldassistant.description,
                 system_message: oldassistant.system_message,
                 publish: oldassistant.publish,
-                temperature: oldassistant.temperature,
+                creativity: convertTemperatureToCreativity(oldassistant.temperature),
                 version: "0", // Set a default version for new assistants
                 is_visible: true
             };
@@ -75,7 +94,7 @@ export async function migrateChats(
                         }),
                         config: {
                             system: chat.Options.system,
-                            temperature: chat.Options.temperature
+                            creativity: convertChatOptionsToCreativity(chat.Options.temperature)
                         },
                         _last_edited: chat.Data.LastEdited,
                         id: chat.id,

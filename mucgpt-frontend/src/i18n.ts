@@ -436,7 +436,23 @@ i18n
                             step_quick_prompts: "Vorgeschlagene Prompts",
                             step_examples: "Beispiele",
                             step_visibility: "Sichtbarkeit",
+                            step_owners: "Besitzer",
                             step_advanced_settings: "Erweiterte Einstellungen",
+                            // Owners step
+                            owners_step: {
+                                title: "Besitzer verwalten",
+                                description:
+                                    "Fügen Sie mehrere Besitzer hinzu, indem Sie deren lhmObjectID eingeben. Besitzer können den Assistenten bearbeiten und verwalten.",
+                                info: "Besitzer haben volle Berechtigungen zum Bearbeiten und Verwalten dieses Assistenten.",
+                                placeholder: "lhmObjectID eingeben",
+                                add_button: "Hinzufügen",
+                                current_owners: "Aktuelle Besitzer",
+                                no_owners: "Keine Besitzer hinzugefügt",
+                                you: "Sie",
+                                empty_input_error: "Bitte geben Sie eine lhmObjectID ein",
+                                duplicate_owner_error: "Dieser Besitzer wurde bereits hinzugefügt",
+                                cannot_remove_last_owner: "Sie können nicht den letzten Besitzer entfernen"
+                            },
                             // Navigation buttons
                             next: "Weiter",
                             previous: "Zurück",
@@ -974,7 +990,22 @@ i18n
                             step_quick_prompts: "Proposed Prompts",
                             step_examples: "Examples",
                             step_visibility: "Visibility",
+                            step_owners: "Owners",
                             step_advanced_settings: "Advanced Settings",
+                            // Owners step
+                            owners_step: {
+                                title: "Manage Owners",
+                                description: "Add multiple owners by entering their lhmObjectID. Owners can edit and manage the assistant.",
+                                info: "Owners have full permissions to edit and manage this assistant.",
+                                placeholder: "Enter lhmObjectID",
+                                add_button: "Add",
+                                current_owners: "Current Owners",
+                                no_owners: "No owners added",
+                                you: "You",
+                                empty_input_error: "Please enter an lhmObjectID",
+                                duplicate_owner_error: "This owner has already been added",
+                                cannot_remove_last_owner: "You cannot remove the last owner"
+                            },
                             next: "Next",
                             previous: "Previous",
                             close_dialog_title: "Close Dialog",
@@ -1510,7 +1541,23 @@ i18n
                             step_quick_prompts: "Vogschlagene Prompts",
                             step_examples: "Beispui",
                             step_visibility: "Sichtbarkeit",
+                            step_owners: "Besitzer",
                             step_advanced_settings: "Erweiterte Einstellungen",
+                            // Owners step
+                            owners_step: {
+                                title: "Besitzer verwalten",
+                                description:
+                                    "Füg meahare Besitzer hinzu, indem d' de lhmObjectID eigibst. Besitzer kennans Assistenten bearbeiten und verwalten.",
+                                info: "Besitzer ham volle Berechtigungen zum Bearbeiten und Verwalten von dem Assistenten.",
+                                placeholder: "lhmObjectID eigebn",
+                                add_button: "Hinzufügn",
+                                current_owners: "Aktuelle Besitzer",
+                                no_owners: "Koane Besitzer hinzugfügt",
+                                you: "Du",
+                                empty_input_error: "Bitte gib a lhmObjectID ei",
+                                duplicate_owner_error: "Der Besitzer is scho dazuagfügt worn",
+                                cannot_remove_last_owner: "Du kannst ned den letzten Besitzer entfernan"
+                            },
                             // Navigation buttons
                             next: "Weiter",
                             previous: "Zruck",
@@ -2051,7 +2098,23 @@ i18n
                             step_quick_prompts: "Invitations proposées",
                             step_examples: "Exemples",
                             step_visibility: "Visibilité",
+                            step_owners: "Propriétaires",
                             step_advanced_settings: "Paramètres avancés",
+                            // Owners step
+                            owners_step: {
+                                title: "Gérer les propriétaires",
+                                description:
+                                    "Ajoutez plusieurs propriétaires en saisissant leur lhmObjectID. Les propriétaires peuvent modifier et gérer l'assistant.",
+                                info: "Les propriétaires ont toutes les permissions pour modifier et gérer cet assistant.",
+                                placeholder: "Entrer lhmObjectID",
+                                add_button: "Ajouter",
+                                current_owners: "Propriétaires actuels",
+                                no_owners: "Aucun propriétaire ajouté",
+                                you: "Vous",
+                                empty_input_error: "Veuillez entrer un lhmObjectID",
+                                duplicate_owner_error: "Ce propriétaire a déjà été ajouté",
+                                cannot_remove_last_owner: "Vous ne pouvez pas supprimer le dernier propriétaire"
+                            },
                             // Navigation buttons
                             next: "Suivant",
                             previous: "Précédent",
@@ -2589,7 +2652,22 @@ i18n
                             step_quick_prompts: "Запропоновані підказки",
                             step_examples: "Приклади",
                             step_visibility: "Видимість",
+                            step_owners: "Власники",
                             step_advanced_settings: "Розширені налаштування",
+                            // Owners step
+                            owners_step: {
+                                title: "Керування власниками",
+                                description: "Додайте кількох власників, ввівши їхній lhmObjectID. Власники можуть редагувати та керувати асистентом.",
+                                info: "Власники мають повні права на редагування та управління цим асистентом.",
+                                placeholder: "Введіть lhmObjectID",
+                                add_button: "Додати",
+                                current_owners: "Поточні власники",
+                                no_owners: "Власників не додано",
+                                you: "Ви",
+                                empty_input_error: "Будь ласка, введіть lhmObjectID",
+                                duplicate_owner_error: "Цей власник уже доданий",
+                                cannot_remove_last_owner: "Ви не можете видалити останнього власника"
+                            },
                             // Navigation buttons
                             next: "Далі",
                             previous: "Назад",

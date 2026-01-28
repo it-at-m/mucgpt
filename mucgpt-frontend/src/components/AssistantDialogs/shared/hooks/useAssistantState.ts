@@ -96,6 +96,11 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setHasChanged(true);
     }, []);
 
+    const updateOwnerIds = useCallback((owners: string[]) => {
+        setOwnerIds(owners);
+        setHasChanged(true);
+    }, []);
+
     // Reset to original values
     const resetToOriginal = useCallback(() => {
         const quickPromptsWithIds = ensureIds(initialAssistant.quick_prompts);
@@ -201,6 +206,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         updateTools,
         updateIsVisible,
         updateHierarchicalAccess,
+        updateOwnerIds,
 
         // Utility functions
         resetToOriginal,

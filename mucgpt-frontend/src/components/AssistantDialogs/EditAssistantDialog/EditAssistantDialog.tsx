@@ -3,14 +3,15 @@ import { Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, Dialog
 
 import sharedStyles from "../shared/AssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo, useEffect, useContext } from "react";
 import { Assistant, ToolInfo } from "../../../api";
 import { Stepper, Step } from "../../Stepper";
-import { useAssistantState, CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep } from "../shared";
+import { useAssistantState, CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep, OwnersStep } from "../shared";
 import { CloseConfirmationDialog } from "../shared/CloseConfirmationDialog";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { AssistantStrategy } from "../../../pages/assistant/AssistantStrategy";
 import { useToolsContext } from "../../ToolsProvider";
+import { UserContext } from "../../../pages/layout/UserContextProvider";
 
 interface Props {
     showDialog: boolean;
@@ -26,12 +27,13 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const { showSuccess } = useGlobalToastContext();
     const { t } = useTranslation();
     const { tools: availableTools } = useToolsContext();
+    const { user } = useContext(UserContext);
 
     // Stepper state (1-based indexing)
     const [currentStep, setCurrentStep] = useState<number>(1);
 
     const assistantState = useAssistantState(assistant);
-    const { title, description, systemPrompt, quickPrompts, examples, temperature, tools, publish, hierarchicalAccess, isVisible } = assistantState;
+    const { title, description, systemPrompt, quickPrompts, examples, temperature, tools, publish, hierarchicalAccess, isVisible, ownerIds } = assistantState;
 
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 
@@ -46,6 +48,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
 
         if (publish) {
             baseSteps.push({ label: t("components.edit_assistant_dialog.step_visibility"), completedIcon: <Checkmark24Filled /> });
+            baseSteps.push({ label: t("components.edit_assistant_dialog.step_owners"), completedIcon: <Checkmark24Filled /> });
         }
 
         baseSteps.push({ label: t("components.edit_assistant_dialog.step_advanced_settings"), completedIcon: <Checkmark24Filled /> });
@@ -199,7 +202,23 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     );
                 }
 
-            case 6: // Advanced Settings (only when published)
+            case 6: // Owners (only when published) or Advanced Settings (when published)
+                if (publish) {
+                    return (
+                        <OwnersStep
+                            isOwner={isOwner}
+                            ownerIds={ownerIds}
+                            currentUserId={user?.sub}
+                            onOwnersChange={assistantState.updateOwnerIds}
+                            onHasChanged={assistantState.setHasChanged}
+                        />
+                    );
+                } else {
+                    // Should not happen - step 6 only exists for published assistants
+                    return null;
+                }
+
+            case 7: // Advanced Settings (only when published)
                 return (
                     <AdvancedSettingsStep
                         temperature={temperature}
@@ -227,6 +246,8 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
         publish,
         hierarchicalAccess,
         isVisible,
+        ownerIds,
+        user,
         isOwner,
         assistantState
     ]);

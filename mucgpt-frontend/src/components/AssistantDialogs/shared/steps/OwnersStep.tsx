@@ -2,7 +2,6 @@ import { DialogContent, Field, Input, Button, Text, InfoLabel } from "@fluentui/
 import { useTranslation } from "react-i18next";
 import { useCallback, useState } from "react";
 import { Delete24Regular, PersonAdd24Regular } from "@fluentui/react-icons";
-import sharedStyles from "../AssistantDialog.module.css";
 
 interface OwnersStepProps {
     isOwner: boolean;
@@ -19,7 +18,7 @@ export const OwnersStep = ({ isOwner, ownerIds, currentUserId, onOwnersChange, o
 
     const handleAddOwner = useCallback(() => {
         const trimmedInput = newOwnerInput.trim();
-        
+
         if (!trimmedInput) {
             setError(t("components.edit_assistant_dialog.owners_step.empty_input_error"));
             return;
@@ -39,8 +38,8 @@ export const OwnersStep = ({ isOwner, ownerIds, currentUserId, onOwnersChange, o
 
     const handleRemoveOwner = useCallback(
         (ownerId: string) => {
-            // Prevent removing the current user if they are the only owner
-            if (ownerId === currentUserId && ownerIds.length === 1) {
+            // Prevent removing the last owner
+            if (ownerIds.length === 1) {
                 setError(t("components.edit_assistant_dialog.owners_step.cannot_remove_last_owner"));
                 return;
             }
@@ -50,10 +49,10 @@ export const OwnersStep = ({ isOwner, ownerIds, currentUserId, onOwnersChange, o
             onHasChanged(true);
             setError("");
         },
-        [ownerIds, currentUserId, onOwnersChange, onHasChanged, t]
+        [ownerIds, onOwnersChange, onHasChanged, t]
     );
 
-    const handleKeyPress = useCallback(
+    const handleKeyDown = useCallback(
         (e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
                 e.preventDefault();
@@ -76,11 +75,7 @@ export const OwnersStep = ({ isOwner, ownerIds, currentUserId, onOwnersChange, o
                 </div>
 
                 <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
-                    <Field
-                        validationMessage={error}
-                        validationState={error ? "error" : undefined}
-                        style={{ flex: 1 }}
-                    >
+                    <Field validationMessage={error} validationState={error ? "error" : undefined} style={{ flex: 1 }}>
                         <Input
                             placeholder={t("components.edit_assistant_dialog.owners_step.placeholder")}
                             value={newOwnerInput}
@@ -88,16 +83,11 @@ export const OwnersStep = ({ isOwner, ownerIds, currentUserId, onOwnersChange, o
                                 setNewOwnerInput(data.value);
                                 setError("");
                             }}
-                            onKeyPress={handleKeyPress}
+                            onKeyDown={handleKeyDown}
                             disabled={!isOwner}
                         />
                     </Field>
-                    <Button
-                        icon={<PersonAdd24Regular />}
-                        onClick={handleAddOwner}
-                        disabled={!isOwner || !newOwnerInput.trim()}
-                        appearance="primary"
-                    >
+                    <Button icon={<PersonAdd24Regular />} onClick={handleAddOwner} disabled={!isOwner || !newOwnerInput.trim()} appearance="primary">
                         {t("components.edit_assistant_dialog.owners_step.add_button")}
                     </Button>
                 </div>
@@ -136,7 +126,7 @@ export const OwnersStep = ({ isOwner, ownerIds, currentUserId, onOwnersChange, o
                                     <Button
                                         icon={<Delete24Regular />}
                                         onClick={() => handleRemoveOwner(ownerId)}
-                                        disabled={!isOwner || (ownerId === currentUserId && ownerIds.length === 1)}
+                                        disabled={!isOwner || ownerIds.length === 1}
                                         appearance="subtle"
                                         size="small"
                                     />

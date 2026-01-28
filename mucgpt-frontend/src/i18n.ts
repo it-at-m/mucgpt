@@ -441,7 +441,8 @@ i18n
                             // Owners step
                             owners_step: {
                                 title: "Besitzer verwalten",
-                                description: "Fügen Sie mehrere Besitzer hinzu, indem Sie deren lhmObjectID eingeben. Besitzer können den Assistenten bearbeiten und verwalten.",
+                                description:
+                                    "Fügen Sie mehrere Besitzer hinzu, indem Sie deren lhmObjectID eingeben. Besitzer können den Assistenten bearbeiten und verwalten.",
                                 info: "Besitzer haben volle Berechtigungen zum Bearbeiten und Verwalten dieses Assistenten.",
                                 placeholder: "lhmObjectID eingeben",
                                 add_button: "Hinzufügen",
@@ -1545,7 +1546,8 @@ i18n
                             // Owners step
                             owners_step: {
                                 title: "Besitzer verwalten",
-                                description: "Füg meahare Besitzer hinzu, indem d' de lhmObjectID eigibst. Besitzer kennans Assistenten bearbeiten und verwalten.",
+                                description:
+                                    "Füg meahare Besitzer hinzu, indem d' de lhmObjectID eigibst. Besitzer kennans Assistenten bearbeiten und verwalten.",
                                 info: "Besitzer ham volle Berechtigungen zum Bearbeiten und Verwalten von dem Assistenten.",
                                 placeholder: "lhmObjectID eigebn",
                                 add_button: "Hinzufügn",
@@ -2101,7 +2103,8 @@ i18n
                             // Owners step
                             owners_step: {
                                 title: "Gérer les propriétaires",
-                                description: "Ajoutez plusieurs propriétaires en saisissant leur lhmObjectID. Les propriétaires peuvent modifier et gérer l'assistant.",
+                                description:
+                                    "Ajoutez plusieurs propriétaires en saisissant leur lhmObjectID. Les propriétaires peuvent modifier et gérer l'assistant.",
                                 info: "Les propriétaires ont toutes les permissions pour modifier et gérer cet assistant.",
                                 placeholder: "Entrer lhmObjectID",
                                 add_button: "Ajouter",

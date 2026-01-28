@@ -42,7 +42,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setSystemPrompt(initialAssistant.system_message);
         setQuickPrompts(quickPromptsWithIds);
         setExamples(examplesWithIds);
-        setCreativity(initialAssistant.temperature);
+        setCreativity(initialAssistant.creativity);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version || "0");
         setTools(initialAssistant.tools || []);
@@ -107,7 +107,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         setSystemPrompt(initialAssistant.system_message);
         setQuickPrompts(quickPromptsWithIds);
         setExamples(examplesWithIds);
-        setCreativity(initialAssistant.temperature);
+        setCreativity(initialAssistant.creativity);
         setDefaultModel(initialAssistant.default_model);
         setVersion(initialAssistant.version);
         setTools(initialAssistant.tools || []);
@@ -132,7 +132,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
             system_message: systemPrompt,
             publish: publish,
             owner_ids: ownerIds,
-            temperature: temperature,
+            creativity: creativity,
             default_model: defaultModelCleared ? "" : defaultModel,
             quick_prompts: validQuickPrompts.map(({ id: _omitId, ...rest }) => {
                 void _omitId;
@@ -154,7 +154,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         description,
         systemPrompt,
         ownerIds,
-        temperature,
+        creativity,
         defaultModel,
         defaultModelCleared,
         quickPrompts,
@@ -175,7 +175,7 @@ export const useAssistantState = (initialAssistant: Assistant) => {
         systemPrompt,
         quickPrompts,
         examples,
-        temperature,
+        creativity,
         defaultModel,
         version,
         tools,

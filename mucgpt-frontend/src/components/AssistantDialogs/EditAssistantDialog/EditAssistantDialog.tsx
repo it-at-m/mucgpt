@@ -31,7 +31,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const [currentStep, setCurrentStep] = useState<number>(1);
 
     const assistantState = useAssistantState(assistant);
-    const { title, description, systemPrompt, quickPrompts, examples, temperature, tools, publish, hierarchicalAccess, isVisible } = assistantState;
+    const { title, description, systemPrompt, quickPrompts, examples, creativity, tools, publish, hierarchicalAccess, isVisible } = assistantState;
 
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 
@@ -189,10 +189,10 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                 } else {
                     return (
                         <AdvancedSettingsStep
-                            temperature={temperature}
+                            creativity={creativity}
                             defaultModel={assistantState.defaultModel}
                             isOwner={isOwner}
-                            onTemperatureChange={assistantState.updateTemperature}
+                            onCreativityChange={assistantState.updateCreativity}
                             onDefaultModelChange={assistantState.updateDefaultModel}
                             onHasChanged={assistantState.setHasChanged}
                         />
@@ -202,10 +202,10 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
             case 6: // Advanced Settings (only when published)
                 return (
                     <AdvancedSettingsStep
-                        temperature={temperature}
+                        creativity={creativity}
                         defaultModel={assistantState.defaultModel}
                         isOwner={isOwner}
-                        onTemperatureChange={assistantState.updateTemperature}
+                        onCreativityChange={assistantState.updateCreativity}
                         onDefaultModelChange={assistantState.updateDefaultModel}
                         onHasChanged={assistantState.setHasChanged}
                     />
@@ -223,7 +223,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
         availableTools,
         quickPrompts,
         examples,
-        temperature,
+        creativity,
         publish,
         hierarchicalAccess,
         isVisible,

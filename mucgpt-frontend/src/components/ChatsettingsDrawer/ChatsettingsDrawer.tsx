@@ -6,13 +6,13 @@ import { useState } from "react";
 import { ChatSettingsContent } from "./ChatSettingsContent";
 import { useTranslation } from "react-i18next";
 interface Props {
-    temperature: number;
-    setTemperature: (temp: number) => void;
+    creativity: string;
+    setCreativity: (creativity: string) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
 }
 
-export const ChatsettingsDrawer = ({ temperature, setTemperature, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatsettingsDrawer = ({ creativity, setCreativity, systemPrompt, setSystemPrompt }: Props) => {
     const { t } = useTranslation();
 
     // State for collapsible sections
@@ -53,8 +53,8 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, systemPrompt, 
                 {isOverviewExpanded && (
                     <div className={styles.collapseContent}>
                         <ChatSettingsContent
-                            temperature={temperature}
-                            setTemperature={setTemperature}
+                            creativity={creativity}
+                            setCreativity={setCreativity}
                             systemPrompt={systemPrompt}
                             setSystemPrompt={setSystemPrompt}
                         />

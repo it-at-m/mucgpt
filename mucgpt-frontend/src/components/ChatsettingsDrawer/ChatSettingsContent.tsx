@@ -15,19 +15,16 @@ interface Props {
 export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, setSystemPrompt }: Props) => {
     const { t } = useTranslation();
 
-    const temperature_headerID = useId("header-temperature");
-    const temperatureID = useId("input-temperature");
+    const creativity_headerID = useId("header-creativity");
+    const creativityID = useId("input-creativity");
     const systemPromptID = useId("header-system-prompt");
 
-    const min_temp = 0;
-    const max_temp = 1;
-
-    // Temperature change - simplified to match AdvancedSettingsStep
-    const onTemperatureChangeHandler = useCallback(
-        (ev: React.ChangeEvent<HTMLInputElement>) => {
-            setTemperature(Number(ev.target.value));
+    // Creativity change
+    const onCreativityChangeHandler = useCallback(
+        (_ev: any, data: any) => {
+            setCreativity(data.optionValue);
         },
-        [setTemperature]
+        [setCreativity]
     );
 
     // System prompt change

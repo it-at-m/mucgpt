@@ -51,7 +51,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 hierarchical_access = publishDepartments;
                 is_visible = true;
             } else {
-                hierarchical_access = ["*"];
+                hierarchical_access = [];
                 is_visible = true;
             }
 

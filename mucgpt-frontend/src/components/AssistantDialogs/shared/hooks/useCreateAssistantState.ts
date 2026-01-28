@@ -17,7 +17,7 @@ export const useCreateAssistantState = () => {
     const [tools, setTools] = useState<ToolBase[]>([]);
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
     const [examples, setExamples] = useState<ExampleModel[]>([]);
-    const [temperature, setTemperature] = useState<number>(0.6);
+    const [creativity, setCreativity] = useState<string>("normal");
     const [defaultModel, setDefaultModel] = useState<string | undefined>(LLM.llm_name);
 
     // Track if user has made any changes
@@ -30,10 +30,10 @@ export const useCreateAssistantState = () => {
             tools.length > 0 ||
             quickPrompts.length > 0 ||
             examples.length > 0 ||
-            temperature !== 0.6 ||
+            creativity !== "normal" ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, temperature, defaultModel, LLM.llm_name]);
+    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, creativity, defaultModel, LLM.llm_name]);
 
     useEffect(() => {
         setDefaultModel(LLM.llm_name);
@@ -60,8 +60,8 @@ export const useCreateAssistantState = () => {
         setSystemPrompt(newPrompt);
     }, []);
 
-    const updateTemperature = useCallback((newTemp: number) => {
-        setTemperature(newTemp);
+    const updateCreativity = useCallback((newCreativity: string) => {
+        setCreativity(newCreativity);
     }, []);
 
     const updateDefaultModel = useCallback((newModel: string | undefined) => {
@@ -102,7 +102,7 @@ export const useCreateAssistantState = () => {
         setTools([]);
         setQuickPrompts([]);
         setExamples([]);
-        setTemperature(0.6);
+        setCreativity("normal");
         setDefaultModel(LLM.llm_name);
     }, [LLM.llm_name]);
 
@@ -116,7 +116,7 @@ export const useCreateAssistantState = () => {
         tools,
         quickPrompts,
         examples,
-        temperature,
+        creativity,
         defaultModel,
         hasChanges,
 
@@ -129,7 +129,7 @@ export const useCreateAssistantState = () => {
         updateTitle,
         updateDescription,
         updateSystemPrompt,
-        updateTemperature,
+        updateCreativity,
         updateDefaultModel,
         updateTools,
         updateTemplate,

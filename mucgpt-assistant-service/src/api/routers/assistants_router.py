@@ -74,7 +74,7 @@ async def createAssistant(
             name=assistant.name,
             description=assistant.description or "",
             system_prompt=assistant.system_prompt,
-            temperature=assistant.temperature,
+            creativity=assistant.creativity,
             default_model=assistant.default_model,
             examples=assistant.examples or [],
             quick_prompts=assistant.quick_prompts or [],
@@ -116,7 +116,7 @@ async def createAssistant(
             description=latest_version.description or "",
             system_prompt=latest_version.system_prompt,
             hierarchical_access=new_assistant.hierarchical_access or [],
-            temperature=latest_version.temperature,
+            creativity=latest_version.creativity,
             default_model=latest_version.default_model,
             examples=latest_version.examples or [],
             quick_prompts=latest_version.quick_prompts or [],
@@ -263,9 +263,9 @@ async def updateAssistant(
         system_prompt=assistant_update.system_prompt
         if assistant_update.system_prompt is not None
         else latest_version.system_prompt,
-        temperature=assistant_update.temperature
-        if assistant_update.temperature is not None
-        else latest_version.temperature,
+        creativity=assistant_update.creativity
+        if assistant_update.creativity is not None
+        else latest_version.creativity,
         default_model=(
             None
             if assistant_update.default_model == ""
@@ -311,7 +311,7 @@ async def updateAssistant(
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
-        temperature=latest_version.temperature,
+        creativity=latest_version.creativity,
         default_model=latest_version.default_model,
         examples=latest_version.examples or [],
         quick_prompts=latest_version.quick_prompts or [],
@@ -384,7 +384,7 @@ async def getAllAssistants(
                 description=latest_version.description or "",
                 system_prompt=latest_version.system_prompt,
                 hierarchical_access=assistant.hierarchical_access or [],
-                temperature=latest_version.temperature,
+                creativity=latest_version.creativity,
                 default_model=latest_version.default_model,
                 examples=latest_version.examples or [],
                 quick_prompts=latest_version.quick_prompts or [],
@@ -466,7 +466,7 @@ async def getAssistant(
         description=latest_version.description or "",
         system_prompt=latest_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
-        temperature=latest_version.temperature,
+        creativity=latest_version.creativity,
         default_model=latest_version.default_model,
         examples=latest_version.examples or [],
         quick_prompts=latest_version.quick_prompts or [],
@@ -546,7 +546,7 @@ async def get_assistant_version(
         description=assistant_version.description or "",
         system_prompt=assistant_version.system_prompt,
         hierarchical_access=assistant.hierarchical_access or [],
-        temperature=assistant_version.temperature,
+        creativity=assistant_version.creativity,
         default_model=assistant_version.default_model,
         examples=assistant_version.examples or [],
         quick_prompts=assistant_version.quick_prompts or [],

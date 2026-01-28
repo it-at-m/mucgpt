@@ -143,12 +143,11 @@ class AssistantBase(BaseModel):
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment"],
     )
-    temperature: float = Field(
-        0.7,
-        description="Controls randomness in AI responses (0.0 = deterministic, 1.0 = very random)",
-        ge=0.0,
-        le=2.0,
-        example=0.7,
+    creativity: str = Field(
+        "normal",
+        description="Controls creativity/randomness in AI responses. Must be one of: 'aus' (conservative), 'normal' (balanced), 'hoch' (creative)",
+        pattern="^(aus|normal|hoch)$",
+        example="normal",
     )
     default_model: str | None = Field(
         None,
@@ -213,7 +212,7 @@ class AssistantBase(BaseModel):
                     "department-underdepartment",
                     "anotherdepartment-underdepartment",
                 ],
-                "temperature": 0.7,
+                "creativity": "normal",
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -256,7 +255,7 @@ class AssistantCreate(AssistantBase):
                 "name": "Customer Service Assistant",
                 "description": "AI assistant for handling customer inquiries",
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
-                "temperature": 0.5,
+                "creativity": "aus",
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -320,12 +319,11 @@ class AssistantUpdate(BaseModel):
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment"],
     )
-    temperature: float | None = Field(
+    creativity: str | None = Field(
         None,
-        description="Controls randomness in AI responses (0.0 = deterministic, 1.0 = very random)",
-        ge=0.0,
-        le=2.0,
-        example=0.7,
+        description="Controls creativity/randomness in AI responses. Must be one of: 'aus' (conservative), 'normal' (balanced), 'hoch' (creative)",
+        pattern="^(aus|normal|hoch)$",
+        example="normal",
     )
     default_model: str | None = Field(
         None,
@@ -473,7 +471,7 @@ class AssistantResponse(BaseModel):
                     "name": "Technical Support Assistant",
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                    "temperature": 0.7,
+                    "creativity": "normal",
                     "default_model": "gpt-4",
                     "tools": [
                         {

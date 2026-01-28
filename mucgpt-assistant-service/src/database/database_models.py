@@ -74,7 +74,7 @@ class AssistantVersion(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text)
     system_prompt = Column(Text, nullable=False)
-    temperature = Column(Float, default=0.7)
+    creativity = Column(String(10), default="normal")
     default_model = Column(String(255), nullable=True)
     examples = Column(JSON, nullable=True)
     quick_prompts = Column(JSON, nullable=True)
@@ -100,7 +100,7 @@ class AssistantVersion(Base):
             "name": self.name,
             "description": self.description,
             "system_prompt": self.system_prompt,
-            "temperature": self.temperature,
+            "creativity": self.creativity,
             "default_model": self.default_model,
             "examples": self.examples,
             "quick_prompts": self.quick_prompts,

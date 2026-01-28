@@ -45,6 +45,10 @@ class ModelInfo(BaseModel):
     litellm_provider: str | None = None
     inference_location: str | None = None
     knowledge_cut_off: str | None = None
+    # Creativity to temperature mappings
+    creativity_aus_temperature: float | None = None
+    creativity_normal_temperature: float | None = None
+    creativity_hoch_temperature: float | None = None
 
 
 class ModelsConfig(BaseModel):
@@ -84,6 +88,9 @@ class ModelsConfig(BaseModel):
             "litellm_provider",
             "inference_location",
             "knowledge_cut_off",
+            "creativity_aus_temperature",
+            "creativity_normal_temperature",
+            "creativity_hoch_temperature",
         }
 
         existing_info = data.get("model_info")
@@ -217,6 +224,36 @@ class ModelsConfig(BaseModel):
     def knowledge_cut_off(self, value: str | None) -> None:
         cleaned = (value or "").strip() or None
         self.model_info.knowledge_cut_off = cleaned
+
+    def get_temperature_for_creativity(self, creativity: str) -> float:
+        """Convert creativity level to temperature value for this model.
+        
+        Args:
+            creativity: One of "aus", "normal", "hoch"
+            
+        Returns:
+            Temperature value for the given creativity level
+            
+        Raises:
+            ValueError: If creativity level is invalid
+        """
+        # Default temperature values if not configured
+        default_temps = {
+            "aus": 0.0,
+            "normal": 0.7,
+            "hoch": 1.0,
+        }
+        
+        if creativity not in default_temps:
+            raise ValueError(f"Invalid creativity level: {creativity}. Must be one of: aus, normal, hoch")
+        
+        # Use model-specific temperature if configured, otherwise use default
+        if creativity == "aus":
+            return self.model_info.creativity_aus_temperature or default_temps["aus"]
+        elif creativity == "normal":
+            return self.model_info.creativity_normal_temperature or default_temps["normal"]
+        else:  # hoch
+            return self.model_info.creativity_hoch_temperature or default_temps["hoch"]
 
 
 class SSOSettings(BaseSettings):

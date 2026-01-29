@@ -91,6 +91,9 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // save assistant
     const onPromptButtonClicked = useCallback(async () => {
+        if (loading) return; // Prevent duplicate submissions
+
+        setLoading(true);
         try {
             const validQuickPrompts = quickPrompts.filter(qp => qp.label?.trim() && qp.prompt?.trim());
             const validExamples = examples.filter(ex => ex.text?.trim() && ex.value?.trim());
@@ -128,8 +131,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             console.error("Failed to save assistant", error);
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
+        } finally {
+            setLoading(false);
         }
-    }, [title, description, systemPrompt, temperature, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [loading, title, description, systemPrompt, temperature, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -178,6 +183,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // Import assistant from JSON file
     const importAssistant = useCallback(() => {
+        if (loading) return; // Prevent duplicate imports
+
         const fileInput = document.createElement("input");
         fileInput.type = "file";
         fileInput.accept = ".json";
@@ -186,6 +193,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const file = (e.target as HTMLInputElement).files?.[0];
             if (!file) return;
 
+            setLoading(true);
             try {
                 // Read and parse file
                 const content = await file.text();
@@ -234,12 +242,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 console.error("Failed to import assistant", error);
                 const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.import_failed");
                 showError(t("components.create_assistant_dialog.import_error"), errorMessage);
+            } finally {
+                setLoading(false);
             }
         };
 
         // Trigger file picker
         fileInput.click();
-    }, [t, showSuccess, showError, navigate, setShowDialogInput, resetAll, defaultModel]);
+    }, [loading, t, showSuccess, showError, navigate, setShowDialogInput, resetAll, defaultModel]);
 
     const steps: Step[] = useMemo(
         () => [

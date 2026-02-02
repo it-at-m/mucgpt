@@ -51,7 +51,7 @@ def sample_assistant_version_data():
         name="Test Assistant",
         system_prompt="You are a helpful assistant",
         description="A test assistant for unit testing",
-        temperature=0.7,
+        creativity="normal",
         examples=["Example 1", "Example 2"],
         quick_prompts=["Quick prompt 1", "Quick prompt 2"],
         tags=["tag1", "tag2"],

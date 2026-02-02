@@ -461,7 +461,7 @@ class TestAssistantRepository:
             name=sample_assistant_version_data.name,
             system_prompt=sample_assistant_version_data.system_prompt,
             description=sample_assistant_version_data.description,
-            temperature=sample_assistant_version_data.temperature,
+            creativity=sample_assistant_version_data.creativity,
             examples=sample_assistant_version_data.examples,
             quick_prompts=sample_assistant_version_data.quick_prompts,
             tags=sample_assistant_version_data.tags,
@@ -474,7 +474,7 @@ class TestAssistantRepository:
         assert version.assistant_id == assistant.id
         assert version.name == sample_assistant_version_data.name
         assert version.system_prompt == sample_assistant_version_data.system_prompt
-        assert version.temperature == sample_assistant_version_data.temperature
+        assert version.creativity == sample_assistant_version_data.creativity
 
     async def test_create_multiple_assistant_versions(
         self, db_session, sample_assistant_data, sample_assistant_version_data
@@ -494,7 +494,7 @@ class TestAssistantRepository:
             name=sample_assistant_version_data.name,
             system_prompt=sample_assistant_version_data.system_prompt,
             description=sample_assistant_version_data.description,
-            temperature=sample_assistant_version_data.temperature,
+            creativity=sample_assistant_version_data.creativity,
             examples=sample_assistant_version_data.examples,
             quick_prompts=sample_assistant_version_data.quick_prompts,
             tags=sample_assistant_version_data.tags,
@@ -506,7 +506,7 @@ class TestAssistantRepository:
             name="Updated Assistant",
             system_prompt="Updated system prompt",
             description="Updated description",
-            temperature=0.8,
+            creativity="hoch",
             examples=["Updated example"],
             quick_prompts=["Updated prompt"],
             tags=["updated"],
@@ -536,7 +536,7 @@ class TestAssistantRepository:
             name=sample_assistant_version_data.name,
             system_prompt=sample_assistant_version_data.system_prompt,
             description=sample_assistant_version_data.description,
-            temperature=sample_assistant_version_data.temperature,
+            creativity=sample_assistant_version_data.creativity,
             examples=sample_assistant_version_data.examples,
             quick_prompts=sample_assistant_version_data.quick_prompts,
             tags=sample_assistant_version_data.tags,

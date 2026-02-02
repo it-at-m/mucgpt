@@ -179,7 +179,7 @@ def test_get_user_assistants_with_complex_data(test_client):
         system_prompt="You are a complex assistant.",
         owner_ids=["test_user_123"],
         hierarchical_access=["IT", "MANAGEMENT"],
-        temperature=0.8,
+        creativity="hoch",
         examples=[
             {"text": "Example 1", "value": "First example value"},
             {"text": "Example 2", "value": "Second example value"},
@@ -214,7 +214,7 @@ def test_get_user_assistants_with_complex_data(test_client):
         assistant_response.latest_version.description
         == "A complex assistant with various features"
     )
-    assert assistant_response.latest_version.temperature == 0.8
+    assert assistant_response.latest_version.creativity == "hoch"
     assert len(assistant_response.latest_version.examples) == 2
     assert len(assistant_response.latest_version.quick_prompts) == 1
     assert assistant_response.latest_version.tags == ["complex", "user-owned"]
@@ -386,7 +386,7 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
         name="My Owned Assistant",
         system_prompt="You are my owned assistant.",
         description="This assistant is owned by test_user_123",
-        temperature=0.7,
+        creativity="normal",
         examples=[],
         quick_prompts=[],
         tags=["owned"],
@@ -403,7 +403,7 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
         name="Not My Assistant",
         system_prompt="You are not my assistant.",
         description="This assistant is owned by other_user_456",
-        temperature=0.8,
+        creativity="hoch",
         examples=[],
         quick_prompts=[],
         tags=["not-owned"],
@@ -420,7 +420,7 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
         name="Co-Owned Assistant",
         system_prompt="You are a co-owned assistant.",
         description="This assistant has multiple owners including test_user_123",
-        temperature=0.5,
+        creativity="aus",
         examples=[],
         quick_prompts=[],
         tags=["co-owned"],
@@ -437,7 +437,7 @@ async def test_get_user_assistants_access_control_repo(test_client, test_db_sess
         name="Orphaned Assistant",
         system_prompt="You are an orphaned assistant.",
         description="This assistant has no owners",
-        temperature=0.6,
+        creativity="normal",
         examples=[],
         quick_prompts=[],
         tags=["orphaned"],
@@ -1083,7 +1083,7 @@ async def test_hierarchical_access_subscription_vs_ownership(
         name="HR Only Assistant",
         system_prompt="Assistant only for HR.",
         description="This assistant is only for HR department",
-        temperature=0.7,
+        creativity="normal",
         examples=[],
         quick_prompts=[],
         tags=["hr-only"],
@@ -1100,7 +1100,7 @@ async def test_hierarchical_access_subscription_vs_ownership(
         name="IT Accessible Assistant",
         system_prompt="Assistant accessible to IT.",
         description="This assistant is accessible to IT department",
-        temperature=0.7,
+        creativity="normal",
         examples=[],
         quick_prompts=[],
         tags=["it-accessible"],
@@ -1370,7 +1370,7 @@ async def test_subscription_count_with_repository_operations(
         name="Repository Test Assistant",
         system_prompt="Testing with repository operations.",
         description="Assistant for testing subscription count with repository",
-        temperature=0.7,
+        creativity="normal",
         examples=[],
         quick_prompts=[],
         tags=["test"],
@@ -1427,7 +1427,7 @@ def test_subscription_count_in_complex_assistant_response(test_client):
         description="A complex assistant for testing subscription count",
         system_prompt="You are a complex assistant with subscription counting.",
         hierarchical_access=["IT-Test-Department"],
-        temperature=0.8,
+        creativity="hoch",
         examples=[
             {"text": "Example 1", "value": "First example value"},
         ],
@@ -1469,7 +1469,7 @@ def test_subscription_count_in_complex_assistant_response(test_client):
     assert assistant_response.subscriptions_count == 1
 
     # Verify other complex fields are still present
-    assert assistant_response.latest_version.temperature == 0.8
+    assert assistant_response.latest_version.creativity == "hoch"
     assert len(assistant_response.latest_version.examples) == 1
     assert len(assistant_response.latest_version.quick_prompts) == 1
     assert assistant_response.latest_version.tags == ["complex", "counting"]

@@ -89,7 +89,7 @@ The system is split into microservices to separate concerns and allow independen
 ### Python (Services)
 
 - **FastAPI**: Use `APIRouter` for modularity. Pydantic v2 models for request/response.
-- **AsyncIO**: Prefer `async/await` for all I/O bound operations.
+- **AsyncIO**: Prefer `async/await` for all I/O-bound operations.
 - **Type Hints**: Mandatory for all function signatures.
 - **Logging**: Use strict structured logging configured in `logconf.yaml`.
 - **Config**: Use `pydantic-settings` (BaseSettings) for configuration management.

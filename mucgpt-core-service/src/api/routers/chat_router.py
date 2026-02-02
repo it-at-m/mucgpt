@@ -50,6 +50,7 @@ async def chat_completions(
                 user_info=user_info,
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
+                reasoning_effort=request.reasoning_effort,
             )
 
             async def sse_generator():
@@ -65,6 +66,7 @@ async def chat_completions(
                 user_info=user_info,
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
+                reasoning_effort=request.reasoning_effort,
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")

@@ -53,6 +53,9 @@ class ChatCompletionMessage(BaseModel):
         ..., description="Message role: system, user, or assistant"
     )
     content: str = Field(..., description="The message content")
+    reasoning_content: Optional[str] = Field(
+        None, description="Reasoning content for reasoning models (o1, etc.)"
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {"role": "user", "content": "List three benefits of unit tests."}
@@ -76,6 +79,9 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: Optional[str] = Field(
         None, description="ID of the assistant to use for this completion request"
     )
+    reasoning_effort: Optional[Literal["low", "medium", "high"]] = Field(
+        None, description="Reasoning effort level for reasoning models (o1, o3, etc.)"
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -89,6 +95,7 @@ class ChatCompletionRequest(BaseModel):
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
+                "reasoning_effort": "medium",
             }
         }
     )
@@ -175,12 +182,16 @@ class ChatCompletionDelta(BaseModel):
         description="Role indicated when provided (assistant only after initial chunk)",
     )
     content: Optional[str] = Field(None, description="New content for this chunk")
+    reasoning_content: Optional[str] = Field(
+        None, description="Reasoning content for reasoning models (o1, etc.)"
+    )
     tool_calls: Optional[List[dict]] = Field(None, description="Tool call information")
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
                 "role": "assistant",
                 "content": "TDD ensures code quality",
+                "reasoning_content": None,
                 "tool_calls": [],
             }
         }

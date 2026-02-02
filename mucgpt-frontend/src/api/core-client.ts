@@ -27,7 +27,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
         model: options.model,
         messages,
         temperature: options.temperature,
-        stream: options.shouldStream
+        stream: options.shouldStream,
+        creativity: options.creativity
     };
     if (options.enabled_tools) {
         body.enabled_tools = options.enabled_tools;

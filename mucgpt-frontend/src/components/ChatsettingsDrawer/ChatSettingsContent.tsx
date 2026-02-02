@@ -1,5 +1,5 @@
 import { Dismiss24Regular } from "@fluentui/react-icons";
-import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeData, Dropdown, Option } from "@fluentui/react-components";
 
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback } from "react";
@@ -10,14 +10,18 @@ interface Props {
     setTemperature: (temp: number) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
+    reasoningEffort?: "low" | "medium" | "high";
+    setReasoningEffort: (effort: "low" | "medium" | "high" | undefined) => void;
+    supportsReasoning: boolean;
 }
 
-export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt, setSystemPrompt, reasoningEffort, setReasoningEffort, supportsReasoning }: Props) => {
     const { t } = useTranslation();
 
     const temperature_headerID = useId("header-temperature");
     const temperatureID = useId("input-temperature");
     const systemPromptID = useId("header-system-prompt");
+    const reasoningEffortID = useId("input-reasoning-effort");
 
     const min_temp = 0;
     const max_temp = 1;
@@ -42,6 +46,20 @@ export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt,
     // Clear system prompt
     const onClearSystemPrompt = () => {
         setSystemPrompt("");
+    };
+
+    // Reasoning effort change
+    const onReasoningEffortChange = useCallback(
+        (_ev: any, data: any) => {
+            const value = data.optionValue as "low" | "medium" | "high" | "none";
+            setReasoningEffort(value === "none" ? undefined : value);
+        },
+        [setReasoningEffort]
+    );
+
+    // Helper to capitalize first letter
+    const capitalizeFirst = (str: string) => {
+        return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
     return (
@@ -125,6 +143,41 @@ export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt,
                     </Field>
                 </div>
             </div>
+
+            {/* Reasoning Effort Section - Only show for reasoning models */}
+            {supportsReasoning && (
+                <div className={styles.sectionContainer}>
+                    <div className={styles.header} role="heading" aria-level={3}>
+                        <div className={styles.headerContent}>
+                            <InfoLabel
+                                info={
+                                    <div>
+                                        <i>Reasoning Effort</i> controls how much time the model spends thinking before responding. Higher effort may improve quality for complex tasks.
+                                    </div>
+                                }
+                            >
+                                Reasoning Effort
+                            </InfoLabel>
+                        </div>
+                    </div>
+
+                    <div>
+                        <Field size="large">
+                            <Dropdown
+                                id={reasoningEffortID}
+                                value={reasoningEffort === undefined ? "Default" : capitalizeFirst(reasoningEffort)}
+                                selectedOptions={[reasoningEffort || "none"]}
+                                onOptionSelect={onReasoningEffortChange}
+                            >
+                                <Option value="none">Default</Option>
+                                <Option value="low">Low</Option>
+                                <Option value="medium">Medium</Option>
+                                <Option value="high">High</Option>
+                            </Dropdown>
+                        </Field>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

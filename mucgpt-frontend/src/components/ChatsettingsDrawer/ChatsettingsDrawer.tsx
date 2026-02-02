@@ -10,9 +10,12 @@ interface Props {
     setTemperature: (temp: number) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
+    reasoningEffort?: "low" | "medium" | "high";
+    setReasoningEffort: (effort: "low" | "medium" | "high" | undefined) => void;
+    supportsReasoning: boolean;
 }
 
-export const ChatsettingsDrawer = ({ temperature, setTemperature, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatsettingsDrawer = ({ temperature, setTemperature, systemPrompt, setSystemPrompt, reasoningEffort, setReasoningEffort, supportsReasoning }: Props) => {
     const { t } = useTranslation();
 
     // State for collapsible sections
@@ -57,6 +60,9 @@ export const ChatsettingsDrawer = ({ temperature, setTemperature, systemPrompt, 
                             setTemperature={setTemperature}
                             systemPrompt={systemPrompt}
                             setSystemPrompt={setSystemPrompt}
+                            reasoningEffort={reasoningEffort}
+                            setReasoningEffort={setReasoningEffort}
+                            supportsReasoning={supportsReasoning}
                         />
                     </div>
                 )}

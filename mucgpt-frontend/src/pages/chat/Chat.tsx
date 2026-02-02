@@ -56,6 +56,7 @@ export type ChatMessage = DBMessage<ChatResponse>;
 export interface ChatOptions {
     system: string;
     temperature: number;
+    reasoning_effort?: "low" | "medium" | "high";
 }
 
 // Define constants outside the component
@@ -113,11 +114,12 @@ const Chat = () => {
         temperature: 0.7,
         systemPrompt: "",
         active_chat: undefined,
-        allChats: []
+        allChats: [],
+        reasoningEffort: undefined
     });
 
     // Destructuring for easier access
-    const { answers, temperature, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, temperature, systemPrompt, active_chat, allChats, reasoningEffort } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -178,6 +180,7 @@ const Chat = () => {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_TEMPERATURE", payload: chat.config.temperature });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
+                    dispatch({ type: "SET_REASONING_EFFORT", payload: chat.config.reasoning_effort });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
@@ -216,7 +219,8 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                temperature: temperature
+                temperature: temperature,
+                reasoning_effort: reasoningEffort
             };
             try {
                 await makeApiRequest(
@@ -242,7 +246,7 @@ const Chat = () => {
             }
             isLoadingRef.current = false;
         },
-        [answers, temperature, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
+        [answers, temperature, reasoningEffort, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
     );
 
     // Regenerate-Funktion
@@ -281,10 +285,11 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: systemPrompt,
-                temperature: temp
+                temperature: temp,
+                reasoning_effort: reasoningEffort
             });
         },
-        [systemPrompt, debouncedStorageUpdate]
+        [systemPrompt, reasoningEffort, debouncedStorageUpdate]
     );
 
     const onSystemPromptChanged = useCallback(
@@ -293,10 +298,24 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: newSystemPrompt,
-                temperature: temperature
+                temperature: temperature,
+                reasoning_effort: reasoningEffort
             });
         },
-        [temperature, debouncedStorageUpdate]
+        [temperature, reasoningEffort, debouncedStorageUpdate]
+    );
+
+    const onReasoningEffortChanged = useCallback(
+        (effort: "low" | "medium" | "high" | undefined) => {
+            dispatch({ type: "SET_REASONING_EFFORT", payload: effort });
+
+            debouncedStorageUpdate({
+                system: systemPrompt,
+                temperature: temperature,
+                reasoning_effort: effort
+            });
+        },
+        [systemPrompt, temperature, debouncedStorageUpdate]
     );
 
     const clearNavigationQueryParams = useCallback(() => {
@@ -612,9 +631,12 @@ const Chat = () => {
                 setTemperature={onTemperatureChanged}
                 systemPrompt={systemPrompt}
                 setSystemPrompt={onSystemPromptChanged}
+                reasoningEffort={reasoningEffort}
+                setReasoningEffort={onReasoningEffortChanged}
+                supportsReasoning={LLM?.supports_reasoning || false}
             />
         ),
-        [temperature, systemPrompt, onTemperatureChanged, onSystemPromptChanged]
+        [temperature, systemPrompt, reasoningEffort, LLM, onTemperatureChanged, onSystemPromptChanged, onReasoningEffortChanged]
     );
 
     const sidebar = useMemo(

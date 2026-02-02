@@ -244,7 +244,8 @@ export const makeApiRequest = async (
         system_message: options.system ?? "",
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
-        assistant_id: assistant_id
+        assistant_id: assistant_id,
+        reasoning_effort: options.reasoning_effort
     };
 
     // Make the API call
@@ -272,6 +273,7 @@ export const makeApiRequest = async (
 
     // Buffer management for optimized UI updates
     let textBuffer = ""; // Accumulates regular text content
+    let reasoningBuffer = ""; // Accumulates reasoning content
     let updateTimer: ReturnType<typeof setTimeout> | null = null; // Debounces UI updates
     let includeActiveToolsInUpdate = false; // Tracks whether tool statuses need to be sent in the next update
     const reader = response.body.getReader();
@@ -295,6 +297,7 @@ export const makeApiRequest = async (
                 answer: combinedContent,
                 tokens: streamed_tokens,
                 user_tokens: user_tokens,
+                reasoning_content: reasoningBuffer || undefined,
                 activeTools: includeActiveToolsInUpdate ? activeToolStatuses : undefined
             };
 
@@ -368,6 +371,14 @@ export const makeApiRequest = async (
                                 scheduleUpdate();
                             }
                         }
+                        // Handle reasoning content from reasoning models
+                        else if (choice.delta?.reasoning_content) {
+                            const content = choice.delta.reasoning_content;
+                            reasoningBuffer += content;
+
+                            // Batch UI updates to prevent excessive re-renders
+                            scheduleUpdate();
+                        }
                         // Handle regular text content from the assistant
                         else if (choice.delta?.content) {
                             const content = choice.delta.content;
@@ -402,6 +413,7 @@ export const makeApiRequest = async (
         answer: finalCombinedContent,
         tokens: streamed_tokens,
         user_tokens: user_tokens,
+        reasoning_content: reasoningBuffer || undefined,
         activeTools: activeToolStatuses
     };
 
@@ -458,6 +470,8 @@ export type ChatState<A> = {
     active_chat: string | undefined;
     /** Array of all chat conversations stored in the application */
     allChats: DBObject<ChatResponse, A>[];
+    /** Reasoning effort level for reasoning models (o1, o3, etc.) */
+    reasoningEffort?: "low" | "medium" | "high";
 };
 
 /**
@@ -474,7 +488,8 @@ export type ChatAction<A> =
     | { type: "SET_TEMPERATURE"; payload: number }
     | { type: "SET_SYSTEM_PROMPT"; payload: string }
     | { type: "SET_ACTIVE_CHAT"; payload: string | undefined }
-    | { type: "SET_ALL_CHATS"; payload: DBObject<ChatResponse, A>[] };
+    | { type: "SET_ALL_CHATS"; payload: DBObject<ChatResponse, A>[] }
+    | { type: "SET_REASONING_EFFORT"; payload: "low" | "medium" | "high" | undefined };
 
 /**
  * Factory function that creates a reducer for managing chat state.
@@ -514,6 +529,9 @@ export function getChatReducer<A>() {
             case "SET_ALL_CHATS":
                 // Update the entire list of chat conversations
                 return { ...state, allChats: action.payload };
+            case "SET_REASONING_EFFORT":
+                // Update the reasoning effort level for reasoning models
+                return { ...state, reasoningEffort: action.payload };
             default:
                 // Return unchanged state for unknown action types
                 return state;

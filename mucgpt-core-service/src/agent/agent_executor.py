@@ -100,14 +100,23 @@ class MUCGPTAgentExecutor:
         return match.group(0) if match else None
 
     def _build_llm_extra_body(
-        self, assistant_id: Optional[str]
+        self, assistant_id: Optional[str], reasoning_effort: Optional[str] = None
     ) -> Optional[dict[str, Any]]:
         tags: list[str] = []
         if assistant_id:
             tags.append(f"MUCGPT_ASSISTANT_ID:{assistant_id}")
-        if not tags:
-            return None
-        return {"metadata": {"tags": tags}}
+        
+        extra_body = None
+        if tags:
+            extra_body = {"metadata": {"tags": tags}}
+        
+        # Add reasoning_effort if provided
+        if reasoning_effort:
+            if extra_body is None:
+                extra_body = {}
+            extra_body["reasoning_effort"] = reasoning_effort
+        
+        return extra_body
 
     async def run_with_streaming(
         self,
@@ -132,13 +141,7 @@ class MUCGPTAgentExecutor:
             self._extract_department_prefix(user_info.department) if user_info else None
         )
         llm_user = dept_prefix
-        llm_extra_body = self._build_llm_extra_body(assistant_id)
-        
-        # Add reasoning_effort to extra_body if provided
-        if reasoning_effort:
-            if llm_extra_body is None:
-                llm_extra_body = {}
-            llm_extra_body["reasoning_effort"] = reasoning_effort
+        llm_extra_body = self._build_llm_extra_body(assistant_id, reasoning_effort)
         
         config = merge_configs(
             self.base_config,
@@ -272,13 +275,7 @@ class MUCGPTAgentExecutor:
             self._extract_department_prefix(user_info.department) if user_info else None
         )
         llm_user = dept_prefix
-        llm_extra_body = self._build_llm_extra_body(assistant_id)
-        
-        # Add reasoning_effort to extra_body if provided
-        if reasoning_effort:
-            if llm_extra_body is None:
-                llm_extra_body = {}
-            llm_extra_body["reasoning_effort"] = reasoning_effort
+        llm_extra_body = self._build_llm_extra_body(assistant_id, reasoning_effort)
         
         request_config = RunnableConfig(
             configurable={

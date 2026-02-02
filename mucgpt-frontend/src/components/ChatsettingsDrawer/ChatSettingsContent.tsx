@@ -57,6 +57,11 @@ export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt,
         [setReasoningEffort]
     );
 
+    // Helper to capitalize first letter
+    const capitalizeFirst = (str: string) => {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    };
+
     return (
         <div className={styles.actionSectionContent}>
             {/* System Prompt Section */}
@@ -160,7 +165,7 @@ export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt,
                         <Field size="large">
                             <Dropdown
                                 id={reasoningEffortID}
-                                value={reasoningEffort === undefined ? "Default" : reasoningEffort.charAt(0).toUpperCase() + reasoningEffort.slice(1)}
+                                value={reasoningEffort === undefined ? "Default" : capitalizeFirst(reasoningEffort)}
                                 selectedOptions={[reasoningEffort || "none"]}
                                 onOptionSelect={onReasoningEffortChange}
                             >

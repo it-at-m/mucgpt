@@ -163,6 +163,7 @@ export interface AssistantVersionResponse {
     system_prompt: string;
     hierarchical_access?: string[];
     creativity: string;
+    temperature?: number; // Deprecated: legacy support
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];

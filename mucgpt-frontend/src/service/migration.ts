@@ -40,7 +40,7 @@ export interface LegacyAssistant {
 /**
  * Convert old temperature values (0.0-1.0) to creativity levels
  */
-function convertTemperatureToCreativity(temperature: number): string {
+export function convertTemperatureToCreativity(temperature: number): string {
     if (temperature < 0.4) return "aus";
     if (temperature >= 0.8) return "hoch";
     return "normal";

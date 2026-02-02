@@ -47,13 +47,7 @@ export const AdvancedSettingsStep = ({
         <DialogContent>
             <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>
-                    <InfoLabel
-                        info={
-                            <div>
-                                {t("components.chattsettingsdrawer.creativity_info")}
-                            </div>
-                        }
-                    >
+                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>
                         {t("components.edit_assistant_dialog.creativity")}
                     </InfoLabel>
                 </label>

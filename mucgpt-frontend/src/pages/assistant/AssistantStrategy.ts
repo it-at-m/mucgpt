@@ -3,6 +3,7 @@ import { AssistantUpdateInput, Assistant } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { convertTemperatureToCreativity } from "../../service/migration";
 
 export interface AssistantStrategy {
     loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined>;
@@ -49,7 +50,7 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
             description: latest.description || "",
             system_message: latest.system_prompt,
             publish: true,
-            temperature: latest.temperature,
+            creativity: latest.creativity || (latest.temperature !== undefined ? convertTemperatureToCreativity(latest.temperature) : "normal"),
             default_model: latest.default_model,
             version: latest.version.toString(),
             examples: latest.examples || [],
@@ -84,7 +85,7 @@ export class DeletedCommunityAssistantStrategy implements AssistantStrategy {
             description: response?.description || "",
             system_message: "",
             publish: true,
-            temperature: 0,
+            creativity: "aus",
             version: "0",
             examples: [],
             quick_prompts: [],
@@ -117,7 +118,7 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             description: latest.description || "",
             system_message: latest.system_prompt,
             publish: true,
-            temperature: latest.temperature,
+            creativity: latest.creativity || (latest.temperature !== undefined ? convertTemperatureToCreativity(latest.temperature) : "normal"),
             default_model: latest.default_model,
             version: latest.version.toString(),
             examples: latest.examples,
@@ -140,7 +141,7 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             description: newAssistant.description,
             system_prompt: newAssistant.system_message,
             hierarchical_access: newAssistant.hierarchical_access,
-            temperature: newAssistant.temperature,
+            creativity: newAssistant.creativity,
             default_model: newAssistant.default_model,
             tools: newAssistant.tools || [],
             owner_ids: newAssistant.owner_ids,

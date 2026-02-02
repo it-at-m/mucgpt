@@ -63,7 +63,7 @@ export function buildAssistant(): AssistantCreateResponse {
             description: randomParagraph(3),
             system_prompt: `You are ${name}. ${randomSentence()} Antworte strukturiert und prägnant.`,
             hierarchical_access: ["POR-O"],
-            temperature: +(Math.random() * 1).toFixed(1),
+            creativity: randomOf(["aus", "normal", "hoch"]),
             default_model: undefined,
             is_visible: true,
             tools: [
@@ -128,7 +128,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
             description,
             system_prompt: overrides.latest_version?.system_prompt || `You are the ${name}. Provide excellent, clear, and structured assistance.`,
             hierarchical_access: overrides.latest_version?.hierarchical_access || ["ITM"],
-            temperature: overrides.latest_version?.temperature ?? Number((Math.random() * 1.5).toFixed(2)),
+            creativity: overrides.latest_version?.creativity ?? randomOf(["aus", "normal", "hoch"]),
             default_model: overrides.latest_version?.default_model,
             is_visible: overrides.latest_version?.is_visible !== undefined ? overrides.latest_version.is_visible : true,
             tools: overrides.latest_version?.tools || [

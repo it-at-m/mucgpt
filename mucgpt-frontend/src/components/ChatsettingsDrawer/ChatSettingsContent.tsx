@@ -92,13 +92,7 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
             <div className={styles.sectionContainer}>
                 <div className={styles.header} role="heading" aria-level={3} id={creativity_headerID}>
                     <div className={styles.headerContent}>
-                        <InfoLabel
-                            info={
-                                <div>
-                                    {t("components.chattsettingsdrawer.creativity_info")}
-                                </div>
-                            }
-                        >
+                        <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>
                             {t("components.chattsettingsdrawer.creativity")}
                         </InfoLabel>
                     </div>

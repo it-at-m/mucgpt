@@ -130,6 +130,12 @@ See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list 
 
 ### ⚙️ Configure the environment
 
+Configuration can be done in two ways:
+1. **Environment variables** (via `.env` file) - recommended for simple deployments
+2. **YAML configuration file** - recommended for complex deployments with multiple models
+
+#### Environment Variables Configuration
+
 Configuration can be found in form of an .env file
 
 ```bash
@@ -162,6 +168,47 @@ MUCGPT_CORE_MODELS='[
   }
 ]'
 ```
+
+#### YAML Configuration File (Recommended)
+
+Instead of using base64-encoded JSON in environment variables, you can use a YAML configuration file for easier model configuration. Create a `config.yaml` file in the service directory (e.g., `mucgpt-core-service/config.yaml`).
+
+Example `config.yaml` for the core service:
+
+```yaml
+# Core service configuration
+VERSION: "0.0.1"
+ENV_NAME: "MUCGPT"
+
+# Models configuration - much cleaner than JSON in environment variables!
+MODELS:
+  - type: "OPENAI"
+    llm_name: "<your-llm-name>"
+    endpoint: "<your-endpoint>"
+    api_key: "<your-sk>"
+    model_info:
+      auto_enrich_from_model_info_endpoint: true
+      max_output_tokens: 16384
+      max_input_tokens: 128000
+      description: "<description>"
+      input_cost_per_token: 0.00000009
+      output_cost_per_token: 0.00000036
+      supports_function_calling: true
+      supports_reasoning: false
+      supports_vision: true
+      litellm_provider: "<provider>"
+      inference_location: "<region>"
+      knowledge_cut_off: "2024-07-01"
+```
+
+See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/config.yaml.example` for complete examples.
+
+**Configuration Priority:**
+1. Environment variables (highest priority)
+2. YAML configuration file
+3. `.env` file (lowest priority)
+
+This means you can use YAML for most settings and override specific values with environment variables when needed.
 
 **Top-level fields:**
 

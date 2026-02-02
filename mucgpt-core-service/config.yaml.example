@@ -6,23 +6,25 @@
 # 1. Environment variables (MUCGPT_CORE_*)
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
+#
+# Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
 
 # General settings
-version: "0.0.1"
-log_config: "logconf.yaml"
+VERSION: "0.0.1"
+LOG_CONFIG: "logconf.yaml"
 
 # Frontend settings
-env_name: "MUCGPT"
-alternative_logo: false
-frontend_version: "unknown"
-assistant_version: "unknown"
+ENV_NAME: "MUCGPT"
+ALTERNATIVE_LOGO: false
+FRONTEND_VERSION: "unknown"
+ASSISTANT_VERSION: "unknown"
 
 # Backend settings
-unauthorized_user_redirect_url: ""
+UNAUTHORIZED_USER_REDIRECT_URL: ""
 
 # Models configuration
 # Instead of base64 encoded JSON in environment variables, you can configure models here
-models:
+MODELS:
   - type: "OPENAI"
     llm_name: "<your-llm-name>"
     deployment: ""
@@ -42,3 +44,25 @@ models:
       litellm_provider: "<provider>"
       inference_location: "<region>"
       knowledge_cut_off: "2024-07-01"
+
+# SSO Settings (optional - can also be configured via environment variables with MUCGPT_SSO_ prefix)
+# ROLE: "lhm-ab-mucgpt-user"
+
+# Langfuse Settings (optional - can also be configured via environment variables with MUCGPT_LANGFUSE_ prefix)
+# PUBLIC_KEY: "<your-public-key>"
+# SECRET_KEY: "<your-secret-key>"
+# HOST: "https://langfuse.example.com"
+
+# MCP Settings (optional - can also be configured via environment variables with MUCGPT_MCP_ prefix)
+# SOURCES:
+#   "ki in muenchen":
+#     url: "http://localhost:8088/sse"
+#     transport: "sse"
+#     forward_token: false
+# CACHE_TTL: 43200
+
+# Redis Settings (optional - can also be configured via environment variables with MUCGPT_REDIS_ prefix)
+# HOST: "redis"
+# PORT: 6379
+# USERNAME: "default"
+# PASSWORD: "password"

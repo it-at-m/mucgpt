@@ -6,14 +6,43 @@
 # 1. Environment variables (MUCGPT_ASSISTANT_*)
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
+#
+# Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
 
 # Database settings
-db_host: "postgres"
-db_port: 5432
-db_name: "postgres"
-db_user: "admin"
-db_password: "admin"
+DB_HOST: "postgres"
+DB_PORT: 5432
+DB_NAME: "postgres"
+DB_USER: "admin"
+DB_PASSWORD: "admin"
 
 # Backend settings
-unauthorized_user_redirect_url: ""
-log_config: "src/logconf.yaml"
+UNAUTHORIZED_USER_REDIRECT_URL: ""
+LOG_CONFIG: "src/logconf.yaml"
+
+# SSO Settings (optional - can also be configured via environment variables with MUCGPT_SSO_ prefix)
+# ROLE: "lhm-ab-mucgpt-user"
+
+# Redis Settings (optional - can also be configured via environment variables with MUCGPT_REDIS_ prefix)
+# HOST: "redis"
+# PORT: 6379
+# USERNAME: "default"
+# PASSWORD: "password"
+
+# LDAP Settings (optional - can also be configured via environment variables with MUCGPT_LDAP_ prefix)
+# ENABLED: true
+# HOST: "<ldap-host>"
+# PORT: 636
+# USE_SSL: true
+# START_TLS: false
+# VERIFY_SSL: true
+# CA_CERT_FILE: null
+# BIND_DN: "<bind-dn>"
+# BIND_PASSWORD: "<bind-password>"
+# SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+# SEARCH_FILTER: "(objectClass=organizationalUnit)"
+# DISPLAY_ATTRIBUTE: "ou"
+# PARENT_ATTRIBUTE: null
+# IGNORED_OU_PREFIXES: ["_"]
+# IGNORED_OU_SUFFIXES: ["-xxx"]
+# PAGE_SIZE: 500

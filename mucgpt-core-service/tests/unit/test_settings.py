@@ -1,6 +1,8 @@
 import json
 import os
+import tempfile
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -372,6 +374,73 @@ class TestSettings:
             mcp_settings = get_mcp_settings()
             assert mcp_settings.SOURCES is None
             assert mcp_settings.CACHE_TTL == 43200
+
+    def test_yaml_configuration_loading(self):
+        """Test that settings can be loaded from YAML configuration file."""
+        yaml_content = """
+VERSION: "yaml-test-1.0"
+ENV_NAME: "YAML_TEST"
+ALTERNATIVE_LOGO: true
+MODELS:
+  - type: "OPENAI"
+    llm_name: "yaml-test-model"
+    endpoint: "https://yaml.test.example.com"
+    api_key: "yaml-test-key"
+    model_info:
+      auto_enrich_from_model_info_endpoint: false
+      max_output_tokens: 2000
+      max_input_tokens: 4000
+      description: "YAML test model"
+"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "config.yaml"
+            config_path.write_text(yaml_content)
+
+            # Change to the temp directory so the config.yaml is found
+            original_dir = os.getcwd()
+            try:
+                os.chdir(tmpdir)
+                # Clear environment variables that might override
+                with patch.dict(os.environ, {}, clear=True):
+                    settings = Settings()
+                    assert settings.VERSION == "yaml-test-1.0"
+                    assert settings.ENV_NAME == "YAML_TEST"
+                    assert settings.ALTERNATIVE_LOGO is True
+                    assert len(settings.MODELS) == 1
+                    model = settings.MODELS[0]
+                    assert model.type == "OPENAI"
+                    assert model.llm_name == "yaml-test-model"
+                    assert model.max_output_tokens == 2000
+                    assert model.max_input_tokens == 4000
+                    assert model.description == "YAML test model"
+            finally:
+                os.chdir(original_dir)
+
+    def test_env_variables_override_yaml(self):
+        """Test that environment variables have priority over YAML configuration."""
+        yaml_content = """
+VERSION: "yaml-version"
+ENV_NAME: "YAML_ENV"
+"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "config.yaml"
+            config_path.write_text(yaml_content)
+
+            original_dir = os.getcwd()
+            try:
+                os.chdir(tmpdir)
+                # Environment variables should override YAML
+                with patch.dict(
+                    os.environ,
+                    {
+                        "MUCGPT_CORE_VERSION": "env-version",
+                    },
+                ):
+                    settings = Settings()
+                    assert settings.VERSION == "env-version"  # From env
+                    assert settings.ENV_NAME == "YAML_ENV"  # From YAML
+            finally:
+                os.chdir(original_dir)
 
     def teardown_method(self):
         """Clean up after each test."""

@@ -9,6 +9,7 @@ import {
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
 } from "./data/generators";
+import { CREATIVITY_HIGH } from "../constants";
 
 const DIRECTORY_TREE = [
     {
@@ -175,7 +176,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
             hierarchical_access: ["BAU", "POR"],
-            creativity: "high",
+            creativity: CREATIVITY_HIGH,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
             tools: [

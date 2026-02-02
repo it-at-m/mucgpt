@@ -47,7 +47,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     env_name: "MUC tschibidi-C",
     alternative_logo: true,
     core_version: "DEV 1.0.0",
-    frontend_version: "DEV 1.0.0"
+    frontend_version: "DEV 1.0.0",
+    assistant_version: "DEV 1.0.0"
 };
 
 export const CREATIVITY_LOW = "low";

@@ -1,5 +1,6 @@
 // Utility generators for mock data (no external libs)
 import { AssistantCreateResponse } from "../../api";
+import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../constants";
 
 const adjectives = ["Smart", "Agile", "Clever", "Helpful", "Trusted", "Adaptive", "Efficient", "Express", "Secure", "Eco"];
 const domains = ["Docs", "Mail", "Code", "Policy", "Legal", "Finance", "HR", "Support", "Data", "Research"];
@@ -63,7 +64,7 @@ export function buildAssistant(): AssistantCreateResponse {
             description: randomParagraph(3),
             system_prompt: `You are ${name}. ${randomSentence()} Antworte strukturiert und prägnant.`,
             hierarchical_access: ["POR-O"],
-            creativity: randomOf(["low", "medium", "high"]),
+            creativity: randomOf([CREATIVITY_LOW, CREATIVITY_MEDIUM, CREATIVITY_HIGH]),
             default_model: undefined,
             is_visible: true,
             tools: [
@@ -128,7 +129,7 @@ export function buildAssistantCreateResponse(overrides: Partial<AssistantCreateR
             description,
             system_prompt: overrides.latest_version?.system_prompt || `You are the ${name}. Provide excellent, clear, and structured assistance.`,
             hierarchical_access: overrides.latest_version?.hierarchical_access || ["ITM"],
-            creativity: overrides.latest_version?.creativity ?? randomOf(["low", "medium", "high"]),
+            creativity: overrides.latest_version?.creativity ?? randomOf([CREATIVITY_LOW, CREATIVITY_MEDIUM, CREATIVITY_HIGH]),
             default_model: overrides.latest_version?.default_model,
             is_visible: overrides.latest_version?.is_visible !== undefined ? overrides.latest_version.is_visible : true,
             tools: overrides.latest_version?.tools || [

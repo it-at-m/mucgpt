@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+from src.api.api_models import CREATIVITY_HIGH
 from src.database import path_matcher
 from src.database.assistant_repo import AssistantRepository
 
@@ -506,7 +507,7 @@ class TestAssistantRepository:
             name="Updated Assistant",
             system_prompt="Updated system prompt",
             description="Updated description",
-            creativity="high",
+            creativity=CREATIVITY_HIGH,
             examples=["Updated example"],
             quick_prompts=["Updated prompt"],
             tags=["updated"],

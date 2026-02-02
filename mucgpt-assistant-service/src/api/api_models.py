@@ -6,6 +6,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
 
+CREATIVITY_LOW = "low"
+CREATIVITY_MEDIUM = "medium"
+CREATIVITY_HIGH = "high"
+
 
 class ExampleModel(BaseModel):
     text: str = Field(
@@ -144,10 +148,10 @@ class AssistantBase(BaseModel):
         example=["department-underdepartment", "anotherdepartment"],
     )
     creativity: str = Field(
-        "medium",
-        description="Controls creativity/randomness in AI responses. Must be one of: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
-        pattern="^(low|medium|high)$",
-        example="medium",
+        CREATIVITY_MEDIUM,
+        description=f"Controls creativity/randomness in AI responses. Must be one of: '{CREATIVITY_LOW}' (conservative), '{CREATIVITY_MEDIUM}' (balanced), '{CREATIVITY_HIGH}' (creative)",
+        pattern=f"^({CREATIVITY_LOW}|{CREATIVITY_MEDIUM}|{CREATIVITY_HIGH})$",
+        example=CREATIVITY_MEDIUM,
     )
     default_model: str | None = Field(
         None,
@@ -212,7 +216,7 @@ class AssistantBase(BaseModel):
                     "department-underdepartment",
                     "anotherdepartment-underdepartment",
                 ],
-                "creativity": "medium",
+                "creativity": CREATIVITY_MEDIUM,
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -255,7 +259,7 @@ class AssistantCreate(AssistantBase):
                 "name": "Customer Service Assistant",
                 "description": "AI assistant for handling customer inquiries",
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
-                "creativity": "low",
+                "creativity": CREATIVITY_LOW,
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -321,9 +325,9 @@ class AssistantUpdate(BaseModel):
     )
     creativity: str | None = Field(
         None,
-        description="Controls creativity/randomness in AI responses. Must be one of: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
-        pattern="^(low|medium|high)$",
-        example="medium",
+        description=f"Controls creativity/randomness in AI responses. Must be one of: '{CREATIVITY_LOW}' (conservative), '{CREATIVITY_MEDIUM}' (balanced), '{CREATIVITY_HIGH}' (creative)",
+        pattern=f"^({CREATIVITY_LOW}|{CREATIVITY_MEDIUM}|{CREATIVITY_HIGH})$",
+        example=CREATIVITY_MEDIUM,
     )
     default_model: str | None = Field(
         None,
@@ -437,7 +441,7 @@ class AssistantResponse(BaseModel):
     )
     owner_ids: list[str] | None = Field(
         [],
-        description="List of ids who will own this assistant",
+        description="List of ids who will owner this assistant",
         example=["12345", "67890"],
     )
     subscriptions_count: int = Field(
@@ -471,7 +475,7 @@ class AssistantResponse(BaseModel):
                     "name": "Technical Support Assistant",
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                    "creativity": "medium",
+                    "creativity": CREATIVITY_MEDIUM,
                     "default_model": "gpt-4",
                     "tools": [
                         {

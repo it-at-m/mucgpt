@@ -210,6 +210,34 @@ See `mucgpt-core-service/config.yaml.example` and `mucgpt-assistant-service/conf
 
 This means you can use YAML for most settings and override specific values with environment variables when needed.
 
+#### Docker Compose Configuration
+
+When using the Docker Compose stack (in the `stack/` directory), configuration is done via YAML files that are mounted into the containers. This is the **recommended approach** for running MUCGPT with Docker.
+
+**Setup:**
+
+1. Copy the environment file for gateway settings:
+   ```bash
+   cd stack
+   cp .env.example .env
+   ```
+
+2. Edit the YAML configuration files:
+   - **core-service-config.yaml**: Configure your LLM models
+   - **assistant-service-config.yaml**: Configure database (defaults usually work)
+   - **shared-config.yaml**: Configure optional features (Redis, Langfuse, MCP, LDAP)
+
+3. Start the stack:
+   ```bash
+   docker compose up -d
+   # or with podman
+   podman compose up -d
+   ```
+
+The YAML files are mounted as read-only volumes in the containers, making it easy to update configurations without rebuilding images.
+
+📖 See [stack/README.md](stack/README.md) for detailed Docker Compose documentation.
+
 **Top-level fields:**
 
 - `type`: The provider type (e.g., `OPENAI`).

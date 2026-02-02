@@ -5,6 +5,7 @@ export type AskResponse = {
     answer: string;
     error?: string;
     tokens?: number;
+    reasoning_content?: string;
 };
 
 export type ChatResponse = {
@@ -12,6 +13,7 @@ export type ChatResponse = {
     error?: string;
     tokens?: number;
     user_tokens?: number;
+    reasoning_content?: string;
     activeTools?: Array<{
         name: string;
         message: string;
@@ -34,6 +36,7 @@ export type ChatRequest = {
     model?: string;
     enabled_tools?: string[];
     assistant_id?: string;
+    reasoning_effort?: "low" | "medium" | "high";
 };
 
 export type CreateAssistantRequest = {
@@ -80,6 +83,7 @@ export interface ToolCall {
 export interface ChatCompletionDelta {
     role?: "system" | "user" | "assistant";
     content?: string;
+    reasoning_content?: string;
     tool_calls?: ToolCall[];
 }
 

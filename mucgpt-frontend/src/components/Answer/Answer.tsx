@@ -7,7 +7,7 @@ import styles from "./Answer.module.css";
 import { AskResponse } from "../../api";
 import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
-import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular } from "@fluentui/react-icons";
+import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular, ChevronDown20Regular, ChevronRight20Regular } from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { QuickPromptList } from "../QuickPrompt/QuickPromptList";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
@@ -24,8 +24,10 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
     const [copied, setCopied] = useState<boolean>(false);
     const [formatted, setFormatted] = useState<boolean>(true);
     const [ref, setRef] = useState<HTMLElement | null>();
+    const [reasoningExpanded, setReasoningExpanded] = useState<boolean>(false);
 
     const [processedText, setProcessedText] = useState<string>("");
+    const [processedReasoning, setProcessedReasoning] = useState<string>("");
     const oncopy = useCallback(() => {
         setCopied(true);
         navigator.clipboard.writeText(answer.answer);
@@ -47,6 +49,20 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
                 .replace(/\\\)/g, "$$$") // Replace \) with $ (inline math end)
         );
     }, [answer.answer]); // Run this effect only when the message changes
+
+    useEffect(() => {
+        if (answer.reasoning_content === "" || answer.reasoning_content === undefined) {
+            setProcessedReasoning("");
+            return;
+        }
+        setProcessedReasoning(
+            answer.reasoning_content
+                .replace(/\\\[/g, "$$$")
+                .replace(/\\\]/g, "$$$")
+                .replace(/\\\(/g, "$$$")
+                .replace(/\\\)/g, "$$$")
+        );
+    }, [answer.reasoning_content]);
 
     return (
         <Stack className={styles.answerContainer} verticalAlign="space-between">
@@ -99,6 +115,29 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
             </Stack.Item>
 
             <Stack.Item className={styles.growItem} grow>
+                {/* Reasoning Section - Show if reasoning content exists */}
+                {processedReasoning && (
+                    <div style={{ marginBottom: "16px", borderLeft: "3px solid #0078d4", paddingLeft: "12px", backgroundColor: "#f3f2f1" }}>
+                        <div
+                            onClick={() => setReasoningExpanded(!reasoningExpanded)}
+                            style={{ cursor: "pointer", padding: "8px", display: "flex", alignItems: "center", fontWeight: "600" }}
+                        >
+                            {reasoningExpanded ? <ChevronDown20Regular /> : <ChevronRight20Regular />}
+                            <span style={{ marginLeft: "8px" }}>Reasoning</span>
+                        </div>
+                        {reasoningExpanded && (
+                            <div style={{ padding: "8px", fontSize: "0.9em", color: "#605e5c" }}>
+                                {formatted ? (
+                                    <MarkdownRenderer>{processedReasoning}</MarkdownRenderer>
+                                ) : (
+                                    <div style={{ whiteSpace: "pre-wrap" }}>{processedReasoning}</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Answer Section */}
                 {formatted && (
                     <div className={styles.answerText}>
                         <MarkdownRenderer>{processedText}</MarkdownRenderer>

@@ -44,6 +44,12 @@ export const AdvancedSettingsStep = ({
         [onDefaultModelChange, onHasChanged]
     );
 
+    const creativityMap: Record<string, string> = {
+        [CREATIVITY_LOW]: t("components.edit_assistant_dialog.creativity_low"),
+        [CREATIVITY_MEDIUM]: t("components.edit_assistant_dialog.creativity_medium"),
+        [CREATIVITY_HIGH]: t("components.edit_assistant_dialog.creativity_high")
+    };
+
     return (
         <DialogContent>
             <Field size="large" className={sharedStyles.fieldSection}>
@@ -54,7 +60,7 @@ export const AdvancedSettingsStep = ({
                 </label>
                 <Dropdown
                     placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
-                    value={creativity}
+                    value={creativityMap[creativity] || creativity}
                     selectedOptions={[creativity]}
                     onOptionSelect={onCreativityChangeHandler}
                     disabled={!isOwner}

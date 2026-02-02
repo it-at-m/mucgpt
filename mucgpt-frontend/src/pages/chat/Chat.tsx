@@ -11,7 +11,7 @@ import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
-import { CHAT_STORE } from "../../constants";
+import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
@@ -110,7 +110,7 @@ const Chat = () => {
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
-        creativity: "low",
+        creativity: CREATIVITY_LOW,
         systemPrompt: "",
         active_chat: undefined,
         allChats: []
@@ -408,7 +408,7 @@ const Chat = () => {
                     isLoadingRef.current = false;
                 });
         } else {
-            // Normal initialization without URL parameter
+            // Normal initialization ohne URL-Parameter
             storageService
                 .getNewestChat()
                 .then(existingData => {

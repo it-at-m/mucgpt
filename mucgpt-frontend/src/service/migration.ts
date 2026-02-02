@@ -1,6 +1,6 @@
 import { IDBPDatabase, IDBPTransaction } from "idb";
 import { ChatResponse } from "../api";
-import { ASSISTANT_STORE, CHAT_STORE, LEGACY_ASSISTANT_STORE } from "../constants";
+import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM, LEGACY_ASSISTANT_STORE } from "../constants";
 import { ChatOptions } from "../pages/chat/Chat";
 import { AssistantStorageService } from "./assistantstorage";
 import { DBObject, StorageService } from "./storage";
@@ -23,9 +23,9 @@ interface LegacyChatObject {
  * Convert legacy chat options with temperature to creativity
  */
 function convertChatOptionsToCreativity(temperature: number): string {
-    if (temperature < 0.4) return "low";
-    if (temperature >= 0.8) return "high";
-    return "medium";
+    if (temperature < 0.4) return CREATIVITY_LOW;
+    if (temperature >= 0.8) return CREATIVITY_HIGH;
+    return CREATIVITY_MEDIUM;
 }
 
 export interface LegacyAssistant {
@@ -41,9 +41,9 @@ export interface LegacyAssistant {
  * Convert old temperature values (0.0-1.0) to creativity levels
  */
 export function convertTemperatureToCreativity(temperature: number): string {
-    if (temperature < 0.4) return "low";
-    if (temperature >= 0.8) return "high";
-    return "medium";
+    if (temperature < 0.4) return CREATIVITY_LOW;
+    if (temperature >= 0.8) return CREATIVITY_HIGH;
+    return CREATIVITY_MEDIUM;
 }
 
 export async function migrate_old_assistants() {

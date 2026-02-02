@@ -8,7 +8,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE } from "../../constants";
+import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
@@ -40,7 +40,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Combined states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
-        creativity: "low",
+        creativity: CREATIVITY_LOW,
         systemPrompt: "",
         active_chat: undefined,
         allChats: []

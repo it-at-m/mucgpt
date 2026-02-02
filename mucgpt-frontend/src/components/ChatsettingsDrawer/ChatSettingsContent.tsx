@@ -4,6 +4,7 @@ import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeDat
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../constants";
 
 interface Props {
     creativity: string;
@@ -108,13 +109,13 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                             id={creativityID}
                             aria-labelledby={creativity_headerID}
                         >
-                            <Option key="low" value="low">
+                            <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
                                 {t("components.edit_assistant_dialog.creativity_low")}
                             </Option>
-                            <Option key="medium" value="medium">
+                            <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
                                 {t("components.edit_assistant_dialog.creativity_medium")}
                             </Option>
-                            <Option key="high" value="high">
+                            <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
                                 {t("components.edit_assistant_dialog.creativity_high")}
                             </Option>
                         </Dropdown>

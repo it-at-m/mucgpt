@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { Assistant, ToolInfo } from "../../../api";
-import { ASSISTANT_STORE } from "../../../constants";
+import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../../constants";
 import { AssistantStorageService } from "../../../service/assistantstorage";
 import { createAssistantApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
@@ -203,7 +203,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     description: importedData.description || "",
                     system_message: importedData.system_message,
                     publish: false,
-                    creativity: importedData.creativity || "low",
+                    creativity: importedData.creativity || CREATIVITY_LOW,
                     default_model: importedData.default_model ?? defaultModel,
                     quick_prompts: importedData.quick_prompts || [],
                     examples: importedData.examples || [],

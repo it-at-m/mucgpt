@@ -3,6 +3,7 @@ import { ToolBase } from "../../../../api";
 import { QuickPrompt } from "../../../QuickPrompt/QuickPrompt";
 import { ExampleModel } from "../../../Example";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
+import { CREATIVITY_LOW } from "../../../../constants";
 
 export const useCreateAssistantState = () => {
     // Context
@@ -17,7 +18,7 @@ export const useCreateAssistantState = () => {
     const [tools, setTools] = useState<ToolBase[]>([]);
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
     const [examples, setExamples] = useState<ExampleModel[]>([]);
-    const [creativity, setCreativity] = useState<string>("low");
+    const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(LLM.llm_name);
 
     // Track if user has made any changes
@@ -30,7 +31,7 @@ export const useCreateAssistantState = () => {
             tools.length > 0 ||
             quickPrompts.length > 0 ||
             examples.length > 0 ||
-            creativity !== "low" ||
+            creativity !== CREATIVITY_LOW ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
     }, [input, title, description, systemPrompt, tools, quickPrompts, examples, creativity, defaultModel, LLM.llm_name]);

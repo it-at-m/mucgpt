@@ -4,15 +4,41 @@ from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field, SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
 
 
 class SSOSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_SSO_",
         extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
     ROLE: str = "lhm-ab-mucgpt-user"
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
 
 
 class Settings(BaseSettings):
@@ -27,13 +53,39 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
         env_prefix="MUCGPT_ASSISTANT_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
 
 
 class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_REDIS_",
         case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
 
     HOST: str | None = None
@@ -41,12 +93,33 @@ class RedisSettings(BaseSettings):
     USERNAME: str | None = None
     PASSWORD: str | None = None
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
+
 
 class LDAPSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_LDAP_",
         case_sensitive=False,
         extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
 
     ENABLED: bool = False
@@ -71,6 +144,22 @@ class LDAPSettings(BaseSettings):
     PAGE_SIZE: int = 500
     CONNECT_TIMEOUT: float = 5.0
     READ_TIMEOUT: float = 10.0
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
 
 
 @lru_cache(maxsize=1)

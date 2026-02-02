@@ -1,0 +1,19 @@
+# Assistant Service Configuration
+# This file provides an example YAML configuration for the MUCGPT assistant service.
+# You can use this instead of environment variables.
+#
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_ASSISTANT_*)
+# 2. YAML configuration file (this file, when named config.yaml)
+# 3. .env file
+
+# Database settings
+db_host: "postgres"
+db_port: 5432
+db_name: "postgres"
+db_user: "admin"
+db_password: "admin"
+
+# Backend settings
+unauthorized_user_redirect_url: ""
+log_config: "src/logconf.yaml"

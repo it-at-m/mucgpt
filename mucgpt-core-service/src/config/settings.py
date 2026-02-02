@@ -17,7 +17,13 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    CliSettingsSource,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
 
@@ -223,8 +229,29 @@ class SSOSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_SSO_",
         extra="ignore",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
     ROLE: str = "lhm-ab-mucgpt-user"
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
 
 
 class LangfuseSettings(BaseSettings):
@@ -232,14 +259,43 @@ class LangfuseSettings(BaseSettings):
         env_prefix="MUCGPT_LANGFUSE_",
         extra="ignore",
         case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
     PUBLIC_KEY: str | None = None
     SECRET_KEY: str | None = None
     HOST: str | None = None
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
+
 
 class MCPSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="MUCGPT_MCP_", case_sensitive=False)
+    model_config = SettingsConfigDict(
+        env_prefix="MUCGPT_MCP_",
+        case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
+    )
 
     class MCPSource(BaseModel):
         url: str
@@ -249,16 +305,53 @@ class MCPSettings(BaseSettings):
     SOURCES: dict[str, MCPSource] | None = None
     CACHE_TTL: int = 12 * 60 * 60  # 12h in s
 
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
+
 
 class RedisSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="MUCGPT_REDIS_",
         case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
     HOST: str | None = None
     PORT: int = 6379
     USERNAME: str | None = None
     PASSWORD: str | None = None
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
 
 
 class Settings(BaseSettings):
@@ -266,6 +359,13 @@ class Settings(BaseSettings):
         env_prefix="MUCGPT_CORE_",
         extra="ignore",
         case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        env_nested_delimiter="__",
+        nested_model_default_partial_update=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
     # General settings
     VERSION: str = Field(default="")
@@ -280,6 +380,23 @@ class Settings(BaseSettings):
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: List[ModelsConfig] = []
+
+    # Customize settings sources to prioritize YAML config
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            dotenv_settings,
+        )
 
 
 def enrich_model_metadata(model: ModelsConfig) -> None:

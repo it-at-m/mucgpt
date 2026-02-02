@@ -1,0 +1,44 @@
+# Core Service Configuration
+# This file provides an example YAML configuration for the MUCGPT core service.
+# You can use this instead of environment variables or base64 encoded JSON.
+#
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_CORE_*)
+# 2. YAML configuration file (this file, when named config.yaml)
+# 3. .env file
+
+# General settings
+version: "0.0.1"
+log_config: "logconf.yaml"
+
+# Frontend settings
+env_name: "MUCGPT"
+alternative_logo: false
+frontend_version: "unknown"
+assistant_version: "unknown"
+
+# Backend settings
+unauthorized_user_redirect_url: ""
+
+# Models configuration
+# Instead of base64 encoded JSON in environment variables, you can configure models here
+models:
+  - type: "OPENAI"
+    llm_name: "<your-llm-name>"
+    deployment: ""
+    endpoint: "<your-endpoint>"
+    api_key: "<your-sk>"
+    api_version: ""
+    model_info:
+      auto_enrich_from_model_info_endpoint: true
+      max_output_tokens: 16384
+      max_input_tokens: 128000
+      description: "<description>"
+      input_cost_per_token: 0.00000009
+      output_cost_per_token: 0.00000036
+      supports_function_calling: true
+      supports_reasoning: false
+      supports_vision: true
+      litellm_provider: "<provider>"
+      inference_location: "<region>"
+      knowledge_cut_off: "2024-07-01"

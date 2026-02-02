@@ -251,13 +251,23 @@ class ModelsConfig(BaseModel):
 
         # Use model-specific temperature if configured, otherwise use default
         if creativity == "low":
-            return self.model_info.creativity_low_temperature or default_temps["low"]
+            return (
+                self.model_info.creativity_low_temperature
+                if self.model_info.creativity_low_temperature is not None
+                else default_temps["low"]
+            )
         elif creativity == "medium":
             return (
-                self.model_info.creativity_medium_temperature or default_temps["medium"]
+                self.model_info.creativity_medium_temperature
+                if self.model_info.creativity_medium_temperature is not None
+                else default_temps["medium"]
             )
         else:  # high
-            return self.model_info.creativity_high_temperature or default_temps["high"]
+            return (
+                self.model_info.creativity_high_temperature
+                if self.model_info.creativity_high_temperature is not None
+                else default_temps["high"]
+            )
 
 
 class SSOSettings(BaseSettings):

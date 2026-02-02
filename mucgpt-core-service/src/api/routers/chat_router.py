@@ -54,17 +54,17 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
             )
             default_temps = {
                 "low": 0.0,
-                "medium": 0.7,
+                "medium": 0.5,
                 "high": 1.0,
             }
-            return default_temps.get(request.creativity, 0.7)
+            return default_temps.get(request.creativity, 0.5)
 
     # Fall back to temperature if provided (backward compatibility)
     if request.temperature is not None:
         return request.temperature
 
     # Default temperature
-    return 0.7
+    return 0.5
 
 
 @router.post(

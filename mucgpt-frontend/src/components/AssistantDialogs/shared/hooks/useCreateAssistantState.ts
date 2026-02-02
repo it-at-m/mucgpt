@@ -103,7 +103,7 @@ export const useCreateAssistantState = () => {
         setTools([]);
         setQuickPrompts([]);
         setExamples([]);
-        setCreativity("medium");
+        setCreativity(CREATIVITY_LOW);
         setDefaultModel(LLM.llm_name);
     }, [LLM.llm_name]);
 

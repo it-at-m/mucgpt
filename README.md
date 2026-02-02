@@ -158,8 +158,8 @@ MUCGPT_CORE_MODELS='[
       "supports_vision": true,
       "litellm_provider": "<provider>",
       "inference_location": "<region>",
-      "creativity_low_temperature": 0.2,
-      "creativity_medium_temperature": 0.6,
+      "creativity_low_temperature": 0.0,
+      "creativity_medium_temperature": 0.5,
       "creativity_high_temperature": 1.0
     }
   }

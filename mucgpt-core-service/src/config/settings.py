@@ -322,6 +322,15 @@ class Settings(BaseSettings):
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: List[ModelsConfig] = []
 
+    @field_validator("VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before")
+    @staticmethod
+    def parse_version(value: str) -> str:
+        """Parse version string to extract only the version number before @sha256."""
+        if not isinstance(value, str):
+            return value
+        # Split by '@' and take the first part to remove the sha256 hash
+        return value.split("@")[0]
+
 
 def enrich_model_metadata(model: ModelsConfig) -> None:
     """Populate missing metadata for a model via the remote info endpoint."""

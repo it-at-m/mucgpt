@@ -40,7 +40,7 @@ const createMockAssistant = (): Assistant => ({
     system_message: "",
     publish: false,
     id: "0",
-    creativity: "normal",
+    creativity: "medium",
     version: "0",
     owner_ids: [],
     tags: [],

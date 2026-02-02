@@ -22,30 +22,30 @@ def upgrade() -> None:
     # Add new creativity column with default value
     op.add_column(
         "assistant_versions",
-        sa.Column("creativity", sa.String(10), nullable=True, server_default="normal"),
+        sa.Column("creativity", sa.String(10), nullable=True, server_default="medium"),
     )
-    
+
     # Convert existing temperature values to creativity levels
-    # Low temperature (0.0 - 0.4) -> "aus"
-    # Medium temperature (0.4 - 0.8) -> "normal"
-    # High temperature (0.8 - 2.0) -> "hoch"
+    # Low temperature (0.0 - 0.4) -> "low"
+    # Medium temperature (0.4 - 0.8) -> "medium"
+    # High temperature (0.8 - 2.0) -> "high"
     connection = op.get_bind()
     connection.execute(
         sa.text(
             """
             UPDATE assistant_versions
             SET creativity = CASE
-                WHEN temperature < 0.4 THEN 'aus'
-                WHEN temperature >= 0.8 THEN 'hoch'
-                ELSE 'normal'
+                WHEN temperature < 0.4 THEN 'low'
+                WHEN temperature >= 0.8 THEN 'high'
+                ELSE 'medium'
             END
             """
         )
     )
-    
+
     # Make creativity non-nullable
     op.alter_column("assistant_versions", "creativity", nullable=False)
-    
+
     # Drop the old temperature column
     op.drop_column("assistant_versions", "temperature")
 
@@ -56,7 +56,7 @@ def downgrade() -> None:
         "assistant_versions",
         sa.Column("temperature", sa.Float(), nullable=True, server_default="0.7"),
     )
-    
+
     # Convert creativity levels back to temperature values
     connection = op.get_bind()
     connection.execute(
@@ -65,15 +65,15 @@ def downgrade() -> None:
             UPDATE assistant_versions
             SET temperature = CASE
                 WHEN creativity = 'aus' THEN 0.0
-                WHEN creativity = 'hoch' THEN 1.0
+                WHEN creativity = 'high' THEN 1.0
                 ELSE 0.7
             END
             """
         )
     )
-    
+
     # Make temperature non-nullable
     op.alter_column("assistant_versions", "temperature", nullable=False)
-    
+
     # Drop the creativity column
     op.drop_column("assistant_versions", "creativity")

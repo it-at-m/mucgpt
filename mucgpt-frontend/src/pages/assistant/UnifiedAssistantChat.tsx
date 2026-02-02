@@ -40,7 +40,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Combined states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
-        creativity: "normal",
+        creativity: "low",
         systemPrompt: "",
         active_chat: undefined,
         allChats: []
@@ -99,7 +99,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         description: "Beschreibung",
         publish: false,
         system_message: "",
-        creativity: "normal",
+        creativity: "medium",
         quick_prompts: [],
         examples: [],
         version: "0",

@@ -506,7 +506,7 @@ class TestAssistantRepository:
             name="Updated Assistant",
             system_prompt="Updated system prompt",
             description="Updated description",
-            creativity="hoch",
+            creativity="high",
             examples=["Updated example"],
             quick_prompts=["Updated prompt"],
             tags=["updated"],

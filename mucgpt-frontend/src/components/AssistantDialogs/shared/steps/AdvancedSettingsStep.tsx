@@ -58,14 +58,14 @@ export const AdvancedSettingsStep = ({
                     onOptionSelect={onCreativityChangeHandler}
                     disabled={!isOwner}
                 >
-                    <Option key="aus" value="aus">
-                        {t("components.edit_assistant_dialog.creativity_aus")}
+                    <Option key="low" value="low">
+                        {t("components.edit_assistant_dialog.creativity_low")}
                     </Option>
-                    <Option key="normal" value="normal">
-                        {t("components.edit_assistant_dialog.creativity_normal")}
+                    <Option key="medium" value="medium">
+                        {t("components.edit_assistant_dialog.creativity_medium")}
                     </Option>
-                    <Option key="hoch" value="hoch">
-                        {t("components.edit_assistant_dialog.creativity_hoch")}
+                    <Option key="high" value="high">
+                        {t("components.edit_assistant_dialog.creativity_high")}
                     </Option>
                 </Dropdown>
             </Field>

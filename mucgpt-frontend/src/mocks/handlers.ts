@@ -140,7 +140,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "A specialized research assistant that always uses the KICCGPT model for consistent, high-quality responses.",
             system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
-            creativity: "aus",
+            creativity: "low",
             default_model: "KICCGPT",
             is_visible: true,
             tools: [
@@ -175,7 +175,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
             hierarchical_access: ["BAU", "POR"],
-            creativity: "hoch",
+            creativity: "high",
             default_model: "gpt-3.5-turbo",
             is_visible: true,
             tools: [

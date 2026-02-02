@@ -144,10 +144,10 @@ class AssistantBase(BaseModel):
         example=["department-underdepartment", "anotherdepartment"],
     )
     creativity: str = Field(
-        "normal",
-        description="Controls creativity/randomness in AI responses. Must be one of: 'aus' (conservative), 'normal' (balanced), 'hoch' (creative)",
-        pattern="^(aus|normal|hoch)$",
-        example="normal",
+        "medium",
+        description="Controls creativity/randomness in AI responses. Must be one of: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
+        pattern="^(low|medium|high)$",
+        example="medium",
     )
     default_model: str | None = Field(
         None,
@@ -212,7 +212,7 @@ class AssistantBase(BaseModel):
                     "department-underdepartment",
                     "anotherdepartment-underdepartment",
                 ],
-                "creativity": "normal",
+                "creativity": "medium",
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -255,7 +255,7 @@ class AssistantCreate(AssistantBase):
                 "name": "Customer Service Assistant",
                 "description": "AI assistant for handling customer inquiries",
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
-                "creativity": "aus",
+                "creativity": "low",
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -321,9 +321,9 @@ class AssistantUpdate(BaseModel):
     )
     creativity: str | None = Field(
         None,
-        description="Controls creativity/randomness in AI responses. Must be one of: 'aus' (conservative), 'normal' (balanced), 'hoch' (creative)",
-        pattern="^(aus|normal|hoch)$",
-        example="normal",
+        description="Controls creativity/randomness in AI responses. Must be one of: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
+        pattern="^(low|medium|high)$",
+        example="medium",
     )
     default_model: str | None = Field(
         None,
@@ -471,7 +471,7 @@ class AssistantResponse(BaseModel):
                     "name": "Technical Support Assistant",
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                    "creativity": "normal",
+                    "creativity": "medium",
                     "default_model": "gpt-4",
                     "tools": [
                         {

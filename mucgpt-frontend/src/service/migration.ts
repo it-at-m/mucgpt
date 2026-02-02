@@ -23,9 +23,9 @@ interface LegacyChatObject {
  * Convert legacy chat options with temperature to creativity
  */
 function convertChatOptionsToCreativity(temperature: number): string {
-    if (temperature < 0.4) return "aus";
-    if (temperature >= 0.8) return "hoch";
-    return "normal";
+    if (temperature < 0.4) return "low";
+    if (temperature >= 0.8) return "high";
+    return "medium";
 }
 
 export interface LegacyAssistant {
@@ -41,9 +41,9 @@ export interface LegacyAssistant {
  * Convert old temperature values (0.0-1.0) to creativity levels
  */
 export function convertTemperatureToCreativity(temperature: number): string {
-    if (temperature < 0.4) return "aus";
-    if (temperature >= 0.8) return "hoch";
-    return "normal";
+    if (temperature < 0.4) return "low";
+    if (temperature >= 0.8) return "high";
+    return "medium";
 }
 
 export async function migrate_old_assistants() {

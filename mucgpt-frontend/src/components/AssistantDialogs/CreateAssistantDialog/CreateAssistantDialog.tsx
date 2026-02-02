@@ -203,7 +203,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     description: importedData.description || "",
                     system_message: importedData.system_message,
                     publish: false,
-                    creativity: importedData.creativity || "normal",
+                    creativity: importedData.creativity || "low",
                     default_model: importedData.default_model ?? defaultModel,
                     quick_prompts: importedData.quick_prompts || [],
                     examples: importedData.examples || [],

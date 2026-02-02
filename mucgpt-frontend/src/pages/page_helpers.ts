@@ -450,7 +450,7 @@ export const makeApiRequest = async (
 export type ChatState<A> = {
     /** Array of chat messages/answers in the current conversation */
     answers: DBMessage<any>[];
-    /** Creativity setting for AI response randomness ("aus" = deterministic, "normal" = balanced, "hoch" = creative) */
+    /** Creativity setting for AI response randomness ("low" = deterministic, "medium" = balanced, "high" = creative) */
     creativity: string;
     /** System prompt that defines the AI's behavior and personality */
     systemPrompt: string;

@@ -73,7 +73,7 @@ class AssistantVersion(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text)
     system_prompt = Column(Text, nullable=False)
-    creativity = Column(String(10), default="normal")
+    creativity = Column(String(10), default="medium")
     default_model = Column(String(255), nullable=True)
     examples = Column(JSON, nullable=True)
     quick_prompts = Column(JSON, nullable=True)

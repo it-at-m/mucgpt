@@ -24,10 +24,10 @@ router = APIRouter(prefix="/v1")
 
 def get_temperature_from_request(request: ChatCompletionRequest) -> float:
     """Convert creativity to temperature based on the selected model.
-    
+
     Args:
         request: The chat completion request
-        
+
     Returns:
         The temperature value to use for the LLM call
     """
@@ -36,34 +36,33 @@ def get_temperature_from_request(request: ChatCompletionRequest) -> float:
         settings = get_settings()
         # Find the model configuration
         model_config = next(
-            (m for m in settings.MODELS if m.llm_name == request.model),
-            None
+            (m for m in settings.MODELS if m.llm_name == request.model), None
         )
-        
+
         if model_config:
             try:
                 return model_config.get_temperature_for_creativity(request.creativity)
             except ValueError:
                 logger.warning(
-                    f"Invalid creativity level '{request.creativity}', using default 'normal'"
+                    f"Invalid creativity level '{request.creativity}', using default 'medium'"
                 )
-                return model_config.get_temperature_for_creativity("normal")
+                return model_config.get_temperature_for_creativity("medium")
         else:
             # Model not found, use default mapping
             logger.warning(
                 f"Model '{request.model}' not found in configuration, using default temperature mapping"
             )
             default_temps = {
-                "aus": 0.0,
-                "normal": 0.7,
-                "hoch": 1.0,
+                "low": 0.0,
+                "medium": 0.7,
+                "high": 1.0,
             }
             return default_temps.get(request.creativity, 0.7)
-    
+
     # Fall back to temperature if provided (backward compatibility)
     if request.temperature is not None:
         return request.temperature
-    
+
     # Default temperature
     return 0.7
 
@@ -89,7 +88,7 @@ async def chat_completions(
     try:
         # Convert creativity to temperature
         temperature = get_temperature_from_request(request)
-        
+
         # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = request.enabled_tools or []
         if request.stream:

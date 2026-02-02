@@ -110,7 +110,7 @@ const Chat = () => {
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
-        creativity: "normal",
+        creativity: "low",
         systemPrompt: "",
         active_chat: undefined,
         allChats: []

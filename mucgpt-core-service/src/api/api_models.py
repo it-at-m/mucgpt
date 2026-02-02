@@ -70,7 +70,7 @@ class ChatCompletionRequest(BaseModel):
     )
     creativity: Optional[str] = Field(
         None,
-        description="Creativity level: 'aus' (conservative), 'medium' (balanced), 'high' (creative)",
+        description="Creativity level: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
     )
     max_tokens: Optional[int] = Field(4096, description="Maximum tokens to generate")
     stream: Optional[bool] = Field(

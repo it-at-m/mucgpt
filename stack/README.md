@@ -154,15 +154,62 @@ See [DEVELOPMENT.md](../docs/DEVELOPMENT.md) for details on local development se
 
 ## Configuration
 
-Environment variables are defined in `.env` file. Key variables:
+The stack uses **YAML configuration files** for service-specific settings, making it easier to configure models and services without dealing with complex JSON in environment variables.
 
-- **Proxy Settings**: `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`
-- **SSO/Auth**: `MUCGPT_SSO_*` (Keycloak configuration)
-- **SSL/TLS**: `SSL_CERT_FILE`, `CA_BUNDLE_PATH`
-- **Models**: `MUCGPT_CORE_MODELS` (LLM configuration)
-- **MCP**: `MUCGPT_MCP_SOURCES` (Model Context Protocol sources)
+### Configuration Files
 
-📖 See the [main README](../README.md#️-configure-the-environment) for complete configuration documentation.
+1. **core-service-config.yaml** - Core service configuration (models, frontend settings)
+2. **assistant-service-config.yaml** - Assistant service configuration (database, backend settings)
+3. **shared-config.yaml** - Shared configuration (SSO, Redis, Langfuse, MCP, LDAP)
+4. **.env** - Infrastructure settings (gateway, proxies, SSL)
+
+### Quick Setup
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit the YAML configuration files with your settings:
+   - **core-service-config.yaml**: Configure your LLM models
+   - **assistant-service-config.yaml**: Configure database connection (usually defaults work)
+   - **shared-config.yaml**: Uncomment and configure optional features (Redis, Langfuse, MCP, LDAP)
+
+3. Edit `.env` for gateway settings:
+   - SSO/Keycloak configuration
+   - Proxy settings (if needed)
+   - SSL/TLS certificates (if needed)
+
+### Example: Configuring LLM Models
+
+Instead of this complex JSON in environment variables:
+```bash
+MUCGPT_CORE_MODELS='[{"type": "OPENAI", "llm_name": "gpt-4", ...}]'
+```
+
+Simply edit **core-service-config.yaml**:
+```yaml
+MODELS:
+  - type: "OPENAI"
+    llm_name: "gpt-4"
+    endpoint: "https://api.openai.com/v1"
+    api_key: "sk-..."
+    model_info:
+      max_output_tokens: 16384
+      max_input_tokens: 128000
+      description: "GPT-4 model"
+```
+
+### Configuration Priority
+
+Settings are loaded in this order (highest priority first):
+1. **Environment variables** - Can override any YAML setting
+2. **YAML configuration files** - Main configuration source
+3. **.env file** - Infrastructure defaults
+
+This means you can use YAML for most settings and still override specific values with environment variables when needed.
+
+📖 See the [main README](../README.md#️-configure-the-environment) for detailed configuration documentation.
 
 ## Technical Details
 

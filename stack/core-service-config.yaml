@@ -1,0 +1,48 @@
+# Core Service Configuration for Docker Compose Stack
+# This file is mounted into the core-service container at /app/config.yaml
+#
+# Note: Use UPPERCASE field names because case_sensitive=False in settings
+
+# General settings
+VERSION: "0.0.1"
+LOG_CONFIG: "logconf.yaml"
+
+# Frontend settings
+ENV_NAME: "MUCGPT"
+ALTERNATIVE_LOGO: false
+FRONTEND_VERSION: "0.0.1"
+ASSISTANT_VERSION: "0.0.1"
+
+# Backend settings
+UNAUTHORIZED_USER_REDIRECT_URL: ""
+
+# Models configuration
+# Configure your LLM models here instead of using base64-encoded JSON in environment variables
+MODELS:
+  - type: "OPENAI"
+    llm_name: "<your-llm-name>"
+    deployment: ""
+    endpoint: "<your-endpoint>"
+    api_key: "<your-sk>"
+    api_version: ""
+    model_info:
+      auto_enrich_from_model_info_endpoint: true
+      max_output_tokens: 16384
+      max_input_tokens: 128000
+      description: "<description>"
+      input_cost_per_token: 0.00000009
+      output_cost_per_token: 0.00000036
+      supports_function_calling: true
+      supports_reasoning: false
+      supports_vision: true
+      litellm_provider: "<provider>"
+      inference_location: "<region>"
+      knowledge_cut_off: "2024-07-01"
+
+# Additional models can be added here as list items:
+# - type: "AZURE"
+#   llm_name: "<another-model>"
+#   endpoint: "<another-endpoint>"
+#   api_key: "<another-key>"
+#   model_info:
+#     # ... model info ...

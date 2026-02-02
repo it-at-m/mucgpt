@@ -187,6 +187,9 @@ services:
       - LOG_LEVEL_MUCGPT_CORE_AGENT=INFO
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
+      # Mount YAML configuration files (recommended over environment variables)
+      - ./core-service-config.yaml:/app/config.yaml:ro
+      - ./shared-config.yaml:/app/shared-config.yaml:ro
 
   assistant-migrations:
     build:
@@ -202,6 +205,10 @@ services:
     networks:
       - internal
     restart: "no" # Run once and exit
+    volumes:
+      # Mount YAML configuration file for database settings
+      - ./assistant-service-config.yaml:/app/config.yaml:ro
+      - ./shared-config.yaml:/app/shared-config.yaml:ro
 
   assistant-service:
     build:
@@ -234,6 +241,10 @@ services:
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "curl http://localhost:8084/api/health"]
+    volumes:
+      # Mount YAML configuration files (recommended over environment variables)
+      - ./assistant-service-config.yaml:/app/config.yaml:ro
+      - ./shared-config.yaml:/app/shared-config.yaml:ro
 
   frontend:
     build:

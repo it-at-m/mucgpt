@@ -1,0 +1,15 @@
+# Assistant Service Configuration for Docker Compose Stack
+# This file is mounted into the assistant-service container at /app/config.yaml
+#
+# Note: Use UPPERCASE field names because case_sensitive=False in settings
+
+# Database settings
+DB_HOST: "postgres"
+DB_PORT: 5432
+DB_NAME: "postgres"
+DB_USER: "admin"
+DB_PASSWORD: "admin"
+
+# Backend settings
+UNAUTHORIZED_USER_REDIRECT_URL: ""
+LOG_CONFIG: "src/logconf.yaml"

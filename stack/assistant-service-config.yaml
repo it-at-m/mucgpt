@@ -4,11 +4,13 @@
 # Note: Use UPPERCASE field names because case_sensitive=False in settings
 
 # Database settings
+# Note: For docker-compose stack, these defaults match the postgres service configuration
+# For production, use secure credentials and consider environment variable overrides
 DB_HOST: "postgres"
 DB_PORT: 5432
 DB_NAME: "postgres"
 DB_USER: "admin"
-DB_PASSWORD: "admin"
+DB_PASSWORD: "admin"  # Change this for production! Or use MUCGPT_ASSISTANT_DB_PASSWORD env var
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""

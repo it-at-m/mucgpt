@@ -18,12 +18,14 @@ UNAUTHORIZED_USER_REDIRECT_URL: ""
 
 # Models configuration
 # Configure your LLM models here instead of using base64-encoded JSON in environment variables
+# IMPORTANT: Replace placeholder values with your actual configuration
+# Consider using environment variables for sensitive data like API keys
 MODELS:
   - type: "OPENAI"
     llm_name: "<your-llm-name>"
     deployment: ""
     endpoint: "<your-endpoint>"
-    api_key: "<your-sk>"
+    api_key: "<your-sk>"  # IMPORTANT: Replace with actual API key or use MUCGPT_CORE_MODELS env var
     api_version: ""
     model_info:
       auto_enrich_from_model_info_endpoint: true

@@ -240,7 +240,7 @@ class ModelsConfig(BaseModel):
         # Default temperature values if not configured
         default_temps = {
             "low": 0.0,
-            "medium": 0.7,
+            "medium": 0.5,
             "high": 1.0,
         }
 

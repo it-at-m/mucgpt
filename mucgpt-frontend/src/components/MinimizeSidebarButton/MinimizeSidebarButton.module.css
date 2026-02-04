@@ -1,0 +1,9 @@
+.hideOnDesktop {
+    display: inline-flex;
+}
+
+@media (min-width: 771px) {
+    .hideOnDesktop {
+        display: none !important;
+    }
+}

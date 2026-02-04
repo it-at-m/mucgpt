@@ -25,6 +25,9 @@ import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { Settings24Regular } from "@fluentui/react-icons";
+import { Button } from "@fluentui/react-components";
+import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -90,8 +93,8 @@ const Chat = () => {
     const { setHeader } = useContext(HeaderContext);
     const headerTitle = t("header.chat");
     useEffect(() => {
-        setHeader(headerTitle);
-    }, [setHeader, headerTitle]);
+        setHeader("");
+    }, [setHeader]);
     const { tools } = useToolsContext();
 
     // Independent states
@@ -106,6 +109,7 @@ const Chat = () => {
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -617,39 +621,43 @@ const Chat = () => {
         [creativity, systemPrompt, onCreativityChanged, onSystemPromptChanged]
     );
 
-    const sidebar = useMemo(
-        () => (
-            <Sidebar
-                actions={sidebar_actions}
-                content={
-                    <>
-                        {sidebar_chat_settings}
-                        {sidebar_history}
-                    </>
-                }
-            ></Sidebar>
-        ),
-        [sidebar_actions, sidebar_history, sidebar_chat_settings]
-    );
+    const sidebar = useMemo(() => <Sidebar actions={sidebar_actions} content={<>{sidebar_history}</>}></Sidebar>, [sidebar_actions, sidebar_history]);
     const layout = useMemo(
         () => (
             <>
+                <ChatSettingsDialog
+                    open={isSettingsOpen}
+                    onOpenChange={setIsSettingsOpen}
+                    creativity={creativity}
+                    setCreativity={onCreativityChanged}
+                    systemPrompt={systemPrompt}
+                    setSystemPrompt={onSystemPromptChanged}
+                />
                 <ChatLayout
                     sidebar={sidebar}
                     examples={examplesComponent}
                     answers={answerList}
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
-                    header={t("chat.header")}
+                    header="Chat"
+                    welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? "large" : "none"}
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setAndStoreShowSidebar(true)}
+                    onToggleMinimized={() => setAndStoreShowSidebar(!showSidebar)}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    actions={
+                        <Button
+                            appearance="subtle"
+                            icon={<Settings24Regular />}
+                            onClick={() => setIsSettingsOpen(true)}
+                            aria-label={t("components.chattsettingsdrawer.title")}
+                        />
+                    }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -667,7 +675,12 @@ const Chat = () => {
             LLM.llm_name,
             onLLMSelectionChange,
             clearChat,
-            isLoadingRef.current
+            isLoadingRef.current,
+            isSettingsOpen,
+            creativity,
+            onCreativityChanged,
+            systemPrompt,
+            onSystemPromptChanged
         ]
     );
 

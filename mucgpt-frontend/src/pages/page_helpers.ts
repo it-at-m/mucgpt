@@ -240,7 +240,7 @@ export const makeApiRequest = async (
         history: [...history, { user: question, assistant: undefined }],
         shouldStream: true, // Enable streaming for real-time responses
         language: language,
-        temperature: options.temperature,
+        creativity: options.creativity,
         system_message: options.system ?? "",
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
@@ -428,7 +428,7 @@ export const makeApiRequest = async (
         await storageService.appendMessage(finalMessage, activeChatRef.current, options);
     } else {
         // Create a new chat with generated name
-        const chatname = await createChatName(question, finalResponse.answer, language, options.temperature, options.system ?? "", LLM.llm_name);
+        const chatname = await createChatName(question, finalResponse.answer, language, options.creativity, options.system ?? "", LLM.llm_name);
 
         // Create chat with assistant-specific ID if assistant_id is provided, otherwise use regular UUID
         const id = assistant_id
@@ -450,8 +450,8 @@ export const makeApiRequest = async (
 export type ChatState<A> = {
     /** Array of chat messages/answers in the current conversation */
     answers: DBMessage<any>[];
-    /** Temperature setting for AI response randomness (0.0 = deterministic, 1.0 = creative) */
-    temperature: number;
+    /** Creativity setting for AI response randomness ("low" = deterministic, "medium" = balanced, "high" = creative) */
+    creativity: string;
     /** System prompt that defines the AI's behavior and personality */
     systemPrompt: string;
     /** ID of the currently active chat conversation */
@@ -471,7 +471,7 @@ export type ChatAction<A> =
     | { type: "ADD_ANSWER"; payload: ChatMessage }
     | { type: "UPDATE_LAST_ANSWER"; payload: ChatMessage }
     | { type: "CLEAR_ANSWERS" }
-    | { type: "SET_TEMPERATURE"; payload: number }
+    | { type: "SET_CREATIVITY"; payload: string }
     | { type: "SET_SYSTEM_PROMPT"; payload: string }
     | { type: "SET_ACTIVE_CHAT"; payload: string | undefined }
     | { type: "SET_ALL_CHATS"; payload: DBObject<ChatResponse, A>[] };
@@ -502,9 +502,9 @@ export function getChatReducer<A>() {
             case "CLEAR_ANSWERS":
                 // Remove all messages from the current conversation
                 return { ...state, answers: [] };
-            case "SET_TEMPERATURE":
-                // Update the AI temperature setting
-                return { ...state, temperature: action.payload };
+            case "SET_CREATIVITY":
+                // Update the AI creativity setting
+                return { ...state, creativity: action.payload };
             case "SET_SYSTEM_PROMPT":
                 // Update the system prompt that guides AI behavior
                 return { ...state, systemPrompt: action.payload };

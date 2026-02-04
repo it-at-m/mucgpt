@@ -157,7 +157,10 @@ MUCGPT_CORE_MODELS='[
       "supports_reasoning": false,
       "supports_vision": true,
       "litellm_provider": "<provider>",
-      "inference_location": "<region>"
+      "inference_location": "<region>",
+      "creativity_low_temperature": 0.0,
+      "creativity_medium_temperature": 0.5,
+      "creativity_high_temperature": 1.0
     }
   }
 ]'
@@ -181,6 +184,7 @@ MUCGPT_CORE_MODELS='[
 - `supports_function_calling`, `supports_reasoning`, `supports_vision`: Capability flags advertised to the UI.
 - `litellm_provider`: Provider identifier reported by LiteLLM.
 - `inference_location`: Region or deployment location for the model.
+- `creativity_{low,medium,high}_temperature`: Map abstract creativity levels to specific `temperature` values (0.0 - 1.0 or higher depending on model). Defaults are low=0.0, medium=0.5, high=1.0.
 
 Replace the placeholder values with your actual model configuration.
 
@@ -229,7 +233,6 @@ MUCGPT_SSO_ROLE=lhm-ab-mucgpt-user
 - The role required to access MUCGPT defaults to `lhm-ab-mucgpt-user` (configurable via `MUCGPT_SSO_ROLE`).
 - The API Gateway handles OpenID Connect login, token issuance, and validation; services receive a validated access token.
 - The access token includes the user’s `department` claim, which is combined with the LDAP organization tree to scope assistant publishing and access.
-
 
 #### MCP (optional)
 

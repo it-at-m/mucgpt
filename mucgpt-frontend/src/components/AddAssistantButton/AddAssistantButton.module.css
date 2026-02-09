@@ -7,9 +7,10 @@
 }
 
 .button {
-    background: var(--onSurface) !important;
-    color: var(--surface) !important;
+    background: var(--onPrimary) !important;
+    color: var(--primary) !important;
     border: none !important;
+    border-radius: 12px !important;
 }
 
 .button:hover {

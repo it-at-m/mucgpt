@@ -1,0 +1,337 @@
+.pageWrapper {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    bottom: 0;
+    background-color: var(--colorNeutralBackground1);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.flexContainer {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    justify-content: center;
+}
+
+.mainContent {
+    flex: 1;
+    padding: 48px 32px 80px 32px;
+    min-width: 0;
+    transition: width 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+    overflow-y: auto;
+    height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--surface);
+}
+
+.mainContent::-webkit-scrollbar,
+.drawerBody::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mainContent::-webkit-scrollbar-track,
+.drawerBody::-webkit-scrollbar-track {
+    background: var(--surface);
+}
+
+.mainContent::-webkit-scrollbar-thumb,
+.drawerBody::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 10px;
+}
+
+.drawerBody {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) var(--onPrimary);
+}
+
+.contentWrapper {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.headerSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.titleBlock {
+    display: flex;
+    flex-direction: column;
+}
+
+.actionBlock {
+    margin-bottom: 8px;
+}
+
+.header {
+    margin-bottom: 8px;
+    color: var(--colorNeutralForeground1);
+    display: block;
+    font-size: 30px !important;
+    line-height: 36px !important;
+    font-weight: bold !important;
+}
+
+.subtitle {
+    color: var(--colorNeutralForeground2);
+    display: block;
+    margin-bottom: 0;
+    font-size: 18px !important;
+}
+
+.toolbarSection {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 24px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+}
+
+.searchBox {
+    flex-grow: 1;
+    max-width: 600px;
+    border-radius: 12px !important;
+    background-color: var(--primary);
+}
+
+.sortSection {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.sortIcon,
+.sortLabel {
+    color: var(--colorNeutralForeground2);
+}
+
+.sortLabel {
+    white-space: nowrap;
+}
+
+.sortDropdown {
+    min-width: 150px;
+    border-radius: 12px !important;
+    background-color: var(--primary);
+}
+
+.assistantsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 8px 0;
+}
+
+.creativityBadge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background-color: var(--colorNeutralBackground3);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    width: fit-content;
+    border: 1px solid var(--colorNeutralStroke2);
+    margin: 0 auto 24px auto;
+}
+
+.startButtonWrapper {
+    margin-bottom: 32px;
+    display: flex;
+}
+
+.startConversationButton {
+    width: 100%;
+    border-radius: 10px !important;
+}
+
+.sidebarSection {
+    margin-bottom: 32px;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--colorNeutralForeground2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.sectionIcon {
+    font-size: 16px;
+}
+
+.aboutText {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--colorNeutralForeground1);
+    white-space: pre-wrap;
+}
+
+.toolList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.toolPill {
+    padding: 4px 10px;
+    background-color: var(--colorNeutralBackground3);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+.systemPromptContainer {
+    background-color: var(--colorNeutralBackground1);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
+.promptText {
+    font-size: 13px;
+    color: var(--colorNeutralForeground2);
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.inlineDrawer {
+    border-left: 1px solid var(--primary) !important;
+    border-right: none;
+    border-bottom: none;
+    background-color: var(--colorNeutralBackground1);
+    width: 400px !important;
+    box-sizing: border-box;
+    position: relative !important;
+    height: 100% !important;
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+@media (max-width: 1200px) {
+    .inlineDrawer {
+        width: 320px !important;
+    }
+}
+
+.headerContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.closeButtonContainer {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+}
+
+.sidebarTitle {
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+    font-size: 24px;
+    margin-bottom: 16px;
+    line-height: 1.2;
+}
+
+@media (max-width: 1400px) {
+    .assistantsGrid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .mainContent {
+        padding: 24px;
+    }
+
+    .assistantsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.noResults {
+    text-align: center;
+    padding: 60px;
+    color: var(--colorNeutralForeground2);
+}
+
+.loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 80px;
+    min-height: 300px;
+}
+
+@media (max-width: 650px) {
+    .assistantsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 24px 16px 16px 16px;
+    }
+
+    .searchContainer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .searchBox {
+        max-width: 100%;
+    }
+
+    .headerSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .actionBlock {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 1100px) {
+    .flexContainer[data-drawer-open="true"] .assistantsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .flexContainer[data-drawer-open="true"] .mainContent {
+        display: none;
+    }
+
+    .flexContainer[data-drawer-open="true"] .inlineDrawer {
+        width: 100% !important;
+        border-left: none !important;
+    }
+}

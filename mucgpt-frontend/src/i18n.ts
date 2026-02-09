@@ -558,6 +558,10 @@ i18n
                             selectButton: "Auswählen"
                         }
                     },
+                    discovery: {
+                        title: "Assistenten entdecken",
+                        subtitle: "Optimiere deinen Workflow mit spezialisierten KI-Agenten."
+                    },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE,
                     ...faqTranslation.DE
@@ -1095,6 +1099,10 @@ i18n
                             price: "Price",
                             selectButton: "Select"
                         }
+                    },
+                    discovery: {
+                        title: "Discover Assistants",
+                        subtitle: "Supercharge your workflow with specialized AI agents."
                     },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN,
@@ -1638,6 +1646,10 @@ i18n
                             price: "Preis",
                             selectButton: "Auswähln"
                         }
+                    },
+                    discovery: {
+                        title: "Assistentn entdeckn",
+                        subtitle: "Optimier dein Workflow mit spezialisierten KI-Agenten."
                     },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA,
@@ -2185,6 +2197,10 @@ i18n
                             selectButton: "Sélectionner"
                         }
                     },
+                    discovery: {
+                        title: "Découvrir les Assistants",
+                        subtitle: "Boostez votre flux de travail avec des agents IA spécialisés."
+                    },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR,
                     ...faqTranslation.FR
@@ -2724,6 +2740,10 @@ i18n
                             price: "Ціна",
                             selectButton: "Обрати"
                         }
+                    },
+                    discovery: {
+                        title: "Відкрийте асистентів",
+                        subtitle: "Прискорте свою роботу за допомогою спеціалізованих ШІ-агентів."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK,

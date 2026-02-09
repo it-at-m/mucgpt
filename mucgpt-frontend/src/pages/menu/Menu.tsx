@@ -257,7 +257,7 @@ const Menu = () => {
                                             onClick={() => onShareAssistant(assistant.id)}
                                             aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
                                         >
-                                            <ShareIos24Regular aria-hidden /> Teilen
+                                            <ShareIos24Regular aria-hidden /> {t("menu.share", "Teilen")}
                                         </Button>
                                     }
                                 />
@@ -294,7 +294,7 @@ const Menu = () => {
                                             onClick={() => onShareAssistant(assistant.id)}
                                             aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
                                         >
-                                            <ShareIos24Regular aria-hidden /> Teilen
+                                            <ShareIos24Regular aria-hidden /> {t("menu.share", "Teilen")}
                                         </Button>
                                     }
                                 />

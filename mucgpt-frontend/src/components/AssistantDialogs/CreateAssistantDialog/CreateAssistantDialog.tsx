@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { ToolInfo } from "../../../api";
+import { CREATIVITY_LOW } from "../../../constants";
 import { createAssistantApi } from "../../../api/core-client";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
@@ -55,14 +56,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         tools,
         quickPrompts,
         examples,
-        temperature,
+        creativity,
         defaultModel,
         hasChanges,
         updateInput,
         updateTitle,
         updateDescription,
         updateSystemPrompt,
-        updateTemperature,
+        updateCreativity,
         updateDefaultModel,
         updateTools,
         updateTemplate,
@@ -106,7 +107,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 name: assistantTitle,
                 description: assistantDescription,
                 system_prompt: systemPrompt,
-                temperature: temperature,
+                creativity: creativity,
                 default_model: defaultModel,
                 tools: tools || [],
                 owner_ids: ["0"],
@@ -134,7 +135,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         } finally {
             setLoading(false);
         }
-    }, [loading, title, description, systemPrompt, temperature, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [loading, title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -209,7 +210,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     name: importedData.title,
                     description: importedData.description || "",
                     system_prompt: importedData.system_message,
-                    temperature: importedData.temperature ?? 0.7,
+                    creativity: importedData.creativity || CREATIVITY_LOW,
                     default_model: importedData.default_model ?? defaultModel,
                     tools: importedData.tools || [],
                     owner_ids: ["0"],
@@ -450,10 +451,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             <Stepper steps={steps} currentStep={currentStep} />
                             <div className={sharedStyles.scrollableDialogContent}>
                                 <AdvancedSettingsStep
-                                    temperature={temperature}
+                                    creativity={creativity}
                                     defaultModel={defaultModel}
                                     isOwner={true}
-                                    onTemperatureChange={updateTemperature}
+                                    onCreativityChange={updateCreativity}
                                     onDefaultModelChange={updateDefaultModel}
                                 />
                             </div>
@@ -509,8 +510,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setQuickPrompts,
         examples,
         setExamples,
-        temperature,
-        updateTemperature,
+        creativity,
+        updateCreativity,
         hasChanges,
         onCancelButtonClicked,
         onPromptButtonClicked

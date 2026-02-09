@@ -65,7 +65,13 @@ class ChatCompletionRequest(BaseModel):
     messages: List[ChatCompletionMessage] = Field(
         ..., description="Sequence of messages in the conversation"
     )
-    temperature: Optional[float] = Field(0.7, description="Sampling temperature")
+    temperature: Optional[float] = Field(
+        None, description="[DEPRECATED] Sampling temperature - use creativity instead"
+    )
+    creativity: Optional[str] = Field(
+        None,
+        description="Creativity level: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
+    )
     max_tokens: Optional[int] = Field(4096, description="Maximum tokens to generate")
     stream: Optional[bool] = Field(
         False, description="Whether to stream partial responses back"
@@ -84,7 +90,7 @@ class ChatCompletionRequest(BaseModel):
                     {"role": "system", "content": "You are concise."},
                     {"role": "user", "content": "Explain test driven development."},
                 ],
-                "temperature": 0.5,
+                "creativity": "medium",
                 "max_tokens": 300,
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],

@@ -1,6 +1,6 @@
 import { IDBPDatabase, IDBPTransaction } from "idb";
 import { ChatResponse } from "../api";
-import { ASSISTANT_STORE, CHAT_STORE, LEGACY_ASSISTANT_STORE } from "../constants";
+import { ASSISTANT_STORE, CHAT_STORE, CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM, LEGACY_ASSISTANT_STORE } from "../constants";
 import { ChatOptions } from "../pages/chat/Chat";
 import { AssistantStorageService } from "./assistantstorage";
 import { DBObject, StorageService } from "./storage";
@@ -19,6 +19,15 @@ interface LegacyChatObject {
     };
 }
 
+/**
+ * Convert legacy chat options with temperature to creativity
+ */
+function convertChatOptionsToCreativity(temperature: number): string {
+    if (temperature < 0.4) return CREATIVITY_LOW;
+    if (temperature >= 0.8) return CREATIVITY_HIGH;
+    return CREATIVITY_MEDIUM;
+}
+
 export interface LegacyAssistant {
     title: string;
     description: string;
@@ -27,6 +36,16 @@ export interface LegacyAssistant {
     id: number;
     temperature: number;
 }
+
+/**
+ * Convert old temperature values (0.0-1.0) to creativity levels
+ */
+export function convertTemperatureToCreativity(temperature: number): string {
+    if (temperature < 0.4) return CREATIVITY_LOW;
+    if (temperature >= 0.8) return CREATIVITY_HIGH;
+    return CREATIVITY_MEDIUM;
+}
+
 export async function migrate_old_assistants() {
     const legacy_store = new StorageService<any, any>(LEGACY_ASSISTANT_STORE);
     const db = await legacy_store.connectToDB();
@@ -41,7 +60,7 @@ export async function migrate_old_assistants() {
                 description: oldassistant.description,
                 system_message: oldassistant.system_message,
                 publish: oldassistant.publish,
-                temperature: oldassistant.temperature,
+                creativity: convertTemperatureToCreativity(oldassistant.temperature),
                 version: "0", // Set a default version for new assistants
                 is_visible: true
             };
@@ -75,7 +94,7 @@ export async function migrateChats(
                         }),
                         config: {
                             system: chat.Options.system,
-                            temperature: chat.Options.temperature
+                            creativity: convertChatOptionsToCreativity(chat.Options.temperature)
                         },
                         _last_edited: chat.Data.LastEdited,
                         id: chat.id,

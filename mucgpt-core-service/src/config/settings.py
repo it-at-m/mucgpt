@@ -275,133 +275,49 @@ class ModelsConfig(BaseModel):
             )
 
 
-class SSOSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_SSO_",
-        extra="ignore",
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_ignore_empty=True,
-        yaml_file="config.yaml",
-        yaml_file_encoding="utf-8",
-    )
+class SSOConfig(BaseModel):
+    """SSO configuration (nested under SSO key in YAML)."""
+
     ROLE: str = "lhm-ab-mucgpt-user"
 
-    @classmethod
-    def settings_customise_sources(
-        cls,
-        settings_cls: type[BaseSettings],
-        init_settings: PydanticBaseSettingsSource,
-        env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource,
-    ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (
-            init_settings,
-            env_settings,
-            YamlConfigSettingsSource(settings_cls),
-            dotenv_settings,
-        )
 
+class LangfuseConfig(BaseModel):
+    """Langfuse configuration (nested under LANGFUSE key in YAML)."""
 
-class LangfuseSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_LANGFUSE_",
-        extra="ignore",
-        case_sensitive=False,
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_ignore_empty=True,
-        yaml_file="config.yaml",
-        yaml_file_encoding="utf-8",
-    )
     PUBLIC_KEY: str | None = None
-    SECRET_KEY: str | None = None
+    SECRET_KEY: SecretStr | None = None
     HOST: str | None = None
 
-    @classmethod
-    def settings_customise_sources(
-        cls,
-        settings_cls: type[BaseSettings],
-        init_settings: PydanticBaseSettingsSource,
-        env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource,
-    ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (
-            init_settings,
-            env_settings,
-            YamlConfigSettingsSource(settings_cls),
-            dotenv_settings,
-        )
+
+class MCPSourceConfig(BaseModel):
+    """Single MCP source configuration."""
+
+    url: str
+    transport: MCPTransport
+    forward_token: bool = False
 
 
-class MCPSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_MCP_",
-        case_sensitive=False,
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_ignore_empty=True,
-        yaml_file="config.yaml",
-        yaml_file_encoding="utf-8",
-    )
+class MCPConfig(BaseModel):
+    """MCP configuration (nested under MCP key in YAML)."""
 
-    class MCPSource(BaseModel):
-        url: str
-        transport: MCPTransport
-        forward_token: bool = False
-
-    SOURCES: dict[str, MCPSource] | None = None
+    SOURCES: dict[str, MCPSourceConfig] | None = None
     CACHE_TTL: int = 12 * 60 * 60  # 12h in s
 
-    @classmethod
-    def settings_customise_sources(
-        cls,
-        settings_cls: type[BaseSettings],
-        init_settings: PydanticBaseSettingsSource,
-        env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource,
-    ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (
-            init_settings,
-            env_settings,
-            YamlConfigSettingsSource(settings_cls),
-            dotenv_settings,
-        )
 
+class RedisConfig(BaseModel):
+    """Redis configuration (nested under REDIS key in YAML)."""
 
-class RedisSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_REDIS_",
-        case_sensitive=False,
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_ignore_empty=True,
-        yaml_file="config.yaml",
-        yaml_file_encoding="utf-8",
-    )
     HOST: str | None = None
     PORT: int = 6379
     USERNAME: str | None = None
-    PASSWORD: str | None = None
+    PASSWORD: SecretStr | None = None
 
-    @classmethod
-    def settings_customise_sources(
-        cls,
-        settings_cls: type[BaseSettings],
-        init_settings: PydanticBaseSettingsSource,
-        env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource,
-    ) -> tuple[PydanticBaseSettingsSource, ...]:
-        return (
-            init_settings,
-            env_settings,
-            YamlConfigSettingsSource(settings_cls),
-            dotenv_settings,
-        )
+
+# Backward-compatible aliases
+SSOSettings = SSOConfig
+LangfuseSettings = LangfuseConfig
+MCPSettings = MCPConfig
+RedisSettings = RedisConfig
 
 
 class Settings(BaseSettings):
@@ -431,6 +347,12 @@ class Settings(BaseSettings):
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: List[ModelsConfig] = []
 
+    # Nested sub-configurations
+    SSO: SSOConfig = Field(default_factory=SSOConfig)
+    LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
+    MCP: MCPConfig = Field(default_factory=MCPConfig)
+    REDIS: RedisConfig = Field(default_factory=RedisConfig)
+
     # Customize settings sources to prioritize YAML config
     @classmethod
     def settings_customise_sources(
@@ -445,6 +367,7 @@ class Settings(BaseSettings):
             init_settings,
             env_settings,
             YamlConfigSettingsSource(settings_cls),
+            YamlConfigSettingsSource(settings_cls, yaml_file="shared-config.yaml"),
             dotenv_settings,
         )
 
@@ -737,10 +660,9 @@ def _match_model_entry(
 
 
 @lru_cache(maxsize=1)
-def get_langfuse_settings() -> LangfuseSettings:
+def get_langfuse_settings() -> LangfuseConfig:
     """Return cached Langfuse Settings instance."""
-    langfuse_settings = LangfuseSettings()
-    return langfuse_settings
+    return get_settings().LANGFUSE
 
 
 @lru_cache(maxsize=1)
@@ -751,21 +673,18 @@ def get_settings() -> Settings:
 
 
 @lru_cache(maxsize=1)
-def get_sso_settings() -> SSOSettings:
+def get_sso_settings() -> SSOConfig:
     """Return cached SSO Settings instance."""
-    sso_settings = SSOSettings()
-    return sso_settings
+    return get_settings().SSO
 
 
 @lru_cache(maxsize=1)
-def get_mcp_settings() -> MCPSettings:
+def get_mcp_settings() -> MCPConfig:
     """Return cached MCP Settings instance."""
-    mcp_settings = MCPSettings()
-    return mcp_settings
+    return get_settings().MCP
 
 
 @lru_cache(maxsize=1)
-def get_redis_settings() -> RedisSettings:
+def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
-    redis_settings = RedisSettings()
-    return redis_settings
+    return get_settings().REDIS

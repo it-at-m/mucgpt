@@ -13,11 +13,15 @@ This directory contains the Docker Compose configuration for running the complet
 
 **Steps:**
 
-1. Configure environment variables:
+1. Copy and configure the config files:
 
    ```powershell
    cp .env.example .env
-   # Edit .env with your settings (see main README for configuration details)
+   cp core.config.yaml.example core.config.yaml
+   cp assistant.config.yaml.example assistant.config.yaml
+   # Edit core.config.yaml with your LLM model settings
+   # Edit assistant.config.yaml if you need non-default DB/LDAP settings
+   # Edit .env for proxy/SSL settings (if needed)
    ```
 
 2. Start the stack:
@@ -154,62 +158,117 @@ See [DEVELOPMENT.md](../docs/DEVELOPMENT.md) for details on local development se
 
 ## Configuration
 
-The stack uses **YAML configuration files** for service-specific settings, making it easier to configure models and services without dealing with complex JSON in environment variables.
+The stack uses **YAML configuration files** as the primary configuration source, with environment variables available as overrides. Each service has its own `config.yaml` mounted into the container.
 
 ### Configuration Files
 
-1. **core-service-config.yaml** - Core service configuration (models, frontend settings)
-2. **assistant-service-config.yaml** - Assistant service configuration (database, backend settings)
-3. **shared-config.yaml** - Shared configuration (SSO, Redis, Langfuse, MCP, LDAP)
-4. **.env** - Infrastructure settings (gateway, proxies, SSL)
+| File | Mounted to | Used by | Purpose |
+|------|-----------|---------|---------|
+| `core.config.yaml` | `/app/config.yaml` | core-service | Models, Langfuse, MCP, Redis, SSO |
+| `assistant.config.yaml` | `/app/config.yaml` | assistant-service, assistant-migrations | Database, Redis, LDAP, SSO |
+| `.env` | env vars | all services | Proxies, SSL, infrastructure overrides |
 
 ### Quick Setup
 
-1. Copy the example environment file:
-   ```bash
+1. Copy the example files:
+
+   ```powershell
    cp .env.example .env
+   cp core..config.yaml.example core.config.yaml
+   cp assistant.config.yaml.example assistant.config.yaml
    ```
 
-2. Edit the YAML configuration files with your settings:
-   - **core-service-config.yaml**: Configure your LLM models
-   - **assistant-service-config.yaml**: Configure database connection (usually defaults work)
-   - **shared-config.yaml**: Uncomment and configure optional features (Redis, Langfuse, MCP, LDAP)
+2. Edit `core.config.yaml` – configure your LLM models and optional features:
 
-3. Edit `.env` for gateway settings:
-   - SSO/Keycloak configuration
-   - Proxy settings (if needed)
-   - SSL/TLS certificates (if needed)
+   ```yaml
+   MODELS:
+     - type: "OPENAI"
+       llm_name: "gpt-4.1"
+       endpoint: "https://your-endpoint.example.com/v1"
+       api_key: "sk-..."
+       model_info:
+         auto_enrich_from_model_info_endpoint: true
 
-### Example: Configuring LLM Models
+   REDIS:
+     HOST: "valkey"
+     PORT: 6379
 
-Instead of this complex JSON in environment variables:
+   LANGFUSE:
+     HOST: "https://your-langfuse-host.example.com"
+     PUBLIC_KEY: "pk-lf-..."
+     SECRET_KEY: "sk-lf-..."
+
+   MCP:
+     SOURCES:
+       "my-mcp-server":
+         url: "http://mcpdoc-server:8088/sse"
+         transport: "sse"
+   ```
+
+3. Edit `assistant.config.yaml` – configure database and optional LDAP:
+
+   ```yaml
+   DB:
+     HOST: "postgres"
+     PORT: 5432
+     NAME: "postgres"
+     USER: "admin"
+     PASSWORD: "admin"
+
+   REDIS:
+     HOST: "valkey"
+     PORT: 6379
+
+   LDAP:
+     ENABLED: false
+   ```
+
+4. Edit `.env` for proxy/SSL settings (if needed).
+
+5. Start the stack:
+
+   ```powershell
+   podman compose up -d
+   ```
+
+### Environment Variable Overrides
+
+Any YAML setting can be overridden with environment variables. The services use **nested delimiters** (`__`) to map to YAML sections:
+
+| Service | Env Prefix | Example |
+|---------|-----------|---------|
+| **core-service** | `MUCGPT_CORE_` | `MUCGPT_CORE_REDIS__HOST=valkey` |
+| **assistant-service** | `MUCGPT_ASSISTANT_` | `MUCGPT_ASSISTANT_DB__HOST=postgres` |
+| **assistant-migrations** | `MUCGPT_ASSISTANT_` | (same as assistant-service) |
+
+**Mapping rules:**
+
+- Top-level fields: `MUCGPT_CORE_VERSION=1.0.0` → `VERSION: "1.0.0"`
+- Nested fields use `__`: `MUCGPT_ASSISTANT_DB__PASSWORD=secret` → `DB: { PASSWORD: "secret" }`
+- Nested Redis: `MUCGPT_CORE_REDIS__HOST=valkey` → `REDIS: { HOST: "valkey" }`
+
+**Examples – set via `.env` or container `environment:`:**
+
 ```bash
-MUCGPT_CORE_MODELS='[{"type": "OPENAI", "llm_name": "gpt-4", ...}]'
-```
+# Override assistant database password (nested under DB section)
+MUCGPT_ASSISTANT_DB__PASSWORD=my-secure-password
 
-Simply edit **core-service-config.yaml**:
-```yaml
-MODELS:
-  - type: "OPENAI"
-    llm_name: "gpt-4"
-    endpoint: "https://api.openai.com/v1"
-    api_key: "sk-..."
-    model_info:
-      max_output_tokens: 16384
-      max_input_tokens: 128000
-      description: "GPT-4 model"
+# Override core Redis host (nested under REDIS section)
+MUCGPT_CORE_REDIS__HOST=my-redis-host
+
+# Override core Langfuse secret key (nested under LANGFUSE section)
+MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-lf-...
 ```
 
 ### Configuration Priority
 
-Settings are loaded in this order (highest priority first):
-1. **Environment variables** - Can override any YAML setting
-2. **YAML configuration files** - Main configuration source
-3. **.env file** - Infrastructure defaults
+Settings are loaded in this order (highest priority wins):
 
-This means you can use YAML for most settings and still override specific values with environment variables when needed.
+1. **Constructor / init** – used in tests
+2. **Environment variables** – including `.env` file, uses `__` for nesting
+3. **YAML config file** – `config.yaml` mounted into each container
 
-📖 See the [main README](../README.md#️-configure-the-environment) for detailed configuration documentation.
+This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD without storing them in config files.
 
 ## Technical Details
 

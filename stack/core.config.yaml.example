@@ -4,17 +4,35 @@
 # Note: Use UPPERCASE field names because case_sensitive=False in settings
 
 # General settings
-VERSION: "0.0.1"
+VERSION: "0.7.1"
 LOG_CONFIG: "logconf.yaml"
 
 # Frontend settings
-ENV_NAME: "MUCGPT"
+ENV_NAME: "MUCGPT🦜"
 ALTERNATIVE_LOGO: false
-FRONTEND_VERSION: "0.0.1"
-ASSISTANT_VERSION: "0.0.1"
+FRONTEND_VERSION: "0.0.2"
+ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
-UNAUTHORIZED_USER_REDIRECT_URL: ""
+UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
+
+# Langfuse Settings (Optional - for LLM observability)
+# Used by core service for tracing and monitoring
+# SECRET_KEY: "<your-secret-key>"  # Use MUCGPT_LANGFUSE_SECRET_KEY env var for production
+LANGFUSE:
+  HOST: "https://ki-observability-test.muenchen.de"
+  SECRET_KEY: "<your-sk>"
+  PUBLIC_KEY: "<your-pk>"
+
+# MCP Settings (Model Context Protocol)
+# Used by core service for external tool integration
+MCP:
+  SOURCES:
+    "ki-muenchen":
+      url: "http://mcpdoc-server:8088/sse"
+      transport: "sse"
+      forward_token: false
+  CACHE_TTL: 123
 
 # Models configuration
 # Configure your LLM models here instead of using base64-encoded JSON in environment variables
@@ -25,7 +43,7 @@ MODELS:
     llm_name: "<your-llm-name>"
     deployment: ""
     endpoint: "<your-endpoint>"
-    api_key: "<your-sk>"  # IMPORTANT: Replace with actual API key or use MUCGPT_CORE_MODELS env var
+    api_key: "<your-sk>" # IMPORTANT: Replace with actual API key or use MUCGPT_CORE_MODELS env var
     api_version: ""
     model_info:
       auto_enrich_from_model_info_endpoint: true
@@ -48,3 +66,16 @@ MODELS:
 #   api_key: "<another-key>"
 #   model_info:
 #     # ... model info ...
+
+# SSO Settings (Keycloak)
+# Used by both core and assistant services for authentication
+# ROLE: "lhm-ab-mucgpt-user"
+# ROLE: "lhm-ab-mucgpt-user" is default, can be overridden here
+
+# Redis Settings (Valkey in docker-compose)
+# Used by both core and assistant services for caching
+REDIS:
+  HOST: "valkey"
+  PORT: 6379
+  USERNAME: "default"
+  PASSWORD: "password"

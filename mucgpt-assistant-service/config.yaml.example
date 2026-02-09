@@ -3,46 +3,51 @@
 # You can use this instead of environment variables.
 #
 # Priority order (highest to lowest):
-# 1. Environment variables (MUCGPT_ASSISTANT_*)
+# 1. Environment variables (MUCGPT_ASSISTANT_* for top-level, MUCGPT_ASSISTANT_<SECTION>__<FIELD> for nested)
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
 #
 # Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
+# Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_ASSISTANT_DB__HOST
 
-# Database settings
-DB_HOST: "postgres"
-DB_PORT: 5432
-DB_NAME: "postgres"
-DB_USER: "admin"
-DB_PASSWORD: "admin"
+# Database settings (nested under DB key)
+DB:
+  HOST: "postgres"
+  PORT: 5432
+  NAME: "postgres"
+  USER: "admin"
+  PASSWORD: "admin"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
 LOG_CONFIG: "src/logconf.yaml"
 
-# SSO Settings (optional - can also be configured via environment variables with MUCGPT_SSO_ prefix)
-# ROLE: "lhm-ab-mucgpt-user"
+# SSO Settings (nested under SSO key)
+SSO:
+  ROLE: "lhm-ab-mucgpt-user"
 
-# Redis Settings (optional - can also be configured via environment variables with MUCGPT_REDIS_ prefix)
-# HOST: "redis"
-# PORT: 6379
-# USERNAME: "default"
-# PASSWORD: "password"
+# Redis Settings (nested under REDIS key)
+REDIS:
+  HOST: "valkey"
+  PORT: 6379
+  USERNAME: "default"
+  PASSWORD: "password"
 
-# LDAP Settings (optional - can also be configured via environment variables with MUCGPT_LDAP_ prefix)
-# ENABLED: true
-# HOST: "<ldap-host>"
-# PORT: 636
-# USE_SSL: true
-# START_TLS: false
-# VERIFY_SSL: true
-# CA_CERT_FILE: null
-# BIND_DN: "<bind-dn>"
-# BIND_PASSWORD: "<bind-password>"
-# SEARCH_BASE: "o=Landeshauptstadt München,c=de"
-# SEARCH_FILTER: "(objectClass=organizationalUnit)"
-# DISPLAY_ATTRIBUTE: "ou"
-# PARENT_ATTRIBUTE: null
-# IGNORED_OU_PREFIXES: ["_"]
-# IGNORED_OU_SUFFIXES: ["-xxx"]
-# PAGE_SIZE: 500
+# LDAP Settings (nested under LDAP key)
+LDAP:
+  ENABLED: true
+  HOST: "<ldap-host>"
+  PORT: 636
+  USE_SSL: true
+  START_TLS: false
+  VERIFY_SSL: true
+  CA_CERT_FILE: null
+  BIND_DN: "<bind-dn>"
+  BIND_PASSWORD: "<bind-password>"
+  SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+  SEARCH_FILTER: "(objectClass=organizationalUnit)"
+  DISPLAY_ATTRIBUTE: "ou"
+  PARENT_ATTRIBUTE: null
+  IGNORED_OU_PREFIXES: ["_"]
+  IGNORED_OU_SUFFIXES: ["-xxx"]
+  PAGE_SIZE: 500

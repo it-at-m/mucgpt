@@ -20,9 +20,13 @@ import sys
 import time
 import traceback
 
+# Add root directory to path to allow imports from migrations package
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import sqlalchemy
 from alembic import command
 from alembic.config import Config
+from migrations.settings import get_db_url
 
 
 def setup_logging():
@@ -47,44 +51,19 @@ def setup_logging():
 
 
 def get_database_url():
-    """Get database URL from environment variables."""
+    """Get database URL from settings."""
     logger = logging.getLogger("migrations")
-
-    # First try to get from DATABASE_URL environment variable
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        logger.info("Using DATABASE_URL environment variable")
-        return database_url
-
-    # If not available, build from individual environment variables
-    db_user = os.getenv("MUCGPT_ASSISTANT_DB_USER")
-    db_password = os.getenv("MUCGPT_ASSISTANT_DB_PASSWORD")
-    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
-    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
-    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
-
-    # Check for missing environment variables and log them
-    missing_vars = []
-    if not db_user:
-        missing_vars.append("MUCGPT_ASSISTANT_DB_USER")
-    if not db_password:
-        missing_vars.append("MUCGPT_ASSISTANT_DB_PASSWORD")
-    if not db_host:
-        missing_vars.append("MUCGPT_ASSISTANT_DB_HOST")
-    if not db_name:
-        missing_vars.append("MUCGPT_ASSISTANT_DB_NAME")
-
-    if missing_vars:
-        error_msg = f"Error: Missing required database environment variables: {', '.join(missing_vars)}"
-        logger.error(error_msg)
+    try:
+        url = get_db_url()
+        # Log masked URL for debugging
+        if "@" in url:
+            prefix, suffix = url.split("@", 1)
+            host = suffix.split("/")[0]
+            logger.info(f"Using database at {host}")
+        return url
+    except Exception as e:
+        logger.error(f"Failed to get database configuration: {e}")
         sys.exit(1)
-
-    logger.info("Constructing database URL using environment variables")
-    logger.debug(
-        f"DB Host: {db_host}, Port: {db_port}, Database: {db_name}, User: {db_user}"
-    )
-
-    return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
 
 
 def run_migrations(revision="head"):
@@ -116,9 +95,9 @@ def run_migrations(revision="head"):
             db_url += f"?connect_timeout={db_timeout}"
 
     # Log only non-sensitive database details
-    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
-    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
-    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
+    db_host = os.getenv("MUCGPT_ASSISTANT_DB__HOST")
+    db_port = os.getenv("MUCGPT_ASSISTANT_DB__PORT", "5432")
+    db_name = os.getenv("MUCGPT_ASSISTANT_DB__NAME")
     logger.info(f"Using database host: {db_host}, port: {db_port}, name: {db_name}")
     logger.info(f"Using alembic script location: {dir_path}")
     alembic_cfg.set_main_option("sqlalchemy.url", db_url)
@@ -207,24 +186,24 @@ def validate_database_config():
 
     # Check if required environment variables are present but empty
     for env_var in [
-        "MUCGPT_ASSISTANT_DB_USER",
-        "MUCGPT_ASSISTANT_DB_PASSWORD",
-        "MUCGPT_ASSISTANT_DB_HOST",
-        "MUCGPT_ASSISTANT_DB_NAME",
+        "MUCGPT_ASSISTANT_DB__USER",
+        "MUCGPT_ASSISTANT_DB__PASSWORD",
+        "MUCGPT_ASSISTANT_DB__HOST",
+        "MUCGPT_ASSISTANT_DB__NAME",
     ]:
         if os.getenv(env_var) == "":
             logger.error(f"Environment variable {env_var} is set but empty!")
             issues_found = True
 
     # Check database host for common misconfigurations
-    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST", "")
+    db_host = os.getenv("MUCGPT_ASSISTANT_DB__HOST", "")
     if db_host in ["localhost", "127.0.0.1"] and os.getenv("DATABASE_URL") is None:
         logger.info(
             "Using localhost database. This might cause issues if running in Docker."
         )
 
     # Check if port is a valid integer
-    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
+    db_port = os.getenv("MUCGPT_ASSISTANT_DB__PORT", "5432")
     try:
         int(db_port)
     except ValueError:

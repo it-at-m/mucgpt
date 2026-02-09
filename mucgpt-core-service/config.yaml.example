@@ -3,11 +3,12 @@
 # You can use this instead of environment variables or base64 encoded JSON.
 #
 # Priority order (highest to lowest):
-# 1. Environment variables (MUCGPT_CORE_*)
+# 1. Environment variables (MUCGPT_CORE_* for top-level, MUCGPT_CORE_<SECTION>__<FIELD> for nested)
 # 2. YAML configuration file (this file, when named config.yaml)
 # 3. .env file
 #
 # Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
+# Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_CORE_REDIS__HOST
 
 # General settings
 VERSION: "0.0.1"
@@ -45,19 +46,30 @@ MODELS:
       inference_location: "<region>"
       knowledge_cut_off: "2024-07-01"
 
-# SSO Settings (optional - can also be configured via environment variables with MUCGPT_SSO_ prefix)
-# ROLE: "lhm-ab-mucgpt-user"
+# SSO Settings (optional - nested under SSO key)
+SSO:
+  ROLE: "lhm-ab-mucgpt-user"
 
-# Langfuse Settings (optional - can also be configured via environment variables with MUCGPT_LANGFUSE_ prefix)
-# PUBLIC_KEY: "<your-public-key>"
-# SECRET_KEY: "<your-secret-key>"
-# HOST: "https://langfuse.example.com"
+# Langfuse Settings (optional - nested under LANGFUSE key)
+LANGFUSE:
+  PUBLIC_KEY: "<your-public-key>"
+  SECRET_KEY: "<your-secret-key>"
+  HOST: "https://langfuse.example.com"
 
-# MCP Settings (optional - can also be configured via environment variables with MUCGPT_MCP_ prefix)
-# SOURCES:
-#   "ki in muenchen":
-#     url: "http://localhost:8088/sse"
-#     transport: "sse"
+# MCP Settings (optional - nested under MCP key)
+MCP:
+  SOURCES:
+    "ki in muenchen":
+      url: "http://localhost:8088/sse"
+      transport: "sse"
+  CACHE_TTL: 43200
+
+# Redis Settings (optional - nested under REDIS key)
+REDIS:
+  HOST: "localhost"
+  PORT: 6379
+  USERNAME: "default"
+  PASSWORD: "<your-password>"
 #     forward_token: false
 # CACHE_TTL: 43200
 

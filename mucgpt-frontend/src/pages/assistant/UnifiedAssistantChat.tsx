@@ -8,7 +8,7 @@ import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
 import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE } from "../../constants";
+import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
@@ -40,7 +40,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Combined states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
-        temperature: 0.7,
+        creativity: CREATIVITY_LOW,
         systemPrompt: "",
         active_chat: undefined,
         allChats: []
@@ -49,7 +49,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { showError, showSuccess } = useGlobalToastContext();
 
     // Destructuring for easier access
-    const { answers, temperature, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
 
     // References
     const activeChatRef = useRef(active_chat);
@@ -99,7 +99,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         description: "Beschreibung",
         publish: false,
         system_message: "",
-        temperature: 0.7,
+        creativity: "medium",
         quick_prompts: [],
         examples: [],
         version: "0",
@@ -136,7 +136,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             setAssistantConfig(assistant);
                             setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
-                            dispatch({ type: "SET_TEMPERATURE", payload: assistant.temperature });
+                            dispatch({ type: "SET_CREATIVITY", payload: assistant.creativity });
                             setQuickPrompts(assistant.quick_prompts || []);
                             setSelectedTools(assistant.tools ? assistant.tools.map(tool => tool.id) : []);
 
@@ -236,7 +236,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             const askResponse: AskResponse = {} as AskResponse;
             const options: ChatOptions = {
                 system: systemPrompt ?? "",
-                temperature: temperature
+                creativity: creativity
             };
             try {
                 await makeApiRequest(

@@ -48,6 +48,26 @@ class TestSettings:
             assert settings.FRONTEND_VERSION == test_frontend_version
             assert settings.ASSISTANT_VERSION == test_assistant_version
 
+    def test_settings_with_version_hash_parsing(self):
+        """Test that version strings with @sha256 hashes are parsed correctly."""
+        test_version = "0.7.1@sha256:b8cac6b90ec35795edcbd0c2a1ffe6805bbecede411d847b2eda7989e10c3816"
+        test_frontend_version = "1.2.3@sha256:abcd1234"
+        test_assistant_version = "2.3.4@sha256:efgh5678"
+
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_VERSION": test_version,
+                "MUCGPT_CORE_FRONTEND_VERSION": test_frontend_version,
+                "MUCGPT_CORE_ASSISTANT_VERSION": test_assistant_version,
+            },
+        ):
+            settings = Settings()
+            # Should only parse the version part before the @ symbol
+            assert settings.VERSION == "0.7.1"
+            assert settings.FRONTEND_VERSION == "1.2.3"
+            assert settings.ASSISTANT_VERSION == "2.3.4"
+
     def test_get_settings_cached(self):
         """Test that get_settings returns cached instance."""
         # Clear cache first

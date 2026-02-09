@@ -19,7 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { Assistant, ToolInfo } from "../../../api";
-import { ASSISTANT_STORE } from "../../../constants";
+import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../../constants";
 import { AssistantStorageService } from "../../../service/assistantstorage";
 import { createAssistantApi } from "../../../api/core-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
@@ -58,14 +58,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         tools,
         quickPrompts,
         examples,
-        temperature,
+        creativity,
         defaultModel,
         hasChanges,
         updateInput,
         updateTitle,
         updateDescription,
         updateSystemPrompt,
-        updateTemperature,
+        updateCreativity,
         updateDefaultModel,
         updateTools,
         updateTemplate,
@@ -103,7 +103,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 description: description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description,
                 system_message: systemPrompt,
                 publish: false,
-                temperature: temperature,
+                creativity: creativity,
                 default_model: defaultModel,
                 quick_prompts: validQuickPrompts,
                 examples: validExamples,
@@ -130,7 +130,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
         }
-    }, [title, description, systemPrompt, temperature, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -203,7 +203,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     description: importedData.description || "",
                     system_message: importedData.system_message,
                     publish: false,
-                    temperature: importedData.temperature ?? 0.7,
+                    creativity: importedData.creativity || CREATIVITY_LOW,
                     default_model: importedData.default_model ?? defaultModel,
                     quick_prompts: importedData.quick_prompts || [],
                     examples: importedData.examples || [],
@@ -440,10 +440,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             <Stepper steps={steps} currentStep={currentStep} />
                             <div className={sharedStyles.scrollableDialogContent}>
                                 <AdvancedSettingsStep
-                                    temperature={temperature}
+                                    creativity={creativity}
                                     defaultModel={defaultModel}
                                     isOwner={true}
-                                    onTemperatureChange={updateTemperature}
+                                    onCreativityChange={updateCreativity}
                                     onDefaultModelChange={updateDefaultModel}
                                 />
                             </div>
@@ -499,8 +499,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setQuickPrompts,
         examples,
         setExamples,
-        temperature,
-        updateTemperature,
+        creativity,
+        updateCreativity,
         hasChanges,
         onCancelButtonClicked,
         onPromptButtonClicked

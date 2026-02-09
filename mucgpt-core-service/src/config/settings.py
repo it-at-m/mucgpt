@@ -19,7 +19,6 @@ from pydantic import (
 )
 from pydantic_settings import (
     BaseSettings,
-    CliSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
     YamlConfigSettingsSource,
@@ -51,6 +50,10 @@ class ModelInfo(BaseModel):
     litellm_provider: str | None = None
     inference_location: str | None = None
     knowledge_cut_off: str | None = None
+    # Creativity to temperature mappings
+    creativity_low_temperature: float | None = None
+    creativity_medium_temperature: float | None = None
+    creativity_high_temperature: float | None = None
 
 
 class ModelsConfig(BaseModel):
@@ -90,6 +93,9 @@ class ModelsConfig(BaseModel):
             "litellm_provider",
             "inference_location",
             "knowledge_cut_off",
+            "creativity_low_temperature",
+            "creativity_medium_temperature",
+            "creativity_high_temperature",
         }
 
         existing_info = data.get("model_info")
@@ -223,6 +229,50 @@ class ModelsConfig(BaseModel):
     def knowledge_cut_off(self, value: str | None) -> None:
         cleaned = (value or "").strip() or None
         self.model_info.knowledge_cut_off = cleaned
+
+    def get_temperature_for_creativity(self, creativity: str) -> float:
+        """Convert creativity level to temperature value for this model.
+
+        Args:
+            creativity: One of "low", "medium", "high"
+
+        Returns:
+            Temperature value for the given creativity level
+
+        Raises:
+            ValueError: If creativity level is invalid
+        """
+        # Default temperature values if not configured
+        default_temps = {
+            "low": 0.0,
+            "medium": 0.5,
+            "high": 1.0,
+        }
+
+        if creativity not in default_temps:
+            raise ValueError(
+                f"Invalid creativity level: {creativity}. Must be one of: low, medium, high"
+            )
+
+        # Use model-specific temperature if configured, otherwise use default
+        if creativity == "low":
+            return (
+                self.model_info.creativity_low_temperature
+                if self.model_info.creativity_low_temperature is not None
+                else default_temps["low"]
+            )
+        elif creativity == "medium":
+            return (
+                self.model_info.creativity_medium_temperature
+                if self.model_info.creativity_medium_temperature is not None
+                else default_temps["medium"]
+            )
+        else:  # high
+            return (
+                self.model_info.creativity_high_temperature
+                if self.model_info.creativity_high_temperature is not None
+                else default_temps["high"]
+            )
 
 
 class SSOSettings(BaseSettings):
@@ -397,6 +447,15 @@ class Settings(BaseSettings):
             YamlConfigSettingsSource(settings_cls),
             dotenv_settings,
         )
+
+    @field_validator("VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before")
+    @staticmethod
+    def parse_version(value: str) -> str:
+        """Parse version string to extract only the version number before @sha256."""
+        if not isinstance(value, str):
+            return value
+        # Split by '@' and take the first part to remove the sha256 hash
+        return value.split("@")[0]
 
 
 def enrich_model_metadata(model: ModelsConfig) -> None:

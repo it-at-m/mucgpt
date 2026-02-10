@@ -110,7 +110,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 creativity: creativity,
                 default_model: defaultModel,
                 tools: tools || [],
-                owner_ids: ["0"],
+                owner_ids: [],
                 examples: validExamples.map(e => ({ text: e.text, value: e.value })),
                 quick_prompts: validQuickPrompts.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
                 tags: [],

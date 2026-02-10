@@ -2,7 +2,7 @@ import styles from "./Menu.module.css";
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData } from "@fluentui/react-components";
+import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData, MessageBar, MessageBarBody } from "@fluentui/react-components";
 import { useContext, useEffect, useState } from "react";
 
 import { AddAssistantButton } from "../../components/AddAssistantButton";
@@ -205,32 +205,37 @@ const Menu = () => {
                 </div>
 
                 <TabList selectedValue={selectedTab} onTabSelect={onTabSelect}>
-                    <Tab value="local">{t("menu.local")}</Tab>
                     <Tab value="private">{t("menu.private", "Privat")}</Tab>
                     <Tab value="owned">{t("menu.owned")}</Tab>
+                    <Tab value="local">{t("menu.local")}</Tab>
                 </TabList>
 
                 {selectedTab === "local" && (
-                    <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
-                        {assistants.map((assistant: Assistant, key) => (
-                            <AssistantCard
-                                key={key}
-                                id={assistant.id || `assistant-${key}`}
-                                title={assistant.title}
-                                description={assistant.description}
-                                linkTo={`/assistant/${assistant.id}`}
-                                linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
-                                linkText={t("menu.select")}
-                                role="listitem"
-                                showTooltip={true}
-                            />
-                        ))}
-                        {assistants.length === 0 && (
-                            <div role="status" aria-live="polite">
-                                {t("menu.no_assistants")}
-                            </div>
-                        )}
-                    </div>
+                    <>
+                        <MessageBar intent="warning" layout="multiline" style={{ marginBottom: "10px" }}>
+                            <MessageBarBody>{t("menu.local_deprecated")}</MessageBarBody>
+                        </MessageBar>
+                        <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
+                            {assistants.map((assistant: Assistant, key) => (
+                                <AssistantCard
+                                    key={key}
+                                    id={assistant.id || `assistant-${key}`}
+                                    title={assistant.title}
+                                    description={assistant.description}
+                                    linkTo={`/assistant/${assistant.id}`}
+                                    linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                    linkText={t("menu.select")}
+                                    role="listitem"
+                                    showTooltip={true}
+                                />
+                            ))}
+                            {assistants.length === 0 && (
+                                <div role="status" aria-live="polite">
+                                    {t("menu.no_assistants")}
+                                </div>
+                            )}
+                        </div>
+                    </>
                 )}
 
                 {selectedTab === "owned" && (

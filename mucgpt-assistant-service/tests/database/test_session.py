@@ -5,7 +5,7 @@ Tests for database session handling, particularly password character issues and 
 from unittest.mock import MagicMock, patch
 
 import pytest
-from src.config.settings import Settings
+from src.config.settings import DBConfig, Settings
 from src.database.session import (
     create_database_url,
     get_engine_and_factory_direct,
@@ -16,15 +16,22 @@ from src.database.session import (
 class TestDatabaseSession:
     """Test cases for database session handling with password character issues."""
 
+    @staticmethod
+    def _make_settings(
+        password: str = "simple123",
+        host: str = "localhost",
+        port: int = 5432,
+        name: str = "testdb",
+        user: str = "testuser",
+    ) -> Settings:
+        """Helper to create Settings with nested DB config."""
+        return Settings(
+            DB=DBConfig(HOST=host, PORT=port, NAME=name, USER=user, PASSWORD=password)
+        )
+
     def test_create_database_url_simple_password(self):
         """Test URL creation with a simple password (no special characters)."""
-        settings = Settings(
-            DB_HOST="localhost",
-            DB_PORT=5432,
-            DB_NAME="testdb",
-            DB_USER="testuser",
-            DB_PASSWORD="simple123",
-        )
+        settings = self._make_settings(password="simple123")
 
         url = create_database_url(settings)
 
@@ -37,13 +44,7 @@ class TestDatabaseSession:
 
     def test_create_database_url_special_characters(self):
         """Test URL creation with special characters (preserved as-is with direct approach)."""
-        settings = Settings(
-            DB_HOST="localhost",
-            DB_PORT=5432,
-            DB_NAME="testdb",
-            DB_USER="testuser",
-            DB_PASSWORD="Ay#W-67CQt)y8f'3",  # User's actual problematic password
-        )
+        settings = self._make_settings(password="Ay#W-67CQt)y8f'3")
 
         url = create_database_url(settings)
 
@@ -56,18 +57,12 @@ class TestDatabaseSession:
 
     def test_create_database_url_empty_password(self):
         """Test URL creation with empty password."""
-        settings = Settings(
-            DB_HOST="localhost",
-            DB_PORT=5432,
-            DB_NAME="testdb",
-            DB_USER="testuser",
-            DB_PASSWORD="",
-        )
+        settings = self._make_settings(password="")
 
         url = create_database_url(settings)
 
-        # Empty password should remain empty
-        assert url.password == ""
+        # Empty password is treated as no password (None in URL)
+        assert url.password is None
 
     @pytest.mark.parametrize(
         "password",
@@ -92,13 +87,7 @@ class TestDatabaseSession:
     )
     def test_direct_connection_preserves_passwords(self, password):
         """Test that direct connection approach preserves all password characters exactly."""
-        settings = Settings(
-            DB_HOST="localhost",
-            DB_PORT=5432,
-            DB_NAME="testdb",
-            DB_USER="testuser",
-            DB_PASSWORD=password,
-        )
+        settings = self._make_settings(password=password)
 
         url = create_database_url(settings)
         # With direct approach, password should be preserved exactly as-is
@@ -110,13 +99,7 @@ class TestDatabaseSession:
         self, mock_sessionmaker, mock_engine
     ):
         """Test direct connection factory with special characters in password."""
-        settings = Settings(
-            DB_HOST="localhost",
-            DB_PORT=5432,
-            DB_NAME="testdb",
-            DB_USER="testuser",
-            DB_PASSWORD="Ay#W-67CQt)y8f'3",  # User's problematic password
-        )
+        settings = self._make_settings(password="Ay#W-67CQt)y8f'3")
 
         # Mock the engine and sessionmaker
         mock_engine_instance = MagicMock()
@@ -145,13 +128,7 @@ class TestDatabaseSession:
     @pytest.mark.asyncio
     async def test_connection_test_with_special_chars(self):
         """Test database connection with special characters in password (mock)."""
-        settings = Settings(
-            DB_HOST="localhost",
-            DB_PORT=5432,
-            DB_NAME="testdb",
-            DB_USER="testuser",
-            DB_PASSWORD="Ay#W-67CQt)y8f'3",  # User's actual problematic password
-        )
+        settings = self._make_settings(password="Ay#W-67CQt)y8f'3")
 
         # Mock the direct connection approach
         with patch(
@@ -199,13 +176,7 @@ class TestDatabaseSession:
         ]
 
         for password in problematic_passwords:
-            settings = Settings(
-                DB_HOST="localhost",
-                DB_PORT=5432,
-                DB_NAME="testdb",
-                DB_USER="testuser",
-                DB_PASSWORD=password,
-            )
+            settings = self._make_settings(password=password)
 
             url = create_database_url(settings)
 
@@ -225,13 +196,7 @@ class TestDatabaseSession:
         ]
 
         for password in safe_passwords:
-            settings = Settings(
-                DB_HOST="localhost",
-                DB_PORT=5432,
-                DB_NAME="testdb",
-                DB_USER="testuser",
-                DB_PASSWORD=password,
-            )
+            settings = self._make_settings(password=password)
 
             url = create_database_url(settings)
 

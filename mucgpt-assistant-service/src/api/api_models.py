@@ -6,6 +6,10 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field  # added ConfigDict
 
+CREATIVITY_LOW = "low"
+CREATIVITY_MEDIUM = "medium"
+CREATIVITY_HIGH = "high"
+
 
 class ExampleModel(BaseModel):
     text: str = Field(
@@ -143,12 +147,11 @@ class AssistantBase(BaseModel):
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment"],
     )
-    temperature: float = Field(
-        0.7,
-        description="Controls randomness in AI responses (0.0 = deterministic, 1.0 = very random)",
-        ge=0.0,
-        le=2.0,
-        example=0.7,
+    creativity: str = Field(
+        CREATIVITY_MEDIUM,
+        description=f"Controls creativity/randomness in AI responses. Must be one of: '{CREATIVITY_LOW}' (conservative), '{CREATIVITY_MEDIUM}' (balanced), '{CREATIVITY_HIGH}' (creative)",
+        pattern=f"^({CREATIVITY_LOW}|{CREATIVITY_MEDIUM}|{CREATIVITY_HIGH})$",
+        example=CREATIVITY_MEDIUM,
     )
     default_model: str | None = Field(
         None,
@@ -213,7 +216,7 @@ class AssistantBase(BaseModel):
                     "department-underdepartment",
                     "anotherdepartment-underdepartment",
                 ],
-                "temperature": 0.7,
+                "creativity": CREATIVITY_MEDIUM,
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -256,7 +259,7 @@ class AssistantCreate(AssistantBase):
                 "name": "Customer Service Assistant",
                 "description": "AI assistant for handling customer inquiries",
                 "system_prompt": "You are a friendly customer service representative. Always be helpful and empathetic.",
-                "temperature": 0.5,
+                "creativity": CREATIVITY_LOW,
                 "default_model": "gpt-4",
                 "tools": [
                     {
@@ -320,12 +323,11 @@ class AssistantUpdate(BaseModel):
         description="Hierarchical access control paths for organizational permissions. All users under these hierarchies can access the assistant. Leave empty for no restrictions.",
         example=["department-underdepartment", "anotherdepartment"],
     )
-    temperature: float | None = Field(
+    creativity: str | None = Field(
         None,
-        description="Controls randomness in AI responses (0.0 = deterministic, 1.0 = very random)",
-        ge=0.0,
-        le=2.0,
-        example=0.7,
+        description=f"Controls creativity/randomness in AI responses. Must be one of: '{CREATIVITY_LOW}' (conservative), '{CREATIVITY_MEDIUM}' (balanced), '{CREATIVITY_HIGH}' (creative)",
+        pattern=f"^({CREATIVITY_LOW}|{CREATIVITY_MEDIUM}|{CREATIVITY_HIGH})$",
+        example=CREATIVITY_MEDIUM,
     )
     default_model: str | None = Field(
         None,
@@ -439,7 +441,7 @@ class AssistantResponse(BaseModel):
     )
     owner_ids: list[str] | None = Field(
         [],
-        description="List of ids who will own this assistant",
+        description="List of ids who will owner this assistant",
         example=["12345", "67890"],
     )
     subscriptions_count: int = Field(
@@ -473,7 +475,7 @@ class AssistantResponse(BaseModel):
                     "name": "Technical Support Assistant",
                     "description": "An AI assistant specialized in providing technical support for software issues",
                     "system_prompt": "You are a helpful technical support assistant. Always be professional and provide step-by-step solutions.",
-                    "temperature": 0.7,
+                    "creativity": CREATIVITY_MEDIUM,
                     "default_model": "gpt-4",
                     "tools": [
                         {

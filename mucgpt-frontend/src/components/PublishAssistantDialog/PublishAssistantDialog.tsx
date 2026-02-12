@@ -51,7 +51,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 hierarchical_access = publishDepartments;
                 is_visible = true;
             } else {
-                hierarchical_access = ["*"];
+                hierarchical_access = [];
                 is_visible = true;
             }
 
@@ -59,7 +59,7 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 name: assistant.title,
                 description: assistant.description,
                 system_prompt: assistant.system_message,
-                temperature: assistant.temperature,
+                creativity: assistant.creativity,
                 tools: assistant.tools || [],
                 owner_ids: assistant.owner_ids ? assistant.owner_ids : ["0"],
                 examples: assistant.examples?.map(e => ({ text: e.text, value: e.value })),

@@ -78,7 +78,7 @@ services:
         ]
     security_opt: *security_settings
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.124@sha256:8da8f5321805d4f734116931f2824d0f89173adbbd317160fa5713479b75acc7
+    image: klg71/keycloakmigration:0.2.125@sha256:a326d3e50e2a35b70a3cf3a5d33288af9bcba27fef89146a2107622583e34231
     depends_on:
       - keycloak
     environment:

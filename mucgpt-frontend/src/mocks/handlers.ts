@@ -9,6 +9,7 @@ import {
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
 } from "./data/generators";
+import { CREATIVITY_HIGH } from "../constants";
 
 const DIRECTORY_TREE = [
     {
@@ -140,7 +141,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "A specialized research assistant that always uses the KICCGPT model for consistent, high-quality responses.",
             system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
-            temperature: 0.3,
+            creativity: "low",
             default_model: "KICCGPT",
             is_visible: true,
             tools: [
@@ -175,7 +176,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
             hierarchical_access: ["BAU", "POR"],
-            temperature: 0.7,
+            creativity: CREATIVITY_HIGH,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
             tools: [
@@ -425,7 +426,7 @@ export const handlers = [
                 description: body.description || current.latest_version.description,
                 system_prompt: body.system_prompt || current.latest_version.system_prompt,
                 hierarchical_access: body.hierarchical_access || current.latest_version.hierarchical_access,
-                temperature: body.temperature ?? current.latest_version.temperature,
+                creativity: body.creativity ?? current.latest_version.creativity,
                 default_model:
                     body.default_model !== undefined ? (body.default_model === "" ? undefined : body.default_model) : current.latest_version.default_model,
                 tools: body.tools || current.latest_version.tools,

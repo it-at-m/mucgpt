@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-core-service"
-version = "0.7.0"
+version = "0.8.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
 requires-python= ">=3.10"
@@ -21,9 +21,9 @@ dependencies = [
     "langchain_community==0.3.31",
     "langchain-openai==0.3.35",
     "openai==1.109.1",
-    "langsmith==0.4.33",
+    "langsmith==0.6.3",
     "joserfc",
-    "pypdf==6.6.0",
+    "pypdf==6.6.2",
     "uvicorn==0.37.0",
     "asgi-correlation-id==4.3.4",
     "pydantic-settings>=2.8.1",

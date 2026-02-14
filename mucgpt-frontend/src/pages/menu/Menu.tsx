@@ -2,7 +2,7 @@ import styles from "./Menu.module.css";
 
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData } from "@fluentui/react-components";
+import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData, MessageBar, MessageBarBody } from "@fluentui/react-components";
 import { useContext, useEffect, useState } from "react";
 
 import { AddAssistantButton } from "../../components/AddAssistantButton";
@@ -205,26 +205,69 @@ const Menu = () => {
                 </div>
 
                 <TabList selectedValue={selectedTab} onTabSelect={onTabSelect}>
-                    <Tab value="local">{t("menu.local")}</Tab>
+                    <Tab value="private">{t("menu.private", "Privat")}</Tab>
                     <Tab value="owned">{t("menu.owned")}</Tab>
+                    <Tab value="local">{t("menu.local")}</Tab>
                 </TabList>
 
                 {selectedTab === "local" && (
-                    <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
-                        {assistants.map((assistant: Assistant, key) => (
-                            <AssistantCard
-                                key={key}
-                                id={assistant.id || `assistant-${key}`}
-                                title={assistant.title}
-                                description={assistant.description}
-                                linkTo={`/assistant/${assistant.id}`}
-                                linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
-                                linkText={t("menu.select")}
-                                role="listitem"
-                                showTooltip={true}
-                            />
-                        ))}
-                        {assistants.length === 0 && (
+                    <>
+                        <MessageBar intent="warning" layout="multiline" style={{ marginBottom: "10px" }}>
+                            <MessageBarBody>{t("menu.local_deprecated")}</MessageBarBody>
+                        </MessageBar>
+                        <div className={styles.row} role="list" aria-label={t("menu.local", "Lokale Assistenten")}>
+                            {assistants.map((assistant: Assistant, key) => (
+                                <AssistantCard
+                                    key={key}
+                                    id={assistant.id || `assistant-${key}`}
+                                    title={assistant.title}
+                                    description={assistant.description}
+                                    linkTo={`/assistant/${assistant.id}`}
+                                    linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.title })}
+                                    linkText={t("menu.select")}
+                                    role="listitem"
+                                    showTooltip={true}
+                                />
+                            ))}
+                            {assistants.length === 0 && (
+                                <div role="status" aria-live="polite">
+                                    {t("menu.no_assistants")}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
+
+                {selectedTab === "owned" && (
+                    <div className={styles.row} role="list" aria-label={t("menu.owned", "Veröffentlicht in der Community")}>
+                        {ownedCommunityAssistants
+                            .filter(a => a.is_visible)
+                            .map((assistant: AssistantResponse, key) => (
+                                <AssistantCard
+                                    key={key}
+                                    id={assistant.id}
+                                    title={assistant.latest_version.name}
+                                    description={assistant.latest_version.description || ""}
+                                    linkTo={`owned/communityassistant/${assistant.id}`}
+                                    linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
+                                    linkText={t("menu.select")}
+                                    role="listitem"
+                                    showTooltip={false}
+                                    onMouseEnter={handleMouseEnter}
+                                    onMouseLeave={handleMouseLeave}
+                                    onFocus={handleFocus}
+                                    onBlur={handleMouseLeave}
+                                    additionalButtons={
+                                        <Button
+                                            onClick={() => onShareAssistant(assistant.id)}
+                                            aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
+                                        >
+                                            <ShareIos24Regular aria-hidden /> {t("menu.share", "Teilen")}
+                                        </Button>
+                                    }
+                                />
+                            ))}
+                        {ownedCommunityAssistants.filter(a => a.is_visible).length === 0 && (
                             <div role="status" aria-live="polite">
                                 {t("menu.no_assistants")}
                             </div>
@@ -232,34 +275,36 @@ const Menu = () => {
                     </div>
                 )}
 
-                {selectedTab === "owned" && (
-                    <div className={styles.row} role="list" aria-label={t("menu.owned", "Veröffentlicht in der Community")}>
-                        {ownedCommunityAssistants.map((assistant: AssistantResponse, key) => (
-                            <AssistantCard
-                                key={key}
-                                id={assistant.id}
-                                title={assistant.latest_version.name}
-                                description={assistant.latest_version.description || ""}
-                                linkTo={`owned/communityassistant/${assistant.id}`}
-                                linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
-                                linkText={t("menu.select")}
-                                role="listitem"
-                                showTooltip={false}
-                                onMouseEnter={handleMouseEnter}
-                                onMouseLeave={handleMouseLeave}
-                                onFocus={handleFocus}
-                                onBlur={handleMouseLeave}
-                                additionalButtons={
-                                    <Button
-                                        onClick={() => onShareAssistant(assistant.id)}
-                                        aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
-                                    >
-                                        <ShareIos24Regular aria-hidden /> Teilen
-                                    </Button>
-                                }
-                            />
-                        ))}
-                        {ownedCommunityAssistants.length === 0 && (
+                {selectedTab === "private" && (
+                    <div className={styles.row} role="list" aria-label={t("menu.private", "Private Assistenten")}>
+                        {ownedCommunityAssistants
+                            .filter(a => !a.is_visible)
+                            .map((assistant: AssistantResponse, key) => (
+                                <AssistantCard
+                                    key={key}
+                                    id={assistant.id}
+                                    title={assistant.latest_version.name}
+                                    description={assistant.latest_version.description || ""}
+                                    linkTo={`owned/communityassistant/${assistant.id}`}
+                                    linkAriaLabel={t("menu.select_assistant_aria", "Assistant auswählen: {{title}}", { title: assistant.latest_version.name })}
+                                    linkText={t("menu.select")}
+                                    role="listitem"
+                                    showTooltip={false}
+                                    onMouseEnter={handleMouseEnter}
+                                    onMouseLeave={handleMouseLeave}
+                                    onFocus={handleFocus}
+                                    onBlur={handleMouseLeave}
+                                    additionalButtons={
+                                        <Button
+                                            onClick={() => onShareAssistant(assistant.id)}
+                                            aria-label={t("menu.share_assistant_aria", "Assistant teilen: {{title}}", { title: assistant.latest_version.name })}
+                                        >
+                                            <ShareIos24Regular aria-hidden /> {t("menu.share", "Teilen")}
+                                        </Button>
+                                    }
+                                />
+                            ))}
+                        {ownedCommunityAssistants.filter(a => !a.is_visible).length === 0 && (
                             <div role="status" aria-live="polite">
                                 {t("menu.no_assistants")}
                             </div>

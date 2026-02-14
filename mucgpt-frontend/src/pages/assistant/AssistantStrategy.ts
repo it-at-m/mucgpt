@@ -68,7 +68,6 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
         await unsubscribeFromAssistantApi(assistantId);
         await assistantStorageService.deleteChatsForAssistant(assistantId);
         await this.communityStorageService.deleteConfigForAssistant(assistantId);
-        window.location.href = "/";
     }
 }
 
@@ -101,7 +100,6 @@ export class DeletedCommunityAssistantStrategy implements AssistantStrategy {
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
         await assistantStorageService.deleteChatsForAssistant(assistantId);
         await this.communityStorageService.deleteConfigForAssistant(assistantId);
-        window.location.href = "/";
     }
 }
 
@@ -132,8 +130,10 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
         };
     }
 
-    async deleteAssistant(assistantId: string): Promise<void> {
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
         await deleteCommunityAssistantApi(assistantId);
+        // Also clean up any local copy that may exist from before the assistant was published
+        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
     }
 
     async updateAssistant(assistantId: string, newAssistant: Assistant): Promise<any> {

@@ -7,8 +7,8 @@
 }
 
 .button {
-    background: var(--onPrimary) !important;
-    color: var(--primary) !important;
+    background: var(--primary) !important;
+    color: var(--onPrimary) !important;
     border: none !important;
     border-radius: 12px !important;
 }

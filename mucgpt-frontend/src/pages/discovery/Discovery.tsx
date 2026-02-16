@@ -65,6 +65,8 @@ const Discovery = () => {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
+    const [filterScope, setFilterScope] = useState<'all' | 'yours'>('yours');
+    const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
         setHeader(DEFAULTHEADER);
@@ -169,11 +171,14 @@ const Discovery = () => {
         const fetchAssistants = async () => {
             setIsLoading(true);
             try {
-                const [allAssistants] = await Promise.all([
+                const [allAssistants, ownedAssistants] = await Promise.all([
                     getAllCommunityAssistantsApi(),
                     getOwnedCommunityAssistants(),
                     getUserSubscriptionsApi()
                 ]);
+
+                const ownedIds = new Set(ownedAssistants.map((a: AssistantResponse) => a.id));
+                setOwnedAssistantIds(ownedIds);
 
                 const cardData: AssistantCardData[] = allAssistants.map((response: AssistantResponse) => ({
                     id: response.id,
@@ -201,29 +206,32 @@ const Discovery = () => {
 
     useEffect(() => {
         if (assistants.length > 0) {
-            setFilteredAssistants(prevFiltered => sortAssistants(prevFiltered, sortMethod));
+            handleSearch(null, { value: searchText });
         }
-    }, [sortMethod, sortAssistants, assistants.length]);
+    }, [sortMethod, filterScope, assistants.length, ownedAssistantIds.size]);
 
     const handleSearch = (event: any, data: any) => {
         const newValue = data.value || "";
         setSearchText(newValue);
-
-        if (!newValue.trim()) {
-            setFilteredAssistants(sortAssistants(assistants, sortMethod));
-            return;
-        }
-
         const lowerCaseSearch = newValue.toLowerCase();
+
         const filtered = assistants.filter(assistant => {
-            return (
+            const matchesSearch = !newValue.trim() || (
                 assistant.title.toLowerCase().includes(lowerCaseSearch) ||
                 assistant.description.toLowerCase().includes(lowerCaseSearch) ||
                 (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)))
             );
+
+            const matchesScope = filterScope === 'all' || (filterScope === 'yours' && ownedAssistantIds.has(assistant.id));
+
+            return matchesSearch && matchesScope;
         });
 
         setFilteredAssistants(sortAssistants(filtered, sortMethod));
+    };
+
+    const handleFilterChange = (scope: 'all' | 'yours') => {
+        setFilterScope(scope);
     };
 
     const handleSortChange = (event: any, data: any) => {
@@ -293,6 +301,7 @@ const Discovery = () => {
                                         <Button
                                             style={{
                                                 borderRadius: "12px",
+                                                backgroundColor: "var(--surface)",
                                             }}
                                             appearance="outline"
                                             icon={<ArrowImport24Filled />}
@@ -314,32 +323,53 @@ const Discovery = () => {
                                 value={searchText}
                                 onChange={handleSearch}
                                 className={styles.searchBox}
+                                style={{ maxWidth: "100%" }}
                                 size="large"
                             />
 
-                            <div className={styles.sortSection}>
-                                <ArrowSort24Regular className={styles.sortIcon} />
-                                <Text size={300} className={styles.sortLabel}>
-                                    {t("components.community_assistants.sort_by", "Sort by")}:
-                                </Text>
-                                <Dropdown
-                                    id="sort"
-                                    value={sortMethod}
-                                    selectedOptions={[sortMethod]}
-                                    appearance="outline"
-                                    className={styles.sortDropdown}
-                                    onOptionSelect={handleSortChange}
-                                >
-                                    <Option value={t("components.community_assistants.sort_title", "Title")} text={t("components.community_assistants.sort_title", "Title")}>
-                                        {t("components.community_assistants.sort_title", "Title")}
-                                    </Option>
-                                    <Option value={t("components.community_assistants.sort_updated", "Last updated")} text={t("components.community_assistants.sort_updated", "Last updated")}>
-                                        {t("components.community_assistants.sort_updated", "Last updated")}
-                                    </Option>
-                                    <Option value={t("components.community_assistants.sort_subscriptions", "Subscriptions")} text={t("components.community_assistants.sort_subscriptions", "Subscriptions")}>
-                                        {t("components.community_assistants.sort_subscriptions", "Subscriptions")}
-                                    </Option>
-                                </Dropdown>
+                            <div className={styles.controlsSection}>
+                                <div className={styles.filterSection}>
+                                    <div className={styles.filterGroup}>
+                                        <button
+                                            className={`${styles.filterButton} ${filterScope === 'all' ? styles.filterButtonActive : ''}`}
+                                            onClick={() => handleFilterChange('all')}
+                                        >
+                                            {t("components.community_assistants.filter_all", "All")}
+                                        </button>
+                                        <div className={styles.filterDivider} />
+                                        <button
+                                            className={`${styles.filterButton} ${filterScope === 'yours' ? styles.filterButtonActive : ''}`}
+                                            onClick={() => handleFilterChange('yours')}
+                                        >
+                                            {t("components.community_assistants.filter_yours", "Yours")}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className={styles.sortSection}>
+                                    <ArrowSort24Regular className={styles.sortIcon} />
+                                    <Text size={300} className={styles.sortLabel}>
+                                        {t("components.community_assistants.sort_by", "Sort by")}:
+                                    </Text>
+                                    <Dropdown
+                                        id="sort"
+                                        value={sortMethod}
+                                        selectedOptions={[sortMethod]}
+                                        appearance="outline"
+                                        className={styles.sortDropdown}
+                                        onOptionSelect={handleSortChange}
+                                    >
+                                        <Option value={t("components.community_assistants.sort_title", "Title")} text={t("components.community_assistants.sort_title", "Title")}>
+                                            {t("components.community_assistants.sort_title", "Title")}
+                                        </Option>
+                                        <Option value={t("components.community_assistants.sort_updated", "Last updated")} text={t("components.community_assistants.sort_updated", "Last updated")}>
+                                            {t("components.community_assistants.sort_updated", "Last updated")}
+                                        </Option>
+                                        <Option value={t("components.community_assistants.sort_subscriptions", "Subscriptions")} text={t("components.community_assistants.sort_subscriptions", "Subscriptions")}>
+                                            {t("components.community_assistants.sort_subscriptions", "Subscriptions")}
+                                        </Option>
+                                    </Dropdown>
+                                </div>
                             </div>
                         </div>
 

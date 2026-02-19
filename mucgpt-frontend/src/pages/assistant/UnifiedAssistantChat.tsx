@@ -5,7 +5,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
@@ -29,6 +29,9 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { Button } from "@fluentui/react-components";
+import { Settings24Regular } from "@fluentui/react-icons";
+import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -66,6 +69,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -88,6 +92,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
+    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+
+    // Auto-open edit dialog when navigating from Discovery with ?edit=true
+    useEffect(() => {
+        if (searchParams.get("edit") === "true") {
+            setShowEditDialog(true);
+            searchParams.delete("edit");
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -440,35 +454,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-    const sidebar_assistant_settings = useMemo(
+    const editAssistantDialog = useMemo(
         () => (
-            <>
-                <AssistantsettingsDrawer
-                    assistant={assistantConfig}
-                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
-                    onDeleteAssistant={onDeleteAssistant}
-                    isOwned={strategy.isOwned}
-                    strategy={strategy}
-                ></AssistantsettingsDrawer>
-            </>
-        ),
-        [assistantConfig, onAssistantChanged, onDeleteAssistant, history, showSidebar, strategy.canEdit, strategy.isOwned, strategy]
-    );
-
-    const sidebar = useMemo(
-        () => (
-            <Sidebar
-                content={
-                    <>
-                        {sidebar_assistant_settings}
-                        {history}
-                    </>
-                }
-                actions={sidebar_actions}
+            <AssistantsettingsDrawer
+                assistant={assistantConfig}
+                onAssistantChange={strategy.canEdit ? onAssistantChanged : () => { }}
+                onDeleteAssistant={onDeleteAssistant}
+                isOwned={strategy.isOwned}
+                strategy={strategy}
             />
         ),
-        [history, sidebar_assistant_settings, sidebar_actions]
+        [assistantConfig, onAssistantChanged, onDeleteAssistant, strategy.canEdit, strategy.isOwned, strategy]
     );
+
+    const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -485,8 +484,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                  }
+                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                }
                 : tools;
 
         return (
@@ -577,7 +576,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     answers={answerList}
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
-                    header=""
+                    header={assistantConfig.title}
+                    welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? sidebarSize : "none"}
@@ -587,6 +587,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     onToggleMinimized={toggleSidebar}
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    actions={
+                        <Button
+                            appearance="subtle"
+                            icon={<Settings24Regular />}
+                            onClick={() => {
+                                setShowEditDialog(true);
+                            }}
+                            aria-label={t("components.assistantsettingsdrawer.show_configutations")}
+                        />
+                    }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -612,6 +622,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     return (
         <>
             {layout}
+            <EditAssistantDialog
+                showDialog={showEditDialog}
+                setShowDialog={setShowEditDialog}
+                assistant={assistantConfig}
+                onAssistantChanged={onAssistantChanged}
+                isOwner={strategy.isOwned}
+                strategy={strategy}
+            />
             <NotSubscribedDialog
                 open={showNotSubscribedDialog}
                 onOpenChange={setShowNotSubscribedDialog}

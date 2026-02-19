@@ -1,23 +1,17 @@
 .container {
     display: flex;
     align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    margin-left: 10px;
 }
 
 .button {
-    background: var(--onSurface) !important;
-    color: var(--surface) !important;
+    background: var(--primary) !important;
+    color: var(--onPrimary) !important;
     border: none !important;
+    border-radius: 8px !important;
 }
 
 .button:hover {
-    background: var(--onSurfaceVariant) !important;
-}
-
-.button:active {
-    background: var(--onSurfaceVariant) !important;
+    opacity: 0.9;
 }
 
 .iconLeftMargin {

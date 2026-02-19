@@ -38,15 +38,11 @@
     align-items: flex-end;
     gap: 8px;
     margin-bottom: 10px;
-    box-shadow:
-        0px 2px 4px var(--onPrimaryContainer),
-        0px 0px 2px var(--onPrimaryContainer);
     transition: box-shadow 0.2s ease;
 }
 
 .questionInputContainer:focus-within {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     outline: 2px solid var(--onPrimaryContainer);
     outline-offset: 2px;
     transition:

@@ -78,7 +78,7 @@ services:
         ]
     security_opt: *security_settings
   init-keycloak:
-    image: klg71/keycloakmigration:0.2.124@sha256:8da8f5321805d4f734116931f2824d0f89173adbbd317160fa5713479b75acc7
+    image: klg71/keycloakmigration:0.2.125@sha256:a326d3e50e2a35b70a3cf3a5d33288af9bcba27fef89146a2107622583e34231
     depends_on:
       - keycloak
     environment:
@@ -98,7 +98,7 @@ services:
   # #### Valkey ####
   #
   valkey:
-    image: valkey/valkey:9.0.1@sha256:546304417feac0874c3dd576e0952c6bb8f06bb4093ea0c9ca303c73cf458f63
+    image: valkey/valkey:9.0.2@sha256:930b41430fb727f533c5982fe509b6f04233e26d0f7354e04de4b0d5c706e44e
     ports:
       - "6379:6379"
     command: ["valkey-server", "--requirepass", "password"]

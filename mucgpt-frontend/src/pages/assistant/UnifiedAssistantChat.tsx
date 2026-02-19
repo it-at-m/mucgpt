@@ -578,14 +578,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     clearChat={clearChat}
                     clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                     actions={
-                        <Button
-                            appearance="subtle"
-                            icon={<Settings24Regular />}
-                            onClick={() => {
-                                setShowEditDialog(true);
-                            }}
-                            aria-label={t("components.assistantsettingsdrawer.show_configutations")}
-                        />
+                        strategy.isOwned && (
+                            <Button
+                                appearance="subtle"
+                                icon={<Settings24Regular />}
+                                onClick={() => {
+                                    setShowEditDialog(true);
+                                }}
+                                aria-label={t("components.assistantsettingsdrawer.show_configutations")}
+                            />
+                        )
                     }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
@@ -606,7 +608,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         onLLMSelectionChange,
         showSidebar,
         clearChat,
-        isLoadingRef.current
+        isLoadingRef.current,
+        strategy
     ]);
 
     return (

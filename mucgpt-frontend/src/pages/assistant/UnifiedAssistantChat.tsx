@@ -5,7 +5,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
@@ -69,6 +69,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -92,6 +93,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+
+    // Auto-open edit dialog when navigating from Discovery with ?edit=true
+    useEffect(() => {
+        if (searchParams.get("edit") === "true") {
+            setShowEditDialog(true);
+            searchParams.delete("edit");
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams]);
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -448,7 +458,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         () => (
             <AssistantsettingsDrawer
                 assistant={assistantConfig}
-                onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
+                onAssistantChange={strategy.canEdit ? onAssistantChanged : () => { }}
                 onDeleteAssistant={onDeleteAssistant}
                 isOwned={strategy.isOwned}
                 strategy={strategy}
@@ -474,8 +484,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                  }
+                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                }
                 : tools;
 
         return (

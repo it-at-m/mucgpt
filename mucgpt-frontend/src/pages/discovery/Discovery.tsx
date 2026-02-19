@@ -9,26 +9,16 @@ import {
     Dropdown,
     Option,
     Button,
-    Tooltip,
-    InlineDrawer,
-    DrawerHeader,
-    DrawerBody
+    Tooltip
 } from "@fluentui/react-components";
 import {
     ArrowSort24Regular,
-    ArrowImport24Filled,
-    Dismiss24Regular,
-    Chat24Regular,
-    Sparkle24Regular,
-    TargetArrow24Regular,
-    PuzzlePiece24Regular,
-    Info24Regular,
-    DocumentText24Regular
+    ArrowImport24Filled
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/assistant-client";
+import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi, deleteCommunityAssistantApi } from "../../api/assistant-client";
 import { Assistant, AssistantResponse } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
@@ -37,6 +27,7 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
+import { AssistantDetailsSidebar } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 
 interface AssistantCardData {
     id: string;
@@ -257,14 +248,29 @@ const Discovery = () => {
         }
     };
 
-    const getCreativityConfig = (creativity: string) => {
-        switch (creativity.toLowerCase()) {
-            case "precise":
-                return { text: "Precise", icon: <TargetArrow24Regular />, description: "Focuses on factual and detailed accuracy." };
-            case "creative":
-                return { text: "Creative", icon: <Sparkle24Regular />, description: "Imaginative and detailed storytelling." };
-            default:
-                return { text: "Balanced", icon: <PuzzlePiece24Regular />, description: "A balance between accuracy and creativity." };
+    const editAssistant = () => {
+        if (selectedAssistant) {
+            navigate(`/owned/communityassistant/${selectedAssistant.id}?edit=true`);
+        }
+    };
+
+    const deleteAssistant = async () => {
+        if (!selectedAssistant) return;
+        try {
+            await deleteCommunityAssistantApi(selectedAssistant.id);
+            showSuccess(
+                t("components.assistant_chat.delete_assistant_success"),
+                t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
+            );
+            setAssistants(prev => prev.filter(a => a.id !== selectedAssistant.id));
+            setFilteredAssistants(prev => prev.filter(a => a.id !== selectedAssistant.id));
+            setIsDrawerOpen(false);
+            setSelectedAssistant(null);
+        } catch (err) {
+            showError(
+                t("components.assistant_chat.delete_assistant_failed"),
+                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
+            );
         }
     };
 
@@ -283,8 +289,6 @@ const Discovery = () => {
         );
     }
 
-    const creativityConfig = selectedAssistant?.rawData?.latest_version?.creativity ? getCreativityConfig(selectedAssistant.rawData.latest_version.creativity) : getCreativityConfig("balanced");
-
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.flexContainer} data-drawer-open={isDrawerOpen}>
@@ -296,13 +300,10 @@ const Discovery = () => {
                                 <Body1 className={styles.subtitle}>{t("discovery.subtitle", "Supercharge your workflow with specialized AI agents.")}</Body1>
                             </div>
                             <div className={styles.actionBlock}>
-                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                <div className={styles.actionButtonsContainer}>
                                     <Tooltip content={t("components.create_assistant_dialog.import")} relationship="description" positioning="below">
                                         <Button
-                                            style={{
-                                                borderRadius: "12px",
-                                                backgroundColor: "var(--surface)",
-                                            }}
+                                            className={styles.importButton}
                                             appearance="outline"
                                             icon={<ArrowImport24Filled />}
                                             onClick={importAssistant}
@@ -323,7 +324,6 @@ const Discovery = () => {
                                 value={searchText}
                                 onChange={handleSearch}
                                 className={styles.searchBox}
-                                style={{ maxWidth: "100%" }}
                                 size="large"
                             />
 
@@ -397,89 +397,15 @@ const Discovery = () => {
                     </div>
                 </div>
 
-                <InlineDrawer
-                    open={isDrawerOpen}
-                    position="end"
-                    className={styles.inlineDrawer}
-                >
-                    <DrawerHeader>
-                        <div className={styles.headerContainer}>
-                            <div className={styles.closeButtonContainer}>
-                                <Button
-                                    appearance="subtle"
-                                    aria-label="Close"
-                                    icon={<Dismiss24Regular />}
-                                    onClick={() => { setIsDrawerOpen(false); setTimeout(() => setSelectedAssistant(null), 300); }}
-                                    className={styles.closeButton}
-                                />
-                            </div>
-                            <div className={styles.sidebarTitle}>
-                                {selectedAssistant?.title}
-                            </div>
-                        </div>
-                    </DrawerHeader>
-
-                    <DrawerBody className={styles.drawerBody}>
-                        <div className={styles.creativityBadge}>
-                            <span style={{ display: 'flex', alignItems: 'center' }}>{creativityConfig.icon}</span>
-                            <span>{creativityConfig.text}</span>
-                        </div>
-
-
-
-                        <div className={styles.startButtonWrapper}>
-                            <Button
-                                appearance="primary"
-                                className={styles.startConversationButton}
-                                icon={<Chat24Regular />}
-                                onClick={startConversation}
-                                size="large"
-                            >
-                                {t("components.community_assistants.start_chat", "Start Conversation")}
-                            </Button>
-                        </div>
-
-                        <div className={styles.sidebarSection}>
-                            <div className={styles.sectionHeader}>
-                                <Info24Regular className={styles.sectionIcon} />
-                                <span>{t("components.create_assistant_dialog.description", "ABOUT")}</span>
-                            </div>
-                            <Text className={styles.aboutText}>
-                                {selectedAssistant?.description}
-                            </Text>
-                        </div>
-
-                        {selectedAssistant?.rawData?.latest_version?.tools && selectedAssistant.rawData.latest_version.tools.length > 0 && (
-                            <div className={styles.sidebarSection}>
-                                <div className={styles.sectionHeader}>
-                                    <Sparkle24Regular className={styles.sectionIcon} />
-                                    <span>{t("components.create_assistant_dialog.tools", "ENABLED TOOLS")}</span>
-                                </div>
-                                <div className={styles.toolList}>
-                                    {selectedAssistant.rawData.latest_version.tools.map((tool, index) => (
-                                        <div key={index} className={styles.toolPill}>
-                                            {tool.id}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {selectedAssistant?.rawData?.latest_version?.system_prompt && (
-                            <div className={styles.sidebarSection}>
-                                <div className={styles.sectionHeader}>
-                                    <DocumentText24Regular className={styles.sectionIcon} />
-                                    <span>{t("components.create_assistant_dialog.system_prompt", "SYSTEM PROMPT")}</span>
-                                </div>
-                                <div className={styles.systemPromptContainer}>
-                                    <Text className={styles.promptText}>
-                                        {selectedAssistant.rawData.latest_version.system_prompt}
-                                    </Text>
-                                </div>
-                            </div>
-                        )}
-                    </DrawerBody>
-                </InlineDrawer>
+                <AssistantDetailsSidebar
+                    isOpen={isDrawerOpen}
+                    onClose={() => { setIsDrawerOpen(false); setTimeout(() => setSelectedAssistant(null), 300); }}
+                    assistant={selectedAssistant}
+                    ownedAssistantIds={ownedAssistantIds}
+                    onStartChat={startConversation}
+                    onEdit={editAssistant}
+                    onDelete={deleteAssistant}
+                />
 
             </div>
         </div>

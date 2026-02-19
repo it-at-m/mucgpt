@@ -28,28 +28,6 @@
     scrollbar-color: var(--primary) var(--surface);
 }
 
-.mainContent::-webkit-scrollbar,
-.drawerBody::-webkit-scrollbar {
-    width: 6px;
-}
-
-.mainContent::-webkit-scrollbar-track,
-.drawerBody::-webkit-scrollbar-track {
-    background: var(--surface);
-}
-
-.mainContent::-webkit-scrollbar-thumb,
-.drawerBody::-webkit-scrollbar-thumb {
-    background-color: var(--primary);
-    border-radius: 10px;
-}
-
-.drawerBody {
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary) var(--onPrimary);
-}
-
 .contentWrapper {
     max-width: 1600px;
     margin: 0 auto;
@@ -71,6 +49,17 @@
 
 .actionBlock {
     margin-bottom: 8px;
+}
+
+.actionButtonsContainer {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.importButton {
+    border-radius: 8px !important;
+    background-color: var(--surface) !important;
 }
 
 .header {
@@ -101,13 +90,14 @@
 .searchBox {
     flex: 1;
     min-width: 0;
-    border-radius: 12px !important;
+    max-width: 100%;
+    border-radius: 8px !important;
     border-bottom-color: var(--outline) !important;
 }
 
 .searchBox::after,
 .searchBox::before {
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
@@ -117,7 +107,7 @@
 .searchBox:focus-within {
     outline: 2px solid var(--primary) !important;
     outline-offset: -2px;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
 }
 
 .searchBox:focus-within::after {
@@ -128,14 +118,15 @@
     display: flex;
     align-items: center;
     gap: 24px;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
 }
 
 
 .filterSection {
     display: flex;
     align-items: center;
-    border-radius: 16px !important; /* Pill shape */
+    border-radius: 8px !important;
     padding: 4px;
     height: fit-content;
 }
@@ -150,7 +141,7 @@
     background: transparent;
     border: none;
     padding: 6px 16px;
-    border-radius: 16px !important;
+    border-radius: 8px !important;
     font-size: 14px;
     font-weight: 500;
     color: var(--colorNeutralForeground2);
@@ -181,7 +172,7 @@
     height: 16px;
     background-color: var(--colorNeutralStroke2);
     margin: 0 4px;
-    display: none; /* Hide divider for pill style */
+    display: none;
 }
 
 .sortSection {
@@ -190,6 +181,8 @@
     gap: 12px;
     padding-left: 24px;
     border-left: 1px solid var(--colorNeutralStroke2);
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 
@@ -204,14 +197,14 @@
 }
 
 .sortDropdown {
-    min-width: 150px;
-    border-radius: 12px !important;
+    min-width: 0;
+    border-radius: 8px !important;
     border-bottom-color: var(--outline) !important;
 }
 
 .sortDropdown::after,
 .sortDropdown::before {
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
@@ -221,7 +214,7 @@
 .sortDropdown:focus-within {
     outline: 2px solid var(--primary) !important;
     outline-offset: -2px;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
 }
 
 .sortDropdown:focus-within::after {
@@ -233,128 +226,6 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     padding: 8px 0;
-}
-
-.creativityBadge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    background-color: var(--colorNeutralBackground3);
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 500;
-    width: fit-content;
-    border: 1px solid var(--colorNeutralStroke2);
-    margin: 0 auto 24px auto;
-}
-
-.startButtonWrapper {
-    margin-bottom: 32px;
-    display: flex;
-}
-
-.startConversationButton {
-    width: 100%;
-    border-radius: 10px !important;
-}
-
-.sidebarSection {
-    margin-bottom: 32px;
-}
-
-.sectionHeader {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-    color: var(--colorNeutralForeground2);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-
-.sectionIcon {
-    font-size: 16px;
-}
-
-.aboutText {
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--colorNeutralForeground1);
-    white-space: pre-wrap;
-}
-
-.toolList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.toolPill {
-    padding: 4px 10px;
-    background-color: var(--colorNeutralBackground3);
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--colorNeutralForeground1);
-    border: 1px solid var(--colorNeutralStroke2);
-}
-
-.systemPromptContainer {
-    background-color: var(--colorNeutralBackground1);
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--colorNeutralStroke2);
-}
-
-.promptText {
-    font-size: 13px;
-    color: var(--colorNeutralForeground2);
-    font-family: monospace;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-
-.inlineDrawer {
-    border-left: 1px solid var(--primary) !important;
-    border-right: none;
-    border-bottom: none;
-    background-color: var(--colorNeutralBackground1);
-    width: 400px !important;
-    box-sizing: border-box;
-    position: relative !important;
-    height: 100% !important;
-    flex-shrink: 0;
-    z-index: 2;
-}
-
-@media (max-width: 1200px) {
-    .inlineDrawer {
-        width: 320px !important;
-    }
-}
-
-.headerContainer {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-
-.closeButtonContainer {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 8px;
-}
-
-.sidebarTitle {
-    font-weight: 700;
-    text-align: center;
-    width: 100%;
-    font-size: 24px;
-    margin-bottom: 16px;
-    line-height: 1.2;
 }
 
 @media (max-width: 1400px) {
@@ -390,21 +261,56 @@
 }
 
 @media (max-width: 650px) {
-    .assistantsGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .container {
-        padding: 24px 16px 16px 16px;
-    }
-
-    .searchContainer {
+    .toolbarSection {
         flex-direction: column;
         align-items: stretch;
     }
 
     .searchBox {
         max-width: 100%;
+        width: 100%;
+    }
+
+    .controlsSection {
+        width: 100%;
+        gap: 12px;
+    }
+
+    .sortSection {
+        border-left: none;
+        padding-left: 0;
+        flex: 1 1 0px;
+        min-width: 0;
+    }
+
+    .sortIcon {
+        display: none !important;
+    }
+
+    .sortLabel {
+        display: none !important;
+    }
+
+    .sortDropdown {
+        min-width: 0 !important;
+        flex: 1;
+        width: 0; /* Vital for flex child truncation */
+        max-width: 100%;
+    }
+    
+    /* Target the text content inside Fluent UI Dropdown to ensure it truncates */
+    .sortDropdown span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .assistantsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .container {
+        padding: 24px 16px 16px 16px;
     }
 
     .headerSection {
@@ -424,15 +330,62 @@
     .flexContainer[data-drawer-open="true"] .assistantsGrid {
         grid-template-columns: 1fr;
     }
+
+    .flexContainer[data-drawer-open="true"] .toolbarSection {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .flexContainer[data-drawer-open="true"] .searchBox {
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .flexContainer[data-drawer-open="true"] .controlsSection {
+        width: 100%;
+        gap: 12px;
+    }
+
+    .flexContainer[data-drawer-open="true"] .sortSection {
+        border-left: none;
+        padding-left: 0;
+        flex: 1 1 0px;
+        min-width: 0;
+    }
+
+    .flexContainer[data-drawer-open="true"] .sortIcon,
+    .flexContainer[data-drawer-open="true"] .sortLabel {
+        display: none !important;
+    }
+
+    .flexContainer[data-drawer-open="true"] .sortDropdown {
+        min-width: 0 !important;
+        flex: 1;
+        width: 0;
+        max-width: 100%;
+    }
+
+    .flexContainer[data-drawer-open="true"] .sortDropdown span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .flexContainer[data-drawer-open="true"] .headerSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .flexContainer[data-drawer-open="true"] .actionBlock {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+    }
 }
 
 @media (max-width: 600px) {
     .flexContainer[data-drawer-open="true"] .mainContent {
         display: none;
-    }
-
-    .flexContainer[data-drawer-open="true"] .inlineDrawer {
-        width: 100% !important;
-        border-left: none !important;
     }
 }

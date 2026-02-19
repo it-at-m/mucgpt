@@ -42,6 +42,16 @@
     gap: 16px;
 }
 
+@media (max-width: 900px) and (min-width: 551px) {
+    .actionButtonsContainer {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+    .actionBlock {
+        margin-bottom: 0px; 
+    }
+}
+
 .titleBlock {
     display: flex;
     flex-direction: column;
@@ -85,11 +95,12 @@
     align-items: center;
     padding: 16px 0;
     width: 100%;
+    flex-wrap: wrap; 
 }
 
 .searchBox {
     flex: 1;
-    min-width: 0;
+    min-width: 150px;
     max-width: 100%;
     border-radius: 8px !important;
     border-bottom-color: var(--outline) !important;
@@ -98,9 +109,6 @@
 .searchBox::after,
 .searchBox::before {
     border-radius: 8px !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
     display: none !important;
 }
 
@@ -122,57 +130,27 @@
     min-width: 0;
 }
 
-
-.filterSection {
-    display: flex;
-    align-items: center;
-    border-radius: 8px !important;
-    padding: 4px;
-    height: fit-content;
-}
-
-.filterGroup {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
 .filterButton {
     background: transparent;
     border: none;
     padding: 6px 16px;
-    border-radius: 8px !important;
-    font-size: 14px;
-    font-weight: 500;
+    border-radius: 8px;
     color: var(--colorNeutralForeground2);
     cursor: pointer;
     transition: all 0.2s ease;
+    margin: 2px ;
 }
 
 .filterButton:hover {
-    background-color: var(--colorNeutralBackground3Hover);
+    background-color: var(--primary);
     color: var(--colorNeutralForeground1);
+    opacity: 0.7;  
 }
 
 .filterButtonActive {
     background-color: var(--primary);
     color: var(--onPrimary);
     font-weight: 600;
-    box-shadow: var(--shadow4);
-}
-
-.filterButtonActive:hover {
-    background-color: var(--primary);
-    opacity: 0.9;
-    color: var(--onPrimary);
-}
-
-.filterDivider {
-    width: 1px;
-    height: 16px;
-    background-color: var(--colorNeutralStroke2);
-    margin: 0 4px;
-    display: none;
 }
 
 .sortSection {
@@ -185,30 +163,26 @@
     flex-shrink: 1;
 }
 
-
-
-.sortIcon,
-.sortLabel {
-    color: var(--colorNeutralForeground2);
-}
-
 .sortLabel {
     white-space: nowrap;
 }
 
 .sortDropdown {
-    min-width: 0;
     border-radius: 8px !important;
     border-bottom-color: var(--outline) !important;
+    min-width: 120px;
+    flex-shrink: 1;
+}
+
+@media (max-width: 900px) {
+    .sortLabel {
+        display: none;
+    }
 }
 
 .sortDropdown::after,
 .sortDropdown::before {
     border-radius: 8px !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    display: none !important;
 }
 
 .sortDropdown:focus-within {
@@ -250,17 +224,7 @@
     color: var(--colorNeutralForeground2);
 }
 
-.loadingContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 80px;
-    min-height: 300px;
-}
-
-@media (max-width: 650px) {
+@media (max-width: 550px) {
     .toolbarSection {
         flex-direction: column;
         align-items: stretch;
@@ -274,12 +238,12 @@
     .controlsSection {
         width: 100%;
         gap: 12px;
+        justify-content: space-between;
     }
 
     .sortSection {
         border-left: none;
         padding-left: 0;
-        flex: 1 1 0px;
         min-width: 0;
     }
 
@@ -292,13 +256,10 @@
     }
 
     .sortDropdown {
-        min-width: 0 !important;
-        flex: 1;
-        width: 0; /* Vital for flex child truncation */
-        max-width: 100%;
+        min-width: 150px !important;
+        max-width: 250px; 
     }
     
-    /* Target the text content inside Fluent UI Dropdown to ensure it truncates */
     .sortDropdown span {
         overflow: hidden;
         text-overflow: ellipsis;

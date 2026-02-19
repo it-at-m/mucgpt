@@ -27,6 +27,7 @@ import { AssistantStorageService } from "../../service/assistantstorage";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
+import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 
 interface AssistantCardData {
@@ -274,26 +275,13 @@ const Discovery = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className={styles.pageWrapper}>
-                <div className={styles.container}>
-                    <Title1 className={styles.header}>{t("discovery.title", "Discover Assistants")}</Title1>
-                    <Body1 className={styles.subtitle}>{t("discovery.subtitle", "Supercharge your workflow with specialized AI agents.")}</Body1>
-                    <div className={styles.loadingContainer}>
-                        <Spinner size="medium" />
-                        <Text>{t("components.community_assistants.loading_assistants", "Loading assistants...")}</Text>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.flexContainer} data-drawer-open={isDrawerOpen}>
                 <div className={styles.mainContent}>
                     <div className={styles.contentWrapper}>
+                        {/* ... Header and Toolbar sections remain same ... */}
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
                                 <Title1 className={styles.header}>{t("discovery.title", "Discover Assistants")}</Title1>
@@ -328,29 +316,28 @@ const Discovery = () => {
                             />
 
                             <div className={styles.controlsSection}>
-                                <div className={styles.filterSection}>
-                                    <div className={styles.filterGroup}>
-                                        <button
-                                            className={`${styles.filterButton} ${filterScope === 'all' ? styles.filterButtonActive : ''}`}
-                                            onClick={() => handleFilterChange('all')}
-                                        >
-                                            {t("components.community_assistants.filter_all", "All")}
-                                        </button>
-                                        <div className={styles.filterDivider} />
-                                        <button
-                                            className={`${styles.filterButton} ${filterScope === 'yours' ? styles.filterButtonActive : ''}`}
-                                            onClick={() => handleFilterChange('yours')}
-                                        >
-                                            {t("components.community_assistants.filter_yours", "Yours")}
-                                        </button>
-                                    </div>
+                                <div>
+                                    <button
+                                        className={`${styles.filterButton} ${filterScope === 'all' ? styles.filterButtonActive : ''}`}
+                                        onClick={() => handleFilterChange('all')}
+                                    >
+                                        {t("components.community_assistants.filter_all", "All")}
+                                    </button>
+                                    <button
+                                        className={`${styles.filterButton} ${filterScope === 'yours' ? styles.filterButtonActive : ''}`}
+                                        onClick={() => handleFilterChange('yours')}
+                                    >
+                                        {t("components.community_assistants.filter_yours", "Yours")}
+                                    </button>
                                 </div>
 
                                 <div className={styles.sortSection}>
-                                    <ArrowSort24Regular className={styles.sortIcon} />
-                                    <Text size={300} className={styles.sortLabel}>
-                                        {t("components.community_assistants.sort_by", "Sort by")}:
-                                    </Text>
+                                    <Tooltip content={t("components.community_assistants.sort_by_tooltip", "Change sorting")} relationship="label">
+                                        <ArrowSort24Regular />
+                                    </Tooltip>
+                                    <span className={styles.sortLabel}>
+                                        <Text>{t("components.community_assistants.sort_by", "Sort by")}</Text>
+                                    </span>
                                     <Dropdown
                                         id="sort"
                                         value={sortMethod}
@@ -375,7 +362,13 @@ const Discovery = () => {
 
                         <CreateAssistantDialog showDialogInput={showCreateDialog} setShowDialogInput={setShowCreateDialog} />
 
-                        {filteredAssistants.length === 0 ? (
+                        {isLoading ? (
+                            <div className={styles.assistantsGrid}>
+                                {Array.from({ length: 12 }).map((_, index) => (
+                                    <DiscoveryCardSkeleton key={index} />
+                                ))}
+                            </div>
+                        ) : filteredAssistants.length === 0 ? (
                             <div className={styles.noResults}>
                                 <Text size={400}>{t("components.community_assistants.no_assistants_found", "No assistants found")}</Text>
                             </div>

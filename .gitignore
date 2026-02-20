@@ -160,3 +160,5 @@ config/p.json
 config/local.json
 .env*
 stack/ca-bundle.crt
+stack/assistant.config.yaml
+stack/core.config.yaml

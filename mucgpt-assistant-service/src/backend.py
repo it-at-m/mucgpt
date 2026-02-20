@@ -1,4 +1,5 @@
 import time
+from contextlib import asynccontextmanager
 
 from asgi_correlation_id import CorrelationIdMiddleware, correlation_id
 from fastapi import FastAPI, Request
@@ -12,14 +13,26 @@ from api.routers import (
     system_router,
     users_router,
 )
+from config.settings import (
+    get_settings,
+)
 from core.auth import AuthError
 from core.logtools import getLogger
 
 logger = getLogger("mucgpt-assistant-service")
+settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Log current settings
+    logger.info("Starting MUCGPT Assistant Service")
+    logger.info("Loaded Settings:\n%s", settings.model_dump_json(indent=2))
+    yield
 
 
 # serves static files and the api
-backend = FastAPI(title="MUCGPT-Assistant-Service")
+backend = FastAPI(title="MUCGPT-Assistant-Service", lifespan=lifespan)
 api_app = FastAPI(
     title="MUCGPT Assistant Service API",
     description="""

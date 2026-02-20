@@ -72,19 +72,23 @@ function Update-ManifestVersion {
     param(
         [Parameter(Mandatory=$true)][string]$FilePath,
         [Parameter(Mandatory=$true)][string]$ManifestType,
-        [Parameter(Mandatory=$true)][string]$NewVersion
+        [Parameter(Mandatory=$true)][string]$NewVersion,
+        [Parameter(Mandatory=$false)][string]$BumpType
     )
 
     if ($ManifestType -eq "pyproject") {
-        $content = Get-Content -Raw -Path $FilePath
-        $regex = [regex]::new('(?m)^(?<prefix>\s*version\s*=\s*")[^\"]+(?<suffix>")')
-
-        if (-not $regex.IsMatch($content)) {
-            throw "Could not find a version entry in $FilePath"
+        $projectDir = Split-Path -Parent $FilePath
+        if ($BumpType) {
+            Write-Host "Running: uv version --bump $BumpType" -ForegroundColor DarkGray
+            $uvOutput = uv version --bump $BumpType --project $projectDir 2>&1
+        } else {
+            Write-Host "Running: uv version $NewVersion" -ForegroundColor DarkGray
+            $uvOutput = uv version $NewVersion --project $projectDir 2>&1
         }
-
-        $updatedContent = $regex.Replace($content, { param($match) return $match.Groups['prefix'].Value + $NewVersion + $match.Groups['suffix'].Value }, 1)
-        [System.IO.File]::WriteAllText($FilePath, $updatedContent, (New-Object System.Text.UTF8Encoding $false))
+        if ($LASTEXITCODE -ne 0) {
+            throw "uv version failed: $uvOutput"
+        }
+        Write-Host $uvOutput -ForegroundColor DarkGray
     }
     elseif ($ManifestType -eq "packageJson") {
         $content = Get-Content -Raw -Path $FilePath
@@ -196,6 +200,14 @@ if (-not $VersionType) {
     Write-Host "Selected version type: $VersionType" -ForegroundColor Green
 }
 
+# Fetch latest tags from remote
+Write-Host "Fetching latest tags from remote..." -ForegroundColor DarkGray
+git fetch --tags | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to fetch remote tags. Aborting to avoid using stale tag data." -ForegroundColor Red
+    exit 1
+}
+
 # Define the prefix based on the service
 $prefix = $serviceConfig[$Service].Prefix
 
@@ -267,7 +279,7 @@ $major = [int]$versionParts[0]
 $minor = [int]$versionParts[1]
 $patch = [int]$versionParts[2]
 
-# Increment the appropriate part
+# Increment the appropriate partj
 switch ($VersionType) {
     "major" {
         $major++
@@ -441,7 +453,8 @@ if ($operationSucceeded -and $manifestPath) {
 
         if ($updateManifest -eq "y") {
             try {
-                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
+                $bumpArg = if ($manifestType -eq "pyproject") { $VersionType } else { $null }
+                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion -BumpType $bumpArg
                 Write-Host "Manifest version updated to $newVersion" -ForegroundColor Green
             }
             catch {

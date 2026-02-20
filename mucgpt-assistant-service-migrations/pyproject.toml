@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-assistant-service-migrations"
-version = "0.3.0"
+version = "0.4.0"
 description = "Migrations for mucgpt-assistant-service"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },

@@ -55,11 +55,23 @@ def get_database_url():
     logger = logging.getLogger("migrations")
     try:
         url = get_db_url()
-        # Log masked URL for debugging
-        if "@" in url:
-            prefix, suffix = url.split("@", 1)
-            host = suffix.split("/")[0]
-            logger.info(f"Using database at {host}")
+        # Log only non-sensitive connection target information for debugging.
+        try:
+            parsed_url = sqlalchemy.engine.make_url(url)
+            if parsed_url.host:
+                if parsed_url.port:
+                    logger.info(
+                        "Using database at %s:%s",
+                        parsed_url.host,
+                        parsed_url.port,
+                    )
+                else:
+                    logger.info("Using database at %s", parsed_url.host)
+        except Exception:
+            # If URL parsing fails, avoid logging the raw URL to prevent leaking secrets.
+            logger.debug(
+                "Database URL could not be parsed for logging host information."
+            )
         return url
     except Exception as e:
         logger.error(f"Failed to get database configuration: {e}")

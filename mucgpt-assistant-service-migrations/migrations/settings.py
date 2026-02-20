@@ -75,11 +75,6 @@ class MigrationSettings(BaseSettings):
 def get_db_url() -> str:
     settings = MigrationSettings()
 
-    print(
-        f"Loaded Migration Settings: {settings.model_dump_json(indent=2)}",
-        file=sys.stderr,
-    )
-
     if settings.DATABASE_URL:
         return settings.DATABASE_URL
 

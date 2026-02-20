@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-assistant-service"
-version = "0.6.0"
+version = "0.7.0"
 description = "Add your description here"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
@@ -71,10 +71,10 @@ filterwarnings = [
 ]
 env = [
     "MUCGPT_ASSISTANT_LOG_CONFIG=src/logconf.yaml",
-    "MUCGPT_ASSISTANT_DB_HOST=test-host",
-    "MUCGPT_ASSISTANT_DB_NAME=test-db",
-    "MUCGPT_ASSISTANT_DB_USER=test-user",
-    "MUCGPT_ASSISTANT_DB_PASSWORD=test-password",
+    "MUCGPT_ASSISTANT_DB__HOST=test-host",
+    "MUCGPT_ASSISTANT_DB__NAME=test-db",
+    "MUCGPT_ASSISTANT_DB__USER=test-user",
+    "MUCGPT_ASSISTANT_DB__PASSWORD=test-password",
 ]
 
 [tool.coverage.paths]

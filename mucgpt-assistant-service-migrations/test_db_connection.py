@@ -15,6 +15,7 @@ import time
 import traceback
 
 import asyncpg
+from migrations.settings import MigrationSettings
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
@@ -22,18 +23,24 @@ async def test_async_connection():
     """Test database connection using asyncpg directly."""
     logger = logging.getLogger("db_test")
 
-    # Get database connection parameters
-    db_user = os.getenv("MUCGPT_ASSISTANT_DB_USER")
-    db_password = os.getenv("MUCGPT_ASSISTANT_DB_PASSWORD")
-    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
-    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
-    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
+    try:
+        settings = MigrationSettings()
+    except Exception as e:
+        logger.error(f"Failed to load settings: {e}")
+        return False
+
+    db = settings.DB
+    db_user = db.USER
+    db_password = db.PASSWORD.get_secret_value() if db.PASSWORD else None
+    db_host = db.HOST
+    db_port = db.PORT
+    db_name = db.NAME
 
     # Get timeout setting
     timeout = float(os.getenv("MIGRATION_DB_TIMEOUT", "30"))
 
     if not all([db_user, db_password, db_host, db_name]):
-        logger.error("Missing required database environment variables")
+        logger.error("Missing required database configuration in settings")
         return False
 
     # Test using asyncpg directly
@@ -69,18 +76,24 @@ async def test_sqlalchemy_connection():
     """Test database connection using SQLAlchemy."""
     logger = logging.getLogger("db_test")
 
-    # Get database connection parameters
-    db_user = os.getenv("MUCGPT_ASSISTANT_DB_USER")
-    db_password = os.getenv("MUCGPT_ASSISTANT_DB_PASSWORD")
-    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
-    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
-    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
+    try:
+        settings = MigrationSettings()
+    except Exception as e:
+        logger.error(f"Failed to load settings: {e}", exc_info=True)
+        return False
+
+    db = settings.DB
+    db_user = db.USER
+    db_password = db.PASSWORD.get_secret_value() if db.PASSWORD else None
+    db_host = db.HOST
+    db_port = db.PORT
+    db_name = db.NAME
 
     # Get timeout setting
     timeout = float(os.getenv("MIGRATION_DB_TIMEOUT", "30"))
 
     if not all([db_user, db_password, db_host, db_name]):
-        logger.error("Missing required database environment variables")
+        logger.error("Missing required database configuration in settings")
         return False
 
     # Construct database URL

@@ -72,7 +72,9 @@ def get_database_url():
             logger.debug(
                 "Database URL could not be parsed for logging host information."
             )
-        return url
+        # Always return a plain str so callers can use str methods like .startswith()
+        # regardless of whether get_db_url() returned a SQLAlchemy URL object or a str.
+        return str(url)
     except Exception as e:
         logger.error(f"Failed to get database configuration: {e}")
         sys.exit(1)

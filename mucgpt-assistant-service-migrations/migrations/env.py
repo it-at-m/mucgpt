@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from migrations.models.base import Base
 
 # Import settings to get database configuration
-from migrations.settings import get_db_url
+from migrations.settings import get_db_schema, get_db_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -55,11 +55,14 @@ def run_migrations_offline() -> None:
 
     """
     url = get_database_url()
+    schema = get_db_schema()
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table_schema=schema,
+        include_schemas=schema is not None,
     )
 
     with context.begin_transaction():
@@ -67,7 +70,13 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    schema = get_db_schema()
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=schema,
+        include_schemas=schema is not None,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

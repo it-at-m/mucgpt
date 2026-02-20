@@ -17,6 +17,7 @@ DB:
   NAME: "postgres"
   USER: "admin"
   PASSWORD: "admin"
+  # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""

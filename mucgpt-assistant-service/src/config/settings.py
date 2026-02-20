@@ -30,6 +30,7 @@ class DBConfig(BaseModel):
     NAME: str
     USER: str
     PASSWORD: SecretStr
+    SCHEMA: str | None = None
 
 
 class RedisConfig(BaseModel):

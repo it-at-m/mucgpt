@@ -512,7 +512,7 @@ class TestRedisSettings:
             redis = get_redis_settings()
             assert redis.HOST == "env-redis-host"
             assert redis.PORT == 1234
-            assert redis.USERNAME == "env-user"
+            assert redis.USERNAME.get_secret_value() == "env-user"
             assert redis.PASSWORD.get_secret_value() == "env-pass"
 
     def test_redis_settings_defaults(self):

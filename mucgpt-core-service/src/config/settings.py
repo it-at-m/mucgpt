@@ -309,7 +309,7 @@ class RedisConfig(BaseModel):
 
     HOST: str | None = None
     PORT: int = 6379
-    USERNAME: str | None = None
+    USERNAME: SecretStr | None = None
     PASSWORD: SecretStr | None = None
 
 

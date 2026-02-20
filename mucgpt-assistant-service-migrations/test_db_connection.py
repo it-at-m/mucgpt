@@ -78,7 +78,8 @@ async def test_sqlalchemy_connection():
 
     try:
         settings = MigrationSettings()
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load settings: {e}", exc_info=True)
         return False
 
     db = settings.DB

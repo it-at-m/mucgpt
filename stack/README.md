@@ -174,7 +174,7 @@ The stack uses **YAML configuration files** as the primary configuration source,
 
    ```powershell
    cp .env.example .env
-   cp core..config.yaml.example core.config.yaml
+   cp core.config.yaml.example core.config.yaml
    cp assistant.config.yaml.example assistant.config.yaml
    ```
 

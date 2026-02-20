@@ -123,6 +123,9 @@ def get_engine_and_factory_direct(settings: Settings):
             "user": settings.DB.USER,
             "password": db_password,
         }
+        if settings.DB.SCHEMA:
+            connect_args["server_settings"] = {"search_path": settings.DB.SCHEMA}
+            logger.info(f"Using PostgreSQL schema (search_path): {settings.DB.SCHEMA}")
 
         engine = create_async_engine(
             "postgresql+asyncpg://",  # Just the driver, parameters passed separately

@@ -13,6 +13,7 @@ DB:
   NAME: "postgres"
   USER: "admin"
   PASSWORD: "admin" # Change this for production! Or use MUCGPT_ASSISTANT_DB__PASSWORD env var
+  # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"

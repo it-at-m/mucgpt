@@ -9,6 +9,7 @@ from pydantic_settings import (
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
+from sqlalchemy.engine import URL
 
 # ---------------------------------------------------------------------------
 # Nested sub-configuration model
@@ -23,6 +24,7 @@ class DBConfig(BaseModel):
     NAME: str | None = None
     USER: str | None = None
     PASSWORD: SecretStr | None = None
+    SCHEMA: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +74,7 @@ class MigrationSettings(BaseSettings):
 # ---------------------------------------------------------------------------
 
 
-def get_db_url() -> str:
+def get_db_url() -> str | URL:
     settings = MigrationSettings()
 
     if settings.DATABASE_URL:
@@ -89,4 +91,16 @@ def get_db_url() -> str:
         )
 
     password = db.PASSWORD.get_secret_value() if db.PASSWORD else ""
-    return f"postgresql+asyncpg://{db.USER}:{password}@{db.HOST}:{db.PORT}/{db.NAME}"
+    return URL.create(
+        drivername="postgresql+asyncpg",
+        username=db.USER,
+        password=password,
+        host=db.HOST,
+        port=db.PORT,
+        database=db.NAME,
+    )
+
+
+def get_db_schema() -> str | None:
+    """Return the optional PostgreSQL schema from settings (DB.SCHEMA)."""
+    return MigrationSettings().DB.SCHEMA

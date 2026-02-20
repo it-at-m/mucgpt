@@ -65,16 +65,13 @@ MCP:
   CACHE_TTL: 43200
 
 # Redis Settings (optional - nested under REDIS key)
+# Override individual fields via environment variables, e.g.:
+#   MUCGPT_CORE_REDIS__HOST=my-redis
+#   MUCGPT_CORE_REDIS__PORT=6379
+#   MUCGPT_CORE_REDIS__USERNAME=default
+#   MUCGPT_CORE_REDIS__PASSWORD=secret
 REDIS:
   HOST: "localhost"
   PORT: 6379
   USERNAME: "default"
   PASSWORD: "<your-password>"
-#     forward_token: false
-# CACHE_TTL: 43200
-
-# Redis Settings (optional - can also be configured via environment variables with MUCGPT_REDIS_ prefix)
-# HOST: "redis"
-# PORT: 6379
-# USERNAME: "default"
-# PASSWORD: "password"

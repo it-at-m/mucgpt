@@ -18,7 +18,7 @@ UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_it
 
 # Langfuse Settings (Optional - for LLM observability)
 # Used by core service for tracing and monitoring
-# SECRET_KEY: "<your-secret-key>"  # Use MUCGPT_LANGFUSE_SECRET_KEY env var for production
+# SECRET_KEY: "<your-secret-key>"  # Use MUCGPT_CORE_LANGFUSE__SECRET_KEY env var for production
 LANGFUSE:
   HOST: "https://ki-observability-test.muenchen.de"
   SECRET_KEY: "<your-sk>"

@@ -75,7 +75,7 @@ MUCGPT is a system that enables users to interact with a large language model (L
 
 Roles and rights management is facilitated by access to an OpenID Connect provider.
 
-Users can create their own assistants and share them within the organisation. A personal assistant is a configuration of the MUCGPT agent, particularly the activated tools and system prompts.
+Users can create their own assistants and share them within the organization. A personal assistant is a configuration of the MUCGPT agent, particularly the activated tools and system prompts.
 
 See the [open issues](https://github.com/it-at-m/mucgpt/issues) for a full list of proposed features (and known issues).
 
@@ -145,7 +145,7 @@ Each service reads a `config.yaml` mounted into the container. Environment varia
 ```bash
 cd stack
 cp .env.example .env
-cp core..config.yaml.example core.config.yaml
+cp core.config.yaml.example core.config.yaml
 cp assistant.config.yaml.example assistant.config.yaml
 ```
 
@@ -201,8 +201,10 @@ MUCGPT_CORE_MODELS='[
 
 Settings are loaded in this order (highest priority wins):
 
-1. **Environment variables** – including `.env` file, uses `__` for nested sections
-2. **YAML config file** – `config.yaml` mounted into each container
+1. **Init values** – constructor kwargs / `init_settings`
+2. **Environment variables** – `MUCGPT_CORE_*` / `MUCGPT_ASSISTANT_*`, using `__` for nested sections
+3. **YAML config file** – `config.yaml` mounted into each container
+4. **`.env` file** – lowest priority; values here will **not** override anything set in `config.yaml` or environment variables
 
 This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD.
 

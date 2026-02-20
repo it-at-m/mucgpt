@@ -72,19 +72,13 @@ function Update-ManifestVersion {
     param(
         [Parameter(Mandatory=$true)][string]$FilePath,
         [Parameter(Mandatory=$true)][string]$ManifestType,
-        [Parameter(Mandatory=$true)][string]$NewVersion,
-        [Parameter(Mandatory=$false)][string]$BumpType
+        [Parameter(Mandatory=$true)][string]$NewVersion
     )
 
     if ($ManifestType -eq "pyproject") {
         $projectDir = Split-Path -Parent $FilePath
-        if ($BumpType) {
-            Write-Host "Running: uv version --bump $BumpType" -ForegroundColor DarkGray
-            $uvOutput = uv version --bump $BumpType --project $projectDir 2>&1
-        } else {
-            Write-Host "Running: uv version $NewVersion" -ForegroundColor DarkGray
-            $uvOutput = uv version $NewVersion --project $projectDir 2>&1
-        }
+        Write-Host "Running: uv version $NewVersion" -ForegroundColor DarkGray
+        $uvOutput = uv version $NewVersion --project $projectDir 2>&1
         if ($LASTEXITCODE -ne 0) {
             throw "uv version failed: $uvOutput"
         }
@@ -279,7 +273,7 @@ $major = [int]$versionParts[0]
 $minor = [int]$versionParts[1]
 $patch = [int]$versionParts[2]
 
-# Increment the appropriate partj
+# Increment the appropriate part
 switch ($VersionType) {
     "major" {
         $major++
@@ -453,8 +447,7 @@ if ($operationSucceeded -and $manifestPath) {
 
         if ($updateManifest -eq "y") {
             try {
-                $bumpArg = if ($manifestType -eq "pyproject") { $VersionType } else { $null }
-                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion -BumpType $bumpArg
+                Update-ManifestVersion -FilePath $manifestPath -ManifestType $manifestType -NewVersion $newVersion
                 Write-Host "Manifest version updated to $newVersion" -ForegroundColor Green
             }
             catch {

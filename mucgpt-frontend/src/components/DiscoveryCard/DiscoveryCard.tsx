@@ -1,12 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    Card,
-    CardHeader,
-    CardPreview,
-    mergeClasses,
-    CardProps
-} from "@fluentui/react-components";
+import { Card, CardHeader, CardPreview, mergeClasses, CardProps } from "@fluentui/react-components";
 import styles from "./DiscoveryCard.module.css";
 
 export interface DiscoveryCardProps extends CardProps {
@@ -14,9 +8,6 @@ export interface DiscoveryCardProps extends CardProps {
     title?: string;
     description?: string;
     linkTo?: string;
-    linkAriaLabel?: string;
-    linkText?: string;
-    additionalButtons?: ReactNode;
 
     header?: ReactNode;
     titleStyle?: React.CSSProperties;
@@ -30,9 +21,6 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         title,
         description,
         linkTo,
-        linkAriaLabel,
-        linkText = "Auswählen",
-        additionalButtons,
 
         header,
         className,
@@ -74,19 +62,10 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
     };
 
     const cardContent = (
-        <Card
-            id={id}
-            ref={ref}
-            className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)}
-            onClick={handleClick}
-            {...rest}
-        >
+        <Card id={id} ref={ref} className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)} onClick={handleClick} {...rest}>
             {renderHeader()}
             {description && (
-                <CardPreview
-                    className={styles.description}
-                    style={{ WebkitLineClamp: descriptionLines } as React.CSSProperties}
-                >
+                <CardPreview className={styles.description} style={{ WebkitLineClamp: descriptionLines } as React.CSSProperties}>
                     {description}
                 </CardPreview>
             )}

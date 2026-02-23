@@ -36,7 +36,6 @@ const Menu = () => {
     const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [selectedTab, setSelectedTab] = useState<string>("local");
 
-
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
@@ -100,7 +99,6 @@ const Menu = () => {
         }
     }, [user]);
 
-
     const onSearchAssistant = () => {
         setShowSearchAssistant(true);
         setGetCommunityAssistants(true);
@@ -156,7 +154,6 @@ const Menu = () => {
     return (
         <div role="presentation">
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
-
                 <h1 id="chat-header" className={styles.heading}>
                     {t("menu.chat_header", { user: username })}{" "}
                 </h1>
@@ -202,7 +199,21 @@ const Menu = () => {
                     {t("menu.own_assistants")}
                     <div className={addButtonStyles.container}>
                         <Tooltip content={t("menu.discover_assistants", "Assistenten entdecken")} relationship="description" positioning="below">
-                            <Link to="/discovery" className={addButtonStyles.button} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 16px", textDecoration: "none", fontSize: "14px", fontWeight: 600, color: "var(--onPrimary)" }} aria-label={t("menu.discover_assistants", "Assistenten entdecken")}>
+                            <Link
+                                to="/discovery"
+                                className={addButtonStyles.button}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    padding: "6px 16px",
+                                    textDecoration: "none",
+                                    fontSize: "14px",
+                                    fontWeight: 600,
+                                    color: "var(--onPrimary)"
+                                }}
+                                aria-label={t("menu.discover_assistants", "Assistenten entdecken")}
+                            >
                                 <CompassNorthwest24Regular aria-hidden />
                                 {t("menu.discover_assistants", "Assistenten entdecken")}
                             </Link>

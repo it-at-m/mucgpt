@@ -1,10 +1,4 @@
-import {
-    InlineDrawer,
-    DrawerHeader,
-    Button,
-    DrawerBody,
-    Text
-} from "@fluentui/react-components";
+import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
     Chat24Regular,
@@ -20,7 +14,6 @@ import {
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { AssistantResponse } from "../../api/models";
-
 
 export interface AssistantCardData {
     id: string;
@@ -42,25 +35,29 @@ interface AssistantDetailsSidebarProps {
     onDelete: () => void;
 }
 
-export const AssistantDetailsSidebar = ({
-    isOpen,
-    onClose,
-    assistant,
-    ownedAssistantIds,
-    onStartChat,
-    onEdit,
-    onDelete
-}: AssistantDetailsSidebarProps) => {
+export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onDelete }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
 
     const getCreativityConfig = (creativity: string) => {
         switch (creativity.toLowerCase()) {
             case "low":
-                return { text: t("components.chattsettingsdrawer.creativity_low"), icon: <TargetArrow24Regular />, description: t("components.chattsettingsdrawer.creativity_low_description") };
+                return {
+                    text: t("components.chattsettingsdrawer.creativity_low"),
+                    icon: <TargetArrow24Regular />,
+                    description: t("components.chattsettingsdrawer.creativity_low_description")
+                };
             case "high":
-                return { text: t("components.chattsettingsdrawer.creativity_high"), icon: <Color24Regular />, description: t("components.chattsettingsdrawer.creativity_high_description") };
+                return {
+                    text: t("components.chattsettingsdrawer.creativity_high"),
+                    icon: <Color24Regular />,
+                    description: t("components.chattsettingsdrawer.creativity_high_description")
+                };
             default:
-                return { text: t("components.chattsettingsdrawer.creativity_medium"), icon: <Scales24Regular />, description: t("components.chattsettingsdrawer.creativity_medium_description") };
+                return {
+                    text: t("components.chattsettingsdrawer.creativity_medium"),
+                    icon: <Scales24Regular />,
+                    description: t("components.chattsettingsdrawer.creativity_medium_description")
+                };
         }
     };
 
@@ -69,21 +66,11 @@ export const AssistantDetailsSidebar = ({
         : getCreativityConfig("balanced");
 
     return (
-        <InlineDrawer
-            open={isOpen}
-            position="end"
-            className={styles.inlineDrawer}
-            aria-labelledby="sidebar-title"
-        >
+        <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
             <DrawerHeader>
                 <div className={styles.headerContainer}>
                     <div className={styles.closeButtonContainer}>
-                        <Button
-                            appearance="subtle"
-                            aria-label={t("common.close")}
-                            icon={<Dismiss24Regular />}
-                            onClick={onClose}
-                        />
+                        <Button appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} onClick={onClose} />
                     </div>
                     <div id="sidebar-title" className={styles.sidebarTitle}>
                         {assistant?.title}
@@ -97,20 +84,12 @@ export const AssistantDetailsSidebar = ({
                         <span className={styles.creativityIcon}>{creativityConfig.icon}</span>
                         <span>{creativityConfig.text}</span>
                     </div>
-                    <Text className={styles.creativityDescription}>
-                        {creativityConfig.description}
-                    </Text>
+                    <Text className={styles.creativityDescription}>{creativityConfig.description}</Text>
                 </div>
 
                 {assistant && (
                     <div className={styles.startButtonWrapper}>
-                        <Button
-                            appearance="primary"
-                            className={styles.startConversationButton}
-                            icon={<Chat24Regular />}
-                            onClick={onStartChat}
-                            size="large"
-                        >
+                        <Button appearance="primary" className={styles.startConversationButton} icon={<Chat24Regular />} onClick={onStartChat} size="large">
                             {t("components.community_assistants.start_chat", "Start Conversation")}
                         </Button>
                     </div>
@@ -118,13 +97,7 @@ export const AssistantDetailsSidebar = ({
 
                 {assistant && ownedAssistantIds.has(assistant.id) && (
                     <div className={styles.actionButtonsRow}>
-                        <Button
-                            appearance="outline"
-                            className={styles.actionButton}
-                            icon={<Edit20Regular />}
-                            onClick={onEdit}
-                            size="medium"
-                        >
+                        <Button appearance="outline" className={styles.actionButton} icon={<Edit20Regular />} onClick={onEdit} size="medium">
                             {t("common.edit")}
                         </Button>
                         <Button
@@ -144,9 +117,7 @@ export const AssistantDetailsSidebar = ({
                         <Info24Regular className={styles.sectionIcon} />
                         <span>{t("components.create_assistant_dialog.description", "ABOUT")}</span>
                     </div>
-                    <Text className={styles.aboutText}>
-                        {assistant?.description}
-                    </Text>
+                    <Text className={styles.aboutText}>{assistant?.description}</Text>
                 </div>
 
                 {assistant?.rawData?.latest_version?.tools && assistant.rawData.latest_version.tools.length > 0 && (
@@ -172,9 +143,7 @@ export const AssistantDetailsSidebar = ({
                             <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                         </div>
                         <div className={styles.systemPromptContainer}>
-                            <Text className={styles.promptText}>
-                                {assistant.rawData.latest_version.system_prompt}
-                            </Text>
+                            <Text className={styles.promptText}>{assistant.rawData.latest_version.system_prompt}</Text>
                         </div>
                     </div>
                 )}

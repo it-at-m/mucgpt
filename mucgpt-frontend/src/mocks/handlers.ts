@@ -221,8 +221,14 @@ DYNAMIC_ASSISTANTS.push(
             ],
             owner_ids: ["user-mock-001"],
             examples: [
-                { text: "Draft a follow-up e-mail after a project kickoff meeting", value: "Sure! I'll draft a concise follow-up summarizing action items and next steps." },
-                { text: "Make this e-mail sound more polite", value: "I can soften the tone while keeping the message clear. Paste your draft and I'll revise it." }
+                {
+                    text: "Draft a follow-up e-mail after a project kickoff meeting",
+                    value: "Sure! I'll draft a concise follow-up summarizing action items and next steps."
+                },
+                {
+                    text: "Make this e-mail sound more polite",
+                    value: "I can soften the tone while keeping the message clear. Paste your draft and I'll revise it."
+                }
             ],
             quick_prompts: [
                 { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday.", tooltip: "Post-meeting follow-up" },
@@ -253,9 +259,7 @@ DYNAMIC_ASSISTANTS.push(
                 { id: "Vereinfachen", config: { enabled: false } }
             ],
             owner_ids: ["user-mock-002"],
-            examples: [
-                { text: "Here are my rough notes from today's standup…", value: "I'll organize these into clean meeting minutes with action items." }
-            ],
+            examples: [{ text: "Here are my rough notes from today's standup…", value: "I'll organize these into clean meeting minutes with action items." }],
             quick_prompts: [
                 { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:", tooltip: "Structure raw notes" },
                 { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:", tooltip: "Find action items" }
@@ -287,7 +291,10 @@ DYNAMIC_ASSISTANTS.push(
             owner_ids: ["user-mock-003"],
             examples: [
                 { text: "Explain the new travel expense policy in simple terms", value: "I'll break it down into the key points that affect your daily work." },
-                { text: "What changed between v2 and v3 of the data protection guideline?", value: "I can create a side-by-side comparison highlighting the differences." }
+                {
+                    text: "What changed between v2 and v3 of the data protection guideline?",
+                    value: "I can create a side-by-side comparison highlighting the differences."
+                }
             ],
             quick_prompts: [
                 { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:", tooltip: "Plain-language summary" },

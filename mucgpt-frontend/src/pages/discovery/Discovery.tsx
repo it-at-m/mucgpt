@@ -1,21 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    Title1,
-    Body1,
-    Spinner,
-    Text,
-    SearchBox,
-    Dropdown,
-    Option,
-    Button,
-    ToggleButton,
-    Tooltip
-} from "@fluentui/react-components";
-import {
-    ArrowSort24Regular,
-    ArrowImport24Filled
-} from "@fluentui/react-icons";
+import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, ToggleButton, Tooltip } from "@fluentui/react-components";
+import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -60,7 +46,7 @@ const Discovery = () => {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
-    const [filterScope, setFilterScope] = useState<'all' | 'yours'>('yours');
+    const [filterScope, setFilterScope] = useState<"all" | "yours">("yours");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -154,9 +140,12 @@ const Discovery = () => {
         }
     }, []);
 
-    const sortAssistants = useCallback((assistantsList: AssistantCardData[], method: SortKey): AssistantCardData[] => {
-        return [...assistantsList].sort(getSortFunction(method));
-    }, [getSortFunction]);
+    const sortAssistants = useCallback(
+        (assistantsList: AssistantCardData[], method: SortKey): AssistantCardData[] => {
+            return [...assistantsList].sort(getSortFunction(method));
+        },
+        [getSortFunction]
+    );
 
     useEffect(() => {
         const fetchAssistants = async () => {
@@ -168,10 +157,7 @@ const Discovery = () => {
                     getUserSubscriptionsApi()
                 ]);
 
-                const ownedIds = new Set([
-                    ...ownedAssistants.map((a: AssistantResponse) => a.id),
-                    ...userSubscriptions.map((s: { id: string }) => s.id)
-                ]);
+                const ownedIds = new Set([...ownedAssistants.map((a: AssistantResponse) => a.id), ...userSubscriptions.map((s: { id: string }) => s.id)]);
                 setOwnedAssistantIds(ownedIds);
 
                 const cardData: AssistantCardData[] = allAssistants.map((response: AssistantResponse) => ({
@@ -183,7 +169,6 @@ const Discovery = () => {
                     tags: response.latest_version.tags || [],
                     rawData: response
                 }));
-
 
                 const sortedData = sortAssistants(cardData, sortMethod);
                 setAssistants(sortedData);
@@ -210,13 +195,13 @@ const Discovery = () => {
         const lowerCaseSearch = newValue.toLowerCase();
 
         const filtered = assistants.filter(assistant => {
-            const matchesSearch = !newValue.trim() || (
+            const matchesSearch =
+                !newValue.trim() ||
                 assistant.title.toLowerCase().includes(lowerCaseSearch) ||
                 assistant.description.toLowerCase().includes(lowerCaseSearch) ||
-                (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)))
-            );
+                (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)));
 
-            const matchesScope = filterScope === 'all' || (filterScope === 'yours' && ownedAssistantIds.has(assistant.id));
+            const matchesScope = filterScope === "all" || (filterScope === "yours" && ownedAssistantIds.has(assistant.id));
 
             return matchesSearch && matchesScope;
         });
@@ -224,7 +209,7 @@ const Discovery = () => {
         setFilteredAssistants(sortAssistants(filtered, sortMethod));
     };
 
-    const handleFilterChange = (scope: 'all' | 'yours') => {
+    const handleFilterChange = (scope: "all" | "yours") => {
         setFilterScope(scope);
     };
 
@@ -277,7 +262,6 @@ const Discovery = () => {
         }
     };
 
-
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.flexContainer} data-drawer-open={isDrawerOpen}>
@@ -320,16 +304,16 @@ const Discovery = () => {
                             <div className={styles.controlsSection}>
                                 <div>
                                     <ToggleButton
-                                        className={`${styles.filterButton} ${filterScope === 'all' ? styles.filterButtonActive : ''}`}
-                                        checked={filterScope === 'all'}
-                                        onClick={() => handleFilterChange('all')}
+                                        className={`${styles.filterButton} ${filterScope === "all" ? styles.filterButtonActive : ""}`}
+                                        checked={filterScope === "all"}
+                                        onClick={() => handleFilterChange("all")}
                                     >
                                         {t("components.community_assistants.filter_all", "All")}
                                     </ToggleButton>
                                     <ToggleButton
-                                        className={`${styles.filterButton} ${filterScope === 'yours' ? styles.filterButtonActive : ''}`}
-                                        checked={filterScope === 'yours'}
-                                        onClick={() => handleFilterChange('yours')}
+                                        className={`${styles.filterButton} ${filterScope === "yours" ? styles.filterButtonActive : ""}`}
+                                        checked={filterScope === "yours"}
+                                        onClick={() => handleFilterChange("yours")}
                                     >
                                         {t("components.community_assistants.filter_yours", "Yours")}
                                     </ToggleButton>
@@ -396,14 +380,16 @@ const Discovery = () => {
 
                 <AssistantDetailsSidebar
                     isOpen={isDrawerOpen}
-                    onClose={() => { setIsDrawerOpen(false); setTimeout(() => setSelectedAssistant(null), 300); }}
+                    onClose={() => {
+                        setIsDrawerOpen(false);
+                        setTimeout(() => setSelectedAssistant(null), 300);
+                    }}
                     assistant={selectedAssistant}
                     ownedAssistantIds={ownedAssistantIds}
                     onStartChat={startConversation}
                     onEdit={editAssistant}
                     onDelete={deleteAssistant}
                 />
-
             </div>
         </div>
     );

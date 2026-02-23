@@ -1,4 +1,4 @@
-import { Checkmark24Filled, ArrowImport24Filled, Dismiss24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -19,7 +19,6 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { ToolInfo } from "../../../api";
-import { CREATIVITY_LOW } from "../../../constants";
 import { createAssistantApi } from "../../../api/core-client";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";

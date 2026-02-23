@@ -437,7 +437,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-
     const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
@@ -455,8 +454,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                }
+                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                  }
                 : tools;
 
         return (

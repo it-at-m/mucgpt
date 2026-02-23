@@ -35,6 +35,6 @@
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    word-break: break-word;
+    overflow-wrap: break-word;
     padding: 0 12px 0;
 }

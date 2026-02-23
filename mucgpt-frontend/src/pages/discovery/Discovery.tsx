@@ -9,6 +9,7 @@ import {
     Dropdown,
     Option,
     Button,
+    ToggleButton,
     Tooltip
 } from "@fluentui/react-components";
 import {
@@ -40,6 +41,8 @@ interface AssistantCardData {
     rawData: AssistantResponse;
 }
 
+type SortKey = "title" | "updated" | "subscriptions";
+
 const storageService = new AssistantStorageService(ASSISTANT_STORE);
 
 const Discovery = () => {
@@ -52,7 +55,7 @@ const Discovery = () => {
     const [filteredAssistants, setFilteredAssistants] = useState<AssistantCardData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>("");
-    const [sortMethod, setSortMethod] = useState<string>(t("components.community_assistants.sort_subscriptions"));
+    const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
     const [showCreateDialog, setShowCreateDialog] = useState<boolean>(false);
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -138,24 +141,20 @@ const Discovery = () => {
         return b.subscriptions - a.subscriptions;
     };
 
-    const getSortFunction = useCallback((method: string) => {
-        const titleLabel = t("components.community_assistants.sort_title");
-        const updatedLabel = t("components.community_assistants.sort_updated");
-        const subscriptionsLabel = t("components.community_assistants.sort_subscriptions");
-
+    const getSortFunction = useCallback((method: SortKey) => {
         switch (method) {
-            case titleLabel:
+            case "title":
                 return compareByTitle;
-            case updatedLabel:
+            case "updated":
                 return compareByUpdated;
-            case subscriptionsLabel:
+            case "subscriptions":
                 return compareBySubscriptions;
             default:
                 return compareByTitle;
         }
-    }, [t]);
+    }, []);
 
-    const sortAssistants = useCallback((assistantsList: AssistantCardData[], method: string): AssistantCardData[] => {
+    const sortAssistants = useCallback((assistantsList: AssistantCardData[], method: SortKey): AssistantCardData[] => {
         return [...assistantsList].sort(getSortFunction(method));
     }, [getSortFunction]);
 
@@ -163,13 +162,16 @@ const Discovery = () => {
         const fetchAssistants = async () => {
             setIsLoading(true);
             try {
-                const [allAssistants, ownedAssistants] = await Promise.all([
+                const [allAssistants, ownedAssistants, userSubscriptions] = await Promise.all([
                     getAllCommunityAssistantsApi(),
                     getOwnedCommunityAssistants(),
                     getUserSubscriptionsApi()
                 ]);
 
-                const ownedIds = new Set(ownedAssistants.map((a: AssistantResponse) => a.id));
+                const ownedIds = new Set([
+                    ...ownedAssistants.map((a: AssistantResponse) => a.id),
+                    ...userSubscriptions.map((s: { id: string }) => s.id)
+                ]);
                 setOwnedAssistantIds(ownedIds);
 
                 const cardData: AssistantCardData[] = allAssistants.map((response: AssistantResponse) => ({
@@ -227,7 +229,7 @@ const Discovery = () => {
     };
 
     const handleSortChange = (event: any, data: any) => {
-        const newSortMethod = data.optionValue;
+        const newSortMethod = data.optionValue as SortKey;
         if (newSortMethod !== undefined) {
             setSortMethod(newSortMethod);
         }
@@ -317,18 +319,20 @@ const Discovery = () => {
 
                             <div className={styles.controlsSection}>
                                 <div>
-                                    <button
+                                    <ToggleButton
                                         className={`${styles.filterButton} ${filterScope === 'all' ? styles.filterButtonActive : ''}`}
+                                        checked={filterScope === 'all'}
                                         onClick={() => handleFilterChange('all')}
                                     >
                                         {t("components.community_assistants.filter_all", "All")}
-                                    </button>
-                                    <button
+                                    </ToggleButton>
+                                    <ToggleButton
                                         className={`${styles.filterButton} ${filterScope === 'yours' ? styles.filterButtonActive : ''}`}
+                                        checked={filterScope === 'yours'}
                                         onClick={() => handleFilterChange('yours')}
                                     >
                                         {t("components.community_assistants.filter_yours", "Yours")}
-                                    </button>
+                                    </ToggleButton>
                                 </div>
 
                                 <div className={styles.sortSection}>
@@ -346,13 +350,13 @@ const Discovery = () => {
                                         className={styles.sortDropdown}
                                         onOptionSelect={handleSortChange}
                                     >
-                                        <Option value={t("components.community_assistants.sort_title", "Title")} text={t("components.community_assistants.sort_title", "Title")}>
+                                        <Option value="title" text={t("components.community_assistants.sort_title", "Title")}>
                                             {t("components.community_assistants.sort_title", "Title")}
                                         </Option>
-                                        <Option value={t("components.community_assistants.sort_updated", "Last updated")} text={t("components.community_assistants.sort_updated", "Last updated")}>
+                                        <Option value="updated" text={t("components.community_assistants.sort_updated", "Last updated")}>
                                             {t("components.community_assistants.sort_updated", "Last updated")}
                                         </Option>
-                                        <Option value={t("components.community_assistants.sort_subscriptions", "Subscriptions")} text={t("components.community_assistants.sort_subscriptions", "Subscriptions")}>
+                                        <Option value="subscriptions" text={t("components.community_assistants.sort_subscriptions", "Subscriptions")}>
                                             {t("components.community_assistants.sort_subscriptions", "Subscriptions")}
                                         </Option>
                                     </Dropdown>

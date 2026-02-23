@@ -73,18 +73,19 @@ export const AssistantDetailsSidebar = ({
             open={isOpen}
             position="end"
             className={styles.inlineDrawer}
+            aria-labelledby="sidebar-title"
         >
             <DrawerHeader>
                 <div className={styles.headerContainer}>
                     <div className={styles.closeButtonContainer}>
                         <Button
                             appearance="subtle"
-                            aria-label="Close"
+                            aria-label={t("common.close")}
                             icon={<Dismiss24Regular />}
                             onClick={onClose}
                         />
                     </div>
-                    <div className={styles.sidebarTitle}>
+                    <div id="sidebar-title" className={styles.sidebarTitle}>
                         {assistant?.title}
                     </div>
                 </div>
@@ -101,17 +102,19 @@ export const AssistantDetailsSidebar = ({
                     </Text>
                 </div>
 
-                <div className={styles.startButtonWrapper}>
-                    <Button
-                        appearance="primary"
-                        className={styles.startConversationButton}
-                        icon={<Chat24Regular />}
-                        onClick={onStartChat}
-                        size="large"
-                    >
-                        {t("components.community_assistants.start_chat", "Start Conversation")}
-                    </Button>
-                </div>
+                {assistant && (
+                    <div className={styles.startButtonWrapper}>
+                        <Button
+                            appearance="primary"
+                            className={styles.startConversationButton}
+                            icon={<Chat24Regular />}
+                            onClick={onStartChat}
+                            size="large"
+                        >
+                            {t("components.community_assistants.start_chat", "Start Conversation")}
+                        </Button>
+                    </div>
+                )}
 
                 {assistant && ownedAssistantIds.has(assistant.id) && (
                     <div className={styles.actionButtonsRow}>

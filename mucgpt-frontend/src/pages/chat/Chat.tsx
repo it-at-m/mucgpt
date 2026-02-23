@@ -90,10 +90,9 @@ const Chat = () => {
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
-    const headerTitle = t("header.chat");
     useEffect(() => {
-        setHeader(headerTitle);
-    }, [setHeader, headerTitle]);
+        setHeader("");
+    }, [setHeader]);
     const { tools } = useToolsContext();
 
     // Independent states
@@ -626,7 +625,7 @@ const Chat = () => {
                     answers={answerList}
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
-                    header={headerTitle}
+                    header={t("chat.header")}
                     welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}

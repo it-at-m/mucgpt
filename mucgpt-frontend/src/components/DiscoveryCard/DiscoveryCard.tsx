@@ -45,9 +45,9 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
     const navigate = useNavigate();
 
-    const handleClick = (e: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
         if (onClick) {
-            onClick(e as any);
+            onClick(e);
         } else if (linkTo) {
             navigate(linkTo);
         }
@@ -75,6 +75,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
     const cardContent = (
         <Card
+            id={id}
             ref={ref}
             className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)}
             onClick={handleClick}

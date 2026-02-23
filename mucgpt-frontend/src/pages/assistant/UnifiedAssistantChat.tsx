@@ -96,11 +96,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Auto-open edit dialog when navigating from Discovery with ?edit=true
     useEffect(() => {
         if (searchParams.get("edit") === "true") {
-            setShowEditDialog(true);
+            if (strategy?.canEdit) {
+                setShowEditDialog(true);
+            }
             searchParams.delete("edit");
             setSearchParams(searchParams, { replace: true });
         }
-    }, [searchParams, setSearchParams]);
+    }, [searchParams, setSearchParams, strategy?.canEdit]);
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);

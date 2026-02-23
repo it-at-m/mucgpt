@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Model } from "../../api";
-import { RocketRegular, Checkmark24Filled, Money24Filled, MoneyRegular } from "@fluentui/react-icons";
+import { Checkmark24Filled, Money24Filled, MoneyRegular, ChevronDown20Regular } from "@fluentui/react-icons";
 import styles from "./LLMSelector.module.css";
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
 import React from "react";
@@ -213,8 +213,8 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={title} relationship="description" positioning="after">
                         <button type="button" className={`${styles.container} ${styles.buttonContainer}`}>
-                            <RocketRegular className={styles.iconRightMargin} />
                             <span className={styles.modelName}>{displayName}</span>
+                            <ChevronDown20Regular className={styles.iconLeftMargin} />
                         </button>
                     </Tooltip>
                 </DialogTrigger>

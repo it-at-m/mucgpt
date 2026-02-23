@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
-import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -29,6 +28,9 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { Button } from "@fluentui/react-components";
+import { Settings24Regular } from "@fluentui/react-icons";
+import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -88,6 +90,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
+    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -207,24 +210,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (chats) dispatch({ type: "SET_ALL_CHATS", payload: chats });
         });
     }, [assistantStorageService, assistant_id]);
-
-    // deleteAssistant-Funktion
-    const onDeleteAssistant = useCallback(async () => {
-        try {
-            await strategy.deleteAssistant(assistant_id, assistantStorageService);
-            showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
-            );
-            window.location.href = "/";
-        } catch (err) {
-            console.error("Error deleting assistant:", err);
-            showError(
-                t("components.assistant_chat.delete_assistant_failed"),
-                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
-            );
-        }
-    }, [strategy, assistant_id, assistantStorageService, showError, showSuccess, t, assistantConfig.title]);
 
     // callApi-Funktion
     const callApi = useCallback(
@@ -440,35 +425,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-    const sidebar_assistant_settings = useMemo(
-        () => (
-            <>
-                <AssistantsettingsDrawer
-                    assistant={assistantConfig}
-                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
-                    onDeleteAssistant={onDeleteAssistant}
-                    isOwned={strategy.isOwned}
-                    strategy={strategy}
-                ></AssistantsettingsDrawer>
-            </>
-        ),
-        [assistantConfig, onAssistantChanged, onDeleteAssistant, history, showSidebar, strategy.canEdit, strategy.isOwned, strategy]
-    );
-
-    const sidebar = useMemo(
-        () => (
-            <Sidebar
-                content={
-                    <>
-                        {sidebar_assistant_settings}
-                        {history}
-                    </>
-                }
-                actions={sidebar_actions}
-            />
-        ),
-        [history, sidebar_assistant_settings, sidebar_actions]
-    );
+    const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
     const examplesComponent = useMemo(() => {
@@ -577,7 +534,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     answers={answerList}
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
-                    header=""
+                    header={assistantConfig.title}
+                    welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? sidebarSize : "none"}
@@ -585,8 +543,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    actions={
+                        strategy.isOwned && (
+                            <Button
+                                appearance="subtle"
+                                icon={<Settings24Regular />}
+                                onClick={() => {
+                                    setShowEditDialog(true);
+                                }}
+                                aria-label={t("components.assistantsettingsdrawer.show_configurations")}
+                            />
+                        )
+                    }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -606,12 +574,21 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         onLLMSelectionChange,
         showSidebar,
         clearChat,
-        isLoadingRef.current
+        isLoadingRef.current,
+        strategy
     ]);
 
     return (
         <>
             {layout}
+            <EditAssistantDialog
+                showDialog={showEditDialog}
+                setShowDialog={setShowEditDialog}
+                assistant={assistantConfig}
+                onAssistantChanged={onAssistantChanged}
+                isOwner={strategy.isOwned}
+                strategy={strategy}
+            />
             <NotSubscribedDialog
                 open={showNotSubscribedDialog}
                 onOpenChange={setShowNotSubscribedDialog}

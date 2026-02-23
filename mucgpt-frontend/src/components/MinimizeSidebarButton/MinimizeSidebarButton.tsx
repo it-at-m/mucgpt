@@ -3,6 +3,8 @@ import { Button, Tooltip } from "@fluentui/react-components";
 
 import { useTranslation } from "react-i18next";
 
+import styles from "./MinimizeSidebarButton.module.css";
+
 interface Props {
     showSidebar: boolean;
     setShowSidebar: (showSidebar: boolean) => void;
@@ -13,6 +15,7 @@ export const MinimizeSidebarButton = ({ showSidebar, setShowSidebar }: Props) =>
     return (
         <Tooltip content={showSidebar ? t("common.sidebar_hide") : t("common.sidebar_show")} relationship="description" positioning="below">
             <Button
+                className={styles.hideOnDesktop}
                 style={{ marginLeft: "5px", right: "5px" }}
                 appearance="primary"
                 icon={showSidebar ? <ArrowMinimize24Filled /> : <ArrowMaximize24Filled />}

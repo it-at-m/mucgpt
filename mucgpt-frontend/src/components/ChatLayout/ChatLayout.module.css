@@ -1,11 +1,53 @@
 .container {
     flex-direction: row;
     margin-right: 1em;
+    --navHeight: 50px;
+}
+
+.headerBar {
+    position: fixed;
+    top: var(--navHeight, 50px);
+    left: max(var(--sidebarWidth, 240px), 0px);
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: var(--colorNeutralBackground1);
+    z-index: 5;
+    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    box-sizing: border-box;
+}
+
+.leftGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.headerTitle {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--colorNeutralForeground1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.controlsContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 8px;
+    padding: 4px 8px;
+    background-color: var(--colorNeutralBackground1);
 }
 
 .chatRoot {
     position: fixed;
-    top: var(--nav-height, 50px);
+    top: calc(var(--navHeight, 50px) + 60px); /* Nav + Header */
     left: calc(var(--sidebarWidth, 240px));
     right: 0;
     bottom: 0;
@@ -14,7 +56,7 @@
     z-index: 1;
     box-sizing: border-box;
     transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
-    background: var(--primary);
+    background: var(--colorNeutralBackground1);
     margin-bottom: 58px;
 }
 
@@ -30,7 +72,7 @@
 
 .sidebar {
     position: fixed;
-    padding-top: 50px;
+    padding-top: var(--navHeight, 50px);
     padding-bottom: 60px;
     height: 100%;
     width: min(var(--sidebarWidth), 100%);
@@ -97,42 +139,12 @@
     max-width: 100%;
     min-width: 80%;
 }
-.llmContainer {
-    position: fixed;
-    top: 53px;
-    left: max(var(--sidebarWidth), 90px);
-    z-index: 5;
-    align-items: center;
-    gap: 90px;
-    padding: 8px;
-    background: transparent;
-    box-sizing: border-box;
-    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
-}
 
 .sidebarOpener {
-    position: fixed;
-    top: 60px;
-    left: 10px;
-    z-index: 1000;
-    background-color: var(--colorNeutralBackground1Hover);
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 2px;
-}
-
-.sidebarOpener button {
-    padding: 4px;
-    border-radius: 3px;
-    transition: background-color 0.2s ease;
-    min-height: 24px;
-    min-width: 24px;
-    background-color: transparent;
-}
-
-.sidebarOpener button:hover {
-    background-color: var(--colorNeutralBackground1Selected);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Removed fixed positioning as it's now inside flex container */
 }
 
 @media (max-width: 650px) {

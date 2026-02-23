@@ -93,8 +93,8 @@ const Chat = () => {
     const { setHeader } = useContext(HeaderContext);
     const headerTitle = t("header.chat");
     useEffect(() => {
-        setHeader("");
-    }, [setHeader]);
+        setHeader(headerTitle);
+    }, [setHeader, headerTitle]);
     const { tools } = useToolsContext();
 
     // Independent states
@@ -639,7 +639,7 @@ const Chat = () => {
                     answers={answerList}
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
-                    header="Chat"
+                    header={headerTitle}
                     welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}

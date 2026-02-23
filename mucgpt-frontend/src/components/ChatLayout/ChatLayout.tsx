@@ -58,7 +58,7 @@ export const ChatLayout = ({
 
             <header className={styles.headerBar}>
                 <div className={styles.leftGroup}>
-                    <div className={styles.sidebarOpener} role="toolbar" aria-label="Sidebar controls">
+                    <div className={styles.sidebarOpener} role="group" aria-label="Sidebar controls">
                         <Button appearance="subtle" onClick={onToggleMinimized} aria-label={size === "none" ? "Open sidebar" : "Close sidebar"}>
                             {size === "none" ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
                         </Button>

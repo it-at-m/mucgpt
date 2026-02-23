@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams } from "react-router-dom";
-import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -444,19 +443,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-    const editAssistantDialog = useMemo(
-        () => (
-            <AssistantsettingsDrawer
-                assistant={assistantConfig}
-                onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
-                onDeleteAssistant={onDeleteAssistant}
-                isOwned={strategy.isOwned}
-                strategy={strategy}
-            />
-        ),
-        [assistantConfig, onAssistantChanged, onDeleteAssistant, strategy.canEdit, strategy.isOwned, strategy]
-    );
-
     const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
@@ -474,8 +460,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                  }
+                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                }
                 : tools;
 
         return (

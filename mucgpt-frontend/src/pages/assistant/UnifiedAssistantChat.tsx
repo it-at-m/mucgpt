@@ -211,24 +211,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         });
     }, [assistantStorageService, assistant_id]);
 
-    // deleteAssistant-Funktion
-    const onDeleteAssistant = useCallback(async () => {
-        try {
-            await strategy.deleteAssistant(assistant_id, assistantStorageService);
-            showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
-            );
-            window.location.href = "/";
-        } catch (err) {
-            console.error("Error deleting assistant:", err);
-            showError(
-                t("components.assistant_chat.delete_assistant_failed"),
-                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
-            );
-        }
-    }, [strategy, assistant_id, assistantStorageService, showError, showSuccess, t, assistantConfig.title]);
-
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string) => {
@@ -460,8 +442,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                }
+                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                  }
                 : tools;
 
         return (
@@ -561,8 +543,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                     actions={
                         strategy.isOwned && (
                             <Button
@@ -571,7 +551,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 onClick={() => {
                                     setShowEditDialog(true);
                                 }}
-                                aria-label={t("components.assistantsettingsdrawer.show_configutations")}
+                                aria-label={t("components.assistantsettingsdrawer.show_configurations")}
                             />
                         )
                     }

@@ -7,7 +7,6 @@ import { ExampleList, ExampleModel } from "../../components/Example";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
-import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
@@ -609,18 +608,6 @@ const Chat = () => {
         [allChats, active_chat, fetchHistory, storageService, loadChat, t]
     );
 
-    const sidebar_chat_settings = useMemo(
-        () => (
-            <ChatsettingsDrawer
-                creativity={creativity}
-                setCreativity={onCreativityChanged}
-                systemPrompt={systemPrompt}
-                setSystemPrompt={onSystemPromptChanged}
-            />
-        ),
-        [creativity, systemPrompt, onCreativityChanged, onSystemPromptChanged]
-    );
-
     const sidebar = useMemo(() => <Sidebar actions={sidebar_actions} content={<>{sidebar_history}</>}></Sidebar>, [sidebar_actions, sidebar_history]);
     const layout = useMemo(
         () => (
@@ -648,8 +635,6 @@ const Chat = () => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={() => setAndStoreShowSidebar(!showSidebar)}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                     actions={
                         <Button
                             appearance="subtle"

@@ -233,7 +233,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                             className={styles.actionButton}
                             disabled={strategy instanceof DeletedCommunityAssistantStrategy}
                         >
-                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
+                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configurations")}
                         </Button>
                         <Tooltip content={t("components.assistantsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button

@@ -75,10 +75,10 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                 t("components.publish_assistant_dialog.publish_assistant_success_message", { title: assistant.title })
             );
 
-            if (is_visible) {
-                onDeleteAssistant();
-                setOpen(false);
-            }
+            // Always delete the local copy and navigate to the new owned assistant
+            onDeleteAssistant();
+            setOpen(false);
+            window.location.href = `/#/owned/communityassistant/${response.id}`;
         } catch (error) {
             console.error("Error publishing assistant:", error);
         } finally {
@@ -216,44 +216,18 @@ export const PublishAssistantDialog = ({ open, setOpen, assistant, invisibleChec
                     </DialogContent>
 
                     <DialogActions className={styles.actions}>
-                        {!(publishedAssistantId && visibilityMode === "private") && (
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
-                                    <Dismiss24Regular />
-                                    {t("components.publish_assistant_dialog.cancel")}
-                                </Button>
-                            </DialogTrigger>
-                        )}
-                        {!publishedAssistantId && (
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button
-                                    appearance="primary"
-                                    size="medium"
-                                    onClick={handlePublishClick}
-                                    className={styles.publishButton}
-                                    disabled={publishDisabled}
-                                >
-                                    <Checkmark24Filled />
-                                    {isPublishing ? t("components.publish_assistant_dialog.publishing") : t("components.publish_assistant_dialog.confirm")}
-                                </Button>
-                            </DialogTrigger>
-                        )}
-                        {publishedAssistantId && visibilityMode === "private" && (
-                            <DialogTrigger disableButtonEnhancement>
-                                <Button
-                                    appearance="primary"
-                                    size="medium"
-                                    onClick={() => {
-                                        onDeleteAssistant();
-                                        setOpen(false);
-                                    }}
-                                    className={styles.publishButton}
-                                >
-                                    <Checkmark24Filled />
-                                    {t("components.publish_assistant_dialog.done")}
-                                </Button>
-                            </DialogTrigger>
-                        )}
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button appearance="secondary" size="medium" onClick={() => setOpen(false)} className={styles.cancelButton}>
+                                <Dismiss24Regular />
+                                {t("components.publish_assistant_dialog.cancel")}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button appearance="primary" size="medium" onClick={handlePublishClick} className={styles.publishButton} disabled={publishDisabled}>
+                                <Checkmark24Filled />
+                                {isPublishing ? t("components.publish_assistant_dialog.publishing") : t("components.publish_assistant_dialog.confirm")}
+                            </Button>
+                        </DialogTrigger>
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>

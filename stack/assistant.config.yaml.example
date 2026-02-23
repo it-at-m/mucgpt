@@ -1,0 +1,52 @@
+# Assistant Service Configuration for Docker Compose Stack
+# This file is mounted into the assistant-service container at /app/config.yaml
+#
+# Note: Use UPPERCASE field names because case_sensitive=False in settings
+# Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_ASSISTANT_DB__HOST
+
+# Database settings
+# Note: For docker-compose stack, these defaults match the postgres service configuration
+# For production, use secure credentials and consider environment variable overrides
+DB:
+  HOST: "postgres"
+  PORT: 5432
+  NAME: "postgres"
+  USER: "admin"
+  PASSWORD: "admin" # Change this for production! Or use MUCGPT_ASSISTANT_DB__PASSWORD env var
+  # SCHEMA: "myschema"  # Optional: restrict to a specific PostgreSQL schema (sets search_path)
+
+# Backend settings
+UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
+LOG_CONFIG: "src/logconf.yaml"
+
+# SSO Settings (Keycloak)
+# Used by both core and assistant services for authentication
+# ROLE: "lhm-ab-mucgpt-user" is default
+
+# Redis Settings (Valkey in docker-compose)
+# Used by both core and assistant services for caching
+REDIS:
+  HOST: "valkey"
+  PORT: 6379
+  USERNAME: "default"
+  PASSWORD: "password"
+
+# LDAP Settings (Optional - for organizational directory)
+# Used by assistant service for department/OU management
+LDAP:
+  ENABLED: true
+  HOST: "ldap.muenchen.de"
+  PORT: 636
+  USE_SSL: true
+  START_TLS: false
+  VERIFY_SSL: false
+  CA_CERT_FILE: null
+  BIND_DN: ""
+  BIND_PASSWORD: ""
+  SEARCH_BASE: "o=Landeshauptstadt München,c=de"
+  SEARCH_FILTER: "(objectClass=organizationalUnit)"
+  DISPLAY_ATTRIBUTE: "ou"
+  PARENT_ATTRIBUTE: null
+  IGNORED_OU_PREFIXES: ["_"]
+  IGNORED_OU_SUFFIXES: ["-xxx"]
+  PAGE_SIZE: 500

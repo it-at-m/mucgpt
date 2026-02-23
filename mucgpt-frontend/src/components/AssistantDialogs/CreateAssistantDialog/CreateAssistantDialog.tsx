@@ -18,10 +18,10 @@ import sharedStyles from "../shared/AssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
-import { Assistant, ToolInfo } from "../../../api";
-import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../../constants";
-import { AssistantStorageService } from "../../../service/assistantstorage";
+import { ToolInfo } from "../../../api";
+import { CREATIVITY_LOW } from "../../../constants";
 import { createAssistantApi } from "../../../api/core-client";
+import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { Stepper, Step } from "../../Stepper";
 import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, useCreateAssistantState } from "../shared";
@@ -33,8 +33,6 @@ interface Props {
     showDialogInput: boolean;
     setShowDialogInput: (showDialogInput: boolean) => void;
 }
-
-const storageService = new AssistantStorageService(ASSISTANT_STORE);
 
 export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -94,33 +92,38 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // save assistant
     const onPromptButtonClicked = useCallback(async () => {
+        if (loading) return; // Prevent duplicate submissions
+
+        setLoading(true);
         try {
             const validQuickPrompts = quickPrompts.filter(qp => qp.label?.trim() && qp.prompt?.trim());
             const validExamples = examples.filter(ex => ex.text?.trim() && ex.value?.trim());
 
-            const assistant: Assistant = {
-                title: title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title,
-                description: description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description,
-                system_message: systemPrompt,
-                publish: false,
+            const assistantTitle = title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title;
+            const assistantDescription = description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description;
+
+            // Create assistant as private on the assistant service
+            const response = await createCommunityAssistantApi({
+                name: assistantTitle,
+                description: assistantDescription,
+                system_prompt: systemPrompt,
                 creativity: creativity,
                 default_model: defaultModel,
-                quick_prompts: validQuickPrompts,
-                examples: validExamples,
-                version: "0",
+                tools: tools || [],
                 owner_ids: [],
+                examples: validExamples.map(e => ({ text: e.text, value: e.value })),
+                quick_prompts: validQuickPrompts.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
                 tags: [],
                 hierarchical_access: [],
-                tools: tools,
-                is_visible: true
-            };
-            const created_id = await storageService.createAssistantConfig(assistant);
-            if (created_id) {
+                is_visible: false // Private by default
+            });
+
+            if (response?.id) {
                 showSuccess(
                     t("components.create_assistant_dialog.assistant_saved_success"),
-                    t("components.create_assistant_dialog.assistant_saved_message", { title: assistant.title })
+                    t("components.create_assistant_dialog.assistant_saved_message", { title: assistantTitle })
                 );
-                navigate(`/assistant/${created_id}`);
+                navigate(`/owned/communityassistant/${response.id}`);
             } else {
                 console.error("Assistant could not be created");
                 showError(t("components.create_assistant_dialog.assistant_creation_failed"), t("components.create_assistant_dialog.save_config_failed"));
@@ -129,8 +132,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             console.error("Failed to save assistant", error);
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
+        } finally {
+            setLoading(false);
         }
-    }, [title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [loading, title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -176,7 +181,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         updateDescription(input);
         setCurrentStep(2);
     }, [input, updateDescription]);
-
 
     const steps: Step[] = useMemo(
         () => [

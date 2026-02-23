@@ -21,10 +21,7 @@ import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
 import { EditAssistantDialog } from "../AssistantDialogs";
 import PublishAssistantDialog from "../PublishAssistantDialog/PublishAssistantDialog";
-import { AssistantStorageService } from "../../service/assistantstorage";
-import { ASSISTANT_STORE } from "../../constants";
 import { Collapse } from "@fluentui/react-motion-components-preview";
-import { deleteCommunityAssistantApi } from "../../api/assistant-client";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import rehypeKatex from "rehype-katex";
 import rehypeExternalLinks from "rehype-external-links";
@@ -48,8 +45,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     const [invisibleChecked, setInvisibleChecked] = useState<boolean>(!assistant.is_visible);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
-
-    const storageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
     useEffect(() => {
         setDescription(assistant.description);
@@ -106,18 +101,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
         URL.revokeObjectURL(url);
     }, [assistant]);
 
-    const saveLocal = useCallback(async () => {
-        if (!assistant.id) return;
-        const updatedAssistant: Assistant = {
-            ...assistant,
-            publish: false
-        };
-        await deleteCommunityAssistantApi(assistant.id);
-        await storageService.createAssistantConfig(updatedAssistant, assistant.id);
-        window.location.href = "/#/";
-        window.location.reload();
-    }, [assistant, storageService, assistant.id]);
-
     // Delete assistant confirmation dialog
     const deleteDialog = useMemo(
         () => (
@@ -125,17 +108,11 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>
-                            {publish
-                                ? isOwner
-                                    ? t("components.assistantsettingsdrawer.unpublish-button")
-                                    : t("components.assistantsettingsdrawer.remove-assistant")
-                                : t("components.assistantsettingsdrawer.deleteDialog.title")}
+                            {publish ? t("components.assistantsettingsdrawer.remove-assistant") : t("components.assistantsettingsdrawer.deleteDialog.title")}
                         </DialogTitle>
                         <DialogContent>
                             {publish
-                                ? isOwner
-                                    ? t("components.assistantsettingsdrawer.deleteDialog.unpublish")
-                                    : t("components.assistantsettingsdrawer.deleteDialog.remove")
+                                ? t("components.assistantsettingsdrawer.deleteDialog.remove")
                                 : t("components.assistantsettingsdrawer.deleteDialog.content")}
                         </DialogContent>
                         <DialogActions>
@@ -148,13 +125,9 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                                 <Button
                                     appearance="secondary"
                                     size="small"
-                                    onClick={async () => {
+                                    onClick={() => {
                                         setShowDeleteDialog(false);
-                                        if (publish && isOwner) {
-                                            await saveLocal();
-                                        } else {
-                                            onDeleteAssistant();
-                                        }
+                                        onDeleteAssistant();
                                     }}
                                 >
                                     <Checkmark24Filled /> {t("components.assistantsettingsdrawer.deleteDialog.confirm")}
@@ -165,7 +138,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 </DialogSurface>
             </Dialog>
         ),
-        [showDeleteDialog, onDeleteAssistant, publish, t, saveLocal]
+        [showDeleteDialog, onDeleteAssistant, publish, t]
     );
 
     // Publish dialog
@@ -260,7 +233,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                             className={styles.actionButton}
                             disabled={strategy instanceof DeletedCommunityAssistantStrategy}
                         >
-                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
+                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configurations")}
                         </Button>
                         <Tooltip content={t("components.assistantsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -269,11 +242,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                                 icon={<Delete24Regular />}
                                 className={`${styles.actionButton} ${styles.deleteButton}`}
                             >
-                                {publish
-                                    ? isOwner
-                                        ? t("components.assistantsettingsdrawer.unpublish-button")
-                                        : t("components.assistantsettingsdrawer.remove-assistant")
-                                    : t("components.assistantsettingsdrawer.delete")}
+                                {publish ? t("components.assistantsettingsdrawer.remove-assistant") : t("components.assistantsettingsdrawer.delete")}
                             </Button>
                         </Tooltip>
 

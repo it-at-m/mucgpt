@@ -23,8 +23,6 @@ interface Props {
     onToggleMinimized?: () => void;
     // LLM Selector props
     onLLMSelectionChange: (nextLLM: string) => void;
-    clearChat: () => void;
-    clearChatDisabled: boolean;
     llmOptions?: Model[];
     defaultLLM?: string;
     actions?: ReactNode;
@@ -45,8 +43,6 @@ export const ChatLayout = ({
     defaultLLM,
     onLLMSelectionChange,
     onToggleMinimized,
-    clearChat,
-    clearChatDisabled,
     actions
 }: Props) => {
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
@@ -58,7 +54,7 @@ export const ChatLayout = ({
 
             <header className={styles.headerBar}>
                 <div className={styles.leftGroup}>
-                    <div className={styles.sidebarOpener} role="toolbar" aria-label="Sidebar controls">
+                    <div className={styles.sidebarOpener} role="group" aria-label="Sidebar controls">
                         <Button appearance="subtle" onClick={onToggleMinimized} aria-label={size === "none" ? "Open sidebar" : "Close sidebar"}>
                             {size === "none" ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
                         </Button>
@@ -68,7 +64,7 @@ export const ChatLayout = ({
 
                 <div className={styles.controlsContainer}>
                     {llmOptions && defaultLLM && onLLMSelectionChange && (
-                        <div aria-label="LLM selector container">
+                        <div aria-label="LLM selector container" role="group">
                             <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
                         </div>
                     )}

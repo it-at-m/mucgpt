@@ -13,11 +13,15 @@ This directory contains the Docker Compose configuration for running the complet
 
 **Steps:**
 
-1. Configure environment variables:
+1. Copy and configure the config files:
 
    ```powershell
    cp .env.example .env
-   # Edit .env with your settings (see main README for configuration details)
+   cp core.config.yaml.example core.config.yaml
+   cp assistant.config.yaml.example assistant.config.yaml
+   # Edit core.config.yaml with your LLM model settings
+   # Edit assistant.config.yaml if you need non-default DB/LDAP settings
+   # Edit .env for proxy/SSL settings (if needed)
    ```
 
 2. Start the stack:
@@ -154,15 +158,117 @@ See [DEVELOPMENT.md](../docs/DEVELOPMENT.md) for details on local development se
 
 ## Configuration
 
-Environment variables are defined in `.env` file. Key variables:
+The stack uses **YAML configuration files** as the primary configuration source, with environment variables available as overrides. Each service has its own `config.yaml` mounted into the container.
 
-- **Proxy Settings**: `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`
-- **SSO/Auth**: `MUCGPT_SSO_*` (Keycloak configuration)
-- **SSL/TLS**: `SSL_CERT_FILE`, `CA_BUNDLE_PATH`
-- **Models**: `MUCGPT_CORE_MODELS` (LLM configuration)
-- **MCP**: `MUCGPT_MCP_SOURCES` (Model Context Protocol sources)
+### Configuration Files
 
-📖 See the [main README](../README.md#️-configure-the-environment) for complete configuration documentation.
+| File | Mounted to | Used by | Purpose |
+|------|-----------|---------|---------|
+| `core.config.yaml` | `/app/config.yaml` | core-service | Models, Langfuse, MCP, Redis, SSO |
+| `assistant.config.yaml` | `/app/config.yaml` | assistant-service, assistant-migrations | Database, Redis, LDAP, SSO |
+| `.env` | env vars | all services | Proxies, SSL, infrastructure overrides |
+
+### Quick Setup
+
+1. Copy the example files:
+
+   ```powershell
+   cp .env.example .env
+   cp core.config.yaml.example core.config.yaml
+   cp assistant.config.yaml.example assistant.config.yaml
+   ```
+
+2. Edit `core.config.yaml` – configure your LLM models and optional features:
+
+   ```yaml
+   MODELS:
+     - type: "OPENAI"
+       llm_name: "gpt-4.1"
+       endpoint: "https://your-endpoint.example.com/v1"
+       api_key: "sk-..."
+       model_info:
+         auto_enrich_from_model_info_endpoint: true
+
+   REDIS:
+     HOST: "valkey"
+     PORT: 6379
+
+   LANGFUSE:
+     HOST: "https://your-langfuse-host.example.com"
+     PUBLIC_KEY: "pk-lf-..."
+     SECRET_KEY: "sk-lf-..."
+
+   MCP:
+     SOURCES:
+       "my-mcp-server":
+         url: "http://mcpdoc-server:8088/sse"
+         transport: "sse"
+   ```
+
+3. Edit `assistant.config.yaml` – configure database and optional LDAP:
+
+   ```yaml
+   DB:
+     HOST: "postgres"
+     PORT: 5432
+     NAME: "postgres"
+     USER: "admin"
+     PASSWORD: "admin"
+
+   REDIS:
+     HOST: "valkey"
+     PORT: 6379
+
+   LDAP:
+     ENABLED: false
+   ```
+
+4. Edit `.env` for proxy/SSL settings (if needed).
+
+5. Start the stack:
+
+   ```powershell
+   podman compose up -d
+   ```
+
+### Environment Variable Overrides
+
+Any YAML setting can be overridden with environment variables. The services use **nested delimiters** (`__`) to map to YAML sections:
+
+| Service | Env Prefix | Example |
+|---------|-----------|---------|
+| **core-service** | `MUCGPT_CORE_` | `MUCGPT_CORE_REDIS__HOST=valkey` |
+| **assistant-service** | `MUCGPT_ASSISTANT_` | `MUCGPT_ASSISTANT_DB__HOST=postgres` |
+| **assistant-migrations** | `MUCGPT_ASSISTANT_` | (same as assistant-service) |
+
+**Mapping rules:**
+
+- Top-level fields: `MUCGPT_CORE_VERSION=1.0.0` → `VERSION: "1.0.0"`
+- Nested fields use `__`: `MUCGPT_ASSISTANT_DB__PASSWORD=secret` → `DB: { PASSWORD: "secret" }`
+- Nested Redis: `MUCGPT_CORE_REDIS__HOST=valkey` → `REDIS: { HOST: "valkey" }`
+
+**Examples – set via `.env` or container `environment:`:**
+
+```bash
+# Override assistant database password (nested under DB section)
+MUCGPT_ASSISTANT_DB__PASSWORD=my-secure-password
+
+# Override core Redis host (nested under REDIS section)
+MUCGPT_CORE_REDIS__HOST=my-redis-host
+
+# Override core Langfuse secret key (nested under LANGFUSE section)
+MUCGPT_CORE_LANGFUSE__SECRET_KEY=sk-lf-...
+```
+
+### Configuration Priority
+
+Settings are loaded in this order (highest priority wins):
+
+1. **Constructor / init** – used in tests
+2. **Environment variables** – including `.env` file, uses `__` for nesting
+3. **YAML config file** – `config.yaml` mounted into each container
+
+This means environment variables always override YAML values, which is useful for injecting secrets in CI/CD without storing them in config files.
 
 ## Technical Details
 

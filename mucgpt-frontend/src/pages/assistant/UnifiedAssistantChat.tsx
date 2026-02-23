@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams, useSearchParams } from "react-router-dom";
-import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -222,24 +221,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         });
     }, [assistantStorageService, assistant_id]);
 
-    // deleteAssistant-Funktion
-    const onDeleteAssistant = useCallback(async () => {
-        try {
-            await strategy.deleteAssistant(assistant_id, assistantStorageService);
-            showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
-            );
-            window.location.href = "/";
-        } catch (err) {
-            console.error("Error deleting assistant:", err);
-            showError(
-                t("components.assistant_chat.delete_assistant_failed"),
-                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
-            );
-        }
-    }, [strategy, assistant_id, assistantStorageService, showError, showSuccess, t, assistantConfig.title]);
-
     // callApi-Funktion
     const callApi = useCallback(
         async (question: string) => {
@@ -454,18 +435,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
     );
 
-    const editAssistantDialog = useMemo(
-        () => (
-            <AssistantsettingsDrawer
-                assistant={assistantConfig}
-                onAssistantChange={strategy.canEdit ? onAssistantChanged : () => { }}
-                onDeleteAssistant={onDeleteAssistant}
-                isOwned={strategy.isOwned}
-                strategy={strategy}
-            />
-        ),
-        [assistantConfig, onAssistantChanged, onDeleteAssistant, strategy.canEdit, strategy.isOwned, strategy]
-    );
 
     const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
@@ -585,17 +554,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
                     actions={
-                        <Button
-                            appearance="subtle"
-                            icon={<Settings24Regular />}
-                            onClick={() => {
-                                setShowEditDialog(true);
-                            }}
-                            aria-label={t("components.assistantsettingsdrawer.show_configutations")}
-                        />
+                        strategy.isOwned && (
+                            <Button
+                                appearance="subtle"
+                                icon={<Settings24Regular />}
+                                onClick={() => {
+                                    setShowEditDialog(true);
+                                }}
+                                aria-label={t("components.assistantsettingsdrawer.show_configurations")}
+                            />
+                        )
                     }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
@@ -616,7 +585,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         onLLMSelectionChange,
         showSidebar,
         clearChat,
-        isLoadingRef.current
+        isLoadingRef.current,
+        strategy
     ]);
 
     return (

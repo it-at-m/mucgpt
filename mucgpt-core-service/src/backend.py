@@ -10,7 +10,9 @@ from api.routers import (
     system_router,
     tools_router,
 )
-from config.settings import get_settings
+from config.settings import (
+    get_settings,
+)
 from core.auth_models import AuthError, AuthErrorResponse
 from core.logtools import getLogger
 from init_app import destroy_app, warmup_app
@@ -24,6 +26,10 @@ settings = get_settings()
 # setup lifespan hooks
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Log current settings
+    logger.info("Starting MUCGPT Core Service")
+    logger.info("Loaded Settings:\n%s", settings.model_dump_json(indent=2))
+
     await warmup_app()
     yield
     await destroy_app()

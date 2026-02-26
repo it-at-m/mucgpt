@@ -31,6 +31,7 @@
 .questionInputContainer {
     border-radius: 8px;
     background: var(--surface);
+    outline: 2px solid var(--onPrimaryContainer);
     width: 100%;
     padding: 8px 4px 8px 16px;
     display: flex;

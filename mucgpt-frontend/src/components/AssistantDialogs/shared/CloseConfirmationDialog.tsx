@@ -1,4 +1,4 @@
-import { Dialog, DialogSurface, DialogTitle, DialogBody, DialogActions, Button } from "@fluentui/react-components";
+import { Dialog, DialogSurface, DialogTitle, DialogBody, DialogContent, DialogActions, Button } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { useCallback } from "react";
 
@@ -23,16 +23,18 @@ export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose }: 
     return (
         <Dialog open={open} onOpenChange={(_event, data) => onOpenChange(data.open)} inertTrapFocus>
             <DialogSurface>
-                <DialogTitle>{t("components.edit_assistant_dialog.close_dialog_title")}</DialogTitle>
-                <DialogBody>{t("components.edit_assistant_dialog.close_dialog_message")}</DialogBody>
-                <DialogActions>
-                    <Button appearance="secondary" onClick={handleCancel}>
-                        {t("common.cancel")}
-                    </Button>
-                    <Button appearance="primary" onClick={handleConfirm}>
-                        {t("common.close")}
-                    </Button>
-                </DialogActions>
+                <DialogBody>
+                    <DialogTitle>{t("components.edit_assistant_dialog.close_dialog_title")}</DialogTitle>
+                    <DialogContent>{t("components.edit_assistant_dialog.close_dialog_message")}</DialogContent>
+                    <DialogActions>
+                        <Button appearance="secondary" onClick={handleCancel}>
+                            {t("common.cancel")}
+                        </Button>
+                        <Button appearance="primary" onClick={handleConfirm}>
+                            {t("common.close")}
+                        </Button>
+                    </DialogActions>
+                </DialogBody>
             </DialogSurface>
         </Dialog>
     );

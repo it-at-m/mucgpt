@@ -328,7 +328,13 @@ const Discovery = () => {
                                     </span>
                                     <Dropdown
                                         id="sort"
-                                        value={sortMethod}
+                                        value={
+                                            sortMethod === "title"
+                                                ? t("components.community_assistants.sort_title", "Title")
+                                                : sortMethod === "updated"
+                                                    ? t("components.community_assistants.sort_updated", "Last updated")
+                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                        }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"
                                         className={styles.sortDropdown}

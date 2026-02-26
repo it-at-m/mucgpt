@@ -1,7 +1,8 @@
 .message {
     padding: 1.25em;
     margin: 1em 0.5em; /* Reduced horizontal margin */
-    background: var(--colorNeutralBackground1);
+    background: var(--primary);
+    color: var(--onPrimary);
     border-radius: 8px;
     overflow-x: auto;
     max-width: 100%; /* Ensure it doesn't overflow container */

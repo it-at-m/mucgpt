@@ -16,7 +16,7 @@ export const AddAssistantButton = ({ onClick }: Props) => {
                     appearance="primary"
                     className={styles.button}
                     aria-label={t("components.add_assistant_button.add_assistant")}
-                    icon={<Add24Regular className={styles.iconLeftMargin} />}
+                    icon={<Add24Regular />}
                     onClick={onClick}
                     size="large"
                 >

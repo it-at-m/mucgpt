@@ -5,7 +5,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -68,6 +68,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -91,6 +92,17 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+
+    // Auto-open edit dialog when navigating from Discovery with ?edit=true
+    useEffect(() => {
+        if (searchParams.get("edit") === "true") {
+            if (strategy?.canEdit) {
+                setShowEditDialog(true);
+            }
+            searchParams.delete("edit");
+            setSearchParams(searchParams, { replace: true });
+        }
+    }, [searchParams, setSearchParams, strategy?.canEdit]);
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);

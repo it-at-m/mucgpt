@@ -47,7 +47,8 @@ i18n
                         deleted_assistants_list: "Gelöschte Community Assistenten",
                         select_assistant_aria: "Assistent auswählen: {{title}}",
                         share_assistant_aria: "Assistent teilen: {{title}}",
-                        share: "Teilen"
+                        share: "Teilen",
+                        discover_assistants: "Assistenten entdecken"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -103,6 +104,8 @@ i18n
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        edit: "Bearbeiten",
+                        delete: "Löschen",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -271,6 +274,9 @@ i18n
                             creativity_low: "Niedrig",
                             creativity_medium: "Normal",
                             creativity_high: "Hoch",
+                            creativity_low_description: "Konzentriert sich auf Genauigkeit und sachliche Antworten",
+                            creativity_medium_description: "Hält einen neutralen und informativen Ton bei",
+                            creativity_high_description: "Erforscht einfallsreiche und ausdrucksstarke Antworten",
                             creativity_info: `bestimmt, wie kreativ oder vorhersehbar die Antworten des Sprachmodells sind. "low" liefert konservative und genaue Antworten, "Normal" ist ausgewogen, und "Hoch" führt zu kreativeren und unvorhersehbareren Antworten.`,
                             max_lenght: "Maximale Antwortlänge",
                             max_lenght_info: "Wie viele Token dürfen maximal bei einer Antwort generiert werden.",
@@ -488,10 +494,16 @@ i18n
                             title: "Community Assistenten", // Deutsch
                             search: "Assistenten suchen",
                             filter_by_tag: "Nach Tag filtern",
+                            filter_all: "Alle",
+                            filter_yours: "Eigene",
+                            system_prompt: "System-Prompt",
+                            enabled_tools: "Aktivierte Werkzeuge",
+                            start_chat: "Chat starten",
                             sort_by: "Sortieren nach",
                             sort_title: "Titel",
                             sort_updated: "Zuletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_by_tooltip: "Sortierung der Assistenten ändern",
                             save: "Assistent speichern",
                             system_message: "System-Prompt",
                             departments: "Zugelassene Bereiche",
@@ -561,6 +573,10 @@ i18n
                             selectButton: "Auswählen"
                         }
                     },
+                    discovery: {
+                        title: "Assistenten entdecken",
+                        subtitle: "Optimiere deinen Workflow mit spezialisierten KI-Agenten."
+                    },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE,
                     ...faqTranslation.DE
@@ -596,7 +612,8 @@ i18n
                         deleted_assistants_list: "Deleted community assistants",
                         select_assistant_aria: "Select assistant: {{title}}",
                         share_assistant_aria: "Share assistant: {{title}}",
-                        share: "Share"
+                        share: "Share",
+                        discover_assistants: "Discover Assistants"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -651,6 +668,8 @@ i18n
                         next: "Next",
                         loading: "Loading...",
                         hint: "Hint:",
+                        edit: "Edit",
+                        delete: "Delete",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -819,6 +838,9 @@ i18n
                             creativity_low: "Low",
                             creativity_medium: "Normal",
                             creativity_high: "High",
+                            creativity_low_description: "Focuses on accuracy and factual responses",
+                            creativity_medium_description: "Maintains a neutral and informative tone",
+                            creativity_high_description: "Explores imaginative and expressive responses",
                             creativity_info: `determines how creative or predictable the language model's responses are. "Low" provides conservative and precise answers, "Normal" is balanced, and "High" leads to more creative and unpredictable responses.`,
                             max_lenght: "Maximum response length",
                             max_lenght_info: "How many tokens (words) can be generated at most in a response.",
@@ -1029,10 +1051,16 @@ i18n
                             title: "Community Assistants", // Englisch
                             search: "Search assistants",
                             filter_by_tag: "Filter by tag",
+                            filter_all: "All",
+                            filter_yours: "Yours",
+                            system_prompt: "System prompt",
+                            enabled_tools: "Enabled tools",
+                            start_chat: "Start conversation",
                             sort_by: "Sort by",
                             sort_title: "Title",
                             sort_updated: "Last updated",
                             sort_subscriptions: "Subscriptions",
+                            sort_by_tooltip: "Change sorting of assistants",
                             save: "Save assistant",
                             system_message: "System prompt",
                             departments: "Authorized Departments",
@@ -1101,6 +1129,10 @@ i18n
                             selectButton: "Select"
                         }
                     },
+                    discovery: {
+                        title: "Discover Assistants",
+                        subtitle: "Supercharge your workflow with specialized AI agents."
+                    },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN,
                     ...faqTranslation.EN
@@ -1136,7 +1168,8 @@ i18n
                         deleted_assistants_list: "Glöschte Community-Assistentn",
                         select_assistant_aria: "Assistent aussuacha: {{title}}",
                         share_assistant_aria: "Assistent teilen: {{title}}",
-                        share: "Teilen"
+                        share: "Teilen",
+                        discover_assistants: "Assistentn entdecka"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -1186,6 +1219,8 @@ i18n
                         next: "Weida",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        edit: "Beorbeitn",
+                        delete: "Löschn",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1358,6 +1393,9 @@ i18n
                             creativity_low: "Niadrig",
                             creativity_medium: "Normal",
                             creativity_high: "Hoch",
+                            creativity_low_description: "Konzentriert si auf Genauigkeit und sachliche Antwortn",
+                            creativity_medium_description: "Hoit an neutralen und informativen Ton bei",
+                            creativity_high_description: "Erkundet einfallsreiche und ausdrucksstarke Antwortn",
                             creativity_info: `entscheidt, wia kreativ oda vorhersehbar de Antowortn vom Sprachmodell san. "Niadrig" liefert konservative und genaue Antwortn, "Normal" is ausgwogen, und "Hoch" führt zu kreativeren und spinnerten Antwortn.`,
                             max_lenght: "Maximale Antwortläng",
                             max_lenght_info: "Wia vui Token dürfen maximal bei am Antwort generiert werdn.",
@@ -1574,10 +1612,16 @@ i18n
                             title: "Community Assistentn", // Bairisch
                             search: "Assistentn durchschaun",
                             filter_by_tag: "Noch Tag filtern",
+                            filter_all: "Olle",
+                            filter_yours: "Eigne",
+                            system_prompt: "System-Prompt",
+                            enabled_tools: "Aktivierte Werkzeig",
+                            start_chat: "Ratsch o'fanga",
                             sort_by: "Sortieren noch",
                             sort_title: "Titel",
                             sort_updated: "Zletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_by_tooltip: "Sortierung vo de Assistentn ändern",
                             save: "Assistent speichan",
                             system_message: "System-Prompt",
                             departments: "Zuglassene Bereiche",
@@ -1646,6 +1690,10 @@ i18n
                             selectButton: "Auswähln"
                         }
                     },
+                    discovery: {
+                        title: "Assistentn entdeckn",
+                        subtitle: "Optimier dein Workflow mit spezialisierten KI-Agenten."
+                    },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA,
                     ...faqTranslation.BA
@@ -1680,7 +1728,8 @@ i18n
                         deleted_assistants_list: "Assistants communautaires supprimés",
                         select_assistant_aria: "Sélectionner l'assistant : {{title}}",
                         share_assistant_aria: "Partager l'assistant : {{title}}",
-                        share: "Partager"
+                        share: "Partager",
+                        discover_assistants: "Découvrir les assistants"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1736,6 +1785,8 @@ i18n
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
                         hint: "Conseil :",
+                        edit: "Modifier",
+                        delete: "Supprimer",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -1904,6 +1955,9 @@ i18n
                             creativity_low: "Faible",
                             creativity_medium: "Normal",
                             creativity_high: "Élevé",
+                            creativity_low_description: "Se concentre sur la précision et les réponses factuelles",
+                            creativity_medium_description: "Maintient un ton neutre et informatif",
+                            creativity_high_description: "Explore des réponses imaginatives et expressives",
                             creativity_info: `détermine à quel point les réponses du modèle linguistique sont créatives ou prévisibles. "Faible" fournit des réponses conservatrices et précises, "Normal" est équilibré, et "Élevé" conduit à des réponses plus créatives et imprévisibles.`,
                             max_lenght: "Longueur maximale de la réponse",
                             max_lenght_info: "Nombre maximal de tokens pouvant être générés pour une réponse.",
@@ -2121,10 +2175,16 @@ i18n
                             title: "Assistants Communautaires",
                             search: "Rechercher des assistants",
                             filter_by_tag: "Filtrer par tag",
+                            filter_all: "Tous",
+                            filter_yours: "Vos",
+                            system_prompt: "Prompt système",
+                            enabled_tools: "Outils activés",
+                            start_chat: "Démarrer la conversation",
                             sort_by: "Trier par",
                             sort_title: "Titre",
                             sort_updated: "Dernière mise à jour",
                             sort_subscriptions: "Abonnements",
+                            sort_by_tooltip: "Modifier le tri des assistants",
                             save: "Enregistrer l'assistant",
                             system_message: "Prompt système",
                             departments: "Départements autorisés",
@@ -2194,6 +2254,10 @@ i18n
                             selectButton: "Sélectionner"
                         }
                     },
+                    discovery: {
+                        title: "Découvrir les Assistants",
+                        subtitle: "Boostez votre flux de travail avec des agents IA spécialisés."
+                    },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR,
                     ...faqTranslation.FR
@@ -2228,7 +2292,8 @@ i18n
                         deleted_assistants_list: "Видалені асистенти спільноти",
                         select_assistant_aria: "Вибрати асистента: {{title}}",
                         share_assistant_aria: "Поділитися асистентом: {{title}}",
-                        share: "Поділитися"
+                        share: "Поділитися",
+                        discover_assistants: "Відкрити асистентів"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
@@ -2284,6 +2349,8 @@ i18n
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
                         hint: "Підказка:",
+                        edit: "Редагувати",
+                        delete: "Видалити",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
@@ -2451,6 +2518,9 @@ i18n
                             creativity_low: "Низька",
                             creativity_medium: "Нормальна",
                             creativity_high: "Висока",
+                            creativity_low_description: "Зосереджується на точності та фактичних відповідях",
+                            creativity_medium_description: "Підтримує нейтральний та інформативний тон",
+                            creativity_high_description: "Досліджує творчі та виразні відповіді",
                             creativity_info: `визначає, наскільки креативними чи передбачуваними є відповіді мовної моделі. "Низька" забезпечує консервативні та точні відповіді, "Нормальна" є збалансованою, а "Висока" призводить до більш креативних та непередбачуваних відповідей.`,
                             max_lenght: "Максимальна довжина відповіді",
                             max_lenght_info: "Яка кількість токенів може бути згенерована при відповіді.",
@@ -2664,10 +2734,16 @@ i18n
                             title: "Громадські Асистенти", // Ukrainisch
                             search: "Пошук асистентів",
                             filter_by_tag: "Фільтрувати за тегом",
+                            filter_all: "Всі",
+                            filter_yours: "Ваші",
+                            system_prompt: "Системний запит",
+                            enabled_tools: "Увімкнені інструменти",
+                            start_chat: "Розпочати розмову",
                             sort_by: "Сортувати за",
                             sort_title: "Заголовок",
                             sort_updated: "Останнє оновлення",
                             sort_subscriptions: "Підписки",
+                            sort_by_tooltip: "Змінити сортування асистентів",
                             save: "Зберегти асистента",
                             system_message: "Системний запит",
                             departments: "Авторизовані відділи",
@@ -2735,6 +2811,10 @@ i18n
                             price: "Ціна",
                             selectButton: "Обрати"
                         }
+                    },
+                    discovery: {
+                        title: "Відкрийте асистентів",
+                        subtitle: "Прискорте свою роботу за допомогою спеціалізованих ШІ-агентів."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK,

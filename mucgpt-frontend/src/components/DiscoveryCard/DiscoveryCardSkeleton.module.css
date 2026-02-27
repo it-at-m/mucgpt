@@ -1,0 +1,30 @@
+.card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow4);
+    border-radius: 8px;
+    background-color: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    min-height: 140px; /* Approximate height of a regular card */
+}
+
+.skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.title {
+    width: 70%;
+    margin-bottom: 8px;
+}
+
+.line1 {
+    width: 100%;
+}
+
+.line2 {
+    width: 60%;
+}

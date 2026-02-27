@@ -3,10 +3,10 @@ import styles from "./Menu.module.css";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData, MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { CompassNorthwest24Regular } from "@fluentui/react-icons";
 import { useContext, useEffect, useState } from "react";
 
-import { AddAssistantButton } from "../../components/AddAssistantButton";
-import { CreateAssistantDialog } from "../../components/AssistantDialogs";
+import addButtonStyles from "../../components/AddAssistantButton/AddAssistantButton.module.css";
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantResponse, Assistant, CommunityAssistant } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
@@ -36,7 +36,6 @@ const Menu = () => {
     const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [selectedTab, setSelectedTab] = useState<string>("local");
 
-    const [showDialogInput, setShowDialogInput] = useState<boolean>(false);
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
@@ -100,9 +99,6 @@ const Menu = () => {
         }
     }, [user]);
 
-    const onAddAssistant = () => {
-        setShowDialogInput(true);
-    };
     const onSearchAssistant = () => {
         setShowSearchAssistant(true);
         setGetCommunityAssistants(true);
@@ -158,7 +154,6 @@ const Menu = () => {
     return (
         <div role="presentation">
             <section className={styles.chatstartercontainer} aria-labelledby="chat-header">
-                <CreateAssistantDialog showDialogInput={showDialogInput} setShowDialogInput={setShowDialogInput} />
                 <h1 id="chat-header" className={styles.heading}>
                     {t("menu.chat_header", { user: username })}{" "}
                 </h1>
@@ -201,7 +196,29 @@ const Menu = () => {
             </section>
             <section className={styles.container} aria-labelledby="assistants-section">
                 <div id="assistants-section" className={styles.rowheader} role="heading" aria-level={3}>
-                    {t("menu.own_assistants")} <AddAssistantButton onClick={onAddAssistant}></AddAssistantButton>
+                    {t("menu.own_assistants")}
+                    <div className={addButtonStyles.container}>
+                        <Tooltip content={t("menu.discover_assistants", "Assistenten entdecken")} relationship="description" positioning="below">
+                            <Link
+                                to="/discovery"
+                                className={addButtonStyles.button}
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    padding: "6px 16px",
+                                    textDecoration: "none",
+                                    fontSize: "14px",
+                                    fontWeight: 600,
+                                    color: "var(--onPrimary)"
+                                }}
+                                aria-label={t("menu.discover_assistants", "Assistenten entdecken")}
+                            >
+                                <CompassNorthwest24Regular aria-hidden />
+                                {t("menu.discover_assistants", "Assistenten entdecken")}
+                            </Link>
+                        </Tooltip>
+                    </div>
                 </div>
 
                 <TabList selectedValue={selectedTab} onTabSelect={onTabSelect}>

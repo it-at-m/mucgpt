@@ -11,13 +11,13 @@ maintainers = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
-requires-python = ">=3.10"
+requires-python = "==3.14.3"
 dependencies = [
-    "alembic>=1.14.0",
-    "asyncpg>=0.30.0",
-    "psycopg2-binary>=2.9.10",
-    "pydantic-settings[yaml]>=2.10.1",
-    "sqlalchemy>=2.0.41",
+    "alembic==1.16.2",
+    "asyncpg==0.30.0",
+    "psycopg2-binary==2.9.10",
+    "pydantic-settings[yaml]==2.10.1",
+    "sqlalchemy==2.0.41",
 ]
 
 [tool.uv]

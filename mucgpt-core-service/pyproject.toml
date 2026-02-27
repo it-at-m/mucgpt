@@ -3,7 +3,7 @@ name = "mucgpt-core-service"
 version = "0.9.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
-requires-python= ">=3.10"
+requires-python= "==3.14.3"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
@@ -26,10 +26,10 @@ dependencies = [
     "pypdf==6.7.3",
     "uvicorn==0.37.0",
     "asgi-correlation-id==4.3.4",
-    "pydantic-settings>=2.8.1",
-    "langgraph>=0.6.0",
-    "truststore>=0.10.4",
-    "langfuse>=3.3.4",
+    "pydantic-settings==2.11.0",
+    "langgraph==1.0.1",
+    "truststore==0.10.4",
+    "langfuse==3.9.0",
     "httpx==0.28.1",
     "langchain-mcp-adapters==0.1.12",
     "redis==7.1.0",

@@ -1,6 +1,7 @@
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, ToggleButton, Tooltip } from "@fluentui/react-components";
+import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
 import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
@@ -15,17 +16,9 @@ import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
-import { AssistantDetailsSidebar } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
+import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
+import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 
-interface AssistantCardData {
-    id: string;
-    title: string;
-    description: string;
-    subscriptions: number;
-    updated: string;
-    tags: string[];
-    rawData: AssistantResponse;
-}
 
 type SortKey = "title" | "updated" | "subscriptions";
 
@@ -38,7 +31,6 @@ const Discovery = () => {
     const { showError, showSuccess } = useGlobalToastContext();
 
     const [assistants, setAssistants] = useState<AssistantCardData[]>([]);
-    const [filteredAssistants, setFilteredAssistants] = useState<AssistantCardData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>("");
     const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
@@ -48,6 +40,10 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [filterScope, setFilterScope] = useState<"all" | "yours">("yours");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => () => { if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current); }, []);
 
     useEffect(() => {
         setHeader(DEFAULTHEADER);
@@ -67,7 +63,7 @@ const Discovery = () => {
                 const importedData = JSON.parse(content);
 
                 if (!importedData.title || !importedData.system_message) {
-                    throw new Error(t("components.create_assistant_dialog.import_invalid_format"));
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
                 const assistant: Assistant = {
@@ -91,18 +87,18 @@ const Discovery = () => {
 
                 if (created_id) {
                     showSuccess(
-                        t("components.create_assistant_dialog.import_success"),
-                        t("components.create_assistant_dialog.import_success_message", { title: assistant.title })
+                        t("components.import_assistant.import_success"),
+                        t("components.import_assistant.import_success_message", { title: assistant.title })
                     );
 
                     navigate(`/assistant/${created_id}`);
                 } else {
-                    throw new Error(t("components.create_assistant_dialog.import_save_failed"));
+                    throw new Error(t("components.import_assistant.import_save_failed"));
                 }
             } catch (error) {
                 console.error("Failed to import assistant", error);
-                const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.import_failed");
-                showError(t("components.create_assistant_dialog.import_error"), errorMessage);
+                const errorMessage = error instanceof Error ? error.message : t("components.import_assistant.import_failed");
+                showError(t("components.import_assistant.import_error"), errorMessage);
             }
         };
 
@@ -170,9 +166,7 @@ const Discovery = () => {
                     rawData: response
                 }));
 
-                const sortedData = sortAssistants(cardData, sortMethod);
-                setAssistants(sortedData);
-                setFilteredAssistants(sortedData);
+                setAssistants(cardData);
             } catch (error) {
                 console.error("Failed to fetch assistants:", error);
             } finally {
@@ -183,37 +177,31 @@ const Discovery = () => {
         fetchAssistants();
     }, []);
 
-    useEffect(() => {
-        if (assistants.length > 0) {
-            handleSearch(null, { value: searchText });
-        }
-    }, [sortMethod, filterScope, assistants.length, ownedAssistantIds.size]);
-
-    const handleSearch = (event: any, data: any) => {
-        const newValue = data.value || "";
-        setSearchText(newValue);
-        const lowerCaseSearch = newValue.toLowerCase();
-
+    const filteredAssistants = useMemo(() => {
+        const lc = searchText.toLowerCase();
         const filtered = assistants.filter(assistant => {
             const matchesSearch =
-                !newValue.trim() ||
-                assistant.title.toLowerCase().includes(lowerCaseSearch) ||
-                assistant.description.toLowerCase().includes(lowerCaseSearch) ||
-                (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearch)));
+                !searchText.trim() ||
+                assistant.title.toLowerCase().includes(lc) ||
+                assistant.description.toLowerCase().includes(lc) ||
+                (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lc)));
 
-            const matchesScope = filterScope === "all" || (filterScope === "yours" && ownedAssistantIds.has(assistant.id));
+            const matchesScope = filterScope === "all" || ownedAssistantIds.has(assistant.id);
 
             return matchesSearch && matchesScope;
         });
+        return sortAssistants(filtered, sortMethod);
+    }, [assistants, searchText, filterScope, ownedAssistantIds, sortMethod, sortAssistants]);
 
-        setFilteredAssistants(sortAssistants(filtered, sortMethod));
+    const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
+        setSearchText(data.value || "");
     };
 
     const handleFilterChange = (scope: "all" | "yours") => {
         setFilterScope(scope);
     };
 
-    const handleSortChange = (event: any, data: any) => {
+    const handleSortChange = (_event: SelectionEvents, data: OptionOnSelectData) => {
         const newSortMethod = data.optionValue as SortKey;
         if (newSortMethod !== undefined) {
             setSortMethod(newSortMethod);
@@ -221,9 +209,14 @@ const Discovery = () => {
     };
 
     const handleAssistantClick = (assistant: AssistantCardData) => {
+        if (closeTimerRef.current !== null) {
+            clearTimeout(closeTimerRef.current);
+            closeTimerRef.current = null;
+        }
+
         if (selectedAssistant?.id === assistant.id) {
             setIsDrawerOpen(false);
-            setSelectedAssistant(null);
+            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
         } else {
             setSelectedAssistant(assistant);
             setIsDrawerOpen(true);
@@ -242,7 +235,13 @@ const Discovery = () => {
         }
     };
 
-    const deleteAssistant = async () => {
+    const deleteAssistant = () => {
+        if (selectedAssistant) {
+            setShowDeleteConfirm(true);
+        }
+    };
+
+    const performDelete = async () => {
         if (!selectedAssistant) return;
         try {
             await deleteCommunityAssistantApi(selectedAssistant.id);
@@ -250,10 +249,13 @@ const Discovery = () => {
                 t("components.assistant_chat.delete_assistant_success"),
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
             );
-            setAssistants(prev => prev.filter(a => a.id !== selectedAssistant.id));
-            setFilteredAssistants(prev => prev.filter(a => a.id !== selectedAssistant.id));
+            setAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+
+            if (closeTimerRef.current !== null) {
+                clearTimeout(closeTimerRef.current);
+            }
             setIsDrawerOpen(false);
-            setSelectedAssistant(null);
+            closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
         } catch (err) {
             showError(
                 t("components.assistant_chat.delete_assistant_failed"),
@@ -275,16 +277,16 @@ const Discovery = () => {
                             </div>
                             <div className={styles.actionBlock}>
                                 <div className={styles.actionButtonsContainer}>
-                                    <Tooltip content={t("components.create_assistant_dialog.import")} relationship="description" positioning="below">
+                                    <Tooltip content={t("components.import_assistant.import")} relationship="description" positioning="below">
                                         <Button
                                             className={styles.importButton}
                                             appearance="outline"
                                             icon={<ArrowImport24Filled />}
                                             onClick={importAssistant}
                                             size="large"
-                                            aria-label={t("components.create_assistant_dialog.import")}
+                                            aria-label={t("components.import_assistant.import")}
                                         >
-                                            {t("components.create_assistant_dialog.import")}
+                                            {t("components.import_assistant.import")}
                                         </Button>
                                     </Tooltip>
                                     <AddAssistantButton onClick={() => setShowCreateDialog(true)} />
@@ -388,7 +390,8 @@ const Discovery = () => {
                     isOpen={isDrawerOpen}
                     onClose={() => {
                         setIsDrawerOpen(false);
-                        setTimeout(() => setSelectedAssistant(null), 300);
+                        if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
+                        closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
                     }}
                     assistant={selectedAssistant}
                     ownedAssistantIds={ownedAssistantIds}
@@ -397,6 +400,15 @@ const Discovery = () => {
                     onDelete={deleteAssistant}
                 />
             </div>
+
+            <CloseConfirmationDialog
+                open={showDeleteConfirm}
+                onOpenChange={setShowDeleteConfirm}
+                onConfirmClose={performDelete}
+                title={t("components.assistantsettingsdrawer.deleteDialog.title")}
+                message={t("components.assistantsettingsdrawer.deleteDialog.content")}
+                confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+            />
         </div>
     );
 };

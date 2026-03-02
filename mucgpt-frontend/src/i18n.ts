@@ -19,7 +19,6 @@ i18n
             DE: {
                 translation: {
                     header: {
-                        chat: "Chat",
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen"
                     },
@@ -347,12 +346,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "Neuer Assistent"
                         },
+                        import_assistant: {
+                            import: "Assistenten importieren",
+                            import_success: "Import erfolgreich",
+                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
+                            import_error: "Import fehlgeschlagen",
+                            import_failed: "Die Datei konnte nicht importiert werden",
+                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
+                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
+                        },
                         create_assistant_dialog: {
                             title: "Titel",
                             description: "Funktionsbeschreibung",
                             prompt: "System-Prompt",
                             dialog_title: "Neuen Assistent erstellen",
-                            import: "Assistenten importieren",
                             default_assistant_title: "Assistent",
                             default_assistant_description: "Ein Assistent",
                             step1_label: "Funktion beschreiben",
@@ -386,13 +393,7 @@ i18n
                             create_example_two:
                                 "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
-                            import_error: "Import fehlgeschlagen",
-                            import_failed: "Die Datei konnte nicht importiert werden",
-                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
-                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
+                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme."
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -491,7 +492,8 @@ i18n
                             search_assistants: "Assistenten suchen"
                         },
                         community_assistants: {
-                            title: "Community Assistenten", // Deutsch
+                            title: "Community Assistenten",
+                            about: "Über", // Deutsch
                             search: "Assistenten suchen",
                             filter_by_tag: "Nach Tag filtern",
                             filter_all: "Alle",
@@ -505,7 +507,7 @@ i18n
                             sort_subscriptions: "Abonnements",
                             sort_by_tooltip: "Sortierung der Assistenten ändern",
                             save: "Assistent speichern",
-                            system_message: "System-Prompt",
+
                             departments: "Zugelassene Bereiche",
                             departments_description: "Dieser Assistent ist für folgende Organisationseinheiten freigegeben:",
                             department_single: "Bereich",
@@ -585,7 +587,6 @@ i18n
             EN: {
                 translation: {
                     header: {
-                        chat: "Chat",
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant"
                     },
@@ -911,12 +912,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "New assistant"
                         },
+                        import_assistant: {
+                            import: "Import assistant",
+                            import_success: "Import successful",
+                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
+                            import_error: "Import failed",
+                            import_failed: "The file could not be imported",
+                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
+                            import_save_failed: "Error saving imported assistant"
+                        },
                         create_assistant_dialog: {
                             title: "Title",
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Create new assistant",
-                            import: "Import assistant",
                             default_assistant_title: "Assistant",
                             default_assistant_description: "An assistant",
                             step1_label: "Describe function",
@@ -948,13 +957,7 @@ i18n
                             example_three: "Example 3: Synonyms",
                             create_example_one: "English translator: The assistant translates the text entered into English.",
                             create_example_two: "The assistant is an employee of the City of Munich and responds politely and individually to incoming emails.",
-                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered.",
-                            import_success: "Import successful",
-                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
-                            import_error: "Import failed",
-                            import_failed: "The file could not be imported",
-                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
-                            import_save_failed: "Error saving imported assistant"
+                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered."
                         },
                         edit_assistant_dialog: {
                             title: "Edit Assistant",
@@ -1048,7 +1051,8 @@ i18n
                             search_assistants: "Search assistants"
                         },
                         community_assistants: {
-                            title: "Community Assistants", // Englisch
+                            title: "Community Assistants",
+                            about: "About", // Englisch
                             search: "Search assistants",
                             filter_by_tag: "Filter by tag",
                             filter_all: "All",
@@ -1062,7 +1066,7 @@ i18n
                             sort_subscriptions: "Subscriptions",
                             sort_by_tooltip: "Change sorting of assistants",
                             save: "Save assistant",
-                            system_message: "System prompt",
+
                             departments: "Authorized Departments",
                             departments_description: "This assistant is authorized for the following organizational units:",
                             department_single: "Department",
@@ -1141,7 +1145,6 @@ i18n
             BA: {
                 translation: {
                     header: {
-                        chat: "Redn",
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin"
                     },
@@ -1466,12 +1469,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "Neia Assistent"
                         },
+                        import_assistant: {
+                            import: "Assistentn importier'n",
+                            import_success: "Import erfolgreich",
+                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
+                            import_error: "Import fehlgschlogn",
+                            import_failed: "De Datei konnt ned importiert werdn",
+                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
+                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
+                        },
                         create_assistant_dialog: {
                             title: "Titel",
                             description: "Was er kenna muass",
                             prompt: "System-Vorgab (Prompt)",
                             dialog_title: "An neia Assistentn o'legn",
-                            import: "Assistentn importier'n",
                             default_assistant_title: "Assistent",
                             default_assistant_description: "A Assistent",
                             step1_label: "Sog ma, was er kenna muass",
@@ -1504,13 +1515,7 @@ i18n
                             create_example_one: "Englisch Übersetzer: Dea Assistent übersetzt den eingemen Text ins Englische.",
                             create_example_two: "Der Assistent is a Mitarbatr dea Stod Minga und antwortet höflich sowie individuell af de eingehnden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme.",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
-                            import_error: "Import fehlgschlogn",
-                            import_failed: "De Datei konnt ned importiert werdn",
-                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
-                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
+                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme."
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -1610,6 +1615,7 @@ i18n
                         },
                         community_assistants: {
                             title: "Community Assistentn", // Bairisch
+                            about: "Über",
                             search: "Assistentn durchschaun",
                             filter_by_tag: "Noch Tag filtern",
                             filter_all: "Olle",
@@ -1623,7 +1629,7 @@ i18n
                             sort_subscriptions: "Abonnements",
                             sort_by_tooltip: "Sortierung vo de Assistentn ändern",
                             save: "Assistent speichan",
-                            system_message: "System-Prompt",
+
                             departments: "Zuglassene Bereiche",
                             departments_description: "Der Assistent is für de foigenden Organisationseinheitn freigem:",
                             department_single: "Bereich",
@@ -1702,7 +1708,6 @@ i18n
             FR: {
                 translation: {
                     header: {
-                        chat: "Chat",
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
@@ -2028,12 +2033,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "nouvel assistant"
                         },
+                        import_assistant: {
+                            import: "Importer un assistant",
+                            import_success: "Importation réussie",
+                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
+                            import_error: "Échec de l'importation",
+                            import_failed: "Le fichier n'a pas pu être importé",
+                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
+                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                        },
                         create_assistant_dialog: {
                             title: "Titre",
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Créer un nouvel assistant",
-                            import: "Importer un assistant",
                             default_assistant_title: "Assistant",
                             default_assistant_description: "Un assistant",
                             step1_label: "Décrire la fonction",
@@ -2067,13 +2080,7 @@ i18n
                             create_example_one: "Traducteur anglais : l'assistant traduit le texte saisi en anglais.",
                             create_example_two:
                                 "L'assistant est un employé de la ville de Munich et répond de manière polie et personnalisée aux e-mails reçus.",
-                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e).",
-                            import_success: "Importation réussie",
-                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
-                            import_error: "Échec de l'importation",
-                            import_failed: "Le fichier n'a pas pu être importé",
-                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
-                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e)."
                         },
                         edit_assistant_dialog: {
                             title: "Modifier l'assistant",
@@ -2173,6 +2180,7 @@ i18n
                         },
                         community_assistants: {
                             title: "Assistants Communautaires",
+                            about: "À propos",
                             search: "Rechercher des assistants",
                             filter_by_tag: "Filtrer par tag",
                             filter_all: "Tous",
@@ -2186,7 +2194,7 @@ i18n
                             sort_subscriptions: "Abonnements",
                             sort_by_tooltip: "Modifier le tri des assistants",
                             save: "Enregistrer l'assistant",
-                            system_message: "Prompt système",
+
                             departments: "Départements autorisés",
                             departments_description: "Cet assistant est autorisé pour les unités organisationnelles suivantes :",
                             department_single: "Département",
@@ -2266,7 +2274,6 @@ i18n
             UK: {
                 translation: {
                     header: {
-                        chat: "Чат",
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
@@ -2591,12 +2598,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "новий асистент"
                         },
+                        import_assistant: {
+                            import: "Імпортувати асистента",
+                            import_success: "Імпорт успішний",
+                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
+                            import_error: "Помилка імпорту",
+                            import_failed: "Не вдалося імпортувати файл",
+                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
+                            import_save_failed: "Помилка збереження імпортованого асистента"
+                        },
                         create_assistant_dialog: {
                             title: "Заголовок",
                             description: "Опис",
                             prompt: "Системний запит",
                             dialog_title: "Створити нового асистента",
-                            import: "Імпортувати асистента",
                             default_assistant_title: "Асистент",
                             default_assistant_description: "Асистент",
                             step1_label: "Описати функцію",
@@ -2628,13 +2643,7 @@ i18n
                             example_three: "Приклад 3: Синоніми",
                             create_example_one: "Перекладач англійської мови: Асистент перекладає введений текст англійською мовою.",
                             create_example_two: "Асистент є співробітником міста Мюнхен і ввічливо та індивідуально відповідає на вхідні електронні листи.",
-                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення.",
-                            import_success: "Імпорт успішний",
-                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
-                            import_error: "Помилка імпорту",
-                            import_failed: "Не вдалося імпортувати файл",
-                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
-                            import_save_failed: "Помилка збереження імпортованого асистента"
+                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення."
                         },
                         edit_assistant_dialog: {
                             title: "Редагувати асистента",
@@ -2732,6 +2741,7 @@ i18n
                         },
                         community_assistants: {
                             title: "Громадські Асистенти", // Ukrainisch
+                            about: "Про",
                             search: "Пошук асистентів",
                             filter_by_tag: "Фільтрувати за тегом",
                             filter_all: "Всі",
@@ -2745,7 +2755,7 @@ i18n
                             sort_subscriptions: "Підписки",
                             sort_by_tooltip: "Змінити сортування асистентів",
                             save: "Зберегти асистента",
-                            system_message: "Системний запит",
+
                             departments: "Авторизовані відділи",
                             departments_description: "Цей асистент авторизований для наступних організаційних підрозділів:",
                             department_single: "Відділ",

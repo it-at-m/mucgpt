@@ -4,6 +4,13 @@
 }
 
 .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
     background: var(--primary) !important;
     color: var(--onPrimary) !important;
     border: none !important;

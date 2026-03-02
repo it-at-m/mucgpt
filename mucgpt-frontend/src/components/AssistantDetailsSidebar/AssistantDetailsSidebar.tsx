@@ -115,7 +115,7 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
                 <div className={styles.sidebarSection}>
                     <div className={styles.sectionHeader}>
                         <Info24Regular className={styles.sectionIcon} />
-                        <span>{t("components.create_assistant_dialog.description", "ABOUT")}</span>
+                        <span>{t("components.community_assistants.about", "ABOUT")}</span>
                     </div>
                     <Text className={styles.aboutText}>{assistant?.description}</Text>
                 </div>

@@ -50,7 +50,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
             return (
                 <CardHeader
                     header={
-                        <div className={styles.headerText} style={titleStyle} data-card-title>
+                        <div className={styles.headerText} style={titleStyle}>
                             {title}
                         </div>
                     }
@@ -74,3 +74,5 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
 
     return cardContent;
 });
+
+DiscoveryCard.displayName = "DiscoveryCard";

@@ -202,16 +202,6 @@ const Menu = () => {
                             <Link
                                 to="/discovery"
                                 className={addButtonStyles.button}
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    padding: "6px 16px",
-                                    textDecoration: "none",
-                                    fontSize: "14px",
-                                    fontWeight: 600,
-                                    color: "var(--onPrimary)"
-                                }}
                                 aria-label={t("menu.discover_assistants", "Assistenten entdecken")}
                             >
                                 <CompassNorthwest24Regular aria-hidden />

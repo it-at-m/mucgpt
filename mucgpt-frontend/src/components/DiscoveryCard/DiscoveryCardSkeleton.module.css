@@ -17,14 +17,21 @@
 }
 
 .title {
+    height: 24px;
     width: 70%;
     margin-bottom: 8px;
 }
 
 .line1 {
+    height: 16px;
     width: 100%;
 }
 
 .line2 {
+    height: 16px;
     width: 60%;
+}
+
+.spacer {
+    height: 4px;
 }

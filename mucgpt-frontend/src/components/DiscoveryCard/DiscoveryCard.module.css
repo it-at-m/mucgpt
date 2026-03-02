@@ -1,13 +1,13 @@
 .card {
     border-radius: 8px;
     min-height: 140px;
-    border: 1px solid var(--primary);
+    border: 2px solid transparent;
     transition: all 0.2s ease;
     background-color: var(--colorNeutralBackground1);
 }
 
 .cardSelected {
-    border: 2px solid var(--primary) !important;
+    border-color: var(--primary) !important;
 }
 
 .card:hover {

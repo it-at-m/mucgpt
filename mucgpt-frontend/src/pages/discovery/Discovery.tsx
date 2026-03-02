@@ -19,7 +19,6 @@ import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryC
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 
-
 type SortKey = "title" | "updated" | "subscriptions";
 
 const storageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -40,10 +39,16 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [filterScope, setFilterScope] = useState<"all" | "yours">("yours");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
+    const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    useEffect(() => () => { if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current); }, []);
+    useEffect(
+        () => () => {
+            if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
+        },
+        []
+    );
 
     useEffect(() => {
         setHeader(DEFAULTHEADER);
@@ -153,8 +158,10 @@ const Discovery = () => {
                     getUserSubscriptionsApi()
                 ]);
 
-                const ownedIds = new Set([...ownedAssistants.map((a: AssistantResponse) => a.id), ...userSubscriptions.map((s: { id: string }) => s.id)]);
+                const ownedIds = new Set(ownedAssistants.map((a: AssistantResponse) => a.id));
+                const subscribedIds = new Set(userSubscriptions.map((s: { id: string }) => s.id));
                 setOwnedAssistantIds(ownedIds);
+                setUserSubscriptionIds(subscribedIds);
 
                 const cardData: AssistantCardData[] = allAssistants.map((response: AssistantResponse) => ({
                     id: response.id,
@@ -186,12 +193,12 @@ const Discovery = () => {
                 assistant.description.toLowerCase().includes(lc) ||
                 (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lc)));
 
-            const matchesScope = filterScope === "all" || ownedAssistantIds.has(assistant.id);
+            const matchesScope = filterScope === "all" || ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
 
             return matchesSearch && matchesScope;
         });
         return sortAssistants(filtered, sortMethod);
-    }, [assistants, searchText, filterScope, ownedAssistantIds, sortMethod, sortAssistants]);
+    }, [assistants, searchText, filterScope, ownedAssistantIds, userSubscriptionIds, sortMethod, sortAssistants]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
@@ -334,8 +341,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

@@ -65,6 +65,8 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
         ? getCreativityConfig(assistant.rawData.latest_version.creativity)
         : getCreativityConfig("balanced");
 
+    const enabledTools = assistant?.rawData?.latest_version?.tools?.filter(tool => tool.config?.enabled) || [];
+
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
             <DrawerHeader>
@@ -120,15 +122,15 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
                     <Text className={styles.aboutText}>{assistant?.description}</Text>
                 </div>
 
-                {assistant?.rawData?.latest_version?.tools && assistant.rawData.latest_version.tools.length > 0 && (
+                {enabledTools.length > 0 && (
                     <div className={styles.sidebarSection}>
                         <div className={styles.sectionHeader}>
                             <Sparkle24Regular className={styles.sectionIcon} />
                             <span>{t("components.community_assistants.enabled_tools", "ENABLED TOOLS")}</span>
                         </div>
                         <div className={styles.toolList}>
-                            {assistant.rawData.latest_version.tools.map((tool, index) => (
-                                <div key={index} className={styles.toolPill}>
+                            {enabledTools.map(tool => (
+                                <div key={tool.id} className={styles.toolPill}>
                                     {tool.id}
                                 </div>
                             ))}

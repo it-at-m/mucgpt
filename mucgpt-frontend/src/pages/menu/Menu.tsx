@@ -199,11 +199,7 @@ const Menu = () => {
                     {t("menu.own_assistants")}
                     <div className={addButtonStyles.container}>
                         <Tooltip content={t("menu.discover_assistants", "Assistenten entdecken")} relationship="description" positioning="below">
-                            <Link
-                                to="/discovery"
-                                className={addButtonStyles.button}
-                                aria-label={t("menu.discover_assistants", "Assistenten entdecken")}
-                            >
+                            <Link to="/discovery" className={addButtonStyles.button} aria-label={t("menu.discover_assistants", "Assistenten entdecken")}>
                                 <CompassNorthwest24Regular aria-hidden />
                                 {t("menu.discover_assistants", "Assistenten entdecken")}
                             </Link>

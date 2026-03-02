@@ -130,29 +130,6 @@
     min-width: 0;
 }
 
-.filterButton {
-    background: transparent;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 8px;
-    color: var(--colorNeutralForeground2);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin: 2px;
-}
-
-.filterButton:hover {
-    background-color: var(--primary);
-    color: var(--colorNeutralForeground1);
-    opacity: 0.7;
-}
-
-.filterButtonActive {
-    background-color: var(--primary);
-    color: var(--onPrimary);
-    font-weight: 600;
-}
-
 .sortSection {
     display: flex;
     align-items: center;

@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, ToggleButton, Tooltip } from "@fluentui/react-components";
-import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData } from "@fluentui/react-components";
+import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, Tooltip, TabList, Tab } from "@fluentui/react-components";
+import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
 import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
@@ -311,22 +311,17 @@ const Discovery = () => {
                             />
 
                             <div className={styles.controlsSection}>
-                                <div>
-                                    <ToggleButton
-                                        className={`${styles.filterButton} ${filterScope === "all" ? styles.filterButtonActive : ""}`}
-                                        checked={filterScope === "all"}
-                                        onClick={() => handleFilterChange("all")}
-                                    >
-                                        {t("components.community_assistants.filter_all", "All")}
-                                    </ToggleButton>
-                                    <ToggleButton
-                                        className={`${styles.filterButton} ${filterScope === "yours" ? styles.filterButtonActive : ""}`}
-                                        checked={filterScope === "yours"}
-                                        onClick={() => handleFilterChange("yours")}
-                                    >
-                                        {t("components.community_assistants.filter_yours", "Yours")}
-                                    </ToggleButton>
-                                </div>
+                                <TabList
+                                    selectedValue={filterScope}
+                                    onTabSelect={(_event: SelectTabEvent, data: SelectTabData) => {
+                                        if (data.value === "all" || data.value === "yours") {
+                                            handleFilterChange(data.value);
+                                        }
+                                    }}
+                                >
+                                    <Tab value="all">{t("components.community_assistants.filter_all", "All")}</Tab>
+                                    <Tab value="yours">{t("components.community_assistants.filter_yours", "Yours")}</Tab>
+                                </TabList>
 
                                 <div className={styles.sortSection}>
                                     <Tooltip content={t("components.community_assistants.sort_by_tooltip", "Change sorting")} relationship="label">
@@ -341,8 +336,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                  ? t("components.community_assistants.sort_updated", "Last updated")
-                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                    ? t("components.community_assistants.sort_updated", "Last updated")
+                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

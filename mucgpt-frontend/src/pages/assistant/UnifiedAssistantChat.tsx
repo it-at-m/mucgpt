@@ -29,8 +29,11 @@ import { ClearChatButton } from "../../components/ClearChatButton";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Button } from "@fluentui/react-components";
-import { Settings24Regular } from "@fluentui/react-icons";
+import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
+import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
+import { getCommunityAssistantApi } from "../../api/assistant-client";
+import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -92,6 +95,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+    const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
+    const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
+    const infoDrawerCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(
+        () => () => {
+            if (infoDrawerCloseTimerRef.current !== null) clearTimeout(infoDrawerCloseTimerRef.current);
+        },
+        []
+    );
 
     // Auto-open edit dialog when navigating from Discovery with ?edit=true
     useEffect(() => {
@@ -215,6 +228,25 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         };
         loadData();
     }, [assistant_id, strategy, t, showError]);
+
+    // Load info data for non-owner community assistants
+    useEffect(() => {
+        if (!strategy.canEdit && assistant_id) {
+            getCommunityAssistantApi(assistant_id)
+                .then(response => {
+                    setAssistantInfoData({
+                        id: response.id,
+                        title: response.latest_version.name,
+                        description: response.latest_version.description || "",
+                        subscriptions: response.subscriptions_count || 0,
+                        updated: response.updated_at,
+                        tags: response.latest_version.tags || [],
+                        rawData: response
+                    });
+                })
+                .catch(err => console.error("Failed to load assistant info data:", err));
+        }
+    }, [assistant_id, strategy.canEdit]);
 
     // get History-Funktion
     const fetchHistory = useCallback(() => {
@@ -454,8 +486,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                  }
+                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                }
                 : tools;
 
         return (
@@ -556,17 +588,24 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
                     actions={
-                        strategy?.canEdit && (
+                        strategy?.canEdit ? (
                             <Button
                                 appearance="subtle"
                                 icon={<Settings24Regular />}
-                                onClick={() => {
-                                    setShowEditDialog(true);
-                                }}
+                                onClick={() => setShowEditDialog(true)}
                                 aria-label={t("components.assistantsettingsdrawer.show_configurations")}
                             />
-                        )
+                        ) : assistantInfoData ? (
+                            <Button
+                                appearance="subtle"
+                                icon={<Info24Regular />}
+                                onClick={() => setIsInfoDrawerOpen(prev => !prev)}
+                                aria-label={t("components.community_assistants.about", "About")}
+                            />
+                        ) : undefined
                     }
+                    onHeaderClick={assistantInfoData && !strategy?.canEdit ? () => setIsInfoDrawerOpen(true) : undefined}
+                    infoDrawerOpen={isInfoDrawerOpen}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -587,7 +626,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         showSidebar,
         clearChat,
         isLoadingRef.current,
-        strategy
+        strategy,
+        assistantInfoData,
+        isInfoDrawerOpen
     ]);
 
     return (
@@ -616,6 +657,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     );
                 }}
             />
+            {assistantInfoData && (
+                <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
+                    <AssistantDetailsSidebar
+                        isOpen={isInfoDrawerOpen}
+                        onClose={() => {
+                            if (infoDrawerCloseTimerRef.current !== null) clearTimeout(infoDrawerCloseTimerRef.current);
+                            setIsInfoDrawerOpen(false);
+                        }}
+                        assistant={assistantInfoData}
+                        ownedAssistantIds={new Set()}
+                        hideStartChat={true}
+                    />
+                </div>
+            )}
         </>
     );
 };

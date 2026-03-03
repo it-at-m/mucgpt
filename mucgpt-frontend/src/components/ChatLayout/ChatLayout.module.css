@@ -8,7 +8,7 @@
     position: fixed;
     top: var(--navHeight, 50px);
     left: max(var(--sidebarWidth, 240px), 0px);
-    right: 0;
+    right: var(--infoDrawerWidth, 0px);
     height: 60px;
     display: flex;
     align-items: center;
@@ -16,7 +16,7 @@
     padding: 0 16px;
     background: var(--colorNeutralBackground1);
     z-index: 5;
-    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
     box-sizing: border-box;
 }
 
@@ -36,6 +36,16 @@
     text-overflow: ellipsis;
 }
 
+.headerTitleClickable {
+    cursor: pointer;
+    text-decoration: underline dotted transparent;
+    transition: text-decoration-color 150ms ease;
+}
+
+.headerTitleClickable:hover {
+    text-decoration-color: var(--colorNeutralForeground1);
+}
+
 .controlsContainer {
     display: flex;
     align-items: center;
@@ -49,13 +59,13 @@
     position: fixed;
     top: calc(var(--navHeight, 50px) + 60px); /* Nav + Header */
     left: calc(var(--sidebarWidth, 240px));
-    right: 0;
+    right: var(--infoDrawerWidth, 0px);
     bottom: 0;
     display: flex;
     flex-direction: column;
     z-index: 1;
     box-sizing: border-box;
-    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
     background: var(--colorNeutralBackground1);
     margin-bottom: 58px;
 }

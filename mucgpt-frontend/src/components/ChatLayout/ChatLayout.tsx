@@ -21,6 +21,8 @@ interface Props {
     messages_description: string;
     size: SidebarSizes;
     onToggleMinimized?: () => void;
+    onHeaderClick?: () => void;
+    infoDrawerOpen?: boolean;
     // LLM Selector props
     onLLMSelectionChange: (nextLLM: string) => void;
     llmOptions?: Model[];
@@ -43,11 +45,14 @@ export const ChatLayout = ({
     defaultLLM,
     onLLMSelectionChange,
     onToggleMinimized,
+    onHeaderClick,
+    infoDrawerOpen,
     actions
 }: Props) => {
+    const infoDrawerWidth = infoDrawerOpen ? "400px" : "0px";
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
     return (
-        <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as CSSProperties}>
+        <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth, "--infoDrawerWidth": infoDrawerWidth } as CSSProperties}>
             <aside hidden={size === "none"} className={styles.sidebar}>
                 {sidebar}
             </aside>
@@ -59,7 +64,12 @@ export const ChatLayout = ({
                             {size === "none" ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
                         </Button>
                     </div>
-                    <h1 className={styles.headerTitle}>{header}</h1>
+                    <h1
+                        className={onHeaderClick ? `${styles.headerTitle} ${styles.headerTitleClickable}` : styles.headerTitle}
+                        onClick={onHeaderClick}
+                    >
+                        {header}
+                    </h1>
                 </div>
 
                 <div className={styles.controlsContainer}>

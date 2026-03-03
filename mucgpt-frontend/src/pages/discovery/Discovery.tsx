@@ -197,8 +197,8 @@ const Discovery = () => {
                 filterScope === "all"
                     ? true
                     : filterScope === "subscribed"
-                        ? userSubscriptionIds.has(assistant.id) && !ownedAssistantIds.has(assistant.id)
-                        : ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
+                      ? userSubscriptionIds.has(assistant.id) && !ownedAssistantIds.has(assistant.id)
+                      : ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
 
             return matchesSearch && matchesScope;
         });
@@ -342,8 +342,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

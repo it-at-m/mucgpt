@@ -16,7 +16,9 @@
     padding: 0 16px;
     background: var(--colorNeutralBackground1);
     z-index: 5;
-    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    transition:
+        left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+        right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
     box-sizing: border-box;
 }
 
@@ -73,7 +75,9 @@
     flex-direction: column;
     z-index: 1;
     box-sizing: border-box;
-    transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    transition:
+        left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+        right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
     background: var(--colorNeutralBackground1);
     margin-bottom: 58px;
 }
@@ -178,7 +182,6 @@
         margin-bottom: 48px;
     }
 }
-
 
 @media (max-width: 1200px) {
     .container[data-info-open="true"] .headerBar,

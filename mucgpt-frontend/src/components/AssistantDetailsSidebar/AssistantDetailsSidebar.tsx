@@ -36,7 +36,16 @@ interface AssistantDetailsSidebarProps {
     hideStartChat?: boolean;
 }
 
-export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onDelete, hideStartChat }: AssistantDetailsSidebarProps) => {
+export const AssistantDetailsSidebar = ({
+    isOpen,
+    onClose,
+    assistant,
+    ownedAssistantIds,
+    onStartChat,
+    onEdit,
+    onDelete,
+    hideStartChat
+}: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
 
     const getCreativityConfig = (creativity: string) => {

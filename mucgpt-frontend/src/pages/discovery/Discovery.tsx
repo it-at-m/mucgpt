@@ -37,7 +37,7 @@ const Discovery = () => {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
-    const [filterScope, setFilterScope] = useState<"all" | "yours">("yours");
+    const [filterScope, setFilterScope] = useState<"all" | "yours" | "subscribed">("yours");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -193,7 +193,12 @@ const Discovery = () => {
                 assistant.description.toLowerCase().includes(lc) ||
                 (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lc)));
 
-            const matchesScope = filterScope === "all" || ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
+            const matchesScope =
+                filterScope === "all"
+                    ? true
+                    : filterScope === "subscribed"
+                        ? userSubscriptionIds.has(assistant.id) && !ownedAssistantIds.has(assistant.id)
+                        : ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
 
             return matchesSearch && matchesScope;
         });
@@ -204,7 +209,7 @@ const Discovery = () => {
         setSearchText(data.value || "");
     };
 
-    const handleFilterChange = (scope: "all" | "yours") => {
+    const handleFilterChange = (scope: "all" | "yours" | "subscribed") => {
         setFilterScope(scope);
     };
 
@@ -314,13 +319,14 @@ const Discovery = () => {
                                 <TabList
                                     selectedValue={filterScope}
                                     onTabSelect={(_event: SelectTabEvent, data: SelectTabData) => {
-                                        if (data.value === "all" || data.value === "yours") {
-                                            handleFilterChange(data.value);
+                                        if (data.value === "all" || data.value === "yours" || data.value === "subscribed") {
+                                            handleFilterChange(data.value as "all" | "yours" | "subscribed");
                                         }
                                     }}
                                 >
                                     <Tab value="all">{t("components.community_assistants.filter_all", "All")}</Tab>
                                     <Tab value="yours">{t("components.community_assistants.filter_yours", "Yours")}</Tab>
+                                    <Tab value="subscribed">{t("components.community_assistants.filter_subscribed", "Abonniert")}</Tab>
                                 </TabList>
 
                                 <div className={styles.sortSection}>

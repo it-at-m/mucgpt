@@ -1,4 +1,4 @@
-import { ReactNode, CSSProperties } from "react";
+import { ReactNode, CSSProperties, useEffect, useState } from "react";
 import styles from "./ChatLayout.module.css";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -51,8 +51,21 @@ export const ChatLayout = ({
 }: Props) => {
     const infoDrawerWidth = infoDrawerOpen ? "400px" : "0px";
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
+
+    const [isCompact, setIsCompact] = useState(() => window.matchMedia("(max-width: 640px)").matches);
+    useEffect(() => {
+        const mq = window.matchMedia("(max-width: 640px)");
+        const handler = (e: MediaQueryListEvent) => setIsCompact(e.matches);
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
+
     return (
-        <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth, "--infoDrawerWidth": infoDrawerWidth } as CSSProperties}>
+        <div
+            className={styles.container}
+            style={{ "--sidebarWidth": sidebarWidth } as CSSProperties}
+            data-info-open={infoDrawerOpen ?? false}
+        >
             <aside hidden={size === "none"} className={styles.sidebar}>
                 {sidebar}
             </aside>
@@ -60,7 +73,7 @@ export const ChatLayout = ({
             <header className={styles.headerBar}>
                 <div className={styles.leftGroup}>
                     <div className={styles.sidebarOpener} role="group" aria-label="Sidebar controls">
-                        <Button appearance="subtle" onClick={onToggleMinimized} aria-label={size === "none" ? "Open sidebar" : "Close sidebar"}>
+                        <Button appearance="subtle" size="small" onClick={onToggleMinimized} aria-label={size === "none" ? "Open sidebar" : "Close sidebar"}>
                             {size === "none" ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
                         </Button>
                     </div>
@@ -75,7 +88,12 @@ export const ChatLayout = ({
                 <div className={styles.controlsContainer}>
                     {llmOptions && defaultLLM && onLLMSelectionChange && (
                         <div aria-label="LLM selector container" role="group">
-                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
+                            <LLMSelector
+                                onSelectionChange={onLLMSelectionChange}
+                                defaultLLM={defaultLLM}
+                                options={llmOptions}
+                                compact={isCompact}
+                            />
                         </div>
                     )}
                     {actions}

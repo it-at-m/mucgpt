@@ -8,7 +8,7 @@
     position: fixed;
     top: var(--navHeight, 50px);
     left: max(var(--sidebarWidth, 240px), 0px);
-    right: var(--infoDrawerWidth, 0px);
+    right: 0;
     height: 60px;
     display: flex;
     align-items: center;
@@ -20,10 +20,17 @@
     box-sizing: border-box;
 }
 
+.container[data-info-open="true"] .headerBar {
+    right: 400px;
+}
+
 .leftGroup {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .headerTitle {
@@ -53,13 +60,14 @@
     border-radius: 8px;
     padding: 4px 8px;
     background-color: var(--colorNeutralBackground1);
+    flex-shrink: 0;
 }
 
 .chatRoot {
     position: fixed;
     top: calc(var(--navHeight, 50px) + 60px); /* Nav + Header */
     left: calc(var(--sidebarWidth, 240px));
-    right: var(--infoDrawerWidth, 0px);
+    right: 0;
     bottom: 0;
     display: flex;
     flex-direction: column;
@@ -68,6 +76,10 @@
     transition: left 220ms cubic-bezier(0.2, 0.9, 0.2, 1), right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
     background: var(--colorNeutralBackground1);
     margin-bottom: 58px;
+}
+
+.container[data-info-open="true"] .chatRoot {
+    right: 400px;
 }
 
 .chatContainer {
@@ -153,8 +165,7 @@
 .sidebarOpener {
     display: flex;
     align-items: center;
-    gap: 8px;
-    /* Removed fixed positioning as it's now inside flex container */
+    margin-left: -6px;
 }
 
 @media (max-width: 650px) {
@@ -165,5 +176,20 @@
     }
     .chatRoot {
         margin-bottom: 48px;
+    }
+}
+
+
+@media (max-width: 1200px) {
+    .container[data-info-open="true"] .headerBar,
+    .container[data-info-open="true"] .chatRoot {
+        right: 320px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container[data-info-open="true"] .headerBar,
+    .container[data-info-open="true"] .chatRoot {
+        right: 0;
     }
 }

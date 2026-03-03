@@ -221,6 +221,16 @@
     color: var(--surface);
     padding: 8px 16px;
     font-size: 14px;
+    z-index: 20;
+    transition: right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+    right: 0;
+    box-sizing: border-box;
+}
+
+:global(body.info-drawer-open) .footer {
+    right: 400px;
+    width: auto;
+    left: 0;
 }
 
 .footerSection {
@@ -344,5 +354,18 @@
 
     .footerSection {
         font-size: 11px;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    :global(body.info-drawer-open) .footer {
+        right: 320px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    :global(body.info-drawer-open) .footer {
+        right: 0;
+        width: 100%;
     }
 }

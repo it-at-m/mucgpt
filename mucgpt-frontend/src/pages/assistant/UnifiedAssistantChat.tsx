@@ -106,6 +106,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         []
     );
 
+    // Sync info drawer state to body class so Layout.module.css can offset the footer
+    useEffect(() => {
+        document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
+        return () => document.body.classList.remove("info-drawer-open");
+    }, [isInfoDrawerOpen]);
+
     // Auto-open edit dialog when navigating from Discovery with ?edit=true
     useEffect(() => {
         if (searchParams.get("edit") === "true") {

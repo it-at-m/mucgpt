@@ -30,12 +30,13 @@ interface AssistantDetailsSidebarProps {
     onClose: () => void;
     assistant: AssistantCardData | null;
     ownedAssistantIds: Set<string>;
-    onStartChat: () => void;
-    onEdit: () => void;
-    onDelete: () => void;
+    onStartChat?: () => void;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    hideStartChat?: boolean;
 }
 
-export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onDelete }: AssistantDetailsSidebarProps) => {
+export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onDelete, hideStartChat }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
 
     const getCreativityConfig = (creativity: string) => {
@@ -89,7 +90,7 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
                     <Text className={styles.creativityDescription}>{creativityConfig.description}</Text>
                 </div>
 
-                {assistant && (
+                {assistant && !hideStartChat && (
                     <div className={styles.startButtonWrapper}>
                         <Button appearance="primary" className={styles.startConversationButton} icon={<Chat24Regular />} onClick={onStartChat} size="large">
                             {t("components.community_assistants.start_chat", "Start Conversation")}

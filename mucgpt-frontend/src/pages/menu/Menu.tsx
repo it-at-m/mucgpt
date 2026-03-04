@@ -1,6 +1,6 @@
 import styles from "./Menu.module.css";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button, Tooltip, TabList, Tab, SelectTabEvent, SelectTabData, MessageBar, MessageBarBody } from "@fluentui/react-components";
 import { CompassNorthwest24Regular } from "@fluentui/react-icons";
@@ -26,6 +26,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 
 const Menu = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [assistants, setAssistants] = useState<Assistant[]>([]);
     const [communityAssistants, setCommunityAssistants] = useState<CommunityAssistant[]>([]);
     const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistant[]>([]);
@@ -199,10 +200,14 @@ const Menu = () => {
                     {t("menu.own_assistants")}
                     <div className={addButtonStyles.container}>
                         <Tooltip content={t("menu.discover_assistants", "Assistenten entdecken")} relationship="description" positioning="below">
-                            <Link to="/discovery" className={addButtonStyles.button} aria-label={t("menu.discover_assistants", "Assistenten entdecken")}>
-                                <CompassNorthwest24Regular aria-hidden />
+                            <Button
+                                className={addButtonStyles.button}
+                                aria-label={t("menu.discover_assistants", "Assistenten entdecken")}
+                                onClick={() => navigate("/discovery")}
+                                icon={<CompassNorthwest24Regular aria-hidden />}
+                            >
                                 {t("menu.discover_assistants", "Assistenten entdecken")}
-                            </Link>
+                            </Button>
                         </Tooltip>
                     </div>
                 </div>

@@ -97,14 +97,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
-    const infoDrawerCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    useEffect(
-        () => () => {
-            if (infoDrawerCloseTimerRef.current !== null) clearTimeout(infoDrawerCloseTimerRef.current);
-        },
-        []
-    );
 
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
@@ -237,21 +229,25 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Load info data for non-owner community assistants
     useEffect(() => {
-        if (!strategy.canEdit && assistant_id) {
-            getCommunityAssistantApi(assistant_id)
-                .then(response => {
-                    setAssistantInfoData({
-                        id: response.id,
-                        title: response.latest_version.name,
-                        description: response.latest_version.description || "",
-                        subscriptions: response.subscriptions_count || 0,
-                        updated: response.updated_at,
-                        tags: response.latest_version.tags || [],
-                        rawData: response
-                    });
-                })
-                .catch(err => console.error("Failed to load assistant info data:", err));
+        if (strategy.canEdit || !assistant_id) {
+            setAssistantInfoData(null);
+            setIsInfoDrawerOpen(false);
+            return;
         }
+
+        getCommunityAssistantApi(assistant_id)
+            .then(response => {
+                setAssistantInfoData({
+                    id: response.id,
+                    title: response.latest_version.name,
+                    description: response.latest_version.description || "",
+                    subscriptions: response.subscriptions_count || 0,
+                    updated: response.updated_at,
+                    tags: response.latest_version.tags || [],
+                    rawData: response
+                });
+            })
+            .catch(err => console.error("Failed to load assistant info data:", err));
     }, [assistant_id, strategy.canEdit]);
 
     // get History-Funktion
@@ -610,7 +606,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             />
                         ) : undefined
                     }
-                    onHeaderClick={assistantInfoData && !strategy?.canEdit ? () => setIsInfoDrawerOpen(true) : undefined}
+                    onHeaderClick={assistantInfoData && !strategy?.canEdit ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
                     infoDrawerOpen={isInfoDrawerOpen}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
@@ -667,10 +663,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
                     <AssistantDetailsSidebar
                         isOpen={isInfoDrawerOpen}
-                        onClose={() => {
-                            if (infoDrawerCloseTimerRef.current !== null) clearTimeout(infoDrawerCloseTimerRef.current);
-                            setIsInfoDrawerOpen(false);
-                        }}
+                        onClose={() => setIsInfoDrawerOpen(false)}
                         assistant={assistantInfoData}
                         ownedAssistantIds={new Set()}
                         hideStartChat={true}

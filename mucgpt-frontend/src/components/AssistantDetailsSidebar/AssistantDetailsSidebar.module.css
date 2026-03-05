@@ -155,7 +155,7 @@
     border-right: none;
     border-bottom: none;
     background-color: var(--colorNeutralBackground1);
-    width: 400px !important;
+    width: var(--assistantDetailsDrawerWidth) !important;
     box-sizing: border-box;
     position: relative !important;
     height: 100% !important;
@@ -165,7 +165,7 @@
 
 @media (max-width: 1200px) {
     .inlineDrawer {
-        width: 320px !important;
+        width: var(--assistantDetailsDrawerCompactWidth) !important;
     }
 }
 

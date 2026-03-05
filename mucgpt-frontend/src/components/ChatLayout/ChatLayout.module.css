@@ -23,7 +23,7 @@
 }
 
 .container[data-info-open="true"] .headerBar {
-    right: 400px;
+    right: var(--assistantDetailsDrawerWidth);
 }
 
 .leftGroup {
@@ -45,14 +45,23 @@
     text-overflow: ellipsis;
 }
 
-.headerTitleClickable {
-    cursor: pointer;
-    text-decoration: underline dotted transparent;
-    transition: text-decoration-color 150ms ease;
+.headerTitleButton {
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit !important;
+    font-weight: inherit;
+    line-height: inherit;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    max-width: 100%;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 0;
 }
 
-.headerTitleClickable:hover {
-    text-decoration-color: var(--colorNeutralForeground1);
+.headerTitleButton:hover {
+    text-decoration: underline;
 }
 
 .controlsContainer {
@@ -83,7 +92,7 @@
 }
 
 .container[data-info-open="true"] .chatRoot {
-    right: 400px;
+    right: var(--assistantDetailsDrawerWidth);
 }
 
 .chatContainer {
@@ -130,6 +139,13 @@
     font-weight: 600;
     margin: 1em;
     text-align: start;
+}
+
+.welcomeMessageContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
 }
 
 @media (max-height: 780px) {
@@ -186,7 +202,7 @@
 @media (max-width: 1200px) {
     .container[data-info-open="true"] .headerBar,
     .container[data-info-open="true"] .chatRoot {
-        right: 320px;
+        right: var(--assistantDetailsDrawerCompactWidth);
     }
 }
 

@@ -49,11 +49,14 @@ export const ChatLayout = ({
     infoDrawerOpen,
     actions
 }: Props) => {
-
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
 
-    const [isCompact, setIsCompact] = useState(() => window.matchMedia("(max-width: 640px)").matches);
+    const [isCompact, setIsCompact] = useState(() =>
+        typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
+    );
+
     useEffect(() => {
+        if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
         const mq = window.matchMedia("(max-width: 640px)");
         const handler = (e: MediaQueryListEvent) => setIsCompact(e.matches);
         mq.addEventListener("change", handler);
@@ -73,8 +76,14 @@ export const ChatLayout = ({
                             {size === "none" ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
                         </Button>
                     </div>
-                    <h1 className={onHeaderClick ? `${styles.headerTitle} ${styles.headerTitleClickable}` : styles.headerTitle} onClick={onHeaderClick}>
-                        {header}
+                    <h1 className={styles.headerTitle}>
+                        {onHeaderClick ? (
+                            <Button appearance="transparent" className={styles.headerTitleButton} onClick={onHeaderClick}>
+                                {header}
+                            </Button>
+                        ) : (
+                            header
+                        )}
                     </h1>
                 </div>
 
@@ -92,7 +101,7 @@ export const ChatLayout = ({
                 <div className={styles.chatContainer}>
                     {showExamples ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                            <div className={styles.welcomeMessageContainer}>
                                 {header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>

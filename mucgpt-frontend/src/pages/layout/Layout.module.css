@@ -228,7 +228,7 @@
 }
 
 :global(body.info-drawer-open) .footer {
-    right: 400px;
+    right: var(--assistantDetailsDrawerWidth);
     width: auto;
     left: 0;
 }
@@ -359,7 +359,7 @@
 
 @media screen and (max-width: 1200px) {
     :global(body.info-drawer-open) .footer {
-        right: 320px;
+        right: var(--assistantDetailsDrawerCompactWidth);
     }
 }
 

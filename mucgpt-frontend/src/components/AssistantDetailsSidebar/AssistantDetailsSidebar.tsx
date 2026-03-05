@@ -4,7 +4,7 @@ import {
     Chat24Regular,
     Edit20Regular,
     Delete20Regular,
-    Info24Regular,
+    Book24Regular,
     Sparkle24Regular,
     DocumentText24Regular,
     TargetArrow24Regular,
@@ -116,7 +116,7 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
 
                 <div className={styles.sidebarSection}>
                     <div className={styles.sectionHeader}>
-                        <Info24Regular className={styles.sectionIcon} />
+                        <Book24Regular className={styles.sectionIcon} />
                         <span>{t("components.community_assistants.about", "ABOUT")}</span>
                     </div>
                     <Text className={styles.aboutText}>{assistant?.description}</Text>

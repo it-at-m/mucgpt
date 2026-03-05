@@ -1,4 +1,4 @@
-import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text } from "@fluentui/react-components";
+import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
     Chat24Regular,
@@ -9,7 +9,9 @@ import {
     DocumentText24Regular,
     TargetArrow24Regular,
     Color24Regular,
-    Scales24Regular
+    Scales24Regular,
+    MoreVertical20Regular,
+    ArrowExportUp20Regular
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
@@ -32,10 +34,11 @@ interface AssistantDetailsSidebarProps {
     ownedAssistantIds: Set<string>;
     onStartChat: () => void;
     onEdit: () => void;
+    onExport: () => void;
     onDelete: () => void;
 }
 
-export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onDelete }: AssistantDetailsSidebarProps) => {
+export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onExport, onDelete }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
 
     const getCreativityConfig = (creativity: string) => {
@@ -66,6 +69,7 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
         : getCreativityConfig("balanced");
 
     const enabledTools = assistant?.rawData?.latest_version?.tools?.filter(tool => tool.config?.enabled) || [];
+    const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
@@ -90,27 +94,38 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
                 </div>
 
                 {assistant && (
-                    <div className={styles.startButtonWrapper}>
+                    <div className={styles.startButtonRow}>
                         <Button appearance="primary" className={styles.startConversationButton} icon={<Chat24Regular />} onClick={onStartChat} size="large">
                             {t("components.community_assistants.start_chat", "Start Conversation")}
                         </Button>
-                    </div>
-                )}
-
-                {assistant && ownedAssistantIds.has(assistant.id) && (
-                    <div className={styles.actionButtonsRow}>
-                        <Button appearance="outline" className={styles.actionButton} icon={<Edit20Regular />} onClick={onEdit} size="medium">
-                            {t("common.edit")}
-                        </Button>
-                        <Button
-                            appearance="outline"
-                            className={`${styles.actionButton} ${styles.deleteButton}`}
-                            icon={<Delete20Regular />}
-                            onClick={onDelete}
-                            size="medium"
-                        >
-                            {t("common.delete")}
-                        </Button>
+                        <Menu>
+                            <MenuTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="primary"
+                                    className={styles.moreOptionsButton}
+                                    icon={<MoreVertical20Regular />}
+                                    aria-label={t("components.community_assistants.more_options", "More options")}
+                                    size="large"
+                                />
+                            </MenuTrigger>
+                            <MenuPopover>
+                                <MenuList>
+                                    {isOwned && (
+                                        <MenuItem icon={<Edit20Regular />} onClick={onEdit}>
+                                            {t("common.edit")}
+                                        </MenuItem>
+                                    )}
+                                    <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
+                                        {t("components.assistantsettingsdrawer.export")}
+                                    </MenuItem>
+                                    {isOwned && (
+                                        <MenuItem icon={<Delete20Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
+                                            {t("common.delete")}
+                                        </MenuItem>
+                                    )}
+                                </MenuList>
+                            </MenuPopover>
+                        </Menu>
                     </div>
                 )}
 

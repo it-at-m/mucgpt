@@ -58,38 +58,37 @@
     line-height: 1.4;
 }
 
-.startButtonWrapper {
-    margin-bottom: 8px;
+.startButtonRow {
     display: flex;
+    align-items: stretch;
+    gap: 2px;
+    margin-bottom: 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .startConversationButton {
-    width: 100%;
-    border-radius: 8px !important;
+    flex: 1;
+    border-radius: 8px 0 0 8px !important;
 }
 
 .startConversationButton:hover {
     opacity: 0.9;
 }
 
-.actionButtonsRow {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 32px;
+.moreOptionsButton {
+    border-radius: 0 6px 6px 0 !important;
+    flex-shrink: 0;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
 }
 
-.actionButton {
-    flex: 1;
-    border-radius: 8px !important;
+.moreOptionsButton:hover {
+    opacity: 0.9;
 }
 
-.deleteButton {
+.menuDeleteItem {
     color: var(--colorPaletteRedForeground1) !important;
-    border-color: var(--colorPaletteRedForeground1) !important;
-}
-
-.deleteButton:hover {
-    background-color: var(--colorPaletteRedBackground1) !important;
 }
 
 .sidebarSection {
@@ -147,7 +146,7 @@
     color: var(--colorNeutralForeground2);
     font-family: monospace;
     white-space: pre-wrap;
-    word-break: break-all;
+    word-break: anywhere;
 }
 
 .inlineDrawer {

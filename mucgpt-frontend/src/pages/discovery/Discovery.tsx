@@ -54,6 +54,42 @@ const Discovery = () => {
         setHeader(DEFAULTHEADER);
     }, [setHeader]);
 
+    const exportAssistant = useCallback(() => {
+        if (!selectedAssistant) return;
+
+        const sanitizeFilename = (name: string) => {
+            const sanitized = name.replace(/[\/\\:*?"<>|]/g, "_");
+            const cleaned = sanitized.trim();
+            if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
+                return "assistant";
+            }
+            return cleaned;
+        };
+
+        const lv = selectedAssistant.rawData.latest_version;
+        const exportableData = {
+            title: lv.name,
+            description: lv.description || "",
+            system_message: lv.system_prompt || "",
+            creativity: lv.creativity,
+            default_model: lv.default_model,
+            examples: lv.examples || [],
+            quick_prompts: lv.quick_prompts || [],
+            tools: lv.tools || [],
+            tags: lv.tags || []
+        };
+
+        const blob = new Blob([JSON.stringify(exportableData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${sanitizeFilename(lv.name)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }, [selectedAssistant]);
+
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -405,6 +441,7 @@ const Discovery = () => {
                     ownedAssistantIds={ownedAssistantIds}
                     onStartChat={startConversation}
                     onEdit={editAssistant}
+                    onExport={exportAssistant}
                     onDelete={deleteAssistant}
                 />
             </div>

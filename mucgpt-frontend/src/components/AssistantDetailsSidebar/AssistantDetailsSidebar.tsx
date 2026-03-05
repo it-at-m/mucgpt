@@ -38,7 +38,16 @@ interface AssistantDetailsSidebarProps {
     onDelete: () => void;
 }
 
-export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssistantIds, onStartChat, onEdit, onExport, onDelete }: AssistantDetailsSidebarProps) => {
+export const AssistantDetailsSidebar = ({
+    isOpen,
+    onClose,
+    assistant,
+    ownedAssistantIds,
+    onStartChat,
+    onEdit,
+    onExport,
+    onDelete
+}: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
 
     const getCreativityConfig = (creativity: string) => {

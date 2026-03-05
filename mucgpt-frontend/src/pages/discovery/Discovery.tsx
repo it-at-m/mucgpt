@@ -58,7 +58,7 @@ const Discovery = () => {
         if (!selectedAssistant) return;
 
         const sanitizeFilename = (name: string) => {
-            const sanitized = name.replace(/[\/\\:*?"<>|]/g, "_");
+            const sanitized = name.replace(/[/\\:*?"<>|]/g, "_");
             const cleaned = sanitized.trim();
             if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
                 return "assistant";
@@ -233,8 +233,8 @@ const Discovery = () => {
                 filterScope === "all"
                     ? true
                     : filterScope === "subscribed"
-                        ? userSubscriptionIds.has(assistant.id) && !ownedAssistantIds.has(assistant.id)
-                        : ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
+                      ? userSubscriptionIds.has(assistant.id) && !ownedAssistantIds.has(assistant.id)
+                      : ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
 
             return matchesSearch && matchesScope;
         });
@@ -378,8 +378,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

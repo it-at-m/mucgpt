@@ -305,6 +305,50 @@ DYNAMIC_ASSISTANTS.push(
     })
 );
 
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-markdown-playground",
+        latest_version: {
+            id: "v-markdown-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+            name: "Markdown Prompt Showcase",
+            description: "Test assistant to verify markdown rendering in the Discovery sidebar system prompt section.",
+            system_prompt: `# Role
+You are a **structured assistant**.
+
+## Output Rules
+- Keep responses concise.
+- Use bullet points when listing steps.
+- Include a short summary at the end.
+
+## Example Table
+| Field | Meaning |
+| --- | --- |
+| \`owner\` | Responsible person |
+| \`due_date\` | Deadline in ISO format |
+
+## Example Code
+\`\`\`json
+{
+  "task": "Prepare rollout plan",
+  "owner": "alex",
+  "due_date": "2026-03-31"
+}
+\`\`\``,
+            hierarchical_access: ["RIT-AI"],
+            creativity: "medium",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: true } },
+                { id: "Vereinfachen", config: { enabled: false } }
+            ],
+            owner_ids: ["user-mock-777"],
+            tags: ["markdown", "demo", "discovery"]
+        }
+    })
+);
+
 // Helper to choose stream type basierend auf enabled_tools
 function chooseStreamType(enabledTools?: string[]) {
     const options: Array<"mindmap" | "simplify"> = [];

@@ -142,12 +142,12 @@
     border: 1px solid var(--colorNeutralStroke2);
 }
 
-.promptText {
+.promptMarkdown {
     font-size: 13px;
     color: var(--colorNeutralForeground2);
-    font-family: monospace;
+    font-family: var(--fontFamilyMonospace);
     white-space: pre-wrap;
-    word-break: break-all;
+    word-break: break-word;
 }
 
 .inlineDrawer {

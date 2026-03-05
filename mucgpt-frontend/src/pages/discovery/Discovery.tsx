@@ -43,7 +43,7 @@ const Discovery = () => {
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
     const [filterScope, setFilterScope] = useState<"all" | "yours" | "subscribed">("yours");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
-    const [setUserSubscriptionIds] = useState<Set<string>>(new Set());
+    const [, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -368,8 +368,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

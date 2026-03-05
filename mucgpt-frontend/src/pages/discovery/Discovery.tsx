@@ -156,7 +156,7 @@ const Discovery = () => {
         const fetchAssistants = async () => {
             setIsLoading(true);
             try {
-                const [allAssistants, ownedAssistants, userSubscriptions, localCommunityAssistants] = await Promise.all([
+                const [allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants] = await Promise.all([
                     getAllCommunityAssistantsApi(),
                     getOwnedCommunityAssistants(),
                     getUserSubscriptionsApi(),
@@ -180,10 +180,14 @@ const Discovery = () => {
                 });
 
                 // 1. All published assistants
-                setAllAssistants(allAssistants.map(a => toCardData(a)));
+                setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));
 
                 // 2. Yours no matter if published or private
                 setYoursAssistants(ownedAssistants.map(a => toCardData(a)));
+
+                const fullAssistantById = new Map<string, AssistantResponse>();
+                allAssistantsResponse.forEach(a => fullAssistantById.set(a.id, a));
+                ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
 
                 // 3. Every assistant subscribed to, merged with deleted ones
                 const deletedCommunityAssistants = localCommunityAssistants
@@ -192,8 +196,9 @@ const Discovery = () => {
 
                 const subscribedData = [
                     ...userSubscriptions.map((sub: any) => {
+                        const fullData = fullAssistantById.get(sub.id);
                         const localData = localCommunityAssistants.find(local => local.id === sub.id);
-                        return toCardData(localData || sub, { subscriptions: 0 });
+                        return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
                     }),
                     ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0 }))
                 ];
@@ -368,8 +373,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                  ? t("components.community_assistants.sort_updated", "Last updated")
-                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                    ? t("components.community_assistants.sort_updated", "Last updated")
+                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

@@ -15,7 +15,7 @@ export interface AssistantStrategy {
 }
 
 export class LocalAssistantStrategy implements AssistantStrategy {
-    isOwned = false;
+    isOwned = true;
     canEdit = true;
     requiresReloadOnSave = false;
 

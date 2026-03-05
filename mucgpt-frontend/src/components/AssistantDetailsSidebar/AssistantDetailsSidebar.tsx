@@ -4,7 +4,7 @@ import {
     Chat24Regular,
     Edit20Regular,
     Delete20Regular,
-    Info24Regular,
+    Book24Regular,
     Sparkle24Regular,
     DocumentText24Regular,
     TargetArrow24Regular,
@@ -16,6 +16,7 @@ import {
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { AssistantResponse } from "../../api/models";
+import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface AssistantCardData {
     id: string;
@@ -140,7 +141,7 @@ export const AssistantDetailsSidebar = ({
 
                 <div className={styles.sidebarSection}>
                     <div className={styles.sectionHeader}>
-                        <Info24Regular className={styles.sectionIcon} />
+                        <Book24Regular className={styles.sectionIcon} />
                         <span>{t("components.community_assistants.about", "ABOUT")}</span>
                     </div>
                     <Text className={styles.aboutText}>{assistant?.description}</Text>
@@ -169,7 +170,7 @@ export const AssistantDetailsSidebar = ({
                             <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                         </div>
                         <div className={styles.systemPromptContainer}>
-                            <Text className={styles.promptText}>{assistant.rawData.latest_version.system_prompt}</Text>
+                            <MarkdownRenderer className={styles.promptMarkdown}>{assistant.rawData.latest_version.system_prompt}</MarkdownRenderer>
                         </div>
                     </div>
                 )}

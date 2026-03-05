@@ -12,7 +12,8 @@ import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { CreateAssistantDialog } from "../../components/AssistantDialogs/CreateAssistantDialog/CreateAssistantDialog";
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
@@ -22,6 +23,7 @@ import { CloseConfirmationDialog } from "../../components/AssistantDialogs/share
 type SortKey = "title" | "updated" | "subscriptions";
 
 const storageService = new AssistantStorageService(ASSISTANT_STORE);
+const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
 const Discovery = () => {
     const { t } = useTranslation();
@@ -29,7 +31,9 @@ const Discovery = () => {
     const { setHeader } = useContext(HeaderContext);
     const { showError, showSuccess } = useGlobalToastContext();
 
-    const [assistants, setAssistants] = useState<AssistantCardData[]>([]);
+    const [allAssistants, setAllAssistants] = useState<AssistantCardData[]>([]);
+    const [yoursAssistants, setYoursAssistants] = useState<AssistantCardData[]>([]);
+    const [subscribedAssistants, setSubscribedAssistants] = useState<AssistantCardData[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>("");
     const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
@@ -37,7 +41,7 @@ const Discovery = () => {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
-    const [filterScope, setFilterScope] = useState<"all" | "yours" | "subscribed">("yours");
+    const [filterScope, setFilterScope] = useState<"community" | "yours" | "subscribed">("community");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -188,10 +192,11 @@ const Discovery = () => {
         const fetchAssistants = async () => {
             setIsLoading(true);
             try {
-                const [allAssistants, ownedAssistants, userSubscriptions] = await Promise.all([
+                const [allAssistantsResponse, ownedAssistants, userSubscriptions, localCommunityAssistants] = await Promise.all([
                     getAllCommunityAssistantsApi(),
                     getOwnedCommunityAssistants(),
-                    getUserSubscriptionsApi()
+                    getUserSubscriptionsApi(),
+                    communityAssistantStorageService.getAllAssistantConfigs()
                 ]);
 
                 const ownedIds = new Set(ownedAssistants.map((a: AssistantResponse) => a.id));
@@ -199,17 +204,41 @@ const Discovery = () => {
                 setOwnedAssistantIds(ownedIds);
                 setUserSubscriptionIds(subscribedIds);
 
-                const cardData: AssistantCardData[] = allAssistants.map((response: AssistantResponse) => ({
-                    id: response.id,
-                    title: response.latest_version.name,
-                    description: response.latest_version.description || "",
-                    subscriptions: response.subscriptions_count || 0,
-                    updated: response.updated_at,
-                    tags: response.latest_version.tags || [],
-                    rawData: response
-                }));
+                const toCardData = (a: any, extra?: Partial<AssistantCardData>): AssistantCardData => ({
+                    id: a.id,
+                    title: a.latest_version?.name || a.title || "Unknown Assistant",
+                    description: a.latest_version?.description || a.description || "",
+                    subscriptions: a.subscriptions_count || 0,
+                    updated: a.updated_at || new Date().toISOString(),
+                    tags: a.latest_version?.tags || a.tags || [],
+                    rawData: a,
+                    ...extra
+                });
 
-                setAssistants(cardData);
+                // 1. All published assistants
+                setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));
+
+                // 2. Yours no matter if published or private
+                setYoursAssistants(ownedAssistants.map(a => toCardData(a)));
+
+                const fullAssistantById = new Map<string, AssistantResponse>();
+                allAssistantsResponse.forEach(a => fullAssistantById.set(a.id, a));
+                ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
+
+                // 3. Every assistant subscribed to, merged with deleted ones
+                const deletedCommunityAssistants = localCommunityAssistants
+                    .filter(local => !userSubscriptions.some((sub: any) => sub.id === local.id))
+                    .filter(deleted => !ownedAssistants.some((own: any) => own.id === deleted.id));
+
+                const subscribedData = [
+                    ...userSubscriptions.map((sub: any) => {
+                        const fullData = fullAssistantById.get(sub.id);
+                        const localData = localCommunityAssistants.find(local => local.id === sub.id);
+                        return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
+                    }),
+                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0 }))
+                ];
+                setSubscribedAssistants(subscribedData);
             } catch (error) {
                 console.error("Failed to fetch assistants:", error);
             } finally {
@@ -222,30 +251,31 @@ const Discovery = () => {
 
     const filteredAssistants = useMemo(() => {
         const lc = searchText.toLowerCase();
-        const filtered = assistants.filter(assistant => {
+
+        let sourceList = allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !userSubscriptionIds.has(assistant.id));
+        if (filterScope === "yours") {
+            sourceList = yoursAssistants;
+        } else if (filterScope === "subscribed") {
+            sourceList = subscribedAssistants;
+        }
+
+        const filtered = sourceList.filter(assistant => {
             const matchesSearch =
                 !searchText.trim() ||
                 assistant.title.toLowerCase().includes(lc) ||
                 assistant.description.toLowerCase().includes(lc) ||
                 (assistant.tags && assistant.tags.some(tag => tag.toLowerCase().includes(lc)));
 
-            const matchesScope =
-                filterScope === "all"
-                    ? true
-                    : filterScope === "subscribed"
-                      ? userSubscriptionIds.has(assistant.id) && !ownedAssistantIds.has(assistant.id)
-                      : ownedAssistantIds.has(assistant.id) || userSubscriptionIds.has(assistant.id);
-
-            return matchesSearch && matchesScope;
+            return matchesSearch;
         });
         return sortAssistants(filtered, sortMethod);
-    }, [assistants, searchText, filterScope, ownedAssistantIds, userSubscriptionIds, sortMethod, sortAssistants]);
+    }, [allAssistants, yoursAssistants, subscribedAssistants, searchText, filterScope, sortMethod, sortAssistants, ownedAssistantIds, userSubscriptionIds]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
     };
 
-    const handleFilterChange = (scope: "all" | "yours" | "subscribed") => {
+    const handleFilterChange = (scope: "community" | "yours" | "subscribed") => {
         setFilterScope(scope);
     };
 
@@ -297,7 +327,9 @@ const Discovery = () => {
                 t("components.assistant_chat.delete_assistant_success"),
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
             );
-            setAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            setAllAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            setYoursAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
+            setSubscribedAssistants(prev => prev.filter((a: AssistantCardData) => a.id !== selectedAssistant.id));
 
             if (closeTimerRef.current !== null) {
                 clearTimeout(closeTimerRef.current);
@@ -317,7 +349,6 @@ const Discovery = () => {
             <div className={styles.flexContainer} data-drawer-open={isDrawerOpen}>
                 <div className={styles.mainContent}>
                     <div className={styles.contentWrapper}>
-                        {/* ... Header and Toolbar sections remain same ... */}
                         <div className={styles.headerSection}>
                             <div className={styles.titleBlock}>
                                 <Title1 className={styles.header}>{t("discovery.title", "Discover Assistants")}</Title1>
@@ -355,12 +386,12 @@ const Discovery = () => {
                                 <TabList
                                     selectedValue={filterScope}
                                     onTabSelect={(_event: SelectTabEvent, data: SelectTabData) => {
-                                        if (data.value === "all" || data.value === "yours" || data.value === "subscribed") {
-                                            handleFilterChange(data.value as "all" | "yours" | "subscribed");
+                                        if (data.value === "community" || data.value === "yours" || data.value === "subscribed") {
+                                            handleFilterChange(data.value as "community" | "yours" | "subscribed");
                                         }
                                     }}
                                 >
-                                    <Tab value="all">{t("components.community_assistants.filter_all", "All")}</Tab>
+                                    <Tab value="community">{t("components.community_assistants.filter_all", "Community")}</Tab>
                                     <Tab value="yours">{t("components.community_assistants.filter_yours", "Yours")}</Tab>
                                     <Tab value="subscribed">{t("components.community_assistants.filter_subscribed", "Abonniert")}</Tab>
                                 </TabList>
@@ -378,8 +409,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                  ? t("components.community_assistants.sort_updated", "Last updated")
-                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                    ? t("components.community_assistants.sort_updated", "Last updated")
+                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

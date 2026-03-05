@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
 import { AssistantResponse } from "../../api/models";
+import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface AssistantCardData {
     id: string;
@@ -145,7 +146,7 @@ export const AssistantDetailsSidebar = ({ isOpen, onClose, assistant, ownedAssis
                             <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                         </div>
                         <div className={styles.systemPromptContainer}>
-                            <Text className={styles.promptText}>{assistant.rawData.latest_version.system_prompt}</Text>
+                            <MarkdownRenderer className={styles.promptMarkdown}>{assistant.rawData.latest_version.system_prompt}</MarkdownRenderer>
                         </div>
                     </div>
                 )}

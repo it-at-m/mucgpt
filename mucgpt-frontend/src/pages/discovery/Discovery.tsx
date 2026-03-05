@@ -41,9 +41,9 @@ const Discovery = () => {
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
-    const [filterScope, setFilterScope] = useState<"all" | "yours" | "subscribed">("yours");
+    const [filterScope, setFilterScope] = useState<"community" | "yours" | "subscribed">("community");
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
-    const [, setUserSubscriptionIds] = useState<Set<string>>(new Set());
+    const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -216,7 +216,7 @@ const Discovery = () => {
     const filteredAssistants = useMemo(() => {
         const lc = searchText.toLowerCase();
 
-        let sourceList = allAssistants;
+        let sourceList = allAssistants.filter(assistant => !ownedAssistantIds.has(assistant.id) && !userSubscriptionIds.has(assistant.id));
         if (filterScope === "yours") {
             sourceList = yoursAssistants;
         } else if (filterScope === "subscribed") {
@@ -233,13 +233,13 @@ const Discovery = () => {
             return matchesSearch;
         });
         return sortAssistants(filtered, sortMethod);
-    }, [allAssistants, yoursAssistants, subscribedAssistants, searchText, filterScope, sortMethod, sortAssistants]);
+    }, [allAssistants, yoursAssistants, subscribedAssistants, searchText, filterScope, sortMethod, sortAssistants, ownedAssistantIds, userSubscriptionIds]);
 
     const handleSearch = (_event: SearchBoxChangeEvent | null, data: InputOnChangeData) => {
         setSearchText(data.value || "");
     };
 
-    const handleFilterChange = (scope: "all" | "yours" | "subscribed") => {
+    const handleFilterChange = (scope: "community" | "yours" | "subscribed") => {
         setFilterScope(scope);
     };
 
@@ -350,12 +350,12 @@ const Discovery = () => {
                                 <TabList
                                     selectedValue={filterScope}
                                     onTabSelect={(_event: SelectTabEvent, data: SelectTabData) => {
-                                        if (data.value === "all" || data.value === "yours" || data.value === "subscribed") {
-                                            handleFilterChange(data.value as "all" | "yours" | "subscribed");
+                                        if (data.value === "community" || data.value === "yours" || data.value === "subscribed") {
+                                            handleFilterChange(data.value as "community" | "yours" | "subscribed");
                                         }
                                     }}
                                 >
-                                    <Tab value="all">{t("components.community_assistants.filter_all", "All")}</Tab>
+                                    <Tab value="community">{t("components.community_assistants.filter_all", "Community")}</Tab>
                                     <Tab value="yours">{t("components.community_assistants.filter_yours", "Yours")}</Tab>
                                     <Tab value="subscribed">{t("components.community_assistants.filter_subscribed", "Abonniert")}</Tab>
                                 </TabList>
@@ -373,8 +373,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

@@ -25,6 +25,8 @@ import { Collapse } from "@fluentui/react-motion-components-preview";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import rehypeKatex from "rehype-katex";
 import rehypeExternalLinks from "rehype-external-links";
+import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 interface Props {
     assistant: Assistant;
@@ -36,6 +38,7 @@ interface Props {
 
 export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDeleteAssistant, isOwned, strategy }: Props) => {
     const { t } = useTranslation();
+    const { showSuccess, showError } = useGlobalToastContext();
 
     const [description, setDescription] = useState<string>(assistant.description);
     const [publish, setPublish] = useState<boolean>(assistant.publish);
@@ -64,42 +67,15 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     }, [isActionsExpanded]);
 
     const exportAssistant = useCallback(() => {
-        const sanitizeFilename = (name: string) => {
-            const sanitized = name.replace(/[/\\:*?"<>|]/g, "_");
-            const cleaned = sanitized.trim();
-            // Fallback if empty, only underscores, or no alphanumeric characters
-            if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
-                return "assistant";
-            }
-            return cleaned;
-        };
-
-        // Extract only exportable fields, exclude sensitive/system data
-        const exportableData = {
-            title: assistant.title,
-            description: assistant.description,
-            system_message: assistant.system_message,
-            creativity: assistant.creativity,
-            default_model: assistant.default_model,
-            examples: assistant.examples,
-            quick_prompts: assistant.quick_prompts,
-            tools: assistant.tools,
-            tags: assistant.tags
-        };
-
-        const blob = new Blob([JSON.stringify(exportableData, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${sanitizeFilename(assistant.title)}.json`;
-
-        document.body.appendChild(link);
-        link.click();
-
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }, [assistant]);
+        try {
+            downloadAssistantExport(mapAssistantToExportData(assistant), assistant.title);
+            showSuccess(t("components.assistantsettingsdrawer.export"), `${assistant.title}.json`);
+        } catch (error) {
+            console.error("Failed to export assistant", error);
+            const errorMessage = error instanceof Error ? error.message : "Export failed";
+            showError(t("components.assistantsettingsdrawer.export"), errorMessage);
+        }
+    }, [assistant, showError, showSuccess, t]);
 
     // Delete assistant confirmation dialog
     const deleteDialog = useMemo(

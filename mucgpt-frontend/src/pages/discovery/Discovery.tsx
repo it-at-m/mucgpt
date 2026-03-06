@@ -6,7 +6,13 @@ import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi, deleteCommunityAssistantApi } from "../../api/assistant-client";
+import {
+    getAllCommunityAssistantsApi,
+    getOwnedCommunityAssistants,
+    getUserSubscriptionsApi,
+    deleteCommunityAssistantApi,
+    getCommunityAssistantApi
+} from "../../api/assistant-client";
 import { Assistant, AssistantResponse } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
@@ -19,6 +25,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { downloadAssistantExport, mapVersionToExportData } from "../../utils/assistant-export";
 
 type SortKey = "title" | "updated" | "subscriptions";
 
@@ -58,41 +65,28 @@ const Discovery = () => {
         setHeader(DEFAULTHEADER);
     }, [setHeader]);
 
-    const exportAssistant = useCallback(() => {
+    const exportAssistant = useCallback(async () => {
         if (!selectedAssistant) return;
 
-        const sanitizeFilename = (name: string) => {
-            const sanitized = name.replace(/[/\\:*?"<>|]/g, "_");
-            const cleaned = sanitized.trim();
-            if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
-                return "assistant";
+        try {
+            let assistantData = selectedAssistant.rawData;
+            if (!assistantData.latest_version) {
+                assistantData = await getCommunityAssistantApi(selectedAssistant.id);
             }
-            return cleaned;
-        };
 
-        const lv = selectedAssistant.rawData.latest_version;
-        const exportableData = {
-            title: lv.name,
-            description: lv.description || "",
-            system_message: lv.system_prompt || "",
-            creativity: lv.creativity,
-            default_model: lv.default_model,
-            examples: lv.examples || [],
-            quick_prompts: lv.quick_prompts || [],
-            tools: lv.tools || [],
-            tags: lv.tags || []
-        };
-
-        const blob = new Blob([JSON.stringify(exportableData, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${sanitizeFilename(lv.name)}.json`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }, [selectedAssistant]);
+            const lv = assistantData.latest_version;
+            if (!lv) {
+                showError(t("components.assistantsettingsdrawer.export"), t("components.import_assistant.import_invalid_format"));
+                return;
+            }
+            downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+            showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+        } catch (error) {
+            console.error("Failed to export assistant", error);
+            const errorMessage = error instanceof Error ? error.message : "Export failed";
+            showError(t("components.assistantsettingsdrawer.export"), errorMessage);
+        }
+    }, [selectedAssistant, showError, showSuccess, t]);
 
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
@@ -123,9 +117,9 @@ const Discovery = () => {
                     version: "0",
                     owner_ids: [],
                     tags: importedData.tags || [],
-                    hierarchical_access: [],
+                    hierarchical_access: importedData.hierarchical_access || [],
                     tools: importedData.tools || [],
-                    is_visible: true
+                    is_visible: typeof importedData.is_visible === "boolean" ? importedData.is_visible : true
                 };
 
                 const created_id = await storageService.createAssistantConfig(assistant);
@@ -409,8 +403,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"
@@ -452,7 +446,6 @@ const Discovery = () => {
                                         title={assistant.title}
                                         description={assistant.description}
                                         onClick={() => handleAssistantClick(assistant)}
-                                        descriptionLines={2}
                                         isSelected={selectedAssistant?.id === assistant.id}
                                     />
                                 ))}

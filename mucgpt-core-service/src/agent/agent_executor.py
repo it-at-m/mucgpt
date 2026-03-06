@@ -100,14 +100,23 @@ class MUCGPTAgentExecutor:
         return match.group(0) if match else None
 
     def _build_llm_extra_body(
-        self, assistant_id: Optional[str]
+        self, assistant_id: Optional[str], reasoning_effort: Optional[str] = None
     ) -> Optional[dict[str, Any]]:
         tags: list[str] = []
         if assistant_id:
             tags.append(f"MUCGPT_ASSISTANT_ID:{assistant_id}")
-        if not tags:
-            return None
-        return {"metadata": {"tags": tags}}
+        
+        extra_body = None
+        if tags:
+            extra_body = {"metadata": {"tags": tags}}
+        
+        # Add reasoning_effort if provided
+        if reasoning_effort:
+            if extra_body is None:
+                extra_body = {}
+            extra_body["reasoning_effort"] = reasoning_effort
+        
+        return extra_body
 
     async def run_with_streaming(
         self,
@@ -117,6 +126,7 @@ class MUCGPTAgentExecutor:
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
+        reasoning_effort: Optional[str] = None,
     ) -> AsyncGenerator[dict, None]:
         logger.info(
             "Chat streaming started with temperature %s, model %s",
@@ -131,7 +141,8 @@ class MUCGPTAgentExecutor:
             self._extract_department_prefix(user_info.department) if user_info else None
         )
         llm_user = dept_prefix
-        llm_extra_body = self._build_llm_extra_body(assistant_id)
+        llm_extra_body = self._build_llm_extra_body(assistant_id, reasoning_effort)
+        
         config = merge_configs(
             self.base_config,
             RunnableConfig(
@@ -169,11 +180,19 @@ class MUCGPTAgentExecutor:
                         message_chunk, AIMessageChunk
                     ):
                         chunk_content = message_chunk.content
-                        if chunk_content is None:
+                        # Extract reasoning content if available (for reasoning models)
+                        reasoning_content = None
+                        if hasattr(message_chunk, "response_metadata"):
+                            metadata_dict = message_chunk.response_metadata
+                            if isinstance(metadata_dict, dict):
+                                # Check for reasoning_content in response_metadata
+                                reasoning_content = metadata_dict.get("reasoning_content")
+                        
+                        if chunk_content is None and reasoning_content is None:
                             continue
                         if isinstance(chunk_content, str):
                             # Skip only when the chunk is truly empty; spaces need to stream for proper formatting.
-                            if chunk_content == "":
+                            if chunk_content == "" and reasoning_content is None:
                                 continue
                         else:
                             # If content is not a string (e.g., list for multimodal), keep existing behavior and pass through.
@@ -184,7 +203,10 @@ class MUCGPTAgentExecutor:
                             created=created,
                             choices=[
                                 ChatCompletionChunkChoice(
-                                    delta=ChatCompletionDelta(content=chunk_content),
+                                    delta=ChatCompletionDelta(
+                                        content=chunk_content,
+                                        reasoning_content=reasoning_content,
+                                    ),
                                     index=0,
                                     finish_reason=None,
                                 )
@@ -241,6 +263,7 @@ class MUCGPTAgentExecutor:
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
+        reasoning_effort: Optional[str] = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s",
@@ -252,7 +275,8 @@ class MUCGPTAgentExecutor:
             self._extract_department_prefix(user_info.department) if user_info else None
         )
         llm_user = dept_prefix
-        llm_extra_body = self._build_llm_extra_body(assistant_id)
+        llm_extra_body = self._build_llm_extra_body(assistant_id, reasoning_effort)
+        
         request_config = RunnableConfig(
             configurable={
                 "llm_temperature": temperature,
@@ -271,6 +295,14 @@ class MUCGPTAgentExecutor:
             llm = self.agent.model.with_config(configurable=config)
             ai_message = llm.invoke(msgs)
             logger.info("Non-streaming completed successfully.")
+            
+            # Extract reasoning content if available
+            reasoning_content = None
+            if hasattr(ai_message, "response_metadata"):
+                metadata_dict = ai_message.response_metadata
+                if isinstance(metadata_dict, dict):
+                    reasoning_content = metadata_dict.get("reasoning_content")
+            
             response = ChatCompletionResponse(
                 id=str(uuid.uuid4()),
                 object="chat.completion",
@@ -280,6 +312,7 @@ class MUCGPTAgentExecutor:
                         message=ChatCompletionMessage(
                             role="assistant",
                             content=ai_message.content,
+                            reasoning_content=reasoning_content,
                         ),
                         index=0,
                         finish_reason="stop",

@@ -1,4 +1,4 @@
-import { Checkmark24Filled, ArrowImport24Filled, Dismiss24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -19,7 +19,6 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
 import { ToolInfo } from "../../../api";
-import { CREATIVITY_LOW } from "../../../constants";
 import { createAssistantApi } from "../../../api/core-client";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
@@ -181,76 +180,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         updateDescription(input);
         setCurrentStep(2);
     }, [input, updateDescription]);
-
-    // Import assistant from JSON file
-    const importAssistant = useCallback(() => {
-        if (loading) return; // Prevent duplicate imports
-
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = ".json";
-
-        fileInput.onchange = async (e: Event) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (!file) return;
-
-            setLoading(true);
-            try {
-                // Read and parse file
-                const content = await file.text();
-                const importedData = JSON.parse(content);
-
-                // Basic validation - check required fields
-                if (!importedData.title || !importedData.system_message) {
-                    throw new Error(t("components.create_assistant_dialog.import_invalid_format"));
-                }
-
-                // Create assistant as private on the assistant service
-                const response = await createCommunityAssistantApi({
-                    name: importedData.title,
-                    description: importedData.description || "",
-                    system_prompt: importedData.system_message,
-                    creativity: importedData.creativity || CREATIVITY_LOW,
-                    default_model: importedData.default_model ?? defaultModel,
-                    tools: importedData.tools || [],
-                    owner_ids: ["0"],
-                    examples: importedData.examples?.map((e: { text: string; value: string }) => ({ text: e.text, value: e.value })) || [],
-                    quick_prompts:
-                        importedData.quick_prompts?.map((qp: { label: string; prompt: string; tooltip?: string }) => ({
-                            label: qp.label,
-                            prompt: qp.prompt,
-                            tooltip: qp.tooltip
-                        })) || [],
-                    tags: importedData.tags || [],
-                    hierarchical_access: [],
-                    is_visible: false // Private by default
-                });
-
-                if (response?.id) {
-                    setShowDialogInput(false);
-                    resetAll();
-
-                    showSuccess(
-                        t("components.create_assistant_dialog.import_success"),
-                        t("components.create_assistant_dialog.import_success_message", { title: importedData.title })
-                    );
-
-                    navigate(`/owned/communityassistant/${response.id}`);
-                } else {
-                    throw new Error(t("components.create_assistant_dialog.import_save_failed"));
-                }
-            } catch (error) {
-                console.error("Failed to import assistant", error);
-                const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.import_failed");
-                showError(t("components.create_assistant_dialog.import_error"), errorMessage);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        // Trigger file picker
-        fileInput.click();
-    }, [loading, t, showSuccess, showError, navigate, setShowDialogInput, resetAll, defaultModel]);
 
     const steps: Step[] = useMemo(
         () => [
@@ -540,11 +469,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     <div className={sharedStyles.dialogHeader}>
                         <DialogTitle className={sharedStyles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
                         <div className={sharedStyles.dialogHeaderActions}>
-                            {currentStep === 1 && (
-                                <Button size="medium" icon={<ArrowImport24Filled />} onClick={importAssistant} className={sharedStyles.importButton}>
-                                    {t("components.create_assistant_dialog.import")}
-                                </Button>
-                            )}
                             <Button
                                 appearance="subtle"
                                 size="small"

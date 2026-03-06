@@ -6,9 +6,15 @@ interface CloseConfirmationDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onConfirmClose: () => void;
+    /** Override the dialog title. Defaults to the "close dialog" i18n string. */
+    title?: string;
+    /** Override the dialog body text. Defaults to the "close dialog" i18n string. */
+    message?: string;
+    /** Override the confirm button label. Defaults to `common.close`. */
+    confirmLabel?: string;
 }
 
-export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose }: CloseConfirmationDialogProps) => {
+export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose, title, message, confirmLabel }: CloseConfirmationDialogProps) => {
     const { t } = useTranslation();
 
     const handleCancel = useCallback(() => {
@@ -24,14 +30,14 @@ export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose }: 
         <Dialog open={open} onOpenChange={(_event, data) => onOpenChange(data.open)} inertTrapFocus>
             <DialogSurface>
                 <DialogBody>
-                    <DialogTitle>{t("components.edit_assistant_dialog.close_dialog_title")}</DialogTitle>
-                    <DialogContent>{t("components.edit_assistant_dialog.close_dialog_message")}</DialogContent>
+                    <DialogTitle>{title ?? t("components.edit_assistant_dialog.close_dialog_title")}</DialogTitle>
+                    <DialogContent>{message ?? t("components.edit_assistant_dialog.close_dialog_message")}</DialogContent>
                     <DialogActions>
                         <Button appearance="secondary" onClick={handleCancel}>
                             {t("common.cancel")}
                         </Button>
                         <Button appearance="primary" onClick={handleConfirm}>
-                            {t("common.close")}
+                            {confirmLabel ?? t("common.close")}
                         </Button>
                     </DialogActions>
                 </DialogBody>

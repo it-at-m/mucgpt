@@ -297,6 +297,7 @@ i18n
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
                             export: "Exportieren",
+                            export_failed: "Der Assistent konnte nicht exportiert werden",
                             deleted_warning: "Dieser Assistent wurde aus der Community gelöscht und ist nicht mehr verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschen",
@@ -529,7 +530,8 @@ i18n
                             subscribe_failed_default: "Beim Abonnieren des Assistenten ist ein Fehler aufgetreten. Bitte versuche es erneut.",
                             times_subscribed: "mal abonniert",
                             owned_assistant: "Eigener Assistent",
-                            subscribed_assistant: "Abonniert"
+                            subscribed_assistant: "Abonniert",
+                            more_options: "Weitere Optionen"
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -864,6 +866,7 @@ i18n
                             publish: "Publish",
                             unpublish: "Unpublish",
                             export: "Export",
+                            export_failed: "Assistant could not be exported",
                             deleted_warning: "This assistant has been deleted from the community and is no longer available.",
                             deleteDialog: {
                                 title: "Delete Assistant",
@@ -1089,7 +1092,8 @@ i18n
                             subscribe_failed_default: "An error occurred while subscribing to the assistant. Please try again.",
                             times_subscribed: "times subscribed",
                             owned_assistant: "Own Assistant",
-                            subscribed_assistant: "Subscribed"
+                            subscribed_assistant: "Subscribed",
+                            more_options: "More options"
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1422,6 +1426,7 @@ i18n
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
                             export: "Exportier'n",
+                            export_failed: "Da Assistent konnt ned exportiert werd'n",
                             deleted_warning: "Der Assistent is aus da Community glöscht wordn und is nimma verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschn",
@@ -1653,7 +1658,8 @@ i18n
                             subscribe_failed_default: "Beim Abonnieren vom Assistentn is a Fehler aufgtretn. Bitte versuch's amoi.",
                             times_subscribed: "moi abonniert",
                             owned_assistant: "Eigener Assistent",
-                            subscribed_assistant: "Abonniert"
+                            subscribed_assistant: "Abonniert",
+                            more_options: "Weitere Optionen"
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -1987,6 +1993,7 @@ i18n
                             publish: "Publier",
                             unpublish: "Dépublier",
                             export: "Exporter",
+                            export_failed: "L'assistant n'a pas pu être exporté",
                             deleted_warning: "Cet assistant a été supprimé de la communauté et n'est plus disponible.",
                             deleteDialog: {
                                 title: "Supprimer l'Assistant",
@@ -2219,7 +2226,8 @@ i18n
                             subscribe_failed_default: "Une erreur est survenue lors de l'abonnement à l'assistant. Veuillez réessayer.",
                             times_subscribed: "fois abonné",
                             owned_assistant: "Assistant Propre",
-                            subscribed_assistant: "Abonné"
+                            subscribed_assistant: "Abonné",
+                            more_options: "Plus d'options"
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -2553,6 +2561,7 @@ i18n
                             publish: "Опублікувати",
                             unpublish: "Скасувати публікацію",
                             export: "Експортувати",
+                            export_failed: "Не вдалося експортувати асистента",
                             deleted_warning: "Цей асистент був видалений з спільноти і більше не доступний.",
                             deleteDialog: {
                                 title: "Видалити Бота",
@@ -2781,7 +2790,8 @@ i18n
                             subscribe_failed_default: "Під час підписки на асистента сталася помилка. Будь ласка, спробуйте ще раз.",
                             times_subscribed: "разів підписано",
                             owned_assistant: "Власний Асистент",
-                            subscribed_assistant: "Підписаний"
+                            subscribed_assistant: "Підписаний",
+                            more_options: "Додаткові параметри"
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

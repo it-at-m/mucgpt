@@ -25,7 +25,7 @@ import { Collapse } from "@fluentui/react-motion-components-preview";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import rehypeKatex from "rehype-katex";
 import rehypeExternalLinks from "rehype-external-links";
-import { downloadAssistantExport, mapAssistantToExportData } from "../../utils/assistant-export";
+import { downloadAssistantExport, mapAssistantToExportData, sanitizeAssistantFilename } from "../../utils/assistant-export";
 import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 interface Props {
@@ -69,7 +69,8 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     const exportAssistant = useCallback(() => {
         try {
             downloadAssistantExport(mapAssistantToExportData(assistant), assistant.title);
-            showSuccess(t("components.assistantsettingsdrawer.export"), `${assistant.title}.json`);
+            const sanitizedFilename = sanitizeAssistantFilename(assistant.title);
+            showSuccess(t("components.assistantsettingsdrawer.export"), `${sanitizedFilename}.json`);
         } catch (error) {
             console.error("Failed to export assistant", error);
             const errorMessage = error instanceof Error ? error.message : "Export failed";

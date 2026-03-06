@@ -6,7 +6,7 @@
         "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@react-spring/web": "10.0.3",
-        "dompurify": "3.3.1",
+        "dompurify": "3.3.2",
         "i18next": "25.8.13",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",

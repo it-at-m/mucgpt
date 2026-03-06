@@ -73,8 +73,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
             showSuccess(t("components.assistantsettingsdrawer.export"), `${sanitizedFilename}.json`);
         } catch (error) {
             console.error("Failed to export assistant", error);
-            const errorMessage = error instanceof Error ? error.message : "Export failed";
-            showError(t("components.assistantsettingsdrawer.export"), errorMessage);
+            showError(t("components.assistantsettingsdrawer.export"), t("components.assistantsettingsdrawer.export_failed"));
         }
     }, [assistant, showError, showSuccess, t]);
 

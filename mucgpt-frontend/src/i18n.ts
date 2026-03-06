@@ -297,6 +297,7 @@ i18n
                             publish: "Veröffentlichen",
                             unpublish: "Nicht mehr veröffentlichen",
                             export: "Exportieren",
+                            export_failed: "Der Assistent konnte nicht exportiert werden",
                             deleted_warning: "Dieser Assistent wurde aus der Community gelöscht und ist nicht mehr verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschen",
@@ -865,6 +866,7 @@ i18n
                             publish: "Publish",
                             unpublish: "Unpublish",
                             export: "Export",
+                            export_failed: "Assistant could not be exported",
                             deleted_warning: "This assistant has been deleted from the community and is no longer available.",
                             deleteDialog: {
                                 title: "Delete Assistant",
@@ -1424,6 +1426,7 @@ i18n
                             publish: "Veröffentlich'n",
                             unpublish: "Nimma veröffentlich'n",
                             export: "Exportier'n",
+                            export_failed: "Da Assistent konnt ned exportiert werd'n",
                             deleted_warning: "Der Assistent is aus da Community glöscht wordn und is nimma verfügbar.",
                             deleteDialog: {
                                 title: "Assistent Löschn",
@@ -1990,6 +1993,7 @@ i18n
                             publish: "Publier",
                             unpublish: "Dépublier",
                             export: "Exporter",
+                            export_failed: "L'assistant n'a pas pu être exporté",
                             deleted_warning: "Cet assistant a été supprimé de la communauté et n'est plus disponible.",
                             deleteDialog: {
                                 title: "Supprimer l'Assistant",
@@ -2557,6 +2561,7 @@ i18n
                             publish: "Опублікувати",
                             unpublish: "Скасувати публікацію",
                             export: "Експортувати",
+                            export_failed: "Не вдалося експортувати асистента",
                             deleted_warning: "Цей асистент був видалений з спільноти і більше не доступний.",
                             deleteDialog: {
                                 title: "Видалити Бота",

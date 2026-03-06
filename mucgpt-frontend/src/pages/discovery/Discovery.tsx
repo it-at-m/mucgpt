@@ -70,11 +70,11 @@ const Discovery = () => {
 
         try {
             let assistantData = selectedAssistant.rawData;
-            if (!assistantData.latest_version) {
+            if (!assistantData?.latest_version) {
                 assistantData = await getCommunityAssistantApi(selectedAssistant.id);
             }
 
-            const lv = assistantData.latest_version;
+            const lv = assistantData?.latest_version;
             if (!lv) {
                 showError(t("components.assistantsettingsdrawer.export"), t("components.import_assistant.import_invalid_format"));
                 return;

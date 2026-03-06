@@ -1,6 +1,8 @@
 import json
 import os
+import tempfile
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -10,6 +12,7 @@ from src.config.settings import (
     enrich_model_metadata,
     get_langfuse_settings,
     get_mcp_settings,
+    get_redis_settings,
     get_settings,
     get_sso_settings,
 )
@@ -314,14 +317,15 @@ class TestSettings:
         mocked.assert_not_called()
 
     def test_sso_settings(self):
-        """Test SSO settings configuration."""
+        """Test SSO settings configuration via nested env vars."""
         with patch.dict(
             os.environ,
             {
-                "MUCGPT_SSO_ROLE": "custom-role",
+                "MUCGPT_CORE_SSO__ROLE": "custom-role",
             },
         ):
             get_sso_settings.cache_clear()
+            get_settings.cache_clear()
             sso_settings = get_sso_settings()
             assert sso_settings.ROLE == "custom-role"
 
@@ -329,36 +333,39 @@ class TestSettings:
         """Test SSO settings default values."""
         with patch.dict(os.environ, {}, clear=True):
             get_sso_settings.cache_clear()
+            get_settings.cache_clear()
             sso_settings = get_sso_settings()
             assert sso_settings.ROLE == "lhm-ab-mucgpt-user"
 
     def test_langfuse_settings(self):
-        """Test Langfuse settings configuration."""
+        """Test Langfuse settings configuration via nested env vars."""
         with patch.dict(
             os.environ,
             {
-                "MUCGPT_LANGFUSE_PUBLIC_KEY": "test-public-key",
-                "MUCGPT_LANGFUSE_SECRET_KEY": "test-secret-key",
-                "MUCGPT_LANGFUSE_HOST": "https://langfuse.example.com",
+                "MUCGPT_CORE_LANGFUSE__PUBLIC_KEY": "test-public-key",
+                "MUCGPT_CORE_LANGFUSE__SECRET_KEY": "test-secret-key",
+                "MUCGPT_CORE_LANGFUSE__HOST": "https://langfuse.example.com",
             },
         ):
             get_langfuse_settings.cache_clear()
+            get_settings.cache_clear()
             langfuse_settings = get_langfuse_settings()
             assert langfuse_settings.PUBLIC_KEY == "test-public-key"
-            assert langfuse_settings.SECRET_KEY == "test-secret-key"
+            assert langfuse_settings.SECRET_KEY.get_secret_value() == "test-secret-key"
             assert langfuse_settings.HOST == "https://langfuse.example.com"
 
     def test_langfuse_settings_default(self):
         """Test Langfuse settings default values."""
         with patch.dict(os.environ, {}, clear=True):
             get_langfuse_settings.cache_clear()
+            get_settings.cache_clear()
             langfuse_settings = get_langfuse_settings()
             assert langfuse_settings.PUBLIC_KEY is None
             assert langfuse_settings.SECRET_KEY is None
             assert langfuse_settings.HOST is None
 
     def test_mcp_settings(self):
-        """Test MCP settings configuration."""
+        """Test MCP settings configuration via nested env vars."""
         mcp_json = json.dumps(
             {
                 "test": {
@@ -371,11 +378,12 @@ class TestSettings:
         with patch.dict(
             os.environ,
             {
-                "MUCGPT_MCP_SOURCES": mcp_json,
-                "MUCGPT_MCP_CACHE_TTL": "123",
+                "MUCGPT_CORE_MCP__SOURCES": mcp_json,
+                "MUCGPT_CORE_MCP__CACHE_TTL": "123",
             },
         ):
             get_mcp_settings.cache_clear()
+            get_settings.cache_clear()
             mcp_settings = get_mcp_settings()
             assert len(mcp_settings.SOURCES.keys()) == 1
             assert mcp_settings.SOURCES["test"].url == "https://example.com/mcp"
@@ -389,9 +397,91 @@ class TestSettings:
         """Test MCP settings default values."""
         with patch.dict(os.environ, {}, clear=True):
             get_mcp_settings.cache_clear()
+            get_settings.cache_clear()
             mcp_settings = get_mcp_settings()
             assert mcp_settings.SOURCES is None
             assert mcp_settings.CACHE_TTL == 43200
+
+    def test_yaml_configuration_loading(self, monkeypatch):
+        """Test that settings can be loaded from YAML configuration file."""
+        yaml_content = """
+VERSION: "yaml-test-1.0"
+ENV_NAME: "YAML_TEST"
+ALTERNATIVE_LOGO: true
+SSO:
+  ROLE: "yaml-test-role"
+LANGFUSE:
+  HOST: "https://langfuse.yaml.test"
+  PUBLIC_KEY: "yaml-pub-key"
+  SECRET_KEY: "yaml-secret-key"
+REDIS:
+  HOST: "yaml-redis-host"
+  PORT: 9999
+MCP:
+  CACHE_TTL: 999
+MODELS:
+  - type: "OPENAI"
+    llm_name: "yaml-test-model"
+    endpoint: "https://yaml.test.example.com"
+    api_key: "yaml-test-key"
+    model_info:
+      auto_enrich_from_model_info_endpoint: false
+      max_output_tokens: 2000
+      max_input_tokens: 4000
+      description: "YAML test model"
+"""
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            config_path = Path(tmpdir) / "config.yaml"
+            config_path.write_text(yaml_content)
+
+            # Change to the temp directory so the config.yaml is found
+            monkeypatch.chdir(tmpdir)
+            # Clear environment variables that might override
+            with patch.dict(os.environ, {}, clear=True):
+                settings = Settings()
+                assert settings.VERSION == "yaml-test-1.0"
+                assert settings.ENV_NAME == "YAML_TEST"
+                assert settings.ALTERNATIVE_LOGO is True
+                # Verify nested configs loaded from YAML
+                assert settings.SSO.ROLE == "yaml-test-role"
+                assert settings.LANGFUSE.HOST == "https://langfuse.yaml.test"
+                assert settings.LANGFUSE.PUBLIC_KEY == "yaml-pub-key"
+                assert (
+                    settings.LANGFUSE.SECRET_KEY.get_secret_value() == "yaml-secret-key"
+                )
+                assert settings.REDIS.HOST == "yaml-redis-host"
+                assert settings.REDIS.PORT == 9999
+                assert settings.MCP.CACHE_TTL == 999
+                # Verify models
+                assert len(settings.MODELS) == 1
+                model = settings.MODELS[0]
+                assert model.type == "OPENAI"
+                assert model.llm_name == "yaml-test-model"
+                assert model.max_output_tokens == 2000
+                assert model.max_input_tokens == 4000
+                assert model.description == "YAML test model"
+
+    def test_env_variables_override_yaml(self, monkeypatch):
+        """Test that environment variables have priority over YAML configuration."""
+        yaml_content = """
+VERSION: "yaml-version"
+ENV_NAME: "YAML_ENV"
+"""
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
+            config_path = Path(tmpdir) / "config.yaml"
+            config_path.write_text(yaml_content)
+
+            monkeypatch.chdir(tmpdir)
+            # Environment variables should override YAML
+            with patch.dict(
+                os.environ,
+                {
+                    "MUCGPT_CORE_VERSION": "env-version",
+                },
+            ):
+                settings = Settings()
+                assert settings.VERSION == "env-version"  # From env
+                assert settings.ENV_NAME == "YAML_ENV"  # From YAML
 
     def teardown_method(self):
         """Clean up after each test."""
@@ -399,3 +489,43 @@ class TestSettings:
         get_settings.cache_clear()
         get_sso_settings.cache_clear()
         get_langfuse_settings.cache_clear()
+        get_mcp_settings.cache_clear()
+        get_redis_settings.cache_clear()
+
+
+class TestRedisSettings:
+    """Test cases for Redis configuration (nested under Settings)."""
+
+    def test_redis_settings_via_nested_env(self):
+        """Test that Redis settings can be configured via nested env vars."""
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_REDIS__HOST": "env-redis-host",
+                "MUCGPT_CORE_REDIS__PORT": "1234",
+                "MUCGPT_CORE_REDIS__USERNAME": "env-user",
+                "MUCGPT_CORE_REDIS__PASSWORD": "env-pass",
+            },
+        ):
+            get_settings.cache_clear()
+            get_redis_settings.cache_clear()
+            redis = get_redis_settings()
+            assert redis.HOST == "env-redis-host"
+            assert redis.PORT == 1234
+            assert redis.USERNAME.get_secret_value() == "env-user"
+            assert redis.PASSWORD.get_secret_value() == "env-pass"
+
+    def test_redis_settings_defaults(self):
+        """Test Redis default values."""
+        with patch.dict(os.environ, {}, clear=True):
+            get_settings.cache_clear()
+            get_redis_settings.cache_clear()
+            redis = get_redis_settings()
+            assert redis.HOST is None
+            assert redis.PORT == 6379
+            assert redis.USERNAME is None
+            assert redis.PASSWORD is None
+
+    def teardown_method(self):
+        get_settings.cache_clear()
+        get_redis_settings.cache_clear()

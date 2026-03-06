@@ -4,10 +4,11 @@ import { Button, useId, Field, InfoLabel, Tooltip, Textarea, TextareaOnChangeDat
 import styles from "./ChatsettingsDrawer.module.css";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../constants";
 
 interface Props {
-    temperature: number;
-    setTemperature: (temp: number) => void;
+    creativity: string;
+    setCreativity: (creativity: string) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
     reasoningEffort?: "low" | "medium" | "high";
@@ -15,23 +16,28 @@ interface Props {
     supportsReasoning: boolean;
 }
 
-export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt, setSystemPrompt, reasoningEffort, setReasoningEffort, supportsReasoning }: Props) => {
+export const ChatSettingsContent = ({
+    creativity,
+    setCreativity,
+    systemPrompt,
+    setSystemPrompt,
+    reasoningEffort,
+    setReasoningEffort,
+    supportsReasoning
+}: Props) => {
     const { t } = useTranslation();
 
-    const temperature_headerID = useId("header-temperature");
-    const temperatureID = useId("input-temperature");
+    const creativity_headerID = useId("header-creativity");
+    const creativityID = useId("input-creativity");
     const systemPromptID = useId("header-system-prompt");
     const reasoningEffortID = useId("input-reasoning-effort");
 
-    const min_temp = 0;
-    const max_temp = 1;
-
-    // Temperature change - simplified to match AdvancedSettingsStep
-    const onTemperatureChangeHandler = useCallback(
-        (ev: React.ChangeEvent<HTMLInputElement>) => {
-            setTemperature(Number(ev.target.value));
+    // Creativity change
+    const onCreativityChangeHandler = useCallback(
+        (_ev: any, data: any) => {
+            setCreativity(data.optionValue);
         },
-        [setTemperature]
+        [setCreativity]
     );
 
     // System prompt change
@@ -109,37 +115,36 @@ export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt,
                 </div>
             </div>
 
-            {/* Temperature Section */}
+            {/* Creativity Section */}
             <div className={styles.sectionContainer}>
-                <div className={styles.header} role="heading" aria-level={3} id={temperature_headerID}>
+                <div className={styles.header} role="heading" aria-level={3} id={creativity_headerID}>
                     <div className={styles.headerContent}>
-                        <InfoLabel
-                            info={
-                                <div>
-                                    {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
-                                    {t("components.chattsettingsdrawer.temperature_info")}
-                                </div>
-                            }
-                        >
-                            {t("components.chattsettingsdrawer.temperature")}
+                        <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>
+                            {t("components.chattsettingsdrawer.creativity")}
                         </InfoLabel>
                     </div>
                 </div>
 
                 <div>
-                    <Field size="large" className={styles.rangeField}>
-                        <input
-                            type="range"
-                            min={min_temp}
-                            max={max_temp}
-                            step={0.05}
-                            value={temperature}
-                            onChange={onTemperatureChangeHandler}
-                            className={styles.rangeInput}
-                            id={temperatureID}
-                            aria-labelledby={temperature_headerID}
-                        />
-                        <div className={styles.rangeValue}>{temperature.toFixed(2)}</div>
+                    <Field size="large">
+                        <Dropdown
+                            placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
+                            value={creativity}
+                            selectedOptions={[creativity]}
+                            onOptionSelect={onCreativityChangeHandler}
+                            id={creativityID}
+                            aria-labelledby={creativity_headerID}
+                        >
+                            <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
+                                {t("components.edit_assistant_dialog.creativity_low")}
+                            </Option>
+                            <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
+                                {t("components.edit_assistant_dialog.creativity_medium")}
+                            </Option>
+                            <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
+                                {t("components.edit_assistant_dialog.creativity_high")}
+                            </Option>
+                        </Dropdown>
                     </Field>
                 </div>
             </div>
@@ -152,7 +157,8 @@ export const ChatSettingsContent = ({ temperature, setTemperature, systemPrompt,
                             <InfoLabel
                                 info={
                                     <div>
-                                        <i>Reasoning Effort</i> controls how much time the model spends thinking before responding. Higher effort may improve quality for complex tasks.
+                                        <i>Reasoning Effort</i> controls how much time the model spends thinking before responding. Higher effort may improve
+                                        quality for complex tasks.
                                     </div>
                                 }
                             >

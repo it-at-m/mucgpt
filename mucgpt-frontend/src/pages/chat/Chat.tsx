@@ -7,11 +7,10 @@ import { ExampleList, ExampleModel } from "../../components/Example";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
-import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
-import { CHAT_STORE } from "../../constants";
+import { CHAT_STORE, CREATIVITY_LOW } from "../../constants";
 import { DBMessage, StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { QuickPromptContext } from "../../components/QuickPrompt/QuickPromptProvider";
@@ -25,6 +24,9 @@ import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { Settings24Regular } from "@fluentui/react-icons";
+import { Button } from "@fluentui/react-components";
+import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -55,7 +57,7 @@ export type ChatMessage = DBMessage<ChatResponse>;
 
 export interface ChatOptions {
     system: string;
-    temperature: number;
+    creativity: string;
     reasoning_effort?: "low" | "medium" | "high";
 }
 
@@ -89,10 +91,9 @@ const Chat = () => {
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
-    const headerTitle = t("header.chat");
     useEffect(() => {
-        setHeader(headerTitle);
-    }, [setHeader, headerTitle]);
+        setHeader("");
+    }, [setHeader]);
     const { tools } = useToolsContext();
 
     // Independent states
@@ -107,11 +108,12 @@ const Chat = () => {
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
         answers: [],
-        temperature: 0.7,
+        creativity: CREATIVITY_LOW,
         systemPrompt: "",
         active_chat: undefined,
         allChats: [],
@@ -119,7 +121,7 @@ const Chat = () => {
     });
 
     // Destructuring for easier access
-    const { answers, temperature, systemPrompt, active_chat, allChats, reasoningEffort } = chatState;
+    const { answers, creativity, systemPrompt, active_chat, allChats, reasoningEffort } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -178,7 +180,7 @@ const Chat = () => {
                 const chat = await storageService.get(id);
                 if (chat) {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
-                    dispatch({ type: "SET_TEMPERATURE", payload: chat.config.temperature });
+                    dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
                     dispatch({ type: "SET_REASONING_EFFORT", payload: chat.config.reasoning_effort });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
@@ -219,7 +221,7 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                temperature: temperature,
+                creativity: creativity,
                 reasoning_effort: reasoningEffort
             };
             try {
@@ -246,7 +248,7 @@ const Chat = () => {
             }
             isLoadingRef.current = false;
         },
-        [answers, temperature, reasoningEffort, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
+        [answers, creativity, reasoningEffort, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
     );
 
     // Regenerate-Funktion
@@ -279,13 +281,13 @@ const Chat = () => {
     );
 
     // Konfigurationsänderungen mit memoisierten Callbacks
-    const onTemperatureChanged = useCallback(
-        (temp: number) => {
-            dispatch({ type: "SET_TEMPERATURE", payload: temp });
+    const onCreativityChanged = useCallback(
+        (newCreativity: string) => {
+            dispatch({ type: "SET_CREATIVITY", payload: newCreativity });
 
             debouncedStorageUpdate({
                 system: systemPrompt,
-                temperature: temp,
+                creativity: newCreativity,
                 reasoning_effort: reasoningEffort
             });
         },
@@ -298,11 +300,11 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: newSystemPrompt,
-                temperature: temperature,
+                creativity: creativity,
                 reasoning_effort: reasoningEffort
             });
         },
-        [temperature, reasoningEffort, debouncedStorageUpdate]
+        [creativity, reasoningEffort, debouncedStorageUpdate]
     );
 
     const onReasoningEffortChanged = useCallback(
@@ -311,11 +313,11 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: systemPrompt,
-                temperature: temperature,
+                creativity: creativity,
                 reasoning_effort: effort
             });
         },
-        [systemPrompt, temperature, debouncedStorageUpdate]
+        [systemPrompt, creativity, debouncedStorageUpdate]
     );
 
     const clearNavigationQueryParams = useCallback(() => {
@@ -427,13 +429,13 @@ const Chat = () => {
                     isLoadingRef.current = false;
                 });
         } else {
-            // Normal initialization without URL parameter
+            // Normal initialization ohne URL-Parameter
             storageService
                 .getNewestChat()
                 .then(existingData => {
                     if (existingData) {
                         dispatch({ type: "SET_ANSWERS", payload: existingData.messages });
-                        dispatch({ type: "SET_TEMPERATURE", payload: existingData.config.temperature });
+                        dispatch({ type: "SET_CREATIVITY", payload: existingData.config.creativity });
                         dispatch({ type: "SET_SYSTEM_PROMPT", payload: existingData.config.system });
                         dispatch({ type: "SET_ACTIVE_CHAT", payload: existingData.id });
 
@@ -624,38 +626,21 @@ const Chat = () => {
         [allChats, active_chat, fetchHistory, storageService, loadChat, t]
     );
 
-    const sidebar_chat_settings = useMemo(
-        () => (
-            <ChatsettingsDrawer
-                temperature={temperature}
-                setTemperature={onTemperatureChanged}
-                systemPrompt={systemPrompt}
-                setSystemPrompt={onSystemPromptChanged}
-                reasoningEffort={reasoningEffort}
-                setReasoningEffort={onReasoningEffortChanged}
-                supportsReasoning={LLM?.supports_reasoning || false}
-            />
-        ),
-        [temperature, systemPrompt, reasoningEffort, LLM, onTemperatureChanged, onSystemPromptChanged, onReasoningEffortChanged]
-    );
-
-    const sidebar = useMemo(
-        () => (
-            <Sidebar
-                actions={sidebar_actions}
-                content={
-                    <>
-                        {sidebar_chat_settings}
-                        {sidebar_history}
-                    </>
-                }
-            ></Sidebar>
-        ),
-        [sidebar_actions, sidebar_history, sidebar_chat_settings]
-    );
+    const sidebar = useMemo(() => <Sidebar actions={sidebar_actions} content={<>{sidebar_history}</>}></Sidebar>, [sidebar_actions, sidebar_history]);
     const layout = useMemo(
         () => (
             <>
+                <ChatSettingsDialog
+                    open={isSettingsOpen}
+                    onOpenChange={setIsSettingsOpen}
+                    creativity={creativity}
+                    setCreativity={onCreativityChanged}
+                    systemPrompt={systemPrompt}
+                    setSystemPrompt={onSystemPromptChanged}
+                    reasoningEffort={reasoningEffort}
+                    setReasoningEffort={onReasoningEffortChanged}
+                    supportsReasoning={LLM?.supports_reasoning || false}
+                />
                 <ChatLayout
                     sidebar={sidebar}
                     examples={examplesComponent}
@@ -663,15 +648,22 @@ const Chat = () => {
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
                     header={t("chat.header")}
+                    welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? "large" : "none"}
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setAndStoreShowSidebar(true)}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    onToggleMinimized={() => setAndStoreShowSidebar(!showSidebar)}
+                    actions={
+                        <Button
+                            appearance="subtle"
+                            icon={<Settings24Regular />}
+                            onClick={() => setIsSettingsOpen(true)}
+                            aria-label={t("components.chattsettingsdrawer.title")}
+                        />
+                    }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -689,7 +681,14 @@ const Chat = () => {
             LLM.llm_name,
             onLLMSelectionChange,
             clearChat,
-            isLoadingRef.current
+            isLoadingRef.current,
+            isSettingsOpen,
+            creativity,
+            onCreativityChanged,
+            systemPrompt,
+            onSystemPromptChanged,
+            reasoningEffort,
+            onReasoningEffortChanged
         ]
     );
 

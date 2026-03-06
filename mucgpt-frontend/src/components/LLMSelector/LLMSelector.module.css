@@ -9,12 +9,12 @@
     display: inline-flex;
     align-items: flex-start;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: 8px;
     padding: 6px 12px;
-    background-color: var(--primaryContainer);
+    background-color: transparent;
     color: var(--onSurface);
     border: 1px solid var(--outline);
-    box-shadow: 0 8px 8px rgba(2, 6, 18, 0.14);
+    box-shadow: none;
     cursor: pointer;
     transition:
         transform 140ms ease,
@@ -27,7 +27,7 @@
     box-shadow: 0 16px 10px rgba(2, 6, 18, 0.2);
     background-color: var(--surface);
     outline: 1px solid var(--primary);
-    border-radius: 999px;
+    border-radius: 8px;
 }
 
 .buttonContainer:focus,
@@ -35,11 +35,11 @@
     outline: 3px solid var(--primary);
 }
 
-.iconRightMargin {
-    margin-right: 8px;
+.iconLeftMargin {
+    margin-left: 8px;
     width: 18px;
     height: 18px;
-    color: var(--primary);
+    color: currentcolor;
 }
 
 .modelName {
@@ -47,7 +47,7 @@
     padding: 2px 6px;
     border-radius: 6px;
     font-weight: 700;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--onSurface);
     min-width: 28px;
     text-align: center;
@@ -146,7 +146,6 @@
     padding: 12px;
 }
 
-.rocket,
 .money {
     width: 28px;
     height: 28px;
@@ -163,21 +162,17 @@
     vertical-align: middle;
 }
 
-.rocketActive,
 .moneyActive {
     opacity: 1;
     color: var(--primary);
     transform: translateY(-1px) scale(1.05);
 }
 
-.card:hover .rocket,
 .card:hover .money,
-.card[data-selected="true"] .rocket,
 .card[data-selected="true"] .money {
     opacity: 0.6;
 }
 
-.card[data-selected="true"] .rocketActive,
 .card[data-selected="true"] .moneyActive {
     opacity: 1;
     color: var(--primary);

@@ -9,6 +9,7 @@ import {
     generateMindmapStreamChunks,
     generateSimplifyStreamChunks
 } from "./data/generators";
+import { CREATIVITY_HIGH } from "../constants";
 
 const DIRECTORY_TREE = [
     {
@@ -140,7 +141,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "A specialized research assistant that always uses the KICCGPT model for consistent, high-quality responses.",
             system_prompt: "You are the KICC Research Assistant. Provide detailed, well-researched answers with citations when possible.",
             hierarchical_access: ["RIT-AI", "ITM-KM-DI"],
-            temperature: 0.3,
+            creativity: "low",
             default_model: "KICCGPT",
             is_visible: true,
             tools: [
@@ -175,7 +176,7 @@ DYNAMIC_ASSISTANTS.push(
             description: "An older assistant configured to use GPT-3.5-Turbo, which has been deprecated and is no longer available in the system.",
             system_prompt: "You are a document processing assistant. Help users analyze, summarize, and extract information from documents.",
             hierarchical_access: ["BAU", "POR"],
-            temperature: 0.7,
+            creativity: CREATIVITY_HIGH,
             default_model: "gpt-3.5-turbo",
             is_visible: true,
             tools: [
@@ -194,6 +195,156 @@ DYNAMIC_ASSISTANTS.push(
                 { label: "Key Points", prompt: "Extract the key points from this text:", tooltip: "Main ideas" }
             ],
             tags: ["documents", "legacy", "deprecated"]
+        }
+    })
+);
+
+// Add assistants with longer names, descriptions, and system prompts
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-email-composer",
+        latest_version: {
+            id: "v-email-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+            name: "Professional E-Mail Drafting Assistant",
+            description:
+                "This assistant helps you compose clear, professional e-mails for a variety of workplace scenarios. Whether you need to write a follow-up to a meeting, respond to a client inquiry, or draft an internal announcement, it adapts tone and structure to your audience. It also suggests subject lines and can rewrite existing drafts to improve clarity and politeness.",
+            system_prompt:
+                "You are a professional e-mail drafting assistant for employees of the City of Munich. Your task is to help users compose, edit, and improve e-mails. Always match the formality level to the intended audience — formal for external partners, semi-formal for cross-department communication, and friendly-professional for team-internal messages. Offer alternative phrasings when the user's draft could be misunderstood. Include a clear subject-line suggestion with every draft. Avoid jargon unless the user explicitly requests it. If the user provides bullet points, convert them into well-structured paragraphs. Always end with an appropriate closing.",
+            hierarchical_access: ["ITM-KM-DI"],
+            creativity: "medium",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: false } },
+                { id: "Vereinfachen", config: { enabled: true } }
+            ],
+            owner_ids: ["user-mock-001"],
+            examples: [
+                {
+                    text: "Draft a follow-up e-mail after a project kickoff meeting",
+                    value: "Sure! I'll draft a concise follow-up summarizing action items and next steps."
+                },
+                {
+                    text: "Make this e-mail sound more polite",
+                    value: "I can soften the tone while keeping the message clear. Paste your draft and I'll revise it."
+                }
+            ],
+            quick_prompts: [
+                { label: "Follow-up", prompt: "Draft a follow-up e-mail for a meeting that took place yesterday.", tooltip: "Post-meeting follow-up" },
+                { label: "Apology", prompt: "Write a professional apology e-mail for a delayed response.", tooltip: "Apologize for delay" }
+            ],
+            tags: ["e-mail", "communication", "writing"]
+        }
+    })
+);
+
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-meeting-minutes",
+        latest_version: {
+            id: "v-meeting-1",
+            version: 2,
+            created_at: new Date().toISOString(),
+            name: "Meeting Minutes & Action Item Tracker",
+            description:
+                "Paste your rough meeting notes or a transcript, and this assistant will transform them into well-structured meeting minutes. It identifies participants, key discussion points, decisions made, and open action items with owners and deadlines. The output is formatted in a clean, ready-to-share document style that can be sent directly to attendees.",
+            system_prompt:
+                "You are a meeting-minutes assistant. When the user provides raw notes, a transcript, or bullet points from a meeting, you must produce structured meeting minutes. Include the following sections: 1) Meeting Title & Date, 2) Attendees, 3) Agenda Items Discussed (with brief summaries), 4) Decisions Made, 5) Action Items (formatted as a table with columns: Action, Owner, Deadline, Status). If information is missing, ask the user to fill in the gaps rather than guessing. Use formal but readable language. Keep summaries concise — no longer than two sentences per agenda item. Always end with a 'Next Steps' section.",
+            hierarchical_access: ["POR-O"],
+            creativity: "low",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: false } },
+                { id: "Vereinfachen", config: { enabled: false } }
+            ],
+            owner_ids: ["user-mock-002"],
+            examples: [{ text: "Here are my rough notes from today's standup…", value: "I'll organize these into clean meeting minutes with action items." }],
+            quick_prompts: [
+                { label: "Format Notes", prompt: "Please format the following rough meeting notes into structured minutes:", tooltip: "Structure raw notes" },
+                { label: "Extract Actions", prompt: "Extract all action items from the following meeting transcript:", tooltip: "Find action items" }
+            ],
+            tags: ["meetings", "productivity", "documentation"]
+        }
+    })
+);
+
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-policy-explainer",
+        latest_version: {
+            id: "v-policy-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+            name: "Municipal Policy & Regulation Explainer",
+            description:
+                "Understanding internal policies and municipal regulations can be overwhelming. This assistant breaks down complex administrative guidelines, city ordinances, and internal procedures into plain language. It can compare different regulation versions, highlight what changed, and explain how a policy affects day-to-day work. Ideal for onboarding new employees or clarifying compliance questions.",
+            system_prompt:
+                "You are a municipal policy explainer for the city administration of Munich. Your role is to translate complex legal and administrative texts into clear, accessible language. When a user pastes a regulation or policy excerpt, summarize its key points in plain language, highlight who is affected, what actions are required, and any deadlines. If the user asks about differences between two versions of a policy, create a comparison highlighting additions, removals, and changes. Never provide legal advice — always recommend consulting the legal department for binding interpretations. Use bullet points and numbered lists for clarity. If a term is technical, provide a brief definition in parentheses.",
+            hierarchical_access: ["POR-P", "BAU"],
+            creativity: "low",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: false } },
+                { id: "Vereinfachen", config: { enabled: true } }
+            ],
+            owner_ids: ["user-mock-003"],
+            examples: [
+                { text: "Explain the new travel expense policy in simple terms", value: "I'll break it down into the key points that affect your daily work." },
+                {
+                    text: "What changed between v2 and v3 of the data protection guideline?",
+                    value: "I can create a side-by-side comparison highlighting the differences."
+                }
+            ],
+            quick_prompts: [
+                { label: "Summarize Policy", prompt: "Summarize the following policy document in plain language:", tooltip: "Plain-language summary" },
+                { label: "Compare Versions", prompt: "Compare these two versions of the regulation and highlight what changed:", tooltip: "Version comparison" }
+            ],
+            tags: ["policy", "legal", "compliance", "onboarding"]
+        }
+    })
+);
+
+DYNAMIC_ASSISTANTS.push(
+    buildAssistantCreateResponse({
+        id: "assistant-markdown-playground",
+        latest_version: {
+            id: "v-markdown-1",
+            version: 1,
+            created_at: new Date().toISOString(),
+            name: "Markdown Prompt Showcase",
+            description: "Test assistant to verify markdown rendering in the Discovery sidebar system prompt section.",
+            system_prompt: `# Role
+You are a **structured assistant**.
+
+## Output Rules
+- Keep responses concise.
+- Use bullet points when listing steps.
+- Include a short summary at the end.
+
+## Example Table
+| Field | Meaning |
+| --- | --- |
+| \`owner\` | Responsible person |
+| \`due_date\` | Deadline in ISO format |
+
+## Example Code
+\`\`\`json
+{
+  "task": "Prepare rollout plan",
+  "owner": "alex",
+  "due_date": "2026-03-31"
+}
+\`\`\``,
+            hierarchical_access: ["RIT-AI"],
+            creativity: "medium",
+            is_visible: true,
+            tools: [
+                { id: "Brainstorming", config: { enabled: true } },
+                { id: "Vereinfachen", config: { enabled: false } }
+            ],
+            owner_ids: ["user-mock-777"],
+            tags: ["markdown", "demo", "discovery"]
         }
     })
 );
@@ -425,7 +576,7 @@ export const handlers = [
                 description: body.description || current.latest_version.description,
                 system_prompt: body.system_prompt || current.latest_version.system_prompt,
                 hierarchical_access: body.hierarchical_access || current.latest_version.hierarchical_access,
-                temperature: body.temperature ?? current.latest_version.temperature,
+                creativity: body.creativity ?? current.latest_version.creativity,
                 default_model:
                     body.default_model !== undefined ? (body.default_model === "" ? undefined : body.default_model) : current.latest_version.default_model,
                 tools: body.tools || current.latest_version.tools,

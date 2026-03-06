@@ -19,7 +19,6 @@ i18n
             DE: {
                 translation: {
                     header: {
-                        chat: "Chat",
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen"
                     },
@@ -36,6 +35,9 @@ i18n
                         owned: "Veröffentlicht in der Community",
                         select: "Auswählen",
                         local: "Lokal",
+                        local_deprecated:
+                            "Hinweis: Lokale Assistenten sind veraltet und werden in Zukunft nicht mehr unterstützt. Bitte veröffentlichen Sie diese.",
+                        private: "Privat",
                         navigation_aria: "Chat Navigation",
                         go_to_chat: "Direkt zum Chat",
                         go_to_chat_tooltip: "Direkt zur Chat-Seite navigieren ohne Frage eingeben zu müssen",
@@ -44,7 +46,8 @@ i18n
                         deleted_assistants_list: "Gelöschte Community Assistenten",
                         select_assistant_aria: "Assistent auswählen: {{title}}",
                         share_assistant_aria: "Assistent teilen: {{title}}",
-                        share: "Teilen"
+                        share: "Teilen",
+                        discover_assistants: "Assistenten entdecken"
                     },
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
@@ -100,6 +103,8 @@ i18n
                         next: "Weiter",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        edit: "Bearbeiten",
+                        delete: "Löschen",
                         errors: {
                             config_not_loaded: "Konfiguration konnte nicht geladen werden.",
                             failed_to_load_config: "Fehler beim Laden der Konfiguration.",
@@ -264,11 +269,14 @@ i18n
                         },
                         chattsettingsdrawer: {
                             title: "Chat Einstellungen",
-                            temperature: "Temperatur",
-                            min_temperature: "konservativ",
-                            max_temperatur: "kreativ",
-                            temperature_article: "Die",
-                            temperature_info: `beeinflusst die "Kreativität" des Sprachmodells. Ein höherer Wert führt zu unvorhersehbareren Antworten (Wörter, die unwahrscheinlich gegenüber dem aktuellen Kontext sind, werden generiert), während ein niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
+                            creativity: "Kreativität",
+                            creativity_low: "Niedrig",
+                            creativity_medium: "Normal",
+                            creativity_high: "Hoch",
+                            creativity_low_description: "Konzentriert sich auf Genauigkeit und sachliche Antworten",
+                            creativity_medium_description: "Hält einen neutralen und informativen Ton bei",
+                            creativity_high_description: "Fördert besonders kreative und vielfältige Antworten",
+                            creativity_info: `bestimmt, wie kreativ oder vorhersehbar die Antworten des Sprachmodells sind. "low" liefert konservative und genaue Antworten, "Normal" ist ausgewogen, und "Hoch" führt zu kreativeren und unvorhersehbareren Antworten.`,
                             max_lenght: "Maximale Antwortlänge",
                             max_lenght_info: "Wie viele Token dürfen maximal bei einer Antwort generiert werden.",
                             system_prompt_clear: "System-Prompt löschen",
@@ -282,8 +290,8 @@ i18n
                             delete: "Assistent löschen",
                             edit: "Assistent bearbeiten",
                             finish_edit: "Bearbeitung abschließen",
-                            show_configutations: "Konfigurationen anzeigen",
-                            close_configutations: "Konfigurationen schließen",
+                            show_configurations: "Konfigurationen anzeigen",
+                            close_configurations: "Konfigurationen schließen",
                             "unpublish-button": "Veröffentlichung aufheben",
                             "remove-assistant": "Assistent entfernen",
                             publish: "Veröffentlichen",
@@ -338,12 +346,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "Neuer Assistent"
                         },
+                        import_assistant: {
+                            import: "Assistenten importieren",
+                            import_success: "Import erfolgreich",
+                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
+                            import_error: "Import fehlgeschlagen",
+                            import_failed: "Die Datei konnte nicht importiert werden",
+                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
+                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
+                        },
                         create_assistant_dialog: {
                             title: "Titel",
                             description: "Funktionsbeschreibung",
                             prompt: "System-Prompt",
                             dialog_title: "Neuen Assistent erstellen",
-                            import: "Assistenten importieren",
                             default_assistant_title: "Assistent",
                             default_assistant_description: "Ein Assistent",
                             step1_label: "Funktion beschreiben",
@@ -377,13 +393,7 @@ i18n
                             create_example_two:
                                 "Der Assistent ist ein Mitarbeiter der Stadt München und antwortet höflich sowie individuell auf die eingehenden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme.",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
-                            import_error: "Import fehlgeschlagen",
-                            import_failed: "Die Datei konnte nicht importiert werden",
-                            import_invalid_format: "Ungültiges Dateiformat. Die Datei muss einen Titel und System-Prompt enthalten.",
-                            import_save_failed: "Fehler beim Speichern des importierten Assistenten"
+                                "Der Assistent erstellt für das eingegebene Wort oder den eingegebenen Satz zehn verschiedene Umformulierungen oder Synonyme."
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -395,7 +405,11 @@ i18n
                             advanced_settings: "Erweiterte Einstellungen",
                             hide_advanced_settings: "Erweiterte Einstellungen ausblenden",
                             collapse: "Einklappen",
-                            temperature: "Temperatur",
+                            creativity: "Kreativität",
+                            creativity_placeholder: "Wählen Sie eine Kreativitätsstufe...",
+                            creativity_low: "Aus (konservativ)",
+                            creativity_medium: "Normal (ausgewogen)",
+                            creativity_high: "Hoch (kreativ)",
                             default_model: "Standard-Modell",
                             default_model_info:
                                 "Das Standard-Modell, das für diesen Assistenten verwendet wird. Wenn kein Modell ausgewählt ist, wird das Benutzer-ausgewählte Modell verwendet.",
@@ -478,15 +492,23 @@ i18n
                             search_assistants: "Assistenten suchen"
                         },
                         community_assistants: {
-                            title: "Community Assistenten", // Deutsch
+                            title: "Community Assistenten",
+                            about: "Über", // Deutsch
                             search: "Assistenten suchen",
                             filter_by_tag: "Nach Tag filtern",
+                            filter_all: "Community",
+                            filter_yours: "Eigene",
+                            filter_subscribed: "Abonniert",
+                            system_prompt: "System-Prompt",
+                            enabled_tools: "Aktivierte Werkzeuge",
+                            start_chat: "Chat starten",
                             sort_by: "Sortieren nach",
                             sort_title: "Titel",
                             sort_updated: "Zuletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_by_tooltip: "Sortierung der Assistenten ändern",
                             save: "Assistent speichern",
-                            system_message: "System-Prompt",
+
                             departments: "Zugelassene Bereiche",
                             departments_description: "Dieser Assistent ist für folgende Organisationseinheiten freigegeben:",
                             department_single: "Bereich",
@@ -554,6 +576,10 @@ i18n
                             selectButton: "Auswählen"
                         }
                     },
+                    discovery: {
+                        title: "Assistenten entdecken",
+                        subtitle: "Optimiere deinen Workflow mit spezialisierten KI-Agenten."
+                    },
                     ...tutorialsTranslations.DE,
                     ...versionTranslations.DE,
                     ...faqTranslation.DE
@@ -562,7 +588,6 @@ i18n
             EN: {
                 translation: {
                     header: {
-                        chat: "Chat",
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant"
                     },
@@ -578,6 +603,8 @@ i18n
                         soon: "In Development...",
                         owned: "Published in the Community",
                         local: "Local",
+                        local_deprecated: "Note: Local assistants are deprecated and will no longer be supported in the future. Please publish them.",
+                        private: "Private",
                         select: "Select",
                         navigation_aria: "Chat navigation",
                         go_to_chat: "Go to chat",
@@ -587,7 +614,8 @@ i18n
                         deleted_assistants_list: "Deleted community assistants",
                         select_assistant_aria: "Select assistant: {{title}}",
                         share_assistant_aria: "Share assistant: {{title}}",
-                        share: "Share"
+                        share: "Share",
+                        discover_assistants: "Discover Assistants"
                     },
                     chat: {
                         header: "Ask a question or try an example",
@@ -642,6 +670,8 @@ i18n
                         next: "Next",
                         loading: "Loading...",
                         hint: "Hint:",
+                        edit: "Edit",
+                        delete: "Delete",
                         errors: {
                             config_not_loaded: "Configuration could not be loaded.",
                             failed_to_load_config: "Failed to load configuration.",
@@ -806,11 +836,14 @@ i18n
                         },
                         chattsettingsdrawer: {
                             title: "Chat Settings",
-                            temperature: "Temperature",
-                            min_temperature: "conservative",
-                            max_temperatur: "creative",
-                            temperature_article: "The",
-                            temperature_info: `controls the “creativity” or randomness of the text generated by MUCGPT. A higher temperature (e.g., 0.7) results in more diverse and creative output, while a lower temperature (e.g., 0.2) makes the output more deterministic and focused.`,
+                            creativity: "Creativity",
+                            creativity_low: "Low",
+                            creativity_medium: "Normal",
+                            creativity_high: "High",
+                            creativity_low_description: "Focuses on accuracy and factual responses",
+                            creativity_medium_description: "Maintains a neutral and informative tone",
+                            creativity_high_description: "Encourages highly creative and diverse responses",
+                            creativity_info: `determines how creative or predictable the language model's responses are. "Low" provides conservative and precise answers, "Normal" is balanced, and "High" leads to more creative and unpredictable responses.`,
                             max_lenght: "Maximum response length",
                             max_lenght_info: "How many tokens (words) can be generated at most in a response.",
                             system_prompt_clear: "Clear system prompt",
@@ -824,8 +857,8 @@ i18n
                             delete: "Delete assistant",
                             edit: "Edit Assistant",
                             finish_edit: "Finish Edit",
-                            show_configutations: "Show configurations",
-                            close_configutations: "Close configurations",
+                            show_configurations: "Show configurations",
+                            close_configurations: "Close configurations",
                             "unpublish-button": "Unpublish",
                             "remove-assistant": "Remove Assistant",
                             publish: "Publish",
@@ -880,12 +913,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "New assistant"
                         },
+                        import_assistant: {
+                            import: "Import assistant",
+                            import_success: "Import successful",
+                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
+                            import_error: "Import failed",
+                            import_failed: "The file could not be imported",
+                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
+                            import_save_failed: "Error saving imported assistant"
+                        },
                         create_assistant_dialog: {
                             title: "Title",
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Create new assistant",
-                            import: "Import assistant",
                             default_assistant_title: "Assistant",
                             default_assistant_description: "An assistant",
                             step1_label: "Describe function",
@@ -917,13 +958,7 @@ i18n
                             example_three: "Example 3: Synonyms",
                             create_example_one: "English translator: The assistant translates the text entered into English.",
                             create_example_two: "The assistant is an employee of the City of Munich and responds politely and individually to incoming emails.",
-                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered.",
-                            import_success: "Import successful",
-                            import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
-                            import_error: "Import failed",
-                            import_failed: "The file could not be imported",
-                            import_invalid_format: "Invalid file format. The file must contain a title and system prompt.",
-                            import_save_failed: "Error saving imported assistant"
+                            create_example_three: "The assistant creates ten different rephrasings or synonyms for the word or sentence entered."
                         },
                         edit_assistant_dialog: {
                             title: "Edit Assistant",
@@ -935,7 +970,11 @@ i18n
                             advanced_settings: "Advanced Settings",
                             hide_advanced_settings: "Hide Advanced Settings",
                             collapse: "Collapse",
-                            temperature: "Temperature",
+                            creativity: "Creativity",
+                            creativity_placeholder: "Select a creativity level...",
+                            creativity_low: "Off (conservative)",
+                            creativity_medium: "Normal (balanced)",
+                            creativity_high: "High (creative)",
                             default_model: "Default Model",
                             default_model_info: "The default model to use for this assistant. If no model is selected, the user-selected model will be used.",
                             default_model_placeholder: "Select a default model...",
@@ -1013,15 +1052,23 @@ i18n
                             search_assistants: "Search assistants"
                         },
                         community_assistants: {
-                            title: "Community Assistants", // Englisch
+                            title: "Community Assistants",
+                            about: "About", // Englisch
                             search: "Search assistants",
                             filter_by_tag: "Filter by tag",
+                            filter_all: "Community",
+                            filter_yours: "Yours",
+                            filter_subscribed: "Subscribed",
+                            system_prompt: "System prompt",
+                            enabled_tools: "Enabled tools",
+                            start_chat: "Start conversation",
                             sort_by: "Sort by",
                             sort_title: "Title",
                             sort_updated: "Last updated",
                             sort_subscriptions: "Subscriptions",
+                            sort_by_tooltip: "Change sorting of assistants",
                             save: "Save assistant",
-                            system_message: "System prompt",
+
                             departments: "Authorized Departments",
                             departments_description: "This assistant is authorized for the following organizational units:",
                             department_single: "Department",
@@ -1088,6 +1135,10 @@ i18n
                             selectButton: "Select"
                         }
                     },
+                    discovery: {
+                        title: "Discover Assistants",
+                        subtitle: "Supercharge your workflow with specialized AI agents."
+                    },
                     ...tutorialsTranslations.EN,
                     ...versionTranslations.EN,
                     ...faqTranslation.EN
@@ -1096,7 +1147,6 @@ i18n
             BA: {
                 translation: {
                     header: {
-                        chat: "Redn",
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin"
                     },
@@ -1112,6 +1162,8 @@ i18n
                         soon: "In Entwicklung...",
                         owned: "In da Gmoa veröfentlicht",
                         local: "Lokal",
+                        local_deprecated: "Obacht: De lokaln Assistentn san veraltet und wern in Zukunft nimma unterstützt. Bitte veröffentlichs de.",
+                        private: "Privat",
                         select: "Auswähln",
                         navigation_aria: "Chat-Navigation",
                         go_to_chat: "Glei zum Chat",
@@ -1121,7 +1173,8 @@ i18n
                         deleted_assistants_list: "Glöschte Community-Assistentn",
                         select_assistant_aria: "Assistent aussuacha: {{title}}",
                         share_assistant_aria: "Assistent teilen: {{title}}",
-                        share: "Teilen"
+                        share: "Teilen",
+                        discover_assistants: "Assistentn entdecka"
                     },
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
@@ -1171,6 +1224,8 @@ i18n
                         next: "Weida",
                         loading: "Lade Konfiguration...",
                         hint: "Hinweis:",
+                        edit: "Beorbeitn",
+                        delete: "Löschn",
                         errors: {
                             config_not_loaded: "Konfiguration konnt ned g'laden werdn.",
                             failed_to_load_config: "Fehler beim Laden vo da Konfiguration.",
@@ -1339,11 +1394,14 @@ i18n
                         },
                         chattsettingsdrawer: {
                             title: "Ratsch Einstellunga",
-                            min_temperature: "konservativ",
-                            max_temperatur: "kreativ",
-                            temperature: "Temperatur",
-                            temperature_article: "Da",
-                            temperature_info: `	beinflusst de "Kreativität" vom Sprachmodel. A höherer Wert führt zu unvorhersehbareren Antworten (Wörter, de unwahrscheinliche geem de aktuelle Kontext san, werdn generiert), während a niedrigerer Wert eher konservative und genauere Antworten erzeugt.`,
+                            creativity: "Kreativität",
+                            creativity_low: "Niadrig",
+                            creativity_medium: "Normal",
+                            creativity_high: "Hoch",
+                            creativity_low_description: "Konzentriert si auf Genauigkeit und sachliche Antwortn",
+                            creativity_medium_description: "Hoit an neutralen und informativen Ton bei",
+                            creativity_high_description: "Fördert bsonders kreative und vielfältige Antwortn",
+                            creativity_info: `entscheidt, wia kreativ oda vorhersehbar de Antowortn vom Sprachmodell san. "Niadrig" liefert konservative und genaue Antwortn, "Normal" is ausgwogen, und "Hoch" führt zu kreativeren und spinnerten Antwortn.`,
                             max_lenght: "Maximale Antwortläng",
                             max_lenght_info: "Wia vui Token dürfen maximal bei am Antwort generiert werdn.",
                             system_prompt_clear: "System Prompt löschn",
@@ -1357,8 +1415,8 @@ i18n
                             delete: "Assistent löschn",
                             edit: "Assistent bearbeit'n",
                             finish_edit: "Bearbeitung abschließ'n",
-                            show_configutations: "Konfigurationen anzeigen",
-                            close_configutations: "Konfigurationen schließen",
+                            show_configurations: "Konfigurationen anzeigen",
+                            close_configurations: "Konfigurationen schließen",
                             "unpublish-button": "Veröffentlichung aufheb'n",
                             "remove-assistant": "Assistent entfern'n",
                             publish: "Veröffentlich'n",
@@ -1413,12 +1471,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "Neia Assistent"
                         },
+                        import_assistant: {
+                            import: "Assistentn importier'n",
+                            import_success: "Import erfolgreich",
+                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
+                            import_error: "Import fehlgschlogn",
+                            import_failed: "De Datei konnt ned importiert werdn",
+                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
+                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
+                        },
                         create_assistant_dialog: {
                             title: "Titel",
                             description: "Was er kenna muass",
                             prompt: "System-Vorgab (Prompt)",
                             dialog_title: "An neia Assistentn o'legn",
-                            import: "Assistentn importier'n",
                             default_assistant_title: "Assistent",
                             default_assistant_description: "A Assistent",
                             step1_label: "Sog ma, was er kenna muass",
@@ -1451,13 +1517,7 @@ i18n
                             create_example_one: "Englisch Übersetzer: Dea Assistent übersetzt den eingemen Text ins Englische.",
                             create_example_two: "Der Assistent is a Mitarbatr dea Stod Minga und antwortet höflich sowie individuell af de eingehnden E-Mails.",
                             create_example_three:
-                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme.",
-                            import_success: "Import erfolgreich",
-                            import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
-                            import_error: "Import fehlgschlogn",
-                            import_failed: "De Datei konnt ned importiert werdn",
-                            import_invalid_format: "Ungültigs Dateiformat. De Datei muass an Titel und System-Prompt enthoidn.",
-                            import_save_failed: "Fehler beim Speichern vom importierten Assistentn"
+                                "Der Assistent erstäit fia des eingeme Wort oda den eingemen Satz zehn verschiedene Umformulierungen oda Synonyme."
                         },
                         edit_assistant_dialog: {
                             title: "Assistent bearbeiten",
@@ -1469,7 +1529,11 @@ i18n
                             advanced_settings: "Erweiterte Einstellungen",
                             hide_advanced_settings: "Erweiterte Einstellungen vaberg",
                             collapse: "Eiklappn",
-                            temperature: "Temperatur",
+                            creativity: "Kreativität",
+                            creativity_placeholder: "Wähl a Kreativitätsstufn...",
+                            creativity_low: "Aus (konservativ)",
+                            creativity_medium: "Normal (ausgwogen)",
+                            creativity_high: "Hoch (kreativ)",
                             default_model: "Standard-Modell",
                             default_model_info:
                                 "Des Standard-Modell, des da Assistent hernimmt. Wenn koa Modell ausgewählt is, nimmt ma des, wos da Nutzer aussucht.",
@@ -1553,14 +1617,22 @@ i18n
                         },
                         community_assistants: {
                             title: "Community Assistentn", // Bairisch
+                            about: "Über",
                             search: "Assistentn durchschaun",
                             filter_by_tag: "Noch Tag filtern",
+                            filter_all: "Community",
+                            filter_yours: "Eigne",
+                            filter_subscribed: "Abonniert",
+                            system_prompt: "System-Prompt",
+                            enabled_tools: "Aktivierte Werkzeig",
+                            start_chat: "Ratsch o'fanga",
                             sort_by: "Sortieren noch",
                             sort_title: "Titel",
                             sort_updated: "Zletzt aktualisiert",
                             sort_subscriptions: "Abonnements",
+                            sort_by_tooltip: "Sortierung vo de Assistentn ändern",
                             save: "Assistent speichan",
-                            system_message: "System-Prompt",
+
                             departments: "Zuglassene Bereiche",
                             departments_description: "Der Assistent is für de foigenden Organisationseinheitn freigem:",
                             department_single: "Bereich",
@@ -1627,6 +1699,10 @@ i18n
                             selectButton: "Auswähln"
                         }
                     },
+                    discovery: {
+                        title: "Assistentn entdeckn",
+                        subtitle: "Optimier dein Workflow mit spezialisierten KI-Agenten."
+                    },
                     ...tutorialsTranslations.BA,
                     ...versionTranslations.BA,
                     ...faqTranslation.BA
@@ -1635,7 +1711,6 @@ i18n
             FR: {
                 translation: {
                     header: {
-                        chat: "Chat",
                         nutzungsbedingungen: "Conditions d'utilisation"
                     },
                     menu: {
@@ -1650,6 +1725,8 @@ i18n
                         soon: "En Développement...",
                         owned: "Publiés dans la Communauté",
                         local: "Local",
+                        local_deprecated: "Remarque : Les assistants locaux sont obsolètes et ne seront plus pris en charge à l'avenir. Veuillez les publier.",
+                        private: "Privé",
                         select: "Sélectionner",
                         navigation_aria: "Navigation du chat",
                         go_to_chat: "Aller au chat",
@@ -1659,7 +1736,8 @@ i18n
                         deleted_assistants_list: "Assistants communautaires supprimés",
                         select_assistant_aria: "Sélectionner l'assistant : {{title}}",
                         share_assistant_aria: "Partager l'assistant : {{title}}",
-                        share: "Partager"
+                        share: "Partager",
+                        discover_assistants: "Découvrir les assistants"
                     },
                     chat: {
                         header: "Posez une question ou essayez un exemple",
@@ -1715,6 +1793,8 @@ i18n
                         next: "Suivant",
                         loading: "Chargement de la configuration...",
                         hint: "Conseil :",
+                        edit: "Modifier",
+                        delete: "Supprimer",
                         errors: {
                             config_not_loaded: "La configuration n'a pas pu être chargée.",
                             failed_to_load_config: "Échec du chargement de la configuration.",
@@ -1879,11 +1959,14 @@ i18n
                         },
                         chattsettingsdrawer: {
                             title: "Paramètres de discussion",
-                            temperature: "Température",
-                            min_temperature: "conservatrice",
-                            max_temperatur: "créative",
-                            temperature_article: "La",
-                            temperature_info: `influence la "créativité" du modèle de langage. Une valeur plus élevée produit des réponses moins prévisibles (des mots improbables par rapport au contexte actuel sont générés), tandis qu'une valeur plus basse produit des réponses plus conservatrices et précises.`,
+                            creativity: "Créativité",
+                            creativity_low: "Faible",
+                            creativity_medium: "Normal",
+                            creativity_high: "Élevé",
+                            creativity_low_description: "Se concentre sur la précision et les réponses factuelles",
+                            creativity_medium_description: "Maintient un ton neutre et informatif",
+                            creativity_high_description: "Favorise des réponses particulièrement créatives et variées",
+                            creativity_info: `détermine à quel point les réponses du modèle linguistique sont créatives ou prévisibles. "Faible" fournit des réponses conservatrices et précises, "Normal" est équilibré, et "Élevé" conduit à des réponses plus créatives et imprévisibles.`,
                             max_lenght: "Longueur maximale de la réponse",
                             max_lenght_info: "Nombre maximal de tokens pouvant être générés pour une réponse.",
                             system_prompt_clear: "Effacer le Prompt système",
@@ -1897,8 +1980,8 @@ i18n
                             delete: "Supprimer l'assistant",
                             edit: "Modifier l'assistant",
                             finish_edit: "Terminer la modification",
-                            show_configutations: "Afficher les configurations",
-                            close_configutations: "Fermer les configurations",
+                            show_configurations: "Afficher les configurations",
+                            close_configurations: "Fermer les configurations",
                             "unpublish-button": "Dépublier",
                             "remove-assistant": "Retirer l'assistant",
                             publish: "Publier",
@@ -1953,12 +2036,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "nouvel assistant"
                         },
+                        import_assistant: {
+                            import: "Importer un assistant",
+                            import_success: "Importation réussie",
+                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
+                            import_error: "Échec de l'importation",
+                            import_failed: "Le fichier n'a pas pu être importé",
+                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
+                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                        },
                         create_assistant_dialog: {
                             title: "Titre",
                             description: "Description",
                             prompt: "System prompt",
                             dialog_title: "Créer un nouvel assistant",
-                            import: "Importer un assistant",
                             default_assistant_title: "Assistant",
                             default_assistant_description: "Un assistant",
                             step1_label: "Décrire la fonction",
@@ -1992,13 +2083,7 @@ i18n
                             create_example_one: "Traducteur anglais : l'assistant traduit le texte saisi en anglais.",
                             create_example_two:
                                 "L'assistant est un employé de la ville de Munich et répond de manière polie et personnalisée aux e-mails reçus.",
-                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e).",
-                            import_success: "Importation réussie",
-                            import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
-                            import_error: "Échec de l'importation",
-                            import_failed: "Le fichier n'a pas pu être importé",
-                            import_invalid_format: "Format de fichier invalide. Le fichier doit contenir un titre et un prompt système.",
-                            import_save_failed: "Erreur lors de l'enregistrement de l'assistant importé"
+                            create_example_three: "L'assistant propose dix reformulations ou synonymes différents pour le mot ou la phrase saisi(e)."
                         },
                         edit_assistant_dialog: {
                             title: "Modifier l'assistant",
@@ -2010,7 +2095,11 @@ i18n
                             advanced_settings: "Paramètres avancés",
                             hide_advanced_settings: "Masquer les paramètres avancés",
                             collapse: "Réduire",
-                            temperature: "Température",
+                            creativity: "Créativité",
+                            creativity_placeholder: "Sélectionnez un niveau de créativité...",
+                            creativity_low: "Désactivé (conservateur)",
+                            creativity_medium: "Normal (équilibré)",
+                            creativity_high: "Élevé (créatif)",
                             default_model: "Modèle par défaut",
                             default_model_info:
                                 "Le modèle par défaut utilisé pour cet assistant. Si aucun modèle n'est sélectionné, celui choisi par l'utilisateur sera utilisé.",
@@ -2094,14 +2183,22 @@ i18n
                         },
                         community_assistants: {
                             title: "Assistants Communautaires",
+                            about: "À propos",
                             search: "Rechercher des assistants",
                             filter_by_tag: "Filtrer par tag",
+                            filter_all: "Communauté",
+                            filter_yours: "Vos",
+                            filter_subscribed: "Abonnés",
+                            system_prompt: "Prompt système",
+                            enabled_tools: "Outils activés",
+                            start_chat: "Démarrer la conversation",
                             sort_by: "Trier par",
                             sort_title: "Titre",
                             sort_updated: "Dernière mise à jour",
                             sort_subscriptions: "Abonnements",
+                            sort_by_tooltip: "Modifier le tri des assistants",
                             save: "Enregistrer l'assistant",
-                            system_message: "Prompt système",
+
                             departments: "Départements autorisés",
                             departments_description: "Cet assistant est autorisé pour les unités organisationnelles suivantes :",
                             department_single: "Département",
@@ -2169,6 +2266,10 @@ i18n
                             selectButton: "Sélectionner"
                         }
                     },
+                    discovery: {
+                        title: "Découvrir les Assistants",
+                        subtitle: "Boostez votre flux de travail avec des agents IA spécialisés."
+                    },
                     ...tutorialsTranslations.FR,
                     ...versionTranslations.FR,
                     ...faqTranslation.FR
@@ -2177,7 +2278,6 @@ i18n
             UK: {
                 translation: {
                     header: {
-                        chat: "Чат",
                         nutzungsbedingungen: "Умови використання"
                     },
                     menu: {
@@ -2192,6 +2292,8 @@ i18n
                         soon: "В розробці...",
                         owned: "Опубліковано в Спільноті",
                         local: "Локальний",
+                        local_deprecated: "Примітка: Локальні асистенти застаріли та більше не підтримуватимуться в майбутньому. Будь ласка, опублікуйте їх.",
+                        private: "Приватний",
                         select: "Вибрати",
                         navigation_aria: "Навігація чату",
                         go_to_chat: "Перейти до чату",
@@ -2201,7 +2303,8 @@ i18n
                         deleted_assistants_list: "Видалені асистенти спільноти",
                         select_assistant_aria: "Вибрати асистента: {{title}}",
                         share_assistant_aria: "Поділитися асистентом: {{title}}",
-                        share: "Поділитися"
+                        share: "Поділитися",
+                        discover_assistants: "Відкрити асистентів"
                     },
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
@@ -2257,6 +2360,8 @@ i18n
                         next: "Далі",
                         loading: "Завантаження конфігурації...",
                         hint: "Підказка:",
+                        edit: "Редагувати",
+                        delete: "Видалити",
                         errors: {
                             config_not_loaded: "Не вдалося завантажити конфігурацію.",
                             failed_to_load_config: "Помилка завантаження конфігурації.",
@@ -2420,11 +2525,14 @@ i18n
                         },
                         chattsettingsdrawer: {
                             title: "Налаштування чату",
-                            temperature: "Температура",
-                            min_temperature: "консервативна",
-                            max_temperatur: "креативна",
-                            temperature_article: "Температура",
-                            temperature_info: `впливає на "креативність" мовної моделі. Вища вартість призводить до менш передбачуваних відповідей (неймовірні слова порівняно з поточним контекстом генеруються), тоді як нижча вартість створює більш консервативні та точні відповіді.`,
+                            creativity: "Креативність",
+                            creativity_low: "Низька",
+                            creativity_medium: "Нормальна",
+                            creativity_high: "Висока",
+                            creativity_low_description: "Зосереджується на точності та фактичних відповідях",
+                            creativity_medium_description: "Підтримує нейтральний та інформативний тон",
+                            creativity_high_description: "Сприяє створенню дуже креативних і різноманітних відповідей",
+                            creativity_info: `визначає, наскільки креативними чи передбачуваними є відповіді мовної моделі. "Низька" забезпечує консервативні та точні відповіді, "Нормальна" є збалансованою, а "Висока" призводить до більш креативних та непередбачуваних відповідей.`,
                             max_lenght: "Максимальна довжина відповіді",
                             max_lenght_info: "Яка кількість токенів може бути згенерована при відповіді.",
                             system_prompt_clear: "Очистити системний запит",
@@ -2438,8 +2546,8 @@ i18n
                             delete: "Видалити асистента",
                             edit: "Редагувати асистента",
                             finish_edit: "Завершити редагування",
-                            show_configutations: "Показати конфігурації",
-                            close_configutations: "Закрити конфігурації",
+                            show_configurations: "Показати конфігурації",
+                            close_configurations: "Закрити конфігурації",
                             "unpublish-button": "Скасувати публікацію",
                             "remove-assistant": "Видалити асистента",
                             publish: "Опублікувати",
@@ -2494,12 +2602,20 @@ i18n
                         add_assistant_button: {
                             add_assistant: "новий асистент"
                         },
+                        import_assistant: {
+                            import: "Імпортувати асистента",
+                            import_success: "Імпорт успішний",
+                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
+                            import_error: "Помилка імпорту",
+                            import_failed: "Не вдалося імпортувати файл",
+                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
+                            import_save_failed: "Помилка збереження імпортованого асистента"
+                        },
                         create_assistant_dialog: {
                             title: "Заголовок",
                             description: "Опис",
                             prompt: "Системний запит",
                             dialog_title: "Створити нового асистента",
-                            import: "Імпортувати асистента",
                             default_assistant_title: "Асистент",
                             default_assistant_description: "Асистент",
                             step1_label: "Описати функцію",
@@ -2531,13 +2647,7 @@ i18n
                             example_three: "Приклад 3: Синоніми",
                             create_example_one: "Перекладач англійської мови: Асистент перекладає введений текст англійською мовою.",
                             create_example_two: "Асистент є співробітником міста Мюнхен і ввічливо та індивідуально відповідає на вхідні електронні листи.",
-                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення.",
-                            import_success: "Імпорт успішний",
-                            import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
-                            import_error: "Помилка імпорту",
-                            import_failed: "Не вдалося імпортувати файл",
-                            import_invalid_format: "Недійсний формат файлу. Файл повинен містити назву та системний запит.",
-                            import_save_failed: "Помилка збереження імпортованого асистента"
+                            create_example_three: "Асистент створює десять різних перефразувань або синонімів для введеного слова або речення."
                         },
                         edit_assistant_dialog: {
                             title: "Редагувати асистента",
@@ -2549,7 +2659,11 @@ i18n
                             advanced_settings: "Розширені налаштування",
                             hide_advanced_settings: "Приховати розширені налаштування",
                             collapse: "Згорнути",
-                            temperature: "Температура",
+                            creativity: "Креативність",
+                            creativity_placeholder: "Виберіть рівень креативності...",
+                            creativity_low: "Вимкнено (консервативно)",
+                            creativity_medium: "Нормально (збалансовано)",
+                            creativity_high: "Високо (креативно)",
                             default_model: "Стандартна модель",
                             default_model_info:
                                 "Стандартна модель, яку використовує цей асистент. Якщо модель не вибрана, буде використана модель, яку обрав користувач.",
@@ -2631,14 +2745,22 @@ i18n
                         },
                         community_assistants: {
                             title: "Громадські Асистенти", // Ukrainisch
+                            about: "Про",
                             search: "Пошук асистентів",
                             filter_by_tag: "Фільтрувати за тегом",
+                            filter_all: "Спільнота",
+                            filter_yours: "Ваші",
+                            filter_subscribed: "Підписані",
+                            system_prompt: "Системний запит",
+                            enabled_tools: "Увімкнені інструменти",
+                            start_chat: "Розпочати розмову",
                             sort_by: "Сортувати за",
                             sort_title: "Заголовок",
                             sort_updated: "Останнє оновлення",
                             sort_subscriptions: "Підписки",
+                            sort_by_tooltip: "Змінити сортування асистентів",
                             save: "Зберегти асистента",
-                            system_message: "Системний запит",
+
                             departments: "Авторизовані відділи",
                             departments_description: "Цей асистент авторизований для наступних організаційних підрозділів:",
                             department_single: "Відділ",
@@ -2704,6 +2826,10 @@ i18n
                             price: "Ціна",
                             selectButton: "Обрати"
                         }
+                    },
+                    discovery: {
+                        title: "Відкрийте асистентів",
+                        subtitle: "Прискорте свою роботу за допомогою спеціалізованих ШІ-агентів."
                     },
                     ...tutorialsTranslations.UK,
                     ...versionTranslations.UK,

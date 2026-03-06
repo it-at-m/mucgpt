@@ -27,7 +27,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
         model: options.model,
         messages,
         temperature: options.temperature,
-        stream: options.shouldStream
+        stream: options.shouldStream,
+        creativity: options.creativity
     };
     if (options.enabled_tools) {
         body.enabled_tools = options.enabled_tools;
@@ -66,7 +67,7 @@ export async function createAssistantApi(options: CreateAssistantRequest): Promi
     );
 }
 
-export async function createChatName(query: string, answer: string, language: string, temperature: number, system_message: string, model: string) {
+export async function createChatName(query: string, answer: string, language: string, creativity: string, system_message: string, model: string) {
     const url = API_BASE + "v1/chat/completions";
     // build OpenAI-compatible messages array
     const messages: Array<{ role: string; content: string }> = [];
@@ -80,7 +81,7 @@ export async function createChatName(query: string, answer: string, language: st
     const body = {
         model: model,
         messages,
-        temperature: temperature,
+        creativity: creativity,
         stream: false
     };
 

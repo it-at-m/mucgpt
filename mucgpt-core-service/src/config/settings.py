@@ -17,7 +17,12 @@ from pydantic import (
     field_validator,
     model_validator,
 )
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import (
+    BaseSettings,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+    YamlConfigSettingsSource,
+)
 
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
 
@@ -45,6 +50,10 @@ class ModelInfo(BaseModel):
     litellm_provider: str | None = None
     inference_location: str | None = None
     knowledge_cut_off: str | None = None
+    # Creativity to temperature mappings
+    creativity_low_temperature: float | None = None
+    creativity_medium_temperature: float | None = None
+    creativity_high_temperature: float | None = None
 
 
 class ModelsConfig(BaseModel):
@@ -84,6 +93,9 @@ class ModelsConfig(BaseModel):
             "litellm_provider",
             "inference_location",
             "knowledge_cut_off",
+            "creativity_low_temperature",
+            "creativity_medium_temperature",
+            "creativity_high_temperature",
         }
 
         existing_info = data.get("model_info")
@@ -218,47 +230,94 @@ class ModelsConfig(BaseModel):
         cleaned = (value or "").strip() or None
         self.model_info.knowledge_cut_off = cleaned
 
+    def get_temperature_for_creativity(self, creativity: str) -> float:
+        """Convert creativity level to temperature value for this model.
 
-class SSOSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_SSO_",
-        extra="ignore",
-    )
+        Args:
+            creativity: One of "low", "medium", "high"
+
+        Returns:
+            Temperature value for the given creativity level
+
+        Raises:
+            ValueError: If creativity level is invalid
+        """
+        # Default temperature values if not configured
+        default_temps = {
+            "low": 0.0,
+            "medium": 0.5,
+            "high": 1.0,
+        }
+
+        if creativity not in default_temps:
+            raise ValueError(
+                f"Invalid creativity level: {creativity}. Must be one of: low, medium, high"
+            )
+
+        # Use model-specific temperature if configured, otherwise use default
+        if creativity == "low":
+            return (
+                self.model_info.creativity_low_temperature
+                if self.model_info.creativity_low_temperature is not None
+                else default_temps["low"]
+            )
+        elif creativity == "medium":
+            return (
+                self.model_info.creativity_medium_temperature
+                if self.model_info.creativity_medium_temperature is not None
+                else default_temps["medium"]
+            )
+        else:  # high
+            return (
+                self.model_info.creativity_high_temperature
+                if self.model_info.creativity_high_temperature is not None
+                else default_temps["high"]
+            )
+
+
+class SSOConfig(BaseModel):
+    """SSO configuration (nested under SSO key in YAML)."""
+
     ROLE: str = "lhm-ab-mucgpt-user"
 
 
-class LangfuseSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_LANGFUSE_",
-        extra="ignore",
-        case_sensitive=False,
-    )
+class LangfuseConfig(BaseModel):
+    """Langfuse configuration (nested under LANGFUSE key in YAML)."""
+
     PUBLIC_KEY: str | None = None
-    SECRET_KEY: str | None = None
+    SECRET_KEY: SecretStr | None = None
     HOST: str | None = None
 
 
-class MCPSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="MUCGPT_MCP_", case_sensitive=False)
+class MCPSourceConfig(BaseModel):
+    """Single MCP source configuration."""
 
-    class MCPSource(BaseModel):
-        url: str
-        transport: MCPTransport
-        forward_token: bool = False
+    url: str
+    transport: MCPTransport
+    forward_token: bool = False
 
-    SOURCES: dict[str, MCPSource] | None = None
+
+class MCPConfig(BaseModel):
+    """MCP configuration (nested under MCP key in YAML)."""
+
+    SOURCES: dict[str, MCPSourceConfig] | None = None
     CACHE_TTL: int = 12 * 60 * 60  # 12h in s
 
 
-class RedisSettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="MUCGPT_REDIS_",
-        case_sensitive=False,
-    )
+class RedisConfig(BaseModel):
+    """Redis configuration (nested under REDIS key in YAML)."""
+
     HOST: str | None = None
     PORT: int = 6379
-    USERNAME: str | None = None
-    PASSWORD: str | None = None
+    USERNAME: SecretStr | None = None
+    PASSWORD: SecretStr | None = None
+
+
+# Backward-compatible aliases
+SSOSettings = SSOConfig
+LangfuseSettings = LangfuseConfig
+MCPSettings = MCPConfig
+RedisSettings = RedisConfig
 
 
 class Settings(BaseSettings):
@@ -266,6 +325,13 @@ class Settings(BaseSettings):
         env_prefix="MUCGPT_CORE_",
         extra="ignore",
         case_sensitive=False,
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        env_nested_delimiter="__",
+        nested_model_default_partial_update=True,
+        yaml_file="config.yaml",
+        yaml_file_encoding="utf-8",
     )
     # General settings
     VERSION: str = Field(default="")
@@ -280,6 +346,30 @@ class Settings(BaseSettings):
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: List[ModelsConfig] = []
+
+    # Nested sub-configurations
+    SSO: SSOConfig = Field(default_factory=SSOConfig)
+    LANGFUSE: LangfuseConfig = Field(default_factory=LangfuseConfig)
+    MCP: MCPConfig = Field(default_factory=MCPConfig)
+    REDIS: RedisConfig = Field(default_factory=RedisConfig)
+
+    # Customize settings sources to prioritize YAML config
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        return (
+            init_settings,
+            env_settings,
+            YamlConfigSettingsSource(settings_cls),
+            YamlConfigSettingsSource(settings_cls, yaml_file="shared-config.yaml"),
+            dotenv_settings,
+        )
 
     @field_validator("VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before")
     @staticmethod
@@ -570,10 +660,9 @@ def _match_model_entry(
 
 
 @lru_cache(maxsize=1)
-def get_langfuse_settings() -> LangfuseSettings:
+def get_langfuse_settings() -> LangfuseConfig:
     """Return cached Langfuse Settings instance."""
-    langfuse_settings = LangfuseSettings()
-    return langfuse_settings
+    return get_settings().LANGFUSE
 
 
 @lru_cache(maxsize=1)
@@ -584,21 +673,18 @@ def get_settings() -> Settings:
 
 
 @lru_cache(maxsize=1)
-def get_sso_settings() -> SSOSettings:
+def get_sso_settings() -> SSOConfig:
     """Return cached SSO Settings instance."""
-    sso_settings = SSOSettings()
-    return sso_settings
+    return get_settings().SSO
 
 
 @lru_cache(maxsize=1)
-def get_mcp_settings() -> MCPSettings:
+def get_mcp_settings() -> MCPConfig:
     """Return cached MCP Settings instance."""
-    mcp_settings = MCPSettings()
-    return mcp_settings
+    return get_settings().MCP
 
 
 @lru_cache(maxsize=1)
-def get_redis_settings() -> RedisSettings:
+def get_redis_settings() -> RedisConfig:
     """Return cached RedisSettings instance."""
-    redis_settings = RedisSettings()
-    return redis_settings
+    return get_settings().REDIS

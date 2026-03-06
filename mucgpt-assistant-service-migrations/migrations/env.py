@@ -14,6 +14,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import models for migrations from our dedicated models package
 from migrations.models.base import Base
 
+# Import settings to get database configuration
+from migrations.settings import get_db_schema, get_db_url
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -35,24 +38,8 @@ if not config.get_main_option("script_location"):
 
 
 def get_database_url():
-    """Get database URL from environment variables."""
-    # First try to get from DATABASE_URL environment variable
-    database_url = os.getenv("DATABASE_URL")
-    if database_url:
-        return database_url
-
-    # If not available, build from individual environment variables
-    db_user = os.getenv("MUCGPT_ASSISTANT_DB_USER")
-    db_password = os.getenv("MUCGPT_ASSISTANT_DB_PASSWORD")
-    db_host = os.getenv("MUCGPT_ASSISTANT_DB_HOST")
-    db_port = os.getenv("MUCGPT_ASSISTANT_DB_PORT", "5432")
-    db_name = os.getenv("MUCGPT_ASSISTANT_DB_NAME")
-
-    if not all([db_user, db_password, db_host, db_name]):
-        print("Error: Database environment variables not set", file=sys.stderr)
-        sys.exit(1)
-
-    return f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    """Get database URL from settings."""
+    return get_db_url()
 
 
 def run_migrations_offline() -> None:
@@ -68,11 +55,14 @@ def run_migrations_offline() -> None:
 
     """
     url = get_database_url()
+    schema = get_db_schema()
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        version_table_schema=schema,
+        include_schemas=schema is not None,
     )
 
     with context.begin_transaction():
@@ -80,7 +70,13 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)
+    schema = get_db_schema()
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=schema,
+        include_schemas=schema is not None,
+    )
 
     with context.begin_transaction():
         context.run_migrations()

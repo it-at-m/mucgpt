@@ -1,4 +1,4 @@
-import { Checkmark24Filled, ArrowImport24Filled, Dismiss24Regular } from "@fluentui/react-icons";
+import { Checkmark24Filled, Dismiss24Regular } from "@fluentui/react-icons";
 import {
     Button,
     Dialog,
@@ -18,10 +18,9 @@ import sharedStyles from "../shared/AssistantDialog.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useContext, useState, useMemo } from "react";
 import { LLMContext } from "../../LLMSelector/LLMContextProvider";
-import { Assistant, ToolInfo } from "../../../api";
-import { ASSISTANT_STORE } from "../../../constants";
-import { AssistantStorageService } from "../../../service/assistantstorage";
+import { ToolInfo } from "../../../api";
 import { createAssistantApi } from "../../../api/core-client";
+import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { Stepper, Step } from "../../Stepper";
 import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, useCreateAssistantState } from "../shared";
@@ -33,8 +32,6 @@ interface Props {
     showDialogInput: boolean;
     setShowDialogInput: (showDialogInput: boolean) => void;
 }
-
-const storageService = new AssistantStorageService(ASSISTANT_STORE);
 
 export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: Props) => {
     const [loading, setLoading] = useState<boolean>(false);
@@ -58,14 +55,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         tools,
         quickPrompts,
         examples,
-        temperature,
+        creativity,
         defaultModel,
         hasChanges,
         updateInput,
         updateTitle,
         updateDescription,
         updateSystemPrompt,
-        updateTemperature,
+        updateCreativity,
         updateDefaultModel,
         updateTools,
         updateTemplate,
@@ -94,33 +91,38 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
 
     // save assistant
     const onPromptButtonClicked = useCallback(async () => {
+        if (loading) return; // Prevent duplicate submissions
+
+        setLoading(true);
         try {
             const validQuickPrompts = quickPrompts.filter(qp => qp.label?.trim() && qp.prompt?.trim());
             const validExamples = examples.filter(ex => ex.text?.trim() && ex.value?.trim());
 
-            const assistant: Assistant = {
-                title: title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title,
-                description: description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description,
-                system_message: systemPrompt,
-                publish: false,
-                temperature: temperature,
+            const assistantTitle = title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title;
+            const assistantDescription = description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description;
+
+            // Create assistant as private on the assistant service
+            const response = await createCommunityAssistantApi({
+                name: assistantTitle,
+                description: assistantDescription,
+                system_prompt: systemPrompt,
+                creativity: creativity,
                 default_model: defaultModel,
-                quick_prompts: validQuickPrompts,
-                examples: validExamples,
-                version: "0",
+                tools: tools || [],
                 owner_ids: [],
+                examples: validExamples.map(e => ({ text: e.text, value: e.value })),
+                quick_prompts: validQuickPrompts.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
                 tags: [],
                 hierarchical_access: [],
-                tools: tools,
-                is_visible: true
-            };
-            const created_id = await storageService.createAssistantConfig(assistant);
-            if (created_id) {
+                is_visible: false // Private by default
+            });
+
+            if (response?.id) {
                 showSuccess(
                     t("components.create_assistant_dialog.assistant_saved_success"),
-                    t("components.create_assistant_dialog.assistant_saved_message", { title: assistant.title })
+                    t("components.create_assistant_dialog.assistant_saved_message", { title: assistantTitle })
                 );
-                navigate(`/assistant/${created_id}`);
+                navigate(`/owned/communityassistant/${response.id}`);
             } else {
                 console.error("Assistant could not be created");
                 showError(t("components.create_assistant_dialog.assistant_creation_failed"), t("components.create_assistant_dialog.save_config_failed"));
@@ -129,8 +131,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             console.error("Failed to save assistant", error);
             const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.save_assistant_failed");
             showError(t("components.create_assistant_dialog.assistant_save_failed"), errorMessage);
+        } finally {
+            setLoading(false);
         }
-    }, [title, description, systemPrompt, temperature, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [loading, title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -176,70 +180,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         updateDescription(input);
         setCurrentStep(2);
     }, [input, updateDescription]);
-
-    // Import assistant from JSON file
-    const importAssistant = useCallback(() => {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = ".json";
-
-        fileInput.onchange = async (e: Event) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (!file) return;
-
-            try {
-                // Read and parse file
-                const content = await file.text();
-                const importedData = JSON.parse(content);
-
-                // Basic validation - check required fields
-                if (!importedData.title || !importedData.system_message) {
-                    throw new Error(t("components.create_assistant_dialog.import_invalid_format"));
-                }
-
-                // Create assistant object with imported data
-                const assistant: Assistant = {
-                    title: importedData.title,
-                    description: importedData.description || "",
-                    system_message: importedData.system_message,
-                    publish: false,
-                    temperature: importedData.temperature ?? 0.7,
-                    default_model: importedData.default_model ?? defaultModel,
-                    quick_prompts: importedData.quick_prompts || [],
-                    examples: importedData.examples || [],
-                    version: "0",
-                    owner_ids: [],
-                    tags: importedData.tags || [],
-                    hierarchical_access: [],
-                    tools: importedData.tools || [],
-                    is_visible: true
-                };
-
-                const created_id = await storageService.createAssistantConfig(assistant);
-
-                if (created_id) {
-                    setShowDialogInput(false);
-                    resetAll();
-
-                    showSuccess(
-                        t("components.create_assistant_dialog.import_success"),
-                        t("components.create_assistant_dialog.import_success_message", { title: assistant.title })
-                    );
-
-                    navigate(`/assistant/${created_id}`);
-                } else {
-                    throw new Error(t("components.create_assistant_dialog.import_save_failed"));
-                }
-            } catch (error) {
-                console.error("Failed to import assistant", error);
-                const errorMessage = error instanceof Error ? error.message : t("components.create_assistant_dialog.import_failed");
-                showError(t("components.create_assistant_dialog.import_error"), errorMessage);
-            }
-        };
-
-        // Trigger file picker
-        fileInput.click();
-    }, [t, showSuccess, showError, navigate, setShowDialogInput, resetAll]);
 
     const steps: Step[] = useMemo(
         () => [
@@ -440,10 +380,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             <Stepper steps={steps} currentStep={currentStep} />
                             <div className={sharedStyles.scrollableDialogContent}>
                                 <AdvancedSettingsStep
-                                    temperature={temperature}
+                                    creativity={creativity}
                                     defaultModel={defaultModel}
                                     isOwner={true}
-                                    onTemperatureChange={updateTemperature}
+                                    onCreativityChange={updateCreativity}
                                     onDefaultModelChange={updateDefaultModel}
                                 />
                             </div>
@@ -499,8 +439,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setQuickPrompts,
         examples,
         setExamples,
-        temperature,
-        updateTemperature,
+        creativity,
+        updateCreativity,
         hasChanges,
         onCancelButtonClicked,
         onPromptButtonClicked
@@ -529,11 +469,6 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                     <div className={sharedStyles.dialogHeader}>
                         <DialogTitle className={sharedStyles.dialogTitle}>{t("components.create_assistant_dialog.dialog_title")}</DialogTitle>
                         <div className={sharedStyles.dialogHeaderActions}>
-                            {currentStep === 1 && (
-                                <Button size="medium" icon={<ArrowImport24Filled />} onClick={importAssistant} className={sharedStyles.importButton}>
-                                    {t("components.create_assistant_dialog.import")}
-                                </Button>
-                            )}
                             <Button
                                 appearance="subtle"
                                 size="small"

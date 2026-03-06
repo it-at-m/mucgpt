@@ -29,7 +29,8 @@ export type ChatTurn = {
 
 export type ChatRequest = {
     history: ChatTurn[];
-    temperature?: number;
+    creativity?: string;
+    temperature?: number; // Deprecated: for backward compatibility
     language?: string;
     system_message?: string;
     shouldStream?: boolean;
@@ -121,7 +122,7 @@ export type Assistant = {
     system_message: string;
     publish: boolean;
     id?: string;
-    temperature: number;
+    creativity: string;
     default_model?: string;
     examples?: ExampleModel[];
     quick_prompts?: QuickPrompt[];
@@ -148,7 +149,7 @@ export interface AssistantCreateInput {
     description?: string;
     system_prompt: string;
     hierarchical_access?: string[];
-    temperature?: number;
+    creativity?: string;
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
@@ -165,7 +166,8 @@ export interface AssistantVersionResponse {
     description?: string;
     system_prompt: string;
     hierarchical_access?: string[];
-    temperature: number;
+    creativity: string;
+    temperature?: number; // Deprecated: legacy support
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];
@@ -189,7 +191,7 @@ export interface AssistantUpdateInput {
     description?: string;
     system_prompt?: string;
     hierarchical_access?: string[];
-    temperature?: number;
+    creativity?: string;
     default_model?: string;
     tools?: ToolBase[];
     owner_ids?: string[];

@@ -1,6 +1,6 @@
 [project]
 name = "mucgpt-assistant-service"
-version = "0.5.1"
+version = "0.7.0"
 description = "Add your description here"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
@@ -17,7 +17,7 @@ dependencies = [
     "asyncpg>=0.30.0",
     "fastapi[standard]==0.118.0",
     "gitpython==3.1.45",
-    "joserfc==1.3.5",
+    "joserfc==1.6.3",
     "psycopg2-binary>=2.9.10",
     "pydantic-settings>=2.10.1",
     "requests>=2.32.5",
@@ -71,10 +71,10 @@ filterwarnings = [
 ]
 env = [
     "MUCGPT_ASSISTANT_LOG_CONFIG=src/logconf.yaml",
-    "MUCGPT_ASSISTANT_DB_HOST=test-host",
-    "MUCGPT_ASSISTANT_DB_NAME=test-db",
-    "MUCGPT_ASSISTANT_DB_USER=test-user",
-    "MUCGPT_ASSISTANT_DB_PASSWORD=test-password",
+    "MUCGPT_ASSISTANT_DB__HOST=test-host",
+    "MUCGPT_ASSISTANT_DB__NAME=test-db",
+    "MUCGPT_ASSISTANT_DB__USER=test-user",
+    "MUCGPT_ASSISTANT_DB__PASSWORD=test-password",
 ]
 
 [tool.coverage.paths]

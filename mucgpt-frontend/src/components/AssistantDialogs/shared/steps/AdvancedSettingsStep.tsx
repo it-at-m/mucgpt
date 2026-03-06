@@ -3,37 +3,35 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useContext } from "react";
 import { LLMContext } from "../../../LLMSelector/LLMContextProvider";
 import sharedStyles from "../AssistantDialog.module.css";
+import { CREATIVITY_HIGH, CREATIVITY_LOW, CREATIVITY_MEDIUM } from "../../../../constants";
 
 interface AdvancedSettingsStepProps {
-    temperature: number;
+    creativity: string;
     defaultModel?: string;
     isOwner: boolean;
-    onTemperatureChange: (temperature: number) => void;
+    onCreativityChange: (creativity: string) => void;
     onDefaultModelChange?: (model: string | undefined) => void;
     onHasChanged?: (hasChanged: boolean) => void;
 }
 
 export const AdvancedSettingsStep = ({
-    temperature,
+    creativity,
     defaultModel,
     isOwner,
-    onTemperatureChange,
+    onCreativityChange,
     onDefaultModelChange,
     onHasChanged
 }: AdvancedSettingsStepProps) => {
     const { t } = useTranslation();
     const { availableLLMs } = useContext(LLMContext);
 
-    const min_temp = 0;
-    const max_temp = 1;
-
-    // Temperature change
-    const onTemperatureChangeHandler = useCallback(
-        (ev: React.ChangeEvent<HTMLInputElement>) => {
-            onTemperatureChange(Number(ev.target.value));
+    // Creativity change
+    const onCreativityChangeHandler = useCallback(
+        (_ev: any, data: any) => {
+            onCreativityChange(data.optionValue);
             onHasChanged?.(true);
         },
-        [onTemperatureChange, onHasChanged]
+        [onCreativityChange, onHasChanged]
     );
 
     // Model change
@@ -46,32 +44,37 @@ export const AdvancedSettingsStep = ({
         [onDefaultModelChange, onHasChanged]
     );
 
+    const creativityMap: Record<string, string> = {
+        [CREATIVITY_LOW]: t("components.edit_assistant_dialog.creativity_low"),
+        [CREATIVITY_MEDIUM]: t("components.edit_assistant_dialog.creativity_medium"),
+        [CREATIVITY_HIGH]: t("components.edit_assistant_dialog.creativity_high")
+    };
+
     return (
         <DialogContent>
-            <Field size="large" className={sharedStyles.rangeField}>
+            <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>
-                    <InfoLabel
-                        info={
-                            <div>
-                                {t("components.chattsettingsdrawer.temperature_article")} <i>{t("components.chattsettingsdrawer.temperature")}</i>{" "}
-                                {t("components.chattsettingsdrawer.temperature_info")}
-                            </div>
-                        }
-                    >
-                        {t("components.edit_assistant_dialog.temperature")}
+                    <InfoLabel info={<div>{t("components.chattsettingsdrawer.creativity_info")}</div>}>
+                        {t("components.edit_assistant_dialog.creativity")}
                     </InfoLabel>
                 </label>
-                <input
-                    type="range"
-                    min={min_temp}
-                    max={max_temp}
-                    step={0.05}
-                    value={temperature}
-                    onChange={onTemperatureChangeHandler}
+                <Dropdown
+                    placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
+                    value={creativityMap[creativity] || creativity}
+                    selectedOptions={[creativity]}
+                    onOptionSelect={onCreativityChangeHandler}
                     disabled={!isOwner}
-                    className={sharedStyles.rangeInput}
-                />
-                <div className={sharedStyles.rangeValue}>{temperature}</div>
+                >
+                    <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
+                        {t("components.edit_assistant_dialog.creativity_low")}
+                    </Option>
+                    <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
+                        {t("components.edit_assistant_dialog.creativity_medium")}
+                    </Option>
+                    <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
+                        {t("components.edit_assistant_dialog.creativity_high")}
+                    </Option>
+                </Dropdown>
             </Field>
             <Field size="large" className={sharedStyles.fieldSection}>
                 <label className={sharedStyles.formLabel}>

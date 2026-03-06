@@ -1,27 +1,28 @@
 from langfuse import Langfuse
 from langfuse.langchain import CallbackHandler
 
-from config.settings import LangfuseSettings
+from config.settings import LangfuseConfig
 from core.logtools import getLogger
 
 logger = getLogger()
+
 
 class LangfuseProvider:
     _langfuse_callback: CallbackHandler | None = None
 
     @staticmethod
-    def init(version: str, langfuse_cfg: LangfuseSettings):
+    def init(version: str, langfuse_cfg: LangfuseConfig):
         if langfuse_cfg is not None:
             if (
-                    langfuse_cfg.HOST
-                    and langfuse_cfg.SECRET_KEY
-                    and langfuse_cfg.PUBLIC_KEY
+                langfuse_cfg.HOST
+                and langfuse_cfg.SECRET_KEY
+                and langfuse_cfg.PUBLIC_KEY
             ):
                 try:
                     langfuse = Langfuse(
                         public_key=langfuse_cfg.PUBLIC_KEY,
                         host=langfuse_cfg.HOST,
-                        secret_key=langfuse_cfg.SECRET_KEY,
+                        secret_key=langfuse_cfg.SECRET_KEY.get_secret_value(),
                         release=version,
                     )
                     langfuse.auth_check()

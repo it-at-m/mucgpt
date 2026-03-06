@@ -131,7 +131,7 @@ export const AssistantDetailDialog = ({ isOpen, assistant, ownedAssistants, subs
                         {/* System Message Section */}
                         <div className={styles.systemMessageSection}>
                             <Text size={300} weight="semibold" className={styles.sectionTitle}>
-                                {t("components.community_assistants.system_message")}
+                                {t("components.community_assistants.system_prompt")}
                             </Text>
                             <div className={styles.systemMessageContent}>
                                 <MarkdownRenderer>{assistant.system_message}</MarkdownRenderer>

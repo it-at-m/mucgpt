@@ -7,7 +7,14 @@ import styles from "./Answer.module.css";
 import { AskResponse } from "../../api";
 import { AnswerIcon } from "./AnswerIcon";
 import { useTranslation } from "react-i18next";
-import { ArrowSync24Regular, CheckmarkSquare24Regular, ContentView24Regular, Copy24Regular, ChevronDown20Regular, ChevronRight20Regular } from "@fluentui/react-icons";
+import {
+    ArrowSync24Regular,
+    CheckmarkSquare24Regular,
+    ContentView24Regular,
+    Copy24Regular,
+    ChevronDown20Regular,
+    ChevronRight20Regular
+} from "@fluentui/react-icons";
 import { Button, Tooltip } from "@fluentui/react-components";
 import { QuickPromptList } from "../QuickPrompt/QuickPromptList";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
@@ -55,13 +62,7 @@ export const Answer = ({ answer, onRegenerateResponseClicked, onQuickPromptSend 
             setProcessedReasoning("");
             return;
         }
-        setProcessedReasoning(
-            answer.reasoning_content
-                .replace(/\\\[/g, "$$$")
-                .replace(/\\\]/g, "$$$")
-                .replace(/\\\(/g, "$$$")
-                .replace(/\\\)/g, "$$$")
-        );
+        setProcessedReasoning(answer.reasoning_content.replace(/\\\[/g, "$$$").replace(/\\\]/g, "$$$").replace(/\\\(/g, "$$$").replace(/\\\)/g, "$$$"));
     }, [answer.reasoning_content]);
 
     return (

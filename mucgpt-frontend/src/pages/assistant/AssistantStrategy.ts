@@ -1,8 +1,9 @@
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantUpdateInput, Assistant } from "../../api/models";
-import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { convertTemperatureToCreativity } from "../../service/migration";
 
 export interface AssistantStrategy {
     loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined>;
@@ -14,7 +15,7 @@ export interface AssistantStrategy {
 }
 
 export class LocalAssistantStrategy implements AssistantStrategy {
-    isOwned = false;
+    isOwned = true;
     canEdit = true;
     requiresReloadOnSave = false;
 
@@ -49,7 +50,8 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
             description: latest.description || "",
             system_message: latest.system_prompt,
             publish: true,
-            temperature: latest.temperature,
+            // Use creativity if available, otherwise convert temperature, fallback to "low"
+            creativity: latest.creativity || (latest.temperature !== undefined ? convertTemperatureToCreativity(latest.temperature) : CREATIVITY_LOW),
             default_model: latest.default_model,
             version: latest.version.toString(),
             examples: latest.examples || [],
@@ -66,7 +68,6 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
         await unsubscribeFromAssistantApi(assistantId);
         await assistantStorageService.deleteChatsForAssistant(assistantId);
         await this.communityStorageService.deleteConfigForAssistant(assistantId);
-        window.location.href = "/";
     }
 }
 
@@ -84,7 +85,7 @@ export class DeletedCommunityAssistantStrategy implements AssistantStrategy {
             description: response?.description || "",
             system_message: "",
             publish: true,
-            temperature: 0,
+            creativity: CREATIVITY_LOW,
             version: "0",
             examples: [],
             quick_prompts: [],
@@ -99,7 +100,6 @@ export class DeletedCommunityAssistantStrategy implements AssistantStrategy {
     async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
         await assistantStorageService.deleteChatsForAssistant(assistantId);
         await this.communityStorageService.deleteConfigForAssistant(assistantId);
-        window.location.href = "/";
     }
 }
 
@@ -117,7 +117,7 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             description: latest.description || "",
             system_message: latest.system_prompt,
             publish: true,
-            temperature: latest.temperature,
+            creativity: latest.creativity || (latest.temperature !== undefined ? convertTemperatureToCreativity(latest.temperature) : "medium"),
             default_model: latest.default_model,
             version: latest.version.toString(),
             examples: latest.examples,
@@ -130,8 +130,10 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
         };
     }
 
-    async deleteAssistant(assistantId: string): Promise<void> {
+    async deleteAssistant(assistantId: string, assistantStorageService: AssistantStorageService): Promise<void> {
         await deleteCommunityAssistantApi(assistantId);
+        // Also clean up any local copy that may exist from before the assistant was published
+        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
     }
 
     async updateAssistant(assistantId: string, newAssistant: Assistant): Promise<any> {
@@ -140,7 +142,7 @@ export class OwnedCommunityAssistantStrategy implements AssistantStrategy {
             description: newAssistant.description,
             system_prompt: newAssistant.system_message,
             hierarchical_access: newAssistant.hierarchical_access,
-            temperature: newAssistant.temperature,
+            creativity: newAssistant.creativity,
             default_model: newAssistant.default_model,
             tools: newAssistant.tools || [],
             owner_ids: newAssistant.owner_ids,

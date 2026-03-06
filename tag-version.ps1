@@ -76,15 +76,13 @@ function Update-ManifestVersion {
     )
 
     if ($ManifestType -eq "pyproject") {
-        $content = Get-Content -Raw -Path $FilePath
-        $regex = [regex]::new('(?m)^(?<prefix>\s*version\s*=\s*")[^\"]+(?<suffix>")')
-
-        if (-not $regex.IsMatch($content)) {
-            throw "Could not find a version entry in $FilePath"
+        $projectDir = Split-Path -Parent $FilePath
+        Write-Host "Running: uv version $NewVersion" -ForegroundColor DarkGray
+        $uvOutput = uv version $NewVersion --project $projectDir 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            throw "uv version failed: $uvOutput"
         }
-
-        $updatedContent = $regex.Replace($content, { param($match) return $match.Groups['prefix'].Value + $NewVersion + $match.Groups['suffix'].Value }, 1)
-        [System.IO.File]::WriteAllText($FilePath, $updatedContent, (New-Object System.Text.UTF8Encoding $false))
+        Write-Host $uvOutput -ForegroundColor DarkGray
     }
     elseif ($ManifestType -eq "packageJson") {
         $content = Get-Content -Raw -Path $FilePath
@@ -194,6 +192,14 @@ if (-not $VersionType) {
     }
 
     Write-Host "Selected version type: $VersionType" -ForegroundColor Green
+}
+
+# Fetch latest tags from remote
+Write-Host "Fetching latest tags from remote..." -ForegroundColor DarkGray
+git fetch --tags | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Failed to fetch remote tags. Aborting to avoid using stale tag data." -ForegroundColor Red
+    exit 1
 }
 
 # Define the prefix based on the service

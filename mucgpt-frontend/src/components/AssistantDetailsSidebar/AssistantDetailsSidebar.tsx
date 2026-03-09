@@ -35,7 +35,7 @@ interface AssistantDetailsSidebarProps {
     ownedAssistantIds: Set<string>;
     onStartChat?: () => void;
     onEdit?: () => void;
-    onExport: () => void;
+    onExport?: () => void;
     onDelete?: () => void;
     hideStartChat?: boolean;
 }
@@ -51,7 +51,6 @@ export const AssistantDetailsSidebar = ({
     onDelete,
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
-
     const { t } = useTranslation();
 
     const getCreativityConfig = (creativity: string) => {
@@ -128,9 +127,11 @@ export const AssistantDetailsSidebar = ({
                                             {t("common.edit")}
                                         </MenuItem>
                                     )}
-                                    <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
-                                        {t("components.assistantsettingsdrawer.export")}
-                                    </MenuItem>
+                                    {onExport && (
+                                        <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
+                                            {t("components.assistantsettingsdrawer.export")}
+                                        </MenuItem>
+                                    )}
                                     {isOwned && (
                                         <MenuItem icon={<Delete20Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
                                             {t("common.delete")}

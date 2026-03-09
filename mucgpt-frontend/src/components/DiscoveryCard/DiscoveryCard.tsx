@@ -10,8 +10,7 @@ export interface DiscoveryCardProps extends CardProps {
     linkTo?: string;
 
     header?: ReactNode;
-    titleStyle?: React.CSSProperties;
-    descriptionLines?: number;
+    titleClassName?: string;
     isSelected?: boolean;
 }
 
@@ -25,8 +24,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         header,
         className,
         onClick,
-        titleStyle,
-        descriptionLines = 10,
+        titleClassName,
         isSelected,
         ...rest
     } = props;
@@ -47,15 +45,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         }
 
         if (title) {
-            return (
-                <CardHeader
-                    header={
-                        <div className={styles.headerText} style={titleStyle}>
-                            {title}
-                        </div>
-                    }
-                />
-            );
+            return <CardHeader header={<div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>} />;
         }
 
         return null;
@@ -64,11 +54,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
     const cardContent = (
         <Card id={id} ref={ref} className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)} onClick={handleClick} {...rest}>
             {renderHeader()}
-            {description && (
-                <CardPreview className={styles.description} style={{ WebkitLineClamp: descriptionLines } as React.CSSProperties}>
-                    {description}
-                </CardPreview>
-            )}
+            {description && <CardPreview className={styles.description}>{description}</CardPreview>}
         </Card>
     );
 

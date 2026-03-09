@@ -6,7 +6,13 @@ import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
-import { getAllCommunityAssistantsApi, getOwnedCommunityAssistants, getUserSubscriptionsApi, deleteCommunityAssistantApi } from "../../api/assistant-client";
+import {
+    getAllCommunityAssistantsApi,
+    getOwnedCommunityAssistants,
+    getUserSubscriptionsApi,
+    deleteCommunityAssistantApi,
+    getCommunityAssistantApi
+} from "../../api/assistant-client";
 import { Assistant, AssistantResponse } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
@@ -19,6 +25,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { downloadAssistantExport, mapVersionToExportData } from "../../utils/assistant-export";
 
 type SortKey = "title" | "updated" | "subscriptions";
 
@@ -58,6 +65,29 @@ const Discovery = () => {
         setHeader(DEFAULTHEADER);
     }, [setHeader]);
 
+    const exportAssistant = useCallback(async () => {
+        if (!selectedAssistant) return;
+
+        try {
+            let assistantData = selectedAssistant.rawData;
+            if (!assistantData?.latest_version) {
+                assistantData = await getCommunityAssistantApi(selectedAssistant.id);
+            }
+
+            const lv = assistantData?.latest_version;
+            if (!lv) {
+                showError(t("components.assistantsettingsdrawer.export"), t("components.import_assistant.import_invalid_format"));
+                return;
+            }
+            downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+            showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+        } catch (error) {
+            console.error("Failed to export assistant", error);
+            const errorMessage = error instanceof Error ? error.message : "Export failed";
+            showError(t("components.assistantsettingsdrawer.export"), errorMessage);
+        }
+    }, [selectedAssistant, showError, showSuccess, t]);
+
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
         fileInput.type = "file";
@@ -87,9 +117,9 @@ const Discovery = () => {
                     version: "0",
                     owner_ids: [],
                     tags: importedData.tags || [],
-                    hierarchical_access: [],
+                    hierarchical_access: importedData.hierarchical_access || [],
                     tools: importedData.tools || [],
-                    is_visible: true
+                    is_visible: typeof importedData.is_visible === "boolean" ? importedData.is_visible : true
                 };
 
                 const created_id = await storageService.createAssistantConfig(assistant);
@@ -416,7 +446,6 @@ const Discovery = () => {
                                         title={assistant.title}
                                         description={assistant.description}
                                         onClick={() => handleAssistantClick(assistant)}
-                                        descriptionLines={2}
                                         isSelected={selectedAssistant?.id === assistant.id}
                                     />
                                 ))}
@@ -436,6 +465,7 @@ const Discovery = () => {
                     ownedAssistantIds={ownedAssistantIds}
                     onStartChat={startConversation}
                     onEdit={editAssistant}
+                    onExport={exportAssistant}
                     onDelete={deleteAssistant}
                 />
             </div>

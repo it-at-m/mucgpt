@@ -11,15 +11,15 @@ import {
     getOwnedCommunityAssistants,
     getUserSubscriptionsApi,
     deleteCommunityAssistantApi,
-    getCommunityAssistantApi
+    getCommunityAssistantApi,
+    createCommunityAssistantApi
 } from "../../api/assistant-client";
-import { Assistant, AssistantResponse } from "../../api/models";
+import { AssistantResponse } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { CreateAssistantDialog } from "../../components/AssistantDialogs/CreateAssistantDialog/CreateAssistantDialog";
-import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
@@ -29,7 +29,6 @@ import { downloadAssistantExport, mapVersionToExportData } from "../../utils/ass
 
 type SortKey = "title" | "updated" | "subscriptions";
 
-const storageService = new AssistantStorageService(ASSISTANT_STORE);
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 
 const Discovery = () => {
@@ -105,32 +104,28 @@ const Discovery = () => {
                     throw new Error(t("components.import_assistant.import_invalid_format"));
                 }
 
-                const assistant: Assistant = {
-                    title: importedData.title,
+                const createdAssistant = await createCommunityAssistantApi({
+                    name: importedData.title,
                     description: importedData.description || "",
-                    system_message: importedData.system_message,
-                    publish: false,
+                    system_prompt: importedData.system_message,
                     creativity: importedData.creativity || CREATIVITY_LOW,
                     default_model: importedData.default_model,
                     quick_prompts: importedData.quick_prompts || [],
                     examples: importedData.examples || [],
-                    version: "0",
                     owner_ids: [],
                     tags: importedData.tags || [],
                     hierarchical_access: importedData.hierarchical_access || [],
                     tools: importedData.tools || [],
-                    is_visible: typeof importedData.is_visible === "boolean" ? importedData.is_visible : true
-                };
+                    is_visible: importedData.is_visible || false
+                });
 
-                const created_id = await storageService.createAssistantConfig(assistant);
-
-                if (created_id) {
+                if (createdAssistant?.id) {
                     showSuccess(
                         t("components.import_assistant.import_success"),
-                        t("components.import_assistant.import_success_message", { title: assistant.title })
+                        t("components.import_assistant.import_success_message", { title: importedData.title })
                     );
 
-                    navigate(`/assistant/${created_id}`);
+                    navigate(`/owned/communityassistant/${createdAssistant.id}`);
                 } else {
                     throw new Error(t("components.import_assistant.import_save_failed"));
                 }
@@ -403,8 +398,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                  ? t("components.community_assistants.sort_updated", "Last updated")
-                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                    ? t("components.community_assistants.sort_updated", "Last updated")
+                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

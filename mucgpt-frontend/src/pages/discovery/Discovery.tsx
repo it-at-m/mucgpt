@@ -116,7 +116,7 @@ const Discovery = () => {
                     tags: importedData.tags || [],
                     hierarchical_access: importedData.hierarchical_access || [],
                     tools: importedData.tools || [],
-                    is_visible: false
+                    is_visible: importedData.is_visible || false
                 });
 
                 if (createdAssistant?.id) {
@@ -398,8 +398,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                  ? t("components.community_assistants.sort_updated", "Last updated")
-                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                    ? t("components.community_assistants.sort_updated", "Last updated")
+                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"

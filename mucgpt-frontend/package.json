@@ -1,13 +1,13 @@
 {
     "dependencies": {
         "@fluentui/react": "8.125.5",
-        "@fluentui/react-components": "9.73.1",
+        "@fluentui/react-components": "9.73.2",
         "@fluentui/react-icons": "2.0.320",
         "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
         "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.1.0",
         "@react-spring/web": "10.0.3",
         "dompurify": "3.3.2",
-        "i18next": "25.8.13",
+        "i18next": "25.8.14",
         "idb": "8.0.3",
         "markmap-common": "0.18.9",
         "markmap-lib": "0.18.12",
@@ -32,7 +32,7 @@
     },
     "devDependencies": {
         "@types/dompurify": "3.2.0",
-        "@types/node": "22.19.13",
+        "@types/node": "22.19.15",
         "@types/react": "18.3.28",
         "@types/react-dom": "18.3.7",
         "@types/react-syntax-highlighter": "15.5.13",

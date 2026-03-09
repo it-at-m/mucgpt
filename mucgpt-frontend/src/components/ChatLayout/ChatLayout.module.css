@@ -46,7 +46,7 @@
 }
 
 .headerTitleButton {
-    color: inherit;
+    color: var(--colorNeutralForeground1) !important;
     font-family: inherit;
     font-size: inherit !important;
     font-weight: inherit;

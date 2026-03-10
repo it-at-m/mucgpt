@@ -99,6 +99,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
+    const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
 
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
@@ -138,6 +139,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     useEffect(() => {
         const loadData = async () => {
             if (assistant_id) {
+                setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
                 isLoadingRef.current = true;
                 let notSubscribed = false;
@@ -156,6 +158,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     }
                 }
+
+                setIsOwnershipResolved(true);
 
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
@@ -234,7 +238,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setAssistantInfoData(null);
         setIsInfoDrawerOpen(false);
 
-        if (strategy.canEdit || !assistant_id) {
+        if (strategy.canEdit || !assistant_id || !isOwnershipResolved) {
             setIsAssistantInfoLoading(false);
             return;
         }
@@ -274,7 +278,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return () => {
             isCurrentRequest = false;
         };
-    }, [assistant_id, strategy.canEdit]);
+    }, [assistant_id, strategy.canEdit, isOwnershipResolved]);
 
     // get History-Funktion
     const fetchHistory = useCallback(() => {

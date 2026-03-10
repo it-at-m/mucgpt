@@ -232,15 +232,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Load info data for non-owner community assistants
     useEffect(() => {
         setAssistantInfoData(null);
+        setIsInfoDrawerOpen(false);
 
         if (strategy.canEdit || !assistant_id) {
             setIsAssistantInfoLoading(false);
-            setIsInfoDrawerOpen(false);
             return;
         }
 
         setIsAssistantInfoLoading(true);
-        setIsInfoDrawerOpen(true);
 
         const requestId = ++assistantInfoRequestIdRef.current;
         let isCurrentRequest = true;

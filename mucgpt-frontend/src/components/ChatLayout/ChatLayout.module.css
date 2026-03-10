@@ -17,8 +17,7 @@
     background: var(--colorNeutralBackground1);
     z-index: 5;
     transition:
-        left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-        right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+        left 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
     box-sizing: border-box;
 }
 
@@ -86,7 +85,7 @@
     box-sizing: border-box;
     transition:
         left 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
-        right 300ms cubic-bezier(0.2, 0.9, 0.2, 1);
+        right 160ms cubic-bezier(0.2, 0.9, 0.2, 1);
     background: var(--colorNeutralBackground1);
     margin-bottom: 58px;
 }

@@ -4,6 +4,15 @@
     scrollbar-color: var(--primary) var(--surface);
 }
 
+.loadingContainer {
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
 .headerContainer {
     display: flex;
     flex-direction: column;

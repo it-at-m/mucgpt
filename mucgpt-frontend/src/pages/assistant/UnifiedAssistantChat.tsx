@@ -62,6 +62,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isLoadingRef = useRef(false);
+    const assistantInfoRequestIdRef = useRef(0);
 
     // useEffect für den Chat-Status
     useEffect(() => {
@@ -97,6 +98,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
+    const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
 
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
@@ -229,14 +231,26 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Load info data for non-owner community assistants
     useEffect(() => {
+        setAssistantInfoData(null);
+
         if (strategy.canEdit || !assistant_id) {
-            setAssistantInfoData(null);
+            setIsAssistantInfoLoading(false);
             setIsInfoDrawerOpen(false);
             return;
         }
 
+        setIsAssistantInfoLoading(true);
+        setIsInfoDrawerOpen(true);
+
+        const requestId = ++assistantInfoRequestIdRef.current;
+        let isCurrentRequest = true;
+
         getCommunityAssistantApi(assistant_id)
             .then(response => {
+                if (!isCurrentRequest || requestId !== assistantInfoRequestIdRef.current) {
+                    return;
+                }
+
                 setAssistantInfoData({
                     id: response.id,
                     title: response.latest_version.name,
@@ -246,8 +260,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     tags: response.latest_version.tags || [],
                     rawData: response
                 });
+                setIsAssistantInfoLoading(false);
             })
-            .catch(err => console.error("Failed to load assistant info data:", err));
+            .catch(err => {
+                if (!isCurrentRequest || requestId !== assistantInfoRequestIdRef.current) {
+                    return;
+                }
+                setAssistantInfoData(null);
+                setIsAssistantInfoLoading(false);
+                console.error("Failed to load assistant info data:", err);
+            });
+
+        return () => {
+            isCurrentRequest = false;
+        };
     }, [assistant_id, strategy.canEdit]);
 
     // get History-Funktion
@@ -597,7 +623,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 onClick={() => setShowEditDialog(true)}
                                 aria-label={t("components.assistantsettingsdrawer.show_configurations")}
                             />
-                        ) : assistantInfoData ? (
+                        ) : assistantInfoData || isAssistantInfoLoading ? (
                             <Button
                                 appearance="subtle"
                                 icon={<Info24Regular />}
@@ -606,7 +632,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             />
                         ) : undefined
                     }
-                    onHeaderClick={assistantInfoData && !strategy?.canEdit ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
+                    onHeaderClick={!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading) ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
                     infoDrawerOpen={isInfoDrawerOpen}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
@@ -630,6 +656,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isLoadingRef.current,
         strategy,
         assistantInfoData,
+        isAssistantInfoLoading,
         isInfoDrawerOpen
     ]);
 
@@ -659,12 +686,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     );
                 }}
             />
-            {assistantInfoData && (
+            {!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
                 <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
                     <AssistantDetailsSidebar
                         isOpen={isInfoDrawerOpen}
                         onClose={() => setIsInfoDrawerOpen(false)}
                         assistant={assistantInfoData}
+                        isLoading={isAssistantInfoLoading}
                         ownedAssistantIds={new Set()}
                         hideStartChat={true}
                     />

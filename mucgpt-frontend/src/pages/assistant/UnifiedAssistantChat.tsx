@@ -268,6 +268,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 }
                 setAssistantInfoData(null);
                 setIsAssistantInfoLoading(false);
+                setIsInfoDrawerOpen(false);
                 console.error("Failed to load assistant info data:", err);
             });
 

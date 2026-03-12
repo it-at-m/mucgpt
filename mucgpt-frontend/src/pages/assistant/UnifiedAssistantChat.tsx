@@ -494,7 +494,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 clearOnSend
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
-                onSend={question => callApi(question)}
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                onSend={(question, _data)=> callApi(question)}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}

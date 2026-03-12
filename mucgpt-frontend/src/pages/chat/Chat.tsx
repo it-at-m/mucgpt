@@ -558,7 +558,8 @@ const Chat = () => {
                 clearOnSend
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
-                onSend={question => callApi(question, systemPrompt)}
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                onSend={(question, _data) => callApi(question, systemPrompt)}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}

@@ -23,6 +23,7 @@ import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { AssistantCard } from "../../components/AssistantCard";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog"
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -108,7 +109,9 @@ const Menu = () => {
         setGetCommunityAssistants(true);
     };
 
-    const onSendQuestion = (question: string) => {
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const onSendQuestion = (question: string, _data: UploadedData[]) => {
         let url = `#/chat?q=${encodeURIComponent(question)}`;
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;

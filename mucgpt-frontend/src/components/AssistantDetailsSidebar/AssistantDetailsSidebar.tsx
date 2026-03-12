@@ -1,4 +1,4 @@
-import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem } from "@fluentui/react-components";
+import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, Spinner } from "@fluentui/react-components";
 import {
     Dismiss24Regular,
     Chat24Regular,
@@ -32,22 +32,26 @@ interface AssistantDetailsSidebarProps {
     isOpen: boolean;
     onClose: () => void;
     assistant: AssistantCardData | null;
+    isLoading?: boolean;
     ownedAssistantIds: Set<string>;
-    onStartChat: () => void;
-    onEdit: () => void;
-    onExport: () => void;
-    onDelete: () => void;
+    onStartChat?: () => void;
+    onEdit?: () => void;
+    onExport?: () => void;
+    onDelete?: () => void;
+    hideStartChat?: boolean;
 }
 
 export const AssistantDetailsSidebar = ({
     isOpen,
     onClose,
     assistant,
+    isLoading = false,
     ownedAssistantIds,
     onStartChat,
     onEdit,
     onExport,
-    onDelete
+    onDelete,
+    hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
 
@@ -89,90 +93,107 @@ export const AssistantDetailsSidebar = ({
                         <Button appearance="subtle" aria-label={t("common.close")} icon={<Dismiss24Regular />} onClick={onClose} />
                     </div>
                     <div id="sidebar-title" className={styles.sidebarTitle}>
-                        {assistant?.title}
+                        {assistant?.title || (isLoading ? t("common.loading") : "")}
                     </div>
                 </div>
             </DrawerHeader>
 
             <DrawerBody className={styles.drawerBody}>
-                <div className={styles.creativitySection}>
-                    <div className={styles.creativityBadge}>
-                        <span className={styles.creativityIcon}>{creativityConfig.icon}</span>
-                        <span>{creativityConfig.text}</span>
+                {isLoading ? (
+                    <div className={styles.loadingContainer}>
+                        <Spinner size="extra-large" />
+                        <Text>{t("common.loading")}</Text>
                     </div>
-                    <Text className={styles.creativityDescription}>{creativityConfig.description}</Text>
-                </div>
+                ) : (
+                    <>
+                        <div className={styles.creativitySection}>
+                            <div className={styles.creativityBadge}>
+                                <span className={styles.creativityIcon}>{creativityConfig.icon}</span>
+                                <span>{creativityConfig.text}</span>
+                            </div>
+                            <Text className={styles.creativityDescription}>{creativityConfig.description}</Text>
+                        </div>
 
-                {assistant && (
-                    <div className={styles.startButtonRow}>
-                        <Button appearance="primary" className={styles.startConversationButton} icon={<Chat24Regular />} onClick={onStartChat} size="large">
-                            {t("components.community_assistants.start_chat", "Start Conversation")}
-                        </Button>
-                        <Menu>
-                            <MenuTrigger disableButtonEnhancement>
+                        {assistant && !hideStartChat && (
+                            <div className={styles.startButtonRow}>
                                 <Button
                                     appearance="primary"
-                                    className={styles.moreOptionsButton}
-                                    icon={<MoreVertical20Regular />}
-                                    aria-label={t("components.community_assistants.more_options", "More options")}
+                                    className={styles.startConversationButton}
+                                    icon={<Chat24Regular />}
+                                    onClick={onStartChat}
                                     size="large"
-                                />
-                            </MenuTrigger>
-                            <MenuPopover>
-                                <MenuList>
-                                    {isOwned && (
-                                        <MenuItem icon={<Edit20Regular />} onClick={onEdit}>
-                                            {t("common.edit")}
-                                        </MenuItem>
-                                    )}
-                                    <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
-                                        {t("components.assistantsettingsdrawer.export")}
-                                    </MenuItem>
-                                    {isOwned && (
-                                        <MenuItem icon={<Delete20Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
-                                            {t("common.delete")}
-                                        </MenuItem>
-                                    )}
-                                </MenuList>
-                            </MenuPopover>
-                        </Menu>
-                    </div>
-                )}
+                                >
+                                    {t("components.community_assistants.start_chat", "Start Conversation")}
+                                </Button>
+                                <Menu>
+                                    <MenuTrigger disableButtonEnhancement>
+                                        <Button
+                                            appearance="primary"
+                                            className={styles.moreOptionsButton}
+                                            icon={<MoreVertical20Regular />}
+                                            aria-label={t("components.community_assistants.more_options", "More options")}
+                                            size="large"
+                                        />
+                                    </MenuTrigger>
+                                    <MenuPopover>
+                                        <MenuList>
+                                            {isOwned && (
+                                                <MenuItem icon={<Edit20Regular />} onClick={onEdit}>
+                                                    {t("common.edit")}
+                                                </MenuItem>
+                                            )}
+                                            {onExport && (
+                                                <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
+                                                    {t("components.assistantsettingsdrawer.export")}
+                                                </MenuItem>
+                                            )}
+                                            {isOwned && (
+                                                <MenuItem icon={<Delete20Regular />} onClick={onDelete} className={styles.menuDeleteItem}>
+                                                    {t("common.delete")}
+                                                </MenuItem>
+                                            )}
+                                        </MenuList>
+                                    </MenuPopover>
+                                </Menu>
+                            </div>
+                        )}
 
-                <div className={styles.sidebarSection}>
-                    <div className={styles.sectionHeader}>
-                        <Book24Regular className={styles.sectionIcon} />
-                        <span>{t("components.community_assistants.about", "ABOUT")}</span>
-                    </div>
-                    <Text className={styles.aboutText}>{assistant?.description}</Text>
-                </div>
-
-                {enabledTools.length > 0 && (
-                    <div className={styles.sidebarSection}>
-                        <div className={styles.sectionHeader}>
-                            <Sparkle24Regular className={styles.sectionIcon} />
-                            <span>{t("components.community_assistants.enabled_tools", "ENABLED TOOLS")}</span>
+                        <div className={styles.sidebarSection}>
+                            <div className={styles.sectionHeader}>
+                                <Book24Regular className={styles.sectionIcon} />
+                                <span>{t("components.community_assistants.about", "ABOUT")}</span>
+                            </div>
+                            <Text className={styles.aboutText}>{assistant?.description}</Text>
                         </div>
-                        <div className={styles.toolList}>
-                            {enabledTools.map(tool => (
-                                <div key={tool.id} className={styles.toolPill}>
-                                    {tool.id}
+
+                        {enabledTools.length > 0 && (
+                            <div className={styles.sidebarSection}>
+                                <div className={styles.sectionHeader}>
+                                    <Sparkle24Regular className={styles.sectionIcon} />
+                                    <span>{t("components.community_assistants.enabled_tools", "ENABLED TOOLS")}</span>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                                <div className={styles.toolList}>
+                                    {enabledTools.map(tool => (
+                                        <div key={tool.id} className={styles.toolPill}>
+                                            {tool.id}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                {assistant?.rawData?.latest_version?.system_prompt && (
-                    <div className={styles.sidebarSection}>
-                        <div className={styles.sectionHeader}>
-                            <DocumentText24Regular className={styles.sectionIcon} />
-                            <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
-                        </div>
-                        <div className={styles.systemPromptContainer}>
-                            <MarkdownRenderer className={styles.promptMarkdown}>{assistant.rawData.latest_version.system_prompt}</MarkdownRenderer>
-                        </div>
-                    </div>
+                        {assistant?.rawData?.latest_version?.system_prompt && (
+                            <div className={styles.sidebarSection}>
+                                <div className={styles.sectionHeader}>
+                                    <DocumentText24Regular className={styles.sectionIcon} />
+                                    <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
+                                </div>
+                                <div className={styles.systemPromptContainer}>
+                                    <MarkdownRenderer className={styles.promptMarkdown}>{assistant.rawData.latest_version.system_prompt}</MarkdownRenderer>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </DrawerBody>
         </InlineDrawer>

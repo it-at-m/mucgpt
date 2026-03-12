@@ -23,7 +23,7 @@ import { createAssistantApi } from "../../../api/core-client";
 import { createCommunityAssistantApi } from "../../../api/assistant-client";
 import { useGlobalToastContext } from "../../GlobalToastHandler/GlobalToastContext";
 import { Stepper, Step } from "../../Stepper";
-import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, useCreateAssistantState } from "../shared";
+import { CombinedDetailsStep, ToolsStep, QuickPromptsStep, ExamplesStep, AdvancedSettingsStep, VisibilityStep, useCreateAssistantState } from "../shared";
 import { CloseConfirmationDialog } from "../shared/CloseConfirmationDialog";
 import { useToolsContext } from "../../ToolsProvider";
 import { useNavigate } from "react-router-dom";
@@ -55,6 +55,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         tools,
         quickPrompts,
         examples,
+        hierarchicalAccess,
+        isVisible,
         creativity,
         defaultModel,
         hasChanges,
@@ -65,6 +67,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         updateCreativity,
         updateDefaultModel,
         updateTools,
+        updateHierarchicalAccess,
+        updateIsVisible,
         updateTemplate,
         setQuickPrompts,
         setExamples,
@@ -101,7 +105,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             const assistantTitle = title === "" ? t("components.create_assistant_dialog.default_assistant_title") : title;
             const assistantDescription = description === "" ? t("components.create_assistant_dialog.default_assistant_description") : description;
 
-            // Create assistant as private on the assistant service
+            // Create assistant with the visibility selected in the dialog.
             const response = await createCommunityAssistantApi({
                 name: assistantTitle,
                 description: assistantDescription,
@@ -113,8 +117,8 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                 examples: validExamples.map(e => ({ text: e.text, value: e.value })),
                 quick_prompts: validQuickPrompts.map(qp => ({ label: qp.label, prompt: qp.prompt, tooltip: qp.tooltip })),
                 tags: [],
-                hierarchical_access: [],
-                is_visible: false // Private by default
+                hierarchical_access: hierarchicalAccess,
+                is_visible: isVisible
             });
 
             if (response?.id) {
@@ -134,7 +138,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         } finally {
             setLoading(false);
         }
-    }, [loading, title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, showError, showSuccess, t, navigate]);
+    }, [loading, title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, hierarchicalAccess, isVisible, showError, showSuccess, t, navigate]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {
@@ -201,6 +205,10 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
             },
             {
                 label: t("components.edit_assistant_dialog.step_examples"),
+                completedIcon: <Checkmark24Filled />
+            },
+            {
+                label: t("components.edit_assistant_dialog.step_visibility"),
                 completedIcon: <Checkmark24Filled />
             },
             {
@@ -373,7 +381,33 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                         </DialogActions>
                     </>
                 );
-            case 6: // Step 6: Advanced Settings
+            case 6: // Step 6: Visibility
+                return (
+                    <>
+                        <DialogContent>
+                            <Stepper steps={steps} currentStep={currentStep} />
+                            <div className={sharedStyles.scrollableDialogContent}>
+                                <VisibilityStep
+                                    isOwner={true}
+                                    publishDepartments={hierarchicalAccess}
+                                    invisibleChecked={!isVisible}
+                                    onHasChanged={() => undefined}
+                                    setPublishDepartments={updateHierarchicalAccess}
+                                    setInvisibleChecked={value => updateIsVisible(!value)}
+                                />
+                            </div>
+                        </DialogContent>
+                        <DialogActions className={sharedStyles.dialogActions}>
+                            <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.backButton}>
+                                {t("common.back")}
+                            </Button>
+                            <Button size="medium" onClick={() => setCurrentStep(7)} className={sharedStyles.continueButton}>
+                                {t("common.next")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                );
+            case 7: // Step 7: Advanced Settings
                 return (
                     <>
                         <DialogContent>
@@ -389,7 +423,7 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
                             </div>
                         </DialogContent>
                         <DialogActions className={sharedStyles.dialogActions}>
-                            <Button size="medium" onClick={() => setCurrentStep(5)} className={sharedStyles.backButton}>
+                            <Button size="medium" onClick={() => setCurrentStep(6)} className={sharedStyles.backButton}>
                                 {t("common.back")}
                             </Button>
                             <Button
@@ -439,8 +473,14 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         setQuickPrompts,
         examples,
         setExamples,
+        hierarchicalAccess,
+        isVisible,
         creativity,
+        defaultModel,
         updateCreativity,
+        updateDefaultModel,
+        updateHierarchicalAccess,
+        updateIsVisible,
         hasChanges,
         onCancelButtonClicked,
         onPromptButtonClicked

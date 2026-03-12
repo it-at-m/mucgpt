@@ -37,23 +37,16 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
 
     // Create steps array for Stepper component (matching CreateAssistantDialog structure)
     const steps: Step[] = useMemo(() => {
-        const baseSteps = [
+        return [
             { label: t("components.create_assistant_dialog.step2_label"), completedIcon: <Checkmark24Filled /> }, // Combined: Title, Description, System Prompt
             { label: t("components.edit_assistant_dialog.step_tools"), completedIcon: <Checkmark24Filled /> },
             { label: t("components.edit_assistant_dialog.step_quick_prompts"), completedIcon: <Checkmark24Filled /> },
-            { label: t("components.edit_assistant_dialog.step_examples"), completedIcon: <Checkmark24Filled /> }
+            { label: t("components.edit_assistant_dialog.step_examples"), completedIcon: <Checkmark24Filled /> },
+            { label: t("components.edit_assistant_dialog.step_visibility"), completedIcon: <Checkmark24Filled /> },
+            { label: t("components.edit_assistant_dialog.step_advanced_settings"), completedIcon: <Checkmark24Filled /> }
         ];
+    }, [t]);
 
-        if (publish) {
-            baseSteps.push({ label: t("components.edit_assistant_dialog.step_visibility"), completedIcon: <Checkmark24Filled /> });
-        }
-
-        baseSteps.push({ label: t("components.edit_assistant_dialog.step_advanced_settings"), completedIcon: <Checkmark24Filled /> });
-
-        return baseSteps;
-    }, [t, publish]);
-
-    // Conditionally adjust total steps based on publish status
     const totalSteps = steps.length;
 
     const selectedTools = useMemo(() => {
@@ -174,32 +167,17 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                     />
                 );
             case 5:
-                // Step 5 is either Visibility (if published) or Advanced Settings (if not published)
-                if (publish) {
-                    return (
-                        <VisibilityStep
-                            isOwner={isOwner}
-                            publishDepartments={hierarchicalAccess}
-                            invisibleChecked={!isVisible}
-                            onHasChanged={assistantState.setHasChanged}
-                            setPublishDepartments={assistantState.updateHierarchicalAccess}
-                            setInvisibleChecked={value => assistantState.updateIsVisible(!value)}
-                        />
-                    );
-                } else {
-                    return (
-                        <AdvancedSettingsStep
-                            creativity={creativity}
-                            defaultModel={assistantState.defaultModel}
-                            isOwner={isOwner}
-                            onCreativityChange={assistantState.updateCreativity}
-                            onDefaultModelChange={assistantState.updateDefaultModel}
-                            onHasChanged={assistantState.setHasChanged}
-                        />
-                    );
-                }
-
-            case 6: // Advanced Settings (only when published)
+                return (
+                    <VisibilityStep
+                        isOwner={isOwner}
+                        publishDepartments={hierarchicalAccess}
+                        invisibleChecked={!isVisible}
+                        onHasChanged={assistantState.setHasChanged}
+                        setPublishDepartments={assistantState.updateHierarchicalAccess}
+                        setInvisibleChecked={value => assistantState.updateIsVisible(!value)}
+                    />
+                );
+            case 6: // Advanced Settings
                 return (
                     <AdvancedSettingsStep
                         creativity={creativity}
@@ -224,7 +202,6 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
         quickPrompts,
         examples,
         creativity,
-        publish,
         hierarchicalAccess,
         isVisible,
         isOwner,
@@ -276,7 +253,11 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
                             </Button>
 
                             <Button size="medium" onClick={onSaveButtonClicked} className={sharedStyles.saveButton}>
-                                {isOwner ? t("components.edit_assistant_dialog.save") : t("common.close")}
+                                {isOwner
+                                    ? strategy.publishesOnSave
+                                        ? t("components.assistantsettingsdrawer.publish")
+                                        : t("components.edit_assistant_dialog.save")
+                                    : t("common.close")}
                             </Button>
 
                             <Button

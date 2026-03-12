@@ -31,7 +31,7 @@ export const EditAssistantDialog = ({ showDialog, setShowDialog, assistant, onAs
     const [currentStep, setCurrentStep] = useState<number>(1);
 
     const assistantState = useAssistantState(assistant);
-    const { title, description, systemPrompt, quickPrompts, examples, creativity, tools, publish, hierarchicalAccess, isVisible } = assistantState;
+    const { title, description, systemPrompt, quickPrompts, examples, creativity, tools, hierarchicalAccess, isVisible } = assistantState;
 
     const [closeDialogOpen, setCloseDialogOpen] = useState<boolean>(false);
 

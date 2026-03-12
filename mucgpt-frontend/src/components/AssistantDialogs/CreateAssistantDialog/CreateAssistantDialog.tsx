@@ -138,7 +138,23 @@ export const CreateAssistantDialog = ({ showDialogInput, setShowDialogInput }: P
         } finally {
             setLoading(false);
         }
-    }, [loading, title, description, systemPrompt, creativity, defaultModel, quickPrompts, examples, tools, hierarchicalAccess, isVisible, showError, showSuccess, t, navigate]);
+    }, [
+        loading,
+        title,
+        description,
+        systemPrompt,
+        creativity,
+        defaultModel,
+        quickPrompts,
+        examples,
+        tools,
+        hierarchicalAccess,
+        isVisible,
+        showError,
+        showSuccess,
+        t,
+        navigate
+    ]);
 
     // cancel button clicked
     const onCancelButtonClicked = useCallback(() => {

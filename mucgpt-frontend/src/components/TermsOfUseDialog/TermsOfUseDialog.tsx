@@ -113,9 +113,9 @@ export const TermsOfUseDialog = ({ defaultOpen, onAccept }: TermsOfUseDialogProp
                             <div className={styles.responsibleContainer}>
                                 Verantwortlich für die Nutzungsbedingungen ist RIT-I (STRAC). Bei Fragen oder Anmerkungen hierzu bitte an folgende E-Mail
                                 Adresse wenden:
-                                <Link inline className={styles.link} href="mailto:it-vorschriften.strac.rit@muenchen.de?subject=MUCGPT">
+                                <Link inline className={styles.link} href="mailto:it-vorschriften.rit@muenchen.de?subject=MUCGPT">
                                     {" "}
-                                    it-vorschriften.strac.rit@muenchen.de
+                                    it-vorschriften.rit@muenchen.de
                                 </Link>
                             </div>
                         </DialogContent>

@@ -1,4 +1,3 @@
-export { CombinedDetailsStep } from "./steps/CombinedDetailsStep";
 export { ToolsStep } from "./steps/ToolsStep";
 export { QuickPromptsStep } from "./steps/QuickPromptsStep";
 export { ExamplesStep } from "./steps/ExamplesStep";

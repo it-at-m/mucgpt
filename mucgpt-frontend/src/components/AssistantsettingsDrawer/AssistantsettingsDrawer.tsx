@@ -18,7 +18,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
-import { EditAssistantDialog } from "../AssistantDialogs";
+import { useNavigate } from "react-router-dom";
 import { Collapse } from "@fluentui/react-motion-components-preview";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import rehypeKatex from "rehype-katex";
@@ -42,7 +42,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     const [publish, setPublish] = useState<boolean>(assistant.publish);
     const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
-    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+    const navigate = useNavigate();
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
 
     useEffect(() => {
@@ -51,10 +51,10 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
         setIsOwner(isOwned || !assistant.publish);
     }, [assistant, isOwned]);
 
-    // Toggle read-only mode
+    // Toggle read-only mode (now navigates)
     const toggleEditDialog = useCallback(() => {
-        setShowEditDialog(!showEditDialog);
-    }, [showEditDialog]);
+        navigate(`edit`);
+    }, [navigate]);
 
     // Toggle actions section visibility
     const toggleActionsVisibility = useCallback(() => {
@@ -112,20 +112,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
         [showDeleteDialog, onDeleteAssistant, publish, t]
     );
 
-    // Edit assistant dialog
-    const editDialog = useMemo(
-        () => (
-            <EditAssistantDialog
-                showDialog={showEditDialog}
-                setShowDialog={setShowEditDialog}
-                assistant={assistant}
-                onAssistantChanged={onAssistantChange}
-                isOwner={isOwner}
-                strategy={strategy}
-            />
-        ),
-        [showEditDialog, assistant, onAssistantChange, isOwner, strategy]
-    );
     const rehypeKatexOptions = {
         output: "mathml"
     };
@@ -136,7 +122,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     // sidebar content
     return (
         <>
-            {editDialog}
             {deleteDialog}
             <div className={styles.titleSection}>
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>

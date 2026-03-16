@@ -5,7 +5,7 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
 import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
@@ -30,7 +30,7 @@ import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/Mi
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Button } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
-import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
+import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getCommunityAssistantApi } from "../../api/assistant-client";
 import styles from "./UnifiedAssistantChat.module.css";
@@ -73,6 +73,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const { id } = useParams();
     const assistant_id = id || "0";
     const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isEditMode = location.pathname.endsWith("/edit");
+
+    useEffect(() => {
+        if (!isEditMode || strategy.canEdit) return;
+        navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
+    }, [isEditMode, strategy.canEdit, navigate, location.pathname]);
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -95,7 +103,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
-    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
@@ -106,17 +113,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
         return () => document.body.classList.remove("info-drawer-open");
     }, [isInfoDrawerOpen]);
-
-    // Auto-open edit dialog when navigating from Discovery with ?edit=true
-    useEffect(() => {
-        if (searchParams.get("edit") === "true") {
-            if (strategy?.canEdit) {
-                setShowEditDialog(true);
-            }
-            searchParams.delete("edit");
-            setSearchParams(searchParams, { replace: true });
-        }
-    }, [searchParams, setSearchParams, strategy?.canEdit]);
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
@@ -624,7 +620,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             <Button
                                 appearance="subtle"
                                 icon={<Settings24Regular />}
-                                onClick={() => setShowEditDialog(true)}
+                                onClick={() => navigate("edit")}
                                 aria-label={t("components.assistantsettingsdrawer.show_configurations")}
                             />
                         ) : assistantInfoData || isAssistantInfoLoading ? (
@@ -664,17 +660,26 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isInfoDrawerOpen
     ]);
 
-    return (
+    if (isEditMode && !strategy.canEdit) {
+        return null;
+    }
+
+    return isEditMode ? (
+        <AssistantEditorPage
+            mode="edit"
+            assistant={assistantConfig}
+            isOwner={strategy.canEdit || strategy.isOwned}
+            strategy={strategy}
+            onSave={async assistant => {
+                if (strategy.updateAssistant && assistant.id) {
+                    await strategy.updateAssistant(assistant.id, assistant);
+                    onAssistantChanged(assistant);
+                }
+            }}
+        />
+    ) : (
         <>
             {layout}
-            <EditAssistantDialog
-                showDialog={showEditDialog}
-                setShowDialog={setShowEditDialog}
-                assistant={assistantConfig}
-                onAssistantChanged={onAssistantChanged}
-                isOwner={strategy.isOwned}
-                strategy={strategy}
-            />
             <NotSubscribedDialog
                 open={showNotSubscribedDialog}
                 onOpenChange={setShowNotSubscribedDialog}

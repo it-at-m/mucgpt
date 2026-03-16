@@ -120,6 +120,13 @@
     font-size: 16px;
 }
 
+.descriptionContainer {
+    background-color: var(--colorNeutralBackground1);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--colorNeutralStroke2);
+}
+
 .aboutText {
     font-size: 14px;
     line-height: 1.6;

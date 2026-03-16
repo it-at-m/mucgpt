@@ -24,8 +24,9 @@ Implementation Details:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from core import directory_cache
 from core.logtools import getLogger
@@ -115,7 +116,7 @@ async def _get_directory_index(
     if directory_tree is not None:
         return _build_index(directory_tree)
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cached = _INDEX_CACHE.get("index")
     expires_at = _INDEX_CACHE.get("expires_at")
     if cached is not None and isinstance(expires_at, datetime) and now < expires_at:

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel
 
 
@@ -16,8 +14,8 @@ class AuthenticationResult(BaseModel):
 
     user_id: str
     department: str
-    name: Optional[str] = None
-    roles: Optional[list[str]] = None
+    name: str | None = None
+    roles: list[str] | None = None
 
     class Config:
         json_schema_extra = {

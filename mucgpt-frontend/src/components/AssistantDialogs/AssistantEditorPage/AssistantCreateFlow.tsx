@@ -43,7 +43,7 @@ export function AssistantCreateFlow({
             <div className={styles.modeSelectorContainer}>
                 <p className={styles.modeSubtitle}>{t("components.assistant_editor.subtitle_mode_select")}</p>
                 <div className={styles.modeCards}>
-                    <button className={styles.modeCard} onClick={onSelectManual} type="button">
+                    <Button className={styles.modeCard} onClick={onSelectManual} type="button">
                         <div className={styles.modeCardIcon}>
                             <Edit24Regular />
                         </div>
@@ -52,9 +52,9 @@ export function AssistantCreateFlow({
                             <span className={styles.modeCardDescription}>{t("components.assistant_editor.create_manually_description")}</span>
                             <span className={styles.modeCardHint}>{t("components.assistant_editor.create_manually_hint")}</span>
                         </div>
-                    </button>
+                    </Button>
 
-                    <button className={styles.modeCard} onClick={onSelectGenerate} type="button">
+                    <Button className={styles.modeCard} onClick={onSelectGenerate} type="button">
                         <div className={styles.modeCardIcon}>
                             <Wand24Regular />
                         </div>
@@ -66,7 +66,7 @@ export function AssistantCreateFlow({
                             <span className={styles.modeCardDescription}>{t("components.assistant_editor.generate_with_mucgpt_description")}</span>
                             <span className={styles.modeCardHint}>{t("components.assistant_editor.generate_with_mucgpt_hint")}</span>
                         </div>
-                    </button>
+                    </Button>
                 </div>
             </div>
         );

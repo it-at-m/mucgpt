@@ -670,10 +670,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             isOwner={strategy.canEdit || strategy.isOwned}
             strategy={strategy}
             onSave={async assistant => {
-                if (strategy.updateAssistant && assistant.id) {
-                    await strategy.updateAssistant(assistant.id, assistant);
-                    onAssistantChanged(assistant);
-                }
+                await onAssistantChanged(assistant);
             }}
         />
     ) : (

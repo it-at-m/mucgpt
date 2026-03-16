@@ -108,12 +108,7 @@ function SettingsForm(props: SettingsFormProps) {
         <div className={styles.settingsGrid}>
             <div className={styles.settingsColumn}>
                 <SectionCard title={t("components.assistant_editor.section_basic")} className={styles.sectionBasic}>
-                    <Field
-                        size="large"
-                        className={styles.formField}
-                        label={{ children: t("components.assistant_editor.title") }}
-                        required
-                    >
+                    <Field size="large" className={styles.formField} label={{ children: t("components.assistant_editor.title") }} required>
                         <Textarea
                             placeholder={t("components.assistant_editor.title_placeholder")}
                             value={props.title}
@@ -124,11 +119,7 @@ function SettingsForm(props: SettingsFormProps) {
                             disabled={!props.isOwner}
                         />
                     </Field>
-                    <Field
-                        size="large"
-                        className={styles.formField}
-                        label={{ children: t("components.assistant_editor.description") }}
-                    >
+                    <Field size="large" className={styles.formField} label={{ children: t("components.assistant_editor.description") }}>
                         <Textarea
                             placeholder={t("components.assistant_editor.description_placeholder")}
                             value={props.description}
@@ -155,7 +146,7 @@ function SettingsForm(props: SettingsFormProps) {
                         publishDepartments={props.publishDepartments}
                         invisibleChecked={!props.isVisible}
                         setPublishDepartments={props.setPublishDepartments}
-                        onHasChanged={props.onHasChanged ?? (() => { })}
+                        onHasChanged={props.onHasChanged ?? (() => {})}
                         setInvisibleChecked={invisible => props.setInvisibleChecked(invisible)}
                     />
                 </SectionCard>
@@ -404,7 +395,12 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
                 throw new Error(getGenerationErrorMessage(result, t("components.assistant_editor.assistant_generation_failed")));
             }
 
-            if (typeof result.title !== "string" || result.title.trim() === "" || typeof result.system_prompt !== "string" || result.system_prompt.trim() === "") {
+            if (
+                typeof result.title !== "string" ||
+                result.title.trim() === "" ||
+                typeof result.system_prompt !== "string" ||
+                result.system_prompt.trim() === ""
+            ) {
                 throw new Error(t("components.assistant_editor.assistant_generation_failed"));
             }
 

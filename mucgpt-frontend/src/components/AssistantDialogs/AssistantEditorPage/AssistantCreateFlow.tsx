@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Field, Spinner, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import { Button, Spinner, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
 import { ArrowLeft24Regular, Edit24Regular, Wand24Regular } from "@fluentui/react-icons";
 
 import styles from "./AssistantCreateFlow.module.css";
@@ -87,7 +87,6 @@ export function AssistantCreateFlow({
                     onChange={(_event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, data?: TextareaOnChangeData) => onInputChange(data?.value || "")}
                     className={styles.aiTextarea}
                 />
-
 
                 <div className={styles.examplesSection}>
                     <span className={styles.examplesLabel}>{t("components.assistant_editor.try_example")}</span>

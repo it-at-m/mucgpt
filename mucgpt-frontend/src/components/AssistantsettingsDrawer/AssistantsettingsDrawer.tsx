@@ -28,13 +28,12 @@ import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext"
 
 interface Props {
     assistant: Assistant;
-    onAssistantChange: (assistant: Assistant) => void;
     onDeleteAssistant: () => void;
     isOwned?: boolean;
     strategy: AssistantStrategy;
 }
 
-export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDeleteAssistant, isOwned, strategy }: Props) => {
+export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned, strategy }: Props) => {
     const { t } = useTranslation();
     const { showSuccess, showError } = useGlobalToastContext();
 

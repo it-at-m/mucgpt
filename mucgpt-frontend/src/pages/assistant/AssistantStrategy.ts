@@ -1,7 +1,13 @@
 import { AssistantStorageService } from "../../service/assistantstorage";
 import { AssistantUpdateInput, Assistant } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
-import { deleteCommunityAssistantApi, getCommunityAssistantApi, unsubscribeFromAssistantApi, updateCommunityAssistantApi } from "../../api/assistant-client";
+import {
+    createCommunityAssistantApi,
+    deleteCommunityAssistantApi,
+    getCommunityAssistantApi,
+    unsubscribeFromAssistantApi,
+    updateCommunityAssistantApi
+} from "../../api/assistant-client";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { convertTemperatureToCreativity } from "../../service/migration";
 
@@ -12,12 +18,14 @@ export interface AssistantStrategy {
     isOwned: boolean;
     canEdit: boolean;
     requiresReloadOnSave?: boolean; // New flag to indicate if page reload is needed after save
+    publishesOnSave?: boolean;
 }
 
 export class LocalAssistantStrategy implements AssistantStrategy {
     isOwned = true;
     canEdit = true;
     requiresReloadOnSave = false;
+    publishesOnSave = true;
 
     async loadAssistantConfig(assistantId: string, assistantStorageService: AssistantStorageService): Promise<Assistant | undefined> {
         return await assistantStorageService.getAssistantConfig(assistantId);
@@ -29,9 +37,25 @@ export class LocalAssistantStrategy implements AssistantStrategy {
 
     async updateAssistant(assistantId: string, newAssistant: Assistant): Promise<{ updatedAssistant?: Assistant }> {
         const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
-        await assistantStorageService.setAssistantConfig(assistantId, newAssistant);
+        const response = await createCommunityAssistantApi({
+            name: newAssistant.title,
+            description: newAssistant.description,
+            system_prompt: newAssistant.system_message,
+            creativity: newAssistant.creativity,
+            default_model: newAssistant.default_model,
+            tools: newAssistant.tools || [],
+            owner_ids: newAssistant.owner_ids || [],
+            examples: newAssistant.examples?.map(e => ({ text: e.text, value: e.value })) || [],
+            quick_prompts: newAssistant.quick_prompts || [],
+            tags: newAssistant.tags || [],
+            hierarchical_access: newAssistant.hierarchical_access || [],
+            is_visible: newAssistant.is_visible
+        });
 
-        return { updatedAssistant: newAssistant };
+        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+        window.location.href = `/#/owned/communityassistant/${response.id}`;
+
+        return {};
     }
 }
 

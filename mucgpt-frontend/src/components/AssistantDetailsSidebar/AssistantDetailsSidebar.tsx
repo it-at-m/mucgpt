@@ -2,6 +2,7 @@ import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger
 import {
     Dismiss24Regular,
     Chat24Regular,
+    Copy20Regular,
     Edit20Regular,
     Delete20Regular,
     Book24Regular,
@@ -15,7 +16,7 @@ import {
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { AssistantResponse } from "../../api/models";
+import { AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface AssistantCardData {
@@ -25,7 +26,7 @@ export interface AssistantCardData {
     subscriptions: number;
     updated: string;
     tags: string[];
-    rawData: AssistantResponse;
+    rawData: AssistantResponse | CommunityAssistantSnapshot;
 }
 
 interface AssistantDetailsSidebarProps {
@@ -36,6 +37,7 @@ interface AssistantDetailsSidebarProps {
     ownedAssistantIds: Set<string>;
     onStartChat?: () => void;
     onEdit?: () => void;
+    onDuplicate?: () => void;
     onExport?: () => void;
     onDelete?: () => void;
     hideStartChat?: boolean;
@@ -49,11 +51,22 @@ export const AssistantDetailsSidebar = ({
     ownedAssistantIds,
     onStartChat,
     onEdit,
+    onDuplicate,
     onExport,
     onDelete,
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
+
+    const assistantVersion = assistant?.rawData
+        ? "latest_version" in assistant.rawData
+            ? assistant.rawData.latest_version
+            : {
+                  creativity: assistant.rawData.creativity,
+                  system_prompt: assistant.rawData.system_message,
+                  tools: assistant.rawData.tools || []
+              }
+        : undefined;
 
     const getCreativityConfig = (creativity: string) => {
         switch (creativity.toLowerCase()) {
@@ -78,11 +91,9 @@ export const AssistantDetailsSidebar = ({
         }
     };
 
-    const creativityConfig = assistant?.rawData?.latest_version?.creativity
-        ? getCreativityConfig(assistant.rawData.latest_version.creativity)
-        : getCreativityConfig("balanced");
+    const creativityConfig = assistantVersion?.creativity ? getCreativityConfig(assistantVersion.creativity) : getCreativityConfig("balanced");
 
-    const enabledTools = assistant?.rawData?.latest_version?.tools?.filter(tool => tool.config?.enabled) || [];
+    const enabledTools = assistantVersion?.tools?.filter(tool => tool.config?.enabled) || [];
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
 
     return (
@@ -142,6 +153,11 @@ export const AssistantDetailsSidebar = ({
                                                     {t("common.edit")}
                                                 </MenuItem>
                                             )}
+                                            {!isOwned && onDuplicate && (
+                                                <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
+                                                    {t("components.community_assistants.duplicate")}
+                                                </MenuItem>
+                                            )}
                                             {onExport && (
                                                 <MenuItem icon={<ArrowExportUp20Regular />} onClick={onExport}>
                                                     {t("components.assistantsettingsdrawer.export")}
@@ -184,14 +200,14 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {assistant?.rawData?.latest_version?.system_prompt && (
+                        {assistantVersion?.system_prompt && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
                                     <DocumentText24Regular className={styles.sectionIcon} />
                                     <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                                 </div>
                                 <div className={styles.systemPromptContainer}>
-                                    <MarkdownRenderer className={styles.promptMarkdown}>{assistant.rawData.latest_version.system_prompt}</MarkdownRenderer>
+                                    <MarkdownRenderer className={styles.promptMarkdown}>{assistantVersion.system_prompt}</MarkdownRenderer>
                                 </div>
                             </div>
                         )}

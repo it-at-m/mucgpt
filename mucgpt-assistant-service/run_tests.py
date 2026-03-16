@@ -45,7 +45,7 @@ def main():
                 "run",
                 "pytest",
                 "tests/",
-                "--cov=src/database",
+                "--cov=app/database",
                 "--cov-report=term-missing",
             ],
             "All Tests with Coverage Report",

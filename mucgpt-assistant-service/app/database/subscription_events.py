@@ -5,12 +5,13 @@ from sqlalchemy.orm import attributes
 
 from core.logtools import getLogger
 
+# Import is deferred to avoid circular import: database.__init__ imports this module
+# while database_models may not be fully initialized yet.
 from .database_models import Subscription
 
 logger = getLogger("assistant_repo")
 
 
-@event.listens_for(Subscription, "after_insert")
 def _subscription_after_insert(mapper, connection, target):
     """Increment subscription count when a subscription is created."""
     logger.debug(f"Incrementing subscription count for assistant {target.assistant_id}")
@@ -22,7 +23,6 @@ def _subscription_after_insert(mapper, connection, target):
     )
 
 
-@event.listens_for(Subscription, "after_update")
 def _subscription_after_update(mapper, connection, target):
     """Handle subscription count when assistant_id changes on a subscription."""
     hist = attributes.get_history(target, "assistant_id")
@@ -49,3 +49,20 @@ def _subscription_after_update(mapper, connection, target):
             ),
             {"assistant_id": new_id},
         )
+
+
+def _subscription_after_delete(mapper, connection, target):
+    """Decrement subscription count when a subscription is deleted."""
+    logger.debug(f"Decrementing subscription count for assistant {target.assistant_id}")
+    connection.execute(
+        text(
+            "UPDATE assistants SET subscriptions_count = subscriptions_count - 1 WHERE id = :assistant_id"
+        ),
+        {"assistant_id": target.assistant_id},
+    )
+
+
+# Register listeners after Subscription class is fully defined
+event.listen(Subscription, "after_insert", _subscription_after_insert)
+event.listen(Subscription, "after_update", _subscription_after_update)
+event.listen(Subscription, "after_delete", _subscription_after_delete)

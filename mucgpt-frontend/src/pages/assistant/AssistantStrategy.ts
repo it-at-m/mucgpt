@@ -11,9 +11,9 @@ import {
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { ApiError } from "../../api/fetch-utils";
 import {
+    isCompleteCommunityAssistantSnapshot,
     mapAssistantResponseToSnapshot,
-    mapCommunitySnapshotToAssistant,
-    upsertCommunityAssistantSnapshotFromResponse
+    mapCommunitySnapshotToAssistant
 } from "../../utils/community-assistant-snapshots";
 
 export interface AssistantStrategy {
@@ -73,12 +73,11 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
     async loadAssistantConfig(assistantId: string): Promise<Assistant | undefined> {
         try {
             const response = await getCommunityAssistantApi(assistantId);
-            const snapshot = await upsertCommunityAssistantSnapshotFromResponse(this.communityStorageService, response);
-            return mapCommunitySnapshotToAssistant(snapshot);
+            return mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(response));
         } catch (error) {
             if (error instanceof ApiError && error.status === 404) {
                 const snapshot = await this.communityStorageService.getAssistantConfig(assistantId);
-                if (snapshot) {
+                if (isCompleteCommunityAssistantSnapshot(snapshot)) {
                     window.location.href = `/#/deleted/communityassistant/${assistantId}`;
                     return mapCommunitySnapshotToAssistant(snapshot);
                 }
@@ -102,7 +101,7 @@ export class DeletedCommunityAssistantStrategy implements AssistantStrategy {
 
     async loadAssistantConfig(assistantId: string): Promise<Assistant | undefined> {
         const response = await this.communityStorageService.getAssistantConfig(assistantId);
-        if (!response) {
+        if (!isCompleteCommunityAssistantSnapshot(response)) {
             return undefined;
         }
 

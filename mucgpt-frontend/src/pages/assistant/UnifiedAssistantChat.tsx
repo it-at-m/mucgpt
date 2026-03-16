@@ -167,8 +167,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
-                    .then(assistant => {
+                    .then(async assistant => {
                         if (assistant) {
+                            if (strategy instanceof CommunityAssistantStrategy && !notSubscribed) {
+                                try {
+                                    await upsertCommunityAssistantSnapshot(
+                                        communityAssistantStorageService,
+                                        mapAssistantToCommunitySnapshot({ ...assistant, id: assistant_id })
+                                    );
+                                } catch (snapshotError) {
+                                    console.error("Error updating community assistant snapshot:", snapshotError);
+                                }
+                            }
+
                             setAssistantConfig(assistant);
                             setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });

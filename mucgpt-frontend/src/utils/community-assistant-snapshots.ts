@@ -3,11 +3,14 @@ import { CREATIVITY_LOW } from "../constants";
 import { convertTemperatureToCreativity } from "../service/migration";
 import { CommunityAssistantStorageService } from "../service/communityassistantstorage";
 
+export const COMMUNITY_ASSISTANT_SNAPSHOT_VERSION = 1;
+
 const mapVersionCreativity = (version: AssistantVersionResponse): string => {
     return version.creativity || (version.temperature !== undefined ? convertTemperatureToCreativity(version.temperature) : CREATIVITY_LOW);
 };
 
 export const mapAssistantVersionToSnapshot = (assistantId: string, version: AssistantVersionResponse): CommunityAssistantSnapshot => ({
+    snapshot_version: COMMUNITY_ASSISTANT_SNAPSHOT_VERSION,
     id: assistantId,
     title: version.name,
     description: version.description || "",
@@ -28,6 +31,7 @@ export const mapAssistantResponseToSnapshot = (assistant: AssistantResponse): Co
 };
 
 export const mapAssistantToCommunitySnapshot = (assistant: Assistant): CommunityAssistantSnapshot => ({
+    snapshot_version: COMMUNITY_ASSISTANT_SNAPSHOT_VERSION,
     id: assistant.id || "",
     title: assistant.title,
     description: assistant.description || "",
@@ -60,6 +64,30 @@ export const mapCommunitySnapshotToAssistant = (snapshot: CommunityAssistantSnap
     hierarchical_access: snapshot.hierarchical_access || [],
     is_visible: snapshot.is_visible ?? true
 });
+
+export const isCompleteCommunityAssistantSnapshot = (snapshot: unknown): snapshot is CommunityAssistantSnapshot => {
+    if (!snapshot || typeof snapshot !== "object") {
+        return false;
+    }
+
+    const candidate = snapshot as Partial<CommunityAssistantSnapshot>;
+
+    return (
+        candidate.snapshot_version === COMMUNITY_ASSISTANT_SNAPSHOT_VERSION &&
+        typeof candidate.id === "string" &&
+        typeof candidate.title === "string" &&
+        typeof candidate.description === "string" &&
+        typeof candidate.system_message === "string" &&
+        typeof candidate.creativity === "string" &&
+        typeof candidate.version === "string" &&
+        Array.isArray(candidate.examples) &&
+        Array.isArray(candidate.quick_prompts) &&
+        Array.isArray(candidate.tags) &&
+        Array.isArray(candidate.hierarchical_access) &&
+        Array.isArray(candidate.tools) &&
+        typeof candidate.is_visible === "boolean"
+    );
+};
 
 export const upsertCommunityAssistantSnapshot = async (
     communityAssistantStorageService: CommunityAssistantStorageService,

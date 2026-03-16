@@ -245,6 +245,7 @@ export type CommunityAssistant = {
 };
 
 export type CommunityAssistantSnapshot = {
+    snapshot_version: number;
     id: string;
     title: string;
     description: string;

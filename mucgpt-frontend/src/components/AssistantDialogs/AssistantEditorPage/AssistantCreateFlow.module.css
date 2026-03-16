@@ -21,23 +21,19 @@
 }
 
 .modeCard {
-    background-color: var(--colorNeutralBackground1);
-    border: 1px solid var(--colorNeutralStroke1);
-    border-radius: 12px;
-    padding: 32px;
+    border-radius: 12px !important;
+    padding: 32px !important;
     width: 320px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
     box-shadow: var(--shadow4);
 }
 
 .modeCard:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow16);
-    border-color: var(--colorBrandStroke1);
+    border-color: var(--colorBrandStroke1) !important;
 }
 
 .modeCardIcon {
@@ -71,8 +67,6 @@
 
 .modeCardTitle {
     font-size: 18px;
-    font-weight: 600;
-    color: var(--colorNeutralForeground1);
     display: flex;
     flex-direction: column;
     align-items: center;

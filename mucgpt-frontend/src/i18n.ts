@@ -393,8 +393,8 @@ i18n
                             title_placeholder: "Zum Beispiel: Englisch Übersetzer",
                             description: "Beschreibung",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt den eingegebenen Text ins Englische.",
-                            default_assistant_title: "Assistant",
-                            default_assistant_description: "Assistant",
+                            default_assistant_title: "Assistent",
+                            default_assistant_description: "Assistent",
                             system_prompt: "System-Prompt",
                             prompt_placeholder:
                                 "# Anforderung\n# Schritte\n# Output Format\n# Beispiele\n\nZum Beispiel:\nStelle sicher, dass die Übersetzung den ursprünglichen Satzbau und die Bedeutung beibehält. Achte auf kontextabhängige Wörter und kulturelle Unterschiede die möglicherweise vorliegen könnten.",
@@ -1542,8 +1542,8 @@ i18n
                             title_placeholder: "Zum Beispiel: Englisch-Ibasatza",
                             description: "Beschreibung",
                             description_placeholder: "Zum Beispiel: Der Assistent übersetzt ois, was'd eam gibst, ins Englische.",
-                            default_assistant_title: "Assistant",
-                            default_assistant_description: "Assistant",
+                            default_assistant_title: "Assistent",
+                            default_assistant_description: "Assistent",
                             system_prompt: "System-Prompt",
                             prompt_placeholder:
                                 "# Anforderung\n# Schritt für Schritt\n# Format\n# Beispiele\n\nZum Beispiel:\nSchau drauf, dass de Ibasetzung an originalen Satzbau und an Sinn beihoid. Pass auf bei Wörtern, de auf'n Zusammenhang okemma, und auf de feinen kulturelln Untaschiede, de 's gebn ko.",

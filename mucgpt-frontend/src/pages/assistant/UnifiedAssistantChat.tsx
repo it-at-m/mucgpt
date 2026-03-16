@@ -228,7 +228,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string) => {
+        async (question: string, dataIds?: string[]) => {
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -255,6 +255,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     assistant_id,
                     selectedTools,
                     setToolStatuses,
+                    dataIds,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -494,8 +495,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 clearOnSend
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                onSend={(question, _data)=> callApi(question)}
+                onSend={(question, datas) => {
+                    // Extract fileIds from active documents that are ready
+                    const dataIds = datas.filter(data => data.isActive !== false && data.status === "ready" && data.fileId).map(data => data.fileId!);
+                    callApi(question, dataIds.length > 0 ? dataIds : undefined);
+                }}
                 question={question}
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}

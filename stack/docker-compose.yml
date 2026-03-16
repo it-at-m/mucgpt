@@ -134,9 +134,13 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
       - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**, /api/directory/**
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=data
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://data-service:8000/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/api/data/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_FILTERS_0=RewritePath=/api/data/(?<urlsegments>.*), /api/data/$\{urlsegments}
+      - SPRING_CLOUD_GATEWAY_ROUTES_4_ID=frontend
+      - SPRING_CLOUD_GATEWAY_ROUTES_4_URI=http://frontend:8080/
+      - SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/${MUCGPT_SSO_REALM}
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
@@ -295,6 +299,24 @@ services:
     volumes:
       - cache-data:/app/.kreuzberg
     restart: unless-stopped
+
+  data-service:
+    build:
+      context: ../mucgpt-data-service
+      dockerfile: Dockerfile
+      args:
+        - HTTPS_PROXY=${HTTPS_PROXY}
+    env_file:
+      - ./.env
+    ports:
+      - "39148:8000"
+    networks:
+      - internal
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "curl http://localhost:8080/data/"]
+    volumes:
+      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
 
 volumes:
   cache-data:

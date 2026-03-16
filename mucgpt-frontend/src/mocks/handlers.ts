@@ -512,7 +512,7 @@ export const handlers = [
         });
     }),
 
-    // Doc-service API handlers
+    // Data-service API handlers
     http.post("/api/data/", async ({ request }) => {
         // Simulate network delay for file upload (longer for larger files)
         await delay(8000 + Math.random() * 4000); // 8-12 seconds delay

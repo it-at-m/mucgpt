@@ -117,6 +117,7 @@ class MUCGPTAgentExecutor:
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
+        data_ids: Optional[List[str]] = None,
     ) -> AsyncGenerator[dict, None]:
         logger.info(
             "Chat streaming started with temperature %s, model %s",
@@ -144,6 +145,7 @@ class MUCGPTAgentExecutor:
                     "llm_user": llm_user,
                     "llm_extra_body": llm_extra_body,
                     "assistant_id": assistant_id,
+                    "data_ids": data_ids,
                 },
             ),
         )
@@ -241,6 +243,7 @@ class MUCGPTAgentExecutor:
         user_info: AuthenticationResult,
         enabled_tools: Optional[List[str]] = None,
         assistant_id: Optional[str] = None,
+        data_ids: Optional[List[str]] = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s",

@@ -1,6 +1,6 @@
 import { getConfig, handleApiRequest } from "./fetch-utils";
 
-const DOC_SERVICE_BASE = "/api/docs";
+const DATA_SERVICE_BASE = "/api/data";
 
 /**
  * Uploads a file and returns a unique UUID for retrieval.
@@ -12,7 +12,7 @@ export async function uploadFileApi(file: File): Promise<string> {
     formData.append("file", file);
 
     return handleApiRequest(async () => {
-        const response = await fetch(`${DOC_SERVICE_BASE}/`, {
+        const response = await fetch(`${DATA_SERVICE_BASE}/`, {
             method: "POST",
             body: formData,
             mode: "cors",
@@ -31,5 +31,5 @@ export async function uploadFileApi(file: File): Promise<string> {
  * @returns File content as string
  */
 export async function getFileApi(fileId: string): Promise<string> {
-    return handleApiRequest(() => fetch(`${DOC_SERVICE_BASE}/${fileId}`, getConfig()), "Failed to get file");
+    return handleApiRequest(() => fetch(`${DATA_SERVICE_BASE}/${fileId}`, getConfig()), "Failed to get file");
 }

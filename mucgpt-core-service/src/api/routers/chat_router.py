@@ -91,6 +91,9 @@ async def chat_completions(
 
         # Use enabled_tools from request if provided, otherwise use no tool
         enabled_tools = request.enabled_tools or []
+
+        # Use data_ids from request if provided
+        data_ids = request.data_ids or []
         if request.stream:
             gen = ae.run_with_streaming(
                 messages=request.messages,
@@ -99,6 +102,7 @@ async def chat_completions(
                 user_info=user_info,
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
+                data_ids=data_ids,
             )
 
             async def sse_generator():
@@ -114,6 +118,7 @@ async def chat_completions(
                 user_info=user_info,
                 enabled_tools=enabled_tools,
                 assistant_id=request.assistant_id,
+                data_ids=data_ids,
             )
     except Exception as e:
         logger.exception("Exception in /chat/completions")

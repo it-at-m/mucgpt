@@ -1,5 +1,6 @@
 from typing import Annotated, TypedDict
 
+from langchain_core.messages import HumanMessage
 from langchain_core.messages.base import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import RunnableSerializable
@@ -11,7 +12,7 @@ from agent.tools.mcp import McpBearerAuthProvider
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
 from core.logtools import getLogger
-
+from agent.data_service import DataService
 
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
@@ -34,6 +35,10 @@ class MUCGPTAgent:
         Call the model, dynamically enabling tools based on config.
         """
         messages = state["messages"]
+        user_request = next(
+            (msg.content for msg in state["messages"] if isinstance(msg, HumanMessage)),
+            None,
+        )
         model = self.model
         configurable = config.get("configurable", {}) if config else {}
         user_info: AuthenticationResult = configurable.get("user_info")
@@ -80,6 +85,12 @@ class MUCGPTAgent:
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
 
+        # inject data
+        if config and config["configurable"].get("data_ids"):
+            data_ids : list[str] = config["configurable"].get("data_ids")
+            self.logger.info(f"Loading data info request context: {data_ids}")
+            self.data_service.inject_data_list_in_messages(messages=messages, data_ids=data_ids, query=user_request)
+
         # invoke model
         response = await model.with_config(config).ainvoke(messages)
         return AgentState(
@@ -99,6 +110,7 @@ class MUCGPTAgent:
         self.tool_collection = tool_collection
         self.tools = tools
         self.tool_node = ToolNode(self.tools)
+        self.data_service = DataService()
         self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
 
         # Define the new graph structure

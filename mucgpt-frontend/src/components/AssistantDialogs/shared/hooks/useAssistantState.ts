@@ -127,8 +127,8 @@ export const useAssistantState = (initialAssistant: Assistant) => {
 
         return {
             id: assistantId,
-            title: title === "" ? t("components.edit_assistant_dialog.default_assistant_title") : title,
-            description: description === "" ? t("components.edit_assistant_dialog.default_assistant_description") : description,
+            title: title === "" ? t("components.assistant_editor.default_assistant_title") : title,
+            description: description === "" ? t("components.assistant_editor.default_assistant_description") : description,
             system_message: systemPrompt,
             publish: publish,
             owner_ids: ownerIds,

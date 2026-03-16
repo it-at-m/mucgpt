@@ -18,6 +18,8 @@ export const useCreateAssistantState = () => {
     const [tools, setTools] = useState<ToolBase[]>([]);
     const [quickPrompts, setQuickPrompts] = useState<QuickPrompt[]>([]);
     const [examples, setExamples] = useState<ExampleModel[]>([]);
+    const [hierarchicalAccess, setHierarchicalAccess] = useState<string[]>([]);
+    const [isVisible, setIsVisible] = useState<boolean>(false);
     const [creativity, setCreativity] = useState<string>(CREATIVITY_LOW);
     const [defaultModel, setDefaultModel] = useState<string | undefined>(LLM.llm_name);
 
@@ -31,10 +33,12 @@ export const useCreateAssistantState = () => {
             tools.length > 0 ||
             quickPrompts.length > 0 ||
             examples.length > 0 ||
+            hierarchicalAccess.length > 0 ||
+            isVisible !== false ||
             creativity !== CREATIVITY_LOW ||
             (defaultModel !== undefined && defaultModel !== LLM.llm_name)
         );
-    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, creativity, defaultModel, LLM.llm_name]);
+    }, [input, title, description, systemPrompt, tools, quickPrompts, examples, hierarchicalAccess, isVisible, creativity, defaultModel, LLM.llm_name]);
 
     useEffect(() => {
         setDefaultModel(LLM.llm_name);
@@ -73,6 +77,14 @@ export const useCreateAssistantState = () => {
         setTools(newTools);
     }, []);
 
+    const updateHierarchicalAccess = useCallback((newHierarchicalAccess: string[]) => {
+        setHierarchicalAccess(newHierarchicalAccess);
+    }, []);
+
+    const updateIsVisible = useCallback((newIsVisible: boolean) => {
+        setIsVisible(newIsVisible);
+    }, []);
+
     const updateTemplate = useCallback(
         (template: string, templateId: string) => {
             // Toggle functionality: if already selected, deselect it
@@ -103,6 +115,8 @@ export const useCreateAssistantState = () => {
         setTools([]);
         setQuickPrompts([]);
         setExamples([]);
+        setHierarchicalAccess([]);
+        setIsVisible(false);
         setCreativity(CREATIVITY_LOW);
         setDefaultModel(LLM.llm_name);
     }, [LLM.llm_name]);
@@ -117,6 +131,8 @@ export const useCreateAssistantState = () => {
         tools,
         quickPrompts,
         examples,
+        hierarchicalAccess,
+        isVisible,
         creativity,
         defaultModel,
         hasChanges,
@@ -133,6 +149,8 @@ export const useCreateAssistantState = () => {
         updateCreativity,
         updateDefaultModel,
         updateTools,
+        updateHierarchicalAccess,
+        updateIsVisible,
         updateTemplate,
         setGeneratedAssistant,
 

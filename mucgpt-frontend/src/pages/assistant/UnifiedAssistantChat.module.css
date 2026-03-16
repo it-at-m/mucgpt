@@ -1,0 +1,13 @@
+.infoDrawerContainer {
+    position: fixed;
+    top: var(--navHeight, 50px);
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    pointer-events: none;
+}
+
+.infoDrawerContainer[data-open="true"] {
+    pointer-events: auto;
+}

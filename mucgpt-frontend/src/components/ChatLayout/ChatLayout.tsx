@@ -1,4 +1,4 @@
-import { ReactNode, CSSProperties } from "react";
+import { ReactNode, CSSProperties, useEffect, useState } from "react";
 import styles from "./ChatLayout.module.css";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -21,6 +21,8 @@ interface Props {
     messages_description: string;
     size: SidebarSizes;
     onToggleMinimized?: () => void;
+    onHeaderClick?: () => void;
+    infoDrawerOpen?: boolean;
     // LLM Selector props
     onLLMSelectionChange: (nextLLM: string) => void;
     llmOptions?: Model[];
@@ -43,11 +45,26 @@ export const ChatLayout = ({
     defaultLLM,
     onLLMSelectionChange,
     onToggleMinimized,
+    onHeaderClick,
+    infoDrawerOpen,
     actions
 }: Props) => {
     const sidebarWidth = { small: "200px", medium: "300px", large: "460px", full_width: "80%", none: "0px" }[size];
+
+    const [isCompact, setIsCompact] = useState(() =>
+        typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(max-width: 640px)").matches : false
+    );
+
+    useEffect(() => {
+        if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+        const mq = window.matchMedia("(max-width: 640px)");
+        const handler = (e: MediaQueryListEvent) => setIsCompact(e.matches);
+        mq.addEventListener("change", handler);
+        return () => mq.removeEventListener("change", handler);
+    }, []);
+
     return (
-        <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as CSSProperties}>
+        <div className={styles.container} style={{ "--sidebarWidth": sidebarWidth } as CSSProperties} data-info-open={infoDrawerOpen ?? false}>
             <aside hidden={size === "none"} className={styles.sidebar}>
                 {sidebar}
             </aside>
@@ -55,17 +72,25 @@ export const ChatLayout = ({
             <header className={styles.headerBar}>
                 <div className={styles.leftGroup}>
                     <div className={styles.sidebarOpener} role="group" aria-label="Sidebar controls">
-                        <Button appearance="subtle" onClick={onToggleMinimized} aria-label={size === "none" ? "Open sidebar" : "Close sidebar"}>
+                        <Button appearance="subtle" size="small" onClick={onToggleMinimized} aria-label={size === "none" ? "Open sidebar" : "Close sidebar"}>
                             {size === "none" ? <ChevronDoubleRight20Regular /> : <ChevronDoubleLeft20Regular />}
                         </Button>
                     </div>
-                    <h1 className={styles.headerTitle}>{header}</h1>
+                    <h1 className={styles.headerTitle}>
+                        {onHeaderClick ? (
+                            <Button appearance="transparent" className={styles.headerTitleButton} onClick={onHeaderClick}>
+                                {header}
+                            </Button>
+                        ) : (
+                            header
+                        )}
+                    </h1>
                 </div>
 
                 <div className={styles.controlsContainer}>
                     {llmOptions && defaultLLM && onLLMSelectionChange && (
                         <div aria-label="LLM selector container" role="group">
-                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} />
+                            <LLMSelector onSelectionChange={onLLMSelectionChange} defaultLLM={defaultLLM} options={llmOptions} compact={isCompact} />
                         </div>
                     )}
                     {actions}
@@ -76,7 +101,7 @@ export const ChatLayout = ({
                 <div className={styles.chatContainer}>
                     {showExamples ? (
                         <div className={styles.chatEmptyState} tabIndex={0}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                            <div className={styles.welcomeMessageContainer}>
                                 {header_as_markdown ? (
                                     <div className={styles.chatEmptyStateSubtitleMarkdown}>
                                         <div className={styles.answerText}>

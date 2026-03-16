@@ -163,7 +163,9 @@ export const AssistantDetailsSidebar = ({
                                 <Book24Regular className={styles.sectionIcon} />
                                 <span>{t("components.community_assistants.about", "ABOUT")}</span>
                             </div>
-                            <Text className={styles.aboutText}>{assistant?.description}</Text>
+                            <div className={styles.descriptionContainer}>
+                                <MarkdownRenderer className={styles.aboutText}>{assistant?.description ?? ""}</MarkdownRenderer>
+                            </div>
                         </div>
 
                         {enabledTools.length > 0 && (

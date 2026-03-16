@@ -2,6 +2,7 @@ import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardPreview, mergeClasses, CardProps } from "@fluentui/react-components";
 import styles from "./DiscoveryCard.module.css";
+import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface DiscoveryCardProps extends CardProps {
     id?: string;
@@ -54,7 +55,11 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
     const cardContent = (
         <Card id={id} ref={ref} className={mergeClasses(styles.card, isSelected && styles.cardSelected, className)} onClick={handleClick} {...rest}>
             {renderHeader()}
-            {description && <CardPreview className={styles.description}>{description}</CardPreview>}
+            {description && (
+                <CardPreview className={styles.description}>
+                    <MarkdownRenderer>{description}</MarkdownRenderer>
+                </CardPreview>
+            )}
         </Card>
     );
 

@@ -7,8 +7,9 @@ import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { useParams, useSearchParams } from "react-router-dom";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList } from "../../components/Example";
@@ -33,6 +34,8 @@ import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getCommunityAssistantApi } from "../../api/assistant-client";
+import { ApiError } from "../../api/fetch-utils";
+import { mapAssistantToCommunitySnapshot, upsertCommunityAssistantSnapshot } from "../../utils/community-assistant-snapshots";
 import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {
@@ -120,6 +123,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+    const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
     const assistantChatStorage: StorageService<ChatResponse, Assistant> = assistantStorageService.getChatStorageService();
 
     //config
@@ -210,7 +214,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     })
                     .catch(err => {
-                        if (err.response?.status === 403 && notSubscribed) {
+                        if (err instanceof ApiError && err.status === 403 && notSubscribed) {
                             setNoAccess(true);
                         } else {
                             console.error("Error loading assistant configuration:", err);
@@ -682,6 +686,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 assistantTitle={assistantConfig.title}
                 onSubscribe={async () => {
                     await subscribeToAssistantApi(assistant_id);
+                    await upsertCommunityAssistantSnapshot(
+                        communityAssistantStorageService,
+                        mapAssistantToCommunitySnapshot({ ...assistantConfig, id: assistant_id })
+                    );
                     setShowNotSubscribedDialog(false);
                     setNoAccess(false);
                     showSuccess(

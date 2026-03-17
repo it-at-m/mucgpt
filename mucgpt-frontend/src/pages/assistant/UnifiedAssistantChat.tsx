@@ -117,9 +117,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [isInfoDrawerOpen]);
 
     // StorageServices
-    const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
-    const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
-    const assistantChatStorage: StorageService<ChatResponse, Assistant> = assistantStorageService.getChatStorageService();
+    const assistantStorageService: AssistantStorageService = useMemo(
+        () => new AssistantStorageService(ASSISTANT_STORE),
+        []
+    );
+    const communityAssistantStorageService = useMemo(
+        () => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE),
+        []
+    );
+    const assistantChatStorage: StorageService<ChatResponse, Assistant> = useMemo(
+        () => assistantStorageService.getChatStorageService(),
+        [assistantStorageService]
+    );
 
     //config
     const [assistantConfig, setAssistantConfig] = useState<Assistant>({

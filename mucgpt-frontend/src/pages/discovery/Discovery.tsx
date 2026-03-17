@@ -26,6 +26,7 @@ import { AssistantDetailsSidebar, AssistantCardData } from "../../components/Ass
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import { downloadAssistantExport, mapVersionToExportData } from "../../utils/assistant-export";
 import { useDuplicateAssistant } from "../../features/community-assistant-ownership/useDuplicateAssistant";
+import { isCompleteCommunityAssistantSnapshot } from "../../utils/community-assistant-snapshots";
 
 type SortKey = "title" | "updated" | "subscriptions";
 
@@ -217,17 +218,19 @@ const Discovery = () => {
                 ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
 
                 // 3. Every assistant subscribed to, merged with deleted ones
-                const deletedCommunityAssistants = localCommunityAssistants
+                const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
+
+                const deletedCommunityAssistants = validLocalCommunityAssistants
                     .filter(local => !userSubscriptions.some((sub: any) => sub.id === local.id))
                     .filter(deleted => !ownedAssistants.some((own: any) => own.id === deleted.id));
 
                 const subscribedData = [
                     ...userSubscriptions.map((sub: any) => {
                         const fullData = fullAssistantById.get(sub.id);
-                        const localData = localCommunityAssistants.find(local => local.id === sub.id);
+                        const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
                         return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
                     }),
-                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0 }))
+                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0, isDeletedSnapshot: true }))
                 ];
                 setSubscribedAssistants(subscribedData);
             } catch (error) {
@@ -307,7 +310,7 @@ const Discovery = () => {
 
     const startConversation = () => {
         if (selectedAssistant) {
-            navigate(`/communityassistant/${selectedAssistant.id}`);
+            navigate(`/${selectedAssistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${selectedAssistant.id}`);
         }
     };
 
@@ -455,6 +458,7 @@ const Discovery = () => {
                                         id={assistant.id}
                                         title={assistant.title}
                                         description={assistant.description}
+                                        badge={assistant.isDeletedSnapshot ? t("components.community_assistants.deleted_badge") : undefined}
                                         onClick={() => handleAssistantClick(assistant)}
                                         isSelected={selectedAssistant?.id === assistant.id}
                                     />
@@ -494,7 +498,12 @@ const Discovery = () => {
                 onOpenChange={setShowDuplicateConfirm}
                 onConfirmClose={confirmDuplicateAssistant}
                 title={t("components.community_assistants.duplicate_confirm_title")}
-                message={t("components.community_assistants.duplicate_confirm_message", { title: assistantToDuplicate?.title ?? "" })}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
         </div>

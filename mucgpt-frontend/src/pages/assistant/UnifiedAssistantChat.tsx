@@ -29,13 +29,15 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { Button } from "@fluentui/react-components";
+import { Button, MessageBar, MessageBarBody } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
 import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getCommunityAssistantApi } from "../../api/assistant-client";
 import { ApiError } from "../../api/fetch-utils";
 import { mapAssistantToCommunitySnapshot, upsertCommunityAssistantSnapshot } from "../../utils/community-assistant-snapshots";
+import { useDuplicateAssistant } from "../../features/community-assistant-ownership/useDuplicateAssistant";
+import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {
@@ -103,6 +105,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
+    const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
+    const { assistantToDuplicate, showDuplicateConfirm, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
+        useDuplicateAssistant();
 
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
@@ -253,7 +258,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         setAssistantInfoData(null);
         setIsInfoDrawerOpen(false);
 
-        if (strategy.canEdit || !assistant_id || !isOwnershipResolved) {
+        if (strategy.canEdit || isDeletedAssistant || !assistant_id || !isOwnershipResolved) {
             setIsAssistantInfoLoading(false);
             return;
         }
@@ -293,7 +298,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return () => {
             isCurrentRequest = false;
         };
-    }, [assistant_id, strategy.canEdit, isOwnershipResolved]);
+    }, [assistant_id, strategy.canEdit, isDeletedAssistant, isOwnershipResolved]);
 
     // get History-Funktion
     const fetchHistory = useCallback(() => {
@@ -491,9 +496,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }, 100);
                     }
                 }}
+                readOnly={isDeletedAssistant}
             ></History>
         ),
-        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom]
+        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant]
     );
 
     // Sidebar component
@@ -505,30 +511,59 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const sidebar_actions = useMemo(
         () => (
             <>
-                <ClearChatButton
-                    onClick={clearChat}
-                    disabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy}
-                    showText={showSidebar}
-                />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} showText={showSidebar} />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
             </>
         ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
+        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar, isDeletedAssistant]
     );
 
     const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
     const examplesComponent = useMemo(() => {
+        if (isDeletedAssistant) {
+            return null;
+        }
+
         if (assistantConfig.examples && assistantConfig.examples.length > 0) {
             return <ExampleList examples={assistantConfig.examples} onExampleClicked={onExampleClicked} />;
         } else {
             return null;
         }
-    }, [assistantConfig.examples, onExampleClicked]);
+    }, [isDeletedAssistant, assistantConfig.examples, onExampleClicked]);
 
     // Text-Input component
     const inputComponent = useMemo(() => {
+        if (isDeletedAssistant) {
+            return (
+                <div className={styles.deletedChatWarningWrapper}>
+                    <MessageBar intent="warning" layout="multiline">
+                        <MessageBarBody>
+                            <div className={styles.deletedChatWarningContent}>
+                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.deleted_chat_warning")}</div>
+                                <div className={styles.deletedChatActions}>
+                                    <Button
+                                        appearance="primary"
+                                        onClick={() =>
+                                            requestDuplicateAssistant({
+                                                id: assistant_id,
+                                                title: assistantConfig.title,
+                                                rawData: mapAssistantToCommunitySnapshot({ ...assistantConfig, id: assistant_id }),
+                                                isDeletedSnapshot: true
+                                            })
+                                        }
+                                    >
+                                        {t("components.community_assistants.deleted_state_save_action")}
+                                    </Button>
+                                </div>
+                            </div>
+                        </MessageBarBody>
+                    </MessageBar>
+                </div>
+            );
+        }
+
         // Filter tools to only show those configured in the assistant
         const filteredTools =
             tools && assistantConfig.tools
@@ -541,7 +576,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             <QuestionInput
                 clearOnSend
                 placeholder={t("chat.prompt")}
-                disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
+                disabled={isLoadingRef.current || error !== undefined}
                 onSend={question => callApi(question)}
                 question={question}
                 setQuestion={question => setQuestion(question)}
@@ -551,7 +586,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 allowToolSelection={false}
             />
         );
-    }, [isLoadingRef.current, callApi, question, t, error, selectedTools, tools, assistantConfig.tools, strategy]);
+    }, [isDeletedAssistant, t, requestDuplicateAssistant, assistant_id, assistantConfig, isLoadingRef.current, callApi, question, error, selectedTools, tools]);
 
     // AnswerList component
     const answerList = useMemo(
@@ -566,15 +601,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 <Answer
                                     key={index}
                                     answer={answer.response}
-                                    onRegenerateResponseClicked={onRegenerateResponseClicked}
-                                    onQuickPromptSend={prompt => callApi(prompt)}
+                                    onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
+                                    onQuickPromptSend={isDeletedAssistant ? undefined : prompt => callApi(prompt)}
                                 />
                             )}
                             {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
                         </>
                     );
                 }}
-                onRollbackMessage={onRollbackMessage}
+                onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
                 isLoading={isLoadingRef.current}
                 error={error}
                 makeApiRequest={() => {
@@ -594,6 +629,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         ),
         [
             answers,
+            isDeletedAssistant,
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoadingRef.current,
@@ -626,7 +662,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
                     header={assistantConfig.title}
-                    welcomeMessage={t("chat.header")}
+                    welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? sidebarSize : "none"}
@@ -662,6 +698,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         examplesComponent,
         answerList,
         inputComponent,
+        isDeletedAssistant,
         lastQuestionRef.current,
         t,
         sidebarSize,
@@ -708,6 +745,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: assistantConfig.title })
                     );
                 }}
+            />
+            <CloseConfirmationDialog
+                open={showDuplicateConfirm}
+                onOpenChange={setShowDuplicateConfirm}
+                onConfirmClose={confirmDuplicateAssistant}
+                title={t("components.community_assistants.duplicate_confirm_title")}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
+                confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
             {!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
                 <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>

@@ -10,7 +10,7 @@ import { QuickPrompt } from "../QuickPrompt/QuickPrompt";
 interface Props {
     answers: ChatMessage[];
     regularAssistantMsg: (answer: ChatMessage, index: number, quickPrompts?: QuickPrompt[]) => ReactNode;
-    onRollbackMessage: (index: number) => void;
+    onRollbackMessage?: (index: number) => void;
     isLoading: boolean;
     error: unknown;
     makeApiRequest: () => void;
@@ -48,7 +48,9 @@ export const AnswerList = ({
                     <ChatTurnComponent
                         key={index}
                         innerRef={isLastAnswer ? lastAnswerRef : undefined}
-                        usermsg={<UserChatMessage message={answer.user} onRollbackMessage={() => onRollbackMessage(index - 1)} />}
+                        usermsg={
+                            <UserChatMessage message={answer.user} onRollbackMessage={onRollbackMessage ? () => onRollbackMessage(index - 1) : undefined} />
+                        }
                         usermsglabel={t("components.usericon.label") + " " + (index + 1).toString()}
                         assistantmsglabel={t("components.answericon.label") + " " + (index + 1).toString()}
                         assistantmsg={regularAssistantMsg(answer, index)}

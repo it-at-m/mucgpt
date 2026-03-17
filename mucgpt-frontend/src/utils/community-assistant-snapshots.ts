@@ -2,6 +2,7 @@ import { Assistant, AssistantCreateInput, AssistantResponse, AssistantVersionRes
 import { CREATIVITY_LOW } from "../constants";
 import { convertTemperatureToCreativity } from "../service/migration";
 import { CommunityAssistantStorageService } from "../service/communityassistantstorage";
+import { ApiError } from "../api/fetch-utils";
 
 export const COMMUNITY_ASSISTANT_SNAPSHOT_VERSION = 1;
 
@@ -132,6 +133,24 @@ export const isCompleteCommunityAssistantSnapshot = (snapshot: unknown): snapsho
         Array.isArray(candidate.tools) &&
         typeof candidate.is_visible === "boolean"
     );
+};
+
+export const resolveDeletedCommunityAssistantSnapshot = async (
+    error: unknown,
+    assistantId: string,
+    communityAssistantStorageService: CommunityAssistantStorageService,
+    fallbackSnapshot?: unknown
+): Promise<CommunityAssistantSnapshot | undefined> => {
+    if (!(error instanceof ApiError) || error.status !== 404) {
+        return undefined;
+    }
+
+    const snapshot = fallbackSnapshot ?? (await communityAssistantStorageService.getAssistantConfig(assistantId));
+    if (isCompleteCommunityAssistantSnapshot(snapshot) && snapshot.id === assistantId) {
+        return snapshot;
+    }
+
+    return undefined;
 };
 
 export const upsertCommunityAssistantSnapshot = async (

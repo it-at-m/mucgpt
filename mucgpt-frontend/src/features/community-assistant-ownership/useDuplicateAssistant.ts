@@ -7,16 +7,17 @@ import { useGlobalToastContext } from "../../components/GlobalToastHandler/Globa
 import { COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import {
-    isCompleteCommunityAssistantSnapshot,
     mapAssistantResponseToCommunityConfig,
     mapCommunityConfigToAssistantCreateInput,
-    mapCommunitySnapshotToCommunityConfig
+    mapCommunitySnapshotToCommunityConfig,
+    resolveDeletedCommunityAssistantSnapshot
 } from "../../utils/community-assistant-snapshots";
 
 export interface DuplicateAssistantCandidate {
     id: string;
     title: string;
     rawData?: AssistantResponse | CommunityAssistantSnapshot;
+    isDeletedSnapshot?: boolean;
 }
 
 export const useDuplicateAssistant = () => {
@@ -33,11 +34,16 @@ export const useDuplicateAssistant = () => {
             try {
                 return await getCommunityAssistantApi(assistantId);
             } catch (responseError) {
-                const fallbackSnapshot =
-                    fallbackData && !("latest_version" in fallbackData) ? fallbackData : await communityAssistantStorageService.getAssistantConfig(assistantId);
+                const fallbackSnapshot = fallbackData && !("latest_version" in fallbackData) ? fallbackData : undefined;
+                const deletedSnapshot = await resolveDeletedCommunityAssistantSnapshot(
+                    responseError,
+                    assistantId,
+                    communityAssistantStorageService,
+                    fallbackSnapshot
+                );
 
-                if (isCompleteCommunityAssistantSnapshot(fallbackSnapshot)) {
-                    return fallbackSnapshot;
+                if (deletedSnapshot) {
+                    return deletedSnapshot;
                 }
 
                 throw responseError;

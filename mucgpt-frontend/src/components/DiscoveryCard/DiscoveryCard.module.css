@@ -26,7 +26,13 @@
     color: var(--colorNeutralForeground1);
     transition-property: color;
     transition-duration: 0.2s;
-    padding-top: 12px;
+}
+
+.headerRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .description {

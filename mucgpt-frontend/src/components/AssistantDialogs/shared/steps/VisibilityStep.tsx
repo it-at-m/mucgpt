@@ -92,8 +92,8 @@ export const VisibilityStep = ({
                         />
                         {visibilityMode === "departments" && (
                             <div className={sharedStyles.departmentSection}>
-                                <InfoLabel info={<div>{t("components.edit_assistant_dialog.departments_info")}</div>}>
-                                    {t("components.edit_assistant_dialog.departments")}
+                                <InfoLabel info={<div>{t("components.assistant_editor.departments_info")}</div>}>
+                                    {t("components.assistant_editor.departments")}
                                 </InfoLabel>
                                 <div className={sharedStyles.departmentDropdown}>
                                     <DepartmentTreeDropdown

@@ -27,7 +27,7 @@ export const ToolsStep = ({ selectedTools, availableTools, onToolsChange, onHasC
     return (
         <DialogContent>
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.edit_assistant_dialog.tools")}</label>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.section_tools")}</label>
                 <div className={sharedStyles.dynamicFieldContainer}>
                     <div className={sharedStyles.toolSelectorContainer}>
                         <ToolsSelectorContent

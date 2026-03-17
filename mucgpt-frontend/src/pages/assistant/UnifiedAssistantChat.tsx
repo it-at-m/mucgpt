@@ -697,10 +697,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 assistantTitle={assistantConfig.title}
                 onSubscribe={async () => {
                     await subscribeToAssistantApi(assistant_id);
-                    await upsertCommunityAssistantSnapshot(
-                        communityAssistantStorageService,
-                        mapAssistantToCommunitySnapshot({ ...assistantConfig, id: assistant_id })
-                    );
+                    try {
+                        await upsertCommunityAssistantSnapshot(
+                            communityAssistantStorageService,
+                            mapAssistantToCommunitySnapshot({ ...assistantConfig, id: assistant_id })
+                        );
+                    } catch (snapshotError) {
+                        console.error("Error updating community assistant snapshot:", snapshotError);
+                    }
                     setShowNotSubscribedDialog(false);
                     setNoAccess(false);
                     showSuccess(

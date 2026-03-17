@@ -84,8 +84,8 @@ const DraggableQuickPromptItem = memo(
                                 ref={handleRef}
                                 type="button"
                                 className={sharedStyles.dragHandleButton}
-                                title={t("components.edit_assistant_dialog.drag_to_reorder")}
-                                aria-label={t("components.edit_assistant_dialog.dnd_aria_label", { position: index + 1, total: totalCount })}
+                                title={t("components.assistant_editor.drag_to_reorder")}
+                                aria-label={t("components.assistant_editor.dnd_aria_label", { position: index + 1, total: totalCount })}
                             >
                                 <ReOrderDotsVertical24Regular />
                             </button>
@@ -93,10 +93,10 @@ const DraggableQuickPromptItem = memo(
                         <MenuPopover>
                             <MenuList>
                                 <MenuItem icon={<ArrowUp20Regular />} onClick={() => onMoveUp(index)} disabled={isFirst}>
-                                    {t("components.edit_assistant_dialog.move_up")}
+                                    {t("components.assistant_editor.move_up")}
                                 </MenuItem>
                                 <MenuItem icon={<ArrowDown20Regular />} onClick={() => onMoveDown(index)} disabled={isLast}>
-                                    {t("components.edit_assistant_dialog.move_down")}
+                                    {t("components.assistant_editor.move_down")}
                                 </MenuItem>
                             </MenuList>
                         </MenuPopover>
@@ -106,7 +106,7 @@ const DraggableQuickPromptItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Label:</span>
                         <Input
-                            placeholder={t("components.edit_assistant_dialog.quick_prompt_label_placeholder")}
+                            placeholder={t("components.assistant_editor.quick_prompt_label_placeholder")}
                             value={qp.label}
                             onChange={onChangeLabel(index)}
                             onBlur={onBlurLabel(index)}
@@ -117,7 +117,7 @@ const DraggableQuickPromptItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Prompt:</span>
                         <Textarea
-                            placeholder={t("components.edit_assistant_dialog.quick_prompt_text_placeholder")}
+                            placeholder={t("components.assistant_editor.quick_prompt_text_placeholder")}
                             value={qp.prompt}
                             onChange={onChangePrompt(index)}
                             disabled={!isOwner}
@@ -131,7 +131,7 @@ const DraggableQuickPromptItem = memo(
                         type="button"
                         className={sharedStyles.removeFieldButton}
                         onClick={() => onRemove(index)}
-                        title={t("components.edit_assistant_dialog.remove")}
+                        title={t("components.assistant_editor.remove")}
                     >
                         <Delete24Regular />
                     </button>
@@ -271,11 +271,11 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
         <DialogContent>
             {isOwner && (
                 <p className={sharedStyles.hintText}>
-                    <strong>{t("common.hint")}</strong> {t("components.edit_assistant_dialog.dnd_reorder_hint")}
+                    <strong>{t("common.hint")}</strong> {t("components.assistant_editor.dnd_reorder_hint")}
                 </p>
             )}
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.edit_assistant_dialog.quick_prompts")}</label>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.quick_prompts")}</label>
                 <div className={sharedStyles.dndFieldContainer}>
                     <div className={sharedStyles.dndListContainer}>
                         {quickPrompts.length > 0 ? (
@@ -295,13 +295,13 @@ export const QuickPromptsStep = ({ quickPrompts, isOwner, onQuickPromptsChange, 
                                 />
                             ))
                         ) : (
-                            <div className={sharedStyles.noToolsText}>{t("components.edit_assistant_dialog.no_quick_prompts_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_quick_prompts_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
                             <Button appearance="subtle" onClick={addQuickPrompt} className={sharedStyles.addFieldButton}>
-                                <Add24Regular /> {t("components.edit_assistant_dialog.add_quick_prompt")}
+                                <Add24Regular /> {t("components.assistant_editor.add_quick_prompt")}
                             </Button>
                         </div>
                     )}

@@ -16,7 +16,6 @@ import {
 import { AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
-import { CreateAssistantDialog } from "../../components/AssistantDialogs/CreateAssistantDialog/CreateAssistantDialog";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -44,7 +43,6 @@ const Discovery = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>("");
     const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
-    const [showCreateDialog, setShowCreateDialog] = useState<boolean>(false);
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
@@ -316,7 +314,7 @@ const Discovery = () => {
 
     const editAssistant = () => {
         if (selectedAssistant) {
-            navigate(`/owned/communityassistant/${selectedAssistant.id}?edit=true`);
+            navigate(`/owned/communityassistant/${selectedAssistant.id}/edit`);
         }
     };
 
@@ -375,7 +373,7 @@ const Discovery = () => {
                                             {t("components.import_assistant.import")}
                                         </Button>
                                     </Tooltip>
-                                    <AddAssistantButton onClick={() => setShowCreateDialog(true)} />
+                                    <AddAssistantButton onClick={() => navigate("/assistant/create")} />
                                 </div>
                             </div>
                         </div>
@@ -437,8 +435,6 @@ const Discovery = () => {
                                 </div>
                             </div>
                         </div>
-
-                        <CreateAssistantDialog showDialogInput={showCreateDialog} setShowDialogInput={setShowCreateDialog} />
 
                         {isLoading ? (
                             <div className={styles.assistantsGrid}>

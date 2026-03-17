@@ -30,8 +30,8 @@ export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose, ti
         <Dialog open={open} onOpenChange={(_event, data) => onOpenChange(data.open)} inertTrapFocus>
             <DialogSurface>
                 <DialogBody>
-                    <DialogTitle>{title ?? t("components.edit_assistant_dialog.close_dialog_title")}</DialogTitle>
-                    <DialogContent>{message ?? t("components.edit_assistant_dialog.close_dialog_message")}</DialogContent>
+                    <DialogTitle>{title ?? t("components.assistant_editor.discard_title")}</DialogTitle>
+                    <DialogContent>{message ?? t("components.assistant_editor.discard_message")}</DialogContent>
                     <DialogActions>
                         <Button appearance="secondary" onClick={handleCancel}>
                             {t("common.cancel")}

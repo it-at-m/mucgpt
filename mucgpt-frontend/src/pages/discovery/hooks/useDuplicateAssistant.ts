@@ -38,7 +38,11 @@ export const useDuplicateAssistant = () => {
                     throw responseError;
                 }
 
-                const fallbackSnapshot = fallbackData && !("latest_version" in fallbackData) ? fallbackData : undefined;
+                if (fallbackData && "latest_version" in fallbackData) {
+                    return fallbackData;
+                }
+
+                const fallbackSnapshot = fallbackData;
 
                 if (isCompleteCommunityAssistantSnapshot(fallbackSnapshot)) {
                     return fallbackSnapshot;

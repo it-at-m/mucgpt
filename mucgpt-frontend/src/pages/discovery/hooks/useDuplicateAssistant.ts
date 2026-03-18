@@ -1,17 +1,19 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { createCommunityAssistantApi, getCommunityAssistantApi } from "../../api/assistant-client";
-import { AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
-import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
-import { COMMUNITY_ASSISTANT_STORE } from "../../constants";
-import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
+import { createCommunityAssistantApi, getCommunityAssistantApi } from "../../../api/assistant-client";
+import { AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
+import { ApiError } from "../../../api/fetch-utils";
+import { useGlobalToastContext } from "../../../components/GlobalToastHandler/GlobalToastContext";
+import { COMMUNITY_ASSISTANT_STORE } from "../../../constants";
+import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
 import {
+    isCompleteCommunityAssistantSnapshot,
     mapAssistantResponseToCommunityConfig,
     mapCommunityConfigToAssistantCreateInput,
     mapCommunitySnapshotToCommunityConfig,
     resolveDeletedCommunityAssistantSnapshot
-} from "../../utils/community-assistant-snapshots";
+} from "../../../utils/community-assistant-snapshots";
 
 export interface DuplicateAssistantCandidate {
     id: string;
@@ -44,6 +46,16 @@ export const useDuplicateAssistant = () => {
 
                 if (deletedSnapshot) {
                     return deletedSnapshot;
+                }
+
+                if (!(responseError instanceof ApiError) || responseError.status !== 404) {
+                    throw responseError;
+                }
+
+                const cachedSnapshot = await communityAssistantStorageService.getAssistantConfig(assistantId);
+
+                if (isCompleteCommunityAssistantSnapshot(cachedSnapshot)) {
+                    return cachedSnapshot;
                 }
 
                 throw responseError;

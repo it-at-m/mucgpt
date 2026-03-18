@@ -117,9 +117,10 @@ export const isCompleteCommunityAssistantSnapshot = (snapshot: unknown): snapsho
     }
 
     const candidate = snapshot as Partial<CommunityAssistantSnapshot>;
+    const hasSupportedSnapshotVersion = candidate.snapshot_version === COMMUNITY_ASSISTANT_SNAPSHOT_VERSION || candidate.snapshot_version === undefined;
 
     return (
-        candidate.snapshot_version === COMMUNITY_ASSISTANT_SNAPSHOT_VERSION &&
+        hasSupportedSnapshotVersion &&
         typeof candidate.id === "string" &&
         typeof candidate.title === "string" &&
         typeof candidate.description === "string" &&

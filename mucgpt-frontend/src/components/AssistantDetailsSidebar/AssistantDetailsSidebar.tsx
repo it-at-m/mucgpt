@@ -16,7 +16,7 @@ import {
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
+import { AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface AssistantCardData {
@@ -58,16 +58,8 @@ export const AssistantDetailsSidebar = ({
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
-
-    const assistantVersion = assistant?.rawData
-        ? "latest_version" in assistant.rawData
-            ? assistant.rawData.latest_version
-            : {
-                  creativity: assistant.rawData.creativity,
-                  system_prompt: assistant.rawData.system_message,
-                  tools: assistant.rawData.tools || []
-              }
-        : undefined;
+    const latestVersion = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData.latest_version : undefined;
+    const snapshot = assistant?.rawData && !("latest_version" in assistant.rawData) ? assistant.rawData : undefined;
 
     const getCreativityConfig = (creativity: string) => {
         switch (creativity.toLowerCase()) {
@@ -92,9 +84,11 @@ export const AssistantDetailsSidebar = ({
         }
     };
 
-    const creativityConfig = assistantVersion?.creativity ? getCreativityConfig(assistantVersion.creativity) : getCreativityConfig("balanced");
+    const assistantCreativity = latestVersion?.creativity || snapshot?.creativity || "balanced";
+    const creativityConfig = getCreativityConfig(assistantCreativity);
 
-    const enabledTools = assistantVersion?.tools?.filter(tool => tool.config?.enabled) || [];
+    const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
+    const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
     const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
 
@@ -221,14 +215,14 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {assistantVersion?.system_prompt && (
+                        {systemPrompt && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
                                     <DocumentText24Regular className={styles.sectionIcon} />
                                     <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                                 </div>
                                 <div className={styles.systemPromptContainer}>
-                                    <MarkdownRenderer className={styles.promptMarkdown}>{assistantVersion.system_prompt}</MarkdownRenderer>
+                                    <MarkdownRenderer className={styles.promptMarkdown}>{systemPrompt}</MarkdownRenderer>
                                 </div>
                             </div>
                         )}

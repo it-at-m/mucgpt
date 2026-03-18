@@ -35,8 +35,13 @@ import { AssistantEditorPage } from "../../components/AssistantDialogs/Assistant
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getCommunityAssistantApi } from "../../api/assistant-client";
 import { ApiError } from "../../api/fetch-utils";
-import { mapAssistantToCommunitySnapshot, upsertCommunityAssistantSnapshot } from "../../utils/community-assistant-snapshots";
-import { useDuplicateAssistant } from "../../features/community-assistant-ownership/useDuplicateAssistant";
+import {
+    mapAssistantResponseToSnapshot,
+    mapAssistantToCommunitySnapshot,
+    mapCommunitySnapshotToAssistant,
+    upsertCommunityAssistantSnapshot
+} from "../../utils/community-assistant-snapshots";
+import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import styles from "./UnifiedAssistantChat.module.css";
 
@@ -122,9 +127,12 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     }, [isInfoDrawerOpen]);
 
     // StorageServices
-    const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
-    const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
-    const assistantChatStorage: StorageService<ChatResponse, Assistant> = assistantStorageService.getChatStorageService();
+    const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
+    const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
+    const assistantChatStorage: StorageService<ChatResponse, Assistant> = useMemo(
+        () => assistantStorageService.getChatStorageService(),
+        [assistantStorageService]
+    );
 
     //config
     const [assistantConfig, setAssistantConfig] = useState<Assistant>({
@@ -735,15 +743,26 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 assistantTitle={assistantConfig.title}
                 onSubscribe={async () => {
                     await subscribeToAssistantApi(assistant_id);
-                    await upsertCommunityAssistantSnapshot(
-                        communityAssistantStorageService,
-                        mapAssistantToCommunitySnapshot({ ...assistantConfig, id: assistant_id })
-                    );
+                    const subscribedAssistantResponse = await getCommunityAssistantApi(assistant_id);
+                    const subscribedAssistant = {
+                        ...mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(subscribedAssistantResponse)),
+                        owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
+                    };
+
+                    try {
+                        await upsertCommunityAssistantSnapshot(
+                            communityAssistantStorageService,
+                            mapAssistantToCommunitySnapshot({ ...subscribedAssistant, id: assistant_id })
+                        );
+                    } catch (snapshotError) {
+                        console.error("Error updating community assistant snapshot:", snapshotError);
+                    }
+                    setAssistantConfig(subscribedAssistant);
                     setShowNotSubscribedDialog(false);
                     setNoAccess(false);
                     showSuccess(
                         t("components.not_subscribed_dialog.subscribe_success"),
-                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: assistantConfig.title })
+                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: subscribedAssistant.title })
                     );
                 }}
             />

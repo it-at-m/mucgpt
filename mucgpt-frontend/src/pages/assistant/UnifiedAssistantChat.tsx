@@ -20,7 +20,7 @@ import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { HeaderContext } from "../layout/HeaderContextProvider";
 import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
-import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy } from "./AssistantStrategy";
+import { AssistantStrategy, CommunityAssistantStrategy, DeletedCommunityAssistantStrategy, LocalAssistantStrategy } from "./AssistantStrategy";
 import { chatApi } from "../../api/core-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi, subscribeToAssistantApi } from "../../api/assistant-client";
@@ -42,6 +42,7 @@ import {
     upsertCommunityAssistantSnapshot
 } from "../../utils/community-assistant-snapshots";
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
+import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
 import styles from "./UnifiedAssistantChat.module.css";
 
@@ -117,9 +118,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
+    const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     const { assistantToDuplicate, showDuplicateConfirm, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
         useDuplicateAssistant();
-
     // Sync info drawer state to body class so Layout.module.css can offset the footer
     useEffect(() => {
         document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
@@ -128,6 +129,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
+    const { showMigrateConfirm: showLocalMigrateConfirm, setShowMigrateConfirm: setShowLocalMigrateConfirm, performMigration } =
+        useMigrateLocalAssistant(assistantStorageService);
     const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
     const assistantChatStorage: StorageService<ChatResponse, Assistant> = useMemo(
         () => assistantStorageService.getChatStorageService(),
@@ -538,10 +541,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     const inputComponent = useMemo(() => {
+        // Filter tools to only show those configured in the assistant
+        const filteredTools =
+            tools && assistantConfig.tools
+                ? {
+                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                  }
+                : tools;
+
         if (isDeletedAssistant) {
             return (
                 <div className={styles.deletedChatWarningWrapper}>
-                    <MessageBar intent="warning" layout="multiline">
+                    <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
                         <MessageBarBody>
                             <div className={styles.deletedChatWarningContent}>
                                 <div className={styles.deletedChatWarningText}>{t("components.community_assistants.deleted_chat_warning")}</div>
@@ -567,13 +578,38 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             );
         }
 
-        // Filter tools to only show those configured in the assistant
-        const filteredTools =
-            tools && assistantConfig.tools
-                ? {
-                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                  }
-                : tools;
+        if (isLocalAssistant) {
+            return (
+                <>
+                    <div className={styles.deletedChatWarningWrapper}>
+                        <MessageBar intent="warning" layout="multiline" className={styles.chatWarningBar}>
+                            <MessageBarBody>
+                                <div className={styles.deletedChatWarningContent}>
+                                    <div className={styles.deletedChatWarningText}>{t("components.community_assistants.local_chat_warning")}</div>
+                                    <div className={styles.deletedChatActions}>
+                                        <Button appearance="primary" onClick={() => setShowLocalMigrateConfirm(true)}>
+                                            {t("components.community_assistants.local_state_publish_action")}
+                                        </Button>
+                                    </div>
+                                </div>
+                            </MessageBarBody>
+                        </MessageBar>
+                    </div>
+                    <QuestionInput
+                        clearOnSend
+                        placeholder={t("chat.prompt")}
+                        disabled={isLoadingRef.current || error !== undefined}
+                        onSend={question => callApi(question)}
+                        question={question}
+                        setQuestion={question => setQuestion(question)}
+                        selectedTools={selectedTools}
+                        setSelectedTools={setSelectedTools}
+                        tools={filteredTools}
+                        allowToolSelection={false}
+                    />
+                </>
+            );
+        }
 
         return (
             <QuestionInput
@@ -589,7 +625,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 allowToolSelection={false}
             />
         );
-    }, [isDeletedAssistant, t, requestDuplicateAssistant, assistant_id, assistantConfig, isLoadingRef.current, callApi, question, error, selectedTools, tools]);
+    }, [isDeletedAssistant, isLocalAssistant, t, requestDuplicateAssistant, assistant_id, assistantConfig, isLoadingRef.current, callApi, question, error, selectedTools, tools, navigate]);
 
     // AnswerList component
     const answerList = useMemo(
@@ -765,6 +801,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: subscribedAssistant.title })
                     );
                 }}
+            />
+            <CloseConfirmationDialog
+                open={showLocalMigrateConfirm}
+                onOpenChange={setShowLocalMigrateConfirm}
+                onConfirmClose={() => performMigration(assistantConfig, assistant_id, assistantConfig.title)}
+                title={t("components.community_assistants.local_migration_confirm_title")}
+                message={t("components.community_assistants.local_migration_confirm_message")}
+                confirmLabel={t("components.community_assistants.local_migration_confirm_action")}
             />
             <CloseConfirmationDialog
                 open={showDuplicateConfirm}

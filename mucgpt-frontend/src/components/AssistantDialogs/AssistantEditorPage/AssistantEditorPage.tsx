@@ -1,5 +1,5 @@
 import type { FormEvent, ReactNode } from "react";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -59,10 +59,10 @@ interface AssistantEditorPageEditProps {
 
 type AssistantEditorPageProps = AssistantEditorPageCreateProps | AssistantEditorPageEditProps;
 
-function SectionCard({ title, children, className, hideTitle }: { title: string; children: ReactNode; className?: string; hideTitle?: boolean }) {
+function SectionCard({ title, children, className, hideTitle, id }: { title: string; children: ReactNode; className?: string; hideTitle?: boolean; id?: string }) {
     const sectionClassName = [styles.sectionCard, className].filter(Boolean).join(" ");
     return (
-        <div className={sectionClassName}>
+        <div className={sectionClassName} id={id}>
             {!hideTitle && <h3 className={styles.sectionTitle}>{title}</h3>}
             <div className={styles.sectionContent}>{children}</div>
         </div>
@@ -140,7 +140,7 @@ function SettingsForm(props: SettingsFormProps) {
                     />
                 </SectionCard>
 
-                <SectionCard title={t("components.assistant_editor.section_access")} className={styles.sectionAccess}>
+                <SectionCard title={t("components.assistant_editor.section_access")} className={styles.sectionAccess} id="visibility-settings">
                     <VisibilityStep
                         isOwner={props.isOwner}
                         publishDepartments={props.publishDepartments}
@@ -418,6 +418,19 @@ export const AssistantEditorPage = (props: AssistantEditorPageProps) => {
     const pageTitle = isCreate ? t("components.assistant_editor.create_title") : t("components.assistant_editor.edit_title");
     const settingsState = isCreate ? createState : editState;
     const isSettingsValid = settingsState.title.trim() !== "" && settingsState.systemPrompt.trim() !== "";
+
+    useEffect(() => {
+        // Support both hash router (/#/route#fragment) and regular routing (#fragment)
+        const parts = window.location.hash.split("#");
+        const hash = parts[2] || parts[1];
+        if (hash !== "visibility-settings") {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            document.getElementById("visibility-settings")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    }, []);
 
     return (
         <div className={styles.page}>

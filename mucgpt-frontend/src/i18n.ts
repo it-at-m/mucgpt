@@ -552,6 +552,21 @@ i18n
                             duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
                             duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
                             duplicate_failed_default: "Beim Duplizieren des Assistenten ist ein Fehler aufgetreten.",
+                            local_badge: "Veraltet - Lokal",
+                            local_state_title: "Dieser lokale Assistent ist veraltet",
+                            discovery_local_hint:
+                                "Dieser Assistent existiert nur lokal in Ihrem Browser. Sichern Sie ihn jetzt privat in Ihrem Konto, damit er erhalten bleibt und weiterhin unterstützt wird.",
+                            local_chat_warning:
+                                "Dieser Assistent ist nur noch lokal in Ihrem Browser gespeichert. Sichern Sie ihn jetzt privat in Ihrem Konto, damit er erhalten bleibt und weiterhin unterstützt wird.",
+                            local_state_publish_action: "Privat sichern",
+                            local_migration_confirm_title: "Assistent privat sichern?",
+                            local_migration_confirm_message:
+                                "Wir sichern diesen Assistenten privat in Ihrem Konto, damit er erhalten bleibt und weiterhin unterstützt wird. Wenn Sie ihn später mit anderen teilen möchten, können Sie das jederzeit in den Einstellungen ändern.",
+                            local_migration_confirm_action: "Privat sichern",
+                            local_migration_success_title: "Assistent privat gesichert",
+                            local_migration_success_message: 'Der Assistent "{{title}}" wurde privat in Ihrem Konto gesichert.',
+                            local_migration_failed_title: "Assistent konnte nicht gesichert werden",
+                            local_migration_failed_default: "Beim Sichern des Assistenten ist ein Fehler aufgetreten.",
                             deleted_badge: "Gelöscht",
                             deleted_state_title: "Dieser Community-Assistent ist nicht mehr verfügbar",
                             deleted_state_body:
@@ -1150,6 +1165,21 @@ i18n
                             duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
                             duplicate_failed_title: "Assistant could not be duplicated",
                             duplicate_failed_default: "An error occurred while duplicating the assistant.",
+                            local_badge: "Deprecated - Local",
+                            local_state_title: "This local assistant is deprecated",
+                            discovery_local_hint:
+                                "This assistant only exists locally in your browser. Save it privately to your account now so it stays available and supported.",
+                            local_chat_warning:
+                                "This assistant is only stored locally in your browser. Save it privately to your account now so it stays available and supported.",
+                            local_state_publish_action: "Save privately",
+                            local_migration_confirm_title: "Save assistant privately?",
+                            local_migration_confirm_message:
+                                "We will save this assistant privately to your account so it stays available and supported. If you want to share it with others later, you can change that at any time in the assistant settings.",
+                            local_migration_confirm_action: "Save privately",
+                            local_migration_success_title: "Assistant saved privately",
+                            local_migration_success_message: 'The assistant "{{title}}" was saved privately to your account.',
+                            local_migration_failed_title: "Assistant could not be saved",
+                            local_migration_failed_default: "An error occurred while saving the assistant.",
                             deleted_badge: "Deleted",
                             deleted_state_title: "This community assistant is no longer available",
                             deleted_state_body: "The original assistant is no longer available or supported. You can no longer continue using it directly.",
@@ -1748,6 +1778,21 @@ i18n
                             duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
                             duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
                             duplicate_failed_default: "Beim Dupliziern vom Assistentn is a Fehler aufgtretn.",
+                            local_badge: "Veraltet - Lokal",
+                            local_state_title: "Der lokale Assistent is veraltet",
+                            discovery_local_hint:
+                                "Der Assistent existiert bloß lokal in deim Browser. Sicher eam jetzt privat in deim Konto, damit a erhalten bleibt und weiter unterstützt werd.",
+                            local_chat_warning:
+                                "Der Assistent is bloß no lokal in deim Browser gespeichert. Sicher eam jetzt privat in deim Konto, damit a erhalten bleibt und weiter unterstützt werd.",
+                            local_state_publish_action: "Privat sichern",
+                            local_migration_confirm_title: "Assistent privat sichern?",
+                            local_migration_confirm_message:
+                                "Mir sichern den Assistenten privat in deim Konto, damit a erhalten bleibt und weiter unterstützt werd. Wennst eam später für andere freigebn magst, kannst des jederzeit in de Einstellungen ändern.",
+                            local_migration_confirm_action: "Privat sichern",
+                            local_migration_success_title: "Assistent privat gesichert",
+                            local_migration_success_message: 'Da Assistent "{{title}}" is privat in deim Konto gesichert worn.',
+                            local_migration_failed_title: "Assistent hod ned gesichert wern kina",
+                            local_migration_failed_default: "Beim Sichern vom Assistentn is a Fehler aufgtretn.",
                             deleted_badge: "Glascht",
                             deleted_state_title: "Der Community-Assistent is nimmer verfuegbar",
                             deleted_state_body:
@@ -2348,6 +2393,21 @@ i18n
                             duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
                             duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
                             duplicate_failed_default: "Une erreur est survenue lors de la duplication de l'assistant.",
+                            local_badge: "Obsolète - Local",
+                            local_state_title: "Cet assistant local est obsolète",
+                            discovery_local_hint:
+                                "Cet assistant n'existe que localement dans votre navigateur. Enregistrez-le maintenant de façon privée dans votre compte pour qu'il reste disponible et pris en charge.",
+                            local_chat_warning:
+                                "Cet assistant n'est plus stocké que localement dans votre navigateur. Enregistrez-le maintenant de façon privée dans votre compte pour qu'il reste disponible et pris en charge.",
+                            local_state_publish_action: "Enregistrer en privé",
+                            local_migration_confirm_title: "Enregistrer l'assistant en privé ?",
+                            local_migration_confirm_message:
+                                "Nous allons enregistrer cet assistant de façon privée dans votre compte afin qu'il reste disponible et pris en charge. Si vous souhaitez plus tard le partager avec d'autres, vous pourrez le modifier à tout moment dans les paramètres de l'assistant.",
+                            local_migration_confirm_action: "Enregistrer en privé",
+                            local_migration_success_title: "Assistant enregistré en privé",
+                            local_migration_success_message: `L'assistant "{{title}}" a été enregistré en privé dans votre compte.`,
+                            local_migration_failed_title: "L'assistant n'a pas pu être enregistré",
+                            local_migration_failed_default: "Une erreur est survenue lors de l'enregistrement de l'assistant.",
                             deleted_badge: "SupprimÃ©",
                             deleted_state_title: "Cet assistant communautaire n'est plus disponible",
                             deleted_state_body:
@@ -2945,6 +3005,21 @@ i18n
                             duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
                             duplicate_failed_title: "Не вдалося дублювати асистента",
                             duplicate_failed_default: "Під час дублювання асистента сталася помилка.",
+                            local_badge: "Застарілий - локальний",
+                            local_state_title: "Цей локальний асистент застарів",
+                            discovery_local_hint:
+                                "Цей асистент існує лише локально у вашому браузері. Збережіть його приватно у своєму обліковому записі зараз, щоб він залишався доступним і підтримуваним.",
+                            local_chat_warning:
+                                "Цей асистент зберігається лише локально у вашому браузері. Збережіть його приватно у своєму обліковому записі зараз, щоб він залишався доступним і підтримуваним.",
+                            local_state_publish_action: "Зберегти приватно",
+                            local_migration_confirm_title: "Зберегти асистента приватно?",
+                            local_migration_confirm_message:
+                                "Ми збережемо цього асистента приватно у вашому обліковому записі, щоб він залишався доступним і підтримуваним. Якщо пізніше ви захочете поділитися ним з іншими, це можна буде будь-коли змінити в налаштуваннях асистента.",
+                            local_migration_confirm_action: "Зберегти приватно",
+                            local_migration_success_title: "Асистента збережено приватно",
+                            local_migration_success_message: 'Асистента "{{title}}" приватно збережено у вашому обліковому записі.',
+                            local_migration_failed_title: "Не вдалося зберегти асистента",
+                            local_migration_failed_default: "Під час збереження асистента сталася помилка.",
                             deleted_badge: "Видалено",
                             deleted_state_title: "Цей асистент спільноти більше недоступний",
                             deleted_state_body:

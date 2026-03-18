@@ -15,11 +15,26 @@
 .deletedChatActions {
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
     flex-shrink: 0;
 }
 
 .deletedChatWarningWrapper {
     margin: 0 24px 24px;
+}
+
+.chatWarningBar {
+    border-radius: 10px !important;
+    overflow: hidden;
+}
+
+.chatWarningBar :global([class*="fui-MessageBar__icon"]) {
+    align-self: center;
+}
+
+.chatWarningBar :global(.fui-Button) {
+    align-items: center;
 }
 
 .deletedChatWarningContent {
@@ -39,5 +54,11 @@
     .deletedChatWarningContent {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .deletedChatActions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
     }
 }

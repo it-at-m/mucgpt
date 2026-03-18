@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { createCommunityAssistantApi, getCommunityAssistantApi } from "../../api/assistant-client";
 import { AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
+import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -33,11 +34,20 @@ export const useDuplicateAssistant = () => {
             try {
                 return await getCommunityAssistantApi(assistantId);
             } catch (responseError) {
-                const fallbackSnapshot =
-                    fallbackData && !("latest_version" in fallbackData) ? fallbackData : await communityAssistantStorageService.getAssistantConfig(assistantId);
+                if (!(responseError instanceof ApiError) || responseError.status !== 404) {
+                    throw responseError;
+                }
+
+                const fallbackSnapshot = fallbackData && !("latest_version" in fallbackData) ? fallbackData : undefined;
 
                 if (isCompleteCommunityAssistantSnapshot(fallbackSnapshot)) {
                     return fallbackSnapshot;
+                }
+
+                const cachedSnapshot = await communityAssistantStorageService.getAssistantConfig(assistantId);
+
+                if (isCompleteCommunityAssistantSnapshot(cachedSnapshot)) {
+                    return cachedSnapshot;
                 }
 
                 throw responseError;

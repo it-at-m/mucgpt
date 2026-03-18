@@ -1,13 +1,12 @@
 """SQLAlchemy event listeners for maintaining subscription counts."""
 
-from sqlalchemy import event, text
+from sqlalchemy import text
 from sqlalchemy.orm import attributes
 
 from core.logtools import getLogger
 
 # Import is deferred to avoid circular import: database.__init__ imports this module
 # while database_models may not be fully initialized yet.
-from .database_models import Subscription
 
 logger = getLogger("assistant_repo")
 
@@ -62,7 +61,7 @@ def _subscription_after_delete(mapper, connection, target):
     )
 
 
-# Register listeners after Subscription class is fully defined
-event.listen(Subscription, "after_insert", _subscription_after_insert)
-event.listen(Subscription, "after_update", _subscription_after_update)
-event.listen(Subscription, "after_delete", _subscription_after_delete)
+# Event listeners disabled - manual counter updates in assistant_repo.py
+# event.listen(Subscription, "after_insert", _subscription_after_insert)
+# event.listen(Subscription, "after_update", _subscription_after_update)
+# event.listen(Subscription, "after_delete", _subscription_after_delete)

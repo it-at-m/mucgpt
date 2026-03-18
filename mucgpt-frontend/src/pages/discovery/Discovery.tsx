@@ -218,16 +218,31 @@ const Discovery = () => {
                 setOwnedAssistantIds(ownedIds);
                 setUserSubscriptionIds(subscribedIds);
 
-                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot, extra?: Partial<AssistantCardData>): AssistantCardData => ({
-                    id: a.id,
-                    title: a.latest_version?.name || a.title || "Unknown Assistant",
-                    description: a.latest_version?.description || a.description || "",
-                    subscriptions: a.subscriptions_count || 0,
-                    updated: a.updated_at || new Date().toISOString(),
-                    tags: a.latest_version?.tags || a.tags || [],
-                    rawData: a as AssistantResponse | CommunityAssistantSnapshot,
-                    ...extra
-                });
+                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot, extra?: Partial<AssistantCardData>): AssistantCardData => {
+                    if ("latest_version" in a) {
+                        return {
+                            id: a.id,
+                            title: a.latest_version?.name || "Unknown Assistant",
+                            description: a.latest_version?.description || "",
+                            subscriptions: a.subscriptions_count || 0,
+                            updated: a.updated_at || new Date().toISOString(),
+                            tags: a.latest_version?.tags || [],
+                            rawData: a,
+                            ...extra
+                        };
+                    }
+
+                    return {
+                        id: a.id,
+                        title: a.title || "Unknown Assistant",
+                        description: a.description || "",
+                        subscriptions: 0,
+                        updated: new Date().toISOString(),
+                        tags: a.tags || [],
+                        rawData: a,
+                        ...extra
+                    };
+                };
 
                 // 1. All published assistants
                 setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));

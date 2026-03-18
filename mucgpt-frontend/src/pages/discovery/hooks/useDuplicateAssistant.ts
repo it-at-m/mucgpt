@@ -20,6 +20,9 @@ export interface DuplicateAssistantCandidate {
     rawData?: AssistantResponse | CommunityAssistantSnapshot;
 }
 
+const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
+    "latest_version" in data && data.latest_version != null && typeof (data as AssistantResponse).latest_version.name === "string";
+
 export const useDuplicateAssistant = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -38,7 +41,7 @@ export const useDuplicateAssistant = () => {
                     throw responseError;
                 }
 
-                if (fallbackData && "latest_version" in fallbackData) {
+                if (fallbackData && isAssistantResponse(fallbackData)) {
                     return fallbackData;
                 }
 
@@ -76,10 +79,11 @@ export const useDuplicateAssistant = () => {
 
         try {
             const assistantData = await resolveAssistantData(assistantToDuplicate.id, assistantToDuplicate.rawData);
-            const assistantConfig =
-                "latest_version" in assistantData ? mapAssistantResponseToCommunityConfig(assistantData) : mapCommunitySnapshotToCommunityConfig(assistantData);
+            const assistantConfig = isAssistantResponse(assistantData)
+                ? mapAssistantResponseToCommunityConfig(assistantData)
+                : mapCommunitySnapshotToCommunityConfig(assistantData);
             const duplicatedAssistant = await createCommunityAssistantApi(mapCommunityConfigToAssistantCreateInput(assistantConfig));
-            const assistantTitle = "latest_version" in assistantData ? assistantData.latest_version.name : assistantData.title;
+            const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
 
             setShowDuplicateConfirm(false);
             showSuccess(

@@ -8,15 +8,15 @@ import { useTranslation } from "react-i18next";
 import styles from "./Discovery.module.css";
 import {
     getAllCommunityAssistantsApi,
+    getCommunityAssistantApi,
     getOwnedCommunityAssistants,
     getUserSubscriptionsApi,
     deleteCommunityAssistantApi,
     createCommunityAssistantApi
 } from "../../api/assistant-client";
-import { AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
-import { CreateAssistantDialog } from "../../components/AssistantDialogs/CreateAssistantDialog/CreateAssistantDialog";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -24,9 +24,10 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { downloadAssistantExport, mapVersionToExportData } from "../../utils/assistant-export";
-import { useDuplicateAssistant } from "../../features/community-assistant-ownership/useDuplicateAssistant";
-import { isCompleteCommunityAssistantSnapshot } from "../../utils/community-assistant-snapshots";
+import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
+import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
+import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
+import { ApiError } from "../../api/fetch-utils";
 
 type SortKey = "title" | "updated" | "subscriptions";
 
@@ -44,7 +45,6 @@ const Discovery = () => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchText, setSearchText] = useState<string>("");
     const [sortMethod, setSortMethod] = useState<SortKey>("subscriptions");
-    const [showCreateDialog, setShowCreateDialog] = useState<boolean>(false);
 
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [selectedAssistant, setSelectedAssistant] = useState<AssistantCardData | null>(null);
@@ -71,18 +71,40 @@ const Discovery = () => {
         if (!selectedAssistant) return;
 
         try {
-            const assistantData = await resolveAssistantData(selectedAssistant.id, selectedAssistant.rawData);
-            if (!("latest_version" in assistantData)) {
-                throw new Error(t("components.import_assistant.import_invalid_format"));
+            try {
+                const assistantData = await getCommunityAssistantApi(selectedAssistant.id);
+                const lv = assistantData?.latest_version;
+
+                if (!lv) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
+
+                downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            } catch (error) {
+                if (!(error instanceof ApiError) || error.status !== 404) {
+                    throw error;
+                }
             }
 
-            const lv = assistantData.latest_version;
-            if (!lv) {
-                showError(t("components.assistantsettingsdrawer.export"), t("components.import_assistant.import_invalid_format"));
+            const snapshotData = selectedAssistant.rawData;
+            if (isCompleteCommunityAssistantSnapshot(snapshotData)) {
+                const snapshotAssistant: Assistant = mapCommunitySnapshotToAssistant(snapshotData);
+                downloadAssistantExport(mapAssistantToExportData(snapshotAssistant), snapshotAssistant.title);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${snapshotAssistant.title}.json`);
                 return;
             }
-            downloadAssistantExport(mapVersionToExportData(lv), lv.name);
-            showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+
+            const assistantData = await resolveAssistantData(selectedAssistant.id, selectedAssistant.rawData);
+            if ("latest_version" in assistantData && assistantData.latest_version) {
+                const lv = assistantData.latest_version;
+                downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            }
+
+            throw new Error(t("components.import_assistant.import_invalid_format"));
         } catch (error) {
             console.error("Failed to export assistant", error);
             const errorMessage = error instanceof Error ? error.message : "Export failed";
@@ -196,16 +218,31 @@ const Discovery = () => {
                 setOwnedAssistantIds(ownedIds);
                 setUserSubscriptionIds(subscribedIds);
 
-                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot, extra?: Partial<AssistantCardData>): AssistantCardData => ({
-                    id: a.id,
-                    title: "latest_version" in a ? a.latest_version.name : a.title,
-                    description: "latest_version" in a ? a.latest_version.description || "" : a.description || "",
-                    subscriptions: "subscriptions_count" in a ? a.subscriptions_count || 0 : 0,
-                    updated: "updated_at" in a ? a.updated_at : new Date().toISOString(),
-                    tags: "latest_version" in a ? a.latest_version.tags || [] : a.tags || [],
-                    rawData: a,
-                    ...extra
-                });
+                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot, extra?: Partial<AssistantCardData>): AssistantCardData => {
+                    if ("latest_version" in a) {
+                        return {
+                            id: a.id,
+                            title: a.latest_version?.name || "Unknown Assistant",
+                            description: a.latest_version?.description || "",
+                            subscriptions: a.subscriptions_count || 0,
+                            updated: a.updated_at || new Date().toISOString(),
+                            tags: a.latest_version?.tags || [],
+                            rawData: a,
+                            ...extra
+                        };
+                    }
+
+                    return {
+                        id: a.id,
+                        title: a.title || "Unknown Assistant",
+                        description: a.description || "",
+                        subscriptions: 0,
+                        updated: new Date().toISOString(),
+                        tags: a.tags || [],
+                        rawData: a,
+                        ...extra
+                    };
+                };
 
                 // 1. All published assistants
                 setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));
@@ -316,7 +353,7 @@ const Discovery = () => {
 
     const editAssistant = () => {
         if (selectedAssistant) {
-            navigate(`/owned/communityassistant/${selectedAssistant.id}?edit=true`);
+            navigate(`/owned/communityassistant/${selectedAssistant.id}/edit`);
         }
     };
 
@@ -375,7 +412,7 @@ const Discovery = () => {
                                             {t("components.import_assistant.import")}
                                         </Button>
                                     </Tooltip>
-                                    <AddAssistantButton onClick={() => setShowCreateDialog(true)} />
+                                    <AddAssistantButton onClick={() => navigate("/assistant/create")} />
                                 </div>
                             </div>
                         </div>
@@ -437,8 +474,6 @@ const Discovery = () => {
                                 </div>
                             </div>
                         </div>
-
-                        <CreateAssistantDialog showDialogInput={showCreateDialog} setShowDialogInput={setShowCreateDialog} />
 
                         {isLoading ? (
                             <div className={styles.assistantsGrid}>

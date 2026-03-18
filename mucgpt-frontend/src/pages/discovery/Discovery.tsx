@@ -52,8 +52,15 @@ const Discovery = () => {
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const { assistantToDuplicate, showDuplicateConfirm, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant, resolveAssistantData } =
-        useDuplicateAssistant();
+    const {
+        assistantToDuplicate,
+        showDuplicateConfirm,
+        isDuplicating,
+        setShowDuplicateConfirm,
+        requestDuplicateAssistant,
+        confirmDuplicateAssistant,
+        resolveAssistantData
+    } = useDuplicateAssistant();
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const latestRequestRef = useRef(0);
@@ -540,6 +547,7 @@ const Discovery = () => {
                 open={showDuplicateConfirm}
                 onOpenChange={setShowDuplicateConfirm}
                 onConfirmClose={confirmDuplicateAssistant}
+                confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
                 message={t("components.community_assistants.duplicate_confirm_message", { title: assistantToDuplicate?.title ?? "" })}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}

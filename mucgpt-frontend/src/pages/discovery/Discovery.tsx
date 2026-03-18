@@ -14,7 +14,7 @@ import {
     getCommunityAssistantApi,
     createCommunityAssistantApi
 } from "../../api/assistant-client";
-import { AssistantResponse } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
@@ -24,7 +24,9 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { downloadAssistantExport, mapVersionToExportData } from "../../utils/assistant-export";
+import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
+import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
+import { ApiError } from "../../api/fetch-utils";
 
 type SortKey = "title" | "updated" | "subscriptions";
 
@@ -66,18 +68,32 @@ const Discovery = () => {
         if (!selectedAssistant) return;
 
         try {
-            let assistantData = selectedAssistant.rawData;
-            if (!assistantData?.latest_version) {
-                assistantData = await getCommunityAssistantApi(selectedAssistant.id);
+            try {
+                const assistantData = await getCommunityAssistantApi(selectedAssistant.id);
+                const lv = assistantData?.latest_version;
+
+                if (!lv) {
+                    throw new Error(t("components.import_assistant.import_invalid_format"));
+                }
+
+                downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            } catch (error) {
+                if (!(error instanceof ApiError) || error.status !== 404) {
+                    throw error;
+                }
             }
 
-            const lv = assistantData?.latest_version;
-            if (!lv) {
-                showError(t("components.assistantsettingsdrawer.export"), t("components.import_assistant.import_invalid_format"));
+            const snapshotData = selectedAssistant.rawData;
+            if (isCompleteCommunityAssistantSnapshot(snapshotData)) {
+                const snapshotAssistant: Assistant = mapCommunitySnapshotToAssistant(snapshotData);
+                downloadAssistantExport(mapAssistantToExportData(snapshotAssistant), snapshotAssistant.title);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${snapshotAssistant.title}.json`);
                 return;
             }
-            downloadAssistantExport(mapVersionToExportData(lv), lv.name);
-            showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+
+            throw new Error(t("components.assistantsettingsdrawer.export_failed"));
         } catch (error) {
             console.error("Failed to export assistant", error);
             const errorMessage = error instanceof Error ? error.message : "Export failed";
@@ -198,7 +214,7 @@ const Discovery = () => {
                     subscriptions: a.subscriptions_count || 0,
                     updated: a.updated_at || new Date().toISOString(),
                     tags: a.latest_version?.tags || a.tags || [],
-                    rawData: a,
+                    rawData: a as AssistantResponse | CommunityAssistantSnapshot,
                     ...extra
                 });
 

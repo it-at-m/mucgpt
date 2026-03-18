@@ -203,16 +203,19 @@ def brainstorming(
         logger.error("Brainstorm tool error: %s", str(e))
         return f"Error brainstorming for '{topic_clean}'"
 
-def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger) -> BaseTool:
+
+def make_brainstorm_tool(
+    model: RunnableSerializable, logger: logging.Logger
+) -> BaseTool:
     @tool(
         "Brainstorming",
         description=BRAINSTORMING_SUMMARY,
     )
     def brainstorm_tool(
-            topic: str,
-            context: str = None,
-            existing_mindmap: str = None,
-            feedback: str = None,
+        topic: str,
+        context: str = None,
+        existing_mindmap: str = None,
+        feedback: str = None,
     ):
         writer = get_stream_writer()
         if existing_mindmap:

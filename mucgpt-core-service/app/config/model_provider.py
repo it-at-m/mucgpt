@@ -14,6 +14,7 @@ class ModelsConfigurationException(Exception):
 
     pass
 
+
 class ModelProvider:
     _llm = None
 
@@ -107,11 +108,11 @@ class ModelProvider:
 
     @staticmethod
     def init_model(
-            models: List[ModelsConfig],
-            n: int = 1,
-            temperature: float = 0.7,
-            streaming: bool = False,
-            logger: Optional[logging.Logger] = None,
+        models: List[ModelsConfig],
+        n: int = 1,
+        temperature: float = 0.7,
+        streaming: bool = False,
+        logger: Optional[logging.Logger] = None,
     ) -> None:
         """
         Init model based on provided configuration.
@@ -130,7 +131,9 @@ class ModelProvider:
         _logger = logger or logging.getLogger(__name__)
 
         if not models:
-            raise ModelsConfigurationException("No models found in the configuration.json")
+            raise ModelsConfigurationException(
+                "No models found in the configuration.json"
+            )
 
         default_model = models[0]
 
@@ -162,11 +165,15 @@ class ModelProvider:
                 alternatives[model.llm_name] = alternative
             except Exception as e:
                 # Log the error but continue with other models
-                _logger.warning(f"Failed to initialize model {model.llm_name}: {str(e)}")
+                _logger.warning(
+                    f"Failed to initialize model {model.llm_name}: {str(e)}"
+                )
 
         # Configure alternatives
         llm = llm.configurable_alternatives(
-            ConfigurableField(id="llm"), default_key=default_model.llm_name, **alternatives
+            ConfigurableField(id="llm"),
+            default_key=default_model.llm_name,
+            **alternatives,
         )
         ModelProvider._llm = llm
 

@@ -24,7 +24,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { useDuplicateAssistant } from "../../features/community-assistant-ownership/useDuplicateAssistant";
+import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";

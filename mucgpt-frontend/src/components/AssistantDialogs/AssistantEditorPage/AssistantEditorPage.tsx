@@ -59,7 +59,19 @@ interface AssistantEditorPageEditProps {
 
 type AssistantEditorPageProps = AssistantEditorPageCreateProps | AssistantEditorPageEditProps;
 
-function SectionCard({ title, children, className, hideTitle, id }: { title: string; children: ReactNode; className?: string; hideTitle?: boolean; id?: string }) {
+function SectionCard({
+    title,
+    children,
+    className,
+    hideTitle,
+    id
+}: {
+    title: string;
+    children: ReactNode;
+    className?: string;
+    hideTitle?: boolean;
+    id?: string;
+}) {
     const sectionClassName = [styles.sectionCard, className].filter(Boolean).join(" ");
     return (
         <div className={sectionClassName} id={id}>

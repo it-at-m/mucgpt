@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { ApplicationConfig } from "../../api";
 import { FluentProvider, Theme, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel, Spinner } from "@fluentui/react-components";
 import { STORAGE_KEYS, adjustTheme, applyCssVariables } from "./LayoutHelper";
-import { lightThemeColors, darkThemeColors } from "./colors";
+import { lightThemeTokens, darkThemeTokens } from "./themeTokens";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -77,8 +77,8 @@ export const Layout = () => {
 
     // Set initial CSS variables and data-theme attribute on mount
     useEffect(() => {
-        const colors = isLight ? lightThemeColors : darkThemeColors;
-        applyCssVariables(colors);
+        const tokens = isLight ? lightThemeTokens : darkThemeTokens;
+        applyCssVariables(tokens);
         document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
     }, [isLight]);
 

@@ -129,8 +129,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // StorageServices
     const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
-    const { showMigrateConfirm: showLocalMigrateConfirm, setShowMigrateConfirm: setShowLocalMigrateConfirm, performMigration } =
-        useMigrateLocalAssistant(assistantStorageService);
+    const {
+        showMigrateConfirm: showLocalMigrateConfirm,
+        setShowMigrateConfirm: setShowLocalMigrateConfirm,
+        performMigration
+    } = useMigrateLocalAssistant(assistantStorageService);
     const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
     const assistantChatStorage: StorageService<ChatResponse, Assistant> = useMemo(
         () => assistantStorageService.getChatStorageService(),
@@ -625,7 +628,21 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 allowToolSelection={false}
             />
         );
-    }, [isDeletedAssistant, isLocalAssistant, t, requestDuplicateAssistant, assistant_id, assistantConfig, isLoadingRef.current, callApi, question, error, selectedTools, tools, navigate]);
+    }, [
+        isDeletedAssistant,
+        isLocalAssistant,
+        t,
+        requestDuplicateAssistant,
+        assistant_id,
+        assistantConfig,
+        isLoadingRef.current,
+        callApi,
+        question,
+        error,
+        selectedTools,
+        tools,
+        navigate
+    ]);
 
     // AnswerList component
     const answerList = useMemo(

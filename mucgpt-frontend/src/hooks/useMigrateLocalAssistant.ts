@@ -30,8 +30,7 @@ export const useMigrateLocalAssistant = (assistantStorageService: AssistantStora
                     showError(
                         t("components.community_assistants.local_migration_failed_title"),
                         t("components.community_assistants.local_migration_cleanup_failed_default", {
-                            defaultValue:
-                                "Der Assistent wurde privat erstellt, aber die lokale Version konnte nicht gelöscht werden."
+                            defaultValue: "Der Assistent wurde privat erstellt, aber die lokale Version konnte nicht gelöscht werden."
                         })
                     );
                     if (error.createdAssistantId) {

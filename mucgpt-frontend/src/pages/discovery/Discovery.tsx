@@ -57,8 +57,11 @@ const Discovery = () => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const { assistantToDuplicate, showDuplicateConfirm, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant, resolveAssistantData } =
         useDuplicateAssistant();
-    const { showMigrateConfirm: showLocalMigrateConfirm, setShowMigrateConfirm: setShowLocalMigrateConfirm, performMigration } =
-        useMigrateLocalAssistant(assistantStorageService);
+    const {
+        showMigrateConfirm: showLocalMigrateConfirm,
+        setShowMigrateConfirm: setShowLocalMigrateConfirm,
+        performMigration
+    } = useMigrateLocalAssistant(assistantStorageService);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(

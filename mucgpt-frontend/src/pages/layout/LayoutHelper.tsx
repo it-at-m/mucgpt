@@ -1,20 +1,44 @@
 import { BrandVariants, createDarkTheme, createLightTheme } from "@fluentui/react-components";
-import { lightThemeColors, darkThemeColors } from "./colors";
-import type { ThemeColors } from "./colors";
+import { darkThemeTokens, lightThemeTokens } from "./themeTokens";
+import type { AppThemeTokens } from "./themeTokens";
 
 // Apply CSS custom properties to document root
-export const applyCssVariables = (colors: ThemeColors) => {
+export const applyCssVariables = (tokens: AppThemeTokens) => {
     const root = document.documentElement.style;
-    root.setProperty("--surface", colors.surface);
-    root.setProperty("--onSurface", colors.onSurface);
-    root.setProperty("--onSurfaceVariant", colors.onSurfaceVariant);
-    root.setProperty("--primary", colors.primary);
-    root.setProperty("--onPrimary", colors.onPrimary);
-    root.setProperty("--onPrimaryVariant", colors.onPrimaryVariant);
-    root.setProperty("--outline", colors.outline);
-    root.setProperty("--primaryContainer", colors.primaryContainer);
-    root.setProperty("--onPrimaryContainer", colors.onPrimaryContainer);
-    root.setProperty("--disabled", colors.disabled);
+    root.setProperty("--theme-header-background", tokens.headerBackground);
+    root.setProperty("--theme-header-hover", tokens.headerHover);
+    root.setProperty("--theme-header-subtle", tokens.headerSubtle);
+    root.setProperty("--theme-surface-base", tokens.surfaceBase);
+    root.setProperty("--theme-surface-raised", tokens.surfaceRaised);
+    root.setProperty("--theme-surface-subtle", tokens.surfaceSubtle);
+    root.setProperty("--theme-primary-base", tokens.primaryBase);
+    root.setProperty("--theme-primary-hover", tokens.primaryHover);
+    root.setProperty("--theme-primary-pressed", tokens.primaryPressed);
+    root.setProperty("--theme-primary-subtle", tokens.primarySubtle);
+    root.setProperty("--theme-primary-strong", tokens.primaryStrong);
+    root.setProperty("--theme-primary-on", tokens.primaryOn);
+    root.setProperty("--theme-text-primary", tokens.textPrimary);
+    root.setProperty("--theme-text-secondary", tokens.textSecondary);
+    root.setProperty("--theme-text-tertiary", tokens.textTertiary);
+    root.setProperty("--theme-text-on-header", tokens.textOnHeader);
+    root.setProperty("--theme-text-on-primary", tokens.textOnPrimary);
+    root.setProperty("--theme-outline-subtle", tokens.outlineSubtle);
+    root.setProperty("--theme-outline-base", tokens.outlineBase);
+    root.setProperty("--theme-outline-strong", tokens.outlineStrong);
+    root.setProperty("--theme-focus-ring", tokens.focusRing);
+
+    // Temporary compatibility aliases for existing CSS modules.
+    root.setProperty("--surface", tokens.surfaceBase);
+    root.setProperty("--onSurface", tokens.textPrimary);
+    root.setProperty("--onSurfaceVariant", tokens.textSecondary);
+    root.setProperty("--primary", tokens.primaryBase);
+    root.setProperty("--onPrimary", tokens.primaryOn);
+    root.setProperty("--onPrimaryVariant", tokens.textOnPrimary);
+    root.setProperty("--outline", tokens.outlineBase);
+    root.setProperty("--primaryContainer", tokens.primarySubtle);
+    root.setProperty("--onPrimaryContainer", tokens.primaryStrong);
+    root.setProperty("--disabled", tokens.textTertiary);
+    root.setProperty("--headerBackground", tokens.headerBackground);
 };
 
 export const enum STORAGE_KEYS {
@@ -28,75 +52,77 @@ export const enum STORAGE_KEYS {
 }
 
 const customBrandRamp: BrandVariants = {
-    10: "#f2f2f2",
-    20: "#e4e4e5",
-    30: "#d6d6d8",
-    40: "#c8c8cb",
-    50: "#bababe",
-    60: "#acacb1",
-    70: "#9e9ea4",
-    80: "#909097", //Buttons
-    90: "#82828a",
-    100: "#74747d",
-    110: "#666670",
-    120: "#585863",
-    130: "#4a4a56",
-    140: "#3c3c49",
-    150: "#2e2e3c",
-    160: "#212529"
+    10: "#f4faf8",
+    20: "#e6f2ef",
+    30: "#d8eae5",
+    40: "#cae1db",
+    50: "#bad7cf",
+    60: "#abcdc3",
+    70: "#9bc3b7",
+    80: "#94b9af",
+    90: "#85ada2",
+    100: "#769f95",
+    110: "#678e85",
+    120: "#597d76",
+    130: "#4b6c66",
+    140: "#3d5c57",
+    150: "#304c48",
+    160: "#223d39"
 };
-const applyThemeColors = (theme: any, colors: ThemeColors) => {
+const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
     // Surface Colors
-    theme.colorNeutralBackground1 = colors.surface; // Surface - Main background
-    theme.colorNeutralBackground2 = colors.onSurfaceVariant; // Header/Footer dark background
-    theme.colorNeutralBackground3 = colors.primaryContainer; // Cards background
-    theme.colorNeutralBackground4 = colors.surface; // Surface variant
+    theme.colorNeutralBackground1 = tokens.surfaceBase;
+    theme.colorNeutralBackground2 = tokens.surfaceSubtle;
+    theme.colorNeutralBackground3 = tokens.surfaceRaised;
+    theme.colorNeutralBackground4 = tokens.surfaceSubtle;
 
     // Brand/Primary Colors
-    theme.colorBrandBackground = colors.primary; // Primary
-    theme.colorBrandBackgroundHover = colors.primary; // Primary hover (could be adjusted)
-    theme.colorBrandBackgroundPressed = colors.primary; // Primary pressed (could be adjusted)
-    theme.colorBrandBackground2 = colors.primaryContainer; // Primary Container
+    theme.colorBrandBackground = tokens.primaryBase;
+    theme.colorBrandBackgroundHover = tokens.primaryHover;
+    theme.colorBrandBackgroundPressed = tokens.primaryPressed;
+    theme.colorBrandBackground2 = tokens.primarySubtle;
 
-    // Text Colors - On Surface
-    theme.colorNeutralForeground1 = colors.onSurface; // On Surface - main text
-    theme.colorNeutralForeground2 = colors.onPrimaryContainer; // On Primary Container
-    theme.colorNeutralForeground3 = colors.disabled; // Disabled text
-    theme.colorNeutralForeground4 = colors.onSurface; // On Surface variant
+    // Text Colors
+    theme.colorNeutralForeground1 = tokens.textPrimary;
+    theme.colorNeutralForeground2 = tokens.textSecondary;
+    theme.colorNeutralForeground3 = tokens.textTertiary;
+    theme.colorNeutralForeground4 = tokens.textSecondary;
 
     // Text on Primary
-    theme.colorNeutralForegroundOnBrand = colors.onPrimaryVariant; // On Primary Variant (for selected tools)
-    theme.colorNeutralForegroundInverted = colors.surface; // Inverted (white on dark header)
+    theme.colorNeutralForegroundOnBrand = tokens.textOnPrimary;
+    theme.colorNeutralForegroundInverted = tokens.textOnHeader;
 
     // Brand foreground colors
-    theme.colorBrandForeground1 = colors.primary; // Primary color for links/accents
-    theme.colorBrandForeground2 = colors.onPrimaryContainer; // On Primary Container
+    theme.colorBrandForeground1 = tokens.primaryStrong;
+    theme.colorBrandForeground2 = tokens.primaryBase;
 
     // Surface Variants
-    theme.colorNeutralBackground1Hover = colors.primaryContainer; // Hover state
-    theme.colorNeutralBackground1Pressed = colors.primaryContainer; // Pressed state
+    theme.colorNeutralBackground1Hover = tokens.surfaceSubtle;
+    theme.colorNeutralBackground1Pressed = tokens.headerSubtle;
 
     // Borders/Strokes
-    theme.colorNeutralStroke1 = colors.outline; // Outline
-    theme.colorNeutralStroke2 = colors.outline; // Outline variant
-    theme.colorBrandStroke1 = colors.primary; // Primary outline
-    theme.colorBrandStroke2 = colors.outline; // Subtle brand outline
+    theme.colorNeutralStroke1 = tokens.outlineBase;
+    theme.colorNeutralStroke2 = tokens.outlineSubtle;
+    theme.colorBrandStroke1 = tokens.primaryStrong;
+    theme.colorBrandStroke2 = tokens.outlineStrong;
 
     // Overlay for hero section background
-    theme.colorBackgroundOverlay = colors.primary; // Primary color for hero section
+    theme.colorBackgroundOverlay = tokens.surfaceSubtle;
 
-    // Subtle button colors (for buttons in dark header)
-    theme.colorSubtleForeground = colors.surface; // Text for subtle buttons
-    theme.colorSubtleForegroundHover = colors.surface; // Hover text for subtle buttons
-    theme.colorSubtleForegroundPressed = colors.surface; // Pressed text for subtle buttons
+    // Focus and subtle header-friendly actions
+    theme.colorStrokeFocus2 = tokens.focusRing;
+    theme.colorSubtleForeground = tokens.textOnHeader;
+    theme.colorSubtleForegroundHover = tokens.textOnHeader;
+    theme.colorSubtleForegroundPressed = tokens.textOnHeader;
+    theme.colorSubtleBackgroundHover = tokens.headerHover;
+    theme.colorSubtleBackgroundPressed = tokens.headerSubtle;
 };
 
 export const adjustTheme = (isLight: boolean, scaling: number) => {
     const theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
 
-    // Apply custom color palette
-    const colors = isLight ? lightThemeColors : darkThemeColors;
-    applyThemeColors(theme, colors);
+    const tokens = isLight ? lightThemeTokens : darkThemeTokens;
+    applyThemeColors(theme, tokens);
 
     theme.fontSizeBase100 = (parseFloat(theme.fontSizeBase100.replace("px", "")) * scaling).toString() + "px";
     theme.fontSizeBase200 = (parseFloat(theme.fontSizeBase200.replace("px", "")) * scaling).toString() + "px";

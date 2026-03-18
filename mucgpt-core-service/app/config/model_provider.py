@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Optional, Union
 
 from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
@@ -19,7 +18,7 @@ class ModelProvider:
     _llm = None
 
     @staticmethod
-    def _create_configurable_fields() -> Dict[str, ConfigurableField]:
+    def _create_configurable_fields() -> dict[str, ConfigurableField]:
         """Create common configurable fields for LLM models.
 
         Returns:
@@ -49,8 +48,8 @@ class ModelProvider:
         n: int,
         temperature: float,
         streaming: bool,
-        logger: Optional[logging.Logger] = None,
-    ) -> Union[AzureChatOpenAI, ChatOpenAI]:
+        logger: logging.Logger | None = None,
+    ) -> AzureChatOpenAI | ChatOpenAI:
         """Create a specific LLM instance based on model configuration.
 
         Args:
@@ -108,11 +107,11 @@ class ModelProvider:
 
     @staticmethod
     def init_model(
-        models: List[ModelsConfig],
+        models: list[ModelsConfig],
         n: int = 1,
         temperature: float = 0.7,
         streaming: bool = False,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         """
         Init model based on provided configuration.
@@ -151,7 +150,7 @@ class ModelProvider:
         llm = llm.configurable_fields(**configurable_fields)
 
         # Add alternative models
-        alternatives: Dict[str, RunnableSerializable] = {
+        alternatives: dict[str, RunnableSerializable] = {
             "fake": FakeListLLM(responses=["Test response"])
         }
 

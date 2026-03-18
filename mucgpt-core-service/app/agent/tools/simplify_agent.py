@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -16,7 +16,7 @@ class ReflectiveSimplificationState(TypedDict):
     simplified_text: str
     critique: str
     revisions: int
-    error: Optional[str]
+    error: str | None
 
 
 # Prompts
@@ -229,7 +229,7 @@ class SimplifyAgent:
         self,
         model: RunnableSerializable,
         logger: logging.Logger,
-        writer: Optional[StreamWriter] = None,
+        writer: StreamWriter | None = None,
     ):
         self.model = model
         self.logger = logger

@@ -3,7 +3,7 @@ name = "mucgpt-core-service"
 version = "0.9.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
-requires-python= ">=3.10"
+requires-python= ">=3.13"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
@@ -55,7 +55,7 @@ name = "pypy"
 url = "https://pypi.org/simple"
 
 [tool.ruff]
-target-version = "py38"
+target-version = "py313"
 src = ["app"]
 
 [tool.ruff.lint]

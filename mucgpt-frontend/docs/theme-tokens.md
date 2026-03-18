@@ -19,6 +19,7 @@ Do not design against raw Fluent token names first. Design against semantic role
 - `text/*`
 - `outline/*`
 - `focus/*`
+- `status/*`
 
 This keeps product decisions readable and stable, while still allowing Fluent UI components to inherit the correct visuals.
 
@@ -63,6 +64,21 @@ This keeps product decisions readable and stable, while still allowing Fluent UI
 
 - `focusRing`: visible keyboard focus indicator
 
+### Status
+
+- `statusSuccessBackground`: success banners, alerts and toast backgrounds
+- `statusSuccessBorder`: success borders and separators
+- `statusSuccessForeground`: success text and icons
+- `statusWarningBackground`: warning banners, alerts and toast backgrounds
+- `statusWarningBorder`: warning borders and separators
+- `statusWarningForeground`: warning text and icons
+- `statusErrorBackground`: error banners, alerts and destructive feedback backgrounds
+- `statusErrorBorder`: error borders and separators
+- `statusErrorForeground`: error text and icons
+- `statusInfoBackground`: informational banners and neutral notices
+- `statusInfoBorder`: info borders and separators
+- `statusInfoForeground`: info text and icons
+
 ## Fluent Mapping
 
 The semantic tokens are mapped to Fluent aliases in `LayoutHelper.tsx`. The most important mappings are:
@@ -80,6 +96,9 @@ The semantic tokens are mapped to Fluent aliases in `LayoutHelper.tsx`. The most
 - `outlineBase -> colorNeutralStroke1`
 - `outlineSubtle -> colorNeutralStroke2`
 - `focusRing -> colorStrokeFocus2`
+- `statusSuccess* -> colorStatusSuccess*`
+- `statusWarning* -> colorStatusWarning*`
+- `statusError* -> colorStatusDanger*`
 
 ## CSS Usage
 
@@ -101,6 +120,18 @@ Prefer the semantic CSS custom properties:
 - `--theme-outline-subtle`
 - `--theme-outline-strong`
 - `--theme-focus-ring`
+- `--theme-status-success-background`
+- `--theme-status-success-border`
+- `--theme-status-success-foreground`
+- `--theme-status-warning-background`
+- `--theme-status-warning-border`
+- `--theme-status-warning-foreground`
+- `--theme-status-error-background`
+- `--theme-status-error-border`
+- `--theme-status-error-foreground`
+- `--theme-status-info-background`
+- `--theme-status-info-border`
+- `--theme-status-info-foreground`
 
 Legacy aliases such as `--primary`, `--surface` or `--primaryContainer` still exist temporarily for compatibility with older CSS modules. New code should not introduce those names.
 
@@ -110,4 +141,5 @@ Legacy aliases such as `--primary`, `--surface` or `--primaryContainer` still ex
 - Prefer `surfaceRaised` for cards and input containers.
 - Use `primarySubtle` for selected states before reaching for stronger fills.
 - Keep `focusRing` distinct from hover; focus exists for keyboard and accessibility states.
+- Prefer status tokens over ad hoc red, yellow, green and blue values in components.
 - If a new token is needed, add it semantically first, then map it to Fluent.

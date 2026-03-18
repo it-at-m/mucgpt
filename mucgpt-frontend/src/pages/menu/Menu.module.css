@@ -151,7 +151,7 @@
 .divider {
     display: flex;
     align-items: center;
-url(https://danielnwz.github.io/mockgpt/)    width: 100%;
+    width: 100%;
     max-width: 700px;
     margin: 30px auto;
     gap: 20px;

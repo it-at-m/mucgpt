@@ -26,6 +26,18 @@ export const applyCssVariables = (tokens: AppThemeTokens) => {
     root.setProperty("--theme-outline-base", tokens.outlineBase);
     root.setProperty("--theme-outline-strong", tokens.outlineStrong);
     root.setProperty("--theme-focus-ring", tokens.focusRing);
+    root.setProperty("--theme-status-success-background", tokens.statusSuccessBackground);
+    root.setProperty("--theme-status-success-border", tokens.statusSuccessBorder);
+    root.setProperty("--theme-status-success-foreground", tokens.statusSuccessForeground);
+    root.setProperty("--theme-status-warning-background", tokens.statusWarningBackground);
+    root.setProperty("--theme-status-warning-border", tokens.statusWarningBorder);
+    root.setProperty("--theme-status-warning-foreground", tokens.statusWarningForeground);
+    root.setProperty("--theme-status-error-background", tokens.statusErrorBackground);
+    root.setProperty("--theme-status-error-border", tokens.statusErrorBorder);
+    root.setProperty("--theme-status-error-foreground", tokens.statusErrorForeground);
+    root.setProperty("--theme-status-info-background", tokens.statusInfoBackground);
+    root.setProperty("--theme-status-info-border", tokens.statusInfoBorder);
+    root.setProperty("--theme-status-info-foreground", tokens.statusInfoForeground);
 
     // Temporary compatibility aliases for existing CSS modules.
     root.setProperty("--surface", tokens.surfaceBase);
@@ -116,6 +128,13 @@ const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
     theme.colorSubtleForegroundPressed = tokens.textOnHeader;
     theme.colorSubtleBackgroundHover = tokens.headerHover;
     theme.colorSubtleBackgroundPressed = tokens.headerSubtle;
+
+    theme.colorStatusSuccessBackground1 = tokens.statusSuccessBackground;
+    theme.colorStatusSuccessForeground1 = tokens.statusSuccessForeground;
+    theme.colorStatusWarningBackground1 = tokens.statusWarningBackground;
+    theme.colorStatusWarningForeground1 = tokens.statusWarningForeground;
+    theme.colorStatusDangerBackground1 = tokens.statusErrorBackground;
+    theme.colorStatusDangerForeground1 = tokens.statusErrorForeground;
 };
 
 export const adjustTheme = (isLight: boolean, scaling: number) => {

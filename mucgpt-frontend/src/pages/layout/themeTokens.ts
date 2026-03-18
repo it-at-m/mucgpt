@@ -20,6 +20,18 @@ export interface AppThemeTokens {
     outlineBase: string;
     outlineStrong: string;
     focusRing: string;
+    statusSuccessBackground: string;
+    statusSuccessBorder: string;
+    statusSuccessForeground: string;
+    statusWarningBackground: string;
+    statusWarningBorder: string;
+    statusWarningForeground: string;
+    statusErrorBackground: string;
+    statusErrorBorder: string;
+    statusErrorForeground: string;
+    statusInfoBackground: string;
+    statusInfoBorder: string;
+    statusInfoForeground: string;
 }
 
 export const lightThemeTokens: AppThemeTokens = {
@@ -43,7 +55,19 @@ export const lightThemeTokens: AppThemeTokens = {
     outlineSubtle: "#D7E2DE",
     outlineBase: "#BEC9C6",
     outlineStrong: "#97A7A2",
-    focusRing: "#5F8F82"
+    focusRing: "#5F8F82",
+    statusSuccessBackground: "#E7F6EE",
+    statusSuccessBorder: "#8CC9A6",
+    statusSuccessForeground: "#14532D",
+    statusWarningBackground: "#FFF4DB",
+    statusWarningBorder: "#E0A63A",
+    statusWarningForeground: "#7A4B00",
+    statusErrorBackground: "#FDECEC",
+    statusErrorBorder: "#E37D7D",
+    statusErrorForeground: "#8A1C1C",
+    statusInfoBackground: "#E8F1FB",
+    statusInfoBorder: "#7BA7D9",
+    statusInfoForeground: "#1E4E8C"
 };
 
 export const darkThemeTokens: AppThemeTokens = {
@@ -67,5 +91,17 @@ export const darkThemeTokens: AppThemeTokens = {
     outlineSubtle: "#2C4A43",
     outlineBase: "#3F6259",
     outlineStrong: "#5A8479",
-    focusRing: "#94B9AF"
+    focusRing: "#94B9AF",
+    statusSuccessBackground: "#16382B",
+    statusSuccessBorder: "#4D8F69",
+    statusSuccessForeground: "#BEE7CC",
+    statusWarningBackground: "#3A2C12",
+    statusWarningBorder: "#B98A2F",
+    statusWarningForeground: "#F4D58D",
+    statusErrorBackground: "#3B1E22",
+    statusErrorBorder: "#B86A74",
+    statusErrorForeground: "#F2C0C7",
+    statusInfoBackground: "#182D42",
+    statusInfoBorder: "#5D88B8",
+    statusInfoForeground: "#BDD8F5"
 };

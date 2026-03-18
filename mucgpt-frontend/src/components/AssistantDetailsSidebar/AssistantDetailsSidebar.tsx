@@ -55,6 +55,7 @@ export const AssistantDetailsSidebar = ({
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
     const latestVersion = assistant?.rawData && "latest_version" in assistant.rawData ? assistant.rawData.latest_version : undefined;
+    const snapshot = assistant?.rawData && !("latest_version" in assistant.rawData) ? assistant.rawData : undefined;
 
     const getCreativityConfig = (creativity: string) => {
         switch (creativity.toLowerCase()) {
@@ -79,9 +80,11 @@ export const AssistantDetailsSidebar = ({
         }
     };
 
-    const creativityConfig = latestVersion?.creativity ? getCreativityConfig(latestVersion.creativity) : getCreativityConfig("balanced");
+    const assistantCreativity = latestVersion?.creativity || snapshot?.creativity || "balanced";
+    const creativityConfig = getCreativityConfig(assistantCreativity);
 
-    const enabledTools = latestVersion?.tools?.filter((tool: ToolBase) => tool.config?.enabled) || [];
+    const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
+    const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
 
     return (
@@ -183,14 +186,14 @@ export const AssistantDetailsSidebar = ({
                             </div>
                         )}
 
-                        {latestVersion?.system_prompt && (
+                        {systemPrompt && (
                             <div className={styles.sidebarSection}>
                                 <div className={styles.sectionHeader}>
                                     <DocumentText24Regular className={styles.sectionIcon} />
                                     <span>{t("components.community_assistants.system_prompt", "SYSTEM PROMPT")}</span>
                                 </div>
                                 <div className={styles.systemPromptContainer}>
-                                    <MarkdownRenderer className={styles.promptMarkdown}>{latestVersion.system_prompt}</MarkdownRenderer>
+                                    <MarkdownRenderer className={styles.promptMarkdown}>{systemPrompt}</MarkdownRenderer>
                                 </div>
                             </div>
                         )}

@@ -4,10 +4,9 @@
 import subprocess
 import sys
 from pathlib import Path
-from typing import List
 
 
-def run_command(cmd: List[str], description: str) -> bool:
+def run_command(cmd: list[str], description: str) -> bool:
     """Run a command and return success status."""
     print(f"\n{'=' * 60}")
     print(f"Running: {description}")
@@ -45,7 +44,7 @@ def main():
                 "run",
                 "pytest",
                 "tests/",
-                "--cov=src/database",
+                "--cov=app/database",
                 "--cov-report=term-missing",
             ],
             "All Tests with Coverage Report",

@@ -243,3 +243,20 @@ export type CommunityAssistant = {
     description: string;
     id: string;
 };
+
+export type CommunityAssistantSnapshot = {
+    snapshot_version: number;
+    id: string;
+    title: string;
+    description: string;
+    system_message: string;
+    creativity: string;
+    version: string;
+    default_model?: string;
+    examples?: ExampleModelInput[];
+    quick_prompts?: QuickPrompt[];
+    tags?: string[];
+    hierarchical_access?: string[];
+    tools?: ToolBase[];
+    is_visible: boolean;
+};

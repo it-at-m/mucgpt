@@ -10,8 +10,6 @@ from sqlalchemy.orm import attributes, selectinload
 from core.logtools import getLogger
 from utils import serialize_list
 
-# Import to register SQLAlchemy event listeners for subscription counting
-from . import subscription_events  # noqa: F401
 from .database_models import (
     Assistant,
     AssistantVersion,
@@ -368,6 +366,16 @@ class AssistantRepository(Repository[Assistant]):
             self.session.add(subscription)
             await self.session.flush()
             await self.session.refresh(subscription)
+
+            # Manually increment the counter since events might not be reliable
+            await self.session.execute(
+                update(Assistant)
+                .where(Assistant.id == assistant_id)
+                .values(
+                    subscriptions_count=Assistant.subscriptions_count + 1,
+                    updated_at=datetime.now(),
+                )
+            )
 
             logger.info(
                 f"Created subscription for user {user_id} to assistant {assistant_id}"

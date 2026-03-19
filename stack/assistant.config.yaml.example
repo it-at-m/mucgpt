@@ -17,7 +17,7 @@ DB:
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
-LOG_CONFIG: "src/logconf.yaml"
+LOG_CONFIG: "logconf.yaml"
 
 # SSO Settings (Keycloak)
 # Used by both core and assistant services for authentication

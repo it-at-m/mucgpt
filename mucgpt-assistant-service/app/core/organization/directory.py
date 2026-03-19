@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Iterable, Sequence
+from datetime import UTC, datetime
+from typing import Any
 
 
 @dataclass
@@ -36,7 +37,7 @@ class DepartmentDirectory:
 
     roots: list[OrganizationNode]
     source: str
-    generated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def as_flat_list(self) -> list[str]:
         """Return a depth-first flattened list of department names."""
@@ -159,7 +160,7 @@ class OrganizationTreeBuilder:
     def _sanitize_value(self, value: Any) -> Any:
         if isinstance(value, bytes):
             return value.decode("utf-8", errors="ignore")
-        if isinstance(value, (list, tuple, set)):
+        if isinstance(value, list | tuple | set):
             return [self._sanitize_value(v) for v in value]
         return value
 
@@ -312,7 +313,7 @@ class OrganizationTreeBuilder:
             value = attributes.get(original_key) if original_key else None
             if value is None:
                 return False
-            if isinstance(value, (list, tuple, set)):
+            if isinstance(value, list | tuple | set):
                 if not value:
                     return False
                 # ensure at least one non-empty string/bytes value exists

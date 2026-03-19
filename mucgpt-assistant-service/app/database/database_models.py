@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict
 
 from sqlalchemy import (
     Boolean,
@@ -21,7 +21,6 @@ from sqlalchemy.types import JSON
 from .path_matcher import _get_directory_index, path_matches_department
 
 Base = declarative_base()
-ModelType = TypeVar("ModelType", bound=Base)  # type: ignore # Define a TypeVar for the model
 
 assistant_owners = Table(
     "assistant_owners",

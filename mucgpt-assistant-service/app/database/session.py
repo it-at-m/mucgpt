@@ -153,7 +153,7 @@ def get_engine_and_factory_direct(settings: Settings):
 
 async def get_db_session(
     settings: Settings = Depends(get_settings),
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[AsyncSession]:
     """Get database session with settings dependency."""
     logger.debug("Starting database session creation")
 

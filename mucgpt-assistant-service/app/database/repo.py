@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-from typing import Generic
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from .database_models import ModelType
+from .database_models import Base
 
 
-class Repository(Generic[ModelType]):
+class Repository[ModelType: Base]:
     def __init__(self, model: type[ModelType], session: AsyncSession):
         self.model = model
         self.session = session

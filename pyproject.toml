@@ -11,6 +11,7 @@ authors = [
     { name = "Simon Hirtreiter", email = "simon.hirtreiter@muenchen.de" },
     { name = "Daniel Nischwitz", email = "daniel.nischwitz@muenchen.de" },
     { name = "Dominik Grenz", email = "dominik.grenz@muenchen.de" },
+    { name = "Benedikt Jursch", email = "benedikt.jursch@muenchen.de" },
 ]
 maintainers = [
     { name = " ITM KICC", email = "itm.kicc@muenchen.de" },

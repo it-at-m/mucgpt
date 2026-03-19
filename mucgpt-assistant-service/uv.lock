@@ -942,7 +942,7 @@ wheels = [
 
 [[package]]
 name = "mucgpt-assistant-service"
-version = "0.7.0"
+version = "0.7.1"
 source = { virtual = "." }
 dependencies = [
     { name = "asgi-correlation-id" },

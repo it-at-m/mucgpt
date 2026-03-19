@@ -552,6 +552,9 @@ i18n
                             duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
                             duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
                             duplicate_failed_default: "Beim Duplizieren des Assistenten ist ein Fehler aufgetreten.",
+                            duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+                            duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
+                            duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
                             local_badge: "Veraltet - Lokal",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
@@ -1165,6 +1168,9 @@ i18n
                             duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
                             duplicate_failed_title: "Assistant could not be duplicated",
                             duplicate_failed_default: "An error occurred while duplicating the assistant.",
+                            duplicate_failed_rate_limited: "Too many requests. Please try again later.",
+                            duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
+                            duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
                             local_badge: "Deprecated - Local",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
@@ -1778,6 +1784,9 @@ i18n
                             duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
                             duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
                             duplicate_failed_default: "Beim Dupliziern vom Assistentn is a Fehler aufgtretn.",
+                            duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
+                            duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
+                            duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
                             local_badge: "Veraltet - Lokal",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
@@ -2393,6 +2402,9 @@ i18n
                             duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
                             duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
                             duplicate_failed_default: "Une erreur est survenue lors de la duplication de l'assistant.",
+                            duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
+                            duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
+                            duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
                             local_badge: "Obsolète - Local",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
@@ -3005,6 +3017,9 @@ i18n
                             duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
                             duplicate_failed_title: "Не вдалося дублювати асистента",
                             duplicate_failed_default: "Під час дублювання асистента сталася помилка.",
+                            duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
+                            duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
+                            duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
                             local_badge: "Застарілий - локальний",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:

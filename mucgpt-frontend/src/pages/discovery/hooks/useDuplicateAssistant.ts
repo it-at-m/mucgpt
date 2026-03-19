@@ -22,6 +22,9 @@ export interface DuplicateAssistantCandidate {
     isDeletedSnapshot?: boolean;
 }
 
+const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
+    "latest_version" in data && data.latest_version != null && typeof (data as AssistantResponse).latest_version.name === "string";
+
 export const useDuplicateAssistant = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -30,13 +33,14 @@ export const useDuplicateAssistant = () => {
 
     const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
     const [assistantToDuplicate, setAssistantToDuplicate] = useState<DuplicateAssistantCandidate | null>(null);
+    const [isDuplicating, setIsDuplicating] = useState(false);
 
     const resolveAssistantData = useCallback(
         async (assistantId: string, fallbackData?: AssistantResponse | CommunityAssistantSnapshot): Promise<AssistantResponse | CommunityAssistantSnapshot> => {
             try {
                 return await getCommunityAssistantApi(assistantId);
             } catch (responseError) {
-                const fallbackSnapshot = fallbackData && !("latest_version" in fallbackData) ? fallbackData : undefined;
+                const fallbackSnapshot = fallbackData && !isAssistantResponse(fallbackData) ? fallbackData : undefined;
                 const deletedSnapshot = await resolveDeletedCommunityAssistantSnapshot(
                     responseError,
                     assistantId,
@@ -48,13 +52,17 @@ export const useDuplicateAssistant = () => {
                     return deletedSnapshot;
                 }
 
-                if (!(responseError instanceof ApiError) || responseError.status !== 404) {
-                    throw responseError;
+                if (fallbackData && isAssistantResponse(fallbackData)) {
+                    return fallbackData;
+                }
+
+                if (isCompleteCommunityAssistantSnapshot(fallbackSnapshot) && fallbackSnapshot.id === assistantId) {
+                    return fallbackSnapshot;
                 }
 
                 const cachedSnapshot = await communityAssistantStorageService.getAssistantConfig(assistantId);
 
-                if (isCompleteCommunityAssistantSnapshot(cachedSnapshot)) {
+                if (isCompleteCommunityAssistantSnapshot(cachedSnapshot) && cachedSnapshot.id === assistantId) {
                     return cachedSnapshot;
                 }
 
@@ -74,16 +82,18 @@ export const useDuplicateAssistant = () => {
     }, []);
 
     const confirmDuplicateAssistant = useCallback(async () => {
-        if (!assistantToDuplicate) {
+        if (!assistantToDuplicate || isDuplicating) {
             return;
         }
 
+        setIsDuplicating(true);
         try {
             const assistantData = await resolveAssistantData(assistantToDuplicate.id, assistantToDuplicate.rawData);
-            const assistantConfig =
-                "latest_version" in assistantData ? mapAssistantResponseToCommunityConfig(assistantData) : mapCommunitySnapshotToCommunityConfig(assistantData);
+            const assistantConfig = isAssistantResponse(assistantData)
+                ? mapAssistantResponseToCommunityConfig(assistantData)
+                : mapCommunitySnapshotToCommunityConfig(assistantData);
             const duplicatedAssistant = await createCommunityAssistantApi(mapCommunityConfigToAssistantCreateInput(assistantConfig));
-            const assistantTitle = "latest_version" in assistantData ? assistantData.latest_version.name : assistantData.title;
+            const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
 
             setShowDuplicateConfirm(false);
             showSuccess(
@@ -93,14 +103,26 @@ export const useDuplicateAssistant = () => {
             navigate(`/owned/communityassistant/${duplicatedAssistant.id}`);
         } catch (error) {
             console.error("Failed to duplicate assistant", error);
-            const errorMessage = error instanceof Error ? error.message : t("components.community_assistants.duplicate_failed_default");
-            showError(t("components.community_assistants.duplicate_failed_title"), errorMessage);
+            let errorKey = "components.community_assistants.duplicate_failed_default";
+            if (error instanceof ApiError) {
+                if (error.status === 429) {
+                    errorKey = "components.community_assistants.duplicate_failed_rate_limited";
+                } else if (error.status === 403) {
+                    errorKey = "components.community_assistants.duplicate_failed_forbidden";
+                } else if (error.status === 404) {
+                    errorKey = "components.community_assistants.duplicate_failed_not_found";
+                }
+            }
+            showError(t("components.community_assistants.duplicate_failed_title"), t(errorKey));
+        } finally {
+            setIsDuplicating(false);
         }
-    }, [assistantToDuplicate, navigate, resolveAssistantData, showError, showSuccess, t]);
+    }, [assistantToDuplicate, isDuplicating, navigate, resolveAssistantData, showError, showSuccess, t]);
 
     return {
         assistantToDuplicate,
         showDuplicateConfirm,
+        isDuplicating,
         setShowDuplicateConfirm,
         requestDuplicateAssistant,
         confirmDuplicateAssistant,

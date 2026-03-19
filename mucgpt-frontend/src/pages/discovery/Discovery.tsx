@@ -55,12 +55,24 @@ const Discovery = () => {
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-    const { assistantToDuplicate, showDuplicateConfirm, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant, resolveAssistantData } =
-        useDuplicateAssistant();
-    const { showMigrateConfirm: showLocalMigrateConfirm, setShowMigrateConfirm: setShowLocalMigrateConfirm, performMigration } =
-        useMigrateLocalAssistant(assistantStorageService);
+    const {
+        assistantToDuplicate,
+        showDuplicateConfirm,
+        isDuplicating,
+        setShowDuplicateConfirm,
+        requestDuplicateAssistant,
+        confirmDuplicateAssistant,
+        resolveAssistantData
+    } = useDuplicateAssistant();
+
+    const {
+        showMigrateConfirm: showLocalMigrateConfirm,
+        setShowMigrateConfirm: setShowLocalMigrateConfirm,
+        performMigration
+    } = useMigrateLocalAssistant(assistantStorageService);
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const latestRequestRef = useRef(0);
     useEffect(
         () => () => {
             if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
@@ -106,6 +118,13 @@ const Discovery = () => {
                 const lv = assistantData.latest_version;
                 downloadAssistantExport(mapVersionToExportData(lv), lv.name);
                 showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            }
+
+            if (isCompleteCommunityAssistantSnapshot(assistantData)) {
+                const snapshotAssistant: Assistant = mapCommunitySnapshotToAssistant(assistantData);
+                downloadAssistantExport(mapAssistantToExportData(snapshotAssistant), snapshotAssistant.title);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${snapshotAssistant.title}.json`);
                 return;
             }
 
@@ -340,6 +359,7 @@ const Discovery = () => {
             setIsDrawerOpen(false);
             closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
         } else {
+            const requestId = ++latestRequestRef.current;
             try {
                 if (assistant.isLocalAssistant) {
                     setSelectedAssistant(assistant);
@@ -348,6 +368,7 @@ const Discovery = () => {
                 }
 
                 const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData as AssistantResponse | CommunityAssistantSnapshot);
+                if (requestId !== latestRequestRef.current) return;
                 setSelectedAssistant({
                     ...assistant,
                     title: "latest_version" in resolvedData ? resolvedData.latest_version.name : resolvedData.title,
@@ -357,6 +378,7 @@ const Discovery = () => {
                 });
                 setIsDrawerOpen(true);
             } catch (error) {
+                if (requestId !== latestRequestRef.current) return;
                 console.error("Failed to load assistant details:", error);
                 const errorMessage = error instanceof Error ? error.message : t("components.assistant_chat.load_assistant_failed_message");
                 showError(t("components.assistant_chat.load_assistant_failed"), errorMessage);
@@ -594,6 +616,7 @@ const Discovery = () => {
                 open={showDuplicateConfirm}
                 onOpenChange={setShowDuplicateConfirm}
                 onConfirmClose={confirmDuplicateAssistant}
+                confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
                 message={t(
                     assistantToDuplicate?.isDeletedSnapshot

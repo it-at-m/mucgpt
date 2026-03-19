@@ -84,7 +84,11 @@ export const useDuplicateAssistant = () => {
             const assistantConfig = isAssistantResponse(assistantData)
                 ? mapAssistantResponseToCommunityConfig(assistantData)
                 : mapCommunitySnapshotToCommunityConfig(assistantData);
-            const duplicatedAssistant = await createCommunityAssistantApi(mapCommunityConfigToAssistantCreateInput(assistantConfig));
+            const duplicatedAssistant = await createCommunityAssistantApi({
+                ...mapCommunityConfigToAssistantCreateInput(assistantConfig),
+                is_visible: false,
+                hierarchical_access: []
+            });
             const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
 
             setShowDuplicateConfirm(false);

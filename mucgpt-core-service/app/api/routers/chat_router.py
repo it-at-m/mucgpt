@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -132,7 +131,7 @@ async def create_assistant(
         logger.info("createAssistant: reading system prompt generator")
         with open("create_assistant/prompt_for_systemprompt.md", encoding="utf-8") as f:
             system_message = f.read()
-        messages: List[ChatCompletionMessage] = [
+        messages: list[ChatCompletionMessage] = [
             ChatCompletionMessage(role="system", content=system_message),
             ChatCompletionMessage(role="user", content="Funktion: " + request.input),
         ]
@@ -148,7 +147,7 @@ async def create_assistant(
         logger.info("createAssistant: creating description prompt")
         with open("create_assistant/prompt_for_description.md", encoding="utf-8") as f:
             system_message = f.read()
-        messages: List[ChatCompletionMessage] = [
+        messages: list[ChatCompletionMessage] = [
             ChatCompletionMessage(role="system", content=system_message),
             ChatCompletionMessage(
                 role="user", content="Systempromt: ```" + system_prompt + "```"
@@ -166,7 +165,7 @@ async def create_assistant(
         with open("create_assistant/prompt_for_title.md", encoding="utf-8") as f:
             system_message = f.read()
         logger.info("createAssistant: creating title")
-        messages: List[ChatCompletionMessage] = [
+        messages: list[ChatCompletionMessage] = [
             ChatCompletionMessage(role="system", content=system_message),
             ChatCompletionMessage(
                 role="user",

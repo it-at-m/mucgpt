@@ -1,6 +1,5 @@
 import logging
 import textwrap
-from typing import List, Optional
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -114,12 +113,12 @@ def cleanup_mindmap(mindmap_result: str) -> str:
 
 def brainstorming(
     topic: str,
-    context: Optional[str],
+    context: str | None,
     model: RunnableSerializable,
     logger: logging.Logger,
     writer: StreamWriter,
-    existing_mindmap: Optional[str] = None,
-    feedback: Optional[str] = None,
+    existing_mindmap: str | None = None,
+    feedback: str | None = None,
 ) -> str:
     """Generate or refine a comprehensive mind map for a given topic in structured markdown format."""
     # Basic validation
@@ -167,7 +166,7 @@ def brainstorming(
         )
         system_msg = SystemMessage(content=BRAINSTORM_SYSTEM_MESSAGE)
         user_msg = HumanMessage(content=mindmap_prompt)
-        msgs: List[BaseMessage] = [system_msg, user_msg]
+        msgs: list[BaseMessage] = [system_msg, user_msg]
 
         llm = model.with_config(
             {
@@ -203,16 +202,19 @@ def brainstorming(
         logger.error("Brainstorm tool error: %s", str(e))
         return f"Error brainstorming for '{topic_clean}'"
 
-def make_brainstorm_tool(model: RunnableSerializable, logger: logging.Logger) -> BaseTool:
+
+def make_brainstorm_tool(
+    model: RunnableSerializable, logger: logging.Logger
+) -> BaseTool:
     @tool(
         "Brainstorming",
         description=BRAINSTORMING_SUMMARY,
     )
     def brainstorm_tool(
-            topic: str,
-            context: str = None,
-            existing_mindmap: str = None,
-            feedback: str = None,
+        topic: str,
+        context: str = None,
+        existing_mindmap: str = None,
+        feedback: str = None,
     ):
         writer = get_stream_writer()
         if existing_mindmap:

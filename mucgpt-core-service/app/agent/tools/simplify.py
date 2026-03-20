@@ -43,6 +43,7 @@ SIMPLIFY_DETAILED = textwrap.dedent(
     """
 )
 
+
 def simplify(
     text: str,
     model: RunnableSerializable,
@@ -67,6 +68,7 @@ def simplify(
                 ).model_dump_json()
             )
         return f"Error simplifying text: {str(e)}"
+
 
 def make_simplify_tool(model: RunnableSerializable, logger: logging.Logger) -> BaseTool:
     @tool(

@@ -147,7 +147,7 @@ export const AssistantDetailsSidebar = ({
                                                     {t("common.edit")}
                                                 </MenuItem>
                                             )}
-                                            {!isOwned && onDuplicate && (
+                                            {onDuplicate && (
                                                 <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
                                                     {t("components.community_assistants.duplicate")}
                                                 </MenuItem>

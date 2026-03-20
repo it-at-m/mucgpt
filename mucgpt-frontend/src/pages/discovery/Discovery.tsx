@@ -32,6 +32,8 @@ import { ApiError } from "../../api/fetch-utils";
 type SortKey = "title" | "updated" | "subscriptions";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
+const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
+    "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
 
 const Discovery = () => {
     const { t } = useTranslation();
@@ -352,11 +354,12 @@ const Discovery = () => {
             try {
                 const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData);
                 if (requestId !== latestRequestRef.current) return;
+                const latestVersion = isAssistantResponse(resolvedData) ? resolvedData.latest_version : null;
                 setSelectedAssistant({
                     ...assistant,
-                    title: "latest_version" in resolvedData ? resolvedData.latest_version.name : resolvedData.title,
-                    description: "latest_version" in resolvedData ? resolvedData.latest_version.description || "" : resolvedData.description || "",
-                    tags: "latest_version" in resolvedData ? resolvedData.latest_version.tags || [] : resolvedData.tags || [],
+                    title: latestVersion ? latestVersion.name : resolvedData.title,
+                    description: latestVersion ? latestVersion.description || "" : resolvedData.description || "",
+                    tags: latestVersion ? latestVersion.tags || [] : resolvedData.tags || [],
                     rawData: resolvedData
                 });
                 setIsDrawerOpen(true);

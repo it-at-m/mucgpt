@@ -26,6 +26,8 @@
     color: var(--colorNeutralForeground1);
     transition-property: color;
     transition-duration: 0.2s;
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -35,9 +37,15 @@
 
 .headerRow {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 8px;
     width: 100%;
+}
+
+.headerBadge {
+    flex-shrink: 0;
+    align-self: flex-start;
 }
 
 .description {

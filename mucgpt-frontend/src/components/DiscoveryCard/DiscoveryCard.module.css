@@ -26,6 +26,11 @@
     color: var(--colorNeutralForeground1);
     transition-property: color;
     transition-duration: 0.2s;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: break-word;
 }
 
 .headerRow {
@@ -33,11 +38,6 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow-wrap: break-word;
 }
 
 .description {

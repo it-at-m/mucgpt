@@ -273,8 +273,11 @@ const Discovery = () => {
 
                 // 3. Every assistant subscribed to, merged with deleted ones
                 const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
+                const activeAssistantIds = new Set(fullAssistantById.keys());
 
-                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !subscribedIds.has(local.id) && !ownedIds.has(local.id));
+                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(
+                    local => !activeAssistantIds.has(local.id) && !subscribedIds.has(local.id) && !ownedIds.has(local.id)
+                );
 
                 const subscribedData = [
                     ...userSubscriptions
@@ -287,10 +290,15 @@ const Discovery = () => {
                                 return null;
                             }
 
-                            return toCardData(assistantData, { subscriptions: fullData?.subscriptions_count || 0 });
+                            return toCardData(assistantData, {
+                                subscriptions: fullData?.subscriptions_count ?? 0,
+                                isDeletedSnapshot: !fullData
+                            });
                         })
                         .filter((assistant): assistant is AssistantCardData => assistant !== null),
-                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0, isDeletedSnapshot: true }))
+                    ...deletedCommunityAssistants.map(deleted =>
+                        toCardData(deleted, { subscriptions: 0, isDeletedSnapshot: !fullAssistantById.has(deleted.id) })
+                    )
                 ];
                 setSubscribedAssistants(subscribedData);
             } catch (error) {
@@ -355,9 +363,7 @@ const Discovery = () => {
                 const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData);
                 if (requestId !== latestRequestRef.current) return;
                 const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
-                const resolvedDescription = isAssistantResponse(resolvedData)
-                    ? resolvedData.latest_version.description || ""
-                    : resolvedData.description || "";
+                const resolvedDescription = isAssistantResponse(resolvedData) ? resolvedData.latest_version.description || "" : resolvedData.description || "";
                 const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
                 setSelectedAssistant({
                     ...assistant,

@@ -2,7 +2,6 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional, Tuple
 
 from asgi_correlation_id import correlation_id
-from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
@@ -18,12 +17,19 @@ from core.types.SummarizeResult import SummarizeResult
 
 logger = getLogger(name="mucgpt-backend-summarize")
 
+
 class DenserSummary(BaseModel):
     missing_entities: List[str] = Field(description="An list of missing entitys")
-    denser_summary: str = Field(description="denser summary, covers every entity in detail")
+    denser_summary: str = Field(
+        description="denser summary, covers every entity in detail"
+    )
+
 
 class Summarys(BaseModel):
-    data: List[DenserSummary] = Field(description="An list of increasingly concise dense summaries")
+    data: List[DenserSummary] = Field(
+        description="An list of increasingly concise dense summaries"
+    )
+
 
 class Summarize:
     """Summarizes text. Chunks long texts. Individual chunks where summarized with Chain of Density prompting: https://arxiv.org/abs/2309.04269. Afterwards the text is translated into the target language."""
@@ -76,13 +82,20 @@ class Summarize:
     Text: {sum}
     """
 
-
-
-    def __init__(self, llm: RunnableSerializable, config: ApproachConfig, repo: Repository, short_split = 2100, medium_split = 1500, long_split = 700, use_last_n_summaries = -2):
+    def __init__(
+        self,
+        llm: RunnableSerializable,
+        config: ApproachConfig,
+        repo: Repository,
+        short_split=2100,
+        medium_split=1500,
+        long_split=700,
+        use_last_n_summaries=-2,
+    ):
         self.llm = llm
         self.config = config
         self.repo = repo
-        self.switcher =  {
+        self.switcher = {
             "short": short_split,
             "medium": medium_split,
             "long": long_split,
@@ -94,22 +107,22 @@ class Summarize:
         return PromptTemplate(input_variables=["text"], template=self.user_sum_prompt)
 
     def getTranslationCleanupPrompt(self) -> PromptTemplate:
-        return PromptTemplate(input_variables=["language", "sum"], template=self.user_translate_and_cleanup_prompt)
+        return PromptTemplate(
+            input_variables=["language", "sum"],
+            template=self.user_translate_and_cleanup_prompt,
+        )
 
-
-    def setup(self, llm_name: str) -> SequentialChain:
-        config: LlmConfigs = {
-            "llm": llm_name
-        }
+    def setup(self, llm_name: str) -> Tuple:
+        config: LlmConfigs = {"llm": llm_name}
         llm = self.llm.with_config(configurable=config)
 
-        #extraction with structured output: https://python.langchain.com/v0.1/docs/use_cases/extraction/quickstart/
-        summarizationChain = self.getSummarizationPrompt() | llm.with_structured_output(schema=Summarys,  method="json_mode")
+        # extraction with structured output: https://python.langchain.com/v0.1/docs/use_cases/extraction/quickstart/
+        summarizationChain = self.getSummarizationPrompt() | llm.with_structured_output(
+            schema=Summarys, method="json_mode"
+        )
         translationChain = self.getTranslationCleanupPrompt() | llm
 
         return (summarizationChain, translationChain)
-
-
 
     def run_io_tasks_in_parallel(self, tasks) -> List[Tuple[Summarys, int]]:
         """execute tasks in parallel
@@ -127,8 +140,9 @@ class Summarize:
                 results.append(running_task.result())
         return results
 
-
-    def call_and_cleanup(self, text: str, summarizeChain: RunnableSerializable, trace_id: str) -> Tuple[Summarys, int, Optional[str]]:
+    def call_and_cleanup(
+        self, text: str, summarizeChain: RunnableSerializable, trace_id: str
+    ) -> Tuple[Summarys, int, Optional[str]]:
         """calls summarization chain and cleans the data
 
         Args:
@@ -145,7 +159,9 @@ class Summarize:
             logger.info("Summarize text for split")
             with get_openai_callback() as cb:
                 result: Summarys = summarizeChain.invoke({"text": text})
-            logger.info("Summarize text for split completed with %s tokens", cb.total_tokens)
+            logger.info(
+                "Summarize text for split completed with %s tokens", cb.total_tokens
+            )
             total_tokens = cb.total_tokens
 
         except Exception as ex:
@@ -153,14 +169,21 @@ class Summarize:
             # error message
             msg = llm_exception_handler(ex=ex, logger=logger)
             total_tokens = 0
-            result = Summarys(data= [DenserSummary(missing_entities=["Fehler"], denser_summary='Zusammenfassung konnte nicht generiert werden. '  )])
+            result = Summarys(
+                data=[
+                    DenserSummary(
+                        missing_entities=["Fehler"],
+                        denser_summary="Zusammenfassung konnte nicht generiert werden. ",
+                    )
+                ]
+            )
             error = msg
 
-        return (result,total_tokens, error)
+        return (result, total_tokens, error)
 
-
-
-    async def summarize(self, splits: List[str],  language: str, department: Optional[str], llm_name:str) -> SummarizeResult:
+    async def summarize(
+        self, splits: List[str], language: str, department: Optional[str], llm_name: str
+    ) -> SummarizeResult:
         """summarizes text with chain of density prompting. Generates 5 increasingly better summaries per split.
         Concatenates the results and translates it into the target language.
 
@@ -184,49 +207,69 @@ class Summarize:
         # call summarization in parallel
 
         trace_id = correlation_id.get()
-        chunk_summaries  =  self.run_io_tasks_in_parallel(
-             list(map(lambda chunk:  lambda: self.call_and_cleanup(text=chunk, summarizeChain=summarizeChain, trace_id=trace_id), splits)))
+        chunk_summaries = self.run_io_tasks_in_parallel(
+            list(
+                map(
+                    lambda chunk: lambda: self.call_and_cleanup(
+                        text=chunk, summarizeChain=summarizeChain, trace_id=trace_id
+                    ),
+                    splits,
+                )
+            )
+        )
 
         logger.info("Concatenate summaries")
         # concatenate all summarys
 
         errors = []
-        for i in range(0,5):
+        for i in range(0, 5):
             next_summary = DenserSummary(missing_entities=[], denser_summary="")
-            for (chunk_summary, tokens, error) in chunk_summaries:
-                if(error is None):
+            for chunk_summary, tokens, error in chunk_summaries:
+                if error is None:
                     total_tokens += tokens
-                    next_summary.denser_summary += " "+ chunk_summary.data[i].denser_summary
-                    next_summary.missing_entities += chunk_summary.data[i].missing_entities
+                    next_summary.denser_summary += (
+                        " " + chunk_summary.data[i].denser_summary
+                    )
+                    next_summary.missing_entities += chunk_summary.data[
+                        i
+                    ].missing_entities
                     summarys.append(next_summary)
                 else:
                     errors.append(error)
 
-        if(summarys == [] or len(summarys) < self.use_last_n_summaries):
+        if summarys == [] or len(summarys) < self.use_last_n_summaries:
             logger.error("No summaries generated")
-            final_summarys =  ["Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen." + ( "" if len(errors) == 0 else " Fehler: " + errors[0])]
+            final_summarys = [
+                "Zusammenfassung konnte nicht generiert werden. Bitte nochmals versuchen."
+                + ("" if len(errors) == 0 else " Fehler: " + errors[0])
+            ]
         else:
             logger.info("Translate and cleanup concatenated summaries")
             final_summarys = []
-            for summary in summarys[self.use_last_n_summaries:]:
+            for summary in summarys[self.use_last_n_summaries :]:
                 # translate and beautify the concatenated summaries
                 with get_openai_callback() as cb:
-                    chunk_summary = cleanupChain.invoke({"language": language, "sum": summary.denser_summary})
+                    chunk_summary = cleanupChain.invoke(
+                        {"language": language, "sum": summary.denser_summary}
+                    )
                 total_tokens += cb.total_tokens
                 final_summarys.append(chunk_summary.content)
         logger.info("Summarize completed with total tokens %s", total_tokens)
         # save total tokens
         if self.config.log_tokens:
-            self.repo.addInfo(Requestinfo(
-                tokencount = total_tokens,
-                department = department,
-                messagecount=  1,
-                method = "Sum",
-                model = llm_name))
+            self.repo.addInfo(
+                Requestinfo(
+                    tokencount=total_tokens,
+                    department=department,
+                    messagecount=1,
+                    method="Sum",
+                    model=llm_name,
+                )
+            )
 
-        return SummarizeResult(answer= final_summarys)
+        return SummarizeResult(answer=final_summarys)
 
-    def split(self, detaillevel: str, file = None, text = None) -> List[str]:
+    def split(self, detaillevel: str, file=None, text=None) -> List[str]:
         """splits the text (either a pdf or text) into equal chunks
 
         Args:
@@ -239,7 +282,7 @@ class Summarize:
         """
         splitsize = self.switcher.get(detaillevel, 700)
 
-        if(file is not None):
+        if file is not None:
             logger.info("Split pdf")
             splits = splitPDF(file, splitsize, 0)
         else:

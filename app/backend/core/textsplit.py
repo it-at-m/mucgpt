@@ -1,7 +1,7 @@
 from typing import List
 
-from langchain.docstore.document import Document
-from langchain.text_splitter import TokenTextSplitter
+from langchain_core.documents import Document
+from langchain_text_splitters import TokenTextSplitter
 from pypdf import PdfReader
 
 
@@ -17,10 +17,12 @@ def textToDocs(text: str, chunk_size=2500, chunk_overlap=100) -> List[Document]:
         List[Document]: List of documents, containing the splits
     """
     text_splitter = TokenTextSplitter.from_tiktoken_encoder(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+    )
     texts = text_splitter.split_text(text)
     docs = [Document(page_content=t) for t in texts]
     return docs
+
 
 def PDFtoDocs(pdf, chunk_size=2500, chunk_overlap=100) -> List[Document]:
     """read pdf and convert o chunks of langchain docs
@@ -32,7 +34,7 @@ def PDFtoDocs(pdf, chunk_size=2500, chunk_overlap=100) -> List[Document]:
     Returns:
         List[Document]: List of documents, containing the splits
     """
-     # creating a pdf reader object
+    # creating a pdf reader object
     reader = PdfReader(pdf)
     # read alll
     complete = ""
@@ -41,7 +43,9 @@ def PDFtoDocs(pdf, chunk_size=2500, chunk_overlap=100) -> List[Document]:
 
     return textToDocs(text=complete, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
 
+
 # Same without langchain documents
+
 
 def splitText(text: str, chunk_size=2500, chunk_overlap=100) -> List[str]:
     """split and convert to text chunks
@@ -54,11 +58,13 @@ def splitText(text: str, chunk_size=2500, chunk_overlap=100) -> List[str]:
     Returns:
         List[Document]: List of documents, containing the splits
     """
-    #split
+    # split
     text_splitter = TokenTextSplitter.from_tiktoken_encoder(
-        chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+    )
     texts = text_splitter.split_text(text)
     return texts
+
 
 def splitPDF(pdf, chunk_size=2500, chunk_overlap=100) -> List[str]:
     """read pdf and convert o chunks of text chunks
@@ -70,7 +76,7 @@ def splitPDF(pdf, chunk_size=2500, chunk_overlap=100) -> List[str]:
     Returns:
         List[str]: list of chunks
     """
-     # creating a pdf reader object
+    # creating a pdf reader object
     reader = PdfReader(pdf)
     # read alll
     complete = ""

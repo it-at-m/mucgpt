@@ -23,10 +23,7 @@ COPY uv.lock .
 COPY pyproject.toml .
 
 # Install dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project
+RUN uv sync --frozen --no-install-project
 
 # copy data from builder and backend srcs
 COPY app/backend .
@@ -41,8 +38,7 @@ ENV MUCGPT_COMMIT=${COMMIT}
 COPY --from=builder /build/dist/ /code/static/
 
 # sync the project
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen
+RUN uv sync --frozen
 
 EXPOSE 8000
 CMD ["uv", "run", "gunicorn", "app:backend"]

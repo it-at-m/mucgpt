@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-from typing import Iterable, Sequence, TypeAlias, TypedDict
+from collections.abc import Iterable, Sequence
+from datetime import UTC, datetime, timedelta
+from typing import TypedDict
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
@@ -27,7 +28,7 @@ class DirectoryTreeNode(TypedDict, total=False):
     children: list[DirectoryTreeNode]
 
 
-DirectoryTree: TypeAlias = list[DirectoryTreeNode]
+DirectoryTree = list[DirectoryTreeNode]
 
 
 class _DirectoryTreeNodeModel(BaseModel):
@@ -166,7 +167,7 @@ async def _set_cached_tree(key: str, data: DirectoryTree) -> None:
     try:
         validated_nodes = _TREE_ADAPTER.validate_python(data)
         envelope = _CacheEnvelopeModel(
-            data=validated_nodes, loaded_at=datetime.now(timezone.utc)
+            data=validated_nodes, loaded_at=datetime.now(UTC)
         )
         payload = envelope.model_dump(mode="json")
         # TTL slightly longer than freshness check to allow stale fallback
@@ -193,7 +194,7 @@ async def get_simplified_directory_tree() -> DirectoryTree:
 
     # If we have fresh cached data, return it
     if cached_data is not None and cached_loaded_at is not None:
-        if datetime.now(timezone.utc) - cached_loaded_at < _CACHE_TTL:
+        if datetime.now(UTC) - cached_loaded_at < _CACHE_TTL:
             return cached_data
 
     # Either no cache, or stale cache: try refresh

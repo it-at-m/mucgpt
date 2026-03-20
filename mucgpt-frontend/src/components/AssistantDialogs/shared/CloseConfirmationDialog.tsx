@@ -12,9 +12,19 @@ interface CloseConfirmationDialogProps {
     message?: string;
     /** Override the confirm button label. Defaults to `common.close`. */
     confirmLabel?: string;
+    /** Disable the confirm button (e.g. while an action is in flight). */
+    confirmDisabled?: boolean;
 }
 
-export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose, title, message, confirmLabel }: CloseConfirmationDialogProps) => {
+export const CloseConfirmationDialog = ({
+    open,
+    onOpenChange,
+    onConfirmClose,
+    title,
+    message,
+    confirmLabel,
+    confirmDisabled
+}: CloseConfirmationDialogProps) => {
     const { t } = useTranslation();
 
     const handleCancel = useCallback(() => {
@@ -36,7 +46,7 @@ export const CloseConfirmationDialog = ({ open, onOpenChange, onConfirmClose, ti
                         <Button appearance="secondary" onClick={handleCancel}>
                             {t("common.cancel")}
                         </Button>
-                        <Button appearance="primary" onClick={handleConfirm}>
+                        <Button appearance="primary" onClick={handleConfirm} disabled={confirmDisabled}>
                             {confirmLabel ?? t("common.close")}
                         </Button>
                     </DialogActions>

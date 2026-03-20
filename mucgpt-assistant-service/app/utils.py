@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-from typing import TypeVar
 
-T = TypeVar("T")
-
-
-def serialize_list(items: list[T] | None) -> list[dict | T]:
+def serialize_list[T](items: list[T] | None) -> list[dict | T]:
     """Serializes a list of items, converting Pydantic models to dicts.
 
     Args:

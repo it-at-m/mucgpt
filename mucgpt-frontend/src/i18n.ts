@@ -2364,10 +2364,10 @@ i18n
                             duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
-                            deleted_badge: "SupprimÃ©",
+                            deleted_badge: "Supprimé",
                             deleted_state_title: "Cet assistant communautaire n'est plus disponible",
                             deleted_state_body:
-                                "L'assistant d'origine n'est plus disponible ni pris en charge. Vous ne pouvez plus continuer Ã  l'utiliser directement.",
+                                "L'assistant d'origine n'est plus disponible ni pris en charge. Vous ne pouvez plus continuer à l'utiliser directement.",
                             deleted_state_body_continue:
                                 "Si vous voulez continuer avec cette configuration, enregistrez-la comme votre propre assistant. Vous pouvez encore consulter les anciens chats en lecture seule.",
                             discovery_deleted_hint:

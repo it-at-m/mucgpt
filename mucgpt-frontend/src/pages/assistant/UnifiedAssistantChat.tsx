@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, ChatResponse } from "../../api";
+import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -36,6 +36,7 @@ import { AssistantDetailsSidebar, AssistantCardData } from "../../components/Ass
 import { getCommunityAssistantApi } from "../../api/assistant-client";
 import { ApiError } from "../../api/fetch-utils";
 import {
+    isCompleteCommunityAssistantSnapshot,
     mapAssistantResponseToSnapshot,
     mapAssistantToCommunitySnapshot,
     mapCommunitySnapshotToAssistant,
@@ -116,8 +117,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
     const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
+    const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
     const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
-    const { assistantToDuplicate, showDuplicateConfirm, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
+    const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
         useDuplicateAssistant();
 
     // Sync info drawer state to body class so Layout.module.css can offset the footer
@@ -151,6 +153,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     useEffect(() => {
         const loadData = async () => {
             if (assistant_id) {
+                setDeletedAssistantSnapshot(null);
                 setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
                 isLoadingRef.current = true;
@@ -177,6 +180,16 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     .loadAssistantConfig(assistant_id, assistantStorageService)
                     .then(async assistant => {
                         if (assistant) {
+                            if (isDeletedAssistant) {
+                                try {
+                                    const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
+                                    setDeletedAssistantSnapshot(isCompleteCommunityAssistantSnapshot(snapshot) ? snapshot : null);
+                                } catch (snapshotError) {
+                                    console.error("Error loading deleted assistant snapshot:", snapshotError);
+                                    setDeletedAssistantSnapshot(null);
+                                }
+                            }
+
                             if (strategy instanceof CommunityAssistantStrategy && !notSubscribed) {
                                 try {
                                     await upsertCommunityAssistantSnapshot(
@@ -254,7 +267,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
         };
         loadData();
-    }, [assistant_id, strategy, t, showError]);
+    }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setHeader, setLLM, setQuickPrompts]);
 
     // Load info data for non-owner community assistants
     useEffect(() => {
@@ -539,6 +552,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Text-Input component
     const inputComponent = useMemo(() => {
         if (isDeletedAssistant) {
+            const duplicateCandidateSnapshot = deletedAssistantSnapshot;
+
             return (
                 <div className={styles.deletedChatWarningWrapper}>
                     <MessageBar intent="warning" layout="multiline">
@@ -548,14 +563,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 <div className={styles.deletedChatActions}>
                                     <Button
                                         appearance="primary"
-                                        onClick={() =>
+                                        disabled={!duplicateCandidateSnapshot}
+                                        onClick={() => {
+                                            if (!duplicateCandidateSnapshot) {
+                                                return;
+                                            }
+
                                             requestDuplicateAssistant({
                                                 id: assistant_id,
-                                                title: assistantConfig.title,
-                                                rawData: mapAssistantToCommunitySnapshot({ ...assistantConfig, id: assistant_id }),
+                                                title: duplicateCandidateSnapshot.title,
+                                                rawData: duplicateCandidateSnapshot,
                                                 isDeletedSnapshot: true
-                                            })
-                                        }
+                                            });
+                                        }}
                                     >
                                         {t("components.community_assistants.deleted_state_save_action")}
                                     </Button>
@@ -589,7 +609,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 allowToolSelection={false}
             />
         );
-    }, [isDeletedAssistant, t, requestDuplicateAssistant, assistant_id, assistantConfig, isLoadingRef.current, callApi, question, error, selectedTools, tools]);
+    }, [
+        isDeletedAssistant,
+        deletedAssistantSnapshot,
+        t,
+        requestDuplicateAssistant,
+        assistant_id,
+        assistantConfig,
+        isLoadingRef.current,
+        callApi,
+        question,
+        error,
+        selectedTools,
+        tools
+    ]);
 
     // AnswerList component
     const answerList = useMemo(
@@ -770,6 +803,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 open={showDuplicateConfirm}
                 onOpenChange={setShowDuplicateConfirm}
                 onConfirmClose={confirmDuplicateAssistant}
+                confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
                 message={t(
                     assistantToDuplicate?.isDeletedSnapshot

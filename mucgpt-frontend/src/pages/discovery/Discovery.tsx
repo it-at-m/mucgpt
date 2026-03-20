@@ -272,16 +272,22 @@ const Discovery = () => {
                 // 3. Every assistant subscribed to, merged with deleted ones
                 const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
 
-                const deletedCommunityAssistants = validLocalCommunityAssistants
-                    .filter(local => !userSubscriptions.some((sub: any) => sub.id === local.id))
-                    .filter(deleted => !ownedAssistants.some((own: any) => own.id === deleted.id));
+                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !subscribedIds.has(local.id) && !ownedIds.has(local.id));
 
                 const subscribedData = [
-                    ...userSubscriptions.map((sub: any) => {
-                        const fullData = fullAssistantById.get(sub.id);
-                        const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
-                        return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
-                    }),
+                    ...userSubscriptions
+                        .map(sub => {
+                            const fullData = fullAssistantById.get(sub.id);
+                            const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
+                            const assistantData = fullData || localData;
+
+                            if (!assistantData) {
+                                return null;
+                            }
+
+                            return toCardData(assistantData, { subscriptions: fullData?.subscriptions_count || 0 });
+                        })
+                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
                     ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0, isDeletedSnapshot: true }))
                 ];
                 setSubscribedAssistants(subscribedData);

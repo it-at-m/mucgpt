@@ -79,14 +79,17 @@ export const useDuplicateAssistant = () => {
         [communityAssistantStorageService]
     );
 
-    const requestDuplicateAssistant = useCallback((assistant: DuplicateAssistantCandidate | null) => {
-        if (!assistant) {
-            return;
-        }
+    const requestDuplicateAssistant = useCallback(
+        (assistant: DuplicateAssistantCandidate | null) => {
+            if (!assistant || isDuplicating) {
+                return;
+            }
 
-        setAssistantToDuplicate(assistant);
-        setShowDuplicateConfirm(true);
-    }, []);
+            setAssistantToDuplicate(assistant);
+            setShowDuplicateConfirm(true);
+        },
+        [isDuplicating]
+    );
 
     const confirmDuplicateAssistant = useCallback(async () => {
         if (!assistantToDuplicate || isDuplicating) {

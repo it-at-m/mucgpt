@@ -96,10 +96,7 @@ export const useDuplicateAssistant = () => {
                 ? mapAssistantResponseToCommunityConfig(assistantData)
                 : mapCommunitySnapshotToCommunityConfig(assistantData);
             const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
-            const duplicatedAssistantTitle = buildDuplicatedAssistantTitle(
-                assistantTitle,
-                t("components.community_assistants.duplicate_title_suffix")
-            );
+            const duplicatedAssistantTitle = buildDuplicatedAssistantTitle(assistantTitle, t("components.community_assistants.duplicate_title_suffix"));
             const duplicatedAssistant = await createCommunityAssistantApi({
                 ...mapCommunityConfigToAssistantCreateInput(assistantConfig),
                 name: duplicatedAssistantTitle,

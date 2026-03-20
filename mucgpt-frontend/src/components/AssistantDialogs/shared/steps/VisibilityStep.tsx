@@ -1,6 +1,6 @@
 import { DialogContent, Field, InfoLabel, Text, RadioGroup, Radio } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import sharedStyles from "../AssistantDialog.module.css";
 import DepartmentTreeDropdown from "../../../DepartmentTreeDropdown/DepartmentTreeDropdown";
@@ -24,28 +24,22 @@ export const VisibilityStep = ({
 }: VisibilityStepProps) => {
     const { t } = useTranslation();
 
-    const initialVisibility: "public" | "departments" | "private" = invisibleChecked
+    // Track whether the user has explicitly selected "departments" mode
+    // (needed because the department picker must be shown before any departments are selected).
+    const [departmentsModeActive, setDepartmentsModeActive] = useState(
+        () => !invisibleChecked && Array.isArray(publishDepartments) && publishDepartments.length > 0
+    );
+
+    const visibilityMode: "public" | "departments" | "private" = invisibleChecked
         ? "private"
-        : Array.isArray(publishDepartments) && publishDepartments.length > 0
+        : departmentsModeActive || (Array.isArray(publishDepartments) && publishDepartments.length > 0)
           ? "departments"
           : "public";
-
-    const [visibilityMode, setVisibilityMode] = useState<"public" | "departments" | "private">(initialVisibility);
-
-    // Sync internal state when props change (e.g. when assistant data loads asynchronously)
-    useEffect(() => {
-        const newMode: "public" | "departments" | "private" = invisibleChecked
-            ? "private"
-            : Array.isArray(publishDepartments) && publishDepartments.length > 0
-              ? "departments"
-              : "public";
-        setVisibilityMode(newMode);
-    }, [invisibleChecked, publishDepartments]);
 
     const onVisibilityChange = useCallback(
         (_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {
             const newMode = data.value as "public" | "departments" | "private";
-            setVisibilityMode(newMode);
+            setDepartmentsModeActive(newMode === "departments");
             onHasChanged(true);
             setInvisibleChecked(newMode === "private");
             if (newMode !== "departments") {

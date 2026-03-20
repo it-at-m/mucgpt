@@ -540,7 +540,20 @@ i18n
                             times_subscribed: "mal abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
-                            more_options: "Weitere Optionen"
+                            more_options: "Weitere Optionen",
+                            duplicate: "Private Kopie erstellen",
+                            duplicate_confirm_title: "Eigene private Kopie erstellen",
+                            duplicate_confirm_message:
+                                'Du kannst "{{title}}" auch ohne eigene Kopie weiter verwenden. Möchtest du trotzdem eine eigene Kopie erstellen? Spätere Änderungen des ursprünglichen Assistenten werden nicht auf deine Kopie übernommen.',
+                            duplicate_confirm_action: "Kopie erstellen",
+                            duplicate_title_suffix: "[Kopie]",
+                            duplicate_success_title: "Assistent dupliziert",
+                            duplicate_success_message: 'Der Assistent "{{title}}" wurde erfolgreich dupliziert.',
+                            duplicate_failed_title: "Assistent konnte nicht dupliziert werden",
+                            duplicate_failed_default: "Beim Duplizieren des Assistenten ist ein Fehler aufgetreten.",
+                            duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+                            duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
+                            duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden."
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -1114,7 +1127,20 @@ i18n
                             times_subscribed: "times subscribed",
                             owned_assistant: "Own Assistant",
                             subscribed_assistant: "Subscribed",
-                            more_options: "More options"
+                            more_options: "More options",
+                            duplicate: "Create private copy",
+                            duplicate_confirm_title: "Create your own private copy",
+                            duplicate_confirm_message:
+                                'You can keep using "{{title}}" without creating your own copy. Do you still want to create one? Future changes to the original assistant will not be applied to your copy.',
+                            duplicate_confirm_action: "Create copy",
+                            duplicate_title_suffix: "[Copy]",
+                            duplicate_success_title: "Assistant duplicated",
+                            duplicate_success_message: 'The assistant "{{title}}" was duplicated successfully.',
+                            duplicate_failed_title: "Assistant could not be duplicated",
+                            duplicate_failed_default: "An error occurred while duplicating the assistant.",
+                            duplicate_failed_rate_limited: "Too many requests. Please try again later.",
+                            duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
+                            duplicate_failed_not_found: "The assistant was not found and cannot be duplicated."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1689,7 +1715,20 @@ i18n
                             times_subscribed: "moi abonniert",
                             owned_assistant: "Eigener Assistent",
                             subscribed_assistant: "Abonniert",
-                            more_options: "Weitere Optionen"
+                            more_options: "Weitere Optionen",
+                            duplicate: "Private Kopie erstoin",
+                            duplicate_confirm_title: "Eigene private Kopie erstoin",
+                            duplicate_confirm_message:
+                                'Du konnst "{{title}}" aa ohne eigene Kopie weiternutzn. Magst trotzdem a eigene Kopie erstoin? Spätere Änderungen vom ursprünglichen Assistentn wearn ned auf dei Kopie übernomma.',
+                            duplicate_confirm_action: "Kopie erstoin",
+                            duplicate_title_suffix: "[Kopie]",
+                            duplicate_success_title: "Assistent dupliziert",
+                            duplicate_success_message: 'Da Assistent "{{title}}" is erfolgreich dupliziert worn.',
+                            duplicate_failed_title: "Assistent hod ned dupliziert wern kina",
+                            duplicate_failed_default: "Beim Dupliziern vom Assistentn is a Fehler aufgtretn.",
+                            duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
+                            duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
+                            duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -2267,7 +2306,19 @@ i18n
                             times_subscribed: "fois abonné",
                             owned_assistant: "Assistant Propre",
                             subscribed_assistant: "Abonné",
-                            more_options: "Plus d'options"
+                            more_options: "Plus d'options",
+                            duplicate: "Créer une copie privée",
+                            duplicate_confirm_title: "Créer votre propre copie privée",
+                            duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
+                            duplicate_confirm_action: "Créer la copie",
+                            duplicate_title_suffix: "[Copie]",
+                            duplicate_success_title: "Assistant dupliqué",
+                            duplicate_success_message: `L'assistant "{{title}}" a été dupliqué avec succès.`,
+                            duplicate_failed_title: "L'assistant n'a pas pu être dupliqué",
+                            duplicate_failed_default: "Une erreur est survenue lors de la duplication de l'assistant.",
+                            duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
+                            duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
+                            duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -2840,7 +2891,20 @@ i18n
                             times_subscribed: "разів підписано",
                             owned_assistant: "Власний Асистент",
                             subscribed_assistant: "Підписаний",
-                            more_options: "Додаткові параметри"
+                            more_options: "Додаткові параметри",
+                            duplicate: "Створити приватну копію",
+                            duplicate_confirm_title: "Створити власну приватну копію",
+                            duplicate_confirm_message:
+                                'Ви можете й далі користуватися "{{title}}" без створення власної копії. Усе ж хочете створити її? Майбутні зміни в оригінальному асистенті не будуть застосовані до вашої копії.',
+                            duplicate_confirm_action: "Створити копію",
+                            duplicate_title_suffix: "[Копія]",
+                            duplicate_success_title: "Асистента дубльовано",
+                            duplicate_success_message: 'Асистента "{{title}}" успішно дубльовано.',
+                            duplicate_failed_title: "Не вдалося дублювати асистента",
+                            duplicate_failed_default: "Під час дублювання асистента сталася помилка.",
+                            duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
+                            duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
+                            duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

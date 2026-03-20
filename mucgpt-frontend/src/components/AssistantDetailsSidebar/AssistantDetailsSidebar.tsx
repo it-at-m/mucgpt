@@ -2,6 +2,7 @@ import { InlineDrawer, DrawerHeader, Button, DrawerBody, Text, Menu, MenuTrigger
 import {
     Dismiss24Regular,
     Chat24Regular,
+    Copy20Regular,
     Edit20Regular,
     Delete20Regular,
     Book24Regular,
@@ -36,6 +37,7 @@ interface AssistantDetailsSidebarProps {
     ownedAssistantIds: Set<string>;
     onStartChat?: () => void;
     onEdit?: () => void;
+    onDuplicate?: () => void;
     onExport?: () => void;
     onDelete?: () => void;
     hideStartChat?: boolean;
@@ -49,6 +51,7 @@ export const AssistantDetailsSidebar = ({
     ownedAssistantIds,
     onStartChat,
     onEdit,
+    onDuplicate,
     onExport,
     onDelete,
     hideStartChat
@@ -142,6 +145,11 @@ export const AssistantDetailsSidebar = ({
                                             {isOwned && (
                                                 <MenuItem icon={<Edit20Regular />} onClick={onEdit}>
                                                     {t("common.edit")}
+                                                </MenuItem>
+                                            )}
+                                            {onDuplicate && (
+                                                <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
+                                                    {t("components.community_assistants.duplicate")}
                                                 </MenuItem>
                                             )}
                                             {onExport && (

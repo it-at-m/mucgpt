@@ -21,7 +21,7 @@ DB:
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: ""
-LOG_CONFIG: "src/logconf.yaml"
+LOG_CONFIG: "app/logconf.yaml"
 
 # SSO Settings (nested under SSO key)
 SSO:

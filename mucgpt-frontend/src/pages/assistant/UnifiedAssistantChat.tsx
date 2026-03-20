@@ -5,10 +5,11 @@ import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList } from "../../components/Example";
@@ -30,9 +31,16 @@ import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/Mi
 import { useToolsContext } from "../../components/ToolsProvider";
 import { Button } from "@fluentui/react-components";
 import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
-import { EditAssistantDialog } from "../../components/AssistantDialogs/EditAssistantDialog/EditAssistantDialog";
+import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { getCommunityAssistantApi } from "../../api/assistant-client";
+import { ApiError } from "../../api/fetch-utils";
+import {
+    mapAssistantResponseToSnapshot,
+    mapAssistantToCommunitySnapshot,
+    mapCommunitySnapshotToAssistant,
+    upsertCommunityAssistantSnapshot
+} from "../../utils/community-assistant-snapshots";
 import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {
@@ -72,7 +80,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
-    const [searchParams, setSearchParams] = useSearchParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isEditMode = location.pathname.endsWith("/edit");
+
+    useEffect(() => {
+        if (!isEditMode || strategy.canEdit) return;
+        navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
+    }, [isEditMode, strategy.canEdit, navigate, location.pathname]);
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -95,7 +110,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
-    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
@@ -107,20 +121,13 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return () => document.body.classList.remove("info-drawer-open");
     }, [isInfoDrawerOpen]);
 
-    // Auto-open edit dialog when navigating from Discovery with ?edit=true
-    useEffect(() => {
-        if (searchParams.get("edit") === "true") {
-            if (strategy?.canEdit) {
-                setShowEditDialog(true);
-            }
-            searchParams.delete("edit");
-            setSearchParams(searchParams, { replace: true });
-        }
-    }, [searchParams, setSearchParams, strategy?.canEdit]);
-
     // StorageServices
-    const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
-    const assistantChatStorage: StorageService<ChatResponse, Assistant> = assistantStorageService.getChatStorageService();
+    const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
+    const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
+    const assistantChatStorage: StorageService<ChatResponse, Assistant> = useMemo(
+        () => assistantStorageService.getChatStorageService(),
+        [assistantStorageService]
+    );
 
     //config
     const [assistantConfig, setAssistantConfig] = useState<Assistant>({
@@ -163,8 +170,19 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
-                    .then(assistant => {
+                    .then(async assistant => {
                         if (assistant) {
+                            if (strategy instanceof CommunityAssistantStrategy && !notSubscribed) {
+                                try {
+                                    await upsertCommunityAssistantSnapshot(
+                                        communityAssistantStorageService,
+                                        mapAssistantToCommunitySnapshot({ ...assistant, id: assistant_id })
+                                    );
+                                } catch (snapshotError) {
+                                    console.error("Error updating community assistant snapshot:", snapshotError);
+                                }
+                            }
+
                             setAssistantConfig(assistant);
                             setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
@@ -210,7 +228,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     })
                     .catch(err => {
-                        if (err.response?.status === 403 && notSubscribed) {
+                        if (err instanceof ApiError && err.status === 403 && notSubscribed) {
                             setNoAccess(true);
                         } else {
                             console.error("Error loading assistant configuration:", err);
@@ -624,7 +642,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                             <Button
                                 appearance="subtle"
                                 icon={<Settings24Regular />}
-                                onClick={() => setShowEditDialog(true)}
+                                onClick={() => navigate("edit")}
                                 aria-label={t("components.assistantsettingsdrawer.show_configurations")}
                             />
                         ) : assistantInfoData || isAssistantInfoLoading ? (
@@ -664,17 +682,23 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         isInfoDrawerOpen
     ]);
 
-    return (
+    if (isEditMode && !strategy.canEdit) {
+        return null;
+    }
+
+    return isEditMode ? (
+        <AssistantEditorPage
+            mode="edit"
+            assistant={assistantConfig}
+            isOwner={strategy.canEdit || strategy.isOwned}
+            strategy={strategy}
+            onSave={async assistant => {
+                await onAssistantChanged(assistant);
+            }}
+        />
+    ) : (
         <>
             {layout}
-            <EditAssistantDialog
-                showDialog={showEditDialog}
-                setShowDialog={setShowEditDialog}
-                assistant={assistantConfig}
-                onAssistantChanged={onAssistantChanged}
-                isOwner={strategy.isOwned}
-                strategy={strategy}
-            />
             <NotSubscribedDialog
                 open={showNotSubscribedDialog}
                 onOpenChange={setShowNotSubscribedDialog}
@@ -682,11 +706,26 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 assistantTitle={assistantConfig.title}
                 onSubscribe={async () => {
                     await subscribeToAssistantApi(assistant_id);
+                    const subscribedAssistantResponse = await getCommunityAssistantApi(assistant_id);
+                    const subscribedAssistant = {
+                        ...mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(subscribedAssistantResponse)),
+                        owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
+                    };
+
+                    try {
+                        await upsertCommunityAssistantSnapshot(
+                            communityAssistantStorageService,
+                            mapAssistantToCommunitySnapshot({ ...subscribedAssistant, id: assistant_id })
+                        );
+                    } catch (snapshotError) {
+                        console.error("Error updating community assistant snapshot:", snapshotError);
+                    }
+                    setAssistantConfig(subscribedAssistant);
                     setShowNotSubscribedDialog(false);
                     setNoAccess(false);
                     showSuccess(
                         t("components.not_subscribed_dialog.subscribe_success"),
-                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: assistantConfig.title })
+                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: subscribedAssistant.title })
                     );
                 }}
             />

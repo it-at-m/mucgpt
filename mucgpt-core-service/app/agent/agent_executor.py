@@ -1,7 +1,8 @@
 import re
 import time
 import uuid
-from typing import Any, AsyncGenerator, List, Optional
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from langchain_core.messages import (
     AIMessage,
@@ -33,9 +34,9 @@ from core.logtools import getLogger
 logger = getLogger(name="mucgpt-core-agent")
 
 
-def _convert_to_langchain_messages(messages: List[InputMessage]) -> List[BaseMessage]:
+def _convert_to_langchain_messages(messages: list[InputMessage]) -> list[BaseMessage]:
     """Converts API messages to LangChain message objects."""
-    msgs: List[BaseMessage] = []
+    msgs: list[BaseMessage] = []
     for m in messages:
         if m.role == "system":
             msgs.append(SystemMessage(m.content))
@@ -92,16 +93,14 @@ class MUCGPTAgentExecutor:
         )
 
     @staticmethod
-    def _extract_department_prefix(department: Optional[str]) -> Optional[str]:
+    def _extract_department_prefix(department: str | None) -> str | None:
         """Return leading alphabetic prefix of department (e.g., POR from POR/3 or POR_Han)."""
         if not department:
             return None
         match = re.match(r"[A-Za-z]+", department)
         return match.group(0) if match else None
 
-    def _build_llm_extra_body(
-        self, assistant_id: Optional[str]
-    ) -> Optional[dict[str, Any]]:
+    def _build_llm_extra_body(self, assistant_id: str | None) -> dict[str, Any] | None:
         tags: list[str] = []
         if assistant_id:
             tags.append(f"MUCGPT_ASSISTANT_ID:{assistant_id}")
@@ -111,13 +110,13 @@ class MUCGPTAgentExecutor:
 
     async def run_with_streaming(
         self,
-        messages: List[InputMessage],
+        messages: list[InputMessage],
         temperature: float,
         model: str,
         user_info: AuthenticationResult,
-        enabled_tools: Optional[List[str]] = None,
-        assistant_id: Optional[str] = None,
-    ) -> AsyncGenerator[dict, None]:
+        enabled_tools: list[str] | None = None,
+        assistant_id: str | None = None,
+    ) -> AsyncGenerator[dict]:
         logger.info(
             "Chat streaming started with temperature %s, model %s",
             temperature,
@@ -235,12 +234,12 @@ class MUCGPTAgentExecutor:
 
     def run_without_streaming(
         self,
-        messages: List[InputMessage],
+        messages: list[InputMessage],
         temperature: float,
         model: str,
         user_info: AuthenticationResult,
-        enabled_tools: Optional[List[str]] = None,
-        assistant_id: Optional[str] = None,
+        enabled_tools: list[str] | None = None,
+        assistant_id: str | None = None,
     ) -> ChatCompletionResponse:
         logger.info(
             "Chat non-streaming started with temperature %s, model %s",

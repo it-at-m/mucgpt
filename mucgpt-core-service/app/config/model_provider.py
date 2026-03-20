@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Optional, Union
 
 from langchain_community.llms.fake import FakeListLLM
 from langchain_core.runnables import ConfigurableField
@@ -14,11 +13,12 @@ class ModelsConfigurationException(Exception):
 
     pass
 
+
 class ModelProvider:
     _llm = None
 
     @staticmethod
-    def _create_configurable_fields() -> Dict[str, ConfigurableField]:
+    def _create_configurable_fields() -> dict[str, ConfigurableField]:
         """Create common configurable fields for LLM models.
 
         Returns:
@@ -48,8 +48,8 @@ class ModelProvider:
         n: int,
         temperature: float,
         streaming: bool,
-        logger: Optional[logging.Logger] = None,
-    ) -> Union[AzureChatOpenAI, ChatOpenAI]:
+        logger: logging.Logger | None = None,
+    ) -> AzureChatOpenAI | ChatOpenAI:
         """Create a specific LLM instance based on model configuration.
 
         Args:
@@ -107,11 +107,11 @@ class ModelProvider:
 
     @staticmethod
     def init_model(
-            models: List[ModelsConfig],
-            n: int = 1,
-            temperature: float = 0.7,
-            streaming: bool = False,
-            logger: Optional[logging.Logger] = None,
+        models: list[ModelsConfig],
+        n: int = 1,
+        temperature: float = 0.7,
+        streaming: bool = False,
+        logger: logging.Logger | None = None,
     ) -> None:
         """
         Init model based on provided configuration.
@@ -130,7 +130,9 @@ class ModelProvider:
         _logger = logger or logging.getLogger(__name__)
 
         if not models:
-            raise ModelsConfigurationException("No models found in the configuration.json")
+            raise ModelsConfigurationException(
+                "No models found in the configuration.json"
+            )
 
         default_model = models[0]
 
@@ -148,7 +150,7 @@ class ModelProvider:
         llm = llm.configurable_fields(**configurable_fields)
 
         # Add alternative models
-        alternatives: Dict[str, RunnableSerializable] = {
+        alternatives: dict[str, RunnableSerializable] = {
             "fake": FakeListLLM(responses=["Test response"])
         }
 
@@ -162,11 +164,15 @@ class ModelProvider:
                 alternatives[model.llm_name] = alternative
             except Exception as e:
                 # Log the error but continue with other models
-                _logger.warning(f"Failed to initialize model {model.llm_name}: {str(e)}")
+                _logger.warning(
+                    f"Failed to initialize model {model.llm_name}: {str(e)}"
+                )
 
         # Configure alternatives
         llm = llm.configurable_alternatives(
-            ConfigurableField(id="llm"), default_key=default_model.llm_name, **alternatives
+            ConfigurableField(id="llm"),
+            default_key=default_model.llm_name,
+            **alternatives,
         )
         ModelProvider._llm = llm
 

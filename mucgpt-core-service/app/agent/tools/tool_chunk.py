@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -23,5 +23,5 @@ class ToolStreamState(str, Enum):
 class ToolStreamChunk(BaseModel):
     state: ToolStreamState
     content: Any
-    tool_name: Optional[str] = None
-    metadata: Optional[dict] = None
+    tool_name: str | None = None
+    metadata: dict | None = None

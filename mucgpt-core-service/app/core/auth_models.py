@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, ConfigDict
 
 
@@ -17,8 +15,8 @@ class AuthenticationResult(BaseModel):
     token: str
     user_id: str
     department: str
-    name: Optional[str] = None
-    roles: Optional[list[str]] = None
+    name: str | None = None
+    roles: list[str] | None = None
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -37,7 +35,7 @@ class AuthErrorResponse(BaseModel):
     """Payload returned to clients on authentication failures."""
 
     message: str
-    redirect_url: Optional[str] = None
+    redirect_url: str | None = None
 
     model_config = ConfigDict(
         json_schema_extra={

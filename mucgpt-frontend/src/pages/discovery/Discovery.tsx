@@ -354,12 +354,16 @@ const Discovery = () => {
             try {
                 const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData);
                 if (requestId !== latestRequestRef.current) return;
-                const latestVersion = isAssistantResponse(resolvedData) ? resolvedData.latest_version : null;
+                const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
+                const resolvedDescription = isAssistantResponse(resolvedData)
+                    ? resolvedData.latest_version.description || ""
+                    : resolvedData.description || "";
+                const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
                 setSelectedAssistant({
                     ...assistant,
-                    title: latestVersion ? latestVersion.name : resolvedData.title,
-                    description: latestVersion ? latestVersion.description || "" : resolvedData.description || "",
-                    tags: latestVersion ? latestVersion.tags || [] : resolvedData.tags || [],
+                    title: resolvedTitle,
+                    description: resolvedDescription,
+                    tags: resolvedTags,
                     rawData: resolvedData
                 });
                 setIsDrawerOpen(true);

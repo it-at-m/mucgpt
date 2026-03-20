@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 from enum import Enum
 from functools import lru_cache
-from typing import Any, List
+from typing import Any
 from urllib.parse import urljoin
 
 import httpx
@@ -345,7 +345,7 @@ class Settings(BaseSettings):
 
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
-    MODELS: List[ModelsConfig] = []
+    MODELS: list[ModelsConfig] = []
 
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)
@@ -434,7 +434,7 @@ def _has_complete_metadata(model_info: ModelInfo) -> bool:
     )
 
 
-def _missing_metadata_fields(model_info: ModelInfo) -> List[str]:
+def _missing_metadata_fields(model_info: ModelInfo) -> list[str]:
     missing = []
     if model_info.max_output_tokens is None:
         missing.append("max_output_tokens")
@@ -540,7 +540,7 @@ def _coerce_bool(value: Any) -> bool | None:
         if lowered in {"false", "0", "no", "n"}:
             return False
         return None
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return bool(value)
     return None
 
@@ -570,7 +570,7 @@ def _build_description(entry: dict[str, Any], fallback_name: str) -> str:
         or fallback_name
     )
 
-    parts: List[str] = []
+    parts: list[str] = []
     base_model = model_info.get("base_model")
     version = model_info.get("version")
     inference_location = model_info.get("inference_location")
@@ -595,7 +595,7 @@ def _fetch_remote_model_entry(model: ModelsConfig) -> dict[str, Any] | None:
 
 def _load_model_info(
     endpoint: HttpUrl, api_key: SecretStr | None
-) -> List[dict[str, Any]]:
+) -> list[dict[str, Any]]:
     info_url = urljoin(endpoint.unicode_string(), "model/info")
 
     headers = {}
@@ -622,7 +622,7 @@ def _load_model_info(
 
 
 def _match_model_entry(
-    payload: List[dict[str, Any]], model: ModelsConfig
+    payload: list[dict[str, Any]], model: ModelsConfig
 ) -> dict[str, Any] | None:
     desired_names = {
         name.lower()
@@ -630,7 +630,7 @@ def _match_model_entry(
         if isinstance(name, str) and name
     }
 
-    def _candidates(entry: dict[str, Any]) -> List[str]:
+    def _candidates(entry: dict[str, Any]) -> list[str]:
         model_info = entry.get("model_info") or {}
         litellm_params = entry.get("litellm_params") or {}
         names = [

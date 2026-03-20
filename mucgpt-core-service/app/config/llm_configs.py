@@ -1,6 +1,6 @@
-from typing import List
+from typing import NotRequired
 
-from typing_extensions import NotRequired, TypedDict
+from typing_extensions import TypedDict
 
 
 class LlmConfigs(TypedDict, total=False):
@@ -11,4 +11,4 @@ class LlmConfigs(TypedDict, total=False):
     llm: NotRequired[str]  # one of the SupportedModels
     llm_temperature: NotRequired[float]
     llm_streaming: NotRequired[bool]
-    llm_callbacks: NotRequired[List]
+    llm_callbacks: NotRequired[list]

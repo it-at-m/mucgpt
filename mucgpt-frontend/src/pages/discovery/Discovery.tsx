@@ -8,10 +8,10 @@ import { useTranslation } from "react-i18next";
 import styles from "./Discovery.module.css";
 import {
     getAllCommunityAssistantsApi,
+    getCommunityAssistantApi,
     getOwnedCommunityAssistants,
     getUserSubscriptionsApi,
     deleteCommunityAssistantApi,
-    getCommunityAssistantApi,
     createCommunityAssistantApi
 } from "../../api/assistant-client";
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
@@ -24,6 +24,7 @@ import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
 import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { useDuplicateAssistant } from "./hooks/useDuplicateAssistant";
 import { downloadAssistantExport, mapAssistantToExportData, mapVersionToExportData } from "../../utils/assistant-export";
 import { isCompleteCommunityAssistantSnapshot, mapCommunitySnapshotToAssistant } from "../../utils/community-assistant-snapshots";
 import { ApiError } from "../../api/fetch-utils";
@@ -51,8 +52,18 @@ const Discovery = () => {
     const [ownedAssistantIds, setOwnedAssistantIds] = useState<Set<string>>(new Set());
     const [userSubscriptionIds, setUserSubscriptionIds] = useState<Set<string>>(new Set());
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const {
+        assistantToDuplicate,
+        showDuplicateConfirm,
+        isDuplicating,
+        setShowDuplicateConfirm,
+        requestDuplicateAssistant,
+        confirmDuplicateAssistant,
+        resolveAssistantData
+    } = useDuplicateAssistant();
 
     const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const latestRequestRef = useRef(0);
     useEffect(
         () => () => {
             if (closeTimerRef.current !== null) clearTimeout(closeTimerRef.current);
@@ -93,13 +104,28 @@ const Discovery = () => {
                 return;
             }
 
-            throw new Error(t("components.assistantsettingsdrawer.export_failed"));
+            const assistantData = await resolveAssistantData(selectedAssistant.id, selectedAssistant.rawData);
+            if ("latest_version" in assistantData && assistantData.latest_version) {
+                const lv = assistantData.latest_version;
+                downloadAssistantExport(mapVersionToExportData(lv), lv.name);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${lv.name}.json`);
+                return;
+            }
+
+            if (isCompleteCommunityAssistantSnapshot(assistantData)) {
+                const snapshotAssistant: Assistant = mapCommunitySnapshotToAssistant(assistantData);
+                downloadAssistantExport(mapAssistantToExportData(snapshotAssistant), snapshotAssistant.title);
+                showSuccess(t("components.assistantsettingsdrawer.export"), `${snapshotAssistant.title}.json`);
+                return;
+            }
+
+            throw new Error(t("components.import_assistant.import_invalid_format"));
         } catch (error) {
             console.error("Failed to export assistant", error);
             const errorMessage = error instanceof Error ? error.message : "Export failed";
             showError(t("components.assistantsettingsdrawer.export"), errorMessage);
         }
-    }, [selectedAssistant, showError, showSuccess, t]);
+    }, [resolveAssistantData, selectedAssistant, showError, showSuccess, t]);
 
     const importAssistant = useCallback(() => {
         const fileInput = document.createElement("input");
@@ -207,16 +233,31 @@ const Discovery = () => {
                 setOwnedAssistantIds(ownedIds);
                 setUserSubscriptionIds(subscribedIds);
 
-                const toCardData = (a: any, extra?: Partial<AssistantCardData>): AssistantCardData => ({
-                    id: a.id,
-                    title: a.latest_version?.name || a.title || "Unknown Assistant",
-                    description: a.latest_version?.description || a.description || "",
-                    subscriptions: a.subscriptions_count || 0,
-                    updated: a.updated_at || new Date().toISOString(),
-                    tags: a.latest_version?.tags || a.tags || [],
-                    rawData: a as AssistantResponse | CommunityAssistantSnapshot,
-                    ...extra
-                });
+                const toCardData = (a: AssistantResponse | CommunityAssistantSnapshot, extra?: Partial<AssistantCardData>): AssistantCardData => {
+                    if ("latest_version" in a) {
+                        return {
+                            id: a.id,
+                            title: a.latest_version?.name || "Unknown Assistant",
+                            description: a.latest_version?.description || "",
+                            subscriptions: a.subscriptions_count || 0,
+                            updated: a.updated_at || new Date().toISOString(),
+                            tags: a.latest_version?.tags || [],
+                            rawData: a,
+                            ...extra
+                        };
+                    }
+
+                    return {
+                        id: a.id,
+                        title: a.title || "Unknown Assistant",
+                        description: a.description || "",
+                        subscriptions: 0,
+                        updated: new Date().toISOString(),
+                        tags: a.tags || [],
+                        rawData: a,
+                        ...extra
+                    };
+                };
 
                 // 1. All published assistants
                 setAllAssistants(allAssistantsResponse.map(a => toCardData(a)));
@@ -289,7 +330,7 @@ const Discovery = () => {
         }
     };
 
-    const handleAssistantClick = (assistant: AssistantCardData) => {
+    const handleAssistantClick = async (assistant: AssistantCardData) => {
         if (closeTimerRef.current !== null) {
             clearTimeout(closeTimerRef.current);
             closeTimerRef.current = null;
@@ -299,8 +340,24 @@ const Discovery = () => {
             setIsDrawerOpen(false);
             closeTimerRef.current = setTimeout(() => setSelectedAssistant(null), 300);
         } else {
-            setSelectedAssistant(assistant);
-            setIsDrawerOpen(true);
+            const requestId = ++latestRequestRef.current;
+            try {
+                const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData);
+                if (requestId !== latestRequestRef.current) return;
+                setSelectedAssistant({
+                    ...assistant,
+                    title: "latest_version" in resolvedData ? resolvedData.latest_version.name : resolvedData.title,
+                    description: "latest_version" in resolvedData ? resolvedData.latest_version.description || "" : resolvedData.description || "",
+                    tags: "latest_version" in resolvedData ? resolvedData.latest_version.tags || [] : resolvedData.tags || [],
+                    rawData: resolvedData
+                });
+                setIsDrawerOpen(true);
+            } catch (error) {
+                if (requestId !== latestRequestRef.current) return;
+                console.error("Failed to load assistant details:", error);
+                const errorMessage = error instanceof Error ? error.message : t("components.assistant_chat.load_assistant_failed_message");
+                showError(t("components.assistant_chat.load_assistant_failed"), errorMessage);
+            }
         }
     };
 
@@ -472,6 +529,7 @@ const Discovery = () => {
                     ownedAssistantIds={ownedAssistantIds}
                     onStartChat={startConversation}
                     onEdit={editAssistant}
+                    onDuplicate={() => requestDuplicateAssistant(selectedAssistant)}
                     onExport={exportAssistant}
                     onDelete={deleteAssistant}
                 />
@@ -484,6 +542,15 @@ const Discovery = () => {
                 title={t("components.assistantsettingsdrawer.deleteDialog.title")}
                 message={t("components.assistantsettingsdrawer.deleteDialog.content")}
                 confirmLabel={t("components.assistantsettingsdrawer.deleteDialog.confirm")}
+            />
+            <CloseConfirmationDialog
+                open={showDuplicateConfirm}
+                onOpenChange={setShowDuplicateConfirm}
+                onConfirmClose={confirmDuplicateAssistant}
+                confirmDisabled={isDuplicating}
+                title={t("components.community_assistants.duplicate_confirm_title")}
+                message={t("components.community_assistants.duplicate_confirm_message", { title: assistantToDuplicate?.title ?? "" })}
+                confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
         </div>
     );

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 class SummarizeResult(BaseModel):
     """Result model for the summarize endpoint."""
 
-    answer: List[str] = Field(
+    answer: list[str] = Field(
         ..., description="The summarized text as a list of strings."
     )
     model_config = ConfigDict(
@@ -26,13 +26,11 @@ class SumRequest(BaseModel):
     """Request model for the summarize endpoint."""
 
     text: str = Field("", description="The text to summarize.")
-    detaillevel: Optional[str] = Field(
+    detaillevel: str | None = Field(
         "short",
         description="The desired level of detail for the summary (e.g., 'short', 'medium', 'long').",
     )
-    language: Optional[str] = Field(
-        "Deutsch", description="The language of the summary."
-    )
+    language: str | None = Field("Deutsch", description="The language of the summary.")
     model: str = Field("gpt-4o-mini", description="The model to use for summarization.")
     model_config = ConfigDict(
         json_schema_extra={
@@ -62,24 +60,24 @@ class ChatCompletionMessage(BaseModel):
 
 class ChatCompletionRequest(BaseModel):
     model: str = Field("gpt-4o-mini", description="The model to use")
-    messages: List[ChatCompletionMessage] = Field(
+    messages: list[ChatCompletionMessage] = Field(
         ..., description="Sequence of messages in the conversation"
     )
-    temperature: Optional[float] = Field(
+    temperature: float | None = Field(
         None, description="[DEPRECATED] Sampling temperature - use creativity instead"
     )
-    creativity: Optional[str] = Field(
+    creativity: str | None = Field(
         None,
         description="Creativity level: 'low' (conservative), 'medium' (balanced), 'high' (creative)",
     )
-    max_tokens: Optional[int] = Field(4096, description="Maximum tokens to generate")
-    stream: Optional[bool] = Field(
+    max_tokens: int | None = Field(4096, description="Maximum tokens to generate")
+    stream: bool | None = Field(
         False, description="Whether to stream partial responses back"
     )
-    enabled_tools: Optional[List[str]] = Field(
+    enabled_tools: list[str] | None = Field(
         None, description="List of enabled tool IDs for this completion request"
     )
-    assistant_id: Optional[str] = Field(
+    assistant_id: str | None = Field(
         None, description="ID of the assistant to use for this completion request"
     )
     model_config = ConfigDict(
@@ -103,7 +101,7 @@ class ChatCompletionRequest(BaseModel):
 class ChatCompletionChoice(BaseModel):
     index: int
     message: ChatCompletionMessage
-    finish_reason: Optional[str] = Field(
+    finish_reason: str | None = Field(
         None, description="Why the model stopped generating"
     )
     model_config = ConfigDict(
@@ -143,7 +141,7 @@ class ChatCompletionResponse(BaseModel):
     id: str = Field(..., description="Unique ID for this completion")
     object: str = Field("chat.completion", description="Type of object returned")
     created: int = Field(..., description="Unix timestamp for creation")
-    choices: List[ChatCompletionChoice] = Field(
+    choices: list[ChatCompletionChoice] = Field(
         ..., description="List of completion choices"
     )
     usage: Usage = Field(..., description="Token usage information")
@@ -176,12 +174,12 @@ class ChatCompletionResponse(BaseModel):
 class ChatCompletionDelta(BaseModel):
     """Incremental content update for streaming responses"""
 
-    role: Optional[Literal["system", "user", "assistant"]] = Field(
+    role: Literal["system", "user", "assistant"] | None = Field(
         None,
         description="Role indicated when provided (assistant only after initial chunk)",
     )
-    content: Optional[str] = Field(None, description="New content for this chunk")
-    tool_calls: Optional[List[dict]] = Field(None, description="Tool call information")
+    content: str | None = Field(None, description="New content for this chunk")
+    tool_calls: list[dict] | None = Field(None, description="Tool call information")
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -198,7 +196,7 @@ class ChatCompletionChunkChoice(BaseModel):
 
     delta: ChatCompletionDelta = Field(..., description="Partial message update")
     index: int = Field(..., description="Choice index, always 0 for single-stream")
-    finish_reason: Optional[str] = Field(
+    finish_reason: str | None = Field(
         None, description="Why the stream stopped for this choice"
     )
     model_config = ConfigDict(
@@ -220,7 +218,7 @@ class ChatCompletionChunk(BaseModel):
         "chat.completion.chunk", description="Type of object returned"
     )
     created: int = Field(..., description="Unix timestamp for chunk creation")
-    choices: List[ChatCompletionChunkChoice] = Field(
+    choices: list[ChatCompletionChunkChoice] = Field(
         ..., description="List of partial choices for this chunk"
     )
     model_config = ConfigDict(
@@ -266,7 +264,7 @@ class ToolInfo(BaseModel):
 class ToolListResponse(BaseModel):
     """Response model for listing available tools with details."""
 
-    tools: List[ToolInfo] = Field(
+    tools: list[ToolInfo] = Field(
         ..., description="List of available tools with details."
     )
     model_config = ConfigDict(
@@ -360,7 +358,7 @@ class ModelsDTO(BaseModel):
 class ConfigResponse(BaseModel):
     env_name: str = "MUCGPT"
     alternative_logo: bool = False
-    models: List[ModelsDTO] = Field(
+    models: list[ModelsDTO] = Field(
         default_factory=list,
         description="List of configured language models",
     )

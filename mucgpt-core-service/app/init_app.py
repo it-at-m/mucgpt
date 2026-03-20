@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from agent.agent import MUCGPTAgent
 from agent.agent_executor import MUCGPTAgentExecutor
@@ -25,7 +25,7 @@ class ModelOptions:
         self,
         streaming: bool = True,
         temperature: float = 0.7,
-        custom_model: Optional[Any] = None,
+        custom_model: Any | None = None,
     ):
         """Initialize model options with validation.
 
@@ -35,7 +35,7 @@ class ModelOptions:
             custom_model: Optional pre-configured model (for testing)
         """
         # Validate parameters
-        if not isinstance(temperature, (int, float)) or not 0 <= temperature <= 1:
+        if not isinstance(temperature, int | float) or not 0 <= temperature <= 1:
             raise ValueError(f"Temperature must be between 0 and 1, got {temperature}")
 
         self.streaming = streaming

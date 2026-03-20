@@ -1,5 +1,4 @@
 from concurrent.futures import ThreadPoolExecutor
-from typing import List, Optional, Tuple
 
 from asgi_correlation_id import correlation_id
 from langchain.chains import SequentialChain
@@ -18,14 +17,14 @@ logger = getLogger(name="mucgpt-core-summarize")
 
 
 class DenserSummary(BaseModel):
-    missing_entities: List[str] = Field(description="An list of missing entitys")
+    missing_entities: list[str] = Field(description="An list of missing entitys")
     denser_summary: str = Field(
         description="denser summary, covers every entity in detail"
     )
 
 
 class Summarys(BaseModel):
-    data: List[DenserSummary] = Field(
+    data: list[DenserSummary] = Field(
         description="An list of increasingly concise dense summaries"
     )
 
@@ -119,7 +118,7 @@ class Summarize:
 
         return (summarizationChain, translationChain)
 
-    def run_io_tasks_in_parallel(self, tasks) -> List[Tuple[Summarys, int]]:
+    def run_io_tasks_in_parallel(self, tasks) -> list[tuple[Summarys, int]]:
         """execute tasks in parallel
 
         Args:
@@ -137,7 +136,7 @@ class Summarize:
 
     def call_and_cleanup(
         self, text: str, summarizeChain: RunnableSerializable, trace_id: str
-    ) -> Tuple[Summarys, int, Optional[str]]:
+    ) -> tuple[Summarys, int, str | None]:
         """calls summarization chain and cleans the data
 
         Args:
@@ -177,7 +176,7 @@ class Summarize:
         return (result, total_tokens, error)
 
     async def summarize(
-        self, splits: List[str], language: str, department: Optional[str], llm_name: str
+        self, splits: list[str], language: str, department: str | None, llm_name: str
     ) -> SummarizeResult:
         """summarizes text with chain of density prompting. Generates 5 increasingly better summaries per split.
         Concatenates the results and translates it into the target language.
@@ -196,7 +195,7 @@ class Summarize:
         (summarizeChain, cleanupChain) = self.setup(llm_name)
         # call chain
         total_tokens = 0
-        summarys: List[DenserSummary] = []
+        summarys: list[DenserSummary] = []
 
         logger.info("Summarize in parallel, having %s splits", len(splits))
         # call summarization in parallel
@@ -253,7 +252,7 @@ class Summarize:
 
         return SummarizeResult(answer=final_summarys)
 
-    def split(self, detaillevel: str, file=None, text=None) -> List[str]:
+    def split(self, detaillevel: str, file=None, text=None) -> list[str]:
         """splits the text (either a pdf or text) into equal chunks
 
         Args:

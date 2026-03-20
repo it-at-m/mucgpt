@@ -100,7 +100,7 @@ class McpBearerAuthProvider(Auth):
     def set_token(uid: str, token: str):
         McpBearerAuthProvider._tokens[uid] = token
 
-    def auth_flow(self, request: Request) -> typing.Generator[Request, Response, None]:
+    def auth_flow(self, request: Request) -> typing.Generator[Request, Response]:
         token = McpBearerAuthProvider._tokens.get(self._uid)
         if token is None:
             raise ValueError("Token is None but needed")

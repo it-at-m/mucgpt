@@ -27,7 +27,14 @@ export const mapAssistantVersionToSnapshot = (assistantId: string, version: Assi
 });
 
 export const mapAssistantResponseToSnapshot = (assistant: AssistantResponse): CommunityAssistantSnapshot => {
-    return mapAssistantVersionToSnapshot(assistant.id, assistant.latest_version);
+    const snapshot = mapAssistantVersionToSnapshot(assistant.id, assistant.latest_version);
+    // is_visible and hierarchical_access are authoritative at the AssistantResponse top level,
+    // not inside latest_version (where they may be null/undefined from the backend).
+    return {
+        ...snapshot,
+        is_visible: assistant.is_visible ?? snapshot.is_visible,
+        hierarchical_access: assistant.hierarchical_access ?? snapshot.hierarchical_access
+    };
 };
 
 export const mapAssistantToCommunitySnapshot = (assistant: Assistant): CommunityAssistantSnapshot => ({

@@ -1,6 +1,6 @@
 import { DialogContent, Field, InfoLabel, Text, RadioGroup, Radio } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Eye24Regular, EyeOff24Regular, People24Regular } from "@fluentui/react-icons";
 import sharedStyles from "../AssistantDialog.module.css";
 import DepartmentTreeDropdown from "../../../DepartmentTreeDropdown/DepartmentTreeDropdown";
@@ -31,6 +31,16 @@ export const VisibilityStep = ({
           : "public";
 
     const [visibilityMode, setVisibilityMode] = useState<"public" | "departments" | "private">(initialVisibility);
+
+    // Sync internal state when props change (e.g. when assistant data loads asynchronously)
+    useEffect(() => {
+        const newMode: "public" | "departments" | "private" = invisibleChecked
+            ? "private"
+            : Array.isArray(publishDepartments) && publishDepartments.length > 0
+              ? "departments"
+              : "public";
+        setVisibilityMode(newMode);
+    }, [invisibleChecked, publishDepartments]);
 
     const onVisibilityChange = useCallback(
         (_: React.FormEvent<HTMLDivElement>, data: { value: string }) => {

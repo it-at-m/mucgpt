@@ -166,11 +166,12 @@ export class AssistantStorageService {
      */
     async transferChatsToAssistant(sourceAssistantId: string, targetAssistantId: string) {
         const chats = await this.getAllChatForAssistant(sourceAssistantId);
+        const db = await this.storageService.connectToDB();
         for (const chat of chats) {
             if (!chat.id) continue;
             const chatUuid = chat.id.replace(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId), "");
             const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
-            await this.storageService.create(chat.messages, chat.config, newId, chat.name, chat.favorite);
+            await db.put(this.config.objectStore_name, { ...chat, id: newId });
             await this.storageService.delete(chat.id);
         }
     }

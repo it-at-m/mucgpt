@@ -9,11 +9,11 @@ import {
     updateCommunityAssistantApi
 } from "../../api/assistant-client";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { ApiError } from "../../api/fetch-utils";
 import {
-    isCompleteCommunityAssistantSnapshot,
     mapAssistantResponseToSnapshot,
-    mapCommunitySnapshotToAssistant
+    mapCommunitySnapshotToAssistant,
+    resolveDeletedCommunityAssistantSnapshot,
+    isCompleteCommunityAssistantSnapshot
 } from "../../utils/community-assistant-snapshots";
 
 export interface AssistantStrategy {
@@ -75,12 +75,10 @@ export class CommunityAssistantStrategy implements AssistantStrategy {
             const response = await getCommunityAssistantApi(assistantId);
             return mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(response));
         } catch (error) {
-            if (error instanceof ApiError && error.status === 404) {
-                const snapshot = await this.communityStorageService.getAssistantConfig(assistantId);
-                if (isCompleteCommunityAssistantSnapshot(snapshot)) {
-                    window.location.href = `/#/deleted/communityassistant/${assistantId}`;
-                    return mapCommunitySnapshotToAssistant(snapshot);
-                }
+            const snapshot = await resolveDeletedCommunityAssistantSnapshot(error, assistantId, this.communityStorageService);
+            if (snapshot) {
+                window.location.href = `/#/deleted/communityassistant/${assistantId}`;
+                return mapCommunitySnapshotToAssistant(snapshot);
             }
             throw error;
         }

@@ -1,6 +1,6 @@
 import React, { forwardRef, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardHeader, CardPreview, mergeClasses, CardProps } from "@fluentui/react-components";
+import { Badge, Card, CardHeader, CardPreview, mergeClasses, CardProps } from "@fluentui/react-components";
 import styles from "./DiscoveryCard.module.css";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
@@ -11,6 +11,7 @@ export interface DiscoveryCardProps extends CardProps {
     linkTo?: string;
 
     header?: ReactNode;
+    badge?: string;
     titleClassName?: string;
     isSelected?: boolean;
 }
@@ -23,6 +24,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         linkTo,
 
         header,
+        badge,
         className,
         onClick,
         titleClassName,
@@ -46,7 +48,20 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
         }
 
         if (title) {
-            return <CardHeader header={<div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>} />;
+            return (
+                <CardHeader
+                    header={
+                        <div className={styles.headerRow}>
+                            <div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>
+                            {badge && (
+                                <Badge className={styles.headerBadge} appearance="tint" color="danger" size="small">
+                                    {badge}
+                                </Badge>
+                            )}
+                        </div>
+                    }
+                />
+            );
         }
 
         return null;

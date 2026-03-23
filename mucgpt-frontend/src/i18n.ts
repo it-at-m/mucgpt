@@ -545,6 +545,8 @@ i18n
                             duplicate_confirm_title: "Eigene private Kopie erstellen",
                             duplicate_confirm_message:
                                 'Du kannst "{{title}}" auch ohne eigene Kopie weiter verwenden. Möchtest du trotzdem eine eigene Kopie erstellen? Spätere Änderungen des ursprünglichen Assistenten werden nicht auf deine Kopie übernommen.',
+                            duplicate_confirm_message_deleted:
+                                'Der ursprüngliche Assistent "{{title}}" ist nicht mehr verfügbar. Wenn du weiter damit arbeiten möchtest, kannst du jetzt eine eigene Kopie aus der zuletzt gespeicherten Version erstellen.',
                             duplicate_confirm_action: "Kopie erstellen",
                             duplicate_title_suffix: "[Kopie]",
                             duplicate_success_title: "Assistent dupliziert",
@@ -553,7 +555,20 @@ i18n
                             duplicate_failed_default: "Beim Duplizieren des Assistenten ist ein Fehler aufgetreten.",
                             duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
-                            duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden."
+                            duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
+                            deleted_badge: "Gelöscht",
+                            deleted_state_title: "Dieser Community-Assistent ist nicht mehr verfügbar",
+                            deleted_state_body:
+                                "Der ursprüngliche Assistent ist nicht mehr verfügbar und wird nicht mehr unterstützt. Sie können ihn nicht weiter direkt verwenden.",
+                            deleted_state_body_continue:
+                                "Wenn Sie mit dieser Konfiguration weiterarbeiten möchten, speichern Sie sie als eigenen Assistenten. Frühere Chats können Sie weiterhin nur lesend ansehen.",
+                            discovery_deleted_hint:
+                                "Dieser Community-Assistent wurde vom Ersteller gelöscht. Er ist nicht mehr verfügbar. Die letzte Version liegt nur noch lokal im Browser und kann verloren gehen. Sichern Sie sie jetzt als eigenen Assistenten oder sehen Sie nur den alten Chatverlauf an.",
+                            deleted_chat_warning:
+                                "Dieser Community-Assistent wurde vom Ersteller gelöscht und ist nicht mehr verfügbar. Diese Version liegt nur noch lokal im Browser und kann verloren gehen. Der Chatverlauf ist schreibgeschützt. Sichern Sie sie als eigenen Assistenten, wenn Sie weiter damit arbeiten möchten.",
+                            deleted_state_save_action: "Als eigenen Assistenten speichern",
+                            deleted_state_history_action: "Alten Chatverlauf ansehen",
+                            deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar."
                         },
                         toolsselector: {
                             title: "Verfügbare Tools",
@@ -1132,6 +1147,8 @@ i18n
                             duplicate_confirm_title: "Create your own private copy",
                             duplicate_confirm_message:
                                 'You can keep using "{{title}}" without creating your own copy. Do you still want to create one? Future changes to the original assistant will not be applied to your copy.',
+                            duplicate_confirm_message_deleted:
+                                'The original assistant "{{title}}" is no longer available. If you want to keep using it, you can create your own copy now from the last cached version.',
                             duplicate_confirm_action: "Create copy",
                             duplicate_title_suffix: "[Copy]",
                             duplicate_success_title: "Assistant duplicated",
@@ -1140,7 +1157,19 @@ i18n
                             duplicate_failed_default: "An error occurred while duplicating the assistant.",
                             duplicate_failed_rate_limited: "Too many requests. Please try again later.",
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
-                            duplicate_failed_not_found: "The assistant was not found and cannot be duplicated."
+                            duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
+                            deleted_badge: "Deleted",
+                            deleted_state_title: "This community assistant is no longer available",
+                            deleted_state_body: "The original assistant is no longer available or supported. You can no longer continue using it directly.",
+                            deleted_state_body_continue:
+                                "If you want to keep using this setup, save it as your own assistant. You can still inspect previous chats in read-only mode.",
+                            discovery_deleted_hint:
+                                "This community assistant was deleted by its creator and is no longer available. The last version only exists locally in this browser and may be lost. Save it now as your own assistant, or only view the old chat history.",
+                            deleted_chat_warning:
+                                "This community assistant was deleted by its creator and is no longer available. This version only exists locally in this browser and may be lost. The chat history is read-only. Save it as your own assistant if you want to keep using it.",
+                            deleted_state_save_action: "Save as own assistant",
+                            deleted_state_history_action: "View old chat history",
+                            deleted_state_no_history: "No local chat history is available for this assistant."
                         },
                         toolsselector: {
                             title: "Available tools",
@@ -1720,6 +1749,8 @@ i18n
                             duplicate_confirm_title: "Eigene private Kopie erstoin",
                             duplicate_confirm_message:
                                 'Du konnst "{{title}}" aa ohne eigene Kopie weiternutzn. Magst trotzdem a eigene Kopie erstoin? Spätere Änderungen vom ursprünglichen Assistentn wearn ned auf dei Kopie übernomma.',
+                            duplicate_confirm_message_deleted:
+                                'Da ursprüngliche Assistent "{{title}}" is nimmer verfuegbar. Wennst weitermacha mogst, koanst jetz a eigene Kopie aus da zletzt gspeicherten Version erstoin.',
                             duplicate_confirm_action: "Kopie erstoin",
                             duplicate_title_suffix: "[Kopie]",
                             duplicate_success_title: "Assistent dupliziert",
@@ -1728,7 +1759,20 @@ i18n
                             duplicate_failed_default: "Beim Dupliziern vom Assistentn is a Fehler aufgtretn.",
                             duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
-                            duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern."
+                            duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
+                            deleted_badge: "Glascht",
+                            deleted_state_title: "Der Community-Assistent is nimmer verfuegbar",
+                            deleted_state_body:
+                                "Da urspruengliche Assistent is nimmer verfuegbar und werd aa nimmer unterstuetzt. Direkt weiternutzn geht nimmer.",
+                            deleted_state_body_continue:
+                                "Wennst mit dera Konfiguration weitermacha mogst, speicherst as ois dein eigenen Assistenten. Fruahere Chats koanst weiterhin nur lesend anschaugn.",
+                            discovery_deleted_hint:
+                                "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De letzte Version liegt bloß no lokal im Browser und ko verloren geh. Sicherst as jetz ois eigenen Assistenten oder schaust bloß den oidn Chatverlauf o.",
+                            deleted_chat_warning:
+                                "Der Community-Assistent is vom Ersteller glascht worn und nimmer verfuegbar. De Version liegt bloß no lokal im Browser und ko verloren geh. Der Chatverlauf is nur lesend. Sicherst as ois eigenen Assistenten, wennst weitermacha mogst.",
+                            deleted_state_save_action: "Ois eigenen Assistenten speichern",
+                            deleted_state_history_action: "Oidn Chatverlauf anschaugn",
+                            deleted_state_no_history: "Fuer den Assistenten gibt's koan lokalen Chatverlauf."
                         },
                         toolsselector: {
                             title: "Verfügbare Werkzeig",
@@ -2310,6 +2354,7 @@ i18n
                             duplicate: "Créer une copie privée",
                             duplicate_confirm_title: "Créer votre propre copie privée",
                             duplicate_confirm_message: `Vous pouvez continuer à utiliser "{{title}}" sans créer votre propre copie. Voulez-vous quand même en créer une ? Les modifications futures de l'assistant d'origine ne seront pas appliquées à votre copie.`,
+                            duplicate_confirm_message_deleted: `L'assistant d'origine "{{title}}" n'est plus disponible. Si vous voulez continuer à l'utiliser, vous pouvez créer maintenant votre propre copie à partir de la dernière version en cache.`,
                             duplicate_confirm_action: "Créer la copie",
                             duplicate_title_suffix: "[Copie]",
                             duplicate_success_title: "Assistant dupliqué",
@@ -2318,7 +2363,20 @@ i18n
                             duplicate_failed_default: "Une erreur est survenue lors de la duplication de l'assistant.",
                             duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
-                            duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué."
+                            duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
+                            deleted_badge: "Supprimé",
+                            deleted_state_title: "Cet assistant communautaire n'est plus disponible",
+                            deleted_state_body:
+                                "L'assistant d'origine n'est plus disponible ni pris en charge. Vous ne pouvez plus continuer à l'utiliser directement.",
+                            deleted_state_body_continue:
+                                "Si vous voulez continuer avec cette configuration, enregistrez-la comme votre propre assistant. Vous pouvez encore consulter les anciens chats en lecture seule.",
+                            discovery_deleted_hint:
+                                "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. La dernière version n'existe plus que localement dans ce navigateur et peut être perdue. Enregistrez-la maintenant comme votre propre assistant, ou consultez seulement l'ancien historique de chat.",
+                            deleted_chat_warning:
+                                "Cet assistant communautaire a été supprimé par son créateur et n'est plus disponible. Cette version n'existe plus que localement dans ce navigateur et peut être perdue. L'historique du chat est en lecture seule. Enregistrez-la comme votre propre assistant si vous voulez continuer à l'utiliser.",
+                            deleted_state_save_action: "Enregistrer comme assistant personnel",
+                            deleted_state_history_action: "Voir l'ancien historique de chat",
+                            deleted_state_no_history: "Aucun historique de chat local n'est disponible pour cet assistant."
                         },
                         toolsselector: {
                             title: "Outils disponibles",
@@ -2896,6 +2954,8 @@ i18n
                             duplicate_confirm_title: "Створити власну приватну копію",
                             duplicate_confirm_message:
                                 'Ви можете й далі користуватися "{{title}}" без створення власної копії. Усе ж хочете створити її? Майбутні зміни в оригінальному асистенті не будуть застосовані до вашої копії.',
+                            duplicate_confirm_message_deleted:
+                                'Оригінальний асистент "{{title}}" більше недоступний. Якщо ви хочете й далі ним користуватися, зараз можна створити власну копію з останньої кешованої версії.',
                             duplicate_confirm_action: "Створити копію",
                             duplicate_title_suffix: "[Копія]",
                             duplicate_success_title: "Асистента дубльовано",
@@ -2904,7 +2964,20 @@ i18n
                             duplicate_failed_default: "Під час дублювання асистента сталася помилка.",
                             duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
-                            duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе."
+                            duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
+                            deleted_badge: "Видалено",
+                            deleted_state_title: "Цей асистент спільноти більше недоступний",
+                            deleted_state_body:
+                                "Оригінальний асистент більше недоступний і не підтримується. Ви більше не можете користуватися ним безпосередньо.",
+                            deleted_state_body_continue:
+                                "Якщо ви хочете й надалі користуватися цією конфігурацією, збережіть її як власного асистента. Попередні чати все ще можна переглядати лише для читання.",
+                            discovery_deleted_hint:
+                                "Цей асистент спільноти був видалений автором і більше недоступний. Остання версія зберігається лише локально в цьому браузері й може бути втрачена. Збережіть її зараз як власного асистента або лише перегляньте стару історію чату.",
+                            deleted_chat_warning:
+                                "Цей асистент спільноти був видалений автором і більше недоступний. Ця версія зберігається лише локально в цьому браузері й може бути втрачена. Історія чату доступна лише для читання. Збережіть її як власного асистента, якщо хочете й далі нею користуватися.",
+                            deleted_state_save_action: "Зберегти як власного асистента",
+                            deleted_state_history_action: "Переглянути стару історію чату",
+                            deleted_state_no_history: "Для цього асистента немає локальної історії чату."
                         },
                         toolsselector: {
                             title: "Доступні інструменти",

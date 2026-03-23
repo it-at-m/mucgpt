@@ -17,8 +17,9 @@ import {
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
+import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
@@ -32,6 +33,17 @@ import { ApiError } from "../../api/fetch-utils";
 type SortKey = "title" | "updated" | "subscriptions";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
+const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
+    "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+const getSnapshotUpdatedAt = (snapshot: CommunityAssistantSnapshot): string | undefined => {
+    const snapshotWithTimestamp = snapshot as CommunityAssistantSnapshot & {
+        snapshotUpdatedAt?: string | null;
+        updated_at?: string | null;
+    };
+
+    return snapshotWithTimestamp.snapshotUpdatedAt ?? snapshotWithTimestamp.updated_at ?? undefined;
+};
 
 const Discovery = () => {
     const { t } = useTranslation();
@@ -188,8 +200,8 @@ const Discovery = () => {
     };
 
     const compareByUpdated = (a: AssistantCardData, b: AssistantCardData): number => {
-        const updatedA = new Date(a.updated).getTime();
-        const updatedB = new Date(b.updated).getTime();
+        const updatedA = a.updated ? new Date(a.updated).getTime() : Number.NEGATIVE_INFINITY;
+        const updatedB = b.updated ? new Date(b.updated).getTime() : Number.NEGATIVE_INFINITY;
         return updatedB - updatedA;
     };
 
@@ -240,7 +252,7 @@ const Discovery = () => {
                             title: a.latest_version?.name || "Unknown Assistant",
                             description: a.latest_version?.description || "",
                             subscriptions: a.subscriptions_count || 0,
-                            updated: a.updated_at || new Date().toISOString(),
+                            updated: a.updated_at || undefined,
                             tags: a.latest_version?.tags || [],
                             rawData: a,
                             ...extra
@@ -252,7 +264,7 @@ const Discovery = () => {
                         title: a.title || "Unknown Assistant",
                         description: a.description || "",
                         subscriptions: 0,
-                        updated: new Date().toISOString(),
+                        updated: getSnapshotUpdatedAt(a),
                         tags: a.tags || [],
                         rawData: a,
                         ...extra
@@ -270,17 +282,34 @@ const Discovery = () => {
                 ownedAssistants.forEach(a => fullAssistantById.set(a.id, a));
 
                 // 3. Every assistant subscribed to, merged with deleted ones
-                const deletedCommunityAssistants = localCommunityAssistants
-                    .filter(local => !userSubscriptions.some((sub: any) => sub.id === local.id))
-                    .filter(deleted => !ownedAssistants.some((own: any) => own.id === deleted.id));
+                const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
+                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !fullAssistantById.has(local.id));
 
                 const subscribedData = [
-                    ...userSubscriptions.map((sub: any) => {
-                        const fullData = fullAssistantById.get(sub.id);
-                        const localData = localCommunityAssistants.find(local => local.id === sub.id);
-                        return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
-                    }),
-                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0 }))
+                    ...userSubscriptions
+                        .map(sub => {
+                            const fullData = fullAssistantById.get(sub.id);
+                            const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
+                            const assistantData = fullData || localData;
+
+                            if (!assistantData) {
+                                return null;
+                            }
+
+                            return toCardData(assistantData, {
+                                subscriptions: fullData?.subscriptions_count ?? 0,
+                                updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
+                                isDeletedSnapshot: !fullData
+                            });
+                        })
+                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
+                    ...deletedCommunityAssistants.map(deleted =>
+                        toCardData(deleted, {
+                            subscriptions: 0,
+                            updated: getSnapshotUpdatedAt(deleted),
+                            isDeletedSnapshot: !fullAssistantById.has(deleted.id)
+                        })
+                    )
                 ];
                 setSubscribedAssistants(subscribedData);
             } catch (error) {
@@ -344,11 +373,14 @@ const Discovery = () => {
             try {
                 const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData);
                 if (requestId !== latestRequestRef.current) return;
+                const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
+                const resolvedDescription = isAssistantResponse(resolvedData) ? resolvedData.latest_version.description || "" : resolvedData.description || "";
+                const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
                 setSelectedAssistant({
                     ...assistant,
-                    title: "latest_version" in resolvedData ? resolvedData.latest_version.name : resolvedData.title,
-                    description: "latest_version" in resolvedData ? resolvedData.latest_version.description || "" : resolvedData.description || "",
-                    tags: "latest_version" in resolvedData ? resolvedData.latest_version.tags || [] : resolvedData.tags || [],
+                    title: resolvedTitle,
+                    description: resolvedDescription,
+                    tags: resolvedTags,
                     rawData: resolvedData
                 });
                 setIsDrawerOpen(true);
@@ -363,7 +395,7 @@ const Discovery = () => {
 
     const startConversation = () => {
         if (selectedAssistant) {
-            navigate(`/communityassistant/${selectedAssistant.id}`);
+            navigate(`/${selectedAssistant.isDeletedSnapshot ? "deleted/communityassistant" : "communityassistant"}/${selectedAssistant.id}`);
         }
     };
 
@@ -382,7 +414,12 @@ const Discovery = () => {
     const performDelete = async () => {
         if (!selectedAssistant) return;
         try {
-            await deleteCommunityAssistantApi(selectedAssistant.id);
+            if (selectedAssistant.isDeletedSnapshot) {
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+            } else {
+                await deleteCommunityAssistantApi(selectedAssistant.id);
+            }
             showSuccess(
                 t("components.assistant_chat.delete_assistant_success"),
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })
@@ -509,6 +546,7 @@ const Discovery = () => {
                                         id={assistant.id}
                                         title={assistant.title}
                                         description={assistant.description}
+                                        badge={assistant.isDeletedSnapshot ? t("components.community_assistants.deleted_badge") : undefined}
                                         onClick={() => handleAssistantClick(assistant)}
                                         isSelected={selectedAssistant?.id === assistant.id}
                                     />
@@ -549,7 +587,12 @@ const Discovery = () => {
                 onConfirmClose={confirmDuplicateAssistant}
                 confirmDisabled={isDuplicating}
                 title={t("components.community_assistants.duplicate_confirm_title")}
-                message={t("components.community_assistants.duplicate_confirm_message", { title: assistantToDuplicate?.title ?? "" })}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
                 confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
             />
         </div>

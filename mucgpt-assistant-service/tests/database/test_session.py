@@ -5,8 +5,9 @@ Tests for database session handling, particularly password character issues and 
 from unittest.mock import MagicMock, patch
 
 import pytest
-from src.config.settings import DBConfig, Settings
-from src.database.session import (
+
+from config.settings import DBConfig, Settings
+from database.session import (
     create_database_url,
     get_engine_and_factory_direct,
     validate_database_connection,
@@ -93,8 +94,8 @@ class TestDatabaseSession:
         # With direct approach, password should be preserved exactly as-is
         assert url.password == password
 
-    @patch("src.database.session.create_async_engine")
-    @patch("src.database.session.async_sessionmaker")
+    @patch("database.session.create_async_engine")
+    @patch("database.session.async_sessionmaker")
     def test_get_engine_and_factory_direct_with_special_chars(
         self, mock_sessionmaker, mock_engine
     ):
@@ -131,9 +132,7 @@ class TestDatabaseSession:
         settings = self._make_settings(password="Ay#W-67CQt)y8f'3")
 
         # Mock the direct connection approach
-        with patch(
-            "src.database.session.get_engine_and_factory_direct"
-        ) as mock_factory:
+        with patch("database.session.get_engine_and_factory_direct") as mock_factory:
             # Create a proper async mock
             mock_session = MagicMock()
             mock_result = MagicMock()

@@ -8,7 +8,7 @@ import { useContext, useEffect, useState } from "react";
 
 import addButtonStyles from "../../components/AddAssistantButton/AddAssistantButton.module.css";
 import { AssistantStorageService } from "../../service/assistantstorage";
-import { AssistantResponse, Assistant, CommunityAssistant } from "../../api/models";
+import { AssistantResponse, Assistant, CommunityAssistant, CommunityAssistantSnapshot } from "../../api/models";
 import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../constants";
 import { migrate_old_assistants } from "../../service/migration";
 import { SearchCommunityAssistantButton } from "../../components/SearchCommunityAssistantButton/SearchCommunityAssistantButton";
@@ -29,7 +29,7 @@ const Menu = () => {
     const navigate = useNavigate();
     const [assistants, setAssistants] = useState<Assistant[]>([]);
     const [communityAssistants, setCommunityAssistants] = useState<CommunityAssistant[]>([]);
-    const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistant[]>([]);
+    const [deletedCommunityAssistants, setDeletedCommunityAssistants] = useState<CommunityAssistantSnapshot[]>([]);
     const [ownedCommunityAssistants, setOwnedCommunityAssistants] = useState<AssistantResponse[]>([]);
     const [showSearchAssistant, setShowSearchAssistant] = useState<boolean>(false);
     const [getCommunityAssistants, setGetCommunityAssistants] = useState<boolean>(false);

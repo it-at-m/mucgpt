@@ -83,8 +83,8 @@ const DraggableExampleItem = memo(
                                 ref={handleRef}
                                 type="button"
                                 className={sharedStyles.dragHandleButton}
-                                title={t("components.edit_assistant_dialog.drag_to_reorder")}
-                                aria-label={t("components.edit_assistant_dialog.dnd_aria_label", { position: index + 1, total: totalCount })}
+                                title={t("components.assistant_editor.drag_to_reorder")}
+                                aria-label={t("components.assistant_editor.dnd_aria_label", { position: index + 1, total: totalCount })}
                             >
                                 <ReOrderDotsVertical24Regular />
                             </button>
@@ -92,10 +92,10 @@ const DraggableExampleItem = memo(
                         <MenuPopover>
                             <MenuList>
                                 <MenuItem icon={<ArrowUp20Regular />} onClick={() => onMoveUp(index)} disabled={isFirst}>
-                                    {t("components.edit_assistant_dialog.move_up")}
+                                    {t("components.assistant_editor.move_up")}
                                 </MenuItem>
                                 <MenuItem icon={<ArrowDown20Regular />} onClick={() => onMoveDown(index)} disabled={isLast}>
-                                    {t("components.edit_assistant_dialog.move_down")}
+                                    {t("components.assistant_editor.move_down")}
                                 </MenuItem>
                             </MenuList>
                         </MenuPopover>
@@ -105,7 +105,7 @@ const DraggableExampleItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Text:</span>
                         <Input
-                            placeholder={t("components.edit_assistant_dialog.example_text_placeholder")}
+                            placeholder={t("components.assistant_editor.example_text_placeholder")}
                             value={example.text}
                             onChange={onChangeText(index)}
                             disabled={!isOwner}
@@ -115,7 +115,7 @@ const DraggableExampleItem = memo(
                     <div className={sharedStyles.dynamicFieldInputRow}>
                         <span className={sharedStyles.dynamicFieldInputLabel}>Value:</span>
                         <Textarea
-                            placeholder={t("components.edit_assistant_dialog.example_value_placeholder")}
+                            placeholder={t("components.assistant_editor.example_value_placeholder")}
                             value={example.value}
                             onChange={onChangeValue(index)}
                             disabled={!isOwner}
@@ -129,7 +129,7 @@ const DraggableExampleItem = memo(
                         type="button"
                         className={sharedStyles.removeFieldButton}
                         onClick={() => onRemove(index)}
-                        title={t("components.edit_assistant_dialog.remove")}
+                        title={t("components.assistant_editor.remove")}
                     >
                         <Delete24Regular />
                     </button>
@@ -256,11 +256,11 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
         <DialogContent>
             {isOwner && (
                 <p className={sharedStyles.hintText}>
-                    <strong>{t("common.hint")}</strong> {t("components.edit_assistant_dialog.dnd_reorder_hint")}
+                    <strong>{t("common.hint")}</strong> {t("components.assistant_editor.dnd_reorder_hint")}
                 </p>
             )}
             <Field size="large" className={sharedStyles.formField}>
-                <label className={sharedStyles.formLabel}>{t("components.edit_assistant_dialog.examples")}</label>
+                <label className={sharedStyles.formLabel}>{t("components.assistant_editor.examples")}</label>
                 <div className={sharedStyles.dndFieldContainer}>
                     <div className={sharedStyles.dndListContainer}>
                         {examples.length > 0 ? (
@@ -279,13 +279,13 @@ export const ExamplesStep = ({ examples, isOwner, onExamplesChange, onHasChanged
                                 />
                             ))
                         ) : (
-                            <div className={sharedStyles.noToolsText}>{t("components.edit_assistant_dialog.no_examples_selected")}</div>
+                            <div className={sharedStyles.noToolsText}>{t("components.assistant_editor.no_examples_selected")}</div>
                         )}
                     </div>
                     {isOwner && (
                         <div ref={buttonRef}>
                             <Button appearance="subtle" onClick={addExample} className={sharedStyles.addFieldButton}>
-                                <Add24Regular /> {t("components.edit_assistant_dialog.add_example")}
+                                <Add24Regular /> {t("components.assistant_editor.add_example")}
                             </Button>
                         </div>
                     )}

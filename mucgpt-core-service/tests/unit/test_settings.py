@@ -6,7 +6,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from src.config.settings import (
+
+from config.settings import (
     MCPTransport,
     Settings,
     enrich_model_metadata,
@@ -200,7 +201,7 @@ class TestSettings:
             }
         ]
 
-        with patch("src.config.settings._load_model_info", return_value=info_payload):
+        with patch("config.settings._load_model_info", return_value=info_payload):
             with patch.dict(
                 os.environ,
                 {
@@ -236,7 +237,7 @@ class TestSettings:
         )
 
         with patch(
-            "src.config.settings._load_model_info",
+            "config.settings._load_model_info",
             side_effect=RuntimeError("network error"),
         ):
             with patch.dict(
@@ -269,7 +270,7 @@ class TestSettings:
             ]
         )
 
-        with patch("src.config.settings._load_model_info") as mocked:
+        with patch("config.settings._load_model_info") as mocked:
             with patch.dict(
                 os.environ,
                 {
@@ -301,7 +302,7 @@ class TestSettings:
             ]
         )
 
-        with patch("src.config.settings._load_model_info") as mocked:
+        with patch("config.settings._load_model_info") as mocked:
             with patch.dict(
                 os.environ,
                 {

@@ -5,7 +5,8 @@ import { createCommunityAssistantApi, getCommunityAssistantApi } from "../../../
 import { AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
 import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../../components/GlobalToastHandler/GlobalToastContext";
-import { COMMUNITY_ASSISTANT_STORE } from "../../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../../constants";
+import { AssistantStorageService } from "../../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
 import {
     isCompleteCommunityAssistantSnapshot,
@@ -41,6 +42,7 @@ export const useDuplicateAssistant = () => {
     const navigate = useNavigate();
     const { showError, showSuccess } = useGlobalToastContext();
     const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
+    const assistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
 
     const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
     const [assistantToDuplicate, setAssistantToDuplicate] = useState<DuplicateAssistantCandidate | null>(null);
@@ -111,6 +113,11 @@ export const useDuplicateAssistant = () => {
                 hierarchical_access: []
             });
 
+            if (assistantToDuplicate.isDeletedSnapshot) {
+                await assistantStorageService.transferChatsToAssistant(assistantToDuplicate.id, duplicatedAssistant.id);
+                await communityAssistantStorageService.deleteConfigForAssistant(assistantToDuplicate.id);
+            }
+
             setShowDuplicateConfirm(false);
             showSuccess(
                 t("components.community_assistants.duplicate_success_title"),
@@ -133,7 +140,17 @@ export const useDuplicateAssistant = () => {
         } finally {
             setIsDuplicating(false);
         }
-    }, [assistantToDuplicate, isDuplicating, navigate, resolveAssistantData, showError, showSuccess, t]);
+    }, [
+        assistantToDuplicate,
+        assistantStorageService,
+        communityAssistantStorageService,
+        isDuplicating,
+        navigate,
+        resolveAssistantData,
+        showError,
+        showSuccess,
+        t
+    ]);
 
     return {
         assistantToDuplicate,

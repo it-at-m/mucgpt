@@ -157,4 +157,21 @@ export class AssistantStorageService {
             }
         }
     }
+
+    /**
+     * Transfers all chats from one assistant to another by re-creating them under the new assistant's ID prefix
+     * and deleting the originals.
+     * @param sourceAssistantId - The ID of the source assistant
+     * @param targetAssistantId - The ID of the target assistant
+     */
+    async transferChatsToAssistant(sourceAssistantId: string, targetAssistantId: string) {
+        const chats = await this.getAllChatForAssistant(sourceAssistantId);
+        for (const chat of chats) {
+            if (!chat.id) continue;
+            const chatUuid = chat.id.replace(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId), "");
+            const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
+            await this.storageService.create(chat.messages, chat.config, newId, chat.name, chat.favorite);
+            await this.storageService.delete(chat.id);
+        }
+    }
 }

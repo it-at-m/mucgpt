@@ -97,6 +97,11 @@
     gap: 8px;
 }
 
+.deleteButton {
+    color: var(--colorPaletteRedForeground1) !important;
+    border-color: var(--colorPaletteRedBorder2) !important;
+}
+
 .startConversationButton {
     flex: 1;
     border-radius: 8px 0 0 8px !important;

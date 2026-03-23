@@ -17,8 +17,9 @@ import {
 import { Assistant, AssistantResponse, CommunityAssistantSnapshot } from "../../api/models";
 import { HeaderContext, DEFAULTHEADER } from "../layout/HeaderContextProvider";
 import { AddAssistantButton } from "../../components/AddAssistantButton/AddAssistantButton";
+import { AssistantStorageService } from "../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
-import { COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
 import { DiscoveryCard } from "../../components/DiscoveryCard/DiscoveryCard";
 import { DiscoveryCardSkeleton } from "../../components/DiscoveryCard/DiscoveryCardSkeleton";
@@ -32,6 +33,7 @@ import { ApiError } from "../../api/fetch-utils";
 type SortKey = "title" | "updated" | "subscriptions";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
+const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
 const getSnapshotUpdatedAt = (snapshot: CommunityAssistantSnapshot): string | undefined => {
@@ -414,6 +416,7 @@ const Discovery = () => {
         try {
             if (selectedAssistant.isDeletedSnapshot) {
                 await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
             } else {
                 await deleteCommunityAssistantApi(selectedAssistant.id);
             }

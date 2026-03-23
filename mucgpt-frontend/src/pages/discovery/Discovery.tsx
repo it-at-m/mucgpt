@@ -453,7 +453,9 @@ const Discovery = () => {
     const performDelete = async () => {
         if (!selectedAssistant) return;
         try {
-            if (selectedAssistant.isDeletedSnapshot) {
+            if (selectedAssistant.isLocalAssistant) {
+                await assistantStorageService.deleteConfigAndChatsForAssistant(selectedAssistant.id);
+            } else if (selectedAssistant.isDeletedSnapshot) {
                 await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
                 await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
             } else {

@@ -159,6 +159,16 @@ export const AssistantDetailsSidebar = ({
                                             {t("components.community_assistants.local_state_publish_action")}
                                         </Button>
                                     )}
+                                    {onStartChat && (
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                            {t("components.community_assistants.deleted_state_history_action")}
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         )}

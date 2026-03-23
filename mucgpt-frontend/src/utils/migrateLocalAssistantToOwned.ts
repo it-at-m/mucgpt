@@ -43,7 +43,8 @@ export const migrateLocalAssistantToOwned = async (
     }
 
     try {
-        await assistantStorageService.deleteConfigAndChatsForAssistant(assistantId);
+        await assistantStorageService.transferChatsToAssistant(assistantId, response.id);
+        await assistantStorageService.deleteConfigForAssistant(assistantId);
     } catch (error) {
         throw new LocalAssistantMigrationError(
             error instanceof Error ? error.message : "Failed to remove local assistant after creating owned assistant",

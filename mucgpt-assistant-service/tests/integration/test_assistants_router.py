@@ -1,7 +1,8 @@
 import uuid
 
 import pytest
-from src.api.api_models import (
+
+from api.api_models import (
     AssistantCreate,
     AssistantResponse,
     AssistantUpdate,
@@ -10,8 +11,8 @@ from src.api.api_models import (
     QuickPrompt,
     ToolBase,
 )
-from src.database.assistant_repo import AssistantRepository
-from src.database.database_models import AssistantTool
+from database.assistant_repo import AssistantRepository
+from database.database_models import AssistantTool
 
 # Headers for authentication
 headers = {

@@ -24,7 +24,7 @@ export interface AssistantCardData {
     title: string;
     description: string;
     subscriptions: number;
-    updated: string;
+    updated?: string | null;
     tags: string[];
     rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
     isDeletedSnapshot?: boolean;
@@ -140,6 +140,11 @@ export const AssistantDetailsSidebar = ({
                                             {t("components.community_assistants.deleted_state_history_action")}
                                         </Button>
                                     )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -152,6 +157,16 @@ export const AssistantDetailsSidebar = ({
                                     {onMigrateLocal && (
                                         <Button appearance="primary" icon={<ArrowExportUp20Regular />} onClick={onMigrateLocal} size="medium">
                                             {t("components.community_assistants.local_state_publish_action")}
+                                        </Button>
+                                    )}
+                                    {onStartChat && (
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                            {t("components.community_assistants.deleted_state_history_action")}
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
                                         </Button>
                                     )}
                                 </div>
@@ -186,7 +201,7 @@ export const AssistantDetailsSidebar = ({
                                                     {t("common.edit")}
                                                 </MenuItem>
                                             )}
-                                            {!isOwned && onDuplicate && (
+                                            {onDuplicate && (
                                                 <MenuItem icon={<Copy20Regular />} onClick={onDuplicate}>
                                                     {t("components.community_assistants.duplicate")}
                                                 </MenuItem>

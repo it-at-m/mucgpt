@@ -1,23 +1,12 @@
 """Test configuration and fixtures."""
 
-import os
-import sys
-from pathlib import Path
-
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from src.core import directory_cache
-from src.database.database_models import AssistantVersion, Base
 
+from core import directory_cache
+from database.database_models import AssistantVersion, Base
 from tests.shared_directory_tree import TEST_TREE
-
-# Add the src directory to the Python path
-# This will allow imports to work without the 'src.' prefix
-root_dir = Path(__file__).parent.parent
-src_dir = os.path.join(root_dir, "src")
-if src_dir not in sys.path:
-    sys.path.insert(0, str(src_dir))
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -72,7 +61,7 @@ def mock_directory_cache():
     yield
     mp.undo()
     try:
-        from src.database import path_matcher
+        from database import path_matcher
 
         path_matcher._INDEX_CACHE["index"] = None
         path_matcher._INDEX_CACHE["expires_at"] = None

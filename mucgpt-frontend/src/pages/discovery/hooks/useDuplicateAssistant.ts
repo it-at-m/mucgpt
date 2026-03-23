@@ -65,16 +65,16 @@ export const useDuplicateAssistant = () => {
                     return deletedSnapshot;
                 }
 
+                if (!(responseError instanceof ApiError) || responseError.status !== 404) {
+                    throw responseError;
+                }
+
                 if (fallbackData && isAssistantResponse(fallbackData)) {
                     return fallbackData;
                 }
 
                 if (isCompleteCommunityAssistantSnapshot(fallbackSnapshot) && fallbackSnapshot.id === assistantId) {
                     return fallbackSnapshot;
-                }
-
-                if (!(responseError instanceof ApiError) || responseError.status !== 404) {
-                    throw responseError;
                 }
 
                 const cachedSnapshot = await communityAssistantStorageService.getAssistantConfig(assistantId);

@@ -24,7 +24,7 @@ export interface AssistantCardData {
     title: string;
     description: string;
     subscriptions: number;
-    updated: string;
+    updated?: string | null;
     tags: string[];
     rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
     isDeletedSnapshot?: boolean;
@@ -138,6 +138,11 @@ export const AssistantDetailsSidebar = ({
                                     {onStartChat && (
                                         <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
                                             {t("components.community_assistants.deleted_state_history_action")}
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
                                         </Button>
                                     )}
                                 </div>

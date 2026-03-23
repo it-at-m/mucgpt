@@ -54,7 +54,7 @@ export const DiscoveryCard = forwardRef<HTMLDivElement, DiscoveryCardProps>((pro
                         <div className={styles.headerRow}>
                             <div className={mergeClasses(styles.headerText, titleClassName)}>{title}</div>
                             {badge && (
-                                <Badge appearance="tint" color="danger" size="small">
+                                <Badge className={styles.headerBadge} appearance="tint" color="danger" size="small">
                                     {badge}
                                 </Badge>
                             )}

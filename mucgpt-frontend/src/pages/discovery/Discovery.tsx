@@ -35,6 +35,16 @@ type SortKey = "title" | "updated" | "subscriptions";
 
 const communityAssistantStorageService = new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE);
 const assistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
+const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
+    "latest_version" in data && data.latest_version != null && typeof data.latest_version.name === "string";
+const getSnapshotUpdatedAt = (snapshot: CommunityAssistantSnapshot): string | undefined => {
+    const snapshotWithTimestamp = snapshot as CommunityAssistantSnapshot & {
+        snapshotUpdatedAt?: string | null;
+        updated_at?: string | null;
+    };
+
+    return snapshotWithTimestamp.snapshotUpdatedAt ?? snapshotWithTimestamp.updated_at ?? undefined;
+};
 
 const Discovery = () => {
     const { t } = useTranslation();
@@ -197,8 +207,8 @@ const Discovery = () => {
     };
 
     const compareByUpdated = (a: AssistantCardData, b: AssistantCardData): number => {
-        const updatedA = new Date(a.updated).getTime();
-        const updatedB = new Date(b.updated).getTime();
+        const updatedA = a.updated ? new Date(a.updated).getTime() : Number.NEGATIVE_INFINITY;
+        const updatedB = b.updated ? new Date(b.updated).getTime() : Number.NEGATIVE_INFINITY;
         return updatedB - updatedA;
     };
 
@@ -250,7 +260,7 @@ const Discovery = () => {
                             title: a.latest_version?.name || "Unknown Assistant",
                             description: a.latest_version?.description || "",
                             subscriptions: a.subscriptions_count || 0,
-                            updated: a.updated_at || new Date().toISOString(),
+                            updated: a.updated_at || undefined,
                             tags: a.latest_version?.tags || [],
                             rawData: a,
                             ...extra
@@ -262,7 +272,7 @@ const Discovery = () => {
                         title: a.title || "Unknown Assistant",
                         description: a.description || "",
                         subscriptions: 0,
-                        updated: new Date().toISOString(),
+                        updated: "snapshot_version" in a ? getSnapshotUpdatedAt(a as CommunityAssistantSnapshot) : undefined,
                         tags: a.tags || [],
                         rawData: a,
                         ...extra
@@ -288,18 +298,33 @@ const Discovery = () => {
 
                 // 3. Every assistant subscribed to, merged with deleted ones
                 const validLocalCommunityAssistants = localCommunityAssistants.filter(isCompleteCommunityAssistantSnapshot);
-
-                const deletedCommunityAssistants = validLocalCommunityAssistants
-                    .filter(local => !userSubscriptions.some((sub: any) => sub.id === local.id))
-                    .filter(deleted => !ownedAssistants.some((own: any) => own.id === deleted.id));
+                const deletedCommunityAssistants = validLocalCommunityAssistants.filter(local => !fullAssistantById.has(local.id));
 
                 const subscribedData = [
-                    ...userSubscriptions.map((sub: any) => {
-                        const fullData = fullAssistantById.get(sub.id);
-                        const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
-                        return toCardData(fullData || localData || sub, { subscriptions: fullData?.subscriptions_count || 0 });
-                    }),
-                    ...deletedCommunityAssistants.map(deleted => toCardData(deleted, { subscriptions: 0, isDeletedSnapshot: true }))
+                    ...userSubscriptions
+                        .map(sub => {
+                            const fullData = fullAssistantById.get(sub.id);
+                            const localData = validLocalCommunityAssistants.find(local => local.id === sub.id);
+                            const assistantData = fullData || localData;
+
+                            if (!assistantData) {
+                                return null;
+                            }
+
+                            return toCardData(assistantData, {
+                                subscriptions: fullData?.subscriptions_count ?? 0,
+                                updated: fullData ? fullData.updated_at : localData ? getSnapshotUpdatedAt(localData) : undefined,
+                                isDeletedSnapshot: !fullData
+                            });
+                        })
+                        .filter((assistant): assistant is AssistantCardData => assistant !== null),
+                    ...deletedCommunityAssistants.map(deleted =>
+                        toCardData(deleted, {
+                            subscriptions: 0,
+                            updated: getSnapshotUpdatedAt(deleted),
+                            isDeletedSnapshot: !fullAssistantById.has(deleted.id)
+                        })
+                    )
                 ];
                 setSubscribedAssistants(subscribedData);
             } catch (error) {
@@ -369,11 +394,14 @@ const Discovery = () => {
 
                 const resolvedData = await resolveAssistantData(assistant.id, assistant.rawData as AssistantResponse | CommunityAssistantSnapshot);
                 if (requestId !== latestRequestRef.current) return;
+                const resolvedTitle = isAssistantResponse(resolvedData) ? resolvedData.latest_version.name : resolvedData.title;
+                const resolvedDescription = isAssistantResponse(resolvedData) ? resolvedData.latest_version.description || "" : resolvedData.description || "";
+                const resolvedTags = isAssistantResponse(resolvedData) ? resolvedData.latest_version.tags || [] : resolvedData.tags || [];
                 setSelectedAssistant({
                     ...assistant,
-                    title: "latest_version" in resolvedData ? resolvedData.latest_version.name : resolvedData.title,
-                    description: "latest_version" in resolvedData ? resolvedData.latest_version.description || "" : resolvedData.description || "",
-                    tags: "latest_version" in resolvedData ? resolvedData.latest_version.tags || [] : resolvedData.tags || [],
+                    title: resolvedTitle,
+                    description: resolvedDescription,
+                    tags: resolvedTags,
                     rawData: resolvedData
                 });
                 setIsDrawerOpen(true);
@@ -425,7 +453,12 @@ const Discovery = () => {
     const performDelete = async () => {
         if (!selectedAssistant) return;
         try {
-            await deleteCommunityAssistantApi(selectedAssistant.id);
+            if (selectedAssistant.isDeletedSnapshot) {
+                await communityAssistantStorageService.deleteConfigForAssistant(selectedAssistant.id);
+                await assistantStorageService.deleteChatsForAssistant(selectedAssistant.id);
+            } else {
+                await deleteCommunityAssistantApi(selectedAssistant.id);
+            }
             showSuccess(
                 t("components.assistant_chat.delete_assistant_success"),
                 t("components.assistant_chat.delete_assistant_success_message", { title: selectedAssistant.title })

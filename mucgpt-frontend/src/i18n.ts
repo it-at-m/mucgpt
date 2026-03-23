@@ -2424,10 +2424,10 @@ i18n
                             local_migration_success_message: `L'assistant "{{title}}" a été enregistré en privé dans votre compte.`,
                             local_migration_failed_title: "L'assistant n'a pas pu être enregistré",
                             local_migration_failed_default: "Une erreur est survenue lors de l'enregistrement de l'assistant.",
-                            deleted_badge: "SupprimÃ©",
+                            deleted_badge: "Supprimé",
                             deleted_state_title: "Cet assistant communautaire n'est plus disponible",
                             deleted_state_body:
-                                "L'assistant d'origine n'est plus disponible ni pris en charge. Vous ne pouvez plus continuer Ã  l'utiliser directement.",
+                                "L'assistant d'origine n'est plus disponible ni pris en charge. Vous ne pouvez plus continuer à l'utiliser directement.",
                             deleted_state_body_continue:
                                 "Si vous voulez continuer avec cette configuration, enregistrez-la comme votre propre assistant. Vous pouvez encore consulter les anciens chats en lecture seule.",
                             discovery_deleted_hint:

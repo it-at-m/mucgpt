@@ -5,7 +5,8 @@ import { createCommunityAssistantApi, getCommunityAssistantApi } from "../../../
 import { AssistantResponse, CommunityAssistantSnapshot } from "../../../api/models";
 import { ApiError } from "../../../api/fetch-utils";
 import { useGlobalToastContext } from "../../../components/GlobalToastHandler/GlobalToastContext";
-import { COMMUNITY_ASSISTANT_STORE } from "../../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE } from "../../../constants";
+import { AssistantStorageService } from "../../../service/assistantstorage";
 import { CommunityAssistantStorageService } from "../../../service/communityassistantstorage";
 import {
     isCompleteCommunityAssistantSnapshot,
@@ -41,6 +42,7 @@ export const useDuplicateAssistant = () => {
     const navigate = useNavigate();
     const { showError, showSuccess } = useGlobalToastContext();
     const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
+    const assistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
 
     const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
     const [assistantToDuplicate, setAssistantToDuplicate] = useState<DuplicateAssistantCandidate | null>(null);
@@ -71,6 +73,10 @@ export const useDuplicateAssistant = () => {
                     return fallbackSnapshot;
                 }
 
+                if (!(responseError instanceof ApiError) || responseError.status !== 404) {
+                    throw responseError;
+                }
+
                 const cachedSnapshot = await communityAssistantStorageService.getAssistantConfig(assistantId);
 
                 if (isCompleteCommunityAssistantSnapshot(cachedSnapshot) && cachedSnapshot.id === assistantId) {
@@ -83,14 +89,17 @@ export const useDuplicateAssistant = () => {
         [communityAssistantStorageService]
     );
 
-    const requestDuplicateAssistant = useCallback((assistant: DuplicateAssistantCandidate | null) => {
-        if (!assistant) {
-            return;
-        }
+    const requestDuplicateAssistant = useCallback(
+        (assistant: DuplicateAssistantCandidate | null) => {
+            if (!assistant || isDuplicating) {
+                return;
+            }
 
-        setAssistantToDuplicate(assistant);
-        setShowDuplicateConfirm(true);
-    }, []);
+            setAssistantToDuplicate(assistant);
+            setShowDuplicateConfirm(true);
+        },
+        [isDuplicating]
+    );
 
     const confirmDuplicateAssistant = useCallback(async () => {
         if (!assistantToDuplicate || isDuplicating) {
@@ -111,6 +120,11 @@ export const useDuplicateAssistant = () => {
                 is_visible: false,
                 hierarchical_access: []
             });
+
+            if (assistantToDuplicate.isDeletedSnapshot) {
+                await assistantStorageService.transferChatsToAssistant(assistantToDuplicate.id, duplicatedAssistant.id);
+                await communityAssistantStorageService.deleteConfigForAssistant(assistantToDuplicate.id);
+            }
 
             setShowDuplicateConfirm(false);
             showSuccess(
@@ -134,7 +148,17 @@ export const useDuplicateAssistant = () => {
         } finally {
             setIsDuplicating(false);
         }
-    }, [assistantToDuplicate, isDuplicating, navigate, resolveAssistantData, showError, showSuccess, t]);
+    }, [
+        assistantToDuplicate,
+        assistantStorageService,
+        communityAssistantStorageService,
+        isDuplicating,
+        navigate,
+        resolveAssistantData,
+        showError,
+        showSuccess,
+        t
+    ]);
 
     return {
         assistantToDuplicate,

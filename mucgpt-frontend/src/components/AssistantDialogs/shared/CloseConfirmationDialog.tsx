@@ -32,9 +32,13 @@ export const CloseConfirmationDialog = ({
     }, [onOpenChange]);
 
     const handleConfirm = useCallback(() => {
+        if (confirmDisabled) {
+            return;
+        }
+
         onOpenChange(false);
         onConfirmClose();
-    }, [onOpenChange, onConfirmClose]);
+    }, [confirmDisabled, onOpenChange, onConfirmClose]);
 
     return (
         <Dialog open={open} onOpenChange={(_event, data) => onOpenChange(data.open)} inertTrapFocus>

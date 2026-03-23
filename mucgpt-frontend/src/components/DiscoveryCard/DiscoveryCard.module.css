@@ -26,13 +26,12 @@
     color: var(--colorNeutralForeground1);
     transition-property: color;
     transition-duration: 0.2s;
-}
-
-.headerRow {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
+    padding-top: 12px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow-wrap: break-word;
 }
 
 .description {

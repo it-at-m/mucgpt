@@ -25,6 +25,17 @@ export interface DuplicateAssistantCandidate {
 const isAssistantResponse = (data: AssistantResponse | CommunityAssistantSnapshot): data is AssistantResponse =>
     "latest_version" in data && data.latest_version != null && typeof (data as AssistantResponse).latest_version.name === "string";
 
+const buildDuplicatedAssistantTitle = (title: string, copyLabel: string): string => {
+    const trimmedTitle = title.trim();
+    const trimmedCopyLabel = copyLabel.trim();
+
+    if (!trimmedTitle || !trimmedCopyLabel) {
+        return trimmedTitle || title;
+    }
+
+    return `${trimmedTitle} ${trimmedCopyLabel}`;
+};
+
 export const useDuplicateAssistant = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -92,8 +103,14 @@ export const useDuplicateAssistant = () => {
             const assistantConfig = isAssistantResponse(assistantData)
                 ? mapAssistantResponseToCommunityConfig(assistantData)
                 : mapCommunitySnapshotToCommunityConfig(assistantData);
-            const duplicatedAssistant = await createCommunityAssistantApi(mapCommunityConfigToAssistantCreateInput(assistantConfig));
             const assistantTitle = isAssistantResponse(assistantData) ? assistantData.latest_version.name : assistantData.title;
+            const duplicatedAssistantTitle = buildDuplicatedAssistantTitle(assistantTitle, t("components.community_assistants.duplicate_title_suffix"));
+            const duplicatedAssistant = await createCommunityAssistantApi({
+                ...mapCommunityConfigToAssistantCreateInput(assistantConfig),
+                name: duplicatedAssistantTitle,
+                is_visible: false,
+                hierarchical_access: []
+            });
 
             setShowDuplicateConfirm(false);
             showSuccess(

@@ -12,10 +12,13 @@ class MissingEnvironmentVariableException(Exception):
 
 def getenv_with_exception(key: str) -> str:
     """Get an environment variable or raise an exception if it is not set.
+
     Args:
         key (str): The name of the environment variable
+
     Raises:
         MissingEnvironmentVariableException: If the environment variable is not set
+
     Returns:
         str: The value of the environment variable
     """

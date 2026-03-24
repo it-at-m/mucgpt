@@ -309,9 +309,9 @@ services:
     networks:
       - internal
 
-  data-service:
+  memory-service:
     build:
-      context: ../mucgpt-data-service
+      context: ../mucgpt-memory-service
       dockerfile: Dockerfile
       args:
         - HTTPS_PROXY=${HTTPS_PROXY}

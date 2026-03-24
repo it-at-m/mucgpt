@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-dev --locked --no-install-project
 
 # copy the application files
-COPY /src  .
+COPY app .
 
 # Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -48,11 +48,11 @@ LABEL org.opencontainers.image.authors='Landeshauptstadt München <opensource@mu
     org.opencontainers.image.created="$IMAGE_CREATED" \
     org.opencontainers.image.revision="$IMAGE_REVISION" \
     org.opencontainers.image.version="$IMAGE_VERSION" \
-    org.opencontainers.image.url='ghcr.io/it-at-m/mucgpt/mucgpt-data' \
+    org.opencontainers.image.url='ghcr.io/it-at-m/mucgpt/mucgpt-memory' \
     org.opencontainers.image.documentation='https://github.com/it-at-m/mucgpt/blob/main/README.md' \
     org.opencontainers.image.source='https://github.com/it-at-m/mucgpt' \
     org.opencontainers.image.licenses='MIT' \
-    org.opencontainers.image.title='mucgpt-data-service' \
+    org.opencontainers.image.title='mucgpt-memory-service' \
     org.opencontainers.image.description="MucGPT data handling service"
 
 # Give permissions to all so random UID can write
@@ -73,4 +73,4 @@ ENV APP_VERSION=${IMAGE_VERSION}
 
 
 EXPOSE 8000
-CMD ["python", "-m", "uvicorn", "app:api", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "app:backend", "--host", "0.0.0.0", "--port", "8000"]

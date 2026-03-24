@@ -1,9 +1,12 @@
 from contextlib import asynccontextmanager
 
-from api.routers import data_router, system_router
+import httpx
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+from api.routers import data_router, parsing_router, system_router
 from config.settings import get_settings
 from core.logtools import getLogger
-from fastapi import FastAPI
 
 logger = getLogger()
 settings = get_settings()
@@ -28,8 +31,12 @@ api_app = FastAPI(
     version=settings.APP_VERSION,
     openapi_tags=[
         {
+            "name": "Parsing",
+            "description": "Operations for uploading and parsing files via Kreuzberg",
+        },
+        {
             "name": "Data",
-            "description": "Operations for uploading and retrieving extracted file content",
+            "description": "Operations for retrieving previously parsed file content",
         },
         {
             "name": "System",
@@ -40,5 +47,17 @@ api_app = FastAPI(
 
 backend.mount("/api/", api_app)
 
+api_app.include_router(parsing_router.router, prefix="", tags=["Parsing"])
 api_app.include_router(data_router.router, prefix="", tags=["Data"])
 api_app.include_router(system_router.router, prefix="", tags=["System"])
+
+
+@api_app.exception_handler(httpx.HTTPStatusError)
+async def upstream_http_error_handler(
+    request: Request, exc: httpx.HTTPStatusError
+) -> JSONResponse:
+    logger.error(f"Upstream HTTP error: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": f"Upstream service error: {exc.response.status_code}"},
+    )

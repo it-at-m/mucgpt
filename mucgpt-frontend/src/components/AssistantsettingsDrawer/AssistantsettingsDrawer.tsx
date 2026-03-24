@@ -4,7 +4,6 @@ import {
     Edit24Regular,
     ChatSettings24Regular,
     Checkmark24Filled,
-    CloudArrowUp24Filled,
     ChevronDown20Regular,
     ChevronRight20Regular,
     Settings24Regular,
@@ -19,49 +18,42 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import CodeBlockRenderer from "../CodeBlockRenderer/CodeBlockRenderer";
 import { Assistant } from "../../api";
-import { EditAssistantDialog } from "../AssistantDialogs";
-import PublishAssistantDialog from "../PublishAssistantDialog/PublishAssistantDialog";
-import { AssistantStorageService } from "../../service/assistantstorage";
-import { ASSISTANT_STORE } from "../../constants";
+import { useNavigate } from "react-router-dom";
 import { Collapse } from "@fluentui/react-motion-components-preview";
-import { deleteCommunityAssistantApi } from "../../api/assistant-client";
 import { AssistantStrategy, DeletedCommunityAssistantStrategy } from "../../pages/assistant/AssistantStrategy";
 import rehypeKatex from "rehype-katex";
 import rehypeExternalLinks from "rehype-external-links";
+import { downloadAssistantExport, mapAssistantToExportData, sanitizeAssistantFilename } from "../../utils/assistant-export";
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 
 interface Props {
     assistant: Assistant;
-    onAssistantChange: (assistant: Assistant) => void;
     onDeleteAssistant: () => void;
     isOwned?: boolean;
     strategy: AssistantStrategy;
 }
 
-export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDeleteAssistant, isOwned, strategy }: Props) => {
+export const AssistantsettingsDrawer = ({ assistant, onDeleteAssistant, isOwned, strategy }: Props) => {
     const { t } = useTranslation();
+    const { showSuccess, showError } = useGlobalToastContext();
 
     const [description, setDescription] = useState<string>(assistant.description);
     const [publish, setPublish] = useState<boolean>(assistant.publish);
     const [isOwner, setIsOwner] = useState<boolean>(isOwned || !publish);
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
-    const [showPublishDialog, setShowPublishDialog] = useState<boolean>(false);
-    const [invisibleChecked, setInvisibleChecked] = useState<boolean>(!assistant.is_visible);
-    const [showEditDialog, setShowEditDialog] = useState<boolean>(false);
+    const navigate = useNavigate();
     const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(false);
-
-    const storageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
 
     useEffect(() => {
         setDescription(assistant.description);
         setPublish(assistant.publish);
         setIsOwner(isOwned || !assistant.publish);
-        setInvisibleChecked(!assistant.is_visible);
     }, [assistant, isOwned]);
 
-    // Toggle read-only mode
+    // Toggle read-only mode (now navigates)
     const toggleEditDialog = useCallback(() => {
-        setShowEditDialog(!showEditDialog);
-    }, [showEditDialog]);
+        navigate(`edit`);
+    }, [navigate]);
 
     // Toggle actions section visibility
     const toggleActionsVisibility = useCallback(() => {
@@ -69,54 +61,15 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     }, [isActionsExpanded]);
 
     const exportAssistant = useCallback(() => {
-        const sanitizeFilename = (name: string) => {
-            const sanitized = name.replace(/[/\\:*?"<>|]/g, "_");
-            const cleaned = sanitized.trim();
-            // Fallback if empty, only underscores, or no alphanumeric characters
-            if (!cleaned || /^_+$/.test(cleaned) || !/[a-zA-Z0-9]/.test(cleaned)) {
-                return "assistant";
-            }
-            return cleaned;
-        };
-
-        // Extract only exportable fields, exclude sensitive/system data
-        const exportableData = {
-            title: assistant.title,
-            description: assistant.description,
-            system_message: assistant.system_message,
-            creativity: assistant.creativity,
-            default_model: assistant.default_model,
-            examples: assistant.examples,
-            quick_prompts: assistant.quick_prompts,
-            tools: assistant.tools,
-            tags: assistant.tags
-        };
-
-        const blob = new Blob([JSON.stringify(exportableData, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${sanitizeFilename(assistant.title)}.json`;
-
-        document.body.appendChild(link);
-        link.click();
-
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }, [assistant]);
-
-    const saveLocal = useCallback(async () => {
-        if (!assistant.id) return;
-        const updatedAssistant: Assistant = {
-            ...assistant,
-            publish: false
-        };
-        await deleteCommunityAssistantApi(assistant.id);
-        await storageService.createAssistantConfig(updatedAssistant, assistant.id);
-        window.location.href = "/#/";
-        window.location.reload();
-    }, [assistant, storageService, assistant.id]);
+        try {
+            downloadAssistantExport(mapAssistantToExportData(assistant), assistant.title);
+            const sanitizedFilename = sanitizeAssistantFilename(assistant.title);
+            showSuccess(t("components.assistantsettingsdrawer.export"), `${sanitizedFilename}.json`);
+        } catch (error) {
+            console.error("Failed to export assistant", error);
+            showError(t("components.assistantsettingsdrawer.export"), t("components.assistantsettingsdrawer.export_failed"));
+        }
+    }, [assistant, showError, showSuccess, t]);
 
     // Delete assistant confirmation dialog
     const deleteDialog = useMemo(
@@ -125,17 +78,11 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 <DialogSurface className={styles.dialog}>
                     <DialogBody className={styles.dialogContent}>
                         <DialogTitle>
-                            {publish
-                                ? isOwner
-                                    ? t("components.assistantsettingsdrawer.unpublish-button")
-                                    : t("components.assistantsettingsdrawer.remove-assistant")
-                                : t("components.assistantsettingsdrawer.deleteDialog.title")}
+                            {publish ? t("components.assistantsettingsdrawer.remove-assistant") : t("components.assistantsettingsdrawer.deleteDialog.title")}
                         </DialogTitle>
                         <DialogContent>
                             {publish
-                                ? isOwner
-                                    ? t("components.assistantsettingsdrawer.deleteDialog.unpublish")
-                                    : t("components.assistantsettingsdrawer.deleteDialog.remove")
+                                ? t("components.assistantsettingsdrawer.deleteDialog.remove")
                                 : t("components.assistantsettingsdrawer.deleteDialog.content")}
                         </DialogContent>
                         <DialogActions>
@@ -148,13 +95,9 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                                 <Button
                                     appearance="secondary"
                                     size="small"
-                                    onClick={async () => {
+                                    onClick={() => {
                                         setShowDeleteDialog(false);
-                                        if (publish && isOwner) {
-                                            await saveLocal();
-                                        } else {
-                                            onDeleteAssistant();
-                                        }
+                                        onDeleteAssistant();
                                     }}
                                 >
                                     <Checkmark24Filled /> {t("components.assistantsettingsdrawer.deleteDialog.confirm")}
@@ -165,38 +108,9 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                 </DialogSurface>
             </Dialog>
         ),
-        [showDeleteDialog, onDeleteAssistant, publish, t, saveLocal]
+        [showDeleteDialog, onDeleteAssistant, publish, t]
     );
 
-    // Publish dialog
-    const publishDialog = useMemo(
-        () => (
-            <PublishAssistantDialog
-                open={showPublishDialog}
-                setOpen={setShowPublishDialog}
-                assistant={assistant}
-                invisibleChecked={invisibleChecked}
-                setInvisibleChecked={setInvisibleChecked}
-                onDeleteAssistant={onDeleteAssistant}
-            />
-        ),
-        [showPublishDialog, setShowPublishDialog, assistant, invisibleChecked, onDeleteAssistant]
-    );
-
-    // Edit assistant dialog
-    const editDialog = useMemo(
-        () => (
-            <EditAssistantDialog
-                showDialog={showEditDialog}
-                setShowDialog={setShowEditDialog}
-                assistant={assistant}
-                onAssistantChanged={onAssistantChange}
-                isOwner={isOwner}
-                strategy={strategy}
-            />
-        ),
-        [showEditDialog, assistant, onAssistantChange, isOwner, strategy]
-    );
     const rehypeKatexOptions = {
         output: "mathml"
     };
@@ -207,8 +121,6 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
     // sidebar content
     return (
         <>
-            {publishDialog}
-            {editDialog}
             {deleteDialog}
             <div className={styles.titleSection}>
                 <h3 className={styles.assistantTitle}>{assistant.title}</h3>
@@ -260,7 +172,7 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                             className={styles.actionButton}
                             disabled={strategy instanceof DeletedCommunityAssistantStrategy}
                         >
-                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configutations")}
+                            {isOwner ? t("components.assistantsettingsdrawer.edit") : t("components.assistantsettingsdrawer.show_configurations")}
                         </Button>
                         <Tooltip content={t("components.assistantsettingsdrawer.delete")} relationship="description" positioning="below">
                             <Button
@@ -269,24 +181,10 @@ export const AssistantsettingsDrawer = ({ assistant, onAssistantChange, onDelete
                                 icon={<Delete24Regular />}
                                 className={`${styles.actionButton} ${styles.deleteButton}`}
                             >
-                                {publish
-                                    ? isOwner
-                                        ? t("components.assistantsettingsdrawer.unpublish-button")
-                                        : t("components.assistantsettingsdrawer.remove-assistant")
-                                    : t("components.assistantsettingsdrawer.delete")}
+                                {publish ? t("components.assistantsettingsdrawer.remove-assistant") : t("components.assistantsettingsdrawer.delete")}
                             </Button>
                         </Tooltip>
 
-                        {!publish && (
-                            <Button
-                                icon={<CloudArrowUp24Filled />}
-                                onClick={() => setShowPublishDialog(true)}
-                                appearance="outline"
-                                className={`${styles.actionButton} ${styles.publishButton}`}
-                            >
-                                {t("components.assistantsettingsdrawer.publish")}
-                            </Button>
-                        )}
                         <Button icon={<ArrowExportUp24Filled />} onClick={() => exportAssistant()} className={styles.actionButton}>
                             {t("components.assistantsettingsdrawer.export")}
                         </Button>

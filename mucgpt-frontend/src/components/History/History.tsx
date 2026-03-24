@@ -20,12 +20,13 @@ interface Props {
     onChatNameChange: (id: string, newName: string) => void;
     onFavChange: (id: string, fav: boolean) => void;
     onSelect: (id: string) => void;
+    readOnly?: boolean;
 }
 
 const INITIAL_ITEMS_PER_CATEGORY = 5;
 const ITEMS_TO_ADD = 10;
 
-export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNameChange, onFavChange, onSelect }: Props) => {
+export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNameChange, onFavChange, onSelect, readOnly = false }: Props) => {
     const { t } = useTranslation();
     const [isExpanded, setIsExpanded] = useState<boolean>(true);
     // Initialize all categories as collapsed by default
@@ -170,37 +171,39 @@ export const History = ({ allChats, currentActiveChatId, onDeleteChat, onChatNam
                                                         </div>
                                                     </Button>
                                                 </Tooltip>
-                                                <Menu>
-                                                    <MenuTrigger disableButtonEnhancement>
-                                                        <Tooltip content={t("components.history.options")} relationship="description" positioning="below">
-                                                            <Button
-                                                                icon={<MoreHorizontal20Regular />}
-                                                                appearance="subtle"
-                                                                size="small"
-                                                                className={styles.optionsButton}
-                                                            />
-                                                        </Tooltip>
-                                                    </MenuTrigger>
-                                                    <MenuPopover>
-                                                        <MenuList>
-                                                            <MenuItem onClick={() => chatId && onDeleteChat(chatId)} disabled={isActiveChat}>
-                                                                {t("components.history.delete")}
-                                                            </MenuItem>
-                                                            <MenuItem onClick={() => chatId && onChatNameChange(chatId, chat.name as string)}>
-                                                                {t("components.history.rename")}
-                                                            </MenuItem>
-                                                            {chat.favorite ? (
-                                                                <MenuItem onClick={() => chatId && onFavChange(chatId, false)}>
-                                                                    {t("components.history.unsave")}
+                                                {!readOnly && (
+                                                    <Menu>
+                                                        <MenuTrigger disableButtonEnhancement>
+                                                            <Tooltip content={t("components.history.options")} relationship="description" positioning="below">
+                                                                <Button
+                                                                    icon={<MoreHorizontal20Regular />}
+                                                                    appearance="subtle"
+                                                                    size="small"
+                                                                    className={styles.optionsButton}
+                                                                />
+                                                            </Tooltip>
+                                                        </MenuTrigger>
+                                                        <MenuPopover>
+                                                            <MenuList>
+                                                                <MenuItem onClick={() => chatId && onDeleteChat(chatId)} disabled={isActiveChat}>
+                                                                    {t("components.history.delete")}
                                                                 </MenuItem>
-                                                            ) : (
-                                                                <MenuItem onClick={() => chatId && onFavChange(chatId, true)}>
-                                                                    {t("components.history.save")}
+                                                                <MenuItem onClick={() => chatId && onChatNameChange(chatId, chat.name as string)}>
+                                                                    {t("components.history.rename")}
                                                                 </MenuItem>
-                                                            )}
-                                                        </MenuList>
-                                                    </MenuPopover>
-                                                </Menu>
+                                                                {chat.favorite ? (
+                                                                    <MenuItem onClick={() => chatId && onFavChange(chatId, false)}>
+                                                                        {t("components.history.unsave")}
+                                                                    </MenuItem>
+                                                                ) : (
+                                                                    <MenuItem onClick={() => chatId && onFavChange(chatId, true)}>
+                                                                        {t("components.history.save")}
+                                                                    </MenuItem>
+                                                                )}
+                                                            </MenuList>
+                                                        </MenuPopover>
+                                                    </Menu>
+                                                )}
                                             </li>
                                         );
                                     })}

@@ -3,22 +3,12 @@ import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
-import {useCallback, useEffect, useRef, useState} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolListResponse } from "../../api/models";
-import {
-    DataUploadDialog,
-    UploadedData,
-    createUploadedData,
-    getDataSignature,
-    getFileSignature
-} from "../DataUploadDialog/DataUploadDialog";
+import { DataUploadDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../DataUploadDialog/DataUploadDialog";
 import { ToolBadges } from "./ToolBadges";
 import { DataUpload } from "./DataUpload";
 import { uploadFileApi } from "../../api/data-client";
-
-
-
-
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -33,7 +23,6 @@ interface Props {
     allowToolSelection?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
 }
-
 
 export const QuestionInput = ({
     onSend,
@@ -74,7 +63,6 @@ export const QuestionInput = ({
         }
         return false;
     }, []);
-
 
     // Auto-resize functionality
     useEffect(() => {
@@ -167,7 +155,6 @@ export const QuestionInput = ({
         [setQuestion]
     );
 
-
     const handleUploadButtonClick = useCallback(() => {
         if (disabled) {
             return;
@@ -179,7 +166,6 @@ export const QuestionInput = ({
         setIsUploadDialogOpen(open);
     }, []);
 
-
     const appendDataFromFiles = useCallback(
         (files: FileList | File[]) => {
             const fileArray = Array.from(files ?? []);
@@ -189,9 +175,7 @@ export const QuestionInput = ({
 
             setUploadedData(prev => {
                 const existingSignatures = new Set(prev.map(getDataSignature));
-                const newData = fileArray
-                    .filter(file => !existingSignatures.has(getFileSignature(file)))
-                    .map(file => createUploadedData(file, "uploading"));
+                const newData = fileArray.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "uploading"));
 
                 if (newData.length === 0) {
                     return prev;
@@ -244,9 +228,6 @@ export const QuestionInput = ({
         },
         [onDataChange]
     );
-
-
-
 
     const handleToggleData = useCallback(
         (id: string) => {
@@ -316,7 +297,6 @@ export const QuestionInput = ({
         [disabled, hasFileData, appendDataFromFiles]
     );
 
-
     return (
         <>
             <div className={styles.questionInputWrapper}>
@@ -375,12 +355,7 @@ export const QuestionInput = ({
                     <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 </div>
             </div>
-            <DataUploadDialog
-                open={isUploadDialogOpen}
-                onOpenChange={handleDialogOpenChange}
-                data={uploadedData}
-                onDataChange={handleDataChange}
-            />
+            <DataUploadDialog open={isUploadDialogOpen} onOpenChange={handleDialogOpenChange} data={uploadedData} onDataChange={handleDataChange} />
         </>
     );
 };

@@ -1,13 +1,10 @@
 .message {
     padding: 1.25em;
     margin: 1em 0.5em; /* Reduced horizontal margin */
-    background: var(--colorNeutralBackground1);
+    background: var(--primary);
+    color: var(--onPrimary);
     border-radius: 8px;
     overflow-x: auto;
-    box-shadow:
-        0px 2px 4px var(--colorBrandForeground2),
-        0px 0px 2px var(--colorBrandForeground2);
-    outline: transparent solid 1px;
     max-width: 100%; /* Ensure it doesn't overflow container */
     transition: all 0.2s ease-in-out;
     border-top-right-radius: 20px; /* More rounded corners for user messages */
@@ -16,9 +13,6 @@
 
 .message:hover {
     border-right: 3px solid var(--colorBrandForeground2);
-    box-shadow:
-        0px 4px 8px rgba(0, 0, 0, 0.1),
-        0px 2px 4px var(--colorBrandForeground2);
 }
 
 .answerText {
@@ -33,7 +27,6 @@
     .message {
         border-top-right-radius: 12px;
         border-bottom-left-radius: 12px;
-        border-right: 2px solid var(--colorBrandForeground2);
     }
 }
 

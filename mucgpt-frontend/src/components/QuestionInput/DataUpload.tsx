@@ -39,8 +39,8 @@ export const DataUpload = ({ data, onToggle, onRemove }: DataUploadProps) => {
                 const tooltipContent = hasError
                     ? d.errorMessage || t("components.questioninput.upload_error", "Upload fehlgeschlagen")
                     : isUploading
-                        ? t("components.questioninput.uploading", "Wird hochgeladen...")
-                        : d.name;
+                      ? t("components.questioninput.uploading", "Wird hochgeladen...")
+                      : d.name;
 
                 return (
                     <div key={d.id} className={styles.toolButtonWrapper}>

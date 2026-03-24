@@ -102,7 +102,7 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                 <div>
                     <Field size="large">
                         <Dropdown
-                            placeholder={t("components.edit_assistant_dialog.creativity_placeholder")}
+                            placeholder={t("components.assistant_editor.creativity_placeholder")}
                             value={creativity}
                             selectedOptions={[creativity]}
                             onOptionSelect={onCreativityChangeHandler}
@@ -110,13 +110,13 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                             aria-labelledby={creativity_headerID}
                         >
                             <Option key={CREATIVITY_LOW} value={CREATIVITY_LOW}>
-                                {t("components.edit_assistant_dialog.creativity_low")}
+                                {t("components.assistant_editor.creativity_low")}
                             </Option>
                             <Option key={CREATIVITY_MEDIUM} value={CREATIVITY_MEDIUM}>
-                                {t("components.edit_assistant_dialog.creativity_medium")}
+                                {t("components.assistant_editor.creativity_medium")}
                             </Option>
                             <Option key={CREATIVITY_HIGH} value={CREATIVITY_HIGH}>
-                                {t("components.edit_assistant_dialog.creativity_high")}
+                                {t("components.assistant_editor.creativity_high")}
                             </Option>
                         </Dropdown>
                     </Field>

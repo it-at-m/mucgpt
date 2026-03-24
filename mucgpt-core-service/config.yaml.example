@@ -1,0 +1,77 @@
+# Core Service Configuration
+# This file provides an example YAML configuration for the MUCGPT core service.
+# You can use this instead of environment variables or base64 encoded JSON.
+#
+# Priority order (highest to lowest):
+# 1. Environment variables (MUCGPT_CORE_* for top-level, MUCGPT_CORE_<SECTION>__<FIELD> for nested)
+# 2. YAML configuration file (this file, when named config.yaml)
+# 3. .env file
+#
+# Note: Because case_sensitive=False in settings, use UPPERCASE field names in YAML
+# Nested env vars use __ (double underscore) as delimiter, e.g. MUCGPT_CORE_REDIS__HOST
+
+# General settings
+VERSION: "0.0.1"
+LOG_CONFIG: "logconf.yaml"
+
+# Frontend settings
+ENV_NAME: "MUCGPT"
+ALTERNATIVE_LOGO: false
+FRONTEND_VERSION: "unknown"
+ASSISTANT_VERSION: "unknown"
+
+# Backend settings
+UNAUTHORIZED_USER_REDIRECT_URL: ""
+
+# Models configuration
+# Instead of base64 encoded JSON in environment variables, you can configure models here
+MODELS:
+  - type: "OPENAI"
+    llm_name: "<your-llm-name>"
+    deployment: ""
+    endpoint: "<your-endpoint>"
+    api_key: "<your-sk>"
+    api_version: ""
+    model_info:
+      auto_enrich_from_model_info_endpoint: true
+      max_output_tokens: 16384
+      max_input_tokens: 128000
+      description: "<description>"
+      input_cost_per_token: 0.00000009
+      output_cost_per_token: 0.00000036
+      supports_function_calling: true
+      supports_reasoning: false
+      supports_vision: true
+      litellm_provider: "<provider>"
+      inference_location: "<region>"
+      knowledge_cut_off: "2024-07-01"
+
+# SSO Settings (optional - nested under SSO key)
+SSO:
+  ROLE: "lhm-ab-mucgpt-user"
+
+# Langfuse Settings (optional - nested under LANGFUSE key)
+LANGFUSE:
+  PUBLIC_KEY: "<your-public-key>"
+  SECRET_KEY: "<your-secret-key>"
+  HOST: "https://langfuse.example.com"
+
+# MCP Settings (optional - nested under MCP key)
+MCP:
+  SOURCES:
+    "ki in muenchen":
+      url: "http://localhost:8088/sse"
+      transport: "sse"
+  CACHE_TTL: 43200
+
+# Redis Settings (optional - nested under REDIS key)
+# Override individual fields via environment variables, e.g.:
+#   MUCGPT_CORE_REDIS__HOST=my-redis
+#   MUCGPT_CORE_REDIS__PORT=6379
+#   MUCGPT_CORE_REDIS__USERNAME=default
+#   MUCGPT_CORE_REDIS__PASSWORD=secret
+REDIS:
+  HOST: "localhost"
+  PORT: 6379
+  USERNAME: "default"
+  PASSWORD: "<your-password>"

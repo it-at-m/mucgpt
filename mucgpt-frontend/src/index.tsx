@@ -22,6 +22,8 @@ import CommunityAssistant from "./pages/assistant/CommunityAssistant";
 import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToastContext";
 import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
 import Unauthorized from "./pages/Unauthorized";
+import Discovery from "./pages/discovery/Discovery";
+import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 initializeIcons();
 
 const router = createHashRouter([
@@ -43,6 +45,11 @@ const router = createHashRouter([
             {
                 path: "chat",
                 element: <Chat />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "discovery",
+                element: <Discovery />,
                 errorElement: <div>Fehler</div>
             },
             {
@@ -86,12 +93,27 @@ const router = createHashRouter([
                 errorElement: <div>Fehler</div>
             },
             {
+                path: "assistant/create",
+                element: <AssistantEditorPage mode="create" />,
+                errorElement: <div>Fehler</div>
+            },
+            {
                 path: "assistant/:id",
                 element: <LocalAssistant />,
                 errorElement: <div>Fehler</div>
             },
             {
+                path: "assistant/:id/edit",
+                element: <LocalAssistant />,
+                errorElement: <div>Fehler</div>
+            },
+            {
                 path: "owned/communityassistant/:id",
+                element: <OwnedCommunityAssistant />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "owned/communityassistant/:id/edit",
                 element: <OwnedCommunityAssistant />,
                 errorElement: <div>Fehler</div>
             },

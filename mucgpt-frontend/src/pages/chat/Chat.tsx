@@ -7,7 +7,6 @@ import { ExampleList, ExampleModel } from "../../components/Example";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { LanguageContext } from "../../components/LanguageSelector/LanguageContextProvider";
 import { useTranslation } from "react-i18next";
-import { ChatsettingsDrawer } from "../../components/ChatsettingsDrawer";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { ChatLayout } from "../../components/ChatLayout/ChatLayout";
@@ -25,6 +24,9 @@ import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
 import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { Settings24Regular } from "@fluentui/react-icons";
+import { Button } from "@fluentui/react-components";
+import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -88,10 +90,9 @@ const Chat = () => {
     const { t } = useTranslation();
     const { setQuickPrompts } = useContext(QuickPromptContext);
     const { setHeader } = useContext(HeaderContext);
-    const headerTitle = t("header.chat");
     useEffect(() => {
-        setHeader(headerTitle);
-    }, [setHeader, headerTitle]);
+        setHeader("");
+    }, [setHeader]);
     const { tools } = useToolsContext();
 
     // Independent states
@@ -106,6 +107,7 @@ const Chat = () => {
     };
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
+    const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -610,35 +612,18 @@ const Chat = () => {
         [allChats, active_chat, fetchHistory, storageService, loadChat, t]
     );
 
-    const sidebar_chat_settings = useMemo(
-        () => (
-            <ChatsettingsDrawer
-                creativity={creativity}
-                setCreativity={onCreativityChanged}
-                systemPrompt={systemPrompt}
-                setSystemPrompt={onSystemPromptChanged}
-            />
-        ),
-        [creativity, systemPrompt, onCreativityChanged, onSystemPromptChanged]
-    );
-
-    const sidebar = useMemo(
-        () => (
-            <Sidebar
-                actions={sidebar_actions}
-                content={
-                    <>
-                        {sidebar_chat_settings}
-                        {sidebar_history}
-                    </>
-                }
-            ></Sidebar>
-        ),
-        [sidebar_actions, sidebar_history, sidebar_chat_settings]
-    );
+    const sidebar = useMemo(() => <Sidebar actions={sidebar_actions} content={<>{sidebar_history}</>}></Sidebar>, [sidebar_actions, sidebar_history]);
     const layout = useMemo(
         () => (
             <>
+                <ChatSettingsDialog
+                    open={isSettingsOpen}
+                    onOpenChange={setIsSettingsOpen}
+                    creativity={creativity}
+                    setCreativity={onCreativityChanged}
+                    systemPrompt={systemPrompt}
+                    setSystemPrompt={onSystemPromptChanged}
+                />
                 <ChatLayout
                     sidebar={sidebar}
                     examples={examplesComponent}
@@ -646,15 +631,22 @@ const Chat = () => {
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
                     header={t("chat.header")}
+                    welcomeMessage={t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? "large" : "none"}
                     llmOptions={availableLLMs}
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
-                    onToggleMinimized={() => setAndStoreShowSidebar(true)}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    onToggleMinimized={() => setAndStoreShowSidebar(!showSidebar)}
+                    actions={
+                        <Button
+                            appearance="subtle"
+                            icon={<Settings24Regular />}
+                            onClick={() => setIsSettingsOpen(true)}
+                            aria-label={t("components.chattsettingsdrawer.title")}
+                        />
+                    }
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -672,7 +664,12 @@ const Chat = () => {
             LLM.llm_name,
             onLLMSelectionChange,
             clearChat,
-            isLoadingRef.current
+            isLoadingRef.current,
+            isSettingsOpen,
+            creativity,
+            onCreativityChanged,
+            systemPrompt,
+            onSystemPromptChanged
         ]
     );
 

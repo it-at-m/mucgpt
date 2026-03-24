@@ -1,15 +1,15 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, ChatResponse } from "../../api";
+import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
 import { History } from "../../components/History/History";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
-import { useParams } from "react-router-dom";
-import { AssistantsettingsDrawer } from "../../components/AssistantsettingsDrawer";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { ChatLayout, SidebarSizes } from "../../components/ChatLayout/ChatLayout";
-import { ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
+import { ASSISTANT_STORE, COMMUNITY_ASSISTANT_STORE, CREATIVITY_LOW } from "../../constants";
 import { AssistantStorageService } from "../../service/assistantstorage";
+import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { StorageService } from "../../service/storage";
 import { AnswerList } from "../../components/AnswerList/AnswerList";
 import { ExampleList } from "../../components/Example";
@@ -29,6 +29,22 @@ import { Sidebar } from "../../components/Sidebar/Sidebar";
 import { ClearChatButton } from "../../components/ClearChatButton";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { Button, MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { Info24Regular, Settings24Regular } from "@fluentui/react-icons";
+import { AssistantEditorPage } from "../../components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
+import { AssistantDetailsSidebar, AssistantCardData } from "../../components/AssistantDetailsSidebar/AssistantDetailsSidebar";
+import { getCommunityAssistantApi } from "../../api/assistant-client";
+import { ApiError } from "../../api/fetch-utils";
+import {
+    isCompleteCommunityAssistantSnapshot,
+    mapAssistantResponseToSnapshot,
+    mapAssistantToCommunitySnapshot,
+    mapCommunitySnapshotToAssistant,
+    upsertCommunityAssistantSnapshot
+} from "../../utils/community-assistant-snapshots";
+import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
+import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {
     strategy: AssistantStrategy;
@@ -57,6 +73,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const chatMessageStreamEnd = useRef<HTMLDivElement | null>(null);
     const lastAnswerRef = useRef<HTMLDivElement | null>(null);
     const isLoadingRef = useRef(false);
+    const assistantInfoRequestIdRef = useRef(0);
 
     // useEffect für den Chat-Status
     useEffect(() => {
@@ -66,6 +83,14 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     // Parameter from URL
     const { id } = useParams();
     const assistant_id = id || "0";
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isEditMode = location.pathname.endsWith("/edit");
+
+    useEffect(() => {
+        if (!isEditMode || strategy.canEdit) return;
+        navigate(location.pathname.replace(/\/edit$/, ""), { replace: true });
+    }, [isEditMode, strategy.canEdit, navigate, location.pathname]);
 
     // Context
     const { LLM, setLLM, availableLLMs } = useContext(LLMContext);
@@ -88,10 +113,28 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
+    const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
+    const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
+    const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
+    const [isOwnershipResolved, setIsOwnershipResolved] = useState<boolean>(!(strategy instanceof CommunityAssistantStrategy));
+    const [deletedAssistantSnapshot, setDeletedAssistantSnapshot] = useState<CommunityAssistantSnapshot | null>(null);
+    const isDeletedAssistant = strategy instanceof DeletedCommunityAssistantStrategy;
+    const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
+        useDuplicateAssistant();
+
+    // Sync info drawer state to body class so Layout.module.css can offset the footer
+    useEffect(() => {
+        document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
+        return () => document.body.classList.remove("info-drawer-open");
+    }, [isInfoDrawerOpen]);
 
     // StorageServices
-    const assistantStorageService: AssistantStorageService = new AssistantStorageService(ASSISTANT_STORE);
-    const assistantChatStorage: StorageService<ChatResponse, Assistant> = assistantStorageService.getChatStorageService();
+    const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
+    const communityAssistantStorageService = useMemo(() => new CommunityAssistantStorageService(COMMUNITY_ASSISTANT_STORE), []);
+    const assistantChatStorage: StorageService<ChatResponse, Assistant> = useMemo(
+        () => assistantStorageService.getChatStorageService(),
+        [assistantStorageService]
+    );
 
     //config
     const [assistantConfig, setAssistantConfig] = useState<Assistant>({
@@ -110,6 +153,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     useEffect(() => {
         const loadData = async () => {
             if (assistant_id) {
+                setDeletedAssistantSnapshot(null);
+                setIsOwnershipResolved(!(strategy instanceof CommunityAssistantStrategy));
                 if (error) setError(undefined);
                 isLoadingRef.current = true;
                 let notSubscribed = false;
@@ -129,10 +174,33 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     }
                 }
 
+                setIsOwnershipResolved(true);
+
                 strategy
                     .loadAssistantConfig(assistant_id, assistantStorageService)
-                    .then(assistant => {
+                    .then(async assistant => {
                         if (assistant) {
+                            if (isDeletedAssistant) {
+                                try {
+                                    const snapshot = await communityAssistantStorageService.getAssistantConfig(assistant_id);
+                                    setDeletedAssistantSnapshot(isCompleteCommunityAssistantSnapshot(snapshot) ? snapshot : null);
+                                } catch (snapshotError) {
+                                    console.error("Error loading deleted assistant snapshot:", snapshotError);
+                                    setDeletedAssistantSnapshot(null);
+                                }
+                            }
+
+                            if (strategy instanceof CommunityAssistantStrategy && !notSubscribed) {
+                                try {
+                                    await upsertCommunityAssistantSnapshot(
+                                        communityAssistantStorageService,
+                                        mapAssistantToCommunitySnapshot({ ...assistant, id: assistant_id })
+                                    );
+                                } catch (snapshotError) {
+                                    console.error("Error updating community assistant snapshot:", snapshotError);
+                                }
+                            }
+
                             setAssistantConfig(assistant);
                             setHeader("");
                             dispatch({ type: "SET_SYSTEM_PROMPT", payload: assistant.system_message });
@@ -178,7 +246,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }
                     })
                     .catch(err => {
-                        if (err.response?.status === 403 && notSubscribed) {
+                        if (err instanceof ApiError && err.status === 403 && notSubscribed) {
                             setNoAccess(true);
                         } else {
                             console.error("Error loading assistant configuration:", err);
@@ -199,7 +267,54 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             }
         };
         loadData();
-    }, [assistant_id, strategy, t, showError]);
+    }, [assistant_id, communityAssistantStorageService, error, isDeletedAssistant, showError, strategy, t, availableLLMs, setHeader, setLLM, setQuickPrompts]);
+
+    // Load info data for non-owner community assistants
+    useEffect(() => {
+        setAssistantInfoData(null);
+        setIsInfoDrawerOpen(false);
+
+        if (strategy.canEdit || isDeletedAssistant || !assistant_id || !isOwnershipResolved) {
+            setIsAssistantInfoLoading(false);
+            return;
+        }
+
+        setIsAssistantInfoLoading(true);
+
+        const requestId = ++assistantInfoRequestIdRef.current;
+        let isCurrentRequest = true;
+
+        getCommunityAssistantApi(assistant_id)
+            .then(response => {
+                if (!isCurrentRequest || requestId !== assistantInfoRequestIdRef.current) {
+                    return;
+                }
+
+                setAssistantInfoData({
+                    id: response.id,
+                    title: response.latest_version.name,
+                    description: response.latest_version.description || "",
+                    subscriptions: response.subscriptions_count || 0,
+                    updated: response.updated_at,
+                    tags: response.latest_version.tags || [],
+                    rawData: response
+                });
+                setIsAssistantInfoLoading(false);
+            })
+            .catch(err => {
+                if (!isCurrentRequest || requestId !== assistantInfoRequestIdRef.current) {
+                    return;
+                }
+                setAssistantInfoData(null);
+                setIsAssistantInfoLoading(false);
+                setIsInfoDrawerOpen(false);
+                console.error("Failed to load assistant info data:", err);
+            });
+
+        return () => {
+            isCurrentRequest = false;
+        };
+    }, [assistant_id, strategy.canEdit, isDeletedAssistant, isOwnershipResolved]);
 
     // get History-Funktion
     const fetchHistory = useCallback(() => {
@@ -207,24 +322,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
             if (chats) dispatch({ type: "SET_ALL_CHATS", payload: chats });
         });
     }, [assistantStorageService, assistant_id]);
-
-    // deleteAssistant-Funktion
-    const onDeleteAssistant = useCallback(async () => {
-        try {
-            await strategy.deleteAssistant(assistant_id, assistantStorageService);
-            showSuccess(
-                t("components.assistant_chat.delete_assistant_success"),
-                t("components.assistant_chat.delete_assistant_success_message", { title: assistantConfig.title })
-            );
-            window.location.href = "/";
-        } catch (err) {
-            console.error("Error deleting assistant:", err);
-            showError(
-                t("components.assistant_chat.delete_assistant_failed"),
-                err instanceof Error ? err.message : t("components.assistant_chat.delete_assistant_failed_message")
-            );
-        }
-    }, [strategy, assistant_id, assistantStorageService, showError, showSuccess, t, assistantConfig.title]);
 
     // callApi-Funktion
     const callApi = useCallback(
@@ -416,9 +513,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         }, 100);
                     }
                 }}
+                readOnly={isDeletedAssistant}
             ></History>
         ),
-        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom]
+        [allChats, active_chat, fetchHistory, assistantChatStorage, t, scrollToBottom, isDeletedAssistant]
     );
 
     // Sidebar component
@@ -430,58 +528,66 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const sidebar_actions = useMemo(
         () => (
             <>
-                <ClearChatButton
-                    onClick={clearChat}
-                    disabled={!lastQuestionRef.current || isLoadingRef.current || strategy instanceof DeletedCommunityAssistantStrategy}
-                    showText={showSidebar}
-                />
+                <ClearChatButton onClick={clearChat} disabled={!lastQuestionRef.current || isLoadingRef.current || isDeletedAssistant} showText={showSidebar} />
                 <MinimizeSidebarButton showSidebar={showSidebar} setShowSidebar={setAndStoreShowSidebar} />
             </>
         ),
-        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar]
+        [clearChat, lastQuestionRef.current, isLoadingRef.current, showSidebar, isDeletedAssistant]
     );
 
-    const sidebar_assistant_settings = useMemo(
-        () => (
-            <>
-                <AssistantsettingsDrawer
-                    assistant={assistantConfig}
-                    onAssistantChange={strategy.canEdit ? onAssistantChanged : () => {}}
-                    onDeleteAssistant={onDeleteAssistant}
-                    isOwned={strategy.isOwned}
-                    strategy={strategy}
-                ></AssistantsettingsDrawer>
-            </>
-        ),
-        [assistantConfig, onAssistantChanged, onDeleteAssistant, history, showSidebar, strategy.canEdit, strategy.isOwned, strategy]
-    );
-
-    const sidebar = useMemo(
-        () => (
-            <Sidebar
-                content={
-                    <>
-                        {sidebar_assistant_settings}
-                        {history}
-                    </>
-                }
-                actions={sidebar_actions}
-            />
-        ),
-        [history, sidebar_assistant_settings, sidebar_actions]
-    );
+    const sidebar = useMemo(() => <Sidebar content={<>{history}</>} actions={sidebar_actions} />, [history, sidebar_actions]);
 
     // Examples component
     const examplesComponent = useMemo(() => {
+        if (isDeletedAssistant) {
+            return null;
+        }
+
         if (assistantConfig.examples && assistantConfig.examples.length > 0) {
             return <ExampleList examples={assistantConfig.examples} onExampleClicked={onExampleClicked} />;
         } else {
             return null;
         }
-    }, [assistantConfig.examples, onExampleClicked]);
+    }, [isDeletedAssistant, assistantConfig.examples, onExampleClicked]);
 
     // Text-Input component
     const inputComponent = useMemo(() => {
+        if (isDeletedAssistant) {
+            const duplicateCandidateSnapshot = deletedAssistantSnapshot;
+
+            return (
+                <div className={styles.deletedChatWarningWrapper}>
+                    <MessageBar intent="warning" layout="multiline">
+                        <MessageBarBody>
+                            <div className={styles.deletedChatWarningContent}>
+                                <div className={styles.deletedChatWarningText}>{t("components.community_assistants.deleted_chat_warning")}</div>
+                                <div className={styles.deletedChatActions}>
+                                    <Button
+                                        appearance="primary"
+                                        disabled={!duplicateCandidateSnapshot}
+                                        onClick={() => {
+                                            if (!duplicateCandidateSnapshot) {
+                                                return;
+                                            }
+
+                                            requestDuplicateAssistant({
+                                                id: assistant_id,
+                                                title: duplicateCandidateSnapshot.title,
+                                                rawData: duplicateCandidateSnapshot,
+                                                isDeletedSnapshot: true
+                                            });
+                                        }}
+                                    >
+                                        {t("components.community_assistants.deleted_state_save_action")}
+                                    </Button>
+                                </div>
+                            </div>
+                        </MessageBarBody>
+                    </MessageBar>
+                </div>
+            );
+        }
+
         // Filter tools to only show those configured in the assistant
         const filteredTools =
             tools && assistantConfig.tools
@@ -508,7 +614,20 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 allowToolSelection={false}
             />
         );
-    }, [isLoadingRef.current, callApi, question, t, error, selectedTools, tools, assistantConfig.tools, strategy]);
+    }, [
+        isDeletedAssistant,
+        deletedAssistantSnapshot,
+        t,
+        requestDuplicateAssistant,
+        assistant_id,
+        assistantConfig,
+        isLoadingRef.current,
+        callApi,
+        question,
+        error,
+        selectedTools,
+        tools
+    ]);
 
     // AnswerList component
     const answerList = useMemo(
@@ -523,15 +642,15 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                                 <Answer
                                     key={index}
                                     answer={answer.response}
-                                    onRegenerateResponseClicked={onRegenerateResponseClicked}
-                                    onQuickPromptSend={prompt => callApi(prompt)}
+                                    onRegenerateResponseClicked={isDeletedAssistant ? undefined : onRegenerateResponseClicked}
+                                    onQuickPromptSend={isDeletedAssistant ? undefined : prompt => callApi(prompt)}
                                 />
                             )}
                             {index !== answers.length - 1 && <Answer key={index} answer={answer.response} />}
                         </>
                     );
                 }}
-                onRollbackMessage={onRollbackMessage}
+                onRollbackMessage={isDeletedAssistant ? undefined : onRollbackMessage}
                 isLoading={isLoadingRef.current}
                 error={error}
                 makeApiRequest={() => {
@@ -551,6 +670,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         ),
         [
             answers,
+            isDeletedAssistant,
             onRegenerateResponseClicked,
             onRollbackMessage,
             isLoadingRef.current,
@@ -582,7 +702,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     answers={answerList}
                     input={inputComponent}
                     showExamples={!lastQuestionRef.current}
-                    header=""
+                    header={assistantConfig.title}
+                    welcomeMessage={isDeletedAssistant ? t("components.community_assistants.deleted_state_title") : t("chat.header")}
                     header_as_markdown={false}
                     messages_description={t("common.messages")}
                     size={showSidebar ? sidebarSize : "none"}
@@ -590,8 +711,25 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     defaultLLM={LLM.llm_name}
                     onLLMSelectionChange={onLLMSelectionChange}
                     onToggleMinimized={toggleSidebar}
-                    clearChat={clearChat}
-                    clearChatDisabled={!lastQuestionRef.current || isLoadingRef.current}
+                    actions={
+                        strategy?.canEdit ? (
+                            <Button
+                                appearance="subtle"
+                                icon={<Settings24Regular />}
+                                onClick={() => navigate("edit")}
+                                aria-label={t("components.assistantsettingsdrawer.show_configurations")}
+                            />
+                        ) : assistantInfoData || isAssistantInfoLoading ? (
+                            <Button
+                                appearance="subtle"
+                                icon={<Info24Regular />}
+                                onClick={() => setIsInfoDrawerOpen(prev => !prev)}
+                                aria-label={t("components.community_assistants.about", "About")}
+                            />
+                        ) : undefined
+                    }
+                    onHeaderClick={!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading) ? () => setIsInfoDrawerOpen(prev => !prev) : undefined}
+                    infoDrawerOpen={isInfoDrawerOpen}
                 />
                 <ToolStatusDisplay activeTools={toolStatuses} />
             </>
@@ -601,6 +739,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         examplesComponent,
         answerList,
         inputComponent,
+        isDeletedAssistant,
         lastQuestionRef.current,
         t,
         sidebarSize,
@@ -611,10 +750,28 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         onLLMSelectionChange,
         showSidebar,
         clearChat,
-        isLoadingRef.current
+        isLoadingRef.current,
+        strategy,
+        assistantInfoData,
+        isAssistantInfoLoading,
+        isInfoDrawerOpen
     ]);
 
-    return (
+    if (isEditMode && !strategy.canEdit) {
+        return null;
+    }
+
+    return isEditMode ? (
+        <AssistantEditorPage
+            mode="edit"
+            assistant={assistantConfig}
+            isOwner={strategy.canEdit || strategy.isOwned}
+            strategy={strategy}
+            onSave={async assistant => {
+                await onAssistantChanged(assistant);
+            }}
+        />
+    ) : (
         <>
             {layout}
             <NotSubscribedDialog
@@ -624,14 +781,55 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 assistantTitle={assistantConfig.title}
                 onSubscribe={async () => {
                     await subscribeToAssistantApi(assistant_id);
+                    const subscribedAssistantResponse = await getCommunityAssistantApi(assistant_id);
+                    const subscribedAssistant = {
+                        ...mapCommunitySnapshotToAssistant(mapAssistantResponseToSnapshot(subscribedAssistantResponse)),
+                        owner_ids: subscribedAssistantResponse.latest_version.owner_ids || []
+                    };
+
+                    try {
+                        await upsertCommunityAssistantSnapshot(
+                            communityAssistantStorageService,
+                            mapAssistantToCommunitySnapshot({ ...subscribedAssistant, id: assistant_id })
+                        );
+                    } catch (snapshotError) {
+                        console.error("Error updating community assistant snapshot:", snapshotError);
+                    }
+                    setAssistantConfig(subscribedAssistant);
                     setShowNotSubscribedDialog(false);
                     setNoAccess(false);
                     showSuccess(
                         t("components.not_subscribed_dialog.subscribe_success"),
-                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: assistantConfig.title })
+                        t("components.not_subscribed_dialog.subscribe_success_message", { assistantTitle: subscribedAssistant.title })
                     );
                 }}
             />
+            <CloseConfirmationDialog
+                open={showDuplicateConfirm}
+                onOpenChange={setShowDuplicateConfirm}
+                onConfirmClose={confirmDuplicateAssistant}
+                confirmDisabled={isDuplicating}
+                title={t("components.community_assistants.duplicate_confirm_title")}
+                message={t(
+                    assistantToDuplicate?.isDeletedSnapshot
+                        ? "components.community_assistants.duplicate_confirm_message_deleted"
+                        : "components.community_assistants.duplicate_confirm_message",
+                    { title: assistantToDuplicate?.title ?? "" }
+                )}
+                confirmLabel={t("components.community_assistants.duplicate_confirm_action")}
+            />
+            {!strategy?.canEdit && (assistantInfoData || isAssistantInfoLoading || isInfoDrawerOpen) && (
+                <div className={styles.infoDrawerContainer} data-open={isInfoDrawerOpen}>
+                    <AssistantDetailsSidebar
+                        isOpen={isInfoDrawerOpen}
+                        onClose={() => setIsInfoDrawerOpen(false)}
+                        assistant={assistantInfoData}
+                        isLoading={isAssistantInfoLoading}
+                        ownedAssistantIds={new Set()}
+                        hideStartChat={true}
+                    />
+                </div>
+            )}
         </>
     );
 };

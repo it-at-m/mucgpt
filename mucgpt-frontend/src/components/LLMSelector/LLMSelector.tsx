@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Model } from "../../api";
-import { RocketRegular, Checkmark24Filled, Money24Filled, MoneyRegular } from "@fluentui/react-icons";
+import { Checkmark24Filled, Money24Filled, MoneyRegular, ChevronDown20Regular } from "@fluentui/react-icons";
 import styles from "./LLMSelector.module.css";
 import { Dialog, DialogTrigger, DialogSurface, DialogTitle, DialogBody, DialogActions, DialogContent, Button, Tooltip, Card } from "@fluentui/react-components";
 import React from "react";
@@ -11,6 +11,7 @@ interface Props {
     onSelectionChange: (nextLLM: string) => void;
     defaultLLM: string;
     options: Model[];
+    compact?: boolean;
 }
 
 const TOKENS_PER_MILLION = 1_000_000;
@@ -103,7 +104,7 @@ const InfoRow = ({ label, value, tooltip, className, useDefaultSpacing = true, s
     );
 };
 
-export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) => {
+export const LLMSelector = ({ onSelectionChange, defaultLLM, options, compact }: Props) => {
     const [selectedModel, setSelectedModel] = useState(defaultLLM);
 
     const { t } = useTranslation();
@@ -208,13 +209,13 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options }: Props) =
     };
 
     return (
-        <div>
+        <div className={compact ? `${styles.container} ${styles.compact}` : styles.container}>
             <Dialog modalType="modal">
                 <DialogTrigger disableButtonEnhancement>
                     <Tooltip content={title} relationship="description" positioning="after">
                         <button type="button" className={`${styles.container} ${styles.buttonContainer}`}>
-                            <RocketRegular className={styles.iconRightMargin} />
                             <span className={styles.modelName}>{displayName}</span>
+                            <ChevronDown20Regular className={styles.iconLeftMargin} />
                         </button>
                     </Tooltip>
                 </DialogTrigger>

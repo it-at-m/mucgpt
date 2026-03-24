@@ -2,6 +2,11 @@
     box-sizing: border-box;
 }
 
+:root {
+    --assistantDetailsDrawerWidth: 400px;
+    --assistantDetailsDrawerCompactWidth: 320px;
+}
+
 html,
 body {
     height: 100%;

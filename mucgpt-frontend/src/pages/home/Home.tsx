@@ -124,7 +124,19 @@ const Home = () => {
 
                 const recent: HomeAssistant[] = [];
                 for (const [assistantId, lastUsed] of assistantLastUsed) {
-                    // Only include if the assistant is a visible community assistant
+                    const own = ownedMap.get(assistantId);
+                    if (own) {
+                        recent.push({
+                            id: assistantId,
+                            title: own.latest_version.name,
+                            description: own.latest_version.description || "",
+                            lastUsed,
+                            linkTo: `/owned/communityassistant/${assistantId}`
+                        });
+                        continue;
+                    }
+
+                    // Subscribed assistants should only be shown if they still exist and are visible.
                     const community = allCommunityMap.get(assistantId);
                     if (!community || !community.is_visible) continue;
 
@@ -136,18 +148,6 @@ const Home = () => {
                             description: sub.description,
                             lastUsed,
                             linkTo: `/communityassistant/${assistantId}`
-                        });
-                        continue;
-                    }
-
-                    const own = ownedMap.get(assistantId);
-                    if (own && own.is_visible) {
-                        recent.push({
-                            id: assistantId,
-                            title: own.latest_version.name,
-                            description: own.latest_version.description || "",
-                            lastUsed,
-                            linkTo: `/owned/communityassistant/${assistantId}`
                         });
                     }
                 }

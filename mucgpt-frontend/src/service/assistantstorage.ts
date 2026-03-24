@@ -149,6 +149,10 @@ export class AssistantStorageService {
         }
     }
 
+    async deleteConfigForAssistant(assistant_id: string) {
+        await this.storageService.delete(AssistantStorageService.GENERATE_BOT_CONFIG_ID(assistant_id));
+    }
+
     async deleteChatsForAssistant(assistant_id: string) {
         const results = await this._getAllChatsAndConfigs((id: string) => id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id)));
         for (let i = 0; i < results.length; i++) {

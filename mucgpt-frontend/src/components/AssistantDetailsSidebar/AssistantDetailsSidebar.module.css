@@ -87,7 +87,18 @@
     background: var(--colorPaletteRedBackground1);
 }
 
-.deletedCalloutTitle {
+.localCallout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--colorPaletteDarkOrangeBorder2);
+    background: var(--colorPaletteDarkOrangeBackground1);
+}
+
+.calloutTitle {
     font-weight: 600 !important;
 }
 

@@ -1,6 +1,7 @@
 import { getConfig, handleApiRequest, postFormDataConfig } from "./fetch-utils";
 
 const DATA_SERVICE_BASE = "/api/data";
+const PARSE_SERVICE_BASE = "/api/parse";
 
 /**
  * Uploads a file and returns a unique UUID for retrieval.
@@ -12,7 +13,7 @@ export async function uploadFileApi(file: File): Promise<string> {
     formData.append("file", file);
 
     return handleApiRequest(async () => {
-        const response = await fetch(`${DATA_SERVICE_BASE}/`, postFormDataConfig(formData));
+        const response = await fetch(`${PARSE_SERVICE_BASE}/`, postFormDataConfig(formData));
         return response;
     }, "Failed to upload file");
 }

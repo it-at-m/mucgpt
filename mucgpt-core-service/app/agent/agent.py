@@ -1,6 +1,5 @@
 from typing import Annotated, TypedDict
 
-from langchain_core.messages import HumanMessage
 from langchain_core.messages.base import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import RunnableSerializable
@@ -36,10 +35,6 @@ class MUCGPTAgent:
         Call the model, dynamically enabling tools based on config.
         """
         messages = state["messages"]
-        user_request = next(
-            (msg.content for msg in state["messages"] if isinstance(msg, HumanMessage)),
-            None,
-        )
         model = self.model
         configurable = config.get("configurable", {}) if config else {}
         user_info: AuthenticationResult = configurable.get("user_info")
@@ -90,8 +85,8 @@ class MUCGPTAgent:
         if config and config["configurable"].get("data_ids"):
             data_ids: list[str] = config["configurable"].get("data_ids")
             self.logger.info(f"Loading data info request context: {data_ids}")
-            self.data_service.inject_data_list_in_messages(
-                messages=messages, data_ids=data_ids, query=user_request
+            messages = await self.data_service.inject_data_list_in_messages(
+                messages=messages, data_ids=data_ids
             )
 
         # invoke model

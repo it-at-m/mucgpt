@@ -346,6 +346,7 @@ class Settings(BaseSettings):
     # Backend settings
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: list[ModelsConfig] = []
+    MEMORY_SERVICE_URL: str = ""
 
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)

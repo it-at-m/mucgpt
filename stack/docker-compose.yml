@@ -135,8 +135,11 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
       - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**, /api/directory/**
       - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=data
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://data-service:8000/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://memory-service:8000/
       - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/api/data/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_5_ID=parse
+      - SPRING_CLOUD_GATEWAY_ROUTES_5_URI=http://memory-service:8000/
+      - SPRING_CLOUD_GATEWAY_ROUTES_5_PREDICATES_0=Path=/api/parse/**
       - SPRING_CLOUD_GATEWAY_ROUTES_4_ID=frontend
       - SPRING_CLOUD_GATEWAY_ROUTES_4_URI=http://frontend:8080/
       - SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0=Path=/**

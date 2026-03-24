@@ -53,7 +53,7 @@ export const useDuplicateAssistant = () => {
             try {
                 return await getCommunityAssistantApi(assistantId);
             } catch (responseError) {
-                const fallbackSnapshot = fallbackData && !("latest_version" in fallbackData) ? fallbackData : undefined;
+                const fallbackSnapshot = fallbackData && !isAssistantResponse(fallbackData) ? fallbackData : undefined;
                 const deletedSnapshot = await resolveDeletedCommunityAssistantSnapshot(
                     responseError,
                     assistantId,
@@ -69,9 +69,17 @@ export const useDuplicateAssistant = () => {
                     throw responseError;
                 }
 
+                if (fallbackData && isAssistantResponse(fallbackData)) {
+                    return fallbackData;
+                }
+
+                if (isCompleteCommunityAssistantSnapshot(fallbackSnapshot) && fallbackSnapshot.id === assistantId) {
+                    return fallbackSnapshot;
+                }
+
                 const cachedSnapshot = await communityAssistantStorageService.getAssistantConfig(assistantId);
 
-                if (isCompleteCommunityAssistantSnapshot(cachedSnapshot)) {
+                if (isCompleteCommunityAssistantSnapshot(cachedSnapshot) && cachedSnapshot.id === assistantId) {
                     return cachedSnapshot;
                 }
 

@@ -569,6 +569,21 @@ i18n
                             duplicate_failed_rate_limited: "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
                             duplicate_failed_forbidden: "Sie haben keine Berechtigung, diesen Assistenten zu duplizieren.",
                             duplicate_failed_not_found: "Der Assistent wurde nicht gefunden und kann nicht dupliziert werden.",
+                            local_badge: "Veraltet - Lokal",
+                            local_state_title: "Dieser lokale Assistent ist veraltet",
+                            discovery_local_hint:
+                                "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
+                            local_chat_warning:
+                                "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
+                            local_state_publish_action: "Sichern",
+                            local_migration_confirm_title: "Assistent sichern?",
+                            local_migration_confirm_message:
+                                "Wir sichern diesen Assistenten, damit er dauerhaft erhalten bleibt. Wenn Sie ihn später mit anderen teilen möchten, können Sie das jederzeit in den Einstellungen ändern.",
+                            local_migration_confirm_action: "Sichern",
+                            local_migration_success_title: "Assistent gesichert",
+                            local_migration_success_message: 'Der Assistent "{{title}}" wurde gesichert.',
+                            local_migration_failed_title: "Assistent konnte nicht gesichert werden",
+                            local_migration_failed_default: "Beim Sichern des Assistenten ist ein Fehler aufgetreten.",
                             deleted_badge: "Gelöscht",
                             deleted_state_title: "Dieser Community-Assistent ist nicht mehr verfügbar",
                             deleted_state_body:
@@ -1184,6 +1199,21 @@ i18n
                             duplicate_failed_rate_limited: "Too many requests. Please try again later.",
                             duplicate_failed_forbidden: "You do not have permission to duplicate this assistant.",
                             duplicate_failed_not_found: "The assistant was not found and cannot be duplicated.",
+                            local_badge: "Deprecated - Local",
+                            local_state_title: "This local assistant is deprecated",
+                            discovery_local_hint:
+                                "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
+                            local_chat_warning:
+                                "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
+                            local_state_publish_action: "Save",
+                            local_migration_confirm_title: "Save assistant?",
+                            local_migration_confirm_message:
+                                "We will save this assistant so it remains available. If you want to share it with others later, you can change that at any time in the assistant settings.",
+                            local_migration_confirm_action: "Save",
+                            local_migration_success_title: "Assistant saved",
+                            local_migration_success_message: 'The assistant "{{title}}" was saved.',
+                            local_migration_failed_title: "Assistant could not be saved",
+                            local_migration_failed_default: "An error occurred while saving the assistant.",
                             deleted_badge: "Deleted",
                             deleted_state_title: "This community assistant is no longer available",
                             deleted_state_body: "The original assistant is no longer available or supported. You can no longer continue using it directly.",
@@ -1799,6 +1829,21 @@ i18n
                             duplicate_failed_rate_limited: "Zvui Anfragen. Bitte probier's spada nomoi.",
                             duplicate_failed_forbidden: "Du host koa Berechtigung, den Assistentn zum Dupliziern.",
                             duplicate_failed_not_found: "Da Assistent is ned gfundn worn und ko ned dupliziert wern.",
+                            local_badge: "Veraltet - Lokal",
+                            local_state_title: "Der lokale Assistent is veraltet",
+                            discovery_local_hint:
+                                "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
+                            local_chat_warning:
+                                "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
+                            local_state_publish_action: "Sichern",
+                            local_migration_confirm_title: "Assistent sichern?",
+                            local_migration_confirm_message:
+                                "Mir sichern den Assistenten, damit a dauerhaft erhalten bleibt. Wennst eam später für andere freigebn magst, kannst des jederzeit in de Einstellungen ändern.",
+                            local_migration_confirm_action: "Sichern",
+                            local_migration_success_title: "Assistent gesichert",
+                            local_migration_success_message: 'Da Assistent "{{title}}" is gesichert worn.',
+                            local_migration_failed_title: "Assistent hod ned gesichert wern kina",
+                            local_migration_failed_default: "Beim Sichern vom Assistentn is a Fehler aufgtretn.",
                             deleted_badge: "Glascht",
                             deleted_state_title: "Der Community-Assistent is nimmer verfuegbar",
                             deleted_state_body:
@@ -2416,6 +2461,21 @@ i18n
                             duplicate_failed_rate_limited: "Trop de requêtes. Veuillez réessayer plus tard.",
                             duplicate_failed_forbidden: "Vous n'avez pas la permission de dupliquer cet assistant.",
                             duplicate_failed_not_found: "L'assistant n'a pas été trouvé et ne peut pas être dupliqué.",
+                            local_badge: "Obsolète - Local",
+                            local_state_title: "Cet assistant local est obsolète",
+                            discovery_local_hint:
+                                "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
+                            local_chat_warning:
+                                "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
+                            local_state_publish_action: "Enregistrer",
+                            local_migration_confirm_title: "Enregistrer l'assistant ?",
+                            local_migration_confirm_message:
+                                "Nous allons enregistrer cet assistant pour le conserver durablement. Si vous souhaitez plus tard le partager avec d'autres, vous pourrez le modifier à tout moment dans les paramètres de l'assistant.",
+                            local_migration_confirm_action: "Enregistrer",
+                            local_migration_success_title: "Assistant enregistré",
+                            local_migration_success_message: `L'assistant "{{title}}" a été enregistré.`,
+                            local_migration_failed_title: "L'assistant n'a pas pu être enregistré",
+                            local_migration_failed_default: "Une erreur est survenue lors de l'enregistrement de l'assistant.",
                             deleted_badge: "Supprimé",
                             deleted_state_title: "Cet assistant communautaire n'est plus disponible",
                             deleted_state_body:
@@ -3030,6 +3090,21 @@ i18n
                             duplicate_failed_rate_limited: "Забагато запитів. Будь ласка, спробуйте пізніше.",
                             duplicate_failed_forbidden: "У вас немає дозволу на дублювання цього асистента.",
                             duplicate_failed_not_found: "Асистента не знайдено, дублювання неможливе.",
+                            local_badge: "Застарілий - локальний",
+                            local_state_title: "Цей локальний асистент застарів",
+                            discovery_local_hint:
+                                "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
+                            local_chat_warning:
+                                "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
+                            local_state_publish_action: "Зберегти",
+                            local_migration_confirm_title: "Зберегти асистента?",
+                            local_migration_confirm_message:
+                                "Ми збережемо цього асистента, щоб він залишався доступним. Якщо пізніше ви захочете поділитися ним з іншими, це можна буде будь-коли змінити в налаштуваннях асистента.",
+                            local_migration_confirm_action: "Зберегти",
+                            local_migration_success_title: "Асистента збережено",
+                            local_migration_success_message: 'Асистента "{{title}}" збережено.',
+                            local_migration_failed_title: "Не вдалося зберегти асистента",
+                            local_migration_failed_default: "Під час збереження асистента сталася помилка.",
                             deleted_badge: "Видалено",
                             deleted_state_title: "Цей асистент спільноти більше недоступний",
                             deleted_state_body:

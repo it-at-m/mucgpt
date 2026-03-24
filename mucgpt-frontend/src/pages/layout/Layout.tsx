@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import logo from "../../assets/mucgpt_frost.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_frost.png";
@@ -8,6 +8,8 @@ import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig } from "../../api";
+
+export const ConfigContext = createContext<ApplicationConfig | null>(null);
 import { FluentProvider, Theme, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel, Spinner } from "@fluentui/react-components";
 import { STORAGE_KEYS, adjustTheme, applyCssVariables } from "./LayoutHelper";
 import { lightThemeTokens, darkThemeTokens } from "./themeTokens";
@@ -19,7 +21,6 @@ import { UserContextProvider } from "./UserContextProvider";
 import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
-import { VersionInfo } from "../../components/VersionInfo";
 import { HelpButton } from "../../components/HelpButton";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
@@ -287,38 +288,24 @@ export const Layout = () => {
                                     )}
                                 </header>
 
-                                <main
-                                    id="main-content"
-                                    role="main"
-                                    aria-label={t("common.main_content", "Hauptinhalt")}
-                                    className={
-                                        isMobile && mobileMenuOpen ? styles.mobileMainContentWithMenu : isMobile ? styles.mobileMainContent : styles.mainContent
-                                    }
-                                >
-                                    <Outlet />
-                                </main>
+                                <ConfigContext.Provider value={config}>
+                                    <main
+                                        id="main-content"
+                                        role="main"
+                                        aria-label={t("common.main_content", "Hauptinhalt")}
+                                        className={
+                                            isMobile && mobileMenuOpen
+                                                ? styles.mobileMainContentWithMenu
+                                                : isMobile
+                                                  ? styles.mobileMainContent
+                                                  : styles.mainContent
+                                        }
+                                    >
+                                        <Outlet />
+                                    </main>
+                                </ConfigContext.Provider>
 
-                                <footer className={styles.footer} role="contentinfo" aria-label={t("common.footer_info", "Fußzeileninformationen")}>
-                                    {!isMobile && (
-                                        <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
-                                            <address>
-                                                Landeshauptstadt München <br />
-                                                RIT/it@M KICC
-                                            </address>
-                                        </div>
-                                    )}
-                                    {!isMobile && (
-                                        <div className={styles.footerSection}>
-                                            <VersionInfo
-                                                core_version={config.core_version}
-                                                frontend_version={config.frontend_version}
-                                                assistant_version={config.assistant_version}
-                                                versionUrl={import.meta.env.BASE_URL + "#/version"}
-                                            />
-                                        </div>
-                                    )}
-                                    <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
-                                </footer>
+                                <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} showTrigger={false} />
                             </div>
                         </ToolsProvider>
                     )}

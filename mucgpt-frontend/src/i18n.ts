@@ -22,6 +22,16 @@ i18n
                         nutzungsbedingungen: "Nutzungsbedingungen",
                         create_assistant: "Assistent erstellen"
                     },
+                    home: {
+                        assistants: "Assistenten",
+                        last_used: "Zuletzt verwendet",
+                        recommended: "Empfohlen",
+                        discover_all: "Alle Assistenten entdecken",
+                        explore_badge: "Entdecken",
+                        discover_all_description: "Entdecke und verwalte alle verfügbaren Assistenten.",
+                        no_assistants_yet: "Du hast noch keine Assistenten verwendet. Entdecke jetzt verfügbare Assistenten!",
+                        no_assistants_available: "Keine Assistenten verfügbar."
+                    },
                     menu: {
                         go_to_tutorials_tooltip: "Lerne, wie MUCGPT und Sprachmodelle im allgemeinen funktionieren",
                         go_to_tutorials: "Über MUCGPT",
@@ -645,6 +655,16 @@ i18n
                         nutzungsbedingungen: "Terms of use",
                         create_assistant: "Create assistant"
                     },
+                    home: {
+                        assistants: "Assistants",
+                        last_used: "Last used",
+                        recommended: "Recommended",
+                        discover_all: "Discover all assistants",
+                        explore_badge: "Discover",
+                        discover_all_description: "Discover and manage all available assistants.",
+                        no_assistants_yet: "You haven't used any assistants yet. Discover available assistants now!",
+                        no_assistants_available: "No assistants available."
+                    },
                     menu: {
                         go_to_tutorials_tooltip: "Learn how MUCGPT and language models work in general",
                         go_to_tutorials: "About MUCGPT",
@@ -1259,6 +1279,16 @@ i18n
                     header: {
                         nutzungsbedingungen: "Gebrauchsvorschriftn",
                         create_assistant: "Assistenten erstoin"
+                    },
+                    home: {
+                        assistants: "Assistentn",
+                        last_used: "Zuletzt verwendet",
+                        recommended: "Empfohlen",
+                        discover_all: "Alle Assistentn entdecka",
+                        explore_badge: "Entdecka",
+                        discover_all_description: "Entdeck und verwalt olle verf??gbaren Assistentn.",
+                        no_assistants_yet: "Du host no koane Assistentn verwendet. Entdeck jetzt verf??gbare Assistentn!",
+                        no_assistants_available: "Koane Assistentn verf??gbar."
                     },
                     menu: {
                         go_to_tutorials_tooltip: "Lern, wia MUCGPT und Sprachmodelle im Allgemeinen funktioniern",
@@ -1878,6 +1908,16 @@ i18n
                         nutzungsbedingungen: "Conditions d'utilisation",
                         create_assistant: "Create assistant"
                     },
+                    home: {
+                        assistants: "Assistants",
+                        last_used: "Derniers utilis?s",
+                        recommended: "Recommand?s",
+                        discover_all: "D?couvrir tous les assistants",
+                        explore_badge: "Découvrir",
+                        discover_all_description: "D?couvrez et g?rez tous les assistants disponibles.",
+                        no_assistants_yet: "Vous n'avez encore utilis? aucun assistant. D?couvrez maintenant les assistants disponibles !",
+                        no_assistants_available: "Aucun assistant disponible."
+                    },
                     menu: {
                         go_to_tutorials_tooltip: "Découvrez comment MUCGPT et les modèles de langage fonctionnent en général",
                         go_to_tutorials: "À propos de MUCGPT",
@@ -2496,6 +2536,16 @@ i18n
                 translation: {
                     header: {
                         nutzungsbedingungen: "Умови використання"
+                    },
+                    home: {
+                        assistants: "Асистенти",
+                        last_used: "Останні використані",
+                        recommended: "Рекомендовані",
+                        discover_all: "Переглянути всіх асистентів",
+                        explore_badge: "Відкрити",
+                        discover_all_description: "Переглядайте та керуйте всіма доступними асистентами.",
+                        no_assistants_yet: "Ви ще не використовували жодного асистента. Перегляньте доступних асистентів зараз!",
+                        no_assistants_available: "Асистенти недоступні."
                     },
                     menu: {
                         go_to_tutorials_tooltip: "Дізнайтеся, як працюють MUCGPT та мовні моделі загалом",

@@ -17,13 +17,12 @@ interface Props {
     setSelectedTools?: (tools: string[]) => void;
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
+    variant?: "default" | "home";
 }
 
-// Map tool IDs to their tutorial routes
 const TOOL_TUTORIAL_MAP: Record<string, string> = {
     Brainstorming: "/tutorials/brainstorm",
     Vereinfachen: "/tutorials/simplify"
-    // Add more tool-to-tutorial mappings here as needed
 };
 
 export const QuestionInput = ({
@@ -36,52 +35,40 @@ export const QuestionInput = ({
     selectedTools,
     setSelectedTools,
     tools,
-    allowToolSelection = true
+    allowToolSelection = true,
+    variant = "default"
 }: Props) => {
     const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
+    const isHomeVariant = variant === "home";
 
-    // Auto-resize functionality
     useEffect(() => {
         const resizeTextarea = () => {
             const textarea = textareaRef.current;
-            if (textarea) {
-                // Check if textarea currently has focus
-                const hadFocus = document.activeElement === textarea;
+            if (!textarea) return;
 
-                // Store current cursor position
-                const selectionStart = textarea.selectionStart;
-                const selectionEnd = textarea.selectionEnd;
+            const hadFocus = document.activeElement === textarea;
+            const selectionStart = textarea.selectionStart;
+            const selectionEnd = textarea.selectionEnd;
 
-                // Reset height first to get accurate scrollHeight
-                textarea.style.height = "auto";
+            textarea.style.height = "auto";
 
-                // Calculate new height, capped at 200px
-                const maxHeight = 200;
-                const scrollHeight = textarea.scrollHeight;
-                const newHeight = Math.min(scrollHeight, maxHeight);
+            const maxHeight = 200;
+            const scrollHeight = textarea.scrollHeight;
+            const newHeight = Math.min(scrollHeight, maxHeight);
 
-                textarea.style.height = `${newHeight}px`;
+            textarea.style.height = `${newHeight}px`;
+            textarea.style.overflowY = scrollHeight > maxHeight ? "auto" : "hidden";
 
-                // Enable scrolling if content exceeds max height
-                if (scrollHeight > maxHeight) {
-                    textarea.style.overflowY = "auto";
-                } else {
-                    textarea.style.overflowY = "hidden";
-                }
-
-                // Only restore focus and cursor position if textarea had focus before
-                if (hadFocus) {
-                    textarea.focus();
-                    textarea.setSelectionRange(selectionStart, selectionEnd);
-                }
+            if (hadFocus) {
+                textarea.focus();
+                textarea.setSelectionRange(selectionStart, selectionEnd);
             }
         };
 
         resizeTextarea();
 
-        // Reset height when question is cleared
         if (question === "") {
             const textarea = textareaRef.current;
             if (textarea) {
@@ -115,11 +102,7 @@ export const QuestionInput = ({
 
     const onQuestionChange = useCallback(
         (_ev: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: TextareaOnChangeData) => {
-            if (!newValue?.value) {
-                setQuestion("");
-            } else {
-                setQuestion(newValue.value);
-            }
+            setQuestion(newValue?.value || "");
         },
         [setQuestion]
     );
@@ -138,95 +121,89 @@ export const QuestionInput = ({
     );
 
     const openTutorial = useCallback((toolId: string, event: React.MouseEvent) => {
-        event.stopPropagation(); // Prevent toggling the tool
+        event.stopPropagation();
         const tutorialRoute = TOOL_TUTORIAL_MAP[toolId];
         if (tutorialRoute) {
             window.open(`#${tutorialRoute}`, "_blank");
         }
     }, []);
 
-    return (
-        <>
-            <div className={styles.questionInputWrapper}>
-                {/* Tool badges at the top - show all tools */}
-                {tools && tools.tools && tools.tools.length > 0 && (
-                    <div className={styles.toolBadgesHeader}>
-                        <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
-                        <div className={styles.toolButtonsRow}>
-                            {tools.tools.map(tool => {
-                                const isSelected = selectedTools.includes(tool.id);
-                                const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
-                                return (
-                                    <div key={tool.id} className={styles.toolButtonWrapper}>
-                                        <Button
-                                            appearance={isSelected ? "primary" : "secondary"}
-                                            size="medium"
-                                            className={styles.toolButton}
-                                            onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
-                                            disabled={!allowToolSelection}
-                                            icon={isSelected ? <Checkmark24Regular style={{ color: "var(--surface)" }} /> : undefined}
-                                            style={
-                                                isSelected
-                                                    ? {
-                                                          backgroundColor: "var(--onPrimary)"
-                                                      }
-                                                    : {
-                                                          backgroundColor: "var(--surface)"
-                                                      }
-                                            }
-                                        >
-                                            <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>
-                                        </Button>
-                                        {hasTutorial && (
-                                            <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
-                                                <button
-                                                    className={styles.toolHelpButton}
-                                                    onClick={e => openTutorial(tool.id, e)}
-                                                    aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
-                                                >
-                                                    <QuestionCircle16Regular />
-                                                </button>
-                                            </Tooltip>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+    const showToolSelection = !isHomeVariant && !!tools?.tools?.length;
+    const containerClasses = [styles.questionInputContainer, (!tools || !tools.tools || tools.tools.length === 0) && styles.noTools, isHomeVariant && styles.questionInputContainerHome]
+        .filter(Boolean)
+        .join(" ");
 
-                {/* Input container with textarea and buttons */}
-                <div className={`${styles.questionInputContainer} ${!tools || !tools.tools || tools.tools.length === 0 ? styles.noTools : ""}`}>
-                    <Textarea
-                        className={styles.questionInputTextArea}
-                        placeholder={placeholder}
-                        resize="none"
-                        value={question}
-                        size="large"
-                        onChange={onQuestionChange}
-                        onKeyDown={onEnterPress}
-                        ref={textareaRef}
-                    />
-                    <div className={styles.questionInputButtons}>
-                        <Tooltip content={placeholder || ""} relationship="label">
-                            <Button
-                                ref={sendButtonRef}
-                                size="large"
-                                appearance={"subtle"}
-                                icon={<Send28Filled />}
-                                aria-label={t("components.questioninput.send_question", "Frage senden")}
-                                disabled={disabled || !question.trim()}
-                                onClick={sendQuestion}
-                            />
-                        </Tooltip>
+    return (
+        <div className={`${styles.questionInputWrapper} ${isHomeVariant ? styles.questionInputWrapperHome : ""}`}>
+            {showToolSelection && (
+                <div className={styles.toolBadgesHeader}>
+                    <span className={styles.toolBadgesLabel}>{t("components.questioninput.tool_header", "Zusätzliche Tools zu wählen:")}</span>
+                    <div className={styles.toolButtonsRow}>
+                        {tools.tools.map(tool => {
+                            const isSelected = selectedTools.includes(tool.id);
+                            const hasTutorial = TOOL_TUTORIAL_MAP[tool.id];
+
+                            return (
+                                <div key={tool.id} className={styles.toolButtonWrapper}>
+                                    <Button
+                                        appearance={isSelected ? "primary" : "secondary"}
+                                        size="medium"
+                                        className={styles.toolButton}
+                                        onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
+                                        disabled={!allowToolSelection}
+                                        icon={isSelected ? <Checkmark24Regular /> : undefined}
+                                    >
+                                        <span>{tool.id}</span>
+                                    </Button>
+                                    {hasTutorial && (
+                                        <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
+                                            <button
+                                                className={styles.toolHelpButton}
+                                                onClick={e => openTutorial(tool.id, e)}
+                                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
+                                            >
+                                                <QuestionCircle16Regular />
+                                            </button>
+                                        </Tooltip>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
+            )}
 
-                {/* Error hint at the bottom */}
+            <div className={containerClasses}>
+                <Textarea
+                    className={styles.questionInputTextArea}
+                    placeholder={placeholder}
+                    resize="none"
+                    value={question}
+                    size="large"
+                    onChange={onQuestionChange}
+                    onKeyDown={onEnterPress}
+                    ref={textareaRef}
+                />
+                <div className={styles.questionInputButtons}>
+                    <Tooltip content={placeholder || ""} relationship="label">
+                        <Button
+                            ref={sendButtonRef}
+                            size="large"
+                            appearance="subtle"
+                            icon={<Send28Filled />}
+                            aria-label={t("components.questioninput.send_question", "Frage senden")}
+                            disabled={disabled || !question.trim()}
+                            onClick={sendQuestion}
+                        />
+                    </Tooltip>
+                </div>
+            </div>
+
+            {!isHomeVariant && (
                 <div className={styles.errorhintSection}>
                     <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 </div>
-            </div>
-        </>
+            )}
+        </div>
     );
 };

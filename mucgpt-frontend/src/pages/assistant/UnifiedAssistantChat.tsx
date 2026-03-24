@@ -123,12 +123,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const isLocalAssistant = strategy instanceof LocalAssistantStrategy;
     const { assistantToDuplicate, showDuplicateConfirm, isDuplicating, setShowDuplicateConfirm, requestDuplicateAssistant, confirmDuplicateAssistant } =
         useDuplicateAssistant();
-    // Sync info drawer state to body class so Layout.module.css can offset the footer
-    useEffect(() => {
-        document.body.classList.toggle("info-drawer-open", isInfoDrawerOpen);
-        return () => document.body.classList.remove("info-drawer-open");
-    }, [isInfoDrawerOpen]);
-
     // StorageServices
     const assistantStorageService: AssistantStorageService = useMemo(() => new AssistantStorageService(ASSISTANT_STORE), []);
     const {

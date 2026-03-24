@@ -1,23 +1,25 @@
 .card {
-    border-radius: 8px;
+    border-radius: 14px !important;
     min-height: 140px;
-    border: 2px solid transparent;
+    border: 1px solid var(--theme-outline-base);
     transition: all 0.2s ease;
-    background-color: var(--colorNeutralBackground1);
+    background-color: var(--theme-surface-raised);
+    box-shadow: none !important;
 }
 
 .cardSelected {
-    border-color: var(--primary) !important;
+    border-color: var(--theme-outline-strong) !important;
 }
 
 .card:hover {
     box-shadow: var(--shadow8);
-    background-color: var(--colorNeutralBackground1) !important;
-    border-color: var(--primary) !important;
+    background-color: var(--theme-surface-raised) !important;
+    border-color: var(--theme-outline-strong) !important;
+    transform: translateY(-2px);
 }
 
 .card:hover .headerText {
-    color: var(--primary);
+    color: var(--theme-primary-base);
 }
 
 .headerText {
@@ -47,6 +49,14 @@
 .headerBadge {
     flex-shrink: 0;
     align-self: flex-start;
+}
+
+.headerBadgePrimary {
+    background-color: var(--theme-primary-subtle) !important;
+    border-color: var(--theme-outline-strong) !important;
+    color: var(--theme-primary-strong) !important;
+    box-shadow: none !important;
+    scale: 1.1;
 }
 
 .description {

@@ -8,10 +8,12 @@ interface VersionInfoProps {
     frontend_version: string;
     assistant_version: string;
     versionUrl?: string;
+    variant?: "default" | "compact";
 }
 
-export const VersionInfo = ({ core_version, versionUrl, frontend_version, assistant_version }: VersionInfoProps) => {
+export const VersionInfo = ({ core_version, versionUrl, frontend_version, assistant_version, variant = "default" }: VersionInfoProps) => {
     const { t } = useTranslation();
+    const isCompact = variant === "compact";
 
     const tooltipContent = t(
         "components.versioninfo.tooltip",
@@ -24,14 +26,24 @@ export const VersionInfo = ({ core_version, versionUrl, frontend_version, assist
     );
 
     const content = (
-        <div className={styles.versionContainer}>
+        <div className={`${styles.versionContainer} ${isCompact ? styles.versionContainerCompact : ""}`}>
             <InfoRegular className={styles.infoIcon} aria-hidden />
-            <span className={styles.label}>{t("components.versioninfo.core_version", "Core Version:")}</span>
-            <Tag shape="circular">{core_version}</Tag>
-            <span className={styles.label}>{t("components.versioninfo.frontend_version", "Frontend Version:")}</span>
-            <Tag shape="circular">{frontend_version}</Tag>
-            <span className={styles.label}>{t("components.versioninfo.assistant_version", "Assistant Version:")}</span>
-            <Tag shape="circular">{assistant_version}</Tag>
+            <span className={`${styles.label} ${isCompact ? styles.labelCompact : ""}`}>{t("components.versioninfo.core_version", "Core Version:")}</span>
+            <Tag shape="circular" className={isCompact ? styles.tagCompact : undefined}>
+                {core_version}
+            </Tag>
+            <span className={`${styles.label} ${isCompact ? styles.labelCompact : ""}`}>
+                {t("components.versioninfo.frontend_version", "Frontend Version:")}
+            </span>
+            <Tag shape="circular" className={isCompact ? styles.tagCompact : undefined}>
+                {frontend_version}
+            </Tag>
+            <span className={`${styles.label} ${isCompact ? styles.labelCompact : ""}`}>
+                {t("components.versioninfo.assistant_version", "Assistant Version:")}
+            </span>
+            <Tag shape="circular" className={isCompact ? styles.tagCompact : undefined}>
+                {assistant_version}
+            </Tag>
         </div>
     );
 
@@ -41,7 +53,7 @@ export const VersionInfo = ({ core_version, versionUrl, frontend_version, assist
                 <Tooltip content={tooltipContent} relationship="description" positioning="above">
                     {content}
                 </Tooltip>
-                <a href={versionUrl} className={styles.versionLink}>
+                <a href={versionUrl} className={`${styles.versionLink} ${isCompact ? styles.versionLinkCompact : ""}`}>
                     {t("components.versioninfo.whats_new", "Was gibt's neues?")}
                 </a>
             </>

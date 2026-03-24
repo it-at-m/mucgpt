@@ -23,6 +23,7 @@ import { GlobalToastProvider } from "./components/GlobalToastHandler/GlobalToast
 import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssistant";
 import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
+import Home from "./pages/home/Home";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
 initializeIcons();
 
@@ -40,6 +41,11 @@ const router = createHashRouter([
             {
                 path: "unauthorized",
                 element: <Unauthorized />,
+                errorElement: <div>Fehler</div>
+            },
+            {
+                path: "home",
+                element: <Home />,
                 errorElement: <div>Fehler</div>
             },
             {

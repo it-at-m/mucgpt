@@ -5,18 +5,22 @@
     width: 100%;
 }
 
+.questionInputWrapperHome {
+    gap: 0;
+}
+
 .toolBadgesHeader {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
-    padding: 12px 16px 8px 16px;
+    padding: 12px 16px 8px;
 }
 
 .toolBadgesLabel {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--onPrimary);
+    color: var(--theme-text-secondary);
     margin-right: 8px;
     white-space: nowrap;
 }
@@ -30,8 +34,8 @@
 
 .questionInputContainer {
     border-radius: 8px;
-    background: var(--surface);
-    outline: 2px solid var(--onPrimaryContainer);
+    background: var(--theme-surface-base);
+    outline: 1px solid var(--theme-outline-base);
     width: 100%;
     padding: 8px 4px 8px 16px;
     display: flex;
@@ -39,17 +43,22 @@
     align-items: flex-end;
     gap: 8px;
     margin-bottom: 10px;
-    transition: box-shadow 0.2s ease;
-}
-
-.questionInputContainer:focus-within {
-    transform: translateY(-1px);
-    outline: 2px solid var(--onPrimaryContainer);
-    outline-offset: 2px;
     transition:
         box-shadow 0.15s ease,
         outline 0.15s ease,
         transform 0.15s ease;
+}
+
+.questionInputContainer:focus-within {
+    transform: translateY(-1px);
+    outline: 2px solid var(--theme-outline-base);
+    outline-offset: 2px;
+}
+
+.questionInputContainerHome {
+    margin-bottom: 0;
+    padding: 10px 8px 10px 18px;
+    border-radius: 14px;
 }
 
 .noTools {
@@ -89,11 +98,11 @@
 }
 
 .questionInputButtons button {
-    color: var(--onSurface);
+    color: var(--theme-text-primary);
 }
 
 .questionInputButtons button svg {
-    color: var(--onSurface);
+    color: var(--theme-text-primary);
 }
 
 .errorhintSection {
@@ -109,7 +118,7 @@
 .errorhint {
     font-style: italic;
     font-size: 0.75rem;
-    color: var(--onPrimary);
+    color: var(--theme-text-secondary);
     margin: 0;
     letter-spacing: 0.01em;
 }
@@ -136,7 +145,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--onPrimary);
+    color: var(--theme-text-secondary);
     transition: all 0.2s ease;
     border-radius: 50%;
     width: 20px;
@@ -144,8 +153,8 @@
 }
 
 .toolHelpButton:hover {
-    color: var(--primary);
-    background: var(--primaryContainer);
+    color: var(--theme-primary-base);
+    background: var(--theme-primary-subtle);
 }
 
 .toolHelpButton:active {
@@ -153,15 +162,20 @@
 }
 
 .toolHelpButton:focus-visible {
-    outline: 2px solid var(--primary);
+    outline: 2px solid var(--theme-primary-base);
     outline-offset: 2px;
-    color: var(--primary);
+    color: var(--theme-primary-base);
 }
 
 @media (max-width: 768px) {
     .questionInputContainer {
         padding: 8px 4px 8px 12px;
         border-radius: 8px;
+    }
+
+    .questionInputContainerHome {
+        padding: 9px 8px 9px 14px;
+        border-radius: 12px;
     }
 
     .questionInputTextArea {

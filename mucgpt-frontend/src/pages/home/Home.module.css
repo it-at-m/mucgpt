@@ -1,0 +1,324 @@
+.pageContainer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    background: var(--theme-surface-base);
+}
+
+.chatstartercontainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 88px;
+    width: 100%;
+}
+
+.heading {
+    font-size: 2.8rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 50px;
+    margin-top: 72px;
+    color: var(--theme-text-primary);
+    text-shadow: 0 2px 10px rgba(57, 91, 82, 0.08);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    position: relative;
+    display: block;
+    max-width: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.chatstarter {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    padding: 0 20px;
+}
+
+.chatstarter > div {
+    width: 100%;
+    max-width: 700px;
+    border-radius: 8px;
+}
+
+.chatNavigationContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    gap: 16px;
+}
+
+.chatNavigationButton {
+    background: var(--theme-header-background);
+    color: var(--theme-text-on-header);
+    padding: 12px 24px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: var(--fontSizeBase300);
+    font-weight: 500;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 120px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.chatNavigationButton:hover {
+    background: var(--theme-header-hover);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contentSection {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: min(1100px, 90%);
+    margin: 0 auto;
+    padding: 18px 0 16px;
+    width: 100%;
+}
+
+.sectionHeaderRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fontSizeBase600);
+    font-weight: bold;
+    color: var(--theme-text-primary);
+}
+
+.modeTabs {
+    flex-shrink: 0;
+}
+
+.assistantGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+.fallbackContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px 20px 8px;
+    text-align: center;
+    gap: 12px;
+}
+
+.fallbackText {
+    font-size: var(--fontSizeBase400);
+    color: var(--theme-text-secondary);
+    max-width: 500px;
+}
+
+.fallbackButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 28px;
+    font-size: var(--fontSizeBase400);
+    font-weight: 500;
+}
+
+.inlineFooter {
+    padding: 12px 24px;
+    border-top: 1px solid var(--theme-outline-base);
+    background: var(--theme-surface-base);
+}
+
+.footerContent {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+}
+
+.footerMetaRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.footerCompanyBlock {
+    font-style: normal;
+    color: var(--theme-text-secondary);
+    font-size: var(--fontSizeBase200);
+    white-space: nowrap;
+}
+
+.footerVersionBlock {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.footerLinksBlock {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.footerLink {
+    color: var(--theme-text-secondary);
+    text-decoration: none;
+    font-size: var(--fontSizeBase200);
+    white-space: nowrap;
+}
+
+.footerLink:hover {
+    text-decoration: underline;
+    color: var(--theme-text-primary);
+}
+
+.footerLinkSeparator {
+    color: var(--theme-text-secondary);
+    font-size: var(--fontSizeBase200);
+    user-select: none;
+}
+
+.footerTermsTrigger {
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    border: none;
+    color: var(--theme-text-secondary);
+    box-shadow: none;
+    font-size: var(--fontSizeBase200);
+    font-weight: normal;
+    gap: 0;
+}
+
+.footerTermsTrigger:hover {
+    background: transparent;
+    box-shadow: none;
+    text-decoration: underline;
+    color: var(--theme-text-primary);
+}
+
+.footerTermsTrigger > svg {
+    display: none;
+}
+
+.footerTermsTrigger > span {
+    font-size: var(--fontSizeBase200);
+    font-weight: normal;
+}
+
+@media screen and (max-width: 1060px) {
+    .footerMetaRow {
+        justify-content: center;
+        gap: 6px 20px;
+    }
+
+    .footerVersionBlock {
+        order: -1;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .footerCompanyBlock {
+        font-size: 12px;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .assistantGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .assistantGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .contentSection {
+        max-width: 95%;
+        padding: 14px 0 12px;
+    }
+
+    .heading {
+        font-size: 2rem;
+        margin-top: 40px;
+        margin-bottom: 30px;
+    }
+
+    .inlineFooter {
+        padding: 10px 16px;
+    }
+
+    .footerMetaRow {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .footerCompanyBlock {
+        font-size: 12px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .footerVersionBlock {
+        order: -1;
+        width: auto;
+    }
+
+    .footerLinksBlock {
+        justify-content: center;
+    }
+
+    .modeTabs {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+}
+
+@media screen and (max-width: 490px) {
+    .chatstartercontainer {
+        padding-top: 60px;
+    }
+
+    .heading {
+        font-size: 1.6rem;
+        margin-top: 24px;
+        margin-bottom: 20px;
+    }
+
+    .inlineFooter {
+        padding: 8px 12px;
+    }
+}

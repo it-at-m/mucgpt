@@ -1,5 +1,3 @@
-from typing import Any
-
 from fastapi import APIRouter, HTTPException
 
 from api.routers.parsing_router import file_storage
@@ -19,7 +17,7 @@ router = APIRouter()
         404: {"description": "File not found"},
     },
 )
-async def get_file(file_id: str) -> Any:
+async def get_file(file_id: str) -> str:
     """
     Retrieves the content of a file using its UUID.
     """

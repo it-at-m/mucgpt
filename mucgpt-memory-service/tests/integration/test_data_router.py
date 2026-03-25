@@ -1,6 +1,6 @@
 import pytest
 
-STORED_RESULT = {"content": "previously parsed content", "metadata": {}}
+STORED_RESULT = "previously parsed content"
 
 
 @pytest.fixture

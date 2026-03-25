@@ -17,7 +17,7 @@ class KreuzbergBackend(ParserBackend):
         self._timeout = settings.KREUZBERG_TIMEOUT
         logger.info(f"KreuzbergBackend configured with URL {settings.KREUZBERG_URL}")
 
-    async def parse(self, file: UploadFile) -> dict:
+    async def parse(self, file: UploadFile) -> str:
         file_bytes = await file.read()
 
         files = {"files": (file.filename, file_bytes, file.content_type)}
@@ -28,4 +28,6 @@ class KreuzbergBackend(ParserBackend):
             )
 
         response.raise_for_status()
-        return response.json()
+        results = response.json()
+        # Kreuzberg returns a list of ExtractionResult objects; join all content fields
+        return "\n\n".join(r["content"] for r in results if r.get("content"))

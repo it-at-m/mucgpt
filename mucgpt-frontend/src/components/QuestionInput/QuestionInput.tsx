@@ -22,6 +22,8 @@ interface Props {
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
+    uploadedData?: UploadedData[];
+    setUploadedData?: (data: UploadedData[]) => void;
 }
 
 export const QuestionInput = ({
@@ -35,7 +37,9 @@ export const QuestionInput = ({
     setSelectedTools,
     tools,
     allowToolSelection = true,
-    onDataChange
+    onDataChange,
+    uploadedData: externalUploadedData,
+    setUploadedData: setExternalUploadedData
 }: Props) => {
     const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -43,10 +47,24 @@ export const QuestionInput = ({
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
     const wasDialogOpenRef = useRef(false);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
+    const [internalUploadedData, setInternalUploadedData] = useState<UploadedData[]>([]);
     const uploadedDataRef = useRef<UploadedData[]>([]);
     const [isDragActive, setIsDragActive] = useState(false);
     const dragCounterRef = useRef(0);
+
+    // Use external state when provided (controlled), otherwise fall back to internal state
+    const uploadedData = externalUploadedData ?? internalUploadedData;
+    const setUploadedData = useCallback(
+        (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
+            if (setExternalUploadedData) {
+                const resolved = typeof data === "function" ? data(uploadedData) : data;
+                setExternalUploadedData(resolved);
+            } else {
+                setInternalUploadedData(data as any);
+            }
+        },
+        [setExternalUploadedData, uploadedData]
+    );
 
     useEffect(() => {
         uploadedDataRef.current = uploadedData;
@@ -121,18 +139,16 @@ export const QuestionInput = ({
         const activeData = uploadedData.filter(data => data.isActive !== false);
         onSend(question, activeData);
 
-        if (uploadedData.length > 0) {
-            onDataChange?.(uploadedData);
-        }
-
         if (clearOnSend) {
             setQuestion("");
-            if (uploadedData.length > 0) {
+            // Only clear uploaded data when using internal (uncontrolled) state.
+            // When external state is provided, the parent is responsible for clearing.
+            if (!externalUploadedData && uploadedData.length > 0) {
                 setUploadedData([]);
                 onDataChange?.([]);
             }
         }
-    }, [disabled, question, onSend, uploadedData, clearOnSend, setQuestion, onDataChange]);
+    }, [disabled, question, onSend, uploadedData, clearOnSend, setQuestion, onDataChange, externalUploadedData]);
 
     const onEnterPress = useCallback(
         (ev: React.KeyboardEvent<Element>) => {

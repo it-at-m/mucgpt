@@ -45,6 +45,7 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
+import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
 import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {
@@ -114,6 +115,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [showNotSubscribedDialog, setShowNotSubscribedDialog] = useState<boolean>(false);
     const [noAccess, setNoAccess] = useState<boolean>(false);
+    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState<boolean>(false);
     const [assistantInfoData, setAssistantInfoData] = useState<AssistantCardData | null>(null);
     const [isAssistantInfoLoading, setIsAssistantInfoLoading] = useState<boolean>(false);
@@ -623,13 +625,18 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         clearOnSend
                         placeholder={t("chat.prompt")}
                         disabled={isLoadingRef.current || error !== undefined}
-                        onSend={question => callApi(question)}
+                        onSend={(question, datas) => {
+                            const dataIds = datas.filter(data => data.isActive !== false && data.status === "ready" && data.fileId).map(data => data.fileId!);
+                            callApi(question, dataIds.length > 0 ? dataIds : undefined);
+                        }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedTools}
                         tools={filteredTools}
                         allowToolSelection={false}
+                        uploadedData={uploadedData}
+                        setUploadedData={setUploadedData}
                     />
                 </>
             );
@@ -651,6 +658,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setSelectedTools={setSelectedTools}
                 tools={filteredTools}
                 allowToolSelection={false}
+                uploadedData={uploadedData}
+                setUploadedData={setUploadedData}
             />
         );
     }, [
@@ -667,7 +676,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         error,
         selectedTools,
         tools,
-        navigate
+        navigate,
+        uploadedData
     ]);
 
     // AnswerList component

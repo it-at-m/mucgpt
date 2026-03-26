@@ -27,6 +27,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
+import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -108,6 +109,7 @@ const Chat = () => {
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -571,9 +573,11 @@ const Chat = () => {
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
                 tools={tools}
+                uploadedData={uploadedData}
+                setUploadedData={setUploadedData}
             />
         ),
-        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools]
+        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData]
     );
 
     const sidebar_actions = useMemo(

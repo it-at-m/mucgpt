@@ -23,7 +23,7 @@
     text-align: center;
     margin-bottom: 50px;
     margin-top: 72px;
-    color: var(--theme-text-primary);
+    color: var(--theme-text-default);
     text-shadow: 0 2px 10px rgba(57, 91, 82, 0.08);
     letter-spacing: -0.5px;
     line-height: 1.2;
@@ -109,7 +109,7 @@
     gap: 8px;
     font-size: var(--fontSizeBase600);
     font-weight: bold;
-    color: var(--theme-text-primary);
+    color: var(--theme-text-default);
 }
 
 .modeTabs {
@@ -151,7 +151,6 @@
 .inlineFooter {
     padding: 12px 24px;
     border-top: 1px solid var(--theme-outline-base);
-    background: var(--theme-surface-base);
 }
 
 .footerContent {
@@ -169,8 +168,6 @@
 
 .footerCompanyBlock {
     font-style: normal;
-    color: var(--theme-text-secondary);
-    font-size: var(--fontSizeBase200);
     white-space: nowrap;
 }
 
@@ -189,7 +186,7 @@
 }
 
 .footerLink {
-    color: var(--theme-text-secondary);
+    color: var(--theme-primary-base);
     text-decoration: none;
     font-size: var(--fontSizeBase200);
     white-space: nowrap;
@@ -197,7 +194,6 @@
 
 .footerLink:hover {
     text-decoration: underline;
-    color: var(--theme-text-primary);
 }
 
 .footerLinkSeparator {
@@ -211,7 +207,7 @@
     border-radius: 0;
     background: transparent;
     border: none;
-    color: var(--theme-text-secondary);
+    color: var(--theme-primary-base);
     box-shadow: none;
     font-size: var(--fontSizeBase200);
     font-weight: normal;
@@ -222,7 +218,6 @@
     background: transparent;
     box-shadow: none;
     text-decoration: underline;
-    color: var(--theme-text-primary);
 }
 
 .footerTermsTrigger > svg {

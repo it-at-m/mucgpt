@@ -19,7 +19,7 @@ export const FeedbackButton = ({ emailAddress, subject = "Feedback" }: FeedbackB
             <Button
                 as={"a"}
                 href={mailtoLink}
-                appearance={"subtle"}
+                appearance={"primary"}
                 icon={<Mail24Regular className={styles.icon} />}
                 aria-label={t("components.feedback.aria_label", "Send feedback via email")}
                 className={styles.feedbackButton}

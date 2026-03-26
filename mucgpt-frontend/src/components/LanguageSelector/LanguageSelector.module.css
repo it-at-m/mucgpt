@@ -1,16 +1,19 @@
 .languageButton {
-    color: var(--surface) !important;
+    background-color: var(--theme-header-background) !important;
+    color: var(--theme-text-on-primary) !important;
+    border-color: transparent !important;
 }
 
 .languageButton:hover {
-    background-color: var(--primary) !important;
-    color: var(--onPrimary) !important;
+    background-color: var(--theme-header-hover) !important;
+    color: var(--theme-text-on-primary) !important;
 }
 
-.languageButton:hover .icon {
-    color: var(--onPrimary) !important;
+.languageButton:active {
+    background-color: var(--theme-header-pressed) !important;
+    color: var(--theme-text-on-primary) !important;
 }
 
 .icon {
-    color: var(--surface);
+    color: var(--theme-text-on-primary);
 }

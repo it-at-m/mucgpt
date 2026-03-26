@@ -11,7 +11,7 @@ export const TutorialsButton = () => {
     return (
         <Tooltip content={t("menu.go_to_tutorials_tooltip", "Tutorials und Anleitungen zu Fragments und Tools")} relationship="description" positioning="below">
             <Button
-                appearance={"subtle"}
+                appearance={"primary"}
                 icon={<Book24Regular className={styles.icon} />}
                 aria-label={t("menu.go_to_tutorials_aria", "Zu Tutorials und Anleitungen navigieren")}
                 onClick={() => navigate("/tutorials")}

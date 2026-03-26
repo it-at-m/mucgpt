@@ -7,6 +7,7 @@ export const applyCssVariables = (tokens: AppThemeTokens) => {
     const root = document.documentElement.style;
     root.setProperty("--theme-header-background", tokens.headerBackground);
     root.setProperty("--theme-header-hover", tokens.headerHover);
+    root.setProperty("--theme-header-pressed", tokens.headerPressed);
     root.setProperty("--theme-header-subtle", tokens.headerSubtle);
     root.setProperty("--theme-surface-base", tokens.surfaceBase);
     root.setProperty("--theme-surface-raised", tokens.surfaceRaised);
@@ -15,17 +16,20 @@ export const applyCssVariables = (tokens: AppThemeTokens) => {
     root.setProperty("--theme-primary-hover", tokens.primaryHover);
     root.setProperty("--theme-primary-pressed", tokens.primaryPressed);
     root.setProperty("--theme-primary-subtle", tokens.primarySubtle);
+    root.setProperty("--theme-primary-subtle-on", tokens.primarySubtleOn);
     root.setProperty("--theme-primary-strong", tokens.primaryStrong);
-    root.setProperty("--theme-primary-on", tokens.primaryOn);
-    root.setProperty("--theme-text-primary", tokens.textPrimary);
+    root.setProperty("--theme-text-default", tokens.textDefault);
     root.setProperty("--theme-text-secondary", tokens.textSecondary);
     root.setProperty("--theme-text-tertiary", tokens.textTertiary);
     root.setProperty("--theme-text-on-header", tokens.textOnHeader);
     root.setProperty("--theme-text-on-primary", tokens.textOnPrimary);
     root.setProperty("--theme-outline-subtle", tokens.outlineSubtle);
     root.setProperty("--theme-outline-base", tokens.outlineBase);
-    root.setProperty("--theme-outline-strong", tokens.outlineStrong);
+    root.setProperty("--theme-outline-hover", tokens.outlineHover);
     root.setProperty("--theme-focus-ring", tokens.focusRing);
+    root.setProperty("--theme-disabled-background", tokens.disabledBackground);
+    root.setProperty("--theme-disabled-foreground", tokens.disabledForeground);
+    root.setProperty("--theme-disabled-border", tokens.disabledBorder);
     root.setProperty("--theme-status-success-background", tokens.statusSuccessBackground);
     root.setProperty("--theme-status-success-border", tokens.statusSuccessBorder);
     root.setProperty("--theme-status-success-foreground", tokens.statusSuccessForeground);
@@ -41,15 +45,15 @@ export const applyCssVariables = (tokens: AppThemeTokens) => {
 
     // Temporary compatibility aliases for existing CSS modules.
     root.setProperty("--surface", tokens.surfaceBase);
-    root.setProperty("--onSurface", tokens.textPrimary);
+    root.setProperty("--onSurface", tokens.textDefault);
     root.setProperty("--onSurfaceVariant", tokens.textSecondary);
     root.setProperty("--primary", tokens.primaryBase);
-    root.setProperty("--onPrimary", tokens.primaryOn);
+    root.setProperty("--onPrimary", tokens.textOnPrimary);
     root.setProperty("--onPrimaryVariant", tokens.textOnPrimary);
     root.setProperty("--outline", tokens.outlineBase);
     root.setProperty("--primaryContainer", tokens.primarySubtle);
     root.setProperty("--onPrimaryContainer", tokens.primaryStrong);
-    root.setProperty("--disabled", tokens.textTertiary);
+    root.setProperty("--disabled", tokens.disabledForeground);
     root.setProperty("--headerBackground", tokens.headerBackground);
 };
 
@@ -64,23 +68,26 @@ export const enum STORAGE_KEYS {
     HOME_ASSISTANT_MODE = "HOME_ASSISTANT_MODE"
 }
 
-const customBrandRamp: BrandVariants = {
-    10: "#f4faf8",
-    20: "#e6f2ef",
-    30: "#d8eae5",
-    40: "#cae1db",
-    50: "#bad7cf",
-    60: "#abcdc3",
-    70: "#9bc3b7",
-    80: "#94b9af",
-    90: "#85ada2",
-    100: "#769f95",
-    110: "#678e85",
-    120: "#597d76",
-    130: "#4b6c66",
-    140: "#3d5c57",
-    150: "#304c48",
-    160: "#223d39"
+// Fluent requires a brand ramp to create a base theme object, but MUCGPT does not
+// use that ramp as the design source of truth anymore. All relevant brand tokens
+// are explicitly mapped from our semantic tokens below.
+const fallbackBrandRamp: BrandVariants = {
+    10: "#f2f6ff",
+    20: "#e4edff",
+    30: "#d4e2ff",
+    40: "#c2d6ff",
+    50: "#aec9ff",
+    60: "#98bbff",
+    70: "#7faaff",
+    80: "#6297ff",
+    90: "#3f7fff",
+    100: "#1e6cff",
+    110: "#0d59fb",
+    120: "#003ceb",
+    130: "#0034cf",
+    140: "#002eb3",
+    150: "#002796",
+    160: "#001f78"
 };
 const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
     // Surface Colors
@@ -93,13 +100,24 @@ const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
     theme.colorBrandBackground = tokens.primaryBase;
     theme.colorBrandBackgroundHover = tokens.primaryHover;
     theme.colorBrandBackgroundPressed = tokens.primaryPressed;
+    theme.colorBrandBackgroundSelected = tokens.primaryPressed;
     theme.colorBrandBackground2 = tokens.primarySubtle;
+    theme.colorBrandBackground2Hover = tokens.primarySubtle;
+    theme.colorBrandBackground2Pressed = tokens.primarySubtle;
+    theme.colorBrandBackgroundStatic = tokens.primaryBase;
+    theme.colorBrandBackgroundInverted = tokens.textOnPrimary;
+    theme.colorBrandBackgroundInvertedHover = tokens.primaryHover;
+    theme.colorBrandBackgroundInvertedPressed = tokens.primaryPressed;
+    theme.colorCompoundBrandBackground = tokens.primaryBase;
+    theme.colorCompoundBrandBackgroundHover = tokens.primaryHover;
+    theme.colorCompoundBrandBackgroundPressed = tokens.primaryPressed;
 
     // Text Colors
-    theme.colorNeutralForeground1 = tokens.textPrimary;
+    theme.colorNeutralForeground1 = tokens.textDefault;
     theme.colorNeutralForeground2 = tokens.textSecondary;
     theme.colorNeutralForeground3 = tokens.textTertiary;
     theme.colorNeutralForeground4 = tokens.textSecondary;
+    theme.colorNeutralForegroundDisabled = tokens.disabledForeground;
 
     // Text on Primary
     theme.colorNeutralForegroundOnBrand = tokens.textOnPrimary;
@@ -107,17 +125,42 @@ const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
 
     // Brand foreground colors
     theme.colorBrandForeground1 = tokens.primaryStrong;
-    theme.colorBrandForeground2 = tokens.primaryBase;
+    theme.colorBrandForeground2 = tokens.primarySubtleOn;
+    theme.colorBrandForeground2Hover = tokens.primarySubtleOn;
+    theme.colorBrandForeground2Pressed = tokens.primarySubtleOn;
+    theme.colorBrandForegroundLink = tokens.primaryStrong;
+    theme.colorBrandForegroundLinkHover = tokens.primaryHover;
+    theme.colorBrandForegroundLinkPressed = tokens.primaryPressed;
+    theme.colorBrandForegroundLinkSelected = tokens.primaryStrong;
+    theme.colorBrandForegroundOnLight = tokens.primaryStrong;
+    theme.colorBrandForegroundOnLightHover = tokens.primaryHover;
+    theme.colorBrandForegroundOnLightPressed = tokens.primaryPressed;
+    theme.colorBrandForegroundOnLightSelected = tokens.primaryStrong;
+    theme.colorBrandForegroundInverted = tokens.textOnPrimary;
+    theme.colorBrandForegroundInvertedHover = tokens.textOnPrimary;
+    theme.colorBrandForegroundInvertedPressed = tokens.textOnPrimary;
+    theme.colorCompoundBrandForeground1 = tokens.primaryStrong;
+    theme.colorCompoundBrandForeground1Hover = tokens.primaryHover;
+    theme.colorCompoundBrandForeground1Pressed = tokens.primaryPressed;
 
     // Surface Variants
     theme.colorNeutralBackground1Hover = tokens.surfaceSubtle;
     theme.colorNeutralBackground1Pressed = tokens.headerSubtle;
+    theme.colorNeutralBackgroundDisabled = tokens.disabledBackground;
 
     // Borders/Strokes
     theme.colorNeutralStroke1 = tokens.outlineBase;
     theme.colorNeutralStroke2 = tokens.outlineSubtle;
     theme.colorBrandStroke1 = tokens.primaryStrong;
-    theme.colorBrandStroke2 = tokens.outlineStrong;
+    theme.colorBrandStroke2 = tokens.outlineHover;
+    theme.colorBrandStroke2Hover = tokens.outlineHover;
+    theme.colorBrandStroke2Pressed = tokens.outlineHover;
+    theme.colorBrandStroke2Contrast = tokens.outlineHover;
+    theme.colorNeutralStrokeAccessible = tokens.outlineHover;
+    theme.colorNeutralStrokeDisabled = tokens.disabledBorder;
+    theme.colorCompoundBrandStroke = tokens.primaryStrong;
+    theme.colorCompoundBrandStrokeHover = tokens.primaryHover;
+    theme.colorCompoundBrandStrokePressed = tokens.primaryPressed;
 
     // Overlay for hero section background
     theme.colorBackgroundOverlay = tokens.surfaceSubtle;
@@ -128,7 +171,7 @@ const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
     theme.colorSubtleForegroundHover = tokens.textOnHeader;
     theme.colorSubtleForegroundPressed = tokens.textOnHeader;
     theme.colorSubtleBackgroundHover = tokens.headerHover;
-    theme.colorSubtleBackgroundPressed = tokens.headerSubtle;
+    theme.colorSubtleBackgroundPressed = tokens.headerPressed;
 
     theme.colorStatusSuccessBackground1 = tokens.statusSuccessBackground;
     theme.colorStatusSuccessForeground1 = tokens.statusSuccessForeground;
@@ -139,7 +182,7 @@ const applyThemeColors = (theme: any, tokens: AppThemeTokens) => {
 };
 
 export const adjustTheme = (isLight: boolean, scaling: number) => {
-    const theme = isLight ? createLightTheme(customBrandRamp) : createDarkTheme(customBrandRamp);
+    const theme = isLight ? createLightTheme(fallbackBrandRamp) : createDarkTheme(fallbackBrandRamp);
 
     const tokens = isLight ? lightThemeTokens : darkThemeTokens;
     applyThemeColors(theme, tokens);

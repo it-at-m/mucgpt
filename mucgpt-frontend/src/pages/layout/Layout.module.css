@@ -25,7 +25,7 @@
     display: flex;
     align-items: center;
     margin-right: 20px;
-    color: var(--theme-text-on-header);
+    color: var(--theme-text-on-primary);
     text-decoration: none;
     width: auto;
     left: 1em;
@@ -53,7 +53,7 @@
 }
 
 .headerNavPageLink {
-    color: var(--theme-text-on-header);
+    color: var(--theme-text-on-primary);
     font-size: var(--fontSizeHero700);
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -137,7 +137,7 @@
 }
 
 .mobileMenuAccordion :global(.fui-AccordionHeader) {
-    color: var(--theme-text-on-header);
+    color: var(--theme-text-on-primary);
 }
 
 .accordionPanel {
@@ -156,7 +156,7 @@
     justify-content: space-between;
     padding: 8px 0;
     border-bottom: 1px solid var(--outline);
-    color: var(--theme-text-on-header);
+    color: var(--theme-text-on-primary);
 }
 
 .mobileMenuButtonContainer {

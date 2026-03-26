@@ -98,11 +98,11 @@
 }
 
 .questionInputButtons button {
-    color: var(--theme-text-primary);
+    color: var(--theme-text-default);
 }
 
 .questionInputButtons button svg {
-    color: var(--theme-text-primary);
+    color: var(--theme-primary-base);
 }
 
 .errorhintSection {

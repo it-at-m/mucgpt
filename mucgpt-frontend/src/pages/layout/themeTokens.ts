@@ -1,6 +1,7 @@
 export interface AppThemeTokens {
     headerBackground: string;
     headerHover: string;
+    headerPressed: string;
     headerSubtle: string;
     surfaceBase: string;
     surfaceRaised: string;
@@ -9,17 +10,20 @@ export interface AppThemeTokens {
     primaryHover: string;
     primaryPressed: string;
     primarySubtle: string;
+    primarySubtleOn: string;
     primaryStrong: string;
-    primaryOn: string;
-    textPrimary: string;
+    textDefault: string;
     textSecondary: string;
     textTertiary: string;
     textOnHeader: string;
     textOnPrimary: string;
     outlineSubtle: string;
     outlineBase: string;
-    outlineStrong: string;
+    outlineHover: string;
     focusRing: string;
+    disabledBackground: string;
+    disabledForeground: string;
+    disabledBorder: string;
     statusSuccessBackground: string;
     statusSuccessBorder: string;
     statusSuccessForeground: string;
@@ -35,27 +39,31 @@ export interface AppThemeTokens {
 }
 
 export const lightThemeTokens: AppThemeTokens = {
-    headerBackground: "#395B52",
-    headerHover: "#46695F",
-    headerSubtle: "#E3ECE9",
-    surfaceBase: "#F7FAF8",
+    headerBackground: "#1A4DBB",
+    headerHover: "#183981",
+    headerPressed: "#122C66",
+    headerSubtle: "#DBEAFE",
+    surfaceBase: "#F7F9FD",
     surfaceRaised: "#FFFFFF",
-    surfaceSubtle: "#E6EFED",
-    primaryBase: "#94B9AF",
-    primaryHover: "#7EA79C",
-    primaryPressed: "#688F85",
-    primarySubtle: "#E3EFEB",
-    primaryStrong: "#5F8F82",
-    primaryOn: "#001412",
-    textPrimary: "#191C1B",
-    textSecondary: "#5C6664",
-    textTertiary: "#7B8582",
-    textOnHeader: "#F7FAF8",
-    textOnPrimary: "#001412",
-    outlineSubtle: "#D7E2DE",
-    outlineBase: "#BEC9C6",
-    outlineStrong: "#97A7A2",
-    focusRing: "#5F8F82",
+    surfaceSubtle: "#EEF3FF",
+    primaryBase: "#1A4DBB",
+    primaryHover: "#183981",
+    primaryPressed: "#183981",
+    primarySubtle: "#DBEAFE",
+    primarySubtleOn: "#1E3A8A",
+    primaryStrong: "#1E40AF",
+    textDefault: "#182033",
+    textSecondary: "#495775",
+    textTertiary: "#687694",
+    textOnHeader: "#F7F9FD",
+    textOnPrimary: "#FFFFFF",
+    outlineSubtle: "#D7E0F2",
+    outlineBase: "#B8C7E6",
+    outlineHover: "#7E97CC",
+    focusRing: "#2563EB",
+    disabledBackground: "#EEF1F7",
+    disabledForeground: "#8B93A6",
+    disabledBorder: "#D8DFEC",
     statusSuccessBackground: "#E7F6EE",
     statusSuccessBorder: "#8CC9A6",
     statusSuccessForeground: "#14532D",
@@ -71,27 +79,31 @@ export const lightThemeTokens: AppThemeTokens = {
 };
 
 export const darkThemeTokens: AppThemeTokens = {
-    headerBackground: "#567E74",
-    headerHover: "#6A9589",
-    headerSubtle: "#29453E",
-    surfaceBase: "#102824",
-    surfaceRaised: "#193A34",
-    surfaceSubtle: "#14312C",
-    primaryBase: "#94B9AF",
-    primaryHover: "#A7C8BF",
-    primaryPressed: "#7EA79C",
-    primarySubtle: "#21423A",
-    primaryStrong: "#5F8F82",
-    primaryOn: "#001412",
-    textPrimary: "#F3F7F5",
-    textSecondary: "#C2D1CC",
-    textTertiary: "#93A7A0",
-    textOnHeader: "#081512",
-    textOnPrimary: "#001412",
-    outlineSubtle: "#2C4A43",
-    outlineBase: "#3F6259",
-    outlineStrong: "#5A8479",
-    focusRing: "#94B9AF",
+    headerBackground: "#1C3766",
+    headerHover: "#6F90D8",
+    headerPressed: "#5A7FCF",
+    headerSubtle: "#1E3A8A",
+    surfaceBase: "#0F172D",
+    surfaceRaised: "#172346",
+    surfaceSubtle: "#13203C",
+    primaryBase: "#86A4E5",
+    primaryHover: "#A0B8ED",
+    primaryPressed: "#6F90D8",
+    primarySubtle: "#1A4DBB",
+    primarySubtleOn: "#DBEAFE",
+    primaryStrong: "#2563EB",
+    textDefault: "#F4F7FF",
+    textSecondary: "#D4DDF4",
+    textTertiary: "#AAB8D9",
+    textOnHeader: "#F4F7FF",
+    textOnPrimary: "#F4F7FF",
+    outlineSubtle: "#29385C",
+    outlineBase: "#3D5287",
+    outlineHover: "#6784CC",
+    focusRing: "#86A4E5",
+    disabledBackground: "#18213A",
+    disabledForeground: "#7482A6",
+    disabledBorder: "#2A3860",
     statusSuccessBackground: "#16382B",
     statusSuccessBorder: "#4D8F69",
     statusSuccessForeground: "#BEE7CC",

@@ -29,6 +29,7 @@ This keeps product decisions readable and stable, while still allowing Fluent UI
 
 - `headerBackground`: app header and footer background
 - `headerHover`: hover state for header buttons and controls
+- `headerPressed`: pressed state for header buttons and controls
 - `headerSubtle`: subtle header-adjacent surfaces such as pills or lightweight menus
 
 ### Surface
@@ -44,11 +45,10 @@ This keeps product decisions readable and stable, while still allowing Fluent UI
 - `primaryPressed`: pressed state for primary actions
 - `primarySubtle`: selected chips, active tabs, soft brand highlights
 - `primaryStrong`: stronger brand accent for emphasis
-- `primaryOn`: text and icons on primary-colored backgrounds
 
 ### Text
 
-- `textPrimary`: main body text and headings
+- `textDefault`: main body text and headings
 - `textSecondary`: descriptions and metadata
 - `textTertiary`: placeholders and low-emphasis text
 - `textOnHeader`: text and icons on the header
@@ -58,11 +58,17 @@ This keeps product decisions readable and stable, while still allowing Fluent UI
 
 - `outlineSubtle`: quiet dividers and card borders
 - `outlineBase`: standard borders
-- `outlineStrong`: active or high-emphasis borders
+- `outlineHover`: hover, active and high-emphasis borders
 
 ### Focus
 
 - `focusRing`: visible keyboard focus indicator
+
+### Disabled
+
+- `disabledBackground`: background for disabled controls
+- `disabledForeground`: text and icon color for disabled controls
+- `disabledBorder`: border color for disabled controls
 
 ### Status
 
@@ -90,12 +96,14 @@ The semantic tokens are mapped to Fluent aliases in `LayoutHelper.tsx`. The most
 - `primaryHover -> colorBrandBackgroundHover`
 - `primaryPressed -> colorBrandBackgroundPressed`
 - `primarySubtle -> colorBrandBackground2`
-- `textPrimary -> colorNeutralForeground1`
+- `textDefault -> colorNeutralForeground1`
 - `textSecondary -> colorNeutralForeground2`
 - `textTertiary -> colorNeutralForeground3`
 - `outlineBase -> colorNeutralStroke1`
 - `outlineSubtle -> colorNeutralStroke2`
+- `outlineHover -> colorNeutralStrokeAccessible`
 - `focusRing -> colorStrokeFocus2`
+- `disabled* -> neutral disabled aliases`
 - `statusSuccess* -> colorStatusSuccess*`
 - `statusWarning* -> colorStatusWarning*`
 - `statusError* -> colorStatusDanger*`
@@ -105,6 +113,7 @@ The semantic tokens are mapped to Fluent aliases in `LayoutHelper.tsx`. The most
 Prefer the semantic CSS custom properties:
 
 - `--theme-header-background`
+- `--theme-header-pressed`
 - `--theme-surface-base`
 - `--theme-surface-raised`
 - `--theme-surface-subtle`
@@ -113,13 +122,16 @@ Prefer the semantic CSS custom properties:
 - `--theme-primary-pressed`
 - `--theme-primary-subtle`
 - `--theme-primary-strong`
-- `--theme-text-primary`
+- `--theme-text-default`
 - `--theme-text-secondary`
 - `--theme-text-tertiary`
 - `--theme-outline-base`
 - `--theme-outline-subtle`
-- `--theme-outline-strong`
+- `--theme-outline-hover`
 - `--theme-focus-ring`
+- `--theme-disabled-background`
+- `--theme-disabled-foreground`
+- `--theme-disabled-border`
 - `--theme-status-success-background`
 - `--theme-status-success-border`
 - `--theme-status-success-foreground`
@@ -141,5 +153,6 @@ Legacy aliases such as `--primary`, `--surface` or `--primaryContainer` still ex
 - Prefer `surfaceRaised` for cards and input containers.
 - Use `primarySubtle` for selected states before reaching for stronger fills.
 - Keep `focusRing` distinct from hover; focus exists for keyboard and accessibility states.
+- Use `disabled*` tokens for disabled components instead of low-opacity hacks where possible.
 - Prefer status tokens over ad hoc red, yellow, green and blue values in components.
 - If a new token is needed, add it semantically first, then map it to Fluent.

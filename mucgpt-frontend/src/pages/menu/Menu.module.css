@@ -28,7 +28,7 @@
     text-align: center;
     margin-bottom: 50px;
     margin-top: 50px;
-    color: var(--theme-text-primary);
+    color: var(--theme-text-default);
     text-shadow: 0 2px 10px rgba(57, 91, 82, 0.08);
     letter-spacing: -0.5px;
     line-height: 1.2;

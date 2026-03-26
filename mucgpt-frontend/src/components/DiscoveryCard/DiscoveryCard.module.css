@@ -3,23 +3,19 @@
     min-height: 140px;
     border: 1px solid var(--theme-outline-base);
     transition: all 0.2s ease;
-    background-color: var(--theme-surface-raised);
+    background-color: var(--theme-surface-raised) !important;
     box-shadow: none !important;
 }
 
 .cardSelected {
-    border-color: var(--theme-outline-strong) !important;
+    border-color: var(--theme-outline-hover) !important;
 }
 
 .card:hover {
     box-shadow: var(--shadow8);
     background-color: var(--theme-surface-raised) !important;
-    border-color: var(--theme-outline-strong) !important;
+    border-color: var(--theme-outline-hover) !important;
     transform: translateY(-2px);
-}
-
-.card:hover .headerText {
-    color: var(--theme-primary-base);
 }
 
 .headerText {
@@ -53,8 +49,8 @@
 
 .headerBadgePrimary {
     background-color: var(--theme-primary-subtle) !important;
-    border-color: var(--theme-outline-strong) !important;
-    color: var(--theme-primary-strong) !important;
+    border-color: var(--theme-outline-hover) !important;
+    color: var(--theme-primary-subtle-on) !important;
     box-shadow: none !important;
     scale: 1.1;
 }

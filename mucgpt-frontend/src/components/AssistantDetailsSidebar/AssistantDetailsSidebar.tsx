@@ -16,7 +16,7 @@ import {
 } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./AssistantDetailsSidebar.module.css";
-import { AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
+import { Assistant, AssistantResponse, CommunityAssistantSnapshot, ToolBase } from "../../api/models";
 import { MarkdownRenderer } from "../MarkdownRenderer/MarkdownRenderer";
 
 export interface AssistantCardData {
@@ -24,9 +24,11 @@ export interface AssistantCardData {
     title: string;
     description: string;
     subscriptions: number;
-    updated: string;
+    updated?: string | null;
     tags: string[];
-    rawData: AssistantResponse | CommunityAssistantSnapshot;
+    rawData: AssistantResponse | CommunityAssistantSnapshot | Assistant;
+    isDeletedSnapshot?: boolean;
+    isLocalAssistant?: boolean;
 }
 
 interface AssistantDetailsSidebarProps {
@@ -40,6 +42,7 @@ interface AssistantDetailsSidebarProps {
     onDuplicate?: () => void;
     onExport?: () => void;
     onDelete?: () => void;
+    onMigrateLocal?: () => void;
     hideStartChat?: boolean;
 }
 
@@ -54,6 +57,7 @@ export const AssistantDetailsSidebar = ({
     onDuplicate,
     onExport,
     onDelete,
+    onMigrateLocal,
     hideStartChat
 }: AssistantDetailsSidebarProps) => {
     const { t } = useTranslation();
@@ -89,6 +93,8 @@ export const AssistantDetailsSidebar = ({
     const enabledTools = (latestVersion?.tools || snapshot?.tools || []).filter((tool: ToolBase) => tool.config?.enabled);
     const systemPrompt = latestVersion?.system_prompt || snapshot?.system_message;
     const isOwned = assistant ? ownedAssistantIds.has(assistant.id) : false;
+    const isDeletedSnapshot = Boolean(assistant?.isDeletedSnapshot);
+    const isLocalAssistant = Boolean(assistant?.isLocalAssistant);
 
     return (
         <InlineDrawer open={isOpen} position="end" className={styles.inlineDrawer} aria-labelledby="sidebar-title">
@@ -119,7 +125,55 @@ export const AssistantDetailsSidebar = ({
                             <Text className={styles.creativityDescription}>{creativityConfig.description}</Text>
                         </div>
 
-                        {assistant && !hideStartChat && (
+                        {assistant && isDeletedSnapshot && !hideStartChat && (
+                            <div className={styles.deletedCallout}>
+                                <Text className={styles.calloutTitle}>{t("components.community_assistants.deleted_state_title")}</Text>
+                                <Text>{t("components.community_assistants.discovery_deleted_hint")}</Text>
+                                <div className={styles.deletedActionRow}>
+                                    {onDuplicate && (
+                                        <Button appearance="primary" icon={<Copy20Regular />} onClick={onDuplicate} size="medium">
+                                            {t("components.community_assistants.deleted_state_save_action")}
+                                        </Button>
+                                    )}
+                                    {onStartChat && (
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                            {t("components.community_assistants.deleted_state_history_action")}
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {assistant && isLocalAssistant && !hideStartChat && (
+                            <div className={styles.localCallout}>
+                                <Text className={styles.calloutTitle}>{t("components.community_assistants.local_state_title")}</Text>
+                                <Text>{t("components.community_assistants.discovery_local_hint")}</Text>
+                                <div className={styles.deletedActionRow}>
+                                    {onMigrateLocal && (
+                                        <Button appearance="primary" icon={<ArrowExportUp20Regular />} onClick={onMigrateLocal} size="medium">
+                                            {t("components.community_assistants.local_state_publish_action")}
+                                        </Button>
+                                    )}
+                                    {onStartChat && (
+                                        <Button appearance="secondary" icon={<Chat24Regular />} onClick={onStartChat}>
+                                            {t("components.community_assistants.deleted_state_history_action")}
+                                        </Button>
+                                    )}
+                                    {onDelete && (
+                                        <Button appearance="outline" icon={<Delete20Regular />} onClick={onDelete} className={styles.deleteButton}>
+                                            {t("common.delete")}
+                                        </Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {assistant && !hideStartChat && !isDeletedSnapshot && !isLocalAssistant && (
                             <div className={styles.startButtonRow}>
                                 <Button
                                     appearance="primary"

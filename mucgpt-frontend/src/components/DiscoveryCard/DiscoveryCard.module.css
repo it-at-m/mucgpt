@@ -27,11 +27,26 @@
     transition-property: color;
     transition-duration: 0.2s;
     padding-top: 12px;
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow-wrap: break-word;
+}
+
+.headerRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
+
+.headerBadge {
+    flex-shrink: 0;
+    align-self: flex-start;
 }
 
 .description {

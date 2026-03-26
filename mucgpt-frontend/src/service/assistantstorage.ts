@@ -149,12 +149,38 @@ export class AssistantStorageService {
         }
     }
 
+    async deleteConfigForAssistant(assistant_id: string) {
+        await this.storageService.delete(AssistantStorageService.GENERATE_BOT_CONFIG_ID(assistant_id));
+    }
+
     async deleteChatsForAssistant(assistant_id: string) {
         const results = await this._getAllChatsAndConfigs((id: string) => id.startsWith(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(assistant_id)));
         for (let i = 0; i < results.length; i++) {
             if (results[i].id) {
                 await this.storageService.delete(results[i].id ?? "");
             }
+        }
+    }
+
+    /**
+     * Transfers all chats from one assistant to another by re-creating them under the new assistant's ID prefix
+     * and deleting the originals.
+     * @param sourceAssistantId - The ID of the source assistant
+     * @param targetAssistantId - The ID of the target assistant
+     */
+    async transferChatsToAssistant(sourceAssistantId: string, targetAssistantId: string) {
+        const chats = await this.getAllChatForAssistant(sourceAssistantId);
+        const db = await this.storageService.connectToDB();
+        const sourceIds: string[] = [];
+        for (const chat of chats) {
+            if (!chat.id) continue;
+            const chatUuid = chat.id.replace(AssistantStorageService.GENERATE_BOT_CHAT_PREFIX(sourceAssistantId), "");
+            const newId = AssistantStorageService.GENERATE_BOT_CHAT_ID(targetAssistantId, chatUuid);
+            await db.put(this.config.objectStore_name, { ...chat, id: newId });
+            sourceIds.push(chat.id);
+        }
+        for (const sourceId of sourceIds) {
+            await this.storageService.delete(sourceId);
         }
     }
 }

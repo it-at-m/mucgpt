@@ -76,6 +76,43 @@
     box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
+.deletedCallout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--colorPaletteRedBorder2);
+    background: var(--colorPaletteRedBackground1);
+}
+
+.localCallout {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--colorPaletteDarkOrangeBorder2);
+    background: var(--colorPaletteDarkOrangeBackground1);
+}
+
+.calloutTitle {
+    font-weight: 600 !important;
+}
+
+.deletedActionRow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.deleteButton {
+    color: var(--colorPaletteRedForeground1) !important;
+    border-color: var(--colorPaletteRedBorder2) !important;
+}
+
 .startConversationButton {
     flex: 1;
     border-radius: 8px 0 0 8px !important;

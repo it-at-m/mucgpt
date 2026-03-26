@@ -2,7 +2,7 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 
 from core.text_processor import TextProcessor
 

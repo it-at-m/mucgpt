@@ -36,6 +36,9 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     if (options.assistant_id) {
         body.assistant_id = options.assistant_id;
     }
+    if (options.data_ids) {
+        body.data_ids = options.data_ids;
+    }
     return await fetch(url, postConfig(body));
 }
 

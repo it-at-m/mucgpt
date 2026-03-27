@@ -15,6 +15,7 @@ ASSISTANT_VERSION: "0.0.3"
 
 # Backend settings
 UNAUTHORIZED_USER_REDIRECT_URL: "https://it-services.muenchen.de/sp?id=sc_cat_item&sys_id=ee55a6911b40ce90757797539b4bcb1f&table=sc_cat_item&searchTerm=mucgpt"
+MEMORY_SERVICE_URL: "http://memory-service:8000"
 
 # Langfuse Settings (Optional - for LLM observability)
 # Used by core service for tracing and monitoring

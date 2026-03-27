@@ -23,6 +23,7 @@ import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { AssistantCard } from "../../components/AssistantCard";
 import { useToolsContext } from "../../components/ToolsProvider";
+import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
 
 const Menu = () => {
     const { t } = useTranslation();
@@ -40,6 +41,7 @@ const Menu = () => {
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [uploadedData, setUploadedData] = useState<UploadedData[]>([]);
     const { tools } = useToolsContext();
 
     const { setHeader } = useContext(HeaderContext);
@@ -105,10 +107,14 @@ const Menu = () => {
         setGetCommunityAssistants(true);
     };
 
-    const onSendQuestion = (question: string) => {
+    const onSendQuestion = (question: string, data: UploadedData[]) => {
         let url = `#/chat?q=${encodeURIComponent(question)}`;
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
+        }
+        const fileIds = data.filter(d => d.isActive !== false && d.status === "ready" && d.fileId).map(d => d.fileId!);
+        if (fileIds.length > 0) {
+            url += `&data=${encodeURIComponent(fileIds.join(","))}`;
         }
         window.location.href = url;
     };
@@ -170,6 +176,8 @@ const Menu = () => {
                         setSelectedTools={setSelectedTools}
                         tools={tools}
                         question={question}
+                        uploadedData={uploadedData}
+                        setUploadedData={setUploadedData}
                     ></QuestionInput>
                 </div>
                 <div className={styles.divider}>

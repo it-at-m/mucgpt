@@ -80,6 +80,9 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: str | None = Field(
         None, description="ID of the assistant to use for this completion request"
     )
+    data_ids: list[str] | None = Field(
+        None, description="List of data IDs to use for this completion request"
+    )
     model_config = ConfigDict(
         json_schema_extra={
             "example": {
@@ -93,6 +96,7 @@ class ChatCompletionRequest(BaseModel):
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
+                "data_ids": ["data-uuid-1", "data-uuid-2"],
             }
         }
     )

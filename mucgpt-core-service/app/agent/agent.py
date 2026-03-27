@@ -7,6 +7,7 @@ from langchain_core.tools.base import BaseTool
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 
+from agent.data_service import DataService
 from agent.tools.mcp import McpBearerAuthProvider
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
@@ -80,6 +81,14 @@ class MUCGPTAgent:
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
 
+        # inject data
+        if config and config["configurable"].get("data_ids"):
+            data_ids: list[str] = config["configurable"].get("data_ids")
+            self.logger.info(f"Loading data info request context: {data_ids}")
+            messages = await self.data_service.inject_data_list_in_messages(
+                messages=messages, data_ids=data_ids
+            )
+
         # invoke model
         response = await model.with_config(config).ainvoke(messages)
         return AgentState(
@@ -99,6 +108,7 @@ class MUCGPTAgent:
         self.tool_collection = tool_collection
         self.tools = tools
         self.tool_node = ToolNode(self.tools)
+        self.data_service = DataService()
         self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
 
         # Define the new graph structure

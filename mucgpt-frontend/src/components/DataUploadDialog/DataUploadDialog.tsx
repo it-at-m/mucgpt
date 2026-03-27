@@ -45,6 +45,23 @@ export const createUploadedData = (file: File, status: UploadedDataStatus = "rea
     errorMessage: overrides.errorMessage
 });
 
+/**
+ * Reconstructs an UploadedData entry from a fileId (e.g. when restoring from URL params).
+ * A dummy File object is used since the original file is no longer available.
+ */
+export const createUploadedDataFromFileId = (fileId: string): UploadedData => {
+    const dummyFile = new File([], fileId, { type: "application/octet-stream" });
+    return {
+        id: generateDataId(),
+        file: dummyFile,
+        name: fileId,
+        size: 0,
+        status: "ready",
+        isActive: true,
+        fileId
+    };
+};
+
 const formatFileSize = (bytes: number) => {
     if (bytes < 1024) {
         return `${bytes} B`;

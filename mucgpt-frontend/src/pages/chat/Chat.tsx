@@ -27,7 +27,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
+import { UploadedData, createUploadedDataFromFileId } from "../../components/DataUploadDialog/DataUploadDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -314,6 +314,7 @@ const Chat = () => {
             hashParams.delete("q");
             hashParams.delete("question");
             hashParams.delete("tools");
+            hashParams.delete("data");
             const newHashQuery = hashParams.toString();
             currentUrl.hash = newHashQuery ? `${hashPath}?${newHashQuery}` : hashPath;
         }
@@ -324,6 +325,7 @@ const Chat = () => {
             searchParams.delete("q");
             searchParams.delete("question");
             searchParams.delete("tools");
+            searchParams.delete("data");
             const newSearch = searchParams.toString();
             currentUrl.search = newSearch ? `?${newSearch}` : "";
         }
@@ -350,6 +352,7 @@ const Chat = () => {
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
+    const [pendingDataIds, setPendingDataIds] = useState<string[] | undefined>(undefined);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
 
@@ -379,6 +382,7 @@ const Chat = () => {
         // Check URL for question parameter - Handle hash router format
         let questionFromUrl;
         let toolsFromUrl;
+        let dataFromUrl;
         const hashPart = window.location.hash;
 
         // For hash router format like #/chat?q=something&tools=tool1,tool2
@@ -387,17 +391,28 @@ const Chat = () => {
             const hashParams = new URLSearchParams(queryPart);
             questionFromUrl = hashParams.get("q") || hashParams.get("question");
             toolsFromUrl = hashParams.get("tools");
+            dataFromUrl = hashParams.get("data");
         } else {
             // Fallback to regular URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             questionFromUrl = urlParams.get("q") || urlParams.get("question");
             toolsFromUrl = urlParams.get("tools");
+            dataFromUrl = urlParams.get("data");
         }
 
         // Parse tools from URL if present
         if (toolsFromUrl) {
             const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
             setSelectedTools(toolsArray);
+        }
+
+        // Parse data (file IDs) from URL if present
+        if (dataFromUrl) {
+            const dataArray = dataFromUrl.split(",").filter(id => id.trim() !== "");
+            if (dataArray.length > 0) {
+                setPendingDataIds(dataArray);
+                setUploadedData(dataArray.map(createUploadedDataFromFileId));
+            }
         }
 
         if (questionFromUrl) {
@@ -446,6 +461,7 @@ const Chat = () => {
 
         scheduledQuestionRef.current = pendingQuestion;
         const questionToAsk = pendingQuestion;
+        const dataIdsToSend = pendingDataIds;
 
         // Wait a bit more to ensure tools are properly set
         const timeoutId = window.setTimeout(() => {
@@ -453,11 +469,12 @@ const Chat = () => {
             if (scheduledQuestionRef.current !== questionToAsk) {
                 return;
             }
-            callApi(questionToAsk, systemPrompt);
+            callApi(questionToAsk, systemPrompt, dataIdsToSend);
 
             // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
             setPendingQuestion(current => (current === questionToAsk ? null : current));
+            setPendingDataIds(undefined);
             clearNavigationQueryParams();
         }, 200);
 
@@ -467,7 +484,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, pendingQuestion, pendingDataIds, tools, callApi, systemPrompt, clearNavigationQueryParams]);
 
     // Set up quick prompts
     useEffect(() => {

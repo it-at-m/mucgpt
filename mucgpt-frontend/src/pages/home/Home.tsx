@@ -301,7 +301,9 @@ const Home = () => {
             <footer className={styles.inlineFooter} role="contentinfo" aria-label={t("common.footer_info", "Fu\u00dfzeileninformationen")}>
                 <div className={styles.footerContent}>
                     <div className={styles.footerMetaRow}>
-                        <address className={styles.footerCompanyBlock}>{"Landeshauptstadt M\u00fcnchen, RIT/it@M KICC"}</address>
+                        <address className={styles.footerCompanyBlock}>
+                            {t("common.organization_name", "Landeshauptstadt M\u00fcnchen, RIT/it@M KIES")}
+                        </address>
                         {config && (
                             <div className={styles.footerVersionBlock}>
                                 <VersionInfo

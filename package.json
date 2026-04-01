@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "eslint": "9.39.3",
+    "eslint": "10.1.0",
     "prettier": "3.8.1",
     "typescript-eslint": "8.56.1"
   },

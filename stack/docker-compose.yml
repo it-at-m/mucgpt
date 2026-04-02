@@ -54,7 +54,7 @@ services:
   #
   keycloak:
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:26.3.5@sha256:357829ec7c4693397533035092ad13b0644bcc95ded311f33a3738c4d9e9bdba
+    image: quay.io/keycloak/keycloak:26.5.7@sha256:45ae20191531eb608ddb0b775d012b40d3e4f942697f3214694887dd7c108d13
     command:
       - start-dev
     environment:

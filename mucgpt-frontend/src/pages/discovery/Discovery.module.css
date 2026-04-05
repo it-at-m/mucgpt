@@ -4,7 +4,7 @@
     left: 0;
     width: 100%;
     bottom: 0;
-    background-color: var(--primaryContainer);
+    background-color: var(--theme-surface-base);
     overflow: hidden;
     z-index: 1;
 }

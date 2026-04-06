@@ -40,6 +40,13 @@
     gap: 8px;
     margin-bottom: 10px;
     transition: box-shadow 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.dragActive {
+    border: 2px dashed var(--colorBrandStroke1);
+    background: var(--colorNeutralBackground2);
+    box-shadow: none;
 }
 
 .questionInputContainer:focus-within {
@@ -81,7 +88,7 @@
 
 .questionInputButtons {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
@@ -94,6 +101,14 @@
 
 .questionInputButtons button svg {
     color: var(--onSurface);
+}
+
+.uploadedDataHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 0 16px 8px 16px;
 }
 
 .errorhintSection {

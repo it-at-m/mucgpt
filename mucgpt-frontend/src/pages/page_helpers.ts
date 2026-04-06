@@ -169,7 +169,7 @@ export async function handleRegenerate(
     activeChat: string,
     storageService: StorageService<any, any>,
     systemPrompt: string,
-    callApi: (question: string, systemPrompt: string) => Promise<void>,
+    callApi: (question: string, ...args: any[]) => Promise<void>,
     isLoadingRef: MutableRefObject<boolean>
 ) {
     // Remove the last message from storage
@@ -230,6 +230,7 @@ export const makeApiRequest = async (
     assistant_id?: string,
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
+    data_ids?: string[],
     answerTopRef?: MutableRefObject<HTMLElement | null>
 ) => {
     // Create conversation history for the API request
@@ -244,7 +245,8 @@ export const makeApiRequest = async (
         system_message: options.system ?? "",
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
-        assistant_id: assistant_id
+        assistant_id: assistant_id,
+        data_ids: data_ids && data_ids.length > 0 ? data_ids : undefined
     };
 
     // Make the API call

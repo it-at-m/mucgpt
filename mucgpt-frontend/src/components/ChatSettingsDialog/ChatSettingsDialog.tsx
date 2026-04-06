@@ -11,9 +11,22 @@ interface Props {
     setCreativity: (creativity: string) => void;
     systemPrompt: string;
     setSystemPrompt: (systemPrompt: string) => void;
+    reasoningEffort?: "low" | "medium" | "high";
+    setReasoningEffort: (effort: "low" | "medium" | "high" | undefined) => void;
+    supportsReasoning: boolean;
 }
 
-export const ChatSettingsDialog = ({ open, onOpenChange, creativity, setCreativity, systemPrompt, setSystemPrompt }: Props) => {
+export const ChatSettingsDialog = ({
+    open,
+    onOpenChange,
+    creativity,
+    setCreativity,
+    systemPrompt,
+    setSystemPrompt,
+    reasoningEffort,
+    setReasoningEffort,
+    supportsReasoning
+}: Props) => {
     const { t } = useTranslation();
 
     return (
@@ -30,6 +43,9 @@ export const ChatSettingsDialog = ({ open, onOpenChange, creativity, setCreativi
                             setCreativity={setCreativity}
                             systemPrompt={systemPrompt}
                             setSystemPrompt={setSystemPrompt}
+                            reasoningEffort={reasoningEffort}
+                            setReasoningEffort={setReasoningEffort}
+                            supportsReasoning={supportsReasoning}
                         />
                     </DialogContent>
                     <DialogActions>

@@ -1,30 +1,30 @@
 .card {
     border-radius: 8px !important;
     min-height: 140px;
-    border: 1px solid var(--theme-outline-base) !important;
+    border: 1px solid var(--colorNeutralStroke1) !important;
     transition: all 0.2s ease;
-    background-color: var(--theme-surface-subtle) !important;
+    background-color: var(--colorNeutralBackground1) !important;
     box-shadow: none !important;
 }
 
 .cardSelected {
-    border: 2px solid var(--theme-primary-base) !important;
+    border: 1px solid var(--colorBrandForeground1) !important;
 
 }
 
 .card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow4) !important;
+    border-color: var(--colorBrandForeground1) !important;
 }
 
 .card:hover .headerText {
-    color: var(--theme-primary-base);
+    color: var(--colorBrandForeground1);
 }
 
 .headerText {
     font-weight: var(--fontWeightSemibold);
     font-size: var(--fontSizeBase400);
-    color: var(--theme-text-default);
     transition-property: color;
     transition-duration: 0.2s;
     padding-top: 12px;
@@ -52,7 +52,7 @@
 
 .description {
     font-size: var(--fontSizeBase200);
-    color: var(--theme-text-secondary);
+    color: var(--colorNeutralForeground2);
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;

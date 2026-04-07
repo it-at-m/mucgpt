@@ -4,7 +4,6 @@
     left: 0;
     width: 100%;
     bottom: 0;
-    background-color: var(--theme-surface-base);
     overflow: hidden;
     z-index: 1;
 }
@@ -25,7 +24,7 @@
     overflow-y: auto;
     height: 100%;
     scrollbar-width: thin;
-    scrollbar-color: var(--primary) var(--surface);
+    scrollbar-color: var(--colorBrandBackground2) var(--colorNeutralBackground1);
 }
 
 .contentWrapper {
@@ -69,12 +68,10 @@
 
 .importButton {
     border-radius: 8px !important;
-    background-color: var(--surface) !important;
 }
 
 .header {
     margin-bottom: 8px;
-    color: var(--colorNeutralForeground1);
     display: block;
     font-size: 30px !important;
     line-height: 36px !important;
@@ -103,7 +100,6 @@
     min-width: 150px;
     max-width: 100%;
     border-radius: 8px !important;
-    border-bottom-color: var(--outline) !important;
 }
 
 .searchBox::after,
@@ -113,13 +109,9 @@
 }
 
 .searchBox:focus-within {
-    outline: 2px solid var(--primary) !important;
-    outline-offset: -2px;
+    outline: 1px solid var(--colorBrandForeground1) !important;
+    outline-offset: -1px;
     border-radius: 8px !important;
-}
-
-.searchBox:focus-within::after {
-    border-bottom-width: 0 !important;
 }
 
 .controlsSection {
@@ -135,7 +127,7 @@
     align-items: center;
     gap: 12px;
     padding-left: 24px;
-    border-left: 1px solid var(--colorNeutralStroke2);
+    border-left: 1px solid var(--colorNeutralStroke1);
     min-width: 0;
     flex-shrink: 1;
 }
@@ -146,7 +138,6 @@
 
 .sortDropdown {
     border-radius: 8px !important;
-    border-bottom-color: var(--outline) !important;
     min-width: 120px;
     flex-shrink: 1;
 }
@@ -163,8 +154,8 @@
 }
 
 .sortDropdown:focus-within {
-    outline: 2px solid var(--primary) !important;
-    outline-offset: -2px;
+    outline: 1px solid var(--colorBrandForeground1) !important;
+    outline-offset: -1px;
     border-radius: 8px !important;
 }
 
@@ -198,7 +189,6 @@
 .noResults {
     text-align: center;
     padding: 60px;
-    color: var(--colorNeutralForeground2);
 }
 
 @media (max-width: 550px) {

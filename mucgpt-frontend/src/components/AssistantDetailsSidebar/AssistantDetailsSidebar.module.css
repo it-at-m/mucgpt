@@ -203,10 +203,10 @@
 }
 
 .inlineDrawer {
-    border-left: 1px solid var(--primary) !important;
+    border-left: 1px solid var(--colorNeutralStroke1) !important;
     border-right: none;
     border-bottom: none;
-    background-color: var(--colorNeutralBackground1);
+    background-color: var(--colorNeutralBackground1) !important;
     width: var(--assistantDetailsDrawerWidth) !important;
     box-sizing: border-box;
     position: relative !important;

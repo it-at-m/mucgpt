@@ -79,7 +79,13 @@ export const Stepper = ({ steps, currentStep, className }: StepperProps) => {
     return (
         <div ref={containerRef} className={`${styles.stepIndicator} ${className || ""}`}>
             {steps.map((step, index) => (
-                <div key={index} ref={el => (stepRefs.current[index] = el)} className={styles.stepWrapper}>
+                <div
+                    key={index}
+                    ref={el => {
+                        stepRefs.current[index] = el;
+                    }}
+                    className={styles.stepWrapper}
+                >
                     <div className={getStepClassName(index)}>
                         <div className={styles.stepNumber}>{renderStepNumber(index, step)}</div>
                         <div className={styles.stepLabel}>{step.label}</div>

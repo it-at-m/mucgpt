@@ -394,7 +394,7 @@ export const LLMSelector = ({ onSelectionChange, defaultLLM, options, compact }:
     );
 };
 
-export const Selectable = (): JSX.Element => {
+export const Selectable = (): React.JSX.Element => {
     const [selected1, setSelected1] = React.useState(false);
 
     return (

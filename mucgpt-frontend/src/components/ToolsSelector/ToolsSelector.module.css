@@ -17,9 +17,6 @@
     flex-direction: column;
 }
 .toolName {
-    font-weight: 700;
-    font-size: var(--fontSizeBase400, 1.08rem);
-    color: var(--colorBrandForeground1, #1a237e);
     margin-bottom: var(--spacingVerticalXXS, 2px);
     letter-spacing: 0.01em;
     white-space: nowrap;
@@ -28,7 +25,7 @@
 }
 .toolDescription {
     font-size: var(--fontSizeBase300, 0.97rem);
-    color: var(--colorNeutralForeground2, #444);
+    color: var(--colorNeutralForeground2);
     margin-bottom: 0;
     opacity: 0.92;
     white-space: nowrap;
@@ -70,9 +67,9 @@
     box-shadow: 0 1px 4px 0 rgba(30, 34, 90, 0.06);
 }
 .toolCard:hover {
-    border-color: var(--colorBrandStroke1, #b3b8d0);
+    border-color: var(--colorBrandStroke1);
     box-shadow: 0 2px 8px 0 rgba(30, 34, 90, 0.13);
-    background: var(--primaryContainer, #f7f8fa);
+    background: var(--primaryContainer);
 }
 .toolCardHeader {
     flex: 1;

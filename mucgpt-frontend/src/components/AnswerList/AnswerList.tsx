@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChatTurnComponent } from "../ChatTurnComponent/ChatTurnComponent";
 import { UserChatMessage } from "../UserChatMessage";
@@ -14,7 +14,7 @@ interface Props {
     isLoading: boolean;
     error: unknown;
     makeApiRequest: () => void;
-    chatMessageStreamEnd: React.RefObject<HTMLDivElement>;
+    chatMessageStreamEnd: React.RefObject<HTMLDivElement | null>;
     lastQuestionRef: React.MutableRefObject<string>;
     onRollbackError?: () => void;
     lastAnswerRef?: React.Ref<HTMLDivElement>;
@@ -34,7 +34,7 @@ export const AnswerList = ({
 }: Props) => {
     const { t } = useTranslation();
 
-    const [answersComponent, setAnswersComponent] = useState<JSX.Element[]>([]);
+    const [answersComponent, setAnswersComponent] = useState<React.JSX.Element[]>([]);
 
     useEffect(() => {
         let shownAnswers = answers;

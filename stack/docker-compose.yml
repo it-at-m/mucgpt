@@ -22,6 +22,8 @@ services:
       start_period: 60s
     security_opt: &security_settings
       - no-new-privileges:true
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - internal
   # see https://event-driven.io/en/automatically_connect_pgadmin_to_database/
@@ -296,3 +298,8 @@ services:
 
 networks:
   internal:
+
+volumes:
+  postgres-data:
+    driver_opts:
+      o: uid=999

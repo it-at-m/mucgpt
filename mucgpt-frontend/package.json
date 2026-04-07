@@ -39,12 +39,12 @@
         "@vitejs/plugin-react": "5.2.0",
         "brace-expansion": ">=1.1.13",
         "esbuild": "0.28.0",
-        "eslint": "10.2.0",
+        "eslint": "9.39.4",
         "eslint-plugin-react": "7.37.5",
         "gh-pages": "6.3.0",
         "msw": "2.12.14",
         "prettier": "3.8.1",
-        "typescript": "5.9.3",
+        "typescript": "6.0.2",
         "vite": "7.3.2"
     },
     "engines": {

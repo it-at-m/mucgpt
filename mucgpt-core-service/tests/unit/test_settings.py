@@ -371,7 +371,12 @@ class TestSettings:
                 "test": {
                     "url": "https://example.com/mcp",
                     "forward_token": True,
+                    "forward_auth_override": "Basic dXNlcjpwYXNz",
                     "transport": MCPTransport.STREAMABLE_HTTP.value,
+                    "headers": {
+                        "x-api-key": "sk-1234",
+                        "X-Test": "true",
+                    },
                 }
             }
         )
@@ -391,6 +396,14 @@ class TestSettings:
                 mcp_settings.SOURCES["test"].transport is MCPTransport.STREAMABLE_HTTP
             )
             assert mcp_settings.SOURCES["test"].forward_token
+            assert (
+                mcp_settings.SOURCES["test"].forward_auth_override
+                == "Basic dXNlcjpwYXNz"
+            )
+            assert mcp_settings.SOURCES["test"].headers == {
+                "x-api-key": "sk-1234",
+                "X-Test": "true",
+            }
             assert mcp_settings.CACHE_TTL == 123
 
     def test_mcp_settings_default(self):

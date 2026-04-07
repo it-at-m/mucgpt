@@ -58,10 +58,14 @@ class McpLoader:
                         f"Unsupported transport protocol {v.transport} for mcp source {k}"
                     )
                     continue
+                if v.headers:
+                    con["headers"] = v.headers
                 # add auth if enabled and user_info present
                 if v.forward_token:
                     con["auth"] = McpBearerAuthProvider(
-                        uid=user_info.user_id, token=user_info.token
+                        uid=user_info.user_id,
+                        token=user_info.token,
+                        auth_override=v.forward_auth_override,
                     )
                     mcp_connections[k] = con
                 else:
@@ -72,7 +76,14 @@ class McpLoader:
             tools = []
             for source_id in mcp_connections.keys():
                 try:
-                    tools += await mcp_client.get_tools(server_name=source_id)
+                    source_tools = await mcp_client.get_tools(server_name=source_id)
+                    for source_tool in source_tools:
+                        existing_metadata = getattr(source_tool, "metadata", None) or {}
+                        source_tool.metadata = {
+                            **existing_metadata,
+                            "mcp_source": source_id,
+                        }
+                    tools += source_tools
                 except Exception as e:
                     McpLoader._logger.error(
                         f"Exception while fetching MCP tools from '{source_id}'",
@@ -92,8 +103,11 @@ class McpBearerAuthProvider(Auth):
 
     _tokens: dict[str, str] = {}
 
-    def __init__(self, uid: str, token: str) -> None:
+    def __init__(
+        self, uid: str, token: str, auth_override: str | None = None
+    ) -> None:
         self._uid = uid
+        self._auth_override = auth_override
         McpBearerAuthProvider._tokens[uid] = token
 
     @staticmethod
@@ -101,8 +115,18 @@ class McpBearerAuthProvider(Auth):
         McpBearerAuthProvider._tokens[uid] = token
 
     def auth_flow(self, request: Request) -> typing.Generator[Request, Response, None]:
+        if self._auth_override:
+            request.headers["Authorization"] = self._auth_override
+            print(f"Using auth override for user {self._uid}: {self._auth_override}")
+            print(f"Request headers: {request.headers}")
+            yield request
+            return
+
         token = McpBearerAuthProvider._tokens.get(self._uid)
         if token is None:
             raise ValueError("Token is None but needed")
-        request.headers["Authorization"] = f"Bearer {token}"
+        if token.startswith("Bearer ") or token.startswith("Basic "):
+            request.headers["Authorization"] = token
+        else:
+            request.headers["Authorization"] = f"Bearer {token}"
         yield request

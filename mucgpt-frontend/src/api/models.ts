@@ -214,6 +214,8 @@ export interface ToolInfo {
     id: string;
     name: string;
     description: string;
+    mcp_source?: string | null;
+    mcp_scope?: string | null;
 }
 
 export interface ToolListResponse {

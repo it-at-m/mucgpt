@@ -295,6 +295,8 @@ class MCPSourceConfig(BaseModel):
     url: str
     transport: MCPTransport
     forward_token: bool = False
+    forward_auth_override: str | None = None
+    headers: dict[str, str] | None = None
 
 
 class MCPConfig(BaseModel):

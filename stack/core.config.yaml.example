@@ -32,6 +32,17 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       transport: "sse"
       forward_token: false
+      
+    # Example for custom headers to authenticate with MCP server via litellm proxy
+    # authentication with litellm via Bearer
+    # authentication with mcp server via basic auth
+    "mcp-atlassian":
+      url: "https://ki-proxy-test.muenchen.de/mcp"
+      transport: "streamable_http"
+      forward_token: true
+      forward_auth_override: "Basic <base64 encoded email:token>"
+      headers:
+        x-litellm-api-key: "Bearer sk-1234"
   CACHE_TTL: 123
 
 # Models configuration

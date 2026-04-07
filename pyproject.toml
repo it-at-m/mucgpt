@@ -19,12 +19,15 @@ maintainers = [
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
 ]
 
-[tool.uv]
-dev-dependencies = [
+
+[dependency-groups]
+dev = [
     "ipykernel==7.2.0",
     "pre-commit==4.5.1",
     "ruff==0.15.9",
 ]
+
+[tool.uv]
 
 [[tool.uv.index]]
 name = "pypy"

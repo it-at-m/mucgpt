@@ -3,23 +3,23 @@
     min-height: 140px;
     border: 1px solid var(--colorNeutralStroke1) !important;
     transition: all 0.2s ease;
-    background-color: var(--colorNeutralBackground1) !important;
+    background-color: var(--colorNeutralBackground3) !important;
     box-shadow: none !important;
 }
 
 .cardSelected {
-    border: 1px solid var(--colorBrandForeground1) !important;
-
+    border: 1px solid var(--colorBrandBackground) !important;
+    color: var(--colorBrandBackground) !important;
 }
 
 .card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow4) !important;
-    border-color: var(--colorBrandForeground1) !important;
+    border-color: var(--colorBrandBackground) !important;
 }
 
 .card:hover .headerText {
-    color: var(--colorBrandForeground1);
+    color: var(--colorBrandBackground);
 }
 
 .headerText {

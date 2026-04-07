@@ -109,7 +109,7 @@
 }
 
 .searchBox:focus-within {
-    outline: 1px solid var(--colorBrandForeground1) !important;
+    outline: 1px solid var(--colorBrandBackground) !important;
     outline-offset: -1px;
     border-radius: 8px !important;
 }
@@ -154,7 +154,7 @@
 }
 
 .sortDropdown:focus-within {
-    outline: 1px solid var(--colorBrandForeground1) !important;
+    outline: 1px solid var(--colorBrandBackground) !important;
     outline-offset: -1px;
     border-radius: 8px !important;
 }

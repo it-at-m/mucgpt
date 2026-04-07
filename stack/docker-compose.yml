@@ -5,7 +5,7 @@ services:
   # #### PostgreSQL ####
   #
   postgres:
-    image: postgres:17.7-alpine3.21@sha256:5bcb5623bb6999b2f7fbd2109f0bfc1f144d138b52ca35ede95d644d93585c2f
+    image: postgres:18.1-alpine3.21@sha256:44d837eb4c2ed263474a95f0cc24745413c50924df60dd73ed6c4c3e36b84259
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=admin

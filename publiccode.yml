@@ -1,0 +1,322 @@
+publiccodeYmlVersion: "0.4" # Version des publiccode.yml-Formats
+name: MUCGPT # Name des Projekts
+url: "https://gitlab.opencode.de/landeshauptstadt-muenchen/mucgpt" # URL zum Projekt-Repository
+landingURL: "https://it-at-m.github.io/mucgpt/" # URL zur Webseite oder Demo der Software
+logo: "assets/mucgpt_title_light.png" # Pfad zum Projektlogo
+roadmap: "https://github.com/it-at-m/mucgpt?tab=readme-ov-file#%EF%B8%8F-roadmap" # Verweis auf die Roadmap
+softwareVersion: "1.2" # Aktuelle veröffentlichte Software-Version
+softwareType: standalone/web # Typ der Software
+releaseDate: "2025-04-24" # Veröffentlichungsdatum der Version
+isBasedOn: "https://github.com/Azure-Samples/azure-search-openai-demo" # Basisprojekt, auf dem MUCGPT aufbaut
+developmentStatus: stable # Entwicklungsstatus der Software
+platforms: # Unterstützte Plattformen
+  - web
+usedBy: # Prominente Nutzung oder Referenzen
+  - 'Landeshauptstadt Stuttgart (BW): Fork unter dem Namen "ChatSTR"'
+categories: # Kategorien, die die Software beschreiben
+  - office
+  - productivity-suite
+dependsOn: # Externe Abhängigkeiten
+  open:
+    - name: Keycloak
+      optional: false
+    - name: "Container Runtime, i.e. Docker, Podman"
+      optional: false
+    - name: Kubernetes Runtime
+      optional: true
+maintenance: # Angaben zur Betreuung der Software
+  type: internal
+  contacts:
+    - name: Michael Jaumann
+      email: michael.jaumann@muenchen.de
+      affiliation: Lead Product Engineer
+    - name: Fabian Reinold
+      email: fabian.reinold@muenchen.de
+      affiliation: AI Team Lead
+  contractors:
+    - name: Landeshauptstadt München - IT-Referat
+      website: https://muenchen.digital/ # Webseite der Organisation
+      until: 2027-12-31 # Darf nicht mehr als 2 Jahre in der Zukunft liegen
+      email: ki@muenchen.de # Kontakt-E-Mail-Adresse
+legal: # Lizenz- und Rechteangaben
+  license: MIT
+  mainCopyrightOwner: Landeshauptstadt München
+localisation: # Angaben zur Lokalisierung
+  localisationReady: true
+  availableLanguages:
+    - de
+    - fr
+    - en
+    - uk
+    - bar
+intendedAudience: # Zielgruppe der Software
+  countries:
+    - "DE"
+  scope: # Not really relevant, MUCGPT is a general tool that can be used in various contexts
+    - local-authorities
+    - government
+description: # Sprachspezifische Produktbeschreibung
+  de:
+    genericName: "KI-Werkzeug"
+    awards:
+      - >-
+        eGovernment-Wettbewerb 2024: 3. Platz in der Kategorie
+        "Digitalisierungsschub durch KI und moderne Infrastruktur "
+    shortDescription: >
+      MUCGPT ist ein KI-Werkzeug zur Arbeit mit generativen Sprachmodellen und
+      bietet u.a. personalisierbare Assistenten und Tools an.
+    longDescription: >
+      MUCGPT hat vier Hauptfunktionen und bietet die Möglichkeit, eigene
+      Assistenten mit spezifischen Funktionen zu erstellen. Die Hauptfunktionen
+      sind Chat zum Austausch mit dem zugrunde liegenden LLM, Zusammenfassen
+      zum Verdichten langer Texte und Dateien, Brainstorming zum Erstellen von
+      Mindmaps zu einem Thema und Einfache Sprache, um Texte in leichter
+      verständliche Sprache zu übersetzen.
+
+      **Chat**
+
+      Die Chat-Funktion von MUCGPT ist ein typischer Chatraum, in dem Sie mit
+      dem LLM schreiben können, um Informationen zu nahezu jedem Thema zu
+      erhalten.
+
+      MUCGPT kann Antworten erzeugen, die denen eines Menschen sehr ähnlich
+      sind, da es ein großes vortrainiertes Sprachmodell verwendet. Es verfügt
+      über eine Reihe von Funktionen und Fähigkeiten, die es ermöglichen,
+      natürliche Sprachverarbeitung, mehrstufige Gespräche, Personalisierung,
+      Stimmungsanalyse, Wissensabfrage und Aufgabenbearbeitung umzusetzen. Diese
+      Fähigkeiten helfen MUCGPT dabei, Benutzeranfragen so zu verstehen und zu
+      beantworten, dass sie an die jeweiligen Bedürfnisse angepasst sind, was
+      es zu einem leistungsstarken Werkzeug für Anwendungsfälle macht, in denen
+      eine menschenähnliche Interaktion gewünscht ist.
+
+      Darüber hinaus können Benutzer eine Systemanweisung konfigurieren, die
+      allen von ihnen gesendeten Nachrichten vorangestellt wird. Auch die
+      Temperatur der generierten Antwort lässt sich anpassen, um die
+      Zufälligkeit oder Kreativität der Modellausgabe zu steuern.
+
+      Die Chat-Funktion enthält einen Chatverlauf, mit dem Benutzer ihre
+      früheren Unterhaltungen einsehen und dort weitermachen können, wo sie
+      aufgehört haben. Außerdem können wichtige Chats als Favoriten markiert
+      werden, um schneller darauf zuzugreifen. Der gesamte Chatverlauf wird
+      lokal im Browser des Benutzers mit IndexedDB gespeichert, sodass keine
+      Chataufzeichnungen in der Cloud oder an anderer Stelle gespeichert
+      werden.
+
+
+      **Zusammenfassen**
+
+      Die Funktion zum Zusammenfassen ermöglicht es, lange Texte oder Dokumente
+      zu verdichten und die relevantesten Informationen zu extrahieren, um
+      einen neuen zusammengefassten Text zu erstellen. Der Benutzer kann den
+      Detaillierungsgrad der generierten Antwort in drei Stufen anpassen
+      (kurz, mittel, lang).
+
+      **Brainstorming**
+
+      Die Brainstorming-Funktion ermöglicht es Benutzern, Mindmaps zu erstellen,
+      um Inspiration zu einem bestimmten Thema zu finden.
+
+      Die erstellten Mindmaps können heruntergeladen und mit
+      [Freeplane](https://docs.freeplane.org/) weiterverarbeitet werden.
+
+      **Einfache Sprache**
+
+      Einfache Sprache ist eine Funktion, mit der sich komplexe Texte in
+      verständliche Sprache übersetzen lassen. Dies ist besonders hilfreich für
+      Menschen mit Leseschwierigkeiten oder für Personen, deren Muttersprache
+      nicht die Originalsprache ist. Durch die Umwandlung komplizierter Sätze
+      und fortgeschrittener Wortwahl in einfachere Strukturen und geläufigere
+      Wörter macht das Werkzeug den Text verständlicher und leichter lesbar.
+      Das verbessert nicht nur die Zugänglichkeit der Inhalte, sondern fördert
+      auch Inklusion, indem es ein breiteres Publikum mit unterschiedlichen
+      Sprachkenntnissen anspricht. Die Prompts und die Logik dieser Funktion
+      basieren auf dem Projekt der Kantonsverwaltung Zürich
+      ([Github](https://github.com/machinelearningZH/simply-simplify-language)).
+
+      **Eigene Assistenten**
+
+      MUCGPT ermöglicht es Benutzern, eigene benutzerdefinierte Assistenten zu
+      erstellen, die auf spezifische Anforderungen und Anwendungsfälle
+      zugeschnitten sind. Durch die Definition individueller Prompts und die
+      Konfiguration des Verhaltens des Sprachmodells können Assistenten
+      entwickelt werden, die spezialisierte Aufgaben übernehmen oder gezielte
+      Informationen bereitstellen. Diese Funktion ist besonders nützlich für
+      Unternehmen, Bildungseinrichtungen und Entwickler, die maßgeschneiderte
+      Lösungen für ihre Arbeitsabläufe benötigen.
+
+      Beim Erstellen eines Assistenten wird eine Systemanweisung festgelegt,
+      die die Antworten des Assistenten steuert. Außerdem werden Parameter wie
+      die Temperatur definiert, um die Kreativität der Ausgabe zu beeinflussen,
+      und die Länge der Ausgabetoken festgelegt. Benutzer können mehrere
+      Assistenten speichern und verwalten und je nach Bedarf zwischen ihnen
+      wechseln, um unterschiedliche Aufgaben oder Szenarien abzudecken. Die
+      Assistenten werden lokal im Browser mit IndexedDB gespeichert.
+
+      Die Flexibilität der Funktion Eigene Assistenten ermöglicht es den
+      Benutzern, das volle Potenzial von MUCGPT auszuschöpfen und das System zu
+      einem vielseitigen Werkzeug für eine breite Palette von Anwendungen zu
+      machen.
+
+      MUCGPT unterstützt außerdem die Erstellung statischer, schreibgeschützter
+      Community-Assistenten, die allen Benutzern zur Verfügung stehen. Diese
+      Assistenten können in der \`.env\`-Datei definiert werden, sodass
+      Administratoren vordefinierte Assistenten einrichten können, die häufige
+      Anforderungen abdecken oder standardisierte Antworten bereitstellen. Dies
+      stellt sicher, dass alle Benutzer Zugriff auf konsistente und zuverlässige
+      Assistenten haben, ohne diese verändern zu können, und sorgt so für
+      Einheitlichkeit und Kontrolle über die bereitgestellten Informationen.
+      Diese Assistenten können mit Beispielen und Schnellprompts versehen sein,
+      die dem Benutzer zeigen, wie der Assistent verwendet wird.
+
+      Durch den Einsatz von Community-Assistenten können Organisationen
+      sicherstellen, dass ihre Benutzer Zugriff auf wichtige Werkzeuge und
+      Informationen haben, die auf ihre spezifischen Anforderungen zugeschnitten
+      sind, was das gesamte Nutzungserlebnis und die Produktivität verbessert.
+
+      **Allgemeine Funktionen**
+
+      Erzeugte Texte in verschiedenen Formaten werden korrekt dargestellt.
+      Folgende Formate werden derzeit unterstützt:
+
+      - Markdown
+      - Einfaches HTML
+      - In Markdown-Codeblöcke eingebettete Mermaid-Diagramme
+      - Mathematische Formeln in LaTeX, eingeschlossen in \`$$ ... $$\`
+        Begrenzern
+    features:
+      - KI-Chat
+      - teilbare Assistenten
+      - Werkzeuge
+      - Brainstorming
+      - Übersetzung
+      - Leichte Sprache
+    screenshots:
+      - docs/chatscreen.png
+      - docs/own-assistant.png
+      - docs/mindmap.png
+      - docs/simply.png
+      - docs/sum.png
+  en:
+    genericName: KI tool
+    awards:
+      - >-
+        eGovernment competition 2024: 3rd place in the category
+        "Digitalization boost through AI and modern infrastructure"
+    shortDescription: >-
+      MUCGPT is an AI tool for working with generative language models and
+      offers customizable assistants and tools.
+    longDescription: >-
+      MUCGPT provides four main capabilities and lets users create custom
+      assistants with specific functions. The main capabilities are Chat for
+      interacting with the underlying LLM, Summarize for condensing long texts
+      and files, Brainstorming for creating mind maps around a topic, and Easy
+      Language for translating text into simpler, more accessible language.
+
+      **Chat**
+
+      The chat feature of MUCGPT is a typical chat room where users can write
+      with the LLM to get information about almost any topic.
+
+      MUCGPT can generate responses that closely resemble those of a human,
+      because it uses a large pretrained language model. It offers a range of
+      features and capabilities that support natural language processing,
+      multi-turn conversations, personalization, sentiment analysis, knowledge
+      retrieval, and task completion. These capabilities help MUCGPT
+      understand and answer user requests in a way that is tailored to their
+      needs, making it a powerful tool for use cases where human-like
+      interaction is desired.
+
+      In addition, users can configure a system prompt that is prepended to any
+      message they send. The temperature of the generated response can also be
+      adjusted to control the randomness or creativity of the model output.
+
+      The chat feature includes a chat history that lets users view previous
+      conversations and continue where they left off. Important chats can also
+      be marked as favorites for quicker access. All chat history is stored
+      locally in the user's browser using IndexedDB, so no chat data is stored
+      in the cloud or elsewhere.
+
+      **Summarize**
+
+      The Summarize feature allows users to condense long texts or documents
+      and extract the most relevant information to create a new summarized
+      text. The user can adjust the level of detail of the generated answer in
+      three levels: short, medium, and long.
+
+      **Brainstorming**
+
+      The Brainstorming feature allows users to create mind maps to help them
+      find inspiration on a given topic.
+
+      The resulting mind maps can be downloaded and further processed with
+      [Freeplane](https://docs.freeplane.org/).
+
+      **Easy language**
+
+      Easy language is a feature that enables users to translate complex texts
+      into plain language. This is especially useful for people who struggle
+      with reading comprehension or whose native language is not the original
+      language. By converting intricate sentences and advanced vocabulary into
+      simpler structures and more familiar words, the tool makes the text more
+      understandable and easier to read. This not only improves accessibility
+      but also promotes inclusion by serving a broader audience with varying
+      language proficiency. The prompts and logic for this feature are based on
+      the project of the Cantonal Administration of Zurich
+      ([Github](https://github.com/machinelearningZH/simply-simplify-language)).
+
+      **Own assistants**
+
+      MUCGPT allows users to create custom assistants tailored to specific
+      needs and use cases. By defining unique prompts and configuring the
+      behavior of the language model, users can build assistants that perform
+      specialized tasks or provide targeted information. This feature is
+      especially useful for businesses, educators, and developers who need
+      bespoke solutions for their workflows.
+
+      Creating an assistant involves defining a system prompt that guides the
+      assistant's responses, setting parameters such as temperature to control
+      output creativity, and defining the length of the output tokens. Users
+      can save and manage multiple assistants and switch between them as
+      needed for different tasks or scenarios. The assistants are stored
+      locally in the browser using IndexedDB.
+
+      The flexibility of the Own assistants feature helps users leverage the
+      full potential of MUCGPT, making it a versatile tool for a wide range of
+      applications.
+
+      MUCGPT also supports the creation of static, read-only Community
+      Assistants that are available to all users. These assistants can be
+      defined in the `.env` file, allowing administrators to set up predefined
+      assistants that cover common needs or provide standardized responses.
+      This ensures that all users have access to consistent and reliable
+      assistants without being able to modify them, maintaining uniformity and
+      control over the provided information. These assistants can include
+      predefined examples and quick prompts that show users how to use them.
+
+      By using Community Assistants, organizations can ensure that their users
+      have access to essential tools and information tailored to their specific
+      requirements, improving the overall user experience and productivity.
+
+      **General features**
+
+      Generated text in various formats is displayed correctly. The currently
+      supported formats are:
+
+      - Markdown
+      - Plain HTML
+      - Mermaid diagrams embedded in Markdown code blocks
+      - Mathematical formulas written in LaTeX, enclosed in `$$ ... $$`
+        delimiters
+    features:
+      - AI chat
+      - shareable assistants
+      - tools
+      - brainstorming
+      - translation
+      - easy language
+    screenshots:
+      - docs/chatscreen.png
+      - docs/own-assistant.png
+      - docs/mindmap.png
+      - docs/simply.png
+      - docs/sum.png

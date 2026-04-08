@@ -10,10 +10,13 @@
     ":separateMultipleMajorReleases",
     ":timezone(Europe/Berlin)",
     "security:openssf-scorecard",
+    ":enableVulnerabilityAlertsWithLabel(Type: Security)",
+    ":automergePatch",
   ],
-  labels: ["renovate"],
+  labels: ["renovate", "Type: Dependency"],
   lockFileMaintenance: {
     enabled: true,
+    automerge: true,
   },
   reviewers: ["Meteord", "pilitz"],
   packageRules: [

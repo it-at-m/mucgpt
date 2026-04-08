@@ -58,6 +58,7 @@ export type ChatMessage = DBMessage<ChatResponse>;
 export interface ChatOptions {
     system: string;
     creativity: string;
+    reasoning_effort?: "low" | "medium" | "high";
 }
 
 // Define constants outside the component
@@ -115,11 +116,12 @@ const Chat = () => {
         creativity: CREATIVITY_LOW,
         systemPrompt: "",
         active_chat: undefined,
-        allChats: []
+        allChats: [],
+        reasoningEffort: undefined
     });
 
     // Destructuring for easier access
-    const { answers, creativity, systemPrompt, active_chat, allChats } = chatState;
+    const { answers, creativity, systemPrompt, active_chat, allChats, reasoningEffort } = chatState;
 
     // Refs
     const lastQuestionRef = useRef<string>("");
@@ -180,6 +182,7 @@ const Chat = () => {
                     dispatch({ type: "SET_ANSWERS", payload: chat.messages });
                     dispatch({ type: "SET_CREATIVITY", payload: chat.config.creativity });
                     dispatch({ type: "SET_SYSTEM_PROMPT", payload: chat.config.system });
+                    dispatch({ type: "SET_REASONING_EFFORT", payload: chat.config.reasoning_effort });
                     dispatch({ type: "SET_ACTIVE_CHAT", payload: id });
                     lastQuestionRef.current = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].user : "";
 
@@ -218,7 +221,8 @@ const Chat = () => {
             const askResponse: ChatResponse = { answer: "", tokens: 0, user_tokens: 0 } as AskResponse;
             const options: ChatOptions = {
                 system: system ?? "",
-                creativity: creativity
+                creativity: creativity,
+                reasoning_effort: reasoningEffort
             };
             try {
                 await makeApiRequest(
@@ -244,7 +248,7 @@ const Chat = () => {
             }
             isLoadingRef.current = false;
         },
-        [answers, creativity, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
+        [answers, creativity, reasoningEffort, LLM, storageService, fetchHistory, selectedTools, setToolStatuses]
     );
 
     // Regenerate-Funktion
@@ -283,10 +287,11 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: systemPrompt,
-                creativity: newCreativity
+                creativity: newCreativity,
+                reasoning_effort: reasoningEffort
             });
         },
-        [systemPrompt, debouncedStorageUpdate]
+        [systemPrompt, reasoningEffort, debouncedStorageUpdate]
     );
 
     const onSystemPromptChanged = useCallback(
@@ -295,10 +300,24 @@ const Chat = () => {
 
             debouncedStorageUpdate({
                 system: newSystemPrompt,
-                creativity: creativity
+                creativity: creativity,
+                reasoning_effort: reasoningEffort
             });
         },
-        [creativity, debouncedStorageUpdate]
+        [creativity, reasoningEffort, debouncedStorageUpdate]
+    );
+
+    const onReasoningEffortChanged = useCallback(
+        (effort: "low" | "medium" | "high" | undefined) => {
+            dispatch({ type: "SET_REASONING_EFFORT", payload: effort });
+
+            debouncedStorageUpdate({
+                system: systemPrompt,
+                creativity: creativity,
+                reasoning_effort: effort
+            });
+        },
+        [systemPrompt, creativity, debouncedStorageUpdate]
     );
 
     const clearNavigationQueryParams = useCallback(() => {
@@ -618,6 +637,9 @@ const Chat = () => {
                     setCreativity={onCreativityChanged}
                     systemPrompt={systemPrompt}
                     setSystemPrompt={onSystemPromptChanged}
+                    reasoningEffort={reasoningEffort}
+                    setReasoningEffort={onReasoningEffortChanged}
+                    supportsReasoning={LLM?.supports_reasoning || false}
                 />
                 <ChatLayout
                     sidebar={sidebar}
@@ -664,7 +686,9 @@ const Chat = () => {
             creativity,
             onCreativityChanged,
             systemPrompt,
-            onSystemPromptChanged
+            onSystemPromptChanged,
+            reasoningEffort,
+            onReasoningEffortChanged
         ]
     );
 

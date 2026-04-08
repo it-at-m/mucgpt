@@ -1,6 +1,6 @@
 import logging
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 from functools import lru_cache
 from typing import Any
 from urllib.parse import urljoin
@@ -27,7 +27,7 @@ from pydantic_settings import (
 MODEL_INFO_TIMEOUT_SECONDS = 8.0
 
 
-class MCPTransport(str, Enum):
+class MCPTransport(StrEnum):
     SSE = "sse"
     STREAMABLE_HTTP = "streamable_http"
 

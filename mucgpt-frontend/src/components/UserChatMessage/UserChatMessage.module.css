@@ -1,18 +1,15 @@
 .message {
     padding: 1.25em;
     margin: 1em 0.5em; /* Reduced horizontal margin */
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorNeutralBackground3);
+    color: var(--colorNeutralForeground1);
     border-radius: 8px;
     overflow-x: auto;
     max-width: 100%; /* Ensure it doesn't overflow container */
     transition: all 0.2s ease-in-out;
     border-top-right-radius: 20px; /* More rounded corners for user messages */
     border-bottom-left-radius: 20px;
-}
-
-.message:hover {
-    border-right: 3px solid var(--colorBrandForeground2);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .answerText {

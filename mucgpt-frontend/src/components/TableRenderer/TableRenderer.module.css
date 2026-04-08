@@ -28,7 +28,8 @@
 }
 
 .tableWrapper th {
-    background-color: var(--primary);
+    background-color: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     font-weight: 600;
 }
 

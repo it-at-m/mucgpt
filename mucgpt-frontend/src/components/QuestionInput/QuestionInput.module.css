@@ -16,7 +16,6 @@
 .toolBadgesLabel {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--onPrimary);
     margin-right: 8px;
     white-space: nowrap;
 }
@@ -30,8 +29,8 @@
 
 .questionInputContainer {
     border-radius: 8px;
-    background: var(--surface);
-    outline: 2px solid var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground3);
+    outline: 1px solid var(--colorNeutralStroke1);
     width: 100%;
     padding: 8px 4px 8px 16px;
     display: flex;
@@ -44,8 +43,8 @@
 
 .questionInputContainer:focus-within {
     transform: translateY(-1px);
-    outline: 2px solid var(--onPrimaryContainer);
-    outline-offset: 2px;
+    outline: 1px solid var(--colorNeutralStroke1Hover);
+    outline-offset: 1px;
     transition:
         box-shadow 0.15s ease,
         outline 0.15s ease,
@@ -67,6 +66,7 @@
     box-sizing: border-box;
     background: transparent;
     transition: height 0.1s ease;
+    background: var(--colorNeutralBackground3) !important;
 }
 
 .questionInputTextArea:focus {
@@ -88,14 +88,6 @@
     padding-bottom: 4px;
 }
 
-.questionInputButtons button {
-    color: var(--onSurface);
-}
-
-.questionInputButtons button svg {
-    color: var(--onSurface);
-}
-
 .errorhintSection {
     display: flex;
     flex-direction: column;
@@ -109,7 +101,6 @@
 .errorhint {
     font-style: italic;
     font-size: 0.75rem;
-    color: var(--onPrimary);
     margin: 0;
     letter-spacing: 0.01em;
 }
@@ -136,26 +127,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--onPrimary);
+    color: var(--colorNeutralForeground1);
     transition: all 0.2s ease;
     border-radius: 50%;
     width: 20px;
     height: 20px;
-}
-
-.toolHelpButton:hover {
-    color: var(--primary);
-    background: var(--primaryContainer);
-}
-
-.toolHelpButton:active {
-    transform: scale(0.95);
-}
-
-.toolHelpButton:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-    color: var(--primary);
 }
 
 @media (max-width: 768px) {

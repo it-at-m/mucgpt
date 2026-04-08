@@ -28,10 +28,9 @@
 }
 
 .pageIcon {
-    color: var(--colorBrandForeground1);
+    color: var(--colorBrandBackground);
     margin-top: 4px;
     font-size: 32px;
-    background: var(--colorBrandBackground2);
     padding: 8px;
     border-radius: 6px;
 }
@@ -67,7 +66,7 @@
     gap: 8px;
     margin-bottom: 16px;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--colorNeutralStroke2);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }
 
 .sectionDescription {
@@ -85,13 +84,15 @@
 
 .tutorialCard {
     cursor: pointer;
-    background: var(--primaryContainer) !important;
+    background: var(--colorNeutralBackground3) !important;
     overflow: hidden;
     transition: border-color 0.2s ease;
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 10px !important;
 }
 
 .tutorialCard:hover {
-    border-color: var(--colorBrandStroke1);
+    border-color: var(--colorBrandBackground);
 }
 
 .tutorialCard:focus-visible {
@@ -104,7 +105,7 @@
 }
 
 .tutorialIcon {
-    opacity: 0.5;
+    opacity: 1;
     display: flex;
     align-items: center;
     justify-content: center;

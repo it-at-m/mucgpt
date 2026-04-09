@@ -1,9 +1,9 @@
 .fragmentContainer {
     width: 100%;
     margin-bottom: 24px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     overflow: hidden;
 }
@@ -13,14 +13,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px 12px 20px;
-    background: var(--onSurfaceVariant);
-    border-bottom: 1px solid var(--outline);
+    background: var(--colorNeutralBackground3);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }
 
 .fragmentTitle {
     font-size: var(--fontSizeBase500);
     font-weight: var(--fontWeightSemibold);
-    color: var(--surface);
+    color: var(--colorNeutralForeground1);
     margin: 0;
     display: flex;
     align-items: center;
@@ -31,7 +31,7 @@
     content: "";
     width: 4px;
     height: 20px;
-    background: var(--primary);
+    background: var(--colorBrandBackground);
     border-radius: 2px;
 }
 
@@ -50,7 +50,7 @@
     white-space: pre-wrap;
     font-size: var(--fontSizeBase400);
     line-height: 1.6;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     max-width: 100%;
 }
 

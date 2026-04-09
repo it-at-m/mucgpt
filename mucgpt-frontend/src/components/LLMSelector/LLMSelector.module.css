@@ -54,7 +54,7 @@
     border-radius: 6px;
     font-weight: 700;
     font-size: 14px;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     min-width: 28px;
     text-align: center;
 }
@@ -89,8 +89,8 @@
     margin: 0;
     border: 1px solid var(--colorNeutralStroke1);
     border-radius: var(--borderRadiusSmall, 8px);
-    background-color: var(--surface);
-    color: var(--onSurface);
+    background-color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     overflow: hidden;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.291);
     transition:

@@ -69,7 +69,7 @@
 .toolCard:hover {
     border-color: var(--colorBrandStroke1);
     box-shadow: 0 2px 8px 0 rgba(30, 34, 90, 0.13);
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground3);
 }
 .toolCardHeader {
     flex: 1;

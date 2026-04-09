@@ -164,18 +164,20 @@ export const QuestionInput = ({
                                             className={styles.toolButton}
                                             onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
                                             disabled={!allowToolSelection}
-                                            icon={isSelected ? <Checkmark24Regular style={{ color: "var(--surface)" }} /> : undefined}
+                                            icon={isSelected ? <Checkmark24Regular style={{ color: "var(--colorNeutralForegroundOnBrand)" }} /> : undefined}
                                             style={
                                                 isSelected
                                                     ? {
-                                                        backgroundColor: "var(--onPrimary)"
+                                                        backgroundColor: "var(--colorBrandBackground)",
+                                                        color: "var(--colorNeutralForegroundOnBrand)"
                                                     }
                                                     : {
-                                                        backgroundColor: "var(--surface)"
+                                                        backgroundColor: "var(--colorNeutralBackground1)",
+                                                        color: "var(--colorNeutralForeground1)"
                                                     }
                                             }
                                         >
-                                            <span style={isSelected ? { color: "var(--surface)" } : { color: "var(--onSurface)" }}>{tool.id}</span>
+                                            <span style={isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }}>{tool.id}</span>
                                         </Button>
                                         {hasTutorial && (
                                             <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">

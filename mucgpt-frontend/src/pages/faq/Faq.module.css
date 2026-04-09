@@ -34,7 +34,7 @@
     font-size: 2.2em;
     margin: 1.5em 0 1em 0;
     text-align: center;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     display: flex;
     flex-direction: column;
     justify-content: center;

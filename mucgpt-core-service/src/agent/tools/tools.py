@@ -253,7 +253,7 @@ class ToolCollection:
         if "confluence" in lowered:
             return "confluence"
         # Add more heuristics here as needed by other MCP sources
-        return "general"
+        return None 
 
     @staticmethod
     def add_instructions(messages, enabled_tools: list[str], tools: list[BaseTool]):

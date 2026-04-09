@@ -333,7 +333,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string, dataIds?: string[]) => {
+        async (question: string, dataContents?: string[]) => {
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -360,7 +360,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     assistant_id,
                     selectedTools,
                     setToolStatuses,
-                    dataIds,
+                    dataContents,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -626,8 +626,10 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         placeholder={t("chat.prompt")}
                         disabled={isLoadingRef.current || error !== undefined}
                         onSend={(question, datas) => {
-                            const dataIds = datas.filter(data => data.isActive !== false && data.status === "ready" && data.fileId).map(data => data.fileId!);
-                            callApi(question, dataIds.length > 0 ? dataIds : undefined);
+                            const dataContents = datas
+                                .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                                .map(data => data.fileContent!);
+                            callApi(question, dataContents.length > 0 ? dataContents : undefined);
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
@@ -648,9 +650,11 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
                 onSend={(question, datas) => {
-                    // Extract fileIds from active documents that are ready
-                    const dataIds = datas.filter(data => data.isActive !== false && data.status === "ready" && data.fileId).map(data => data.fileId!);
-                    callApi(question, dataIds.length > 0 ? dataIds : undefined);
+                    // Extract file contents from active documents that are ready
+                    const dataContents = datas
+                        .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                        .map(data => data.fileContent!);
+                    callApi(question, dataContents.length > 0 ? dataContents : undefined);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

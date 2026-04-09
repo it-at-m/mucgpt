@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Field, Text, Tooltip } from "@fluentui/react-components";
 import { Dismiss16Regular, DocumentAdd24Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
-import { uploadFileApi } from "../../api/data-client";
+import { uploadFileApi } from "../../api/core-client";
 
 import styles from "./DataUploadDialog.module.css";
 
@@ -16,7 +16,7 @@ export interface UploadedData {
     status: UploadedDataStatus;
     isActive: boolean;
     errorMessage?: string;
-    fileId?: string; // UUID from the doc service
+    fileContent?: string; // parsed text content returned by the parse endpoint
 }
 
 interface DataUploadDialogProps {
@@ -46,19 +46,19 @@ export const createUploadedData = (file: File, status: UploadedDataStatus = "rea
 });
 
 /**
- * Reconstructs an UploadedData entry from a fileId (e.g. when restoring from URL params).
+ * Reconstructs an UploadedData entry from pre-parsed file content (e.g. when restoring from URL params).
  * A dummy File object is used since the original file is no longer available.
  */
-export const createUploadedDataFromFileId = (fileId: string): UploadedData => {
-    const dummyFile = new File([], fileId, { type: "application/octet-stream" });
+export const createUploadedDataFromContent = (fileContent: string, name = "restored-file"): UploadedData => {
+    const dummyFile = new File([], name, { type: "application/octet-stream" });
     return {
         id: generateDataId(),
         file: dummyFile,
-        name: fileId,
+        name,
         size: 0,
         status: "ready",
         isActive: true,
-        fileId
+        fileContent
     };
 };
 
@@ -156,9 +156,9 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
         // Upload each document
         uploadingData.forEach(data => {
             uploadFileApi(data.file)
-                .then(fileId => {
+                .then(fileContent => {
                     const current = dataRef.current;
-                    const updated = current.map(d => (d.id === data.id ? { ...d, status: "ready" as UploadedDataStatus, fileId } : d));
+                    const updated = current.map(d => (d.id === data.id ? { ...d, status: "ready" as UploadedDataStatus, fileContent } : d));
                     onDataChange(updated);
                 })
                 .catch(error => {

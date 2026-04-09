@@ -80,8 +80,9 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: str | None = Field(
         None, description="ID of the assistant to use for this completion request"
     )
-    data_ids: list[str] | None = Field(
-        None, description="List of data IDs to use for this completion request"
+    data_contents: list[str] | None = Field(
+        None,
+        description="List of pre-parsed file contents to inject into the request context",
     )
     model_config = ConfigDict(
         json_schema_extra={
@@ -96,7 +97,10 @@ class ChatCompletionRequest(BaseModel):
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
-                "data_ids": ["data-uuid-1", "data-uuid-2"],
+                "data_contents": [
+                    "Content of document 1...",
+                    "Content of document 2...",
+                ],
             }
         }
     )

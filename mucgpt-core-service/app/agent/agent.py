@@ -1,5 +1,6 @@
 from typing import Annotated, TypedDict
 
+from langchain_core.messages import SystemMessage
 from langchain_core.messages.base import BaseMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import RunnableSerializable
@@ -7,7 +8,6 @@ from langchain_core.tools.base import BaseTool
 from langgraph.graph import END, START, StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
 
-from agent.data_service import DataService
 from agent.tools.mcp import McpBearerAuthProvider
 from agent.tools.tools import ToolCollection
 from core.auth_models import AuthenticationResult
@@ -81,13 +81,20 @@ class MUCGPTAgent:
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
 
-        # inject data
-        if config and config["configurable"].get("data_ids"):
-            data_ids: list[str] = config["configurable"].get("data_ids")
-            self.logger.info(f"Loading data info request context: {data_ids}")
-            messages = await self.data_service.inject_data_list_in_messages(
-                messages=messages, data_ids=data_ids
+        # inject data contents directly into messages
+        if config and config["configurable"].get("data_contents"):
+            data_contents: list[str] = config["configurable"].get("data_contents")
+            self.logger.info(
+                f"Injecting {len(data_contents)} data content(s) into request context"
             )
+            combined = "\n\n".join(data_contents)
+            data_string = f"# Data\nFollowing is the content of data chosen by the user which should be used to answer the request.\n{combined}"
+            if messages and isinstance(messages[0], SystemMessage):
+                messages[0] = SystemMessage(
+                    content=f"{messages[0].content}\n\n{data_string}"
+                )
+            else:
+                messages.insert(0, SystemMessage(content=data_string))
 
         # invoke model
         response = await model.with_config(config).ainvoke(messages)
@@ -108,7 +115,6 @@ class MUCGPTAgent:
         self.tool_collection = tool_collection
         self.tools = tools
         self.tool_node = ToolNode(self.tools)
-        self.data_service = DataService()
         self.logger = logger if logger else getLogger(name="mucgpt-core-agent")
 
         # Define the new graph structure

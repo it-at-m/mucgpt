@@ -136,15 +136,9 @@ services:
       - SPRING_CLOUD_GATEWAY_ROUTES_2_ID=assistant
       - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://assistant-service:8084/
       - SPRING_CLOUD_GATEWAY_ROUTES_2_PREDICATES_0=Path=/api/assistant/**, /api/user/**, /api/directory/**
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=data
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://memory-service:8000/
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/api/data/**
-      - SPRING_CLOUD_GATEWAY_ROUTES_4_ID=parse
-      - SPRING_CLOUD_GATEWAY_ROUTES_4_URI=http://memory-service:8000/
-      - SPRING_CLOUD_GATEWAY_ROUTES_4_PREDICATES_0=Path=/api/parse/**
-      - SPRING_CLOUD_GATEWAY_ROUTES_5_ID=frontend
-      - SPRING_CLOUD_GATEWAY_ROUTES_5_URI=http://frontend:8080/
-      - SPRING_CLOUD_GATEWAY_ROUTES_5_PREDICATES_0=Path=/**
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_ID=frontend
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://frontend:8080/
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_PREDICATES_0=Path=/**
       - SPRING_PROFILES_ACTIVE=hazelcast-local
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUERURI=http://keycloak:8100/auth/realms/local_realm
       - SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SSO_ISSUERURI=$${spring.security.oauth2.resourceserver.jwt.issuer-uri}
@@ -176,9 +170,6 @@ services:
         - HTTPS_PROXY=${HTTPS_PROXY}
     env_file:
       - ./.env
-    depends_on:
-      memory-service:
-        condition: service_healthy
     ports:
       - "39146:8000"
     networks:
@@ -196,6 +187,9 @@ services:
       - LOG_LEVEL_UVICORN_ACCESS=INFO
       - LOG_LEVEL_MUCGPT_CORE=INFO
       - LOG_LEVEL_MUCGPT_CORE_AGENT=INFO
+    depends_on:
+      kreuzberg-full:
+        condition: service_started
     volumes:
       - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
       # Mount YAML configuration files (recommended over environment variables)
@@ -317,37 +311,11 @@ services:
     networks:
       - internal
 
-  memory-service:
-    build:
-      context: ../mucgpt-memory-service
-      dockerfile: Dockerfile
-      args:
-        - HTTPS_PROXY=${HTTPS_PROXY}
-    env_file:
-      - ./.env
-    depends_on:
-      - kreuzberg-full
-    ports:
-      - "39148:8000"
-    networks:
-      - internal
-    environment:
-      - PARSER_BACKEND=kreuzberg
-      - KREUZBERG_URL=http://kreuzberg-full:8000
-      - KREUZBERG_TIMEOUT=120.0
-    healthcheck:
-      <<: *healthcheck
-      test: ["CMD-SHELL", "curl http://localhost:8000/api/health"]
-    volumes:
-      - ${CA_BUNDLE_PATH:-./ca-bundle.crt}:${SSL_MOUNT_PATH:-/etc/pki/ca-trust/extracted/pem/ca-bundle.crt}:ro,Z
-
-volumes:
-  cache-data:
-
 networks:
   internal:
 
 volumes:
+  cache-data:
   postgres-data:
     driver_opts:
       o: uid=999

@@ -8,7 +8,7 @@ import { ToolListResponse } from "../../api/models";
 import { DataUploadDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../DataUploadDialog/DataUploadDialog";
 import { ToolBadges } from "./ToolBadges";
 import { DataUpload } from "./DataUpload";
-import { uploadFileApi } from "../../api/data-client";
+import { uploadFileApi } from "../../api/core-client";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -202,9 +202,9 @@ export const QuestionInput = ({
                 // Upload each new document
                 newData.forEach(data => {
                     uploadFileApi(data.file)
-                        .then(fileId => {
+                        .then(fileContent => {
                             const current = uploadedDataRef.current;
-                            const updatedData = current.map(d => (d.id === data.id ? { ...d, status: "ready" as const, fileId } : d));
+                            const updatedData = current.map(d => (d.id === data.id ? { ...d, status: "ready" as const, fileContent } : d));
                             setUploadedData(updatedData);
                             onDataChange?.(updatedData);
                         })

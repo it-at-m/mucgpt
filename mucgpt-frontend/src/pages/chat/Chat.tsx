@@ -27,7 +27,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData, createUploadedDataFromFileId } from "../../components/DataUploadDialog/DataUploadDialog";
+import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -212,7 +212,7 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string, dataIds?: string[]) => {
+        async (question: string, system?: string, dataContents?: string[]) => {
             lastQuestionRef.current = question;
             setError(undefined);
             isLoadingRef.current = true;
@@ -239,7 +239,7 @@ const Chat = () => {
                     undefined,
                     selectedTools,
                     setToolStatuses,
-                    dataIds,
+                    dataContents,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -352,7 +352,6 @@ const Chat = () => {
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
-    const [pendingDataIds, setPendingDataIds] = useState<string[] | undefined>(undefined);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
 
@@ -406,13 +405,9 @@ const Chat = () => {
             setSelectedTools(toolsArray);
         }
 
-        // Parse data (file IDs) from URL if present
+        // Parse data (file IDs) from URL if present - no longer supported (content is not passed via URL)
         if (dataFromUrl) {
-            const dataArray = dataFromUrl.split(",").filter(id => id.trim() !== "");
-            if (dataArray.length > 0) {
-                setPendingDataIds(dataArray);
-                setUploadedData(dataArray.map(createUploadedDataFromFileId));
-            }
+            console.warn("URL-based data restore is no longer supported. Please re-upload your files.");
         }
 
         if (questionFromUrl) {
@@ -461,7 +456,6 @@ const Chat = () => {
 
         scheduledQuestionRef.current = pendingQuestion;
         const questionToAsk = pendingQuestion;
-        const dataIdsToSend = pendingDataIds;
 
         // Wait a bit more to ensure tools are properly set
         const timeoutId = window.setTimeout(() => {
@@ -469,12 +463,11 @@ const Chat = () => {
             if (scheduledQuestionRef.current !== questionToAsk) {
                 return;
             }
-            callApi(questionToAsk, systemPrompt, dataIdsToSend);
+            callApi(questionToAsk, systemPrompt);
 
             // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
             setPendingQuestion(current => (current === questionToAsk ? null : current));
-            setPendingDataIds(undefined);
             clearNavigationQueryParams();
         }, 200);
 
@@ -484,7 +477,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, pendingDataIds, tools, callApi, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
 
     // Set up quick prompts
     useEffect(() => {
@@ -582,8 +575,10 @@ const Chat = () => {
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={(question, datas) => {
                     // Extract fileIds from active documents that are ready
-                    const dataIds = datas.filter(data => data.isActive !== false && data.status === "ready" && data.fileId).map(data => data.fileId!);
-                    callApi(question, systemPrompt, dataIds.length > 0 ? dataIds : undefined);
+                    const dataContents = datas
+                        .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                        .map(data => data.fileContent!);
+                    callApi(question, systemPrompt, dataContents.length > 0 ? dataContents : undefined);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

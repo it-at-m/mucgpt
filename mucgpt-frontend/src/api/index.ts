@@ -1,2 +1,2 @@
 export * from "./models";
-export * from "./data-client";
+export * from "./core-client";

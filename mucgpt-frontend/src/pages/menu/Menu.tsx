@@ -112,7 +112,7 @@ const Menu = () => {
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
         }
-        const fileIds = data.filter(d => d.isActive !== false && d.status === "ready" && d.fileId).map(d => d.fileId!);
+        const fileIds = data.filter(d => d.isActive !== false && d.status === "ready" && d.fileContent).map(d => d.fileContent!);
         if (fileIds.length > 0) {
             url += `&data=${encodeURIComponent(fileIds.join(","))}`;
         }

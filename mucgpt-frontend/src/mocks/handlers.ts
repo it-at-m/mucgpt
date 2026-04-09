@@ -129,14 +129,6 @@ const CONFIG_RESPONSE: ApplicationConfig = {
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);
 
-// In-memory storage for uploaded documents
-const UPLOADED_FILES = new Map<string, { filename: string; content: string; uploadedAt: Date }>();
-
-// Helper to generate UUID for uploaded files
-function generateFileUUID(): string {
-    return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
-}
-
 // Add a specific assistant with a default model
 DYNAMIC_ASSISTANTS.push(
     buildAssistantCreateResponse({
@@ -662,9 +654,9 @@ export const handlers = [
         });
     }),
 
-    // Data-service API handlers
-    http.post("/api/data/", async ({ request }) => {
-        // Simulate network delay for file upload (longer for larger files)
+    // Parse API handler (moved from memory-service to core-service)
+    http.post("/api/v1/parse/", async ({ request }) => {
+        // Simulate network delay for file upload and parsing
         await delay(8000 + Math.random() * 4000); // 8-12 seconds delay
 
         const formData = await request.formData();
@@ -674,33 +666,10 @@ export const handlers = [
             return HttpResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
-        // Read file content (for mock storage)
+        // Read file content and return it directly as the parsed text
         const content = await file.text();
-        const fileId = generateFileUUID();
 
-        // Store file in memory
-        UPLOADED_FILES.set(fileId, {
-            filename: file.name,
-            content: content,
-            uploadedAt: new Date()
-        });
-
-        // Return the UUID as a plain string (matching the API spec)
-        return HttpResponse.json(fileId);
-    }),
-
-    http.get("/api/data/:fileId", async ({ params }) => {
-        // Simulate network delay for file retrieval
-        await delay(300 + Math.random() * 200); // 300-500ms delay
-
-        const fileId = params.fileId as string;
-        const file = UPLOADED_FILES.get(fileId);
-
-        if (!file) {
-            return HttpResponse.json({ error: "File not found" }, { status: 404 });
-        }
-
-        // Return the content as a plain string (matching the API spec)
-        return HttpResponse.json(file.content);
+        // Return the parsed content as a plain string (matching the API spec)
+        return HttpResponse.json(content);
     })
 ];

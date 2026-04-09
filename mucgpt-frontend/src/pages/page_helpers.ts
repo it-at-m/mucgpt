@@ -230,7 +230,7 @@ export const makeApiRequest = async (
     assistant_id?: string,
     enabled_tools?: string[],
     onToolStatusUpdate?: (statuses: ToolStatus[]) => void,
-    data_ids?: string[],
+    data_contents?: string[],
     answerTopRef?: MutableRefObject<HTMLElement | null>
 ) => {
     // Create conversation history for the API request
@@ -246,7 +246,7 @@ export const makeApiRequest = async (
         model: LLM.llm_name,
         enabled_tools: enabled_tools && enabled_tools.length > 0 ? enabled_tools : undefined,
         assistant_id: assistant_id,
-        data_ids: data_ids && data_ids.length > 0 ? data_ids : undefined
+        data_contents: data_contents && data_contents.length > 0 ? data_contents : undefined
     };
 
     // Make the API call

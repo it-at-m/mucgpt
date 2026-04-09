@@ -35,7 +35,7 @@ export type ChatRequest = {
     model?: string;
     enabled_tools?: string[];
     assistant_id?: string;
-    data_ids?: string[];
+    data_contents?: string[];
 };
 
 export type CreateAssistantRequest = {

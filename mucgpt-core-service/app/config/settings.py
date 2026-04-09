@@ -32,6 +32,10 @@ class MCPTransport(StrEnum):
     STREAMABLE_HTTP = "streamable_http"
 
 
+class ParserBackendType(StrEnum):
+    KREUZBERG = "kreuzberg"
+
+
 _logger = logging.getLogger(__name__)
 _positive_int_adapter = TypeAdapter(PositiveInt)
 _decimal_adapter = TypeAdapter(Decimal)
@@ -347,6 +351,11 @@ class Settings(BaseSettings):
     UNAUTHORIZED_USER_REDIRECT_URL: str = ""
     MODELS: list[ModelsConfig] = []
     MEMORY_SERVICE_URL: str = ""
+
+    # Parsing
+    PARSER_BACKEND: ParserBackendType = ParserBackendType.KREUZBERG
+    KREUZBERG_URL: str = ""
+    KREUZBERG_TIMEOUT: float = 120.0
 
     # Nested sub-configurations
     SSO: SSOConfig = Field(default_factory=SSOConfig)

@@ -34,6 +34,7 @@ dependencies = [
     "langchain-mcp-adapters==0.2.2",
     "redis>=7.3.0",
     "cloudpickle>=3.1.2",
+    "python-multipart>=0.0.5",
 ]
 
 [dependency-groups]

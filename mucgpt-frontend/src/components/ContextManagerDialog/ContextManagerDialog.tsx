@@ -292,7 +292,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
         if (storedDocuments.length === 0) {
             return (
                 <Text className={styles.emptyState} role="note">
-                    {t("components.questioninput.upload_manager_no_saved", "Noch keine gespeicherten Dokumente.")}
+                    {t("components.contextmanagerdialog.no_saved", "Noch keine gespeicherten Dokumente.")}
                 </Text>
             );
         }
@@ -305,38 +305,35 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                         <Checkbox
                             checked={isAttached}
                             onChange={(_, data) => handleToggleStoredDocument(document.id, data.checked === true)}
-                            aria-label={t("components.questioninput.upload_manager_use", "Verwenden")}
+                            aria-label={t("components.contextmanagerdialog.use", "Verwenden")}
                         />
                     </div>
                     <div className={styles.fileMeta}>
                         <span className={styles.fileName}>{document.name}</span>
                         <span className={styles.fileSize}>{formatFileSize(document.size)}</span>
                         <span className={styles.fileSecondary}>
-                            {t("components.questioninput.upload_manager_parsed_at", "Geparsed")}: {formatParsedAt(document.parsedAt)}
+                            {t("components.contextmanagerdialog.parsed_at", "Geparsed")}: {formatParsedAt(document.parsedAt)}
                         </span>
                     </div>
                     <div className={styles.fileActions}>
                         {document.content && (
-                            <Tooltip content={t("components.questioninput.upload_manager_download", "Text herunterladen")} relationship="description">
+                            <Tooltip content={t("components.contextmanagerdialog.download", "Text herunterladen")} relationship="description">
                                 <Button
                                     appearance="subtle"
                                     size="small"
                                     icon={<ArrowDownload16Regular />}
                                     onClick={() => handleDownloadParsedContent(document)}
-                                    aria-label={t("components.questioninput.upload_manager_download", "Text herunterladen")}
+                                    aria-label={t("components.contextmanagerdialog.download", "Text herunterladen")}
                                 />
                             </Tooltip>
                         )}
-                        <Tooltip
-                            content={t("components.questioninput.upload_manager_remove_saved", "Gespeichertes Dokument entfernen")}
-                            relationship="description"
-                        >
+                        <Tooltip content={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")} relationship="description">
                             <Button
                                 appearance="subtle"
                                 size="small"
                                 icon={<Dismiss16Regular />}
                                 onClick={() => handleRemoveStoredDocument(document.id)}
-                                aria-label={t("components.questioninput.upload_manager_remove_saved", "Gespeichertes Dokument entfernen")}
+                                aria-label={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
                             />
                         </Tooltip>
                     </div>
@@ -349,23 +346,23 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
         <Dialog open={open} onOpenChange={onDialogOpenChange} modalType="modal">
             <DialogSurface>
                 <DialogBody>
-                    <DialogTitle>{t("components.questioninput.upload_dialog_title", "Kontextmanager")}</DialogTitle>
+                    <DialogTitle>{t("components.contextmanagerdialog.title", "Kontextmanager")}</DialogTitle>
                     <DialogContent className={styles.dialogContent}>
-                        <SectionCard title={t("components.questioninput.upload_manager_upload", "Dokumente hochladen")}>
+                        <SectionCard title={t("components.contextmanagerdialog.upload_section_title", "Dokumente hochladen")}>
                             <Text className={styles.description}>
                                 {t(
-                                    "components.questioninput.upload_manager_description",
+                                    "components.contextmanagerdialog.upload_description",
                                     "Lade neue Dokumente hoch oder wähle bereits hochgeladene Dokumente aus."
                                 )}
                             </Text>
                             <Field
-                                label={t("components.questioninput.upload_dialog_select_label", "Dateien auswählen")}
-                                hint={t("components.questioninput.upload_dialog_select_hint", "Mehrere Dateien sind möglich.")}
+                                label={t("components.contextmanagerdialog.select_label", "Dateien auswählen")}
+                                hint={t("components.contextmanagerdialog.select_hint", "Mehrere Dateien sind möglich.")}
                                 className={styles.field}
                             >
                                 {isUploading ? (
                                     <div className={styles.spinnerContainer}>
-                                        <Spinner label={t("components.questioninput.upload_dialog_uploading", "Wird hochgeladen...")} size="medium" />
+                                        <Spinner label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")} size="medium" />
                                     </div>
                                 ) : (
                                     <input
@@ -375,18 +372,15 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                                         className={styles.fileInput}
                                         onChange={handleFileSelection}
                                         disabled={isUploading}
-                                        aria-label={t("components.questioninput.upload_dialog_select_label", "Dateien auswählen")}
+                                        aria-label={t("components.contextmanagerdialog.select_label", "Dateien auswählen")}
                                     />
                                 )}
                             </Field>
                         </SectionCard>
-                        <SectionCard
-                            title={t("components.questioninput.upload_manager_saved_label", "Bereits hochgeladene Dokumente")}
-                            className={styles.section}
-                        >
+                        <SectionCard title={t("components.contextmanagerdialog.saved_label", "Bereits hochgeladene Dokumente")} className={styles.section}>
                             <div className={styles.sectionHeader}>
                                 <Text weight="semibold" as="span" className={styles.sectionCount}>
-                                    {t("components.questioninput.upload_manager_saved_count", "Anzahl: ")}
+                                    {t("components.contextmanagerdialog.saved_count", "Anzahl: ")}
                                     {storedDocuments.length}
                                 </Text>
                                 <Button
@@ -394,9 +388,9 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                                     size="small"
                                     onClick={handleClearStoredDocuments}
                                     disabled={!hasStoredDocuments || isUploading}
-                                    aria-label={t("components.questioninput.upload_manager_clear_saved", "Alle gespeicherten Dokumente löschen")}
+                                    aria-label={t("components.contextmanagerdialog.clear_saved", "Alle gespeicherten Dokumente löschen")}
                                 >
-                                    {t("components.questioninput.upload_manager_clear_saved", "Alle löschen")}
+                                    {t("components.contextmanagerdialog.clear_saved", "Alle löschen")}
                                 </Button>
                             </div>
                             <div className={styles.fileList}>{storedDocumentsList}</div>
@@ -404,7 +398,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                     </DialogContent>
                     <DialogActions>
                         <Button appearance="primary" onClick={handleCancel}>
-                            {t("components.questioninput.upload_dialog_close", "Schließen")}
+                            {t("components.contextmanagerdialog.close", "Schließen")}
                         </Button>
                     </DialogActions>
                 </DialogBody>

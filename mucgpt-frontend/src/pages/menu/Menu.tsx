@@ -112,8 +112,9 @@ const Menu = () => {
         if (selectedTools.length > 0) {
             url += `&tools=${encodeURIComponent(selectedTools.join(","))}`;
         }
-        const fileIds = data.filter(d => d.isActive !== false && d.status === "ready" && d.fileContent).map(d => d.fileContent!);
+        const fileIds = data.filter(d => d.isActive !== false && d.status === "ready" && d.storedDocumentId).map(d => d.storedDocumentId!);
         if (fileIds.length > 0) {
+            localStorage.setItem("chatFileIds", JSON.stringify(fileIds));
             url += `&data=${encodeURIComponent(fileIds.join(","))}`;
         }
         window.location.href = url;

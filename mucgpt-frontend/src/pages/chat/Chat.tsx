@@ -405,9 +405,40 @@ const Chat = () => {
             setSelectedTools(toolsArray);
         }
 
-        // Parse data (file IDs) from URL if present - no longer supported (content is not passed via URL)
+        // Parse data (file IDs) from URL if present
         if (dataFromUrl) {
-            console.warn("URL-based data restore is no longer supported. Please re-upload your files.");
+            const fileIds = dataFromUrl.split(",").filter(id => id.trim() !== "");
+            if (fileIds.length > 0) {
+                const storedRawIds = localStorage.getItem("chatFileIds");
+                let validIds: string[] = [];
+                if (storedRawIds) {
+                    try {
+                        const parsedIds = JSON.parse(storedRawIds);
+                        // Check if the parameter IDs match the ones we stored
+                        validIds = fileIds.filter(id => parsedIds.includes(id));
+                    } catch (e) {
+                        console.error("Failed to parse chatFileIds from localStorage:", e);
+                    }
+                }
+
+                if (validIds.length > 0) {
+                    // Populate initial uploadedData with pseudo-objects for the QuestionInput to resolve
+                    setUploadedData(
+                        validIds.map(id => ({
+                            id,
+                            storedDocumentId: id,
+                            file: new File([], "Loading..."), // Dummy file, actual data will be pulled from IndexedDB by components
+                            name: "Stored Document",
+                            size: 0,
+                            status: "ready",
+                            isActive: true,
+                            source: "stored"
+                        }))
+                    );
+                } else {
+                    console.warn("Requested files were not found in localStorage recent history. Please re-upload your files.");
+                }
+            }
         }
 
         if (questionFromUrl) {

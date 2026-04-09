@@ -547,8 +547,8 @@ const Discovery = () => {
                                             sortMethod === "title"
                                                 ? t("components.community_assistants.sort_title", "Title")
                                                 : sortMethod === "updated"
-                                                    ? t("components.community_assistants.sort_updated", "Last updated")
-                                                    : t("components.community_assistants.sort_subscriptions", "Subscriptions")
+                                                  ? t("components.community_assistants.sort_updated", "Last updated")
+                                                  : t("components.community_assistants.sort_subscriptions", "Subscriptions")
                                         }
                                         selectedOptions={[sortMethod]}
                                         appearance="outline"
@@ -591,8 +591,8 @@ const Discovery = () => {
                                             assistant.isLocalAssistant
                                                 ? t("components.community_assistants.local_badge")
                                                 : assistant.isDeletedSnapshot
-                                                    ? t("components.community_assistants.deleted_badge")
-                                                    : undefined
+                                                  ? t("components.community_assistants.deleted_badge")
+                                                  : undefined
                                         }
                                         onClick={() => handleAssistantClick(assistant)}
                                         isSelected={selectedAssistant?.id === assistant.id}

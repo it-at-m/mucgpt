@@ -168,16 +168,22 @@ export const QuestionInput = ({
                                             style={
                                                 isSelected
                                                     ? {
-                                                        backgroundColor: "var(--colorBrandBackground)",
-                                                        color: "var(--colorNeutralForegroundOnBrand)"
-                                                    }
+                                                          backgroundColor: "var(--colorBrandBackground)",
+                                                          color: "var(--colorNeutralForegroundOnBrand)"
+                                                      }
                                                     : {
-                                                        backgroundColor: "var(--colorNeutralBackground1)",
-                                                        color: "var(--colorNeutralForeground1)"
-                                                    }
+                                                          backgroundColor: "var(--colorNeutralBackground1)",
+                                                          color: "var(--colorNeutralForeground1)"
+                                                      }
                                             }
                                         >
-                                            <span style={isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }}>{tool.id}</span>
+                                            <span
+                                                style={
+                                                    isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }
+                                                }
+                                            >
+                                                {tool.id}
+                                            </span>
                                         </Button>
                                         {hasTutorial && (
                                             <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">

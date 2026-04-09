@@ -561,8 +561,8 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         const filteredTools =
             tools && assistantConfig.tools
                 ? {
-                    tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                }
+                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
+                  }
                 : tools;
 
         if (isDeletedAssistant) {

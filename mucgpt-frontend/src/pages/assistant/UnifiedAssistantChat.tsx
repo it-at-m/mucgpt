@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useContext, useCallback, useReducer, useMemo } from "react";
-import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot } from "../../api";
+import { AskResponse, Assistant, ChatResponse, CommunityAssistantSnapshot, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { useTranslation } from "react-i18next";
@@ -333,7 +333,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // callApi-Funktion
     const callApi = useCallback(
-        async (question: string, dataContents?: string[]) => {
+        async (question: string, dataSources?: DataSource[]) => {
             lastQuestionRef.current = question;
             if (error) setError(undefined);
             isLoadingRef.current = true;
@@ -360,7 +360,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     assistant_id,
                     selectedTools,
                     setToolStatuses,
-                    dataContents,
+                    dataSources,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -626,10 +626,22 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         placeholder={t("chat.prompt")}
                         disabled={isLoadingRef.current || error !== undefined}
                         onSend={(question, datas) => {
-                            const dataContents = datas
+                            const dataSources = datas
                                 .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
-                                .map(data => data.fileContent!);
-                            callApi(question, dataContents.length > 0 ? dataContents : undefined);
+                                .map(data => ({
+                                    title: data.name,
+                                    content: data.fileContent!,
+                                    metadata: {
+                                        source: data.source,
+                                        mime_type: data.mimeType || data.file?.type || undefined,
+                                        size: data.size,
+                                        parsed_at: data.parsedAt,
+                                        file_signature: data.fileSignature,
+                                        stored_document_id: data.storedDocumentId,
+                                        status: data.status
+                                    }
+                                }));
+                            callApi(question, dataSources.length > 0 ? dataSources : undefined);
                         }}
                         question={question}
                         setQuestion={question => setQuestion(question)}
@@ -650,11 +662,22 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
                 onSend={(question, datas) => {
-                    // Extract file contents from active documents that are ready
-                    const dataContents = datas
+                    const dataSources = datas
                         .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
-                        .map(data => data.fileContent!);
-                    callApi(question, dataContents.length > 0 ? dataContents : undefined);
+                        .map(data => ({
+                            title: data.name,
+                            content: data.fileContent!,
+                            metadata: {
+                                source: data.source,
+                                mime_type: data.mimeType || data.file?.type || undefined,
+                                size: data.size,
+                                parsed_at: data.parsedAt,
+                                file_signature: data.fileSignature,
+                                stored_document_id: data.storedDocumentId,
+                                status: data.status
+                            }
+                        }));
+                    callApi(question, dataSources.length > 0 ? dataSources : undefined);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

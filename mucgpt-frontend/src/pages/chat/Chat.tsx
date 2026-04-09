@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useContext, useCallback, useMemo, useReducer } from "react";
 
-import { AskResponse, ChatResponse } from "../../api";
+import { AskResponse, ChatResponse, DataSource } from "../../api";
 import { Answer } from "../../components/Answer";
 import { QuestionInput } from "../../components/QuestionInput";
 import { ExampleList, ExampleModel } from "../../components/Example";
@@ -212,7 +212,7 @@ const Chat = () => {
 
     // API Request mit optimiertem State Management
     const callApi = useCallback(
-        async (question: string, system?: string, dataContents?: string[]) => {
+        async (question: string, system?: string, dataSources?: DataSource[]) => {
             lastQuestionRef.current = question;
             setError(undefined);
             isLoadingRef.current = true;
@@ -239,7 +239,7 @@ const Chat = () => {
                     undefined,
                     selectedTools,
                     setToolStatuses,
-                    dataContents,
+                    dataSources,
                     lastAnswerRef
                 );
             } catch (e) {
@@ -574,11 +574,22 @@ const Chat = () => {
                 placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={(question, datas) => {
-                    // Extract fileIds from active documents that are ready
-                    const dataContents = datas
+                    const dataSources = datas
                         .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
-                        .map(data => data.fileContent!);
-                    callApi(question, systemPrompt, dataContents.length > 0 ? dataContents : undefined);
+                        .map(data => ({
+                            title: data.name,
+                            content: data.fileContent!,
+                            metadata: {
+                                source: data.source,
+                                mime_type: data.mimeType || data.file?.type || undefined,
+                                size: data.size,
+                                parsed_at: data.parsedAt,
+                                file_signature: data.fileSignature,
+                                stored_document_id: data.storedDocumentId,
+                                status: data.status
+                            }
+                        }));
+                    callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
                 }}
                 question={question}
                 setQuestion={question => setQuestion(question)}

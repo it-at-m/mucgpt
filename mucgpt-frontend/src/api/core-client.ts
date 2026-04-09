@@ -38,8 +38,8 @@ export async function chatApi(options: ChatRequest): Promise<Response> {
     if (options.assistant_id) {
         body.assistant_id = options.assistant_id;
     }
-    if (options.data_contents) {
-        body.data_contents = options.data_contents;
+    if (options.data_sources) {
+        body.data_sources = options.data_sources;
     }
     return await fetch(url, postConfig(body));
 }

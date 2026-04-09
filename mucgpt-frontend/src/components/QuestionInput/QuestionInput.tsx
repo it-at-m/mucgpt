@@ -7,8 +7,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolListResponse } from "../../api/models";
 import { DataUploadDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../DataUploadDialog/DataUploadDialog";
 import { ToolBadges } from "./ToolBadges";
-import { DataUpload } from "./DataUpload";
 import { uploadFileApi } from "../../api/core-client";
+import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -54,6 +54,8 @@ export const QuestionInput = ({
 
     // Use external state when provided (controlled), otherwise fall back to internal state
     const uploadedData = externalUploadedData ?? internalUploadedData;
+    const activeDocumentCount = uploadedData.filter(data => data.isActive !== false).length;
+
     const setUploadedData = useCallback(
         (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
             if (setExternalUploadedData) {
@@ -203,8 +205,22 @@ export const QuestionInput = ({
                 newData.forEach(data => {
                     uploadFileApi(data.file)
                         .then(fileContent => {
+                            const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
                             const current = uploadedDataRef.current;
-                            const updatedData = current.map(d => (d.id === data.id ? { ...d, status: "ready" as const, fileContent } : d));
+                            const updatedData = current.map(d =>
+                                d.id === data.id
+                                    ? {
+                                          ...d,
+                                          status: "ready" as const,
+                                          fileContent,
+                                          storedDocumentId: storedDocument?.id,
+                                          parsedAt: storedDocument?.parsedAt,
+                                          fileSignature: storedDocument?.fileSignature,
+                                          mimeType: storedDocument?.mimeType,
+                                          source: "upload" as const
+                                      }
+                                    : d
+                            );
                             setUploadedData(updatedData);
                             onDataChange?.(updatedData);
                         })
@@ -230,28 +246,6 @@ export const QuestionInput = ({
         (data: UploadedData[]) => {
             setUploadedData(data);
             onDataChange?.(data);
-        },
-        [onDataChange]
-    );
-
-    const handleRemoveData = useCallback(
-        (id: string) => {
-            setUploadedData(prev => {
-                const updated = prev.filter(data => data.id !== id);
-                onDataChange?.(updated);
-                return updated;
-            });
-        },
-        [onDataChange]
-    );
-
-    const handleToggleData = useCallback(
-        (id: string) => {
-            setUploadedData(prev => {
-                const updated = prev.map(data => (data.id === id ? { ...data, isActive: !(data.isActive !== false) } : data));
-                onDataChange?.(updated);
-                return updated;
-            });
         },
         [onDataChange]
     );
@@ -318,7 +312,6 @@ export const QuestionInput = ({
             <div className={styles.questionInputWrapper}>
                 {/* Tool badges at the top - show all tools */}
                 <ToolBadges tools={tools} selectedTools={selectedTools} allowToolSelection={allowToolSelection} setSelectedTools={setSelectedTools} />
-                <DataUpload data={uploadedData} onToggle={handleToggleData} onRemove={handleRemoveData} />
 
                 {/* Input container with textarea and buttons */}
                 <div
@@ -342,15 +335,18 @@ export const QuestionInput = ({
                     />
                     <div className={styles.questionInputButtons}>
                         <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
-                            <Button
-                                ref={uploadButtonRef}
-                                size="large"
-                                appearance={"subtle"}
-                                icon={<DocumentAdd24Regular />}
-                                aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
-                                onClick={handleUploadButtonClick}
-                                disabled={disabled}
-                            />
+                            <div className={styles.uploadButtonWrapper}>
+                                <Button
+                                    ref={uploadButtonRef}
+                                    size="large"
+                                    appearance={"subtle"}
+                                    icon={<DocumentAdd24Regular />}
+                                    aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
+                                    onClick={handleUploadButtonClick}
+                                    disabled={disabled}
+                                />
+                                {activeDocumentCount > 0 && <span className={styles.uploadCountBadge}>{activeDocumentCount}</span>}
+                            </div>
                         </Tooltip>
                         <Tooltip content={placeholder || ""} relationship="label">
                             <Button

@@ -274,7 +274,15 @@ i18n
                             upload_dialog_uploaded_label: "Bereits hinzugefügt",
                             upload_dialog_no_uploaded: "Noch keine Dokumente hinzugefügt.",
                             upload_dialog_cancel: "Abbrechen",
-                            upload_dialog_confirm: "Hinzufügen"
+                            upload_dialog_confirm: "Hinzufügen",
+                            upload_manager_saved_label: "Gespeicherte Dokumente",
+                            upload_manager_no_saved: "Noch keine gespeicherten Dokumente.",
+                            upload_manager_use: "Verwenden",
+                            upload_manager_added: "Hinzugefügt",
+                            upload_manager_remove_saved: "Gespeichertes Dokument entfernen",
+                            upload_manager_parsed_at: "Geparsed",
+                            upload_manager_clear_saved: "Alle löschen",
+                            upload_manager_description: "Lade neue Dokumente hoch oder verwende bereits geparste Dokumente aus deinem lokalen Speicher."
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -909,7 +917,15 @@ i18n
                             upload_dialog_uploaded_label: "Already added",
                             upload_dialog_no_uploaded: "No documents added yet.",
                             upload_dialog_cancel: "Cancel",
-                            upload_dialog_confirm: "Add"
+                            upload_dialog_confirm: "Add",
+                            upload_manager_saved_label: "Saved documents",
+                            upload_manager_no_saved: "No saved documents yet.",
+                            upload_manager_use: "Use",
+                            upload_manager_added: "Added",
+                            upload_manager_remove_saved: "Remove saved document",
+                            upload_manager_parsed_at: "Parsed",
+                            upload_manager_clear_saved: "Clear all",
+                            upload_manager_description: "Upload new documents or reuse previously parsed documents from your local storage."
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1537,7 +1553,15 @@ i18n
                             upload_dialog_uploaded_label: "Bereits dazua doa",
                             upload_dialog_no_uploaded: "No koane Dokumente dazua doa.",
                             upload_dialog_cancel: "Abbrecha",
-                            upload_dialog_confirm: "Dazua doa"
+                            upload_dialog_confirm: "Dazua doa",
+                            upload_manager_saved_label: "Gspeicherte Dokumente",
+                            upload_manager_no_saved: "No koane gspeicherten Dokumente.",
+                            upload_manager_use: "Verwenden",
+                            upload_manager_added: "Dazua",
+                            upload_manager_remove_saved: "Gspeicherts Dokument entfernen",
+                            upload_manager_parsed_at: "Geparsed",
+                            upload_manager_clear_saved: "Ois löschen",
+                            upload_manager_description: "Lad neue Dokumente aufe oder verwende scho geparste Dokumente ausm lokalen Speicher."
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -2171,7 +2195,16 @@ i18n
                             upload_dialog_uploaded_label: "Déjà ajoutés",
                             upload_dialog_no_uploaded: "Aucun document ajouté pour l'instant.",
                             upload_dialog_cancel: "Annuler",
-                            upload_dialog_confirm: "Ajouter"
+                            upload_dialog_confirm: "Ajouter",
+                            upload_manager_saved_label: "Documents enregistrés",
+                            upload_manager_no_saved: "Aucun document enregistré pour l'instant.",
+                            upload_manager_use: "Utiliser",
+                            upload_manager_added: "Ajouté",
+                            upload_manager_remove_saved: "Supprimer le document enregistré",
+                            upload_manager_parsed_at: "Analysé",
+                            upload_manager_clear_saved: "Tout effacer",
+                            upload_manager_description:
+                                "Téléversez de nouveaux documents ou réutilisez des documents déjà analysés depuis votre stockage local."
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2803,7 +2836,16 @@ i18n
                             upload_dialog_uploaded_label: "Вже додано",
                             upload_dialog_no_uploaded: "Ще немає доданих документів.",
                             upload_dialog_cancel: "Скасувати",
-                            upload_dialog_confirm: "Додати"
+                            upload_dialog_confirm: "Додати",
+                            upload_manager_saved_label: "Збережені документи",
+                            upload_manager_no_saved: "Ще немає збережених документів.",
+                            upload_manager_use: "Використати",
+                            upload_manager_added: "Додано",
+                            upload_manager_remove_saved: "Видалити збережений документ",
+                            upload_manager_parsed_at: "Опрацьовано",
+                            upload_manager_clear_saved: "Очистити все",
+                            upload_manager_description:
+                                "Завантажуйте нові документи або повторно використовуйте вже опрацьовані документи з локального сховища."
                         },
                         suminput: {
                             tokensused: "Використано токени",

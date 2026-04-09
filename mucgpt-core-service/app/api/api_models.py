@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
@@ -58,6 +58,14 @@ class ChatCompletionMessage(BaseModel):
     )
 
 
+class ChatDataSource(BaseModel):
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Document content to inject")
+    metadata: dict[str, Any] | None = Field(
+        None, description="Additional metadata for this document"
+    )
+
+
 class ChatCompletionRequest(BaseModel):
     model: str = Field("gpt-4o-mini", description="The model to use")
     messages: list[ChatCompletionMessage] = Field(
@@ -80,9 +88,9 @@ class ChatCompletionRequest(BaseModel):
     assistant_id: str | None = Field(
         None, description="ID of the assistant to use for this completion request"
     )
-    data_contents: list[str] | None = Field(
+    data_sources: list[ChatDataSource] | None = Field(
         None,
-        description="List of pre-parsed file contents to inject into the request context",
+        description="Structured document payload with title, content and metadata",
     )
     model_config = ConfigDict(
         json_schema_extra={
@@ -97,9 +105,16 @@ class ChatCompletionRequest(BaseModel):
                 "stream": False,
                 "enabled_tools": ["Vereinfachen"],
                 "assistant_id": "assistant-123",
-                "data_contents": [
-                    "Content of document 1...",
-                    "Content of document 2...",
+                "data_sources": [
+                    {
+                        "title": "Policy-Handbook.pdf",
+                        "content": "Document content...",
+                        "metadata": {
+                            "mime_type": "application/pdf",
+                            "size": 123456,
+                            "source": "upload",
+                        },
+                    }
                 ],
             }
         }

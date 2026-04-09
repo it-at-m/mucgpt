@@ -1,4 +1,5 @@
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
+from xml.sax.saxutils import escape
 
 from langchain_core.messages import SystemMessage
 from langchain_core.messages.base import BaseMessage
@@ -22,6 +23,59 @@ class MUCGPTAgent:
     """
     Agent responsible for tool and agent construction, tool invocation, and postprocessing.
     """
+
+    @staticmethod
+    def _build_data_sources_xml(data_sources: list[Any]) -> str:
+        document_blocks: list[str] = []
+
+        for idx, source in enumerate(data_sources, start=1):
+            if isinstance(source, str):
+                title = f"Document {idx}"
+                content = source
+                metadata_map: dict[str, str] = {}
+            elif isinstance(source, dict):
+                title = str(source.get("title") or f"Document {idx}")
+                content = str(source.get("content") or "")
+                raw_metadata = source.get("metadata") or {}
+                metadata_map = {}
+                if isinstance(raw_metadata, dict):
+                    metadata_map = {
+                        str(k): str(v)
+                        for k, v in raw_metadata.items()
+                        if v is not None and str(v).strip()
+                    }
+            else:
+                continue
+
+            if not content.strip():
+                continue
+
+            metadata_xml = ""
+            if metadata_map:
+                meta_lines = [
+                    f'      <meta key="{escape(key)}">{escape(value)}</meta>'
+                    for key, value in metadata_map.items()
+                ]
+                metadata_xml = (
+                    "\n    <metadata>\n" + "\n".join(meta_lines) + "\n    </metadata>"
+                )
+
+            document_blocks.append(
+                "\n".join(
+                    [
+                        f'  <document index="{idx}">',
+                        f"    <title>{escape(title)}</title>",
+                        *([] if not metadata_xml else [metadata_xml]),
+                        f"    <content>{escape(content)}</content>",
+                        "  </document>",
+                    ]
+                )
+            )
+
+        if not document_blocks:
+            return ""
+
+        return "<data-sources>\n" + "\n".join(document_blocks) + "\n</data-sources>"
 
     def should_continue(self, state: AgentState) -> str:
         messages = state["messages"]
@@ -81,20 +135,27 @@ class MUCGPTAgent:
         if tools_to_use:
             model = model.bind_tools(tools_to_use, parallel_tool_calls=False)
 
-        # inject data contents directly into messages
-        if config and config["configurable"].get("data_contents"):
-            data_contents: list[str] = config["configurable"].get("data_contents")
+        # inject selected data sources directly into messages as XML
+        data_sources = (
+            config.get("configurable", {}).get("data_sources") if config else None
+        )
+
+        if data_sources:
             self.logger.info(
-                f"Injecting {len(data_contents)} data content(s) into request context"
+                f"Injecting {len(data_sources)} data source(s) into request context"
             )
-            combined = "\n\n".join(data_contents)
-            data_string = f"# Data\nFollowing is the content of data chosen by the user which should be used to answer the request.\n{combined}"
-            if messages and isinstance(messages[0], SystemMessage):
-                messages[0] = SystemMessage(
-                    content=f"{messages[0].content}\n\n{data_string}"
+            data_sources_xml = self._build_data_sources_xml(data_sources)
+            if data_sources_xml:
+                data_string = (
+                    "Use the following selected data-sources to answer the request when relevant.\n"
+                    f"{data_sources_xml}"
                 )
-            else:
-                messages.insert(0, SystemMessage(content=data_string))
+                if messages and isinstance(messages[0], SystemMessage):
+                    messages[0] = SystemMessage(
+                        content=f"{messages[0].content}\n\n{data_string}"
+                    )
+                else:
+                    messages.insert(0, SystemMessage(content=data_string))
 
         # invoke model
         response = await model.with_config(config).ainvoke(messages)

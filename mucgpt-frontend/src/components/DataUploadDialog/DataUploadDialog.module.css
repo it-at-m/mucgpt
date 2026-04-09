@@ -14,13 +14,15 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-width: 360px;
+    min-width: 420px;
+    max-width: 640px;
 }
 
 .description {
     margin: 0;
     color: var(--colorNeutralForeground2);
     font-size: 0.9375rem;
+    line-height: 1.4;
 }
 
 .field {
@@ -58,6 +60,17 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 10px;
+    background: var(--colorNeutralBackground1);
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .sectionTitle {
@@ -66,11 +79,18 @@
     color: var(--colorNeutralForeground1);
 }
 
+.sectionCount {
+    margin-left: 6px;
+    color: var(--colorNeutralForeground3);
+    font-weight: 500;
+}
+
 .fileList {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 200px;
+    max-height: 220px;
+    min-height: 48px;
     overflow-y: auto;
 }
 
@@ -82,6 +102,11 @@
     padding: 8px 12px;
     background: var(--colorNeutralBackground2);
     border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--colorNeutralStroke1) 70%, transparent);
+}
+
+.fileItem:hover {
+    background: color-mix(in srgb, var(--colorNeutralBackground2) 70%, var(--colorNeutralBackground3));
 }
 
 .fileMeta {
@@ -89,6 +114,7 @@
     flex-direction: column;
     gap: 2px;
     overflow: hidden;
+    min-width: 0;
 }
 
 .fileName {
@@ -101,6 +127,19 @@
 .fileSize {
     font-size: 0.75rem;
     color: var(--colorNeutralForeground3);
+}
+
+.fileSecondary {
+    font-size: 0.75rem;
+    color: var(--colorNeutralForeground3);
+    word-break: break-word;
+}
+
+.fileActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .emptyState {

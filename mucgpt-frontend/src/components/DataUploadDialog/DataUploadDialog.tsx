@@ -1,6 +1,20 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, Field, Text, Tooltip } from "@fluentui/react-components";
-import { Dismiss16Regular, DocumentAdd24Regular } from "@fluentui/react-icons";
+import {
+    Button,
+    Checkbox,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    Field,
+    Text,
+    Tooltip,
+    Spinner
+} from "@fluentui/react-components";
+import { Dismiss16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { uploadFileApi } from "../../api/core-client";
 import {
@@ -12,6 +26,28 @@ import {
 } from "../../service/parsedDocumentStorage";
 
 import styles from "./DataUploadDialog.module.css";
+
+function SectionCard({
+    title,
+    children,
+    className,
+    hideTitle,
+    id
+}: {
+    title: string;
+    children: ReactNode;
+    className?: string;
+    hideTitle?: boolean;
+    id?: string;
+}) {
+    const sectionClassName = [styles.sectionCard, className].filter(Boolean).join(" ");
+    return (
+        <div className={sectionClassName} id={id}>
+            {!hideTitle && <h3 className={styles.sectionTitle}>{title}</h3>}
+            <div className={styles.sectionContent}>{children}</div>
+        </div>
+    );
+}
 
 export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error";
 
@@ -98,30 +134,47 @@ const formatFileSize = (bytes: number) => {
 export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: DataUploadDialogProps) => {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const [pendingData, setPendingData] = useState<UploadedData[]>([]);
     const [storedDocuments, setStoredDocuments] = useState<StoredParsedDocument[]>([]);
-    const dataRef = useRef<UploadedData[]>(data);
+    const [selectedStoredDocumentIds, setSelectedStoredDocumentIds] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
 
-    const refreshStoredDocuments = useCallback(() => {
-        setStoredDocuments(getStoredParsedDocuments());
+    const toUploadedData = useCallback((document: StoredParsedDocument): UploadedData => {
+        const file = new File([], document.name, {
+            type: document.mimeType || "application/octet-stream",
+            lastModified: document.lastModified
+        });
+        return createUploadedData(file, "ready", {
+            size: document.size,
+            fileContent: document.content,
+            source: "stored",
+            storedDocumentId: document.id,
+            parsedAt: document.parsedAt,
+            fileSignature: document.fileSignature,
+            mimeType: document.mimeType
+        });
     }, []);
 
-    useEffect(() => {
-        dataRef.current = data;
-    }, [data]);
+    const syncSelectionToData = useCallback(
+        (selectedIds: string[], documents: StoredParsedDocument[]) => {
+            const selectedData = documents.filter(document => selectedIds.includes(document.id)).map(toUploadedData);
+            onDataChange(selectedData);
+        },
+        [onDataChange, toUploadedData]
+    );
 
     useEffect(() => {
         if (open) {
-            refreshStoredDocuments();
+            const docs = getStoredParsedDocuments();
+            setStoredDocuments(docs);
+            const selectedIds = data.map(d => d.storedDocumentId).filter((id): id is string => Boolean(id));
+            setSelectedStoredDocumentIds(selectedIds);
         } else {
-            setPendingData([]);
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
         }
-    }, [open, refreshStoredDocuments]);
+    }, [open, data]);
 
-    const hasPendingData = pendingData.length > 0;
     const hasStoredDocuments = storedDocuments.length > 0;
 
     const formatParsedAt = useCallback((value: string) => {
@@ -143,151 +196,84 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
     );
 
     const handleFileSelection = useCallback(
-        (event: React.ChangeEvent<HTMLInputElement>) => {
+        async (event: React.ChangeEvent<HTMLInputElement>) => {
             const files = Array.from(event.target.files ?? []);
             if (files.length === 0) {
                 return;
             }
 
-            setPendingData(prev => {
-                const existingSignatures = new Set(prev.map(getDataSignature).concat(data.map(getDataSignature)));
+            setIsUploading(true);
+            const newlyStoredIds: string[] = [];
+            const knownSignatures = new Set(storedDocuments.map(doc => doc.fileSignature));
 
-                const newData = files.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "pending"));
+            for (const file of files) {
+                const signature = getFileSignature(file);
+                if (knownSignatures.has(signature)) {
+                    continue;
+                }
+                try {
+                    const fileContent = await uploadFileApi(file);
+                    const storedDocument = upsertParsedDocumentFromUpload(file, fileContent);
+                    if (storedDocument?.id) {
+                        newlyStoredIds.push(storedDocument.id);
+                    }
+                    knownSignatures.add(signature);
+                } catch (error) {
+                    console.error("Failed to upload data:", error);
+                }
+            }
 
-                return newData.length > 0 ? [...prev, ...newData] : prev;
-            });
+            const docs = getStoredParsedDocuments();
+            setStoredDocuments(docs);
+
+            if (newlyStoredIds.length > 0) {
+                const nextSelectedIds = Array.from(new Set([...selectedStoredDocumentIds, ...newlyStoredIds]));
+                setSelectedStoredDocumentIds(nextSelectedIds);
+                syncSelectionToData(nextSelectedIds, docs);
+            }
+
+            setIsUploading(false);
 
             if (event.target) {
                 event.target.value = "";
             }
         },
-        [data]
+        [storedDocuments, selectedStoredDocumentIds, syncSelectionToData]
     );
 
-    const handleRemovePending = useCallback((id: string) => {
-        setPendingData(prev => prev.filter(data => data.id !== id));
-    }, []);
-
     const handleCancel = useCallback(() => {
-        setPendingData([]);
         onOpenChange(false);
     }, [onOpenChange]);
 
-    const handleUseStoredDocument = useCallback(
-        (document: StoredParsedDocument) => {
-            const isAlreadyAttached = data.some(d => d.storedDocumentId === document.id);
-            if (isAlreadyAttached) {
-                return;
-            }
-
-            const file = new File([], document.name, { type: document.mimeType || "application/octet-stream", lastModified: document.lastModified });
-            const reusable = createUploadedData(file, "ready", {
-                size: document.size,
-                fileContent: document.content,
-                source: "stored",
-                storedDocumentId: document.id,
-                parsedAt: document.parsedAt,
-                fileSignature: document.fileSignature,
-                mimeType: document.mimeType
-            });
-
-            onDataChange([...data, reusable]);
+    const handleToggleStoredDocument = useCallback(
+        (documentId: string, checked: boolean) => {
+            const nextSelectedIds = checked
+                ? Array.from(new Set([...selectedStoredDocumentIds, documentId]))
+                : selectedStoredDocumentIds.filter(id => id !== documentId);
+            setSelectedStoredDocumentIds(nextSelectedIds);
+            syncSelectionToData(nextSelectedIds, storedDocuments);
         },
-        [data, onDataChange]
+        [selectedStoredDocumentIds, storedDocuments, syncSelectionToData]
     );
 
     const handleRemoveStoredDocument = useCallback(
         (id: string) => {
             removeStoredParsedDocument(id);
-            refreshStoredDocuments();
+            const docs = getStoredParsedDocuments();
+            setStoredDocuments(docs);
+            const nextSelectedIds = selectedStoredDocumentIds.filter(selectedId => selectedId !== id);
+            setSelectedStoredDocumentIds(nextSelectedIds);
+            syncSelectionToData(nextSelectedIds, docs);
         },
-        [refreshStoredDocuments]
+        [selectedStoredDocumentIds, syncSelectionToData]
     );
 
     const handleClearStoredDocuments = useCallback(() => {
         clearStoredParsedDocuments();
-        refreshStoredDocuments();
-    }, [refreshStoredDocuments]);
-
-    const handleConfirm = useCallback(() => {
-        if (pendingData.length === 0) {
-            onOpenChange(false);
-            return;
-        }
-
-        // Mark data as uploading and add them to the main list
-        const uploadingData = pendingData.map(doc => ({
-            ...doc,
-            status: "uploading" as UploadedDataStatus,
-            isActive: doc.isActive ?? true
-        }));
-
-        const updatedData = [...data, ...uploadingData];
-        onDataChange(updatedData);
-        setPendingData([]);
-        onOpenChange(false);
-
-        // Upload each document
-        uploadingData.forEach(data => {
-            uploadFileApi(data.file)
-                .then(fileContent => {
-                    const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
-                    const current = dataRef.current;
-                    const updated = current.map(d =>
-                        d.id === data.id
-                            ? {
-                                  ...d,
-                                  status: "ready" as UploadedDataStatus,
-                                  fileContent,
-                                  storedDocumentId: storedDocument?.id,
-                                  parsedAt: storedDocument?.parsedAt,
-                                  fileSignature: storedDocument?.fileSignature,
-                                  mimeType: storedDocument?.mimeType,
-                                  source: "upload" as const
-                              }
-                            : d
-                    );
-                    onDataChange(updated);
-                    refreshStoredDocuments();
-                })
-                .catch(error => {
-                    console.error("Failed to upload data:", error);
-                    const current = dataRef.current;
-                    const updated = current.map(d =>
-                        d.id === data.id ? { ...d, status: "error" as UploadedDataStatus, errorMessage: error.message || "Upload failed" } : d
-                    );
-                    onDataChange(updated);
-                });
-        });
-    }, [pendingData, data, onDataChange, onOpenChange, refreshStoredDocuments]);
-
-    const pendingList = useMemo(() => {
-        if (!hasPendingData) {
-            return (
-                <Text className={styles.emptyState} role="note">
-                    {t("components.questioninput.upload_dialog_no_pending", "Keine Dateien ausgewählt.")}
-                </Text>
-            );
-        }
-
-        return pendingData.map(data => (
-            <div key={data.id} className={styles.fileItem}>
-                <div className={styles.fileMeta}>
-                    <span className={styles.fileName}>{data.name}</span>
-                    <span className={styles.fileSize}>{formatFileSize(data.size)}</span>
-                </div>
-                <Tooltip content={t("components.questioninput.remove_data", "Dokument entfernen")} relationship="description">
-                    <Button
-                        appearance="subtle"
-                        size="small"
-                        icon={<Dismiss16Regular />}
-                        onClick={() => handleRemovePending(data.id)}
-                        aria-label={t("components.questioninput.remove_data", "Dokument entfernen")}
-                    />
-                </Tooltip>
-            </div>
-        ));
-    }, [hasPendingData, pendingData, handleRemovePending, t]);
+        setStoredDocuments([]);
+        setSelectedStoredDocumentIds([]);
+        onDataChange([]);
+    }, [onDataChange]);
 
     const storedDocumentsList = useMemo(() => {
         if (storedDocuments.length === 0) {
@@ -299,9 +285,16 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
         }
 
         return storedDocuments.map(document => {
-            const isAttached = data.some(d => d.storedDocumentId === document.id);
+            const isAttached = selectedStoredDocumentIds.includes(document.id);
             return (
                 <div key={document.id} className={styles.fileItem}>
+                    <div className={styles.fileSelector}>
+                        <Checkbox
+                            checked={isAttached}
+                            onChange={(_, data) => handleToggleStoredDocument(document.id, data.checked === true)}
+                            aria-label={t("components.questioninput.upload_manager_use", "Verwenden")}
+                        />
+                    </div>
                     <div className={styles.fileMeta}>
                         <span className={styles.fileName}>{document.name}</span>
                         <span className={styles.fileSize}>{formatFileSize(document.size)}</span>
@@ -310,11 +303,6 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
                         </span>
                     </div>
                     <div className={styles.fileActions}>
-                        <Button appearance="secondary" size="small" onClick={() => handleUseStoredDocument(document)} disabled={isAttached}>
-                            {isAttached
-                                ? t("components.questioninput.upload_manager_added", "Hinzugefügt")
-                                : t("components.questioninput.upload_manager_use", "Verwenden")}
-                        </Button>
                         <Tooltip
                             content={t("components.questioninput.upload_manager_remove_saved", "Gespeichertes Dokument entfernen")}
                             relationship="description"
@@ -331,70 +319,68 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
                 </div>
             );
         });
-    }, [data, formatParsedAt, handleRemoveStoredDocument, handleUseStoredDocument, storedDocuments, t]);
+    }, [formatParsedAt, handleRemoveStoredDocument, handleToggleStoredDocument, selectedStoredDocumentIds, storedDocuments, t]);
 
     return (
         <Dialog open={open} onOpenChange={onDialogOpenChange} modalType="modal">
             <DialogSurface>
                 <DialogBody>
-                    <DialogTitle>
-                        <span className={styles.titleContent}>
-                            <DocumentAdd24Regular className={styles.titleIcon} aria-hidden />
-                            {t("components.questioninput.upload_dialog_title", "Dokumente verwalten")}
-                        </span>
-                    </DialogTitle>
+                    <DialogTitle>{t("components.questioninput.upload_dialog_title", "Kontextmanager")}</DialogTitle>
                     <DialogContent className={styles.dialogContent}>
-                        <Text className={styles.description}>
-                            {t(
-                                "components.questioninput.upload_manager_description",
-                                "Lade neue Dokumente hoch oder verwende bereits geparste Dokumente aus deinem lokalen Speicher."
-                            )}
-                        </Text>
-                        <Field
-                            label={t("components.questioninput.upload_dialog_select_label", "Dateien auswählen")}
-                            hint={t("components.questioninput.upload_dialog_select_hint", "Mehrere Dateien sind möglich.")}
-                            className={styles.field}
-                        >
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                multiple
-                                className={styles.fileInput}
-                                onChange={handleFileSelection}
-                                aria-label={t("components.questioninput.upload_dialog_select_label", "Dateien auswählen")}
-                            />
-                        </Field>
-                        <div className={styles.section}>
-                            <Text weight="semibold" as="h3" className={styles.sectionTitle}>
-                                {t("components.questioninput.upload_dialog_pending_label", "Ausgewählte Dateien")}
+                        <SectionCard title={t("components.questioninput.upload_manager_upload", "Dokumente hochladen")}>
+                            <Text className={styles.description}>
+                                {t(
+                                    "components.questioninput.upload_manager_description",
+                                    "Lade neue Dokumente hoch oder wähle bereits hochgeladene Dokumente aus."
+                                )}
                             </Text>
-                            <div className={styles.fileList}>{pendingList}</div>
-                        </div>
-                        <div className={styles.section}>
+                            <Field
+                                label={t("components.questioninput.upload_dialog_select_label", "Dateien auswählen")}
+                                hint={t("components.questioninput.upload_dialog_select_hint", "Mehrere Dateien sind möglich.")}
+                                className={styles.field}
+                            >
+                                {isUploading ? (
+                                    <div className={styles.spinnerContainer}>
+                                        <Spinner label={t("components.questioninput.upload_dialog_uploading", "Wird hochgeladen...")} size="medium" />
+                                    </div>
+                                ) : (
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        multiple
+                                        className={styles.fileInput}
+                                        onChange={handleFileSelection}
+                                        disabled={isUploading}
+                                        aria-label={t("components.questioninput.upload_dialog_select_label", "Dateien auswählen")}
+                                    />
+                                )}
+                            </Field>
+                        </SectionCard>
+                        <SectionCard
+                            title={t("components.questioninput.upload_manager_saved_label", "Bereits hochgeladene Dokumente")}
+                            className={styles.section}
+                        >
                             <div className={styles.sectionHeader}>
-                                <Text weight="semibold" as="h3" className={styles.sectionTitle}>
-                                    {t("components.questioninput.upload_manager_saved_label", "Gespeicherte Dokumente")}
-                                    <span className={styles.sectionCount}>({storedDocuments.length})</span>
+                                <Text weight="semibold" as="span" className={styles.sectionCount}>
+                                    {t("components.questioninput.upload_manager_saved_count", "Anzahl: ")}
+                                    {storedDocuments.length}
                                 </Text>
                                 <Button
-                                    appearance="subtle"
+                                    appearance="transparent"
                                     size="small"
                                     onClick={handleClearStoredDocuments}
-                                    disabled={!hasStoredDocuments}
+                                    disabled={!hasStoredDocuments || isUploading}
                                     aria-label={t("components.questioninput.upload_manager_clear_saved", "Alle gespeicherten Dokumente löschen")}
                                 >
                                     {t("components.questioninput.upload_manager_clear_saved", "Alle löschen")}
                                 </Button>
                             </div>
                             <div className={styles.fileList}>{storedDocumentsList}</div>
-                        </div>
+                        </SectionCard>
                     </DialogContent>
                     <DialogActions>
-                        <Button appearance="secondary" onClick={handleCancel}>
-                            {t("components.questioninput.upload_dialog_cancel", "Abbrechen")}
-                        </Button>
-                        <Button appearance="primary" onClick={handleConfirm} disabled={!hasPendingData}>
-                            {t("components.questioninput.upload_dialog_confirm", "Hinzufügen")}
+                        <Button appearance="primary" onClick={handleCancel}>
+                            {t("components.questioninput.upload_dialog_close", "Schließen")}
                         </Button>
                     </DialogActions>
                 </DialogBody>

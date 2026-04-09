@@ -1,21 +1,32 @@
-.titleContent {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.titleIcon {
-    color: var(--colorBrandForeground1);
-    flex-shrink: 0;
-    font-size: 24px;
-}
-
 .dialogContent {
     display: flex;
     flex-direction: column;
     gap: 16px;
     min-width: 420px;
     max-width: 640px;
+}
+
+.sectionCard {
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sectionTitle {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--colorNeutralForeground1);
+}
+
+.sectionContent {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .description {
@@ -35,7 +46,7 @@
     padding: 8px;
     border: 1px dashed var(--colorNeutralStroke1);
     border-radius: 8px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     color: var(--colorNeutralForeground1);
     cursor: pointer;
 }
@@ -45,8 +56,18 @@
     outline-offset: 2px;
 }
 
+.spinnerContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    background: var(--primaryContainer);
+    border: 1px dashed var(--colorNeutralStroke1);
+    border-radius: 8px;
+}
+
 .fileInput::file-selector-button {
-    background: var(--colorBrandBackground2);
+    background: var(--primary);
     color: var(--colorNeutralForegroundOnBrand);
     border: none;
     border-radius: 6px;
@@ -100,13 +121,13 @@
     justify-content: space-between;
     gap: 12px;
     padding: 8px 12px;
-    background: var(--colorNeutralBackground2);
+    background: var(--primaryContainer);
     border-radius: 8px;
     border: 1px solid color-mix(in srgb, var(--colorNeutralStroke1) 70%, transparent);
 }
 
 .fileItem:hover {
-    background: color-mix(in srgb, var(--colorNeutralBackground2) 70%, var(--colorNeutralBackground3));
+    background: color-mix(in srgb, var(--primaryContainer) 70%, var(--colorNeutralBackground3));
 }
 
 .fileMeta {

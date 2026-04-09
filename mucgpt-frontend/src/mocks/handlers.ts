@@ -358,6 +358,24 @@ function chooseStreamType(enabledTools?: string[]) {
     return options[Math.floor(Math.random() * options.length)];
 }
 
+async function parseUploadHandler({ request }: { request: Request }) {
+    // Simulate network delay for file upload and parsing
+    await delay(8000 + Math.random() * 4000); // 8-12 seconds delay
+
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+
+    if (!file) {
+        return HttpResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
+    // Read file content and return it directly as the parsed text
+    const content = await file.text();
+
+    // Return the parsed content as a plain string (matching the API spec)
+    return HttpResponse.json(content);
+}
+
 export const handlers = [
     http.get("/api/backend/config", () => {
         return HttpResponse.json(CONFIG_RESPONSE);
@@ -654,22 +672,8 @@ export const handlers = [
         });
     }),
 
-    // Parse API handler (moved from memory-service to core-service)
-    http.post("/api/v1/parse/", async ({ request }) => {
-        // Simulate network delay for file upload and parsing
-        await delay(8000 + Math.random() * 4000); // 8-12 seconds delay
-
-        const formData = await request.formData();
-        const file = formData.get("file") as File;
-
-        if (!file) {
-            return HttpResponse.json({ error: "No file provided" }, { status: 400 });
-        }
-
-        // Read file content and return it directly as the parsed text
-        const content = await file.text();
-
-        // Return the parsed content as a plain string (matching the API spec)
-        return HttpResponse.json(content);
-    })
+    // Parse API handlers (core-service route + legacy compatibility)
+    http.post("/api/backend/v1/parse", parseUploadHandler),
+    http.post("/api/backend/v1/parse/", parseUploadHandler),
+    http.post("/api/v1/parse/", parseUploadHandler)
 ];

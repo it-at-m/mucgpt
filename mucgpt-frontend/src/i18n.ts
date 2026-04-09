@@ -253,6 +253,10 @@ i18n
                             copy: "Zusammenfassung kopieren"
                         },
                         questioninput: {
+                            upload_dialog_uploading: "Wird hochgeladen...",
+                            upload_manager_upload: "Dokumente hochladen",
+                            upload_manager_saved_count: "Anzahl: ",
+                            upload_manager_download: "Text herunterladen",
                             tokensused: "Token verbraucht",
                             limit: ". Ältere Eingaben werden bei der Generierung nicht berücksichtigt!",
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
@@ -897,6 +901,10 @@ i18n
                             copy: "Copy summary"
                         },
                         questioninput: {
+                            upload_dialog_uploading: "Uploading...",
+                            upload_manager_upload: "Upload documents",
+                            upload_manager_saved_count: "Count: ",
+                            upload_manager_download: "Download text",
                             tokensused: "Token used",
                             limit: ". Previous inputs are not considered during generation!",
                             errorhint: "MUCGPT can make errors. Verify important information.",
@@ -1534,6 +1542,10 @@ i18n
                             copy: "Zsammanfassung kopiern"
                         },
                         questioninput: {
+                            upload_dialog_uploading: "Wird obagloodn...",
+                            upload_manager_upload: "Dokumente obalodn",
+                            upload_manager_saved_count: "Anzahl: ",
+                            upload_manager_download: "Text obalodn",
                             tokensused: "Token vabrocht",
                             limit: ". Oide Eingabn wean bei da Generierung ned mit einbezogn!",
                             errorhint: "MUCGPT kann a Schmarrn macha. Schau oba wichtige Informationen stimma.",
@@ -2177,6 +2189,10 @@ i18n
                             copy: "Copier le résumé"
                         },
                         questioninput: {
+                            upload_dialog_uploading: "Téléversement...",
+                            upload_manager_upload: "Téléverser des documents",
+                            upload_manager_saved_count: "Nombre : ",
+                            upload_manager_download: "Télécharger le texte",
                             tokensused: "Jetons utilisés",
                             limit: ". Les entrées plus anciennes ne seront pas prises en compte lors de la génération !",
                             errorhint: "MUCGPT peut faire des erreurs. Vérifiez les informations importantes.",
@@ -2819,6 +2835,10 @@ i18n
                             copy: "Копіювати резюме"
                         },
                         questioninput: {
+                            upload_dialog_uploading: "Завантаження...",
+                            upload_manager_upload: "Завантажити документи",
+                            upload_manager_saved_count: "Кількість: ",
+                            upload_manager_download: "Завантажити текст",
                             tokensused: "Використано токени",
                             limit: ". Старіші введення не будуть враховані при генерації!",
                             errorhint: "MUCGPT може помилятися. Перевірте важливу інформацію.",

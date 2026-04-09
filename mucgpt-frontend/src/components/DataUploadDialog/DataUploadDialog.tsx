@@ -14,7 +14,7 @@ import {
     Tooltip,
     Spinner
 } from "@fluentui/react-components";
-import { Dismiss16Regular } from "@fluentui/react-icons";
+import { Dismiss16Regular, ArrowDownload16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { uploadFileApi } from "../../api/core-client";
 import {
@@ -275,6 +275,19 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
         onDataChange([]);
     }, [onDataChange]);
 
+    const handleDownloadParsedContent = useCallback((doc: StoredParsedDocument) => {
+        if (!doc.content) return;
+        const blob = new Blob([doc.content], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = window.document.createElement("a");
+        a.href = url;
+        a.download = `${doc.name}.txt`;
+        window.document.body.appendChild(a);
+        a.click();
+        window.document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, []);
+
     const storedDocumentsList = useMemo(() => {
         if (storedDocuments.length === 0) {
             return (
@@ -303,6 +316,17 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
                         </span>
                     </div>
                     <div className={styles.fileActions}>
+                        {document.content && (
+                            <Tooltip content={t("components.questioninput.upload_manager_download", "Text herunterladen")} relationship="description">
+                                <Button
+                                    appearance="subtle"
+                                    size="small"
+                                    icon={<ArrowDownload16Regular />}
+                                    onClick={() => handleDownloadParsedContent(document)}
+                                    aria-label={t("components.questioninput.upload_manager_download", "Text herunterladen")}
+                                />
+                            </Tooltip>
+                        )}
                         <Tooltip
                             content={t("components.questioninput.upload_manager_remove_saved", "Gespeichertes Dokument entfernen")}
                             relationship="description"
@@ -319,7 +343,7 @@ export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: Dat
                 </div>
             );
         });
-    }, [formatParsedAt, handleRemoveStoredDocument, handleToggleStoredDocument, selectedStoredDocumentIds, storedDocuments, t]);
+    }, [formatParsedAt, handleDownloadParsedContent, handleRemoveStoredDocument, handleToggleStoredDocument, selectedStoredDocumentIds, storedDocuments, t]);
 
     return (
         <Dialog open={open} onOpenChange={onDialogOpenChange} modalType="modal">

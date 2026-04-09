@@ -268,7 +268,7 @@
 }
 
 .noToolsText {
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
     font-style: italic;
     font-size: var(--fontSizeBase300);
     padding: 32px 16px;

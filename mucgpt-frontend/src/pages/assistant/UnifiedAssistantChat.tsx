@@ -45,7 +45,7 @@ import {
 import { useDuplicateAssistant } from "../discovery/hooks/useDuplicateAssistant";
 import { useMigrateLocalAssistant } from "../../hooks/useMigrateLocalAssistant";
 import { CloseConfirmationDialog } from "../../components/AssistantDialogs/shared/CloseConfirmationDialog";
-import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
+import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 import styles from "./UnifiedAssistantChat.module.css";
 
 interface UnifiedAssistantChatProps {

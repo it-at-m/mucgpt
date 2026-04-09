@@ -25,7 +25,7 @@ import {
     upsertParsedDocumentFromUpload
 } from "../../service/parsedDocumentStorage";
 
-import styles from "./DataUploadDialog.module.css";
+import styles from "./ContextManagerDialog.module.css";
 
 function SectionCard({
     title,
@@ -67,7 +67,7 @@ export interface UploadedData {
     mimeType?: string;
 }
 
-interface DataUploadDialogProps {
+interface ContextManagerDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     data: UploadedData[];
@@ -131,7 +131,7 @@ const formatFileSize = (bytes: number) => {
     return `${mb.toFixed(mb >= 10 ? 0 : 1)} MB`;
 };
 
-export const DataUploadDialog = ({ open, onOpenChange, data, onDataChange }: DataUploadDialogProps) => {
+export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }: ContextManagerDialogProps) => {
     const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [storedDocuments, setStoredDocuments] = useState<StoredParsedDocument[]>([]);

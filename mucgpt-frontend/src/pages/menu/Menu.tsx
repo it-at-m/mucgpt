@@ -23,7 +23,7 @@ import { AssistantStats } from "../../components/AssistantStats/AssistantStats";
 import { CommunityAssistantStorageService } from "../../service/communityassistantstorage";
 import { AssistantCard } from "../../components/AssistantCard";
 import { useToolsContext } from "../../components/ToolsProvider";
-import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
+import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 
 const Menu = () => {
     const { t } = useTranslation();

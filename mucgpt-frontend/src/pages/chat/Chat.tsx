@@ -27,7 +27,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData } from "../../components/DataUploadDialog/DataUploadDialog";
+import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
 
 /**
  * Creates a debounced function that delays invoking the provided function

@@ -3,7 +3,7 @@ import { Button, Tooltip, Spinner } from "@fluentui/react-components";
 import { Checkmark24Regular, Dismiss16Regular, ErrorCircle24Regular } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
-import { UploadedData } from "../DataUploadDialog/DataUploadDialog";
+import { UploadedData } from "../ContextManagerDialog/ContextManagerDialog";
 
 interface DataUploadProps {
     data: UploadedData[];

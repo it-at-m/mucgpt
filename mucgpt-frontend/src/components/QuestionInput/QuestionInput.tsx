@@ -5,7 +5,7 @@ import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolListResponse } from "../../api/models";
-import { DataUploadDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../DataUploadDialog/DataUploadDialog";
+import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ToolBadges } from "./ToolBadges";
 import { uploadFileApi } from "../../api/core-client";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
@@ -367,7 +367,7 @@ export const QuestionInput = ({
                     <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 </div>
             </div>
-            <DataUploadDialog open={isUploadDialogOpen} onOpenChange={handleDialogOpenChange} data={uploadedData} onDataChange={handleDataChange} />
+            <ContextManagerDialog open={isUploadDialogOpen} onOpenChange={handleDialogOpenChange} data={uploadedData} onDataChange={handleDataChange} />
         </>
     );
 };

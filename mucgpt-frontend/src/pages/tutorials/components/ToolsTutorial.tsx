@@ -11,7 +11,7 @@ import { ToolStatus, ToolStreamState } from "../../../utils/ToolStreamHandler";
 import { useToolsContext } from "../../../components/ToolsProvider";
 import styles from "./ToolsTutorial.module.css";
 import { TutorialSection } from "./TutorialTypes";
-import { UploadedData } from "../../../components/DataUploadDialog/DataUploadDialog";
+import { UploadedData } from "../../../components/ContextManagerDialog/ContextManagerDialog";
 
 // Create a tutorial-specific implementation using the real QuestionInput
 const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTools: string[]; setSelectedTools: (tools: string[]) => void }) => {

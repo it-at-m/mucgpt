@@ -1,24 +1,6 @@
 <!-- PROJECT LOGO -->
-<style>
-  .mucgpt-logo {
-    width: min(100%, 900px);
-    height: 300px;
-    margin: 0 auto;
-    background-color: #333;
-    -webkit-mask: url("assets/mucgpt_title.svg") center / contain no-repeat;
-    mask: url("assets/mucgpt_title.svg") center / contain no-repeat;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .mucgpt-logo {
-      background-color: #ccc;
-    }
-  }
-</style>
 <div align="center">
-  <a href="#" aria-label="MUCGPT logo">
-    <div class="mucgpt-logo" role="img" aria-label="Logo"></div>
-  </a>
+  <img src="assets/mucgpt_title.svg" alt="MUCGPT logo" width="900" />
 </div>
 <br />
 

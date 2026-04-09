@@ -117,8 +117,6 @@ class McpBearerAuthProvider(Auth):
     def auth_flow(self, request: Request) -> typing.Generator[Request, Response, None]:
         if self._auth_override:
             request.headers["Authorization"] = self._auth_override
-            print(f"Using auth override for user {self._uid}: {self._auth_override}")
-            print(f"Request headers: {request.headers}")
             yield request
             return
 

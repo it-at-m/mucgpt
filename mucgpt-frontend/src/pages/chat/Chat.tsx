@@ -602,7 +602,6 @@ const Chat = () => {
         () => (
             <QuestionInput
                 clearOnSend
-                placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={(question, datas) => {
                     const dataSources = datas

@@ -623,7 +623,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                     </div>
                     <QuestionInput
                         clearOnSend
-                        placeholder={t("chat.prompt")}
                         disabled={isLoadingRef.current || error !== undefined}
                         onSend={(question, datas) => {
                             const dataSources = datas
@@ -659,7 +658,6 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
         return (
             <QuestionInput
                 clearOnSend
-                placeholder={t("chat.prompt")}
                 disabled={isLoadingRef.current || error !== undefined || strategy instanceof DeletedCommunityAssistantStrategy}
                 onSend={(question, datas) => {
                     const dataSources = datas

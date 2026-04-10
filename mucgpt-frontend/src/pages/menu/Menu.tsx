@@ -169,7 +169,6 @@ const Menu = () => {
                     <QuestionInput
                         onSend={onSendQuestion}
                         disabled={false}
-                        placeholder={t("chat.prompt")}
                         setQuestion={question => {
                             setQuestion(question);
                         }}

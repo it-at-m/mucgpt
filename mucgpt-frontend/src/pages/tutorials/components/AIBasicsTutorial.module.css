@@ -690,7 +690,7 @@
 
 .analogyBox h4 {
     margin: 0 0 16px 0;
-    color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
 }
 
 .analogyBox p {

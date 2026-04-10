@@ -3,9 +3,9 @@
 .progressContainer {
     margin: 16px 0;
     padding: 16px;
-    background: var(--primaryContainer);
-    border-radius: 8px;
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border-radius: 8px !important;
+    border: 1px solid var(--colorNeutralStroke1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
 }
@@ -15,8 +15,7 @@
     position: sticky !important;
     z-index: 1000 !important;
     backdrop-filter: blur(10px);
-    background: var(--primaryContainer);
-    border-bottom: 2px solid var(--primary);
+    background: var(--colorNeutralBackground1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-radius: 0;
     margin: 0;
@@ -98,8 +97,9 @@
 }
 
 .progressStats {
-    color: var(--onPrimaryContainer);
+    color: var(--colorBrandBackground);
     margin-top: 4px;
+    margin-left: 10px;
 }
 
 .progressBarContainer {
@@ -112,21 +112,21 @@
 .progressBar {
     flex: 1;
     height: 8px;
-    background: var(--outline);
+    background: var(--colorNeutralStroke1);
     border-radius: 4px;
     overflow: hidden;
 }
 
 .progressFill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary), var(--primary));
+    background: linear-gradient(90deg, var(--colorBrandBackground), var(--colorBrandBackground2));
     transition: width 0.3s ease;
     border-radius: 4px;
 }
 
 .progressPercentage {
     font-weight: 600;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     min-width: 35px;
     text-align: right;
 }
@@ -153,19 +153,19 @@
 }
 
 .sectionItem.completed {
-    background: var(--primary);
-    border: 1px solid var(--primary);
+    background: var(--colorBrandBackground);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .sectionItem.current {
-    background: var(--primaryContainer);
-    border: 1px solid var(--primary);
-    box-shadow: 0 0 0 2px var(--outline);
+    background: var(--colorBrandBackground2);
+    border: 1px solid var(--colorBrandBackground);
+    box-shadow: 0 0 0 2px var(--colorNeutralStroke1);
 }
 
 .sectionItem.pending {
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     opacity: 0.7;
 }
 
@@ -181,17 +181,17 @@
 }
 
 .completed .sectionIcon {
-    color: var(--onPrimary);
+    color: var(--colorNeutralForeground1);
 }
 
 .current .sectionIcon {
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
 }
 
 .pending .sectionIcon {
-    background: var(--surface);
-    color: var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
 }
 
 .sectionNumber {
@@ -206,18 +206,18 @@
 }
 
 .completed .sectionLabel {
-    color: var(--onPrimary);
+    color: var(--colorNeutralForeground1);
     text-decoration: line-through;
     opacity: 0.8;
 }
 
 .current .sectionLabel {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     font-weight: 600;
 }
 
 .pending .sectionLabel {
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 /* Responsive design */

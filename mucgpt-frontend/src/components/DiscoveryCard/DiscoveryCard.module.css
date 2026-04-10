@@ -1,29 +1,30 @@
 .card {
-    border-radius: 8px;
+    border-radius: 8px !important;
     min-height: 140px;
-    border: 2px solid transparent;
+    border: 1px solid var(--colorNeutralStroke1) !important;
     transition: all 0.2s ease;
-    background-color: var(--colorNeutralBackground1);
+    background-color: var(--colorNeutralBackground3) !important;
+    box-shadow: none !important;
 }
 
 .cardSelected {
-    border-color: var(--primary) !important;
+    border: 1px solid var(--colorBrandBackground) !important;
+    color: var(--colorBrandBackground) !important;
 }
 
 .card:hover {
-    box-shadow: var(--shadow8);
-    background-color: var(--colorNeutralBackground1) !important;
-    border-color: var(--primary) !important;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow4) !important;
+    border-color: var(--colorBrandBackground) !important;
 }
 
 .card:hover .headerText {
-    color: var(--primary);
+    color: var(--colorBrandBackground);
 }
 
 .headerText {
     font-weight: var(--fontWeightSemibold);
     font-size: var(--fontSizeBase400);
-    color: var(--colorNeutralForeground1);
     transition-property: color;
     transition-duration: 0.2s;
     padding-top: 12px;

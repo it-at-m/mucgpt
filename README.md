@@ -1,8 +1,6 @@
 <!-- PROJECT LOGO -->
 <div align="center">
-  <a href="#">
-    <img src="assets/mucgpt_title_dark.png" alt="Logo" height="300" style="display: block; margin: 0 auto; filter: invert(0)">
-  </a>
+  <img src="assets/mucgpt_title.svg" alt="MUCGPT logo" width="900" />
 </div>
 <br />
 

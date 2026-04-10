@@ -130,6 +130,15 @@
     background: color-mix(in srgb, var(--primaryContainer) 70%, var(--colorNeutralBackground3));
 }
 
+.fileItemError {
+    background: color-mix(in srgb, var(--colorPaletteRedBackground2, #fde7e9) 60%, var(--primaryContainer));
+    border-color: var(--colorPaletteRedBorder2, #d13438);
+}
+
+.fileItemError:hover {
+    background: color-mix(in srgb, var(--colorPaletteRedBackground2, #fde7e9) 80%, var(--primaryContainer));
+}
+
 .fileMeta {
     display: flex;
     flex-direction: column;

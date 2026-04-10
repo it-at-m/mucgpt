@@ -137,6 +137,11 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
     const [storedDocuments, setStoredDocuments] = useState<StoredParsedDocument[]>([]);
     const [selectedStoredDocumentIds, setSelectedStoredDocumentIds] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    // Transient error entries for uploads that succeeded on the network but
+    // could not be persisted to browser storage (e.g. QuotaExceededError).
+    // They are shown in the list so the user knows what happened, but are
+    // never written to localStorage.
+    const [failedUploads, setFailedUploads] = useState<UploadedData[]>([]);
 
     const toUploadedData = useCallback((document: StoredParsedDocument): UploadedData => {
         const file = new File([], document.name, {
@@ -155,9 +160,9 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
     }, []);
 
     const syncSelectionToData = useCallback(
-        (selectedIds: string[], documents: StoredParsedDocument[]) => {
+        (selectedIds: string[], documents: StoredParsedDocument[], currentFailedUploads: UploadedData[]) => {
             const selectedData = documents.filter(document => selectedIds.includes(document.id)).map(toUploadedData);
-            onDataChange(selectedData);
+            onDataChange([...selectedData, ...currentFailedUploads]);
         },
         [onDataChange, toUploadedData]
     );
@@ -168,6 +173,8 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
             setStoredDocuments(docs);
             const selectedIds = data.map(d => d.storedDocumentId).filter((id): id is string => Boolean(id));
             setSelectedStoredDocumentIds(selectedIds);
+            // Restore any transient error entries that are already tracked in `data`
+            setFailedUploads(data.filter(d => d.status === "error" && !d.storedDocumentId));
         } else {
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
@@ -204,6 +211,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
 
             setIsUploading(true);
             const newlyStoredIds: string[] = [];
+            const newlyFailedUploads: UploadedData[] = [];
             const knownSignatures = new Set(storedDocuments.map(doc => doc.fileSignature));
 
             for (const file of files) {
@@ -214,10 +222,25 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                 try {
                     const fileContent = await uploadFileApi(file);
                     const storedDocument = upsertParsedDocumentFromUpload(file, fileContent);
-                    if (storedDocument?.id) {
+                    if (storedDocument) {
+                        // Storage succeeded — track the new id so we can select it.
                         newlyStoredIds.push(storedDocument.id);
+                        knownSignatures.add(signature);
+                    } else {
+                        // The network upload worked but the browser rejected the
+                        // localStorage write (e.g. QuotaExceededError).  Create a
+                        // transient error entry so the user sees what happened.
+                        console.error(`Failed to persist document "${file.name}" to browser storage (storage quota may be exceeded).`);
+                        newlyFailedUploads.push(
+                            createUploadedData(file, "error", {
+                                fileContent,
+                                errorMessage: t(
+                                    "components.contextmanagerdialog.storage_error",
+                                    "Dokument konnte nicht gespeichert werden (Speicherplatz voll)."
+                                )
+                            })
+                        );
                     }
-                    knownSignatures.add(signature);
                 } catch (error) {
                     console.error("Failed to upload data:", error);
                 }
@@ -226,10 +249,15 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
             const docs = getStoredParsedDocuments();
             setStoredDocuments(docs);
 
-            if (newlyStoredIds.length > 0) {
+            const nextFailedUploads = [...failedUploads, ...newlyFailedUploads];
+            if (newlyFailedUploads.length > 0) {
+                setFailedUploads(nextFailedUploads);
+            }
+
+            if (newlyStoredIds.length > 0 || newlyFailedUploads.length > 0) {
                 const nextSelectedIds = Array.from(new Set([...selectedStoredDocumentIds, ...newlyStoredIds]));
                 setSelectedStoredDocumentIds(nextSelectedIds);
-                syncSelectionToData(nextSelectedIds, docs);
+                syncSelectionToData(nextSelectedIds, docs, nextFailedUploads);
             }
 
             setIsUploading(false);
@@ -238,7 +266,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                 event.target.value = "";
             }
         },
-        [storedDocuments, selectedStoredDocumentIds, syncSelectionToData]
+        [storedDocuments, selectedStoredDocumentIds, failedUploads, syncSelectionToData, t]
     );
 
     const handleCancel = useCallback(() => {
@@ -251,9 +279,9 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                 ? Array.from(new Set([...selectedStoredDocumentIds, documentId]))
                 : selectedStoredDocumentIds.filter(id => id !== documentId);
             setSelectedStoredDocumentIds(nextSelectedIds);
-            syncSelectionToData(nextSelectedIds, storedDocuments);
+            syncSelectionToData(nextSelectedIds, storedDocuments, failedUploads);
         },
-        [selectedStoredDocumentIds, storedDocuments, syncSelectionToData]
+        [selectedStoredDocumentIds, storedDocuments, failedUploads, syncSelectionToData]
     );
 
     const handleRemoveStoredDocument = useCallback(
@@ -263,15 +291,16 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
             setStoredDocuments(docs);
             const nextSelectedIds = selectedStoredDocumentIds.filter(selectedId => selectedId !== id);
             setSelectedStoredDocumentIds(nextSelectedIds);
-            syncSelectionToData(nextSelectedIds, docs);
+            syncSelectionToData(nextSelectedIds, docs, failedUploads);
         },
-        [selectedStoredDocumentIds, syncSelectionToData]
+        [selectedStoredDocumentIds, failedUploads, syncSelectionToData]
     );
 
     const handleClearStoredDocuments = useCallback(() => {
         clearStoredParsedDocuments();
         setStoredDocuments([]);
         setSelectedStoredDocumentIds([]);
+        setFailedUploads([]);
         onDataChange([]);
     }, [onDataChange]);
 
@@ -289,7 +318,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
     }, []);
 
     const storedDocumentsList = useMemo(() => {
-        if (storedDocuments.length === 0) {
+        if (storedDocuments.length === 0 && failedUploads.length === 0) {
             return (
                 <Text className={styles.emptyState} role="note">
                     {t("components.contextmanagerdialog.no_saved", "Noch keine gespeicherten Dokumente.")}
@@ -297,50 +326,94 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
             );
         }
 
-        return storedDocuments.map(document => {
-            const isAttached = selectedStoredDocumentIds.includes(document.id);
-            return (
-                <div key={document.id} className={styles.fileItem}>
-                    <div className={styles.fileSelector}>
-                        <Checkbox
-                            checked={isAttached}
-                            onChange={(_, data) => handleToggleStoredDocument(document.id, data.checked === true)}
-                            aria-label={t("components.contextmanagerdialog.use", "Verwenden")}
-                        />
-                    </div>
-                    <div className={styles.fileMeta}>
-                        <span className={styles.fileName}>{document.name}</span>
-                        <span className={styles.fileSize}>{formatFileSize(document.size)}</span>
-                        <span className={styles.fileSecondary}>
-                            {t("components.contextmanagerdialog.parsed_at", "Geparsed")}: {formatParsedAt(document.parsedAt)}
-                        </span>
-                    </div>
-                    <div className={styles.fileActions}>
-                        {document.content && (
-                            <Tooltip content={t("components.contextmanagerdialog.download", "Text herunterladen")} relationship="description">
+        return (
+            <>
+                {failedUploads.map(entry => (
+                    <div key={entry.id} className={`${styles.fileItem} ${styles.fileItemError}`} role="alert">
+                        <div className={styles.fileMeta}>
+                            <span className={styles.fileName}>{entry.name}</span>
+                            <span className={styles.fileSize}>{formatFileSize(entry.size)}</span>
+                            <span className={styles.fileSecondary}>
+                                {entry.errorMessage ??
+                                    t("components.contextmanagerdialog.storage_error", "Dokument konnte nicht gespeichert werden (Speicherplatz voll).")}
+                            </span>
+                        </div>
+                        <div className={styles.fileActions}>
+                            <Tooltip content={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")} relationship="description">
                                 <Button
                                     appearance="subtle"
                                     size="small"
-                                    icon={<ArrowDownload16Regular />}
-                                    onClick={() => handleDownloadParsedContent(document)}
-                                    aria-label={t("components.contextmanagerdialog.download", "Text herunterladen")}
+                                    icon={<Dismiss16Regular />}
+                                    onClick={() => {
+                                        const next = failedUploads.filter(f => f.id !== entry.id);
+                                        setFailedUploads(next);
+                                        syncSelectionToData(selectedStoredDocumentIds, storedDocuments, next);
+                                    }}
+                                    aria-label={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
                                 />
                             </Tooltip>
-                        )}
-                        <Tooltip content={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")} relationship="description">
-                            <Button
-                                appearance="subtle"
-                                size="small"
-                                icon={<Dismiss16Regular />}
-                                onClick={() => handleRemoveStoredDocument(document.id)}
-                                aria-label={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
-                            />
-                        </Tooltip>
+                        </div>
                     </div>
-                </div>
-            );
-        });
-    }, [formatParsedAt, handleDownloadParsedContent, handleRemoveStoredDocument, handleToggleStoredDocument, selectedStoredDocumentIds, storedDocuments, t]);
+                ))}
+                {storedDocuments.map(document => {
+                    const isAttached = selectedStoredDocumentIds.includes(document.id);
+                    return (
+                        <div key={document.id} className={styles.fileItem}>
+                            <div className={styles.fileSelector}>
+                                <Checkbox
+                                    checked={isAttached}
+                                    onChange={(_, data) => handleToggleStoredDocument(document.id, data.checked === true)}
+                                    aria-label={t("components.contextmanagerdialog.use", "Verwenden")}
+                                />
+                            </div>
+                            <div className={styles.fileMeta}>
+                                <span className={styles.fileName}>{document.name}</span>
+                                <span className={styles.fileSize}>{formatFileSize(document.size)}</span>
+                                <span className={styles.fileSecondary}>
+                                    {t("components.contextmanagerdialog.parsed_at", "Geparsed")}: {formatParsedAt(document.parsedAt)}
+                                </span>
+                            </div>
+                            <div className={styles.fileActions}>
+                                {document.content && (
+                                    <Tooltip content={t("components.contextmanagerdialog.download", "Text herunterladen")} relationship="description">
+                                        <Button
+                                            appearance="subtle"
+                                            size="small"
+                                            icon={<ArrowDownload16Regular />}
+                                            onClick={() => handleDownloadParsedContent(document)}
+                                            aria-label={t("components.contextmanagerdialog.download", "Text herunterladen")}
+                                        />
+                                    </Tooltip>
+                                )}
+                                <Tooltip
+                                    content={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
+                                    relationship="description"
+                                >
+                                    <Button
+                                        appearance="subtle"
+                                        size="small"
+                                        icon={<Dismiss16Regular />}
+                                        onClick={() => handleRemoveStoredDocument(document.id)}
+                                        aria-label={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
+                                    />
+                                </Tooltip>
+                            </div>
+                        </div>
+                    );
+                })}
+            </>
+        );
+    }, [
+        failedUploads,
+        formatParsedAt,
+        handleDownloadParsedContent,
+        handleRemoveStoredDocument,
+        handleToggleStoredDocument,
+        selectedStoredDocumentIds,
+        storedDocuments,
+        syncSelectionToData,
+        t
+    ]);
 
     return (
         <Dialog open={open} onOpenChange={onDialogOpenChange} modalType="modal">

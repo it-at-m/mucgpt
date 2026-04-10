@@ -349,6 +349,32 @@ const Chat = () => {
         [availableLLMs, setLLM]
     );
 
+    // Shared helper: converts UploadedData[] → DataSource[] (same logic as onSend)
+    const uploadedDataToDataSources = useCallback((datas: UploadedData[]): DataSource[] => {
+        return datas
+            .filter(data => {
+                if (!data.isActive) return false;
+                if (data.status === "pending-restore") {
+                    console.warn(`Skipping document "${data.name}" (id: ${data.id}): content has not been restored yet.`);
+                    return false;
+                }
+                return data.status === "ready" && !!data.fileContent;
+            })
+            .map(data => ({
+                title: data.name,
+                content: data.fileContent!,
+                metadata: {
+                    source: data.source,
+                    mime_type: data.mimeType || data.file?.type || undefined,
+                    size: data.size,
+                    parsed_at: data.parsedAt,
+                    file_signature: data.fileSignature,
+                    stored_document_id: data.storedDocumentId,
+                    status: data.status
+                }
+            }));
+    }, []);
+
     // State to track if initialization is complete
     const [isInitialized, setIsInitialized] = useState(false);
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
@@ -483,6 +509,13 @@ const Chat = () => {
             return;
         }
 
+        // If any uploadedData item still needs to be restored, wait for the
+        // next render when its status will have changed.
+        const hasPendingRestore = uploadedData.some(d => d.status === "pending-restore");
+        if (hasPendingRestore) {
+            return;
+        }
+
         // Prevent scheduling the same question multiple times
         if (scheduledQuestionRef.current === pendingQuestion) {
             return;
@@ -490,6 +523,8 @@ const Chat = () => {
 
         scheduledQuestionRef.current = pendingQuestion;
         const questionToAsk = pendingQuestion;
+        // Capture the current uploadedData snapshot for use inside the timeout
+        const dataSnapshot = uploadedData;
 
         // Wait a bit more to ensure tools are properly set
         const timeoutId = window.setTimeout(() => {
@@ -497,7 +532,8 @@ const Chat = () => {
             if (scheduledQuestionRef.current !== questionToAsk) {
                 return;
             }
-            callApi(questionToAsk, systemPrompt);
+            const dataSources = uploadedDataToDataSources(dataSnapshot);
+            callApi(questionToAsk, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
 
             // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
@@ -511,7 +547,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, callApi, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, callApi, systemPrompt, clearNavigationQueryParams]);
 
     // Set up quick prompts
     useEffect(() => {
@@ -607,28 +643,7 @@ const Chat = () => {
                 clearOnSend
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={(question, datas) => {
-                    const dataSources = datas
-                        .filter(data => {
-                            if (!data.isActive) return false;
-                            if (data.status === "pending-restore") {
-                                console.warn(`Skipping document "${data.name}" (id: ${data.id}): content has not been restored yet.`);
-                                return false;
-                            }
-                            return data.status === "ready" && !!data.fileContent;
-                        })
-                        .map(data => ({
-                            title: data.name,
-                            content: data.fileContent!,
-                            metadata: {
-                                source: data.source,
-                                mime_type: data.mimeType || data.file?.type || undefined,
-                                size: data.size,
-                                parsed_at: data.parsedAt,
-                                file_signature: data.fileSignature,
-                                stored_document_id: data.storedDocumentId,
-                                status: data.status
-                            }
-                        }));
+                    const dataSources = uploadedDataToDataSources(datas);
                     callApi(question, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
                 }}
                 question={question}
@@ -640,7 +655,7 @@ const Chat = () => {
                 setUploadedData={setUploadedData}
             />
         ),
-        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData]
+        [callApi, systemPrompt, question, t, isLoadingRef.current, selectedTools, tools, uploadedData, uploadedDataToDataSources]
     );
 
     const sidebar_actions = useMemo(

@@ -3,7 +3,7 @@ import { Send28Filled, DocumentAdd24Regular } from "@fluentui/react-icons";
 
 import styles from "./QuestionInput.module.css";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Dispatch, SetStateAction } from "react";
 import { ToolListResponse } from "../../api/models";
 import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignature, getFileSignature } from "../ContextManagerDialog/ContextManagerDialog";
 import { ToolBadges } from "./ToolBadges";
@@ -26,7 +26,7 @@ interface Props {
     allowFileUpload?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
     uploadedData?: UploadedData[];
-    setUploadedData?: (data: UploadedData[]) => void;
+    setUploadedData?: Dispatch<SetStateAction<UploadedData[]>>;
 }
 
 export const QuestionInput = ({
@@ -66,13 +66,12 @@ export const QuestionInput = ({
     const setUploadedData = useCallback(
         (data: UploadedData[] | ((prev: UploadedData[]) => UploadedData[])) => {
             if (setExternalUploadedData) {
-                const resolved = typeof data === "function" ? data(uploadedData) : data;
-                setExternalUploadedData(resolved);
+                setExternalUploadedData(data);
             } else {
-                setInternalUploadedData(data as any);
+                setInternalUploadedData(data);
             }
         },
-        [setExternalUploadedData, uploadedData]
+        [setExternalUploadedData]
     );
 
     useEffect(() => {
@@ -198,52 +197,54 @@ export const QuestionInput = ({
                 return;
             }
 
-            setUploadedData(prev => {
-                const existingSignatures = new Set(prev.map(getDataSignature));
-                const newData = fileArray.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "uploading"));
+            // Compute the pure next state outside any updater callback so that
+            // React StrictMode double-invocations cannot trigger duplicate API calls.
+            const prev = uploadedDataRef.current;
+            const existingSignatures = new Set(prev.map(getDataSignature));
+            const newData = fileArray.filter(file => !existingSignatures.has(getFileSignature(file))).map(file => createUploadedData(file, "uploading"));
 
-                if (newData.length === 0) {
-                    return prev;
-                }
+            if (newData.length === 0) {
+                return;
+            }
 
-                const updated = [...prev, ...newData];
+            const updated = [...prev, ...newData];
 
-                // Upload each new document
-                newData.forEach(data => {
-                    uploadFileApi(data.file)
-                        .then(fileContent => {
-                            const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
-                            const current = uploadedDataRef.current;
-                            const updatedData = current.map(d =>
-                                d.id === data.id
-                                    ? {
-                                          ...d,
-                                          status: "ready" as const,
-                                          fileContent,
-                                          storedDocumentId: storedDocument?.id,
-                                          parsedAt: storedDocument?.parsedAt,
-                                          fileSignature: storedDocument?.fileSignature,
-                                          mimeType: storedDocument?.mimeType,
-                                          source: "upload" as const
-                                      }
-                                    : d
-                            );
-                            setUploadedData(updatedData);
-                            onDataChange?.(updatedData);
-                        })
-                        .catch(error => {
-                            console.error("Failed to upload document:", error);
-                            const current = uploadedDataRef.current;
-                            const updatedData = current.map(d =>
-                                d.id === data.id ? { ...d, status: "error" as const, errorMessage: error.message || "Upload failed" } : d
-                            );
-                            setUploadedData(updatedData);
-                            onDataChange?.(updatedData);
-                        });
-                });
+            // Synchronously commit the "uploading" state and notify the parent.
+            setUploadedData(updated);
+            onDataChange?.(updated);
 
-                onDataChange?.(updated);
-                return updated;
+            // Launch uploads in a separate pass – no API calls inside a state updater.
+            newData.forEach(data => {
+                uploadFileApi(data.file)
+                    .then(fileContent => {
+                        const storedDocument = upsertParsedDocumentFromUpload(data.file, fileContent);
+                        const current = uploadedDataRef.current;
+                        const updatedData = current.map(d =>
+                            d.id === data.id
+                                ? {
+                                      ...d,
+                                      status: "ready" as const,
+                                      fileContent,
+                                      storedDocumentId: storedDocument?.id,
+                                      parsedAt: storedDocument?.parsedAt,
+                                      fileSignature: storedDocument?.fileSignature,
+                                      mimeType: storedDocument?.mimeType,
+                                      source: "upload" as const
+                                  }
+                                : d
+                        );
+                        setUploadedData(updatedData);
+                        onDataChange?.(updatedData);
+                    })
+                    .catch(error => {
+                        console.error("Failed to upload document:", error);
+                        const current = uploadedDataRef.current;
+                        const updatedData = current.map(d =>
+                            d.id === data.id ? { ...d, status: "error" as const, errorMessage: error.message || "Upload failed" } : d
+                        );
+                        setUploadedData(updatedData);
+                        onDataChange?.(updatedData);
+                    });
             });
         },
         [setUploadedData, onDataChange]

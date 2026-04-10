@@ -1,0 +1,25 @@
+.wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.inlineTextarea {
+    width: 100%;
+}
+
+.expandButton {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+}
+
+.dialogTextarea {
+    flex: 1;
+    height: 100%;
+}
+
+.dialogTextarea textarea {
+    height: 100%;
+    min-height: 400px;
+}

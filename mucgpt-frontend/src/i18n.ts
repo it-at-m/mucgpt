@@ -52,6 +52,7 @@ i18n
                     chat: {
                         header: "Stelle eine Frage oder probiere ein Beispiel",
                         prompt: "Stelle eine Frage oder lade ein Dokument hoch",
+                        prompt_no_upload: "Stelle eine Frage",
                         answer_loading: "Erstelle Antwort",
                         quickprompts: {
                             shorter_tooltip: "Schreibe eine kürzere Antwort",
@@ -697,6 +698,7 @@ i18n
                     chat: {
                         header: "Ask a question or try an example",
                         prompt: "Ask a question or upload a document",
+                        prompt_no_upload: "Ask a question",
                         answer_loading: "Generating answer",
                         quickprompts: {
                             shorter_tooltip: "Shorten your answer",
@@ -1335,6 +1337,7 @@ i18n
                     chat: {
                         header: "Stelle a Froog oda probier a Beispui",
                         prompt: "Stell a Froog oder lad a Dokument hoch",
+                        prompt_no_upload: "Stell a Froog",
                         answer_loading: "I bearbeit grad de Frog",
                         quickprompts: {
                             shorter_tooltip: "Schreib a kürzere Antwort",
@@ -1976,6 +1979,7 @@ i18n
                     chat: {
                         header: "Posez une question ou essayez un exemple",
                         prompt: "Posez une question ou téléchargez un document",
+                        prompt_no_upload: "Posez une question",
                         answer_loading: "Créer une réponse",
                         quickprompts: {
                             shorter_tooltip: "Écrire une réponse plus courte",
@@ -2618,6 +2622,7 @@ i18n
                     chat: {
                         header: "Задайте питання або спробуйте приклад",
                         prompt: "Задайте питання або завантажте документ",
+                        prompt_no_upload: "Задайте питання",
                         answer_loading: "Створення відповіді",
                         quickprompts: {
                             shorter_tooltip: "Написати коротшу відповідь",

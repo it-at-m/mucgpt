@@ -56,6 +56,7 @@ export interface ApplicationConfig {
     core_version: string;
     frontend_version: string;
     assistant_version: string;
+    document_processing_enabled: boolean;
 }
 
 export interface Model {

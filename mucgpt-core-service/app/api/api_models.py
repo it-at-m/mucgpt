@@ -388,3 +388,7 @@ class ConfigResponse(BaseModel):
     core_version: str
     frontend_version: str
     assistant_version: str
+    document_processing_enabled: bool = Field(
+        False,
+        description="Whether document upload and parsing is enabled. True when a parser backend (e.g. Kreuzberg) is configured.",
+    )

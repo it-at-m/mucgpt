@@ -9,6 +9,7 @@ import { ContextManagerDialog, UploadedData, createUploadedData, getDataSignatur
 import { ToolBadges } from "./ToolBadges";
 import { uploadFileApi } from "../../api/core-client";
 import { upsertParsedDocumentFromUpload } from "../../service/parsedDocumentStorage";
+import { useConfigContext } from "../../context/ConfigContext";
 
 interface Props {
     onSend: (question: string, data: UploadedData[]) => void;
@@ -21,6 +22,8 @@ interface Props {
     setSelectedTools?: (tools: string[]) => void;
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
+    /** Override whether the file upload / context manager is available. Defaults to the `document_processing_enabled` flag from the application config. */
+    allowFileUpload?: boolean;
     onDataChange?: (data: UploadedData[]) => void;
     uploadedData?: UploadedData[];
     setUploadedData?: (data: UploadedData[]) => void;
@@ -37,11 +40,15 @@ export const QuestionInput = ({
     setSelectedTools,
     tools,
     allowToolSelection = true,
+    allowFileUpload: allowFileUploadProp,
     onDataChange,
     uploadedData: externalUploadedData,
     setUploadedData: setExternalUploadedData
 }: Props) => {
     const { t } = useTranslation();
+    const config = useConfigContext();
+    const allowFileUpload = allowFileUploadProp ?? config.document_processing_enabled;
+    const resolvedPlaceholder = placeholder ?? (allowFileUpload ? t("chat.prompt") : t("chat.prompt_no_upload"));
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const sendButtonRef = useRef<HTMLButtonElement | null>(null);
     const uploadButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -318,14 +325,14 @@ export const QuestionInput = ({
                     className={`${styles.questionInputContainer} ${
                         !tools || !tools.tools || tools.tools.length === 0 ? styles.noTools : ""
                     } ${isDragActive ? styles.dragActive : ""}`}
-                    onDragEnter={handleDragEnter}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
+                    onDragEnter={allowFileUpload ? handleDragEnter : undefined}
+                    onDragOver={allowFileUpload ? handleDragOver : undefined}
+                    onDragLeave={allowFileUpload ? handleDragLeave : undefined}
+                    onDrop={allowFileUpload ? handleDrop : undefined}
                 >
                     <Textarea
                         className={styles.questionInputTextArea}
-                        placeholder={placeholder}
+                        placeholder={resolvedPlaceholder}
                         resize="none"
                         value={question}
                         size="large"
@@ -334,21 +341,23 @@ export const QuestionInput = ({
                         ref={textareaRef}
                     />
                     <div className={styles.questionInputButtons}>
-                        <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
-                            <div className={styles.uploadButtonWrapper}>
-                                <Button
-                                    ref={uploadButtonRef}
-                                    size="large"
-                                    appearance={"subtle"}
-                                    icon={<DocumentAdd24Regular />}
-                                    aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
-                                    onClick={handleUploadButtonClick}
-                                    disabled={disabled}
-                                />
-                                {activeDocumentCount > 0 && <span className={styles.uploadCountBadge}>{activeDocumentCount}</span>}
-                            </div>
-                        </Tooltip>
-                        <Tooltip content={placeholder || ""} relationship="label">
+                        {allowFileUpload && (
+                            <Tooltip content={t("components.questioninput.upload_data", "Dokument hochladen")} relationship="label">
+                                <div className={styles.uploadButtonWrapper}>
+                                    <Button
+                                        ref={uploadButtonRef}
+                                        size="large"
+                                        appearance={"subtle"}
+                                        icon={<DocumentAdd24Regular />}
+                                        aria-label={t("components.questioninput.upload_data", "Dokument hochladen")}
+                                        onClick={handleUploadButtonClick}
+                                        disabled={disabled}
+                                    />
+                                    {activeDocumentCount > 0 && <span className={styles.uploadCountBadge}>{activeDocumentCount}</span>}
+                                </div>
+                            </Tooltip>
+                        )}
+                        <Tooltip content={resolvedPlaceholder} relationship="label">
                             <Button
                                 ref={sendButtonRef}
                                 size="large"
@@ -367,7 +376,9 @@ export const QuestionInput = ({
                     <div className={styles.errorhint}>{t("components.questioninput.errorhint")}</div>
                 </div>
             </div>
-            <ContextManagerDialog open={isUploadDialogOpen} onOpenChange={handleDialogOpenChange} data={uploadedData} onDataChange={handleDataChange} />
+            {allowFileUpload && (
+                <ContextManagerDialog open={isUploadDialogOpen} onOpenChange={handleDialogOpenChange} data={uploadedData} onDataChange={handleDataChange} />
+            )}
         </>
     );
 };

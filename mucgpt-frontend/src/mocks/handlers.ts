@@ -124,7 +124,8 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     alternative_logo: false,
     core_version: "0.0.1",
     frontend_version: "0.0.1",
-    assistant_version: "0.0.1"
+    assistant_version: "0.0.1",
+    document_processing_enabled: true
 };
 
 const DYNAMIC_ASSISTANTS: AssistantCreateResponse[] = buildAssistantList(6);

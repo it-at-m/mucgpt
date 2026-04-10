@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from api.api_models import ConfigResponse, ModelsDTO
-from config.settings import get_settings
+from config.settings import ParserBackendType, get_settings
 from core.auth import authenticate_user
 
 router = APIRouter()
@@ -25,6 +25,7 @@ async def get_config(user_info=Depends(authenticate_user)) -> ConfigResponse:
         core_version=settings.VERSION,
         frontend_version=settings.FRONTEND_VERSION,
         assistant_version=settings.ASSISTANT_VERSION,
+        document_processing_enabled=settings.PARSER_BACKEND != ParserBackendType.NONE,
     )
 
     models = settings.MODELS

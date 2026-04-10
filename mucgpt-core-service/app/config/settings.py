@@ -33,6 +33,7 @@ class MCPTransport(StrEnum):
 
 
 class ParserBackendType(StrEnum):
+    NONE = "none"
     KREUZBERG = "kreuzberg"
 
 
@@ -353,7 +354,7 @@ class Settings(BaseSettings):
     MEMORY_SERVICE_URL: str = ""
 
     # Parsing
-    PARSER_BACKEND: ParserBackendType = ParserBackendType.KREUZBERG
+    PARSER_BACKEND: ParserBackendType = ParserBackendType.NONE
     KREUZBERG_URL: str = ""
     KREUZBERG_TIMEOUT: float = 120.0
 

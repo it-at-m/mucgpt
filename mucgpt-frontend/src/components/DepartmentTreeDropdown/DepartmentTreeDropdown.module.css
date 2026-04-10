@@ -27,7 +27,7 @@
 }
 
 .selected_item:hover {
-    border: 1px solidvar(--colorBrandBackground);
+    border: 1px solid var(--colorBrandBackground);
     opacity: 0.9;
 }
 

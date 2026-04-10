@@ -1,14 +1,13 @@
 <!-- PROJECT LOGO -->
 <div align="center">
-  <a href="#">
-    <img src="mucgpt-frontend/src/assets/mucgpt_pride.png" alt="Logo" height="200" style="display: block; margin: 0 auto; filter: invert(0)">
-  </a>
+  <img src="assets/mucgpt_title.svg" alt="MUCGPT logo" width="900" />
 </div>
 <br />
 
 <div align="center">
 
 <!-- Project / Meta -->
+
 ### Project Information
 
 [![Made with love by it@M][made-with-love-shield]][itm-opensource]
@@ -18,6 +17,7 @@
 [![Demo-Frontend][pages-shield]][pages]
 
 <!-- Tech Stack -->
+
 ### Technology Stack
 
 ![Supported python versions][python-versions-shield]
@@ -29,12 +29,14 @@
 [![LangGraph][langgraph-shield]][langgraph]
 
 <!-- CI -->
+
 ### Build Status
 
 [![Assistant-service tests][assistant-service-tests-shield]][assistant-service-tests]
 [![Core service tests][core-service-tests-shield]][core-service-tests]
 
 <!-- Container Images -->
+
 ### Container Images
 
 [![Frontend version][frontend-version-shield]][frontend-container]
@@ -134,10 +136,10 @@ Configuration is done via **YAML configuration files** (primary) with optional *
 
 Each service reads a `config.yaml` mounted into the container. Environment variables can override any YAML setting using a service-specific prefix and `__` (double underscore) as the nested delimiter.
 
-| Service | YAML file (in `stack/`) | Env Prefix |
-|---------|------------------------|------------|
-| core-service | `core.config.yaml` | `MUCGPT_CORE_` |
-| assistant-service | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
+| Service              | YAML file (in `stack/`) | Env Prefix          |
+| -------------------- | ----------------------- | ------------------- |
+| core-service         | `core.config.yaml`      | `MUCGPT_CORE_`      |
+| assistant-service    | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
 | assistant-migrations | `assistant.config.yaml` | `MUCGPT_ASSISTANT_` |
 
 #### Initial Setup
@@ -267,7 +269,7 @@ LDAP:
   SEARCH_BASE: "o=Example Org,c=de"
   SEARCH_FILTER: "(objectClass=organizationalUnit)"
   DISPLAY_ATTRIBUTE: "ou"
-  PARENT_ATTRIBUTE: "lhmParentOu"  # optional
+  PARENT_ATTRIBUTE: "lhmParentOu" # optional
   ADDITIONAL_ATTRIBUTES: ["lhmOULongname", "lhmOUShortname"]
   REQUIRED_ATTRIBUTES: ["lhmOULongname", "lhmOUShortname"]
   IGNORED_OU_PREFIXES: ["_"]
@@ -328,7 +330,7 @@ MCP:
       url: "http://mcpdoc-server:8088/sse"
       forward_token: true
       transport: "sse"
-  CACHE_TTL: 43200  # seconds, default: 12h
+  CACHE_TTL: 43200 # seconds, default: 12h
 ```
 
 Or via environment variable:

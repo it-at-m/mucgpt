@@ -1,5 +1,5 @@
-from langchain.docstore.document import Document
-from langchain.text_splitter import TokenTextSplitter
+from langchain_core.documents import Document
+from langchain_text_splitters import TokenTextSplitter
 from pypdf import PdfReader
 
 

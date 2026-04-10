@@ -1,5 +1,6 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -121,3 +122,72 @@ class TestParsingRouter:
                 )
 
         assert response.status_code == 500
+
+    def test_parse_timeout_returns_504(self, test_client: TestClient):
+        """When the parser raises an httpx.TimeoutException the endpoint returns 504."""
+        mock_parser = AsyncMock()
+        mock_parser.parse = AsyncMock(side_effect=httpx.TimeoutException("timed out"))
+
+        with (
+            patch("api.routers.parsing_router.settings") as mock_settings,
+            patch("api.routers.parsing_router._parser", mock_parser),
+        ):
+            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            response = test_client.post(
+                "/v1/parse",
+                files={"file": ("slow.pdf", b"pdf bytes", "application/pdf")},
+                headers=headers,
+            )
+
+        assert response.status_code == 504
+        assert "timed out" in response.json()["detail"].lower()
+
+    def test_parse_connect_error_returns_502(self, test_client: TestClient):
+        """When the parser raises an httpx.ConnectError the endpoint returns 502."""
+        mock_parser = AsyncMock()
+        mock_parser.parse = AsyncMock(
+            side_effect=httpx.ConnectError("connection refused")
+        )
+
+        with (
+            patch("api.routers.parsing_router.settings") as mock_settings,
+            patch("api.routers.parsing_router._parser", mock_parser),
+        ):
+            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            response = test_client.post(
+                "/v1/parse",
+                files={"file": ("unreachable.pdf", b"pdf bytes", "application/pdf")},
+                headers=headers,
+            )
+
+        assert response.status_code == 502
+        assert "error" in response.json()["detail"].lower()
+
+    def test_parse_http_status_error_returns_502(self, test_client: TestClient):
+        """When the parser backend responds with a non-2xx status the endpoint returns 502."""
+        upstream_request = MagicMock(spec=httpx.Request)
+        upstream_response = MagicMock(spec=httpx.Response)
+        upstream_response.status_code = 422
+
+        mock_parser = AsyncMock()
+        mock_parser.parse = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "422 Unprocessable Entity",
+                request=upstream_request,
+                response=upstream_response,
+            )
+        )
+
+        with (
+            patch("api.routers.parsing_router.settings") as mock_settings,
+            patch("api.routers.parsing_router._parser", mock_parser),
+        ):
+            mock_settings.PARSER_BACKEND = ParserBackendType.KREUZBERG
+            response = test_client.post(
+                "/v1/parse",
+                files={"file": ("bad.pdf", b"pdf bytes", "application/pdf")},
+                headers=headers,
+            )
+
+        assert response.status_code == 502
+        assert "error" in response.json()["detail"].lower()

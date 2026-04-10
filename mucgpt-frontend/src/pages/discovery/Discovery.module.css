@@ -67,6 +67,8 @@
 
 .importButton {
     border-radius: 8px !important;
+    background-color: var(--colorBrandBackground2) !important;
+    border: 1px solid var(--colorNeutralStroke1) !important;
 }
 
 .header {

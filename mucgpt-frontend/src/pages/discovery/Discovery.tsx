@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "r
 import { useNavigate } from "react-router-dom";
 import { Title1, Body1, Text, SearchBox, Dropdown, Option, Button, Tooltip, TabList, Tab } from "@fluentui/react-components";
 import type { SearchBoxChangeEvent, InputOnChangeData, SelectionEvents, OptionOnSelectData, SelectTabData, SelectTabEvent } from "@fluentui/react-components";
-import { ArrowSort24Regular, ArrowImport24Filled } from "@fluentui/react-icons";
+import { ArrowSort24Regular, DocumentArrowUpRegular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 
 import styles from "./Discovery.module.css";
@@ -498,7 +498,7 @@ const Discovery = () => {
                                         <Button
                                             className={styles.importButton}
                                             appearance="outline"
-                                            icon={<ArrowImport24Filled />}
+                                            icon={<DocumentArrowUpRegular />}
                                             onClick={importAssistant}
                                             size="large"
                                             aria-label={t("components.import_assistant.import")}

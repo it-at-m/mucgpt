@@ -10,19 +10,17 @@ interface Props {
 export const AddAssistantButton = ({ onClick }: Props) => {
     const { t } = useTranslation();
     return (
-        <div className={styles.container}>
-            <Tooltip content={t("components.add_assistant_button.add_assistant")} relationship="description" positioning="below">
-                <Button
-                    appearance="primary"
-                    className={styles.button}
-                    aria-label={t("components.add_assistant_button.add_assistant")}
-                    icon={<Add24Regular />}
-                    onClick={onClick}
-                    size="large"
-                >
-                    {t("components.add_assistant_button.add_assistant")}
-                </Button>
-            </Tooltip>
-        </div>
+        <Tooltip content={t("components.add_assistant_button.add_assistant")} relationship="description" positioning="below">
+            <Button
+                appearance="primary"
+                className={styles.button}
+                aria-label={t("components.add_assistant_button.add_assistant")}
+                icon={<Add24Regular />}
+                onClick={onClick}
+                size="large"
+            >
+                {t("components.add_assistant_button.add_assistant")}
+            </Button>
+        </Tooltip>
     );
 };

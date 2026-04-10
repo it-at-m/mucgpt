@@ -1,16 +1,11 @@
 .tutorialsButton {
-    color: var(--surface) !important;
+    color: var(--app-header-foreground) !important;
 }
 
 .tutorialsButton:hover {
-    background-color: var(--primary) !important;
-    color: var(--onPrimary) !important;
-}
-
-.tutorialsButton:hover .icon {
-    color: var(--onPrimary) !important;
+    background-color: var(--app-header-hover) !important;
 }
 
 .icon {
-    color: var(--surface);
+    color: var(--app-header-foreground);
 }

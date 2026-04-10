@@ -362,7 +362,7 @@ export const QuestionInput = ({
                             <Button
                                 ref={sendButtonRef}
                                 size="large"
-                                appearance={"subtle"}
+                                appearance={"transparent"}
                                 icon={<Send28Filled />}
                                 aria-label={t("components.questioninput.send_question", "Frage senden")}
                                 disabled={disabled || !question.trim()}

@@ -369,10 +369,10 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Neuer Assistent"
+                            add_assistant: "Neu erstellen"
                         },
                         import_assistant: {
-                            import: "Assistenten importieren",
+                            import: "Importieren",
                             import_success: "Import erfolgreich",
                             import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
                             import_error: "Import fehlgeschlagen",
@@ -1014,10 +1014,10 @@ i18n
                             more: "more"
                         },
                         add_assistant_button: {
-                            add_assistant: "New assistant"
+                            add_assistant: "Create New"
                         },
                         import_assistant: {
-                            import: "Import assistant",
+                            import: "Import",
                             import_success: "Import successful",
                             import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
                             import_error: "Import failed",
@@ -1652,10 +1652,10 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Neia Assistent"
+                            add_assistant: "Nei anlegn"
                         },
                         import_assistant: {
-                            import: "Assistentn importier'n",
+                            import: "Importiern",
                             import_success: "Import erfolgreich",
                             import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
                             import_error: "Import fehlgschlogn",
@@ -2296,10 +2296,10 @@ i18n
                             more: "plus"
                         },
                         add_assistant_button: {
-                            add_assistant: "nouvel assistant"
+                            add_assistant: "Créer"
                         },
                         import_assistant: {
-                            import: "Importer un assistant",
+                            import: "Importer",
                             import_success: "Importation réussie",
                             import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
                             import_error: "Échec de l'importation",
@@ -2938,10 +2938,10 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "новий асистент"
+                            add_assistant: "Створити"
                         },
                         import_assistant: {
-                            import: "Імпортувати асистента",
+                            import: "Імпортувати",
                             import_success: "Імпорт успішний",
                             import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
                             import_error: "Помилка імпорту",

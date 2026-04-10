@@ -100,12 +100,12 @@ li:not(:last-child) {
     padding: 18px 0 0 0;
     border-top: 1px solid var(--colorNeutralStroke2);
     margin-top: 18px;
-    color: #444;
+    color: var(--colorNeutralForeground2);
     font-size: 0.98em;
 }
 
 .link {
-    color: var(--primary) !important;
+    color: var(--colorBrandBackground);
 }
 
 @media (max-width: 700px) {

@@ -1,7 +1,7 @@
 .answerContainer {
     padding: 1.25em;
     margin: 1em 0.5em; /* Reduced horizontal margin */
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground3);
     border-radius: 8px;
     width: 98%; /* Increased from 95% to use more space */
     max-width: 100%;

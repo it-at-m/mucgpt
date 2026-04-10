@@ -1,7 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 
 from asgi_correlation_id import correlation_id
-from langchain.chains import SequentialChain
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables.base import RunnableSerializable
@@ -106,7 +105,7 @@ class Summarize:
             template=self.user_translate_and_cleanup_prompt,
         )
 
-    def setup(self, llm_name: str) -> SequentialChain:
+    def setup(self, llm_name: str) -> tuple[RunnableSerializable, RunnableSerializable]:
         config: LlmConfigs = {"llm": llm_name}
         llm = self.llm.with_config(configurable=config)
 

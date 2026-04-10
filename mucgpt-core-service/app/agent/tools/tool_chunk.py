@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel
 
 
-class ToolStreamState(str, Enum):
+class ToolStreamState(StrEnum):
     """Enumeration representing the state of a tool stream chunk.
     STARTED: The tool invocation has started. Content is for status update.
     UPDATE: The tool is providing an update. Content is the tool output. Should replace previous output.

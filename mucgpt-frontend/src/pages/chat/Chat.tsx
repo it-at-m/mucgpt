@@ -430,13 +430,16 @@ const Chat = () => {
                             file: new File([], "Loading..."), // Dummy file, actual data will be pulled from IndexedDB by components
                             name: "Stored Document",
                             size: 0,
-                            status: "ready",
+                            status: "pending-restore" as const,
+                            fileContent: null,
                             isActive: true,
-                            source: "stored"
+                            source: "stored" as const
                         }))
                     );
                 } else {
                     console.warn("Requested files were not found in localStorage recent history. Please re-upload your files.");
+                    // Clear the stale data URL parameter so it is not reprocessed
+                    clearNavigationQueryParams();
                 }
             }
         }
@@ -605,7 +608,14 @@ const Chat = () => {
                 disabled={isLoadingRef.current || error !== undefined}
                 onSend={(question, datas) => {
                     const dataSources = datas
-                        .filter(data => data.isActive !== false && data.status === "ready" && data.fileContent)
+                        .filter(data => {
+                            if (!data.isActive) return false;
+                            if (data.status === "pending-restore") {
+                                console.warn(`Skipping document "${data.name}" (id: ${data.id}): content has not been restored yet.`);
+                                return false;
+                            }
+                            return data.status === "ready" && !!data.fileContent;
+                        })
                         .map(data => ({
                             title: data.name,
                             content: data.fileContent!,

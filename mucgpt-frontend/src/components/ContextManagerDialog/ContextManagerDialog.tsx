@@ -49,7 +49,7 @@ function SectionCard({
     );
 }
 
-export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error";
+export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore";
 
 export interface UploadedData {
     id: string;
@@ -59,7 +59,7 @@ export interface UploadedData {
     status: UploadedDataStatus;
     isActive: boolean;
     errorMessage?: string;
-    fileContent?: string; // parsed text content returned by the parse endpoint
+    fileContent?: string | null; // parsed text content returned by the parse endpoint; null means content is known to be absent (e.g. pending-restore)
     source?: "upload" | "stored";
     storedDocumentId?: string;
     parsedAt?: string;

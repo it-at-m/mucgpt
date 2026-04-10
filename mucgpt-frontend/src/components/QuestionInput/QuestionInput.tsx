@@ -246,7 +246,7 @@ export const QuestionInput = ({
                 return updated;
             });
         },
-        [onDataChange]
+        [setUploadedData, onDataChange]
     );
 
     const handleDataChange = useCallback(

@@ -1,5 +1,5 @@
 from typing import Annotated, Any, TypedDict
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape, quoteattr
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.messages.base import BaseMessage
@@ -80,7 +80,7 @@ class MUCGPTAgent:
             metadata_xml = ""
             if metadata_map:
                 meta_lines = [
-                    f'      <meta key="{escape(key)}">{escape(value)}</meta>'
+                    f"      <meta key={quoteattr(key)}>{escape(value)}</meta>"
                     for key, value in metadata_map.items()
                 ]
                 metadata_xml = (

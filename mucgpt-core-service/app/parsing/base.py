@@ -14,5 +14,5 @@ class ParserBackend(ABC):
             file: The uploaded file to parse.
 
         Returns:
-            A dict with the extracted content as returned by the backend.
+            The extracted text content as a string.
         """

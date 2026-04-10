@@ -340,6 +340,7 @@ class Settings(BaseSettings):
     # Frontend settings
     ENV_NAME: str = "MUCGPT"
     ALTERNATIVE_LOGO: bool = False
+    APP_VERSION: str = "2.0"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
 

@@ -183,11 +183,10 @@ i18n
                             accept: "Zustimmen"
                         },
                         versioninfo: {
-                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
-                            core_version: "Core Version:",
-                            frontend_version: "Frontend Version:",
-                            assistant_version: "Assistenten Version:",
-                            label: "Version:",
+                            label: "Version",
+                            service_frontend: "mucgpt-frontend",
+                            service_core: "mucgpt-core",
+                            service_assistants: "mucgpt-assistants",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
@@ -804,11 +803,10 @@ i18n
                             accept: "Accept"
                         },
                         versioninfo: {
-                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
-                            core_version: "Core Version:",
-                            frontend_version: "Frontend Version:",
-                            assistant_version: "Assistant Version:",
-                            label: "Version:",
+                            label: "Version",
+                            service_frontend: "mucgpt-frontend",
+                            service_core: "mucgpt-core",
+                            service_assistants: "mucgpt-assistants",
                             whats_new: "What's new?"
                         },
                         feedback: {
@@ -1418,11 +1416,10 @@ i18n
                             accept: "Zustimm'n"
                         },
                         versioninfo: {
-                            tooltip: "Core Version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistenten Version: {{assistant_version}}",
-                            core_version: "Core Version:",
-                            frontend_version: "Frontend Version:",
-                            assistant_version: "Assistenten Version:",
-                            label: "Version:",
+                            label: "Version",
+                            service_frontend: "mucgpt-frontend",
+                            service_core: "mucgpt-core",
+                            service_assistants: "mucgpt-assistants",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
@@ -2037,12 +2034,10 @@ i18n
                             accept: "Accepter"
                         },
                         versioninfo: {
-                            tooltip:
-                                "Version principale: {{core_version}}, Version de la frontend: {{frontend_version}}, Version de l'assistant: {{assistant_version}}",
-                            core_version: "Version principale:",
-                            frontend_version: "Version de la frontend:",
-                            assistant_version: "Version de l'assistant:",
-                            label: "Version:",
+                            label: "Version",
+                            service_frontend: "mucgpt-frontend",
+                            service_core: "mucgpt-core",
+                            service_assistants: "mucgpt-assistants",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
@@ -2656,11 +2651,10 @@ i18n
                             accept: "Прийняти"
                         },
                         versioninfo: {
-                            tooltip: "основна версія: {{core_version}}, версія інтерфейсу: {{frontend_version}}, версія помічника: {{assistant_version}}",
-                            core_version: "основна версія:",
-                            frontend_version: "версія інтерфейсу:",
-                            assistant_version: "версія помічника:",
-                            label: "Версія:",
+                            label: "Версія",
+                            service_frontend: "mucgpt-frontend",
+                            service_core: "mucgpt-core",
+                            service_assistants: "mucgpt-assistants",
                             whats_new: "Що нового?"
                         },
                         feedback: {

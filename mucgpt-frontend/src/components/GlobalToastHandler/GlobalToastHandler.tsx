@@ -52,7 +52,7 @@ const getToastTimeout = (toast: ToastMessage) => {
 
 const renderToastContent = (toast: ToastMessage, closeLabel: string) => {
     const showIcon = toast.showIcon ?? true;
-    const media = !showIcon ? null : toast.type === "loading" ? <Spinner size="tiny" /> : undefined;
+    const media = !showIcon ? null : toast.type === "loading" ? <Spinner size="extra-small" /> : undefined;
 
     return (
         <div className={`${styles.toastWrapper} ${getTypeClass(toast.type)}`}>

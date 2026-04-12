@@ -21,11 +21,11 @@
     pointer-events: none;
 }
 
-.toastWrapper :global(.fui-Toast) {
+.toastWrapper :global .fui-Toast {
     background: var(--colorNeutralBackground2);
 }
 
-.toastWrapper :global(.fui-ToastTitle__media) svg {
+.toastWrapper :global .fui-ToastTitle__media svg {
     width: 24px;
     height: 24px;
 }

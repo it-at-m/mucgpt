@@ -3,9 +3,10 @@ import { useGlobalToastContext } from "../components/GlobalToastHandler/GlobalTo
 import { ToolStatus, ToolStreamState } from "../utils/ToolStreamHandler";
 
 const TOOL_SUCCESS_TIMEOUT = 4000;
+const MAX_PROCESSED_STATUSES = 200;
 
 export const useToolStatusToasts = (activeTools: ToolStatus[]) => {
-    const { showLoadingToast, showToast, updateToast, dismissToast } = useGlobalToastContext();
+    const { showLoadingToast, showToast, updateToast, dismissToast, toasts } = useGlobalToastContext();
     const activeLoadingToastIdsRef = useRef<Map<string, string>>(new Map());
     const processedStatusesRef = useRef<Set<string>>(new Set());
 
@@ -43,7 +44,8 @@ export const useToolStatusToasts = (activeTools: ToolStatus[]) => {
                 }
             } else if (tool.state === ToolStreamState.ENDED) {
                 const existingToastId = activeLoadingToastIdsRef.current.get(tool.name);
-                if (existingToastId) {
+                const toastStillExists = existingToastId !== undefined && toasts.some(t => t.id === existingToastId);
+                if (toastStillExists && existingToastId) {
                     updateToast(existingToastId, {
                         type: "success",
                         title: tool.name,
@@ -53,7 +55,6 @@ export const useToolStatusToasts = (activeTools: ToolStatus[]) => {
                         showIcon: true,
                         dismissible: true
                     });
-                    activeLoadingToastIdsRef.current.delete(tool.name);
                 } else {
                     showToast({
                         type: "success",
@@ -64,11 +65,28 @@ export const useToolStatusToasts = (activeTools: ToolStatus[]) => {
                         dismissible: true
                     });
                 }
+                activeLoadingToastIdsRef.current.delete(tool.name);
             }
 
+            if (processedStatuses.size >= MAX_PROCESSED_STATUSES) {
+                const oldest = processedStatuses.values().next().value;
+                if (oldest !== undefined) {
+                    processedStatuses.delete(oldest);
+                }
+            }
             processedStatuses.add(toolKey);
         });
-    }, [activeTools, dismissToast, showLoadingToast, showToast, updateToast]);
+    }, [activeTools, dismissToast, showLoadingToast, showToast, toasts, updateToast]);
+
+    useEffect(() => {
+        if (activeTools.length === 0) {
+            for (const toastId of activeLoadingToastIdsRef.current.values()) {
+                dismissToast(toastId);
+            }
+            activeLoadingToastIdsRef.current.clear();
+            processedStatusesRef.current.clear();
+        }
+    }, [activeTools, dismissToast]);
 
     useEffect(() => {
         return () => {

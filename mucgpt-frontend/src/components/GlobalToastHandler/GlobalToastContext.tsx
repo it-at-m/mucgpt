@@ -78,7 +78,10 @@ export const GlobalToastProvider: React.FC<GlobalToastProviderProps> = ({ childr
                 }
 
                 const nextType = patch.type ?? toast.type;
-                const nextPersistent = patch.persistent ?? toast.persistent ?? nextType === "loading";
+                const nextPersistent =
+                    patch.persistent === undefined && toast.type === "loading" && nextType !== "loading"
+                        ? false
+                        : (patch.persistent ?? toast.persistent ?? nextType === "loading");
                 const explicitTimeout = patch.timeout !== undefined ? patch.timeout : toast.timeout;
 
                 return {

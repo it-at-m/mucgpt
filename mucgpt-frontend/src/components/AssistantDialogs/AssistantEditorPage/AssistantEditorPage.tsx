@@ -136,7 +136,10 @@ function SettingsForm(props: SettingsFormProps) {
                             value={props.description}
                             placeholder={t("components.assistant_editor.description_placeholder")}
                             rows={3}
-                            onChange={v => { props.onDescriptionChange(v); props.onHasChanged?.(true); }}
+                            onChange={v => {
+                                props.onDescriptionChange(v);
+                                props.onHasChanged?.(true);
+                            }}
                             disabled={!props.isOwner}
                             dialogTitle={t("components.assistant_editor.description")}
                         />
@@ -191,7 +194,10 @@ function SettingsForm(props: SettingsFormProps) {
                             value={props.systemPrompt}
                             placeholder={t("components.assistant_editor.prompt_placeholder")}
                             rows={7}
-                            onChange={v => { props.onSystemPromptChange(v); props.onHasChanged?.(true); }}
+                            onChange={v => {
+                                props.onSystemPromptChange(v);
+                                props.onHasChanged?.(true);
+                            }}
                             disabled={!props.isOwner}
                             dialogTitle={t("components.assistant_editor.system_prompt")}
                         />

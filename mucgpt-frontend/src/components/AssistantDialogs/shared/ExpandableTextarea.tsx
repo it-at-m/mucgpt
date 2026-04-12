@@ -1,15 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-    Button,
-    Dialog,
-    DialogBody,
-    DialogContent,
-    DialogSurface,
-    DialogTitle,
-    Textarea
-} from "@fluentui/react-components";
-import { ArrowMaximize24Regular, Dismiss24Regular } from "@fluentui/react-icons";
+import { Button, Dialog, DialogBody, DialogContent, DialogSurface, DialogTitle, Textarea } from "@fluentui/react-components";
+import { ArrowMaximize20Regular, Dismiss24Regular } from "@fluentui/react-icons";
 
 import styles from "./ExpandableTextarea.module.css";
 
@@ -27,8 +19,20 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [dialogDraft, setDialogDraft] = useState("");
+    const [hasScrollbar, setHasScrollbar] = useState(false);
     const valueOnOpenRef = useRef("");
     const dialogTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const inlineTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        const el = inlineTextareaRef.current;
+        if (!el) return;
+        const check = () => setHasScrollbar(el.scrollHeight > el.clientHeight);
+        check();
+        const observer = new ResizeObserver(check);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [value]);
 
     const handleOpen = useCallback(() => {
         valueOnOpenRef.current = value;
@@ -76,49 +80,39 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
                 resize="vertical"
                 disabled={disabled}
                 onChange={(_e, data) => onChange(data?.value ?? "")}
+                textarea={{ ref: inlineTextareaRef }}
             />
             {!disabled && (
                 <Button
                     className={styles.expandButton}
-                    appearance="subtle"
+                    appearance="primary"
                     size="small"
-                    icon={<ArrowMaximize24Regular />}
-                    aria-label={t("components.expandable_textarea.expand")}
+                    icon={<ArrowMaximize20Regular />}
+                    aria-label={t("components.expandable_textarea.default_title")}
+                    style={{ right: hasScrollbar ? 12 : 4 }}
                     onClick={handleOpen}
                 />
             )}
-            <Dialog open={isOpen} onOpenChange={(_e, data) => { if (!data.open) handleClose(); }} modalType="modal">
-                <DialogSurface
-                    style={{
-                        width: "80vw",
-                        maxWidth: "80vw",
-                        height: "80vh",
-                        maxHeight: "80vh",
-                        display: "flex",
-                        flexDirection: "column"
-                    }}
-                >
-                    <DialogBody style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-                        <DialogTitle
-                            action={
-                                <Button
-                                    appearance="subtle"
-                                    icon={<Dismiss24Regular />}
-                                    aria-label={t("common.close")}
-                                    onClick={handleClose}
-                                />
-                            }
-                        >
+            <Dialog
+                open={isOpen}
+                onOpenChange={(_e, data) => {
+                    if (!data.open) handleClose();
+                }}
+                modalType="modal"
+            >
+                <DialogSurface className={styles.dialogSurface}>
+                    <DialogBody className={styles.dialogBody}>
+                        <DialogTitle action={<Button appearance="subtle" icon={<Dismiss24Regular />} aria-label={t("common.close")} onClick={handleClose} />}>
                             {dialogTitle ?? t("components.expandable_textarea.default_title")}
                         </DialogTitle>
-                        <DialogContent style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
+                        <DialogContent className={styles.dialogContent}>
                             <Textarea
-                                className={styles.dialogTextarea}
+                                style={{ flex: 1, width: "100%", display: "flex" }}
+                                textarea={{ ref: dialogTextareaRef, style: { flex: 1, maxHeight: "none" } }}
                                 value={dialogDraft}
                                 placeholder={placeholder}
                                 resize="none"
                                 onChange={(_e, data) => setDialogDraft(data?.value ?? "")}
-                                textarea={{ ref: dialogTextareaRef }}
                             />
                         </DialogContent>
                     </DialogBody>

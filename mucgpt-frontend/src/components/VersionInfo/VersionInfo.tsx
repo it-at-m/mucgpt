@@ -1,4 +1,4 @@
-import { Badge, Tooltip } from "@fluentui/react-components";
+import { Badge, Link, Tooltip } from "@fluentui/react-components";
 import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
 
@@ -10,7 +10,14 @@ interface VersionInfoProps {
     versionUrl?: string;
 }
 
-export const VersionInfo = ({ app_version, core_version, versionUrl, frontend_version, assistant_version }: VersionInfoProps) => {
+const SERVICES = [
+    { name: "mucgpt-frontend", getVersion: (p: VersionInfoProps) => p.frontend_version },
+    { name: "mucgpt-core", getVersion: (p: VersionInfoProps) => p.core_version },
+    { name: "mucgpt-assistants", getVersion: (p: VersionInfoProps) => p.assistant_version }
+];
+
+export const VersionInfo = (props: VersionInfoProps) => {
+    const { app_version, versionUrl } = props;
     const { t } = useTranslation();
 
     return (
@@ -18,18 +25,12 @@ export const VersionInfo = ({ app_version, core_version, versionUrl, frontend_ve
             <Tooltip
                 content={
                     <div className={styles.tooltipContent}>
-                        <div className={styles.tooltipRow}>
-                            <span className={styles.tooltipService}>{t("components.versioninfo.service_frontend")}</span>
-                            <span className={styles.tooltipVersion}>{frontend_version}</span>
-                        </div>
-                        <div className={styles.tooltipRow}>
-                            <span className={styles.tooltipService}>{t("components.versioninfo.service_core")}</span>
-                            <span className={styles.tooltipVersion}>{core_version}</span>
-                        </div>
-                        <div className={styles.tooltipRow}>
-                            <span className={styles.tooltipService}>{t("components.versioninfo.service_assistants")}</span>
-                            <span className={styles.tooltipVersion}>{assistant_version}</span>
-                        </div>
+                        {SERVICES.map(service => (
+                            <div key={service.name} className={styles.tooltipRow}>
+                                <span>{service.name}</span>
+                                <span>{service.getVersion(props)}</span>
+                            </div>
+                        ))}
                     </div>
                 }
                 relationship="description"

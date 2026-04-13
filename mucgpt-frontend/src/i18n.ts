@@ -184,9 +184,6 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
-                            service_frontend: "mucgpt-frontend",
-                            service_core: "mucgpt-core",
-                            service_assistants: "mucgpt-assistants",
                             whats_new: "Was gibt's neues?"
                         },
                         feedback: {
@@ -804,9 +801,6 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
-                            service_frontend: "mucgpt-frontend",
-                            service_core: "mucgpt-core",
-                            service_assistants: "mucgpt-assistants",
                             whats_new: "What's new?"
                         },
                         feedback: {
@@ -1417,9 +1411,6 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
-                            service_frontend: "mucgpt-frontend",
-                            service_core: "mucgpt-core",
-                            service_assistants: "mucgpt-assistants",
                             whats_new: "Wos gibt's Nei's?"
                         },
                         feedback: {
@@ -2035,9 +2026,6 @@ i18n
                         },
                         versioninfo: {
                             label: "Version",
-                            service_frontend: "mucgpt-frontend",
-                            service_core: "mucgpt-core",
-                            service_assistants: "mucgpt-assistants",
                             whats_new: "Quoi de neuf ?"
                         },
                         feedback: {
@@ -2652,9 +2640,6 @@ i18n
                         },
                         versioninfo: {
                             label: "Версія",
-                            service_frontend: "mucgpt-frontend",
-                            service_core: "mucgpt-core",
-                            service_assistants: "mucgpt-assistants",
                             whats_new: "Що нового?"
                         },
                         feedback: {

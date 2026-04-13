@@ -9,7 +9,7 @@
 
 .modeSubtitle {
     font-size: 24px;
-    color: var(--colorNeutralForeground2);
+    color: var(--colorNeutralForeground1);
     margin: 0;
 }
 
@@ -33,7 +33,6 @@
 .modeCard:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow16);
-    border-color: var(--colorBrandStroke1) !important;
 }
 
 .modeCardIcon {
@@ -84,7 +83,6 @@
 
 .modeCardDescription {
     font-size: 14px;
-    color: var(--colorNeutralForeground1);
     line-height: 1.5;
     flex: 1;
 }
@@ -92,7 +90,6 @@
 .modeCardHint {
     font-size: 12px;
     font-weight: 700;
-    color: var(--colorNeutralForeground1);
     text-transform: uppercase;
     margin-top: 16px;
 }

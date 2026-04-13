@@ -44,7 +44,7 @@ export const ThemeSelector = ({ isLight, onThemeChange }: ThemeSelectorProps) =>
     return (
         <Tooltip content={tooltipContent} relationship="description" positioning="below">
             <Button
-                appearance={"primary"}
+                appearance={"subtle"}
                 onClick={handleButtonClick}
                 aria-label={tooltipContent}
                 onKeyDown={handleKeyDown}

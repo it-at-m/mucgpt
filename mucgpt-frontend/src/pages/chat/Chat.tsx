@@ -636,7 +636,7 @@ const Chat = () => {
                     onToggleMinimized={() => setAndStoreShowSidebar(!showSidebar)}
                     actions={
                         <Button
-                            appearance="subtle"
+                            appearance="transparent"
                             icon={<Settings24Regular />}
                             onClick={() => setIsSettingsOpen(true)}
                             aria-label={t("components.chattsettingsdrawer.title")}

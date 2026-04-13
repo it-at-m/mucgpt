@@ -19,7 +19,7 @@ export const HelpButton = ({ url, label }: HelpButtonProps) => {
             <Button
                 as={"a"}
                 href={url}
-                appearance={"primary"}
+                appearance={"subtle"}
                 icon={<QuestionCircle24Regular className={styles.icon} />}
                 aria-label={t("components.helpbutton.aria_label", "Hilfe und FAQ öffnen")}
                 className={styles.helpButton}

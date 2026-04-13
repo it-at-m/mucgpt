@@ -1,19 +1,11 @@
 .feedbackButton {
-    background-color: var(--theme-header-background) !important;
-    color: var(--theme-text-on-primary) !important;
-    border-color: transparent !important;
+    color: var(--app-header-foreground) !important;
 }
 
 .feedbackButton:hover {
-    background-color: var(--theme-header-hover) !important;
-    color: var(--theme-text-on-primary) !important;
-}
-
-.feedbackButton:active {
-    background-color: var(--theme-header-pressed) !important;
-    color: var(--theme-text-on-primary) !important;
+    background-color: var(--app-header-hover) !important;
 }
 
 .icon {
-    color: var(--theme-text-on-primary);
+    color: var(--app-header-foreground);
 }

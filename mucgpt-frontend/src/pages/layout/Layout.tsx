@@ -1,6 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import styles from "./Layout.module.css";
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import logo from "../../assets/mucgpt_frost.png";
 import alternative_logo from "../../assets/mugg_tschibidi.png";
 import logo_black from "../../assets/mucgpt_frost.png";
@@ -8,11 +8,8 @@ import { DEFAULTLANG, LanguageContext } from "../../components/LanguageSelector/
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { useTranslation } from "react-i18next";
 import { ApplicationConfig } from "../../api";
-
-export const ConfigContext = createContext<ApplicationConfig | null>(null);
-import { FluentProvider, Theme, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel, Spinner } from "@fluentui/react-components";
-import { STORAGE_KEYS, adjustTheme, applyCssVariables } from "./LayoutHelper";
-import { lightThemeTokens, darkThemeTokens } from "./themeTokens";
+import { FluentProvider, Button, Accordion, AccordionHeader, AccordionItem, AccordionPanel, Spinner } from "@fluentui/react-components";
+import { STORAGE_KEYS, createAppCssVars, createFluentTheme, createScaledTypographyTheme, getAppTokens } from "./LayoutHelper";
 import { LLMContext } from "../../components/LLMSelector/LLMContextProvider";
 import { LightContext } from "./LightContext";
 import { DEFAULT_APP_CONFIG } from "../../constants";
@@ -29,6 +26,8 @@ import { Navigation24Regular, DismissRegular, Settings24Regular, ContactCard24Re
 import TutorialsButton from "../../components/TutorialsButton";
 import { ToolsProvider } from "../../components/ToolsProvider";
 import Unauthorized from "../Unauthorized";
+
+export const ConfigContext = createContext<ApplicationConfig | undefined>(undefined);
 
 const formatDate = (date: Date) => {
     const formatted_date = date.getDate() + "-" + (date.getMonth() + 1) + "-" + date.getFullYear();
@@ -74,25 +73,17 @@ export const Layout = () => {
         localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) === null ? true : localStorage.getItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME) == "true";
     const [isLight, setLight] = useState<boolean>(ligth_theme_pref);
 
-    const [theme, setTheme] = useState<Theme>(adjustTheme(isLight, fontscaling));
-
-    // Set initial CSS variables and data-theme attribute on mount
-    useEffect(() => {
-        const tokens = isLight ? lightThemeTokens : darkThemeTokens;
-        applyCssVariables(tokens);
-        document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
-    }, [isLight]);
+    const appTokens = useMemo(() => getAppTokens(isLight), [isLight]);
+    const theme = useMemo(() => createScaledTypographyTheme(createFluentTheme(appTokens, isLight), fontscaling), [appTokens, isLight, fontscaling]);
+    const appCssVars = useMemo(() => createAppCssVars(appTokens) as CSSProperties, [appTokens]);
 
     // change theme
     const onThemeChange = useCallback(
         (light: boolean) => {
             setLight(light);
             localStorage.setItem(STORAGE_KEYS.SETTINGS_IS_LIGHT_THEME, String(light));
-            setTheme(adjustTheme(light, fontscaling));
-            // Set data-theme attribute for CSS custom properties
-            document.documentElement.setAttribute("data-theme", light ? "light" : "dark");
         },
-        [fontscaling, setLight, setTheme]
+        [setLight]
     );
 
     useEffect(() => {
@@ -162,7 +153,7 @@ export const Layout = () => {
     }, []);
 
     return (
-        <FluentProvider theme={theme}>
+        <FluentProvider theme={theme} style={appCssVars}>
             <LightContext.Provider value={isLight}>
                 <UserContextProvider>
                     {isLoadingConfig ? (
@@ -297,8 +288,8 @@ export const Layout = () => {
                                             isMobile && mobileMenuOpen
                                                 ? styles.mobileMainContentWithMenu
                                                 : isMobile
-                                                  ? styles.mobileMainContent
-                                                  : styles.mainContent
+                                                    ? styles.mobileMainContent
+                                                    : styles.mainContent
                                         }
                                     >
                                         <Outlet />

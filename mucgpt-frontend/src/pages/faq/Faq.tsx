@@ -22,7 +22,7 @@ const Faq = () => {
                     <Button
                         aria-label={t("common.close")}
                         icon={<Dismiss24Regular className={styles.system_prompt_warining_icon} />}
-                        appearance="secondary"
+                        appearance="transparent"
                         onClick={onClose}
                         size="large"
                     ></Button>

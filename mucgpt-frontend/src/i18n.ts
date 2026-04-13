@@ -356,10 +356,10 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Neuer Assistent"
+                            add_assistant: "Neu erstellen"
                         },
                         import_assistant: {
-                            import: "Assistenten importieren",
+                            import: "Importieren",
                             import_success: "Import erfolgreich",
                             import_success_message: 'Der Assistent "{{title}}" wurde importiert und kann nun verwendet werden.',
                             import_error: "Import fehlgeschlagen",
@@ -570,16 +570,16 @@ i18n
                             local_badge: "Veraltet - Lokal",
                             local_state_title: "Dieser lokale Assistent ist veraltet",
                             discovery_local_hint:
-                                "Dieser Assistent existiert nur lokal in Ihrem Browser. Sichern Sie ihn jetzt privat in Ihrem Konto, damit er erhalten bleibt und weiterhin unterstützt wird.",
+                                "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
                             local_chat_warning:
-                                "Dieser Assistent ist nur noch lokal in Ihrem Browser gespeichert. Sichern Sie ihn jetzt privat in Ihrem Konto, damit er erhalten bleibt und weiterhin unterstützt wird.",
-                            local_state_publish_action: "Privat sichern",
-                            local_migration_confirm_title: "Assistent privat sichern?",
+                                "Dieser Assistent ist nur lokal in Ihrem Browser gesichert und geht verloren, falls Sie das Gerät wechseln. Sichern Sie ihn jetzt, damit er dauerhaft erhalten bleibt.",
+                            local_state_publish_action: "Sichern",
+                            local_migration_confirm_title: "Assistent sichern?",
                             local_migration_confirm_message:
-                                "Wir sichern diesen Assistenten privat in Ihrem Konto, damit er erhalten bleibt und weiterhin unterstützt wird. Wenn Sie ihn später mit anderen teilen möchten, können Sie das jederzeit in den Einstellungen ändern.",
-                            local_migration_confirm_action: "Privat sichern",
-                            local_migration_success_title: "Assistent privat gesichert",
-                            local_migration_success_message: 'Der Assistent "{{title}}" wurde privat in Ihrem Konto gesichert.',
+                                "Wir sichern diesen Assistenten, damit er dauerhaft erhalten bleibt. Wenn Sie ihn später mit anderen teilen möchten, können Sie das jederzeit in den Einstellungen ändern.",
+                            local_migration_confirm_action: "Sichern",
+                            local_migration_success_title: "Assistent gesichert",
+                            local_migration_success_message: 'Der Assistent "{{title}}" wurde gesichert.',
                             local_migration_failed_title: "Assistent konnte nicht gesichert werden",
                             local_migration_failed_default: "Beim Sichern des Assistenten ist ein Fehler aufgetreten.",
                             deleted_badge: "Gelöscht",
@@ -988,10 +988,10 @@ i18n
                             more: "more"
                         },
                         add_assistant_button: {
-                            add_assistant: "New assistant"
+                            add_assistant: "Create New"
                         },
                         import_assistant: {
-                            import: "Import assistant",
+                            import: "Import",
                             import_success: "Import successful",
                             import_success_message: 'The assistant "{{title}}" has been imported and is ready to use.',
                             import_error: "Import failed",
@@ -1198,16 +1198,16 @@ i18n
                             local_badge: "Deprecated - Local",
                             local_state_title: "This local assistant is deprecated",
                             discovery_local_hint:
-                                "This assistant only exists locally in your browser. Save it privately to your account now so it stays available and supported.",
+                                "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
                             local_chat_warning:
-                                "This assistant is only stored locally in your browser. Save it privately to your account now so it stays available and supported.",
-                            local_state_publish_action: "Save privately",
-                            local_migration_confirm_title: "Save assistant privately?",
+                                "This assistant is only saved locally in your browser and will be lost if you switch devices. Save it now so it remains available.",
+                            local_state_publish_action: "Save",
+                            local_migration_confirm_title: "Save assistant?",
                             local_migration_confirm_message:
-                                "We will save this assistant privately to your account so it stays available and supported. If you want to share it with others later, you can change that at any time in the assistant settings.",
-                            local_migration_confirm_action: "Save privately",
-                            local_migration_success_title: "Assistant saved privately",
-                            local_migration_success_message: 'The assistant "{{title}}" was saved privately to your account.',
+                                "We will save this assistant so it remains available. If you want to share it with others later, you can change that at any time in the assistant settings.",
+                            local_migration_confirm_action: "Save",
+                            local_migration_success_title: "Assistant saved",
+                            local_migration_success_message: 'The assistant "{{title}}" was saved.',
                             local_migration_failed_title: "Assistant could not be saved",
                             local_migration_failed_default: "An error occurred while saving the assistant.",
                             deleted_badge: "Deleted",
@@ -1613,10 +1613,10 @@ i18n
                             more: "mehr"
                         },
                         add_assistant_button: {
-                            add_assistant: "Neia Assistent"
+                            add_assistant: "Nei anlegn"
                         },
                         import_assistant: {
-                            import: "Assistentn importier'n",
+                            import: "Importiern",
                             import_success: "Import erfolgreich",
                             import_success_message: 'Dea Assistent "{{title}}" is importiert wordn und ko jetzt verwendet werdn.',
                             import_error: "Import fehlgschlogn",
@@ -1826,16 +1826,16 @@ i18n
                             local_badge: "Veraltet - Lokal",
                             local_state_title: "Der lokale Assistent is veraltet",
                             discovery_local_hint:
-                                "Der Assistent existiert bloß lokal in deim Browser. Sicher eam jetzt privat in deim Konto, damit a erhalten bleibt und weiter unterstützt werd.",
+                                "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
                             local_chat_warning:
-                                "Der Assistent is bloß no lokal in deim Browser gespeichert. Sicher eam jetzt privat in deim Konto, damit a erhalten bleibt und weiter unterstützt werd.",
-                            local_state_publish_action: "Privat sichern",
-                            local_migration_confirm_title: "Assistent privat sichern?",
+                                "Der Assistent is bloß lokal in deim Browser gesichert und geht verloren, wennst des Gerät wechselst. Sicher eam jetzt, damit a dauerhaft erhalten bleibt.",
+                            local_state_publish_action: "Sichern",
+                            local_migration_confirm_title: "Assistent sichern?",
                             local_migration_confirm_message:
-                                "Mir sichern den Assistenten privat in deim Konto, damit a erhalten bleibt und weiter unterstützt werd. Wennst eam später für andere freigebn magst, kannst des jederzeit in de Einstellungen ändern.",
-                            local_migration_confirm_action: "Privat sichern",
-                            local_migration_success_title: "Assistent privat gesichert",
-                            local_migration_success_message: 'Da Assistent "{{title}}" is privat in deim Konto gesichert worn.',
+                                "Mir sichern den Assistenten, damit a dauerhaft erhalten bleibt. Wennst eam später für andere freigebn magst, kannst des jederzeit in de Einstellungen ändern.",
+                            local_migration_confirm_action: "Sichern",
+                            local_migration_success_title: "Assistent gesichert",
+                            local_migration_success_message: 'Da Assistent "{{title}}" is gesichert worn.',
                             local_migration_failed_title: "Assistent hod ned gesichert wern kina",
                             local_migration_failed_default: "Beim Sichern vom Assistentn is a Fehler aufgtretn.",
                             deleted_badge: "Glascht",
@@ -2244,10 +2244,10 @@ i18n
                             more: "plus"
                         },
                         add_assistant_button: {
-                            add_assistant: "nouvel assistant"
+                            add_assistant: "Créer"
                         },
                         import_assistant: {
-                            import: "Importer un assistant",
+                            import: "Importer",
                             import_success: "Importation réussie",
                             import_success_message: 'L\'assistant "{{title}}" a été importé et est prêt à être utilisé.',
                             import_error: "Échec de l'importation",
@@ -2456,16 +2456,16 @@ i18n
                             local_badge: "Obsolète - Local",
                             local_state_title: "Cet assistant local est obsolète",
                             discovery_local_hint:
-                                "Cet assistant n'existe que localement dans votre navigateur. Enregistrez-le maintenant de façon privée dans votre compte pour qu'il reste disponible et pris en charge.",
+                                "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
                             local_chat_warning:
-                                "Cet assistant n'est plus stocké que localement dans votre navigateur. Enregistrez-le maintenant de façon privée dans votre compte pour qu'il reste disponible et pris en charge.",
-                            local_state_publish_action: "Enregistrer en privé",
-                            local_migration_confirm_title: "Enregistrer l'assistant en privé ?",
+                                "Cet assistant est uniquement enregistré localement dans votre navigateur et sera perdu si vous changez d'appareil. Enregistrez-le maintenant pour le conserver durablement.",
+                            local_state_publish_action: "Enregistrer",
+                            local_migration_confirm_title: "Enregistrer l'assistant ?",
                             local_migration_confirm_message:
-                                "Nous allons enregistrer cet assistant de façon privée dans votre compte afin qu'il reste disponible et pris en charge. Si vous souhaitez plus tard le partager avec d'autres, vous pourrez le modifier à tout moment dans les paramètres de l'assistant.",
-                            local_migration_confirm_action: "Enregistrer en privé",
-                            local_migration_success_title: "Assistant enregistré en privé",
-                            local_migration_success_message: `L'assistant "{{title}}" a été enregistré en privé dans votre compte.`,
+                                "Nous allons enregistrer cet assistant pour le conserver durablement. Si vous souhaitez plus tard le partager avec d'autres, vous pourrez le modifier à tout moment dans les paramètres de l'assistant.",
+                            local_migration_confirm_action: "Enregistrer",
+                            local_migration_success_title: "Assistant enregistré",
+                            local_migration_success_message: `L'assistant "{{title}}" a été enregistré.`,
                             local_migration_failed_title: "L'assistant n'a pas pu être enregistré",
                             local_migration_failed_default: "Une erreur est survenue lors de l'enregistrement de l'assistant.",
                             deleted_badge: "Supprimé",
@@ -2873,10 +2873,10 @@ i18n
                             more: "більше"
                         },
                         add_assistant_button: {
-                            add_assistant: "новий асистент"
+                            add_assistant: "Створити"
                         },
                         import_assistant: {
-                            import: "Імпортувати асистента",
+                            import: "Імпортувати",
                             import_success: "Імпорт успішний",
                             import_success_message: 'Асистент "{{title}}" було імпортовано і готовий до використання.',
                             import_error: "Помилка імпорту",
@@ -3083,16 +3083,16 @@ i18n
                             local_badge: "Застарілий - локальний",
                             local_state_title: "Цей локальний асистент застарів",
                             discovery_local_hint:
-                                "Цей асистент існує лише локально у вашому браузері. Збережіть його приватно у своєму обліковому записі зараз, щоб він залишався доступним і підтримуваним.",
+                                "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
                             local_chat_warning:
-                                "Цей асистент зберігається лише локально у вашому браузері. Збережіть його приватно у своєму обліковому записі зараз, щоб він залишався доступним і підтримуваним.",
-                            local_state_publish_action: "Зберегти приватно",
-                            local_migration_confirm_title: "Зберегти асистента приватно?",
+                                "Цей асистент збережено лише локально у вашому браузері, і він буде втрачений, якщо ви зміните пристрій. Збережіть його зараз, щоб він залишався доступним.",
+                            local_state_publish_action: "Зберегти",
+                            local_migration_confirm_title: "Зберегти асистента?",
                             local_migration_confirm_message:
-                                "Ми збережемо цього асистента приватно у вашому обліковому записі, щоб він залишався доступним і підтримуваним. Якщо пізніше ви захочете поділитися ним з іншими, це можна буде будь-коли змінити в налаштуваннях асистента.",
-                            local_migration_confirm_action: "Зберегти приватно",
-                            local_migration_success_title: "Асистента збережено приватно",
-                            local_migration_success_message: 'Асистента "{{title}}" приватно збережено у вашому обліковому записі.',
+                                "Ми збережемо цього асистента, щоб він залишався доступним. Якщо пізніше ви захочете поділитися ним з іншими, це можна буде будь-коли змінити в налаштуваннях асистента.",
+                            local_migration_confirm_action: "Зберегти",
+                            local_migration_success_title: "Асистента збережено",
+                            local_migration_success_message: 'Асистента "{{title}}" збережено.',
                             local_migration_failed_title: "Не вдалося зберегти асистента",
                             local_migration_failed_default: "Під час збереження асистента сталася помилка.",
                             deleted_badge: "Видалено",

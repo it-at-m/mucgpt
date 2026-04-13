@@ -1,158 +1,166 @@
 # Theme Tokens
 
-MUCGPT uses semantic app tokens as the source of truth for theming. These tokens are then mapped to Fluent UI theme aliases so Fluent components such as `Button`, `Input`, `Tab` and `Dialog` render consistently with the rest of the app.
+MUCGPT uses semantic app tokens from `src/pages/layout/themeTokens.ts` as the source of truth.  
+`src/pages/layout/LayoutHelper.tsx` maps those app tokens to Fluent UI v9 theme tokens.
 
 ## Files
 
 - `src/pages/layout/themeTokens.ts`
-  Contains the light and dark semantic token sets.
+  Defines the semantic light and dark token sets.
 - `src/pages/layout/LayoutHelper.tsx`
-  Maps semantic tokens to Fluent UI theme aliases and exposes CSS custom properties.
+  Creates the Fluent theme and exposes the remaining `--app-*` CSS variables.
+- `src/pages/layout/Layout.tsx`
+  Passes the Fluent theme and `--app-*` vars into `FluentProvider`.
 
-## Token Strategy
+## Mental Model
 
-Do not design against raw Fluent token names first. Design against semantic roles:
+Use this order when styling:
 
-- `header/*`
-- `surface/*`
-- `primary/*`
-- `text/*`
-- `outline/*`
-- `focus/*`
-- `status/*`
+1. Define product semantics in `themeTokens.ts`
+2. Map them to Fluent tokens in `LayoutHelper.tsx`
+3. Use Fluent CSS vars directly in CSS, for example `var(--colorNeutralBackground1)`
+4. Use `--app-*` only where Fluent has no clean equivalent
 
-This keeps product decisions readable and stable, while still allowing Fluent UI components to inherit the correct visuals.
-
-## Current Semantic Tokens
+## Current App Tokens
 
 ### Header
 
-- `headerBackground`: app header and footer background
-- `headerHover`: hover state for header buttons and controls
-- `headerPressed`: pressed state for header buttons and controls
-- `headerSubtle`: subtle header-adjacent surfaces such as pills or lightweight menus
+- `headerBackground`
+- `headerHover`
+- `headerPressed`
 
-### Surface
+### Surfaces
 
-- `surfaceBase`: page background
-- `surfaceRaised`: cards, dialogs, inputs, drawers
-- `surfaceSubtle`: softly separated sections, hero areas, sidebars
+- `surfaceBase`
+- `surfaceRaised`
+- `surfaceSubtle`
 
 ### Primary
 
-- `primaryBase`: default primary action background
-- `primaryHover`: hover state for primary actions
-- `primaryPressed`: pressed state for primary actions
-- `primarySubtle`: selected chips, active tabs, soft brand highlights
-- `primaryStrong`: stronger brand accent for emphasis
+- `primaryBase`
+- `primaryHover`
+- `primaryPressed`
+- `primarySubtle`
+- `primarySubtleOn`
+- `primaryStrong`
 
 ### Text
 
-- `textDefault`: main body text and headings
-- `textSecondary`: descriptions and metadata
-- `textTertiary`: placeholders and low-emphasis text
-- `textOnHeader`: text and icons on the header
-- `textOnPrimary`: text and icons on primary backgrounds
+- `textDefault`
+- `textSecondary`
+- `textTertiary`
+- `textOnHeader`
+- `textOnPrimary`
 
-### Outline
+### Outline / Focus / Disabled
 
-- `outlineSubtle`: quiet dividers and card borders
-- `outlineBase`: standard borders
-- `outlineHover`: hover, active and high-emphasis borders
-
-### Focus
-
-- `focusRing`: visible keyboard focus indicator
-
-### Disabled
-
-- `disabledBackground`: background for disabled controls
-- `disabledForeground`: text and icon color for disabled controls
-- `disabledBorder`: border color for disabled controls
+- `outlineSubtle`
+- `outlineBase`
+- `outlineHover`
+- `focusRing`
+- `disabledBackground`
+- `disabledForeground`
+- `disabledBorder`
 
 ### Status
 
-- `statusSuccessBackground`: success banners, alerts and toast backgrounds
-- `statusSuccessBorder`: success borders and separators
-- `statusSuccessForeground`: success text and icons
-- `statusWarningBackground`: warning banners, alerts and toast backgrounds
-- `statusWarningBorder`: warning borders and separators
-- `statusWarningForeground`: warning text and icons
-- `statusErrorBackground`: error banners, alerts and destructive feedback backgrounds
-- `statusErrorBorder`: error borders and separators
-- `statusErrorForeground`: error text and icons
-- `statusInfoBackground`: informational banners and neutral notices
-- `statusInfoBorder`: info borders and separators
-- `statusInfoForeground`: info text and icons
+- `statusSuccessBackground`
+- `statusSuccessBorder`
+- `statusSuccessForeground`
+- `statusWarningBackground`
+- `statusWarningBorder`
+- `statusWarningForeground`
+- `statusErrorBackground`
+- `statusErrorBorder`
+- `statusErrorForeground`
+- `statusInfoBackground`
+- `statusInfoBorder`
+- `statusInfoForeground`
 
-## Fluent Mapping
+## Fluent Mapping Reference
 
-The semantic tokens are mapped to Fluent aliases in `LayoutHelper.tsx`. The most important mappings are:
+This is the current intended mapping from app tokens to Fluent v9 tokens.
+
+### Surfaces
 
 - `surfaceBase -> colorNeutralBackground1`
-- `surfaceSubtle -> colorNeutralBackground2`
-- `surfaceRaised -> colorNeutralBackground3`
+- `surfaceRaised -> colorNeutralBackground2`
+- `surfaceSubtle -> colorNeutralBackground3`
+- `surfaceRaised -> colorNeutralCardBackground`
+- `disabledBackground -> colorNeutralBackgroundDisabled`
+
+### Primary / Brand
+
 - `primaryBase -> colorBrandBackground`
 - `primaryHover -> colorBrandBackgroundHover`
 - `primaryPressed -> colorBrandBackgroundPressed`
 - `primarySubtle -> colorBrandBackground2`
+- `primaryStrong -> colorBrandForeground1`
+- `primaryStrong -> colorBrandStroke1`
+- `primaryStrong -> colorBrandForegroundLink`
+- `primarySubtleOn -> colorBrandForeground2`
+- `textOnPrimary -> colorNeutralForegroundOnBrand`
+
+### Text
+
 - `textDefault -> colorNeutralForeground1`
 - `textSecondary -> colorNeutralForeground2`
 - `textTertiary -> colorNeutralForeground3`
+- `disabledForeground -> colorNeutralForegroundDisabled`
+
+### Outline / Focus / Disabled
+
 - `outlineBase -> colorNeutralStroke1`
+- `outlineHover -> colorNeutralStroke1Hover`
 - `outlineSubtle -> colorNeutralStroke2`
-- `outlineHover -> colorNeutralStrokeAccessible`
+- `disabledBorder -> colorNeutralStrokeDisabled`
 - `focusRing -> colorStrokeFocus2`
-- `disabled* -> neutral disabled aliases`
-- `statusSuccess* -> colorStatusSuccess*`
-- `statusWarning* -> colorStatusWarning*`
-- `statusError* -> colorStatusDanger*`
+
+### Status
+
+- `statusSuccessBackground -> colorStatusSuccessBackground1`
+- `statusSuccessBorder -> colorStatusSuccessBorder1`
+- `statusSuccessForeground -> colorStatusSuccessForeground1`
+- `statusWarningBackground -> colorStatusWarningBackground1`
+- `statusWarningBorder -> colorStatusWarningBorder1`
+- `statusWarningForeground -> colorStatusWarningForeground1`
+- `statusErrorBackground -> colorStatusDangerBackground1`
+- `statusErrorBorder -> colorStatusDangerBorder1`
+- `statusErrorForeground -> colorStatusDangerForeground1`
+
+## Remaining Custom CSS Variables
+
+These values intentionally remain outside Fluent and are exposed as `--app-*`:
+
+- `headerBackground -> --app-header-background`
+- `headerHover -> --app-header-hover`
+- `headerPressed -> --app-header-pressed`
+- `textOnHeader -> --app-header-foreground`
+- `primarySubtleOn -> --app-primary-subtle-foreground`
+- `statusInfoBackground -> --app-status-info-background`
+- `statusInfoBorder -> --app-status-info-border`
+- `statusInfoForeground -> --app-status-info-foreground`
 
 ## CSS Usage
 
-Prefer the semantic CSS custom properties:
+Prefer Fluent CSS variables directly:
 
-- `--theme-header-background`
-- `--theme-header-pressed`
-- `--theme-surface-base`
-- `--theme-surface-raised`
-- `--theme-surface-subtle`
-- `--theme-primary-base`
-- `--theme-primary-hover`
-- `--theme-primary-pressed`
-- `--theme-primary-subtle`
-- `--theme-primary-strong`
-- `--theme-text-default`
-- `--theme-text-secondary`
-- `--theme-text-tertiary`
-- `--theme-outline-base`
-- `--theme-outline-subtle`
-- `--theme-outline-hover`
-- `--theme-focus-ring`
-- `--theme-disabled-background`
-- `--theme-disabled-foreground`
-- `--theme-disabled-border`
-- `--theme-status-success-background`
-- `--theme-status-success-border`
-- `--theme-status-success-foreground`
-- `--theme-status-warning-background`
-- `--theme-status-warning-border`
-- `--theme-status-warning-foreground`
-- `--theme-status-error-background`
-- `--theme-status-error-border`
-- `--theme-status-error-foreground`
-- `--theme-status-info-background`
-- `--theme-status-info-border`
-- `--theme-status-info-foreground`
+- `var(--colorNeutralBackground1)`
+- `var(--colorNeutralBackground2)`
+- `var(--colorNeutralBackground3)`
+- `var(--colorBrandBackground)`
+- `var(--colorBrandBackground2)`
+- `var(--colorNeutralForeground1)`
+- `var(--colorNeutralForeground2)`
+- `var(--colorNeutralStroke1)`
+- `var(--colorStatusSuccessBackground1)`
 
-Legacy aliases such as `--primary`, `--surface` or `--primaryContainer` still exist temporarily for compatibility with older CSS modules. New code should not introduce those names.
+Use `--app-*` only for the remaining custom semantics listed above.
 
-## Guidelines
+## Practical Rules
 
-- Do not use `primaryBase` as a large page background.
-- Prefer `surfaceRaised` for cards and input containers.
-- Use `primarySubtle` for selected states before reaching for stronger fills.
-- Keep `focusRing` distinct from hover; focus exists for keyboard and accessibility states.
-- Use `disabled*` tokens for disabled components instead of low-opacity hacks where possible.
-- Prefer status tokens over ad hoc red, yellow, green and blue values in components.
-- If a new token is needed, add it semantically first, then map it to Fluent.
+- Do not introduce raw hex colors into app CSS or components.
+- Do not introduce alias layers like `--surface`, `--primary`, or `--theme-*`.
+- If a new product semantic is needed, add it in `themeTokens.ts` first.
+- If Fluent already has a matching token, map to it and consume it directly.
+- Only add a new `--app-*` token when Fluent does not model the semantic cleanly.

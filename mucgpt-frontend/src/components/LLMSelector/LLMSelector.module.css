@@ -12,8 +12,8 @@
     border-radius: 8px;
     padding: 6px 12px;
     background-color: transparent;
-    color: var(--onSurface);
-    border: 1px solid var(--outline);
+    color: var(--colorNeutralForeground1);
+    border: 1px solid var(--colorNeutralStroke1);
     box-shadow: none;
     cursor: pointer;
     transition:
@@ -23,16 +23,14 @@
 }
 
 .buttonContainer:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 10px rgba(2, 6, 18, 0.2);
-    background-color: var(--surface);
-    outline: 1px solid var(--primary);
+    transform: translateY(-1px);
+    outline: 1px solid var(--colorBrandBackground);
     border-radius: 8px;
 }
 
 .buttonContainer:focus,
 .buttonContainer:focus-visible {
-    outline: 3px solid var(--primary);
+    outline: 1px solid var(--colorBrandBackground);
 }
 
 .iconLeftMargin {
@@ -56,7 +54,7 @@
     border-radius: 6px;
     font-weight: 700;
     font-size: 14px;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     min-width: 28px;
     text-align: center;
 }
@@ -89,10 +87,10 @@
     display: flex;
     flex-direction: column;
     margin: 0;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: var(--borderRadiusSmall, 8px);
-    background-color: var(--surface);
-    color: var(--onSurface);
+    background-color: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     overflow: hidden;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.291);
     transition:
@@ -104,15 +102,14 @@
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.32);
-    background-color: var(--primaryContainer);
+    transform: translateY(-2px);
+    background-color: var(--colorNeutralBackground2);
 }
 
 .card[data-selected="true"] {
-    transform: translateY(-6px) scale(1.02);
-    background-color: var(--primaryContainer);
-    border-color: var(--primary);
+    transform: translateY(-2px) scale(1.02);
+    background-color: var(--colorNeutralBackground2);
+    border-color: var(--colorBrandBackground);
 }
 
 .cardContent {
@@ -146,10 +143,8 @@
 .dialogSurface {
     min-width: min(1240px, 96vw);
     max-width: 96vw;
-    background-color: var(--primaryContainer);
-    color: var(--onSurface);
+    background-color: var(--colorNeutralBackground1);
     border: none;
-    box-shadow: 0 16px 40px rgba(16, 24, 40, 0.08);
     border-radius: var(--borderRadiusMedium, 8px);
     padding: 12px;
 }
@@ -159,7 +154,7 @@
     height: 28px;
     font-size: 20px;
     opacity: 0.56;
-    color: var(--onPrimaryContainer);
+    color: var(--colorBrandBackground);
     transition:
         color 140ms ease,
         opacity 140ms ease,
@@ -172,7 +167,7 @@
 
 .moneyActive {
     opacity: 1;
-    color: var(--primary);
+    color: var(--colorBrandBackground);
     transform: translateY(-1px) scale(1.05);
 }
 
@@ -183,7 +178,7 @@
 
 .card[data-selected="true"] .moneyActive {
     opacity: 1;
-    color: var(--primary);
+    color: var(--colorBrandBackground);
 }
 
 .infoRow {
@@ -235,15 +230,15 @@
 .badge {
     border-radius: 999px;
     padding: 2px 10px;
-    background-color: var(--primary);
-    color: var(--onPrimary);
+    background-color: var(--colorBrandBackground2);
+    color: var(--colorNeutralForeground1);
     font-size: 12px;
     font-weight: 600;
 }
 
 .badgeKnowledge {
-    background-color: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
+    background-color: var(--colorBrandBackground2);
+    color: var(--colorNeutralForeground1);
 }
 
 .featuresValue {
@@ -254,7 +249,6 @@
 
 .featuresMeta {
     font-size: 12px;
-    color: var(--onPrimaryContainer);
     margin-top: 6px;
 }
 
@@ -284,7 +278,7 @@
     width: 18px;
     height: 6px;
     border-radius: 999px;
-    background-color: var(--outline);
+    background-color: var(--colorBrandBackground);
     opacity: 0.4;
     transition:
         background-color 140ms ease,
@@ -292,6 +286,6 @@
 }
 
 .contextBarActive {
-    background-color: var(--primary);
+    background-color: var(--colorBrandBackground);
     opacity: 1;
 }

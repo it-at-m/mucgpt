@@ -19,7 +19,7 @@
     justify-content: center;
     padding-top: 50px;
     width: 100%;
-    background: var(--theme-surface-subtle);
+    background: var(--colorNeutralBackground3);
 }
 
 .heading {
@@ -28,8 +28,7 @@
     text-align: center;
     margin-bottom: 50px;
     margin-top: 50px;
-    color: var(--theme-text-default);
-    text-shadow: 0 2px 10px rgba(57, 91, 82, 0.08);
+    color: var(--colorNeutralForeground1);
     letter-spacing: -0.5px;
     line-height: 1.2;
     position: relative;
@@ -53,7 +52,7 @@
 .disclaimerText {
     text-align: center;
     font-size: 0.8rem;
-    color: var(--theme-text-secondary);
+    color: var(--colorNeutralForeground2);
     margin-top: 10px;
     font-style: italic;
 }
@@ -67,8 +66,8 @@
 }
 
 .chatNavigationButton {
-    background: var(--theme-header-background);
-    color: var(--theme-text-on-header);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     padding: 12px 24px;
     border-radius: 6px;
     text-decoration: none;
@@ -86,7 +85,7 @@
 }
 
 .chatNavigationButton:hover {
-    background: var(--theme-header-hover);
+    background: var(--colorNeutralBackground2);
     text-decoration: none;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -113,7 +112,7 @@
     margin-top: 20px;
     margin-bottom: 12px;
     padding-left: 10px;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .row {
@@ -160,11 +159,11 @@
 .divider hr {
     flex: 1;
     border: none;
-    border-top: 1px solid var(--theme-outline-base);
+    border-top: 1px solid var(--colorNeutralStroke1);
     margin: 0;
 }
 
 .divider span {
-    color: var(--theme-text-secondary);
+    color: var(--colorNeutralForeground2);
     font-size: var(--fontSizeBase500);
 }

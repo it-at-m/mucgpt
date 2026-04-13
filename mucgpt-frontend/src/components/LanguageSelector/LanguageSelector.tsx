@@ -66,7 +66,7 @@ export const LanguageSelector = ({ onSelectionChange, defaultlang }: LanguageSel
             <MenuTrigger disableButtonEnhancement>
                 <Tooltip content={tooltipText} relationship="description" positioning="below">
                     <MenuButton
-                        appearance={"primary"}
+                        appearance={"subtle"}
                         aria-label={tooltipText}
                         icon={<LocalLanguage24Regular className={styles.icon} />}
                         className={styles.languageButton}

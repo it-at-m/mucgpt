@@ -1,7 +1,6 @@
 .drawerBody {
     overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary) var(--surface);
+    scrollbar-color: var(--colorBrandBackground) var(--colorNeutralBackground1);
 }
 
 .loadingContainer {
@@ -73,7 +72,6 @@
     gap: 2px;
     margin-bottom: 24px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px -2px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .deletedCallout {
@@ -83,8 +81,9 @@
     margin-bottom: 24px;
     padding: 16px;
     border-radius: 12px;
-    border: 1px solid var(--colorPaletteRedBorder2);
-    background: var(--colorPaletteRedBackground1);
+    border: 1px solid var(--colorStatusDangerBorder1);
+    background: var(--colorStatusDangerBackground1);
+    color: var(--colorStatusDangerForeground1);
 }
 
 .localCallout {
@@ -94,8 +93,9 @@
     margin-bottom: 24px;
     padding: 16px;
     border-radius: 12px;
-    border: 1px solid var(--colorPaletteDarkOrangeBorder2);
-    background: var(--colorPaletteDarkOrangeBackground1);
+    border: 1px solid var(--colorStatusWarningBorder1);
+    background: var(--colorStatusWarningBackground1);
+    color: var(--colorStatusWarningForeground1);
 }
 
 .calloutTitle {
@@ -109,8 +109,8 @@
 }
 
 .deleteButton {
-    color: var(--colorPaletteRedForeground1) !important;
-    border-color: var(--colorPaletteRedBorder2) !important;
+    color: var(--colorStatusDangerForeground1) !important;
+    border-color: var(--colorStatusDangerBorder1) !important;
 }
 
 .startConversationButton {
@@ -134,7 +134,7 @@
 }
 
 .menuDeleteItem {
-    color: var(--colorPaletteRedForeground1) !important;
+    color: var(--colorStatusDangerForeground1) !important;
 }
 
 .sidebarSection {
@@ -203,10 +203,10 @@
 }
 
 .inlineDrawer {
-    border-left: 1px solid var(--primary) !important;
+    border-left: 1px solid var(--colorNeutralStroke1) !important;
     border-right: none;
     border-bottom: none;
-    background-color: var(--colorNeutralBackground1);
+    background-color: var(--colorNeutralBackground1) !important;
     width: var(--assistantDetailsDrawerWidth) !important;
     box-sizing: border-box;
     position: relative !important;

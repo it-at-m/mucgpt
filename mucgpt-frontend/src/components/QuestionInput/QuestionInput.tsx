@@ -151,9 +151,26 @@ export const QuestionInput = ({
                                         className={styles.toolButton}
                                         onClick={allowToolSelection ? () => toggleTool(tool.id) : undefined}
                                         disabled={!allowToolSelection}
-                                        icon={isSelected ? <Checkmark24Regular /> : undefined}
+                                        icon={isSelected ? <Checkmark24Regular style={{ color: "var(--colorNeutralForegroundOnBrand)" }} /> : undefined}
+                                        style={
+                                            isSelected
+                                                ? {
+                                                      backgroundColor: "var(--colorBrandBackground)",
+                                                      color: "var(--colorNeutralForegroundOnBrand)"
+                                                  }
+                                                : {
+                                                      backgroundColor: "var(--colorNeutralBackground1)",
+                                                      color: "var(--colorNeutralForeground1)"
+                                                  }
+                                        }
                                     >
-                                        <span>{tool.id}</span>
+                                        <span
+                                            style={
+                                                isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }
+                                            }
+                                        >
+                                            {tool.id}
+                                        </span>
                                     </Button>
                                     {hasTutorial && (
                                         <Tooltip content={t("components.questioninput.tutorial_help", "Tutorial öffnen")} relationship="label">
@@ -189,7 +206,7 @@ export const QuestionInput = ({
                         <Button
                             ref={sendButtonRef}
                             size="large"
-                            appearance="subtle"
+                            appearance="transparent"
                             icon={<Send28Filled />}
                             aria-label={t("components.questioninput.send_question", "Frage senden")}
                             disabled={disabled || !question.trim()}

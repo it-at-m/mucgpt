@@ -23,16 +23,27 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
     const valueOnOpenRef = useRef("");
     const dialogTextareaRef = useRef<HTMLTextAreaElement>(null);
     const inlineTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const defaultTitle = t("components.expandable_textarea.default_title");
+    const expandButtonLabel = dialogTitle ? `${defaultTitle}: ${dialogTitle}` : defaultTitle;
+
+    const updateScrollbarState = useCallback(() => {
+        const el = inlineTextareaRef.current;
+        if (!el) return;
+        setHasScrollbar(el.scrollHeight > el.clientHeight);
+    }, []);
+
+    useEffect(() => {
+        updateScrollbarState();
+    }, [value, rows, updateScrollbarState]);
 
     useEffect(() => {
         const el = inlineTextareaRef.current;
-        if (!el) return;
-        const check = () => setHasScrollbar(el.scrollHeight > el.clientHeight);
-        check();
-        const observer = new ResizeObserver(check);
+        if (!el || typeof ResizeObserver === "undefined") return;
+
+        const observer = new ResizeObserver(updateScrollbarState);
         observer.observe(el);
         return () => observer.disconnect();
-    }, [value]);
+    }, [updateScrollbarState]);
 
     const handleOpen = useCallback(() => {
         valueOnOpenRef.current = value;
@@ -41,9 +52,11 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
     }, [value]);
 
     const handleClose = useCallback(() => {
-        onChange(dialogDraft);
+        if (dialogDraft !== value) {
+            onChange(dialogDraft);
+        }
         setIsOpen(false);
-    }, [dialogDraft, onChange]);
+    }, [dialogDraft, onChange, value]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -84,12 +97,11 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
             />
             {!disabled && (
                 <Button
-                    className={styles.expandButton}
+                    className={`${styles.expandButton} ${hasScrollbar ? styles.expandButtonWithScrollbar : styles.expandButtonDefault}`}
                     appearance="primary"
                     size="small"
                     icon={<ArrowMaximize20Regular />}
-                    aria-label={t("components.expandable_textarea.default_title")}
-                    style={{ right: hasScrollbar ? 12 : 4 }}
+                    aria-label={expandButtonLabel}
                     onClick={handleOpen}
                 />
             )}
@@ -103,7 +115,7 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
                 <DialogSurface className={styles.dialogSurface}>
                     <DialogBody className={styles.dialogBody}>
                         <DialogTitle action={<Button appearance="subtle" icon={<Dismiss24Regular />} aria-label={t("common.close")} onClick={handleClose} />}>
-                            {dialogTitle ?? t("components.expandable_textarea.default_title")}
+                            {dialogTitle ?? defaultTitle}
                         </DialogTitle>
                         <DialogContent className={styles.dialogContent}>
                             <Textarea

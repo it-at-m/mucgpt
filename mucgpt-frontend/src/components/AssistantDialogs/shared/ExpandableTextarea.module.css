@@ -26,13 +26,21 @@
     background-color: transparent;
 }
 
-/* Expand button: absolute top-right, only visible on hover; right is set dynamically via inline style */
+/* Expand button: absolute top-right; visible by default and emphasized on hover/focus */
 .expandButton {
     position: absolute;
     top: 4px;
     z-index: 1;
-    opacity: 0;
+    opacity: 0.7;
     transition: opacity 0.15s ease;
+}
+
+.expandButtonDefault {
+    right: 4px;
+}
+
+.expandButtonWithScrollbar {
+    right: 12px;
 }
 
 .wrapper:hover .expandButton,

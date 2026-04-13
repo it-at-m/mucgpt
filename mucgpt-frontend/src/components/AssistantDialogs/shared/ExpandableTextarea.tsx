@@ -52,11 +52,11 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
     }, [value]);
 
     const handleClose = useCallback(() => {
-        if (dialogDraft !== value) {
+        if (dialogDraft !== valueOnOpenRef.current) {
             onChange(dialogDraft);
         }
         setIsOpen(false);
-    }, [dialogDraft, onChange, value]);
+    }, [dialogDraft, onChange]);
 
     useEffect(() => {
         if (!isOpen) return;

@@ -1,4 +1,4 @@
-import { Badge, Link, Tooltip } from "@fluentui/react-components";
+import { Badge, Tooltip } from "@fluentui/react-components";
 import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
 

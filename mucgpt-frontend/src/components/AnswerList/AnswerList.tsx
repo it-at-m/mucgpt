@@ -14,7 +14,7 @@ interface Props {
     isLoading: boolean;
     error: unknown;
     makeApiRequest: () => void;
-    chatMessageStreamEnd: React.RefObject<HTMLDivElement | null>;
+    chatMessageStreamEnd: React.RefObject<HTMLDivElement>;
     lastQuestionRef: React.MutableRefObject<string>;
     onRollbackError?: () => void;
     lastAnswerRef?: React.Ref<HTMLDivElement>;

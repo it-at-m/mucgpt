@@ -19,6 +19,7 @@ import { LanguageSelector } from "../../components/LanguageSelector";
 import { ThemeSelector } from "../../components/ThemeSelector";
 import { FeedbackButton } from "../../components/FeedbackButton";
 import { HelpButton } from "../../components/HelpButton";
+import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";

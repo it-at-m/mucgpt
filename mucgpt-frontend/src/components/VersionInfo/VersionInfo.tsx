@@ -3,7 +3,7 @@ import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
 
 interface VersionInfoProps {
-    app_version: string;
+    app_version?: string;
     core_version: string;
     frontend_version: string;
     assistant_version: string;
@@ -18,7 +18,7 @@ const SERVICES = [
 ];
 
 export const VersionInfo = (props: VersionInfoProps) => {
-    const { app_version, versionUrl } = props;
+    const { app_version, frontend_version, versionUrl, variant = "default" } = props;
     const { t } = useTranslation();
     const isCompact = variant === "compact";
 
@@ -40,7 +40,7 @@ export const VersionInfo = (props: VersionInfoProps) => {
                 withArrow
             >
                 <Badge appearance="outline" color="subtle" shape="circular" tabIndex={0}>
-                    v{app_version}
+                    v{isCompact ? frontend_version : (app_version ?? frontend_version)}
                 </Badge>
             </Tooltip>
             {versionUrl && (

@@ -27,7 +27,8 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
-import { UploadedData } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { UploadedData, createUploadedDataFromContent } from "../../components/ContextManagerDialog/ContextManagerDialog";
+import { getStoredParsedDocuments } from "../../service/parsedDocumentStorage";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -352,14 +353,7 @@ const Chat = () => {
     // Shared helper: converts UploadedData[] → DataSource[] (same logic as onSend)
     const uploadedDataToDataSources = useCallback((datas: UploadedData[]): DataSource[] => {
         return datas
-            .filter(data => {
-                if (!data.isActive) return false;
-                if (data.status === "pending-restore") {
-                    console.warn(`Skipping document "${data.name}" (id: ${data.id}): content has not been restored yet.`);
-                    return false;
-                }
-                return data.status === "ready" && !!data.fileContent;
-            })
+            .filter(data => data.isActive && data.status === "ready" && !!data.fileContent)
             .map(data => ({
                 title: data.name,
                 content: data.fileContent!,
@@ -380,6 +374,14 @@ const Chat = () => {
     const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
     // Effect to handle pending question after tools are loaded
     const scheduledQuestionRef = useRef<string | null>(null);
+
+    // Stable ref for callApi so the pending-question effect doesn't
+    // get cancelled/rescheduled every time callApi's identity changes
+    // (which happens whenever answers, selectedTools, creativity, etc. update).
+    const callApiRef = useRef(callApi);
+    useEffect(() => {
+        callApiRef.current = callApi;
+    }, [callApi]);
 
     const hasRestoredLLMRef = useRef(false);
 
@@ -448,20 +450,25 @@ const Chat = () => {
                 }
 
                 if (validIds.length > 0) {
-                    // Populate initial uploadedData with pseudo-objects for the QuestionInput to resolve
-                    setUploadedData(
-                        validIds.map(id => ({
-                            id,
-                            storedDocumentId: id,
-                            file: new File([], "Loading..."), // Dummy file, actual data will be pulled from IndexedDB by components
-                            name: "Stored Document",
-                            size: 0,
-                            status: "pending-restore" as const,
-                            fileContent: null,
-                            isActive: true,
-                            source: "stored" as const
-                        }))
-                    );
+                    // Look up documents from localStorage and create ready UploadedData items immediately
+                    const storedDocs = getStoredParsedDocuments();
+                    const restoredData: UploadedData[] = validIds
+                        .map(id => {
+                            const doc = storedDocs.find(d => d.id === id);
+                            if (doc) {
+                                return createUploadedDataFromContent(doc.content, doc.name);
+                            }
+                            console.warn(`Stored document with id "${id}" not found in localStorage.`);
+                            return null;
+                        })
+                        .filter((d): d is UploadedData => d !== null);
+
+                    if (restoredData.length > 0) {
+                        setUploadedData(restoredData);
+                    } else {
+                        console.warn("None of the requested documents could be restored from localStorage.");
+                        clearNavigationQueryParams();
+                    }
                 } else {
                     console.warn("Requested files were not found in localStorage recent history. Please re-upload your files.");
                     // Clear the stale data URL parameter so it is not reprocessed
@@ -509,13 +516,6 @@ const Chat = () => {
             return;
         }
 
-        // If any uploadedData item still needs to be restored, wait for the
-        // next render when its status will have changed.
-        const hasPendingRestore = uploadedData.some(d => d.status === "pending-restore");
-        if (hasPendingRestore) {
-            return;
-        }
-
         // Prevent scheduling the same question multiple times
         if (scheduledQuestionRef.current === pendingQuestion) {
             return;
@@ -533,7 +533,8 @@ const Chat = () => {
                 return;
             }
             const dataSources = uploadedDataToDataSources(dataSnapshot);
-            callApi(questionToAsk, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
+            // Use ref so this effect doesn't depend on callApi's identity
+            callApiRef.current(questionToAsk, systemPrompt, dataSources.length > 0 ? dataSources : undefined);
 
             // Clear state and hash param once the question is sent
             scheduledQuestionRef.current = null;
@@ -547,7 +548,7 @@ const Chat = () => {
                 scheduledQuestionRef.current = null;
             }
         };
-    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, callApi, systemPrompt, clearNavigationQueryParams]);
+    }, [isInitialized, pendingQuestion, tools, uploadedData, uploadedDataToDataSources, systemPrompt, clearNavigationQueryParams]);
 
     // Set up quick prompts
     useEffect(() => {

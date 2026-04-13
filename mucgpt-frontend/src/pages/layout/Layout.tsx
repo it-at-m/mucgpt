@@ -321,8 +321,8 @@ export const Layout = () => {
                                             isMobile && mobileMenuOpen
                                                 ? styles.mobileMainContentWithMenu
                                                 : isMobile
-                                                    ? styles.mobileMainContent
-                                                    : styles.mainContent
+                                                  ? styles.mobileMainContent
+                                                  : styles.mainContent
                                         }
                                     >
                                         <Outlet />

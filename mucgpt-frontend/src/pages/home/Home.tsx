@@ -176,7 +176,6 @@ const Home = () => {
                 } else {
                     setMode("recommended");
                 }
-
             } catch (error) {
                 console.error("Failed to load home page data", error);
             } finally {
@@ -281,9 +280,7 @@ const Home = () => {
 
                 {!loading && dataReady && !hasAnyContent && (
                     <div className={styles.fallbackContainer}>
-                        <div className={styles.fallbackText}>
-                            {t("home.no_assistants_available")}
-                        </div>
+                        <div className={styles.fallbackText}>{t("home.no_assistants_available")}</div>
                         <Button
                             className={styles.fallbackButton}
                             appearance="primary"
@@ -299,9 +296,7 @@ const Home = () => {
             <footer className={styles.inlineFooter} role="contentinfo" aria-label={t("common.footer_info", "Fu\u00dfzeileninformationen")}>
                 <div className={styles.footerContent}>
                     <div className={styles.footerMetaRow}>
-                        <address className={styles.footerCompanyBlock}>
-                            {t("common.organization_name", "Landeshauptstadt M\u00fcnchen, RIT/it@M KIES")}
-                        </address>
+                        <address className={styles.footerCompanyBlock}>{t("common.organization_name", "Landeshauptstadt M\u00fcnchen, RIT/it@M KIES")}</address>
                         {config && (
                             <div className={styles.footerVersionBlock}>
                                 <VersionInfo
@@ -316,7 +311,9 @@ const Home = () => {
                             <a href={import.meta.env.BASE_URL + "#/version"} className={styles.footerLink}>
                                 {t("components.versioninfo.whats_new", "Was gibt's neues?")}
                             </a>
-                            <span className={styles.footerLinkSeparator} aria-hidden>·</span>
+                            <span className={styles.footerLinkSeparator} aria-hidden>
+                                ·
+                            </span>
                             <TermsOfUseDialog defaultOpen={false} onAccept={onAcceptTermsOfUse} triggerClassName={styles.footerTermsTrigger} />
                         </div>
                     </div>

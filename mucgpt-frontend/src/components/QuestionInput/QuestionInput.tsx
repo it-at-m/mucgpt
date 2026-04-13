@@ -129,7 +129,11 @@ export const QuestionInput = ({
     }, []);
 
     const showToolSelection = !isHomeVariant && !!tools?.tools?.length;
-    const containerClasses = [styles.questionInputContainer, (!tools || !tools.tools || tools.tools.length === 0) && styles.noTools, isHomeVariant && styles.questionInputContainerHome]
+    const containerClasses = [
+        styles.questionInputContainer,
+        (!tools || !tools.tools || tools.tools.length === 0) && styles.noTools,
+        isHomeVariant && styles.questionInputContainerHome
+    ]
         .filter(Boolean)
         .join(" ");
 
@@ -165,9 +169,7 @@ export const QuestionInput = ({
                                         }
                                     >
                                         <span
-                                            style={
-                                                isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }
-                                            }
+                                            style={isSelected ? { color: "var(--colorNeutralForegroundOnBrand)" } : { color: "var(--colorNeutralForeground1)" }}
                                         >
                                             {tool.id}
                                         </span>

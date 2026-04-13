@@ -93,7 +93,7 @@ export const Layout = () => {
 
         configApi()
             .then(result => {
-                setConfig(result);
+                setConfig({ ...DEFAULT_APP_CONFIG, ...result });
                 setModels(result.models);
                 if (result.models.length === 0) {
                     console.error("Keine Modelle vorhanden");
@@ -279,6 +279,39 @@ export const Layout = () => {
                                     )}
                                 </header>
 
+                                <main
+                                    id="main-content"
+                                    role="main"
+                                    aria-label={t("common.main_content", "Hauptinhalt")}
+                                    className={
+                                        isMobile && mobileMenuOpen ? styles.mobileMainContentWithMenu : isMobile ? styles.mobileMainContent : styles.mainContent
+                                    }
+                                >
+                                    <Outlet />
+                                </main>
+
+                                <footer className={styles.footer} role="contentinfo" aria-label={t("common.footer_info", "Fußzeileninformationen")}>
+                                    {!isMobile && (
+                                        <div className={`${styles.footerSection} ${styles.footerCompanyInfo}`}>
+                                            <address>
+                                                Landeshauptstadt München <br />
+                                                RIT/it@M KICC
+                                            </address>
+                                        </div>
+                                    )}
+                                    {!isMobile && (
+                                        <div className={styles.footerSection}>
+                                            <VersionInfo
+                                                app_version={config.app_version}
+                                                core_version={config.core_version}
+                                                frontend_version={config.frontend_version}
+                                                assistant_version={config.assistant_version}
+                                                versionUrl={import.meta.env.BASE_URL + "#/version"}
+                                            />
+                                        </div>
+                                    )}
+                                    <TermsOfUseDialog defaultOpen={!termsofuseread} onAccept={onAcceptTermsOfUse} />
+                                </footer>
                                 <ConfigContext.Provider value={config}>
                                     <main
                                         id="main-content"

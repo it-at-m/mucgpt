@@ -10,25 +10,25 @@
 .phaseContainer {
     margin: 24px 0;
     padding: 16px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1) !important;
 }
 
 .phasesTitle {
     margin-bottom: 16px;
     text-align: center;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .phaseTabs {
-    border-bottom: 1px solid var(--outline);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
     margin-bottom: 24px;
 }
 
 .phaseContent {
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 6px;
 }
 
@@ -42,13 +42,13 @@
 }
 
 .trainingPhase {
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .inferencePhase {
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .phaseIcon {
@@ -56,11 +56,11 @@
 }
 
 .trainingPhase .phaseIcon {
-    color: var(--primary);
+    color: var(--colorBrandBackground);
 }
 
 .inferencePhase .phaseIcon {
-    color: var(--primary);
+    color: var(--colorBrandBackground);
 }
 
 .phaseDescription {
@@ -72,16 +72,16 @@
 .keyConcept {
     margin-top: 24px;
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground3);
     border-radius: 6px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
     display: flex;
     gap: 16px;
     align-items: flex-start;
 }
 
 .keyConceptIcon {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     flex-shrink: 0;
 }
 
@@ -108,7 +108,7 @@
 }
 
 .processArrow {
-    color: var(--disabled);
+    color: var(--colorNeutralStrokeDisabled);
     font-size: 18px;
     margin: 0 8px;
 }
@@ -153,8 +153,8 @@
 
 .tokenOutput {
     padding: 4px 10px;
-    background: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     border-radius: 4px;
     font-family: monospace;
     font-weight: 500;
@@ -163,7 +163,7 @@
 .contentSection {
     margin-bottom: 32px;
     padding: 24px 0;
-    border-bottom: 1px solid var(--outline);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }
 
 .contentSection:last-child {
@@ -178,7 +178,7 @@
 }
 
 .sectionIcon {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     flex-shrink: 0;
     font-size: 20px;
 }
@@ -191,30 +191,30 @@
 .tutorialImage {
     max-width: 100%;
     border-radius: 6px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .highlightBox {
     margin: 16px 0;
     padding: 16px;
     border-radius: 6px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
 }
 
 .infoBox {
     margin: 16px 0;
     padding: 16px;
     border-radius: 6px;
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .limitationsBox {
     margin: 16px 0;
     padding: 16px;
     border-radius: 6px;
-    background: var(--primaryContainer);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
 }
 
 .conceptGrid {
@@ -231,8 +231,8 @@
     min-height: 120px;
     border-radius: 8px;
     text-decoration: none;
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     display: flex;
     flex-direction: column;
     padding: 16px;
@@ -241,8 +241,8 @@
 }
 
 .conceptCard:hover {
-    border-color: var(--primary);
-    background: var(--primaryContainer);
+    border-color: var(--colorBrandBackground);
+    background: var(--colorNeutralBackground1);
     transform: translateY(-2px);
 }
 
@@ -254,8 +254,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    background: var(--primaryContainer);
-    color: var(--onPrimaryContainer);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
     margin-bottom: 12px;
 }
 
@@ -273,7 +273,7 @@
     top: 8px;
     bottom: 8px;
     width: 2px;
-    background: var(--outline);
+    background: var(--colorNeutralStroke1);
 }
 
 .timelineItem {
@@ -293,13 +293,13 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--primary);
-    border: 2px solid var(--primary);
+    background: var(--colorNeutralBackground1);
+    border: 2px solid var(--colorBrandBackground);
 }
 
 .timelineYear {
     font-weight: bold;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     margin-bottom: 4px;
 }
 
@@ -334,7 +334,7 @@
 }
 
 .exampleBox strong {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 /* Self-attention explanation styles */
@@ -370,14 +370,14 @@
     gap: 6px;
     margin-top: 10px;
     padding: 8px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 4px;
 }
 
 .token {
     padding: 4px 8px;
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     border-radius: 4px;
     font-weight: 500;
     font-family: monospace;
@@ -396,15 +396,15 @@
     align-items: center;
     gap: 8px;
     padding: 6px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 4px;
     transition: transform 0.1s ease;
 }
 
 .prediction:hover {
     transform: translateX(5px);
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
 }
 
 .predictionIcon {
@@ -414,14 +414,14 @@
 /* Comparison table */
 .comparisonTable {
     margin-top: 24px;
-    border: 1px solid var(--outline);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 6px;
     overflow: hidden;
 }
 
 .comparisonRow {
     display: flex;
-    border-bottom: 1px solid var(--outline);
+    border-bottom: 1px solid var(--colorNeutralStroke1);
 }
 
 .comparisonRow:last-child {
@@ -431,7 +431,7 @@
 .comparisonHeader {
     padding: 12px 16px;
     font-weight: 600;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     flex: 1;
 }
 
@@ -441,17 +441,17 @@
 }
 
 .trainingColumn {
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
 }
 
 .inferenceColumn {
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
 }
 
 .finalNote {
     margin-top: 20px;
     padding: 12px 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 4px;
 }
 
@@ -468,7 +468,7 @@
     .comparisonCell,
     .comparisonHeader {
         border-left: none;
-        border-top: 1px solid var(--outline);
+        border-top: 1px solid var(--colorNeutralStroke1);
     }
 
     .comparisonHeader:first-child {
@@ -494,15 +494,15 @@
     gap: 20px;
     align-items: flex-start;
     padding: 24px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 12px;
     transition: all 0.2s ease;
 }
 
 .stepItem:hover {
-    border-color: var(--primary);
-    background: var(--primaryContainer);
+    border-color: var(--colorBrandBackground);
+    background: var(--colorNeutralBackground1);
     transform: translateY(-1px);
 }
 
@@ -511,8 +511,8 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -529,13 +529,13 @@
 
 .stepContent h4 {
     margin: 0 0 8px 0;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .stepContent p {
     margin: 0 0 16px 0;
     line-height: 1.6;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 /* Token breakdown styling */
@@ -545,13 +545,13 @@
     gap: 12px;
     margin-top: 12px;
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
 }
 
 .originalText {
     font-weight: 600;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     font-size: 16px;
     margin-bottom: 8px;
 }
@@ -559,7 +559,7 @@
 .arrow {
     align-self: center;
     font-size: 24px;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     margin: 8px 0;
 }
 
@@ -576,14 +576,14 @@
     align-items: center;
     gap: 12px;
     padding: 12px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground1);
     border-radius: 6px;
 }
 
 .numbers {
     font-family: monospace;
-    color: var(--onPrimaryContainer);
-    background: var(--primaryContainer);
+    color: var(--colorNeutralForeground1);
+    background: var(--colorNeutralBackground1);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -593,7 +593,7 @@
 .attentionExample {
     margin-top: 12px;
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
 }
 
@@ -611,14 +611,14 @@
 
 .word {
     padding: 8px 12px;
-    background: var(--primary);
-    color: var(--onPrimary);
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
     border-radius: 6px;
     font-weight: 500;
 }
 
 .connectionLine {
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
     font-weight: bold;
 }
 
@@ -629,7 +629,7 @@
     gap: 8px;
     margin-top: 12px;
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralForeground1);
     border-radius: 8px;
 }
 
@@ -638,20 +638,20 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 12px;
-    background: var(--surface);
+    background: var(--colorNeutralForeground1);
     border-radius: 6px;
     transition: all 0.2s ease;
 }
 
 .prediction:hover {
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     transform: translateX(4px);
 }
 
 .probability {
     font-weight: bold;
-    color: var(--onPrimaryContainer);
-    background: var(--primary);
+    color: var(--colorNeutralForegroundOnBrand);
+    background: var(--colorBrandBackground);
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -664,39 +664,39 @@
     gap: 8px;
     margin-top: 12px;
     padding: 16px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 8px;
 }
 
 .sequence {
     padding: 8px 12px;
-    background: var(--surface);
+    background: var(--colorNeutralBackground1);
     border-radius: 6px;
     font-family: monospace;
     font-size: 14px;
 }
 
 .context {
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 /* Analogy box styling */
 .analogyBox {
     margin: 32px 0;
     padding: 24px;
-    background: var(--primaryContainer);
+    background: var(--colorNeutralBackground1);
     border-radius: 12px;
 }
 
 .analogyBox h4 {
     margin: 0 0 16px 0;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .analogyBox p {
     margin: 0 0 16px 0;
     line-height: 1.6;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 .analogyList {
@@ -771,27 +771,27 @@
 .tipItem {
     margin-bottom: 16px;
     padding: 16px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
+    background: var(--colorNeutralBackground1);
+    border: 1px solid var(--colorNeutralStroke1);
     border-radius: 8px;
 }
 
 .tipItem strong {
     display: block;
     margin-bottom: 8px;
-    color: var(--onSurface);
+    color: var(--colorNeutralForeground1);
 }
 
 .tipItem p {
     margin: 0;
     line-height: 1.5;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 .description {
     line-height: 1.6;
     margin-bottom: 16px;
-    color: var(--onPrimaryContainer);
+    color: var(--colorNeutralForeground1);
 }
 
 /* Additional styles for inline style replacements */

@@ -14,6 +14,11 @@
 .chatMessageGpt {
     width: 98%;
     align-self: flex-start;
+    background-color: var(--colorNeutralBackground3);
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 8px;
+    border-top-left-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 @media (max-width: 650px) {

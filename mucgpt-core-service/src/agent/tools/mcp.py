@@ -59,13 +59,21 @@ class McpLoader:
                     )
                     continue
                 if v.headers:
-                    con["headers"] = v.headers
+                    con["headers"] = {
+                        header_name: header_value.get_secret_value()
+                        for header_name, header_value in v.headers.items()
+                    }
                 # add auth if enabled and user_info present
                 if v.forward_token:
+                    auth_override = (
+                        v.forward_auth_override.get_secret_value()
+                        if v.forward_auth_override
+                        else None
+                    )
                     con["auth"] = McpBearerAuthProvider(
                         uid=user_info.user_id,
                         token=user_info.token,
-                        auth_override=v.forward_auth_override,
+                        auth_override=auth_override,
                     )
                     mcp_connections[k] = con
                 else:
@@ -103,9 +111,7 @@ class McpBearerAuthProvider(Auth):
 
     _tokens: dict[str, str] = {}
 
-    def __init__(
-        self, uid: str, token: str, auth_override: str | None = None
-    ) -> None:
+    def __init__(self, uid: str, token: str, auth_override: str | None = None) -> None:
         self._uid = uid
         self._auth_override = auth_override
         McpBearerAuthProvider._tokens[uid] = token

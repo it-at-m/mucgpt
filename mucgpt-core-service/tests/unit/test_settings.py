@@ -397,14 +397,42 @@ class TestSettings:
             )
             assert mcp_settings.SOURCES["test"].forward_token
             assert (
-                mcp_settings.SOURCES["test"].forward_auth_override
+                mcp_settings.SOURCES["test"].forward_auth_override.get_secret_value()
                 == "Basic dXNlcjpwYXNz"
             )
-            assert mcp_settings.SOURCES["test"].headers == {
-                "x-api-key": "sk-1234",
-                "X-Test": "true",
-            }
+            assert (
+                mcp_settings.SOURCES["test"].headers["x-api-key"].get_secret_value()
+                == "sk-1234"
+            )
+            assert (
+                mcp_settings.SOURCES["test"].headers["X-Test"].get_secret_value()
+                == "true"
+            )
             assert mcp_settings.CACHE_TTL == 123
+
+    def test_mcp_settings_forward_auth_override_requires_forward_token(self):
+        """forward_auth_override must not be configured without forward_token=true."""
+        mcp_json = json.dumps(
+            {
+                "test": {
+                    "url": "https://example.com/mcp",
+                    "forward_token": False,
+                    "forward_auth_override": "Basic dXNlcjpwYXNz",
+                    "transport": MCPTransport.STREAMABLE_HTTP.value,
+                }
+            }
+        )
+
+        with patch.dict(
+            os.environ,
+            {
+                "MUCGPT_CORE_MCP__SOURCES": mcp_json,
+            },
+        ):
+            get_mcp_settings.cache_clear()
+            get_settings.cache_clear()
+            with pytest.raises(ValueError):
+                get_mcp_settings()
 
     def test_mcp_settings_default(self):
         """Test MCP settings default values."""

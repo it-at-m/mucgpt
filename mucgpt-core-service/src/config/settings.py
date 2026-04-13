@@ -295,8 +295,42 @@ class MCPSourceConfig(BaseModel):
     url: str
     transport: MCPTransport
     forward_token: bool = False
-    forward_auth_override: str | None = None
-    headers: dict[str, str] | None = None
+    forward_auth_override: SecretStr | None = None
+    headers: dict[str, SecretStr] | None = None
+
+    @field_validator("forward_auth_override", mode="before")
+    @staticmethod
+    def parse_forward_auth_override(value):
+        if isinstance(value, str):
+            return SecretStr(value)
+        return value
+
+    @field_validator("headers", mode="before")
+    @staticmethod
+    def parse_secret_headers(value):
+        if value is None:
+            return None
+        if not isinstance(value, dict):
+            return value
+
+        parsed: dict[str, SecretStr] = {}
+        for key, header_value in value.items():
+            if isinstance(header_value, SecretStr):
+                parsed[key] = header_value
+            elif isinstance(header_value, str):
+                parsed[key] = SecretStr(header_value)
+            else:
+                parsed[key] = SecretStr(str(header_value))
+        return parsed
+
+    @model_validator(mode="after")
+    @staticmethod
+    def validate_forward_auth_config(source: "MCPSourceConfig") -> "MCPSourceConfig":
+        if source.forward_auth_override is not None and not source.forward_token:
+            raise ValueError(
+                "forward_auth_override requires forward_token=true to avoid no-op auth configuration"
+            )
+        return source
 
 
 class MCPConfig(BaseModel):

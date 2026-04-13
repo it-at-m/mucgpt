@@ -15,7 +15,6 @@ import { UserContext } from "../layout/UserContextProvider";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getAllCommunityAssistantsApi, getUserSubscriptionsApi, getOwnedCommunityAssistants } from "../../api/assistant-client";
 import { DiscoveryCard } from "../../components/DiscoveryCard";
-import discoveryCardStyles from "../../components/DiscoveryCard/DiscoveryCard.module.css";
 import { useToolsContext } from "../../components/ToolsProvider";
 import { TermsOfUseDialog } from "../../components/TermsOfUseDialog";
 import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
@@ -178,10 +177,10 @@ const Home = () => {
                     setMode("recommended");
                 }
 
-                setDataReady(true);
             } catch (error) {
                 console.error("Failed to load home page data", error);
             } finally {
+                setDataReady(true);
                 setLoading(false);
             }
         })();
@@ -272,8 +271,7 @@ const Home = () => {
                                 description={t("home.discover_all_description")}
                                 linkTo="/discovery"
                                 badge={t("home.explore_badge")}
-                                badgeClassName={discoveryCardStyles.headerBadgePrimary}
-                                badgeAppearance="outline"
+                                badgeAppearance="tint"
                                 badgeColor="brand"
                                 role="listitem"
                             />

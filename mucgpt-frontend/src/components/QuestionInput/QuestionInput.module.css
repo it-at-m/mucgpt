@@ -57,8 +57,7 @@
 
 .questionInputContainer:focus-within {
     transform: translateY(-1px);
-    outline: 2px solid var(--theme-outline-base);
-    outline-offset: 2px;
+    outline: 2px solid var(--colorBrandBackground);
 }
 
 .questionInputContainerHome {

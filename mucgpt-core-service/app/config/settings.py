@@ -340,7 +340,7 @@ class Settings(BaseSettings):
     # Frontend settings
     ENV_NAME: str = "MUCGPT"
     ALTERNATIVE_LOGO: bool = False
-    APP_VERSION: str = "2.0"
+    APP_VERSION: str = "unknown"
     FRONTEND_VERSION: str = "unknown"
     ASSISTANT_VERSION: str = "unknown"
 
@@ -372,7 +372,7 @@ class Settings(BaseSettings):
             dotenv_settings,
         )
 
-    @field_validator("VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before")
+    @field_validator("VERSION", "APP_VERSION", "FRONTEND_VERSION", "ASSISTANT_VERSION", mode="before")
     @staticmethod
     def parse_version(value: str) -> str:
         """Parse version string to extract only the version number before @sha256."""

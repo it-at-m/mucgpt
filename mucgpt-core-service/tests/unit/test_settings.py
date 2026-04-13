@@ -28,12 +28,14 @@ class TestSettings:
         with patch.dict(os.environ, {}, clear=True):
             settings = Settings()
             assert settings.VERSION == ""
+            assert settings.APP_VERSION == "unknown"
             assert settings.FRONTEND_VERSION == "unknown"
             assert settings.ASSISTANT_VERSION == "unknown"
 
     def test_settings_with_env_variables(self):
         """Test that settings respect environment variables."""
         test_version = "test-version-1.0.0"
+        test_app_version = "app-1.0.0"
         test_frontend_version = "frontend-2.0.0"
         test_assistant_version = "assistant-3.0.0"
 
@@ -41,18 +43,21 @@ class TestSettings:
             os.environ,
             {
                 "MUCGPT_CORE_VERSION": test_version,
+                "MUCGPT_CORE_APP_VERSION": test_app_version,
                 "MUCGPT_CORE_FRONTEND_VERSION": test_frontend_version,
                 "MUCGPT_CORE_ASSISTANT_VERSION": test_assistant_version,
             },
         ):
             settings = Settings()
             assert settings.VERSION == test_version
+            assert settings.APP_VERSION == test_app_version
             assert settings.FRONTEND_VERSION == test_frontend_version
             assert settings.ASSISTANT_VERSION == test_assistant_version
 
     def test_settings_with_version_hash_parsing(self):
         """Test that version strings with @sha256 hashes are parsed correctly."""
         test_version = "0.7.1@sha256:b8cac6b90ec35795edcbd0c2a1ffe6805bbecede411d847b2eda7989e10c3816"
+        test_app_version = "3.0.0@sha256:abcd1234"
         test_frontend_version = "1.2.3@sha256:abcd1234"
         test_assistant_version = "2.3.4@sha256:efgh5678"
 
@@ -60,6 +65,7 @@ class TestSettings:
             os.environ,
             {
                 "MUCGPT_CORE_VERSION": test_version,
+                "MUCGPT_CORE_APP_VERSION": test_app_version,
                 "MUCGPT_CORE_FRONTEND_VERSION": test_frontend_version,
                 "MUCGPT_CORE_ASSISTANT_VERSION": test_assistant_version,
             },
@@ -67,6 +73,7 @@ class TestSettings:
             settings = Settings()
             # Should only parse the version part before the @ symbol
             assert settings.VERSION == "0.7.1"
+            assert settings.APP_VERSION == "3.0.0"
             assert settings.FRONTEND_VERSION == "1.2.3"
             assert settings.ASSISTANT_VERSION == "2.3.4"
 

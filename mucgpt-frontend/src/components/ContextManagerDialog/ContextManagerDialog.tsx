@@ -1,20 +1,18 @@
-import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Button,
     Checkbox,
     Dialog,
-    DialogActions,
     DialogBody,
     DialogContent,
     DialogSurface,
     DialogTitle,
-    Field,
+    DialogTrigger,
+    Spinner,
     Text,
-    Tooltip,
-    Spinner
+    Tooltip
 } from "@fluentui/react-components";
-import { Dismiss16Regular, ArrowDownload16Regular } from "@fluentui/react-icons";
+import { Dismiss24Regular, Delete16Regular, ArrowDownload16Regular, ArrowUpload16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import { uploadFileApi } from "../../api/core-client";
 import {
@@ -24,30 +22,8 @@ import {
     StoredParsedDocument,
     upsertParsedDocumentFromUpload
 } from "../../service/parsedDocumentStorage";
-
+import { useGlobalToastContext } from "../GlobalToastHandler/GlobalToastContext";
 import styles from "./ContextManagerDialog.module.css";
-
-function SectionCard({
-    title,
-    children,
-    className,
-    hideTitle,
-    id
-}: {
-    title: string;
-    children: ReactNode;
-    className?: string;
-    hideTitle?: boolean;
-    id?: string;
-}) {
-    const sectionClassName = [styles.sectionCard, className].filter(Boolean).join(" ");
-    return (
-        <div className={sectionClassName} id={id}>
-            {!hideTitle && <h3 className={styles.sectionTitle}>{title}</h3>}
-            <div className={styles.sectionContent}>{children}</div>
-        </div>
-    );
-}
 
 export type UploadedDataStatus = "pending" | "uploading" | "ready" | "error" | "pending-restore";
 
@@ -133,6 +109,7 @@ const formatFileSize = (bytes: number) => {
 
 export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }: ContextManagerDialogProps) => {
     const { t } = useTranslation();
+    const { showError, showSuccess } = useGlobalToastContext();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [storedDocuments, setStoredDocuments] = useState<StoredParsedDocument[]>([]);
     const [selectedStoredDocumentIds, setSelectedStoredDocumentIds] = useState<string[]>([]);
@@ -189,17 +166,39 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
         if (Number.isNaN(date.getTime())) {
             return value;
         }
-        return new Intl.DateTimeFormat(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short"
+
+        return new Intl.DateTimeFormat("de-DE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
         }).format(date);
     }, []);
 
     const onDialogOpenChange = useCallback(
-        (_: unknown, data: { open: boolean }) => {
-            onOpenChange(data.open);
+        (_: unknown, dialogData: { open: boolean }) => {
+            onOpenChange(dialogData.open);
         },
         [onOpenChange]
+    );
+
+    const showCountToast = useCallback(
+        (
+            count: number,
+            showToast: (title: string, message?: string, timeout?: number) => string,
+            titleKey: string,
+            titleFallback: string,
+            messageKey: string
+        ) => {
+            if (count === 0) {
+                return;
+            }
+
+            showToast(t(titleKey, titleFallback), t(messageKey, { count }));
+        },
+        [t]
     );
 
     const handleFileSelection = useCallback(
@@ -212,6 +211,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
             setIsUploading(true);
             const newlyStoredIds: string[] = [];
             const newlyFailedUploads: UploadedData[] = [];
+            let uploadFailureCount = 0;
             const knownSignatures = new Set(storedDocuments.map(doc => doc.fileSignature));
 
             for (const file of files) {
@@ -243,6 +243,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                     }
                 } catch (error) {
                     console.error("Failed to upload data:", error);
+                    uploadFailureCount += 1;
                 }
             }
 
@@ -260,18 +261,38 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                 syncSelectionToData(nextSelectedIds, docs, nextFailedUploads);
             }
 
+            showCountToast(
+                newlyStoredIds.length,
+                showSuccess,
+                "components.contextmanagerdialog.upload_success_title",
+                "Upload erfolgreich",
+                "components.contextmanagerdialog.upload_success"
+            );
+
+            showCountToast(
+                newlyFailedUploads.length,
+                showError,
+                "components.contextmanagerdialog.storage_error_title",
+                "Speichern fehlgeschlagen",
+                "components.contextmanagerdialog.storage_error"
+            );
+
+            showCountToast(
+                uploadFailureCount,
+                showError,
+                "components.contextmanagerdialog.upload_error_title",
+                "Upload fehlgeschlagen",
+                "components.contextmanagerdialog.upload_error"
+            );
+
             setIsUploading(false);
 
             if (event.target) {
                 event.target.value = "";
             }
         },
-        [storedDocuments, selectedStoredDocumentIds, failedUploads, syncSelectionToData, t]
+        [storedDocuments, selectedStoredDocumentIds, failedUploads, syncSelectionToData, showCountToast, showError, showSuccess]
     );
-
-    const handleCancel = useCallback(() => {
-        onOpenChange(false);
-    }, [onOpenChange]);
 
     const handleToggleStoredDocument = useCallback(
         (documentId: string, checked: boolean) => {
@@ -296,6 +317,15 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
         [selectedStoredDocumentIds, failedUploads, syncSelectionToData]
     );
 
+    const handleRemoveFailedUpload = useCallback(
+        (id: string) => {
+            const nextFailedUploads = failedUploads.filter(entry => entry.id !== id);
+            setFailedUploads(nextFailedUploads);
+            syncSelectionToData(selectedStoredDocumentIds, storedDocuments, nextFailedUploads);
+        },
+        [failedUploads, selectedStoredDocumentIds, storedDocuments, syncSelectionToData]
+    );
+
     const handleClearStoredDocuments = useCallback(() => {
         clearStoredParsedDocuments();
         setStoredDocuments([]);
@@ -305,15 +335,19 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
     }, [onDataChange]);
 
     const handleDownloadParsedContent = useCallback((doc: StoredParsedDocument) => {
-        if (!doc.content) return;
+        if (!doc.content) {
+            return;
+        }
+
         const blob = new Blob([doc.content], { type: "text/plain;charset=utf-8" });
         const url = URL.createObjectURL(blob);
-        const a = window.document.createElement("a");
-        a.href = url;
-        a.download = `${doc.name}.txt`;
-        window.document.body.appendChild(a);
-        a.click();
-        window.document.body.removeChild(a);
+        const anchor = window.document.createElement("a");
+
+        anchor.href = url;
+        anchor.download = `${doc.name}.txt`;
+        window.document.body.appendChild(anchor);
+        anchor.click();
+        window.document.body.removeChild(anchor);
         URL.revokeObjectURL(url);
     }, []);
 
@@ -331,24 +365,26 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                 {failedUploads.map(entry => (
                     <div key={entry.id} className={`${styles.fileItem} ${styles.fileItemError}`} role="alert">
                         <div className={styles.fileMeta}>
-                            <span className={styles.fileName}>{entry.name}</span>
-                            <span className={styles.fileSize}>{formatFileSize(entry.size)}</span>
-                            <span className={styles.fileSecondary}>
+                            <Tooltip content={entry.name} relationship="description">
+                                <Text size={300} weight="semibold" className={styles.fileName}>
+                                    {entry.name}
+                                </Text>
+                            </Tooltip>
+                            <Text size={200} className={styles.fileSize}>
+                                {formatFileSize(entry.size)}
+                            </Text>
+                            <Text size={200} className={styles.fileSecondary}>
                                 {entry.errorMessage ??
                                     t("components.contextmanagerdialog.storage_error", "Dokument konnte nicht gespeichert werden (Speicherplatz voll).")}
-                            </span>
+                            </Text>
                         </div>
                         <div className={styles.fileActions}>
                             <Tooltip content={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")} relationship="description">
                                 <Button
                                     appearance="subtle"
                                     size="small"
-                                    icon={<Dismiss16Regular />}
-                                    onClick={() => {
-                                        const next = failedUploads.filter(f => f.id !== entry.id);
-                                        setFailedUploads(next);
-                                        syncSelectionToData(selectedStoredDocumentIds, storedDocuments, next);
-                                    }}
+                                    icon={<Delete16Regular />}
+                                    onClick={() => handleRemoveFailedUpload(entry.id)}
                                     aria-label={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
                                 />
                             </Tooltip>
@@ -357,21 +393,27 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                 ))}
                 {storedDocuments.map(document => {
                     const isAttached = selectedStoredDocumentIds.includes(document.id);
+                    const itemClassName = [styles.fileItem, isAttached && styles.fileItemSelected].filter(Boolean).join(" ");
+
                     return (
-                        <div key={document.id} className={styles.fileItem}>
+                        <div key={document.id} className={itemClassName}>
                             <div className={styles.fileSelector}>
                                 <Checkbox
                                     checked={isAttached}
-                                    onChange={(_, data) => handleToggleStoredDocument(document.id, data.checked === true)}
+                                    onChange={(_, checkboxData) => handleToggleStoredDocument(document.id, checkboxData.checked === true)}
                                     aria-label={t("components.contextmanagerdialog.use", "Verwenden")}
                                 />
                             </div>
                             <div className={styles.fileMeta}>
-                                <span className={styles.fileName}>{document.name}</span>
-                                <span className={styles.fileSize}>{formatFileSize(document.size)}</span>
-                                <span className={styles.fileSecondary}>
-                                    {t("components.contextmanagerdialog.parsed_at", "Geparsed")}: {formatParsedAt(document.parsedAt)}
-                                </span>
+                                <Tooltip content={document.name} relationship="description">
+                                    <Text size={300} weight="semibold" className={styles.fileName}>
+                                        {document.name}
+                                    </Text>
+                                </Tooltip>
+                                <Text size={200} className={styles.fileSecondary}>
+                                    {t("components.contextmanagerdialog.parsed_at", "Verarbeitet am")}: {formatParsedAt(document.parsedAt)} •{" "}
+                                    {formatFileSize(document.size)}
+                                </Text>
                             </div>
                             <div className={styles.fileActions}>
                                 {document.content && (
@@ -392,7 +434,7 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
                                     <Button
                                         appearance="subtle"
                                         size="small"
-                                        icon={<Dismiss16Regular />}
+                                        icon={<Delete16Regular />}
                                         onClick={() => handleRemoveStoredDocument(document.id)}
                                         aria-label={t("components.contextmanagerdialog.remove_saved", "Gespeichertes Dokument entfernen")}
                                     />
@@ -407,73 +449,82 @@ export const ContextManagerDialog = ({ open, onOpenChange, data, onDataChange }:
         failedUploads,
         formatParsedAt,
         handleDownloadParsedContent,
+        handleRemoveFailedUpload,
         handleRemoveStoredDocument,
         handleToggleStoredDocument,
         selectedStoredDocumentIds,
         storedDocuments,
-        syncSelectionToData,
         t
     ]);
+
+    const selectedCount = selectedStoredDocumentIds.length;
+    const totalCount = storedDocuments.length;
 
     return (
         <Dialog open={open} onOpenChange={onDialogOpenChange} modalType="modal">
             <DialogSurface>
                 <DialogBody>
-                    <DialogTitle>{t("components.contextmanagerdialog.title", "Kontextmanager")}</DialogTitle>
+                    <DialogTitle
+                        action={
+                            <DialogTrigger action="close">
+                                <Button appearance="subtle" aria-label="close" icon={<Dismiss24Regular />} />
+                            </DialogTrigger>
+                        }
+                    >
+                        {t("components.contextmanagerdialog.title", "Meine Dokumente")}
+                    </DialogTitle>
                     <DialogContent className={styles.dialogContent}>
-                        <SectionCard title={t("components.contextmanagerdialog.upload_section_title", "Dokumente hochladen")}>
-                            <Text className={styles.description}>
-                                {t(
-                                    "components.contextmanagerdialog.upload_description",
-                                    "Lade neue Dokumente hoch oder wähle bereits hochgeladene Dokumente aus."
-                                )}
+                        <Text className={styles.subtitle}>
+                            {t("components.contextmanagerdialog.subtitle", "Ausgewählte Dokumente werden im Chat als Kontext verwendet.")}
+                        </Text>
+                        <div className={styles.toolbar}>
+                            <Text as="span" className={styles.toolbarCount}>
+                                {t("components.contextmanagerdialog.selection_count", "Im Chat verwendet: {{selected}} von {{total}}", {
+                                    selected: selectedCount,
+                                    total: totalCount
+                                })}
                             </Text>
-                            <Field
-                                label={t("components.contextmanagerdialog.select_label", "Dateien auswählen")}
-                                hint={t("components.contextmanagerdialog.select_hint", "Mehrere Dateien sind möglich.")}
-                                className={styles.field}
-                            >
+                            <div className={styles.toolbarActions}>
                                 {isUploading ? (
-                                    <div className={styles.spinnerContainer}>
-                                        <Spinner label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")} size="medium" />
-                                    </div>
+                                    <Spinner size="tiny" label={t("components.contextmanagerdialog.uploading", "Wird hochgeladen...")} labelPosition="after" />
                                 ) : (
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        multiple
-                                        className={styles.fileInput}
-                                        onChange={handleFileSelection}
+                                    <Button
+                                        appearance="primary"
+                                        size="small"
+                                        icon={<ArrowUpload16Regular />}
+                                        onClick={() => fileInputRef.current?.click()}
                                         disabled={isUploading}
-                                        aria-label={t("components.contextmanagerdialog.select_label", "Dateien auswählen")}
-                                    />
+                                    >
+                                        {t("components.contextmanagerdialog.upload_btn", "Hochladen")}
+                                    </Button>
                                 )}
-                            </Field>
-                        </SectionCard>
-                        <SectionCard title={t("components.contextmanagerdialog.saved_label", "Bereits hochgeladene Dokumente")} className={styles.section}>
-                            <div className={styles.sectionHeader}>
-                                <Text weight="semibold" as="span" className={styles.sectionCount}>
-                                    {t("components.contextmanagerdialog.saved_count", "Anzahl: ")}
-                                    {storedDocuments.length}
-                                </Text>
+                            </div>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                multiple
+                                hidden
+                                onChange={handleFileSelection}
+                                disabled={isUploading}
+                                aria-label={t("components.contextmanagerdialog.select_label", "Dateien auswählen")}
+                            />
+                        </div>
+                        {hasStoredDocuments && (
+                            <div className={styles.listActions}>
                                 <Button
+                                    className={styles.clearAllButton}
                                     appearance="transparent"
                                     size="small"
                                     onClick={handleClearStoredDocuments}
-                                    disabled={!hasStoredDocuments || isUploading}
+                                    disabled={isUploading}
                                     aria-label={t("components.contextmanagerdialog.clear_saved", "Alle gespeicherten Dokumente löschen")}
                                 >
                                     {t("components.contextmanagerdialog.clear_saved", "Alle löschen")}
                                 </Button>
                             </div>
-                            <div className={styles.fileList}>{storedDocumentsList}</div>
-                        </SectionCard>
+                        )}
+                        <div className={styles.fileList}>{storedDocumentsList}</div>
                     </DialogContent>
-                    <DialogActions>
-                        <Button appearance="primary" onClick={handleCancel}>
-                            {t("components.contextmanagerdialog.close", "Schließen")}
-                        </Button>
-                    </DialogActions>
                 </DialogBody>
             </DialogSurface>
         </Dialog>

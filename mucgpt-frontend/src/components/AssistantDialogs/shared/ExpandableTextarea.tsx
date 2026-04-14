@@ -128,6 +128,7 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
                                 value={dialogDraft}
                                 placeholder={placeholder}
                                 resize="none"
+                                aria-label={dialogTitle ?? defaultTitle}
                                 onChange={(_e, data) => setDialogDraft(data?.value ?? "")}
                             />
                         </DialogContent>

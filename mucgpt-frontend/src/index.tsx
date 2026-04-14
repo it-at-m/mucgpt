@@ -24,7 +24,6 @@ import DeletedCommunityAssistant from "./pages/assistant/DeletedCommunityAssista
 import Unauthorized from "./pages/Unauthorized";
 import Discovery from "./pages/discovery/Discovery";
 import { AssistantEditorPage } from "./components/AssistantDialogs/AssistantEditorPage/AssistantEditorPage";
-import ToastDebugPage from "./pages/debug/ToastDebugPage";
 initializeIcons();
 
 const router = createHashRouter([
@@ -91,11 +90,6 @@ const router = createHashRouter([
             {
                 path: "version",
                 element: <Version />,
-                errorElement: <div>Fehler</div>
-            },
-            {
-                path: "debug/toasts",
-                element: <ToastDebugPage />,
                 errorElement: <div>Fehler</div>
             },
             {

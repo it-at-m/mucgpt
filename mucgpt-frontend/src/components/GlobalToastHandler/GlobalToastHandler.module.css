@@ -1,25 +1,66 @@
-/* Container and Layout */
 .globalToastHandler {
     z-index: 1050 !important;
+    max-width: 24rem;
 }
 
-/* Toast Background - Target Fluent UI's toast classes */
-.globalToastHandler :global(.fui-Toast) {
-    background-color: var(--colorNeutralBackground1, #ffffff);
-    box-shadow: var(--shadow16, 0 8px 16px rgba(0, 0, 0, 0.14));
-    border: 1px solid var(--colorNeutralStroke2, #e0e0e0);
+.toastWrapper {
+    --toast-accent: var(--app-status-info-border);
+    position: relative;
 }
 
-.toastTitleContainer {
-    display: flex;
-    align-items: center;
-    gap: var(--spacingHorizontalS, 8px);
+.toastWrapper::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--toast-accent);
+    border-radius: 8px 0 0 8px;
+    z-index: 1;
+    pointer-events: none;
 }
 
-/* Icons */
-.successIcon,
-.errorIcon,
-.warningIcon,
-.infoIcon {
-    font-size: 16px;
+.toastWrapper :global .fui-Toast {
+    background: var(--colorNeutralBackground2);
+}
+
+.toastWrapper :global .fui-ToastTitle__media svg {
+    width: 24px;
+    height: 24px;
+}
+
+.successToast {
+    --toast-accent: var(--colorStatusSuccessBorder1);
+}
+
+.errorToast {
+    --toast-accent: var(--colorStatusDangerBorder1);
+}
+
+.warningToast {
+    --toast-accent: var(--colorStatusWarningBorder1);
+}
+
+.infoToast,
+.loadingToast {
+    --toast-accent: var(--app-status-info-border);
+}
+
+@media (max-width: 768px) {
+    .globalToastHandler {
+        max-width: min(24rem, calc(100vw - 1rem));
+        bottom: 0.75rem !important;
+        right: 0.5rem !important;
+        left: auto !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .globalToastHandler {
+        max-width: min(24rem, calc(100vw - 0.75rem));
+        right: 0.375rem !important;
+        left: auto !important;
+        bottom: 0.375rem !important;
+    }
 }

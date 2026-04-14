@@ -18,7 +18,6 @@ import { getChatReducer, handleRegenerate, handleRollback, makeApiRequest } from
 import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { MinimizeSidebarButton } from "../../components/MinimizeSidebarButton/MinimizeSidebarButton";
 import { HeaderContext } from "../layout/HeaderContextProvider";
-import ToolStatusDisplay from "../../components/ToolStatusDisplay";
 import { ToolStatus } from "../../utils/ToolStreamHandler";
 import { Model } from "../../api";
 import { chatApi } from "../../api/core-client";
@@ -27,6 +26,7 @@ import { useToolsContext } from "../../components/ToolsProvider";
 import { Settings24Regular } from "@fluentui/react-icons";
 import { Button } from "@fluentui/react-components";
 import { ChatSettingsDialog } from "../../components/ChatSettingsDialog/ChatSettingsDialog";
+import { useToolStatusToasts } from "../../hooks/useToolStatusToasts";
 
 /**
  * Creates a debounced function that delays invoking the provided function
@@ -108,6 +108,8 @@ const Chat = () => {
     const [selectedTools, setSelectedTools] = useState<string[]>([]);
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+
+    useToolStatusToasts(toolStatuses);
 
     // Related states with useReducer
     const [chatState, dispatch] = useReducer(chatReducer, {
@@ -643,7 +645,6 @@ const Chat = () => {
                         />
                     }
                 />
-                <ToolStatusDisplay activeTools={toolStatuses} />
             </>
         ),
         [
@@ -654,7 +655,6 @@ const Chat = () => {
             lastQuestionRef.current,
             t,
             showSidebar,
-            toolStatuses,
             availableLLMs,
             LLM.llm_name,
             onLLMSelectionChange,

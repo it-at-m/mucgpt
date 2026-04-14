@@ -13,9 +13,11 @@ export interface ExpandableTextareaProps {
     disabled?: boolean;
     dialogTitle?: string;
     className?: string;
+    id?: string;
+    ariaLabelledBy?: string;
 }
 
-export function ExpandableTextarea({ value, onChange, placeholder, rows, disabled, dialogTitle, className }: ExpandableTextareaProps) {
+export function ExpandableTextarea({ value, onChange, placeholder, rows, disabled, dialogTitle, className, id, ariaLabelledBy }: ExpandableTextareaProps) {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [dialogDraft, setDialogDraft] = useState("");
@@ -94,6 +96,8 @@ export function ExpandableTextarea({ value, onChange, placeholder, rows, disable
                 disabled={disabled}
                 onChange={(_e, data) => onChange(data?.value ?? "")}
                 textarea={{ ref: inlineTextareaRef }}
+                id={id}
+                aria-labelledby={ariaLabelledBy}
             />
             {!disabled && (
                 <Button

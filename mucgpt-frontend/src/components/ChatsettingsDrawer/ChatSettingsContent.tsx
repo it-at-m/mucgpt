@@ -82,6 +82,7 @@ export const ChatSettingsContent = ({ creativity, setCreativity, systemPrompt, s
                                 rows={7}
                                 onChange={onSytemPromptChange}
                                 dialogTitle={t("components.chattsettingsdrawer.system_prompt")}
+                                ariaLabelledBy={systemPromptID}
                             />
                         </Field>
                     </div>

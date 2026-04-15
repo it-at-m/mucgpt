@@ -1,9 +1,9 @@
-import type { FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Spinner, Textarea, TextareaOnChangeData } from "@fluentui/react-components";
+import { Button, Spinner } from "@fluentui/react-components";
 import { ArrowLeft24Regular, Edit24Regular, Wand24Regular } from "@fluentui/react-icons";
 
 import styles from "./AssistantCreateFlow.module.css";
+import { ExpandableTextarea } from "../shared";
 
 export type AssistantCreateFlowView = "mode_select" | "ai_input";
 
@@ -79,12 +79,12 @@ export function AssistantCreateFlow({
             <div className={styles.aiInputCard}>
                 <span className={styles.aiInputTitle}>{t("components.assistant_editor.ai_input_label")}</span>
 
-                <Textarea
-                    placeholder={t("components.assistant_editor.ai_input_placeholder")}
+                <ExpandableTextarea
                     value={input}
+                    placeholder={t("components.assistant_editor.ai_input_placeholder")}
                     rows={6}
-                    resize="vertical"
-                    onChange={(_event: FormEvent<HTMLInputElement | HTMLTextAreaElement>, data?: TextareaOnChangeData) => onInputChange(data?.value || "")}
+                    onChange={onInputChange}
+                    dialogTitle={t("components.assistant_editor.ai_input_label")}
                     className={styles.aiTextarea}
                 />
 

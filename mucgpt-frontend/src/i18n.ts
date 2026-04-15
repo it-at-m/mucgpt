@@ -468,6 +468,9 @@ i18n
                             discard_title: "Änderungen verwerfen?",
                             discard_message: "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich abbrechen?"
                         },
+                        expandable_textarea: {
+                            default_title: "Bearbeiten"
+                        },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlichen",
                             version: "Version",
@@ -1086,6 +1089,9 @@ i18n
                             discard_title: "Discard changes?",
                             discard_message: "You have unsaved changes. Are you sure you want to cancel?"
                         },
+                        expandable_textarea: {
+                            default_title: "Edit"
+                        },
                         publish_assistant_dialog: {
                             title: "Publish Assistant",
                             version: "Version",
@@ -1701,6 +1707,9 @@ i18n
                             // Discard confirmation
                             discard_title: "Änderungen verwerfn?",
                             discard_message: "Du hosd ungespeicherte Änderungen. Wuißt du wirklich abbrechen?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Bearbeiten"
                         },
                         publish_assistant_dialog: {
                             title: "Assistent veröffentlcha",
@@ -2323,6 +2332,9 @@ i18n
                             discard_title: "Annuler les modifications ?",
                             discard_message: "Vous avez des modifications non enregistrées. Voulez-vous vraiment annuler ?"
                         },
+                        expandable_textarea: {
+                            default_title: "Modifier"
+                        },
                         publish_assistant_dialog: {
                             title: "Publier l'assistant",
                             version: "Version",
@@ -2937,6 +2949,9 @@ i18n
                             // Discard confirmation
                             discard_title: "Скасувати зміни?",
                             discard_message: "У вас є незбережені зміни. Ви впевнені, що хочете скасувати?"
+                        },
+                        expandable_textarea: {
+                            default_title: "Редагувати"
                         },
                         publish_assistant_dialog: {
                             title: "Опублікувати асистента",

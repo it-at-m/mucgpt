@@ -79,7 +79,7 @@ export const createUploadedData = (file: File, status: UploadedDataStatus = "rea
  * Reconstructs an UploadedData entry from pre-parsed file content (e.g. when restoring from URL params).
  * A dummy File object is used since the original file is no longer available.
  */
-export const createUploadedDataFromContent = (fileContent: string, name = "restored-file"): UploadedData => {
+export const createUploadedDataFromContent = (fileContent: string, name = "restored-file", storedDocumentId?: string): UploadedData => {
     const dummyFile = new File([], name, { type: "application/octet-stream" });
     return {
         id: generateDataId(),
@@ -89,7 +89,8 @@ export const createUploadedDataFromContent = (fileContent: string, name = "resto
         status: "ready",
         isActive: true,
         fileContent,
-        source: "stored"
+        source: "stored",
+        storedDocumentId
     };
 };
 

@@ -458,7 +458,7 @@ const Chat = () => {
                         .map(id => {
                             const doc = storedDocs.find(d => d.id === id);
                             if (doc) {
-                                return createUploadedDataFromContent(doc.content, doc.name);
+                                return createUploadedDataFromContent(doc.content, doc.name, doc.id);
                             }
                             console.warn(`Stored document with id "${id}" not found in localStorage.`);
                             return null;

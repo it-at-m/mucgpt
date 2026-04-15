@@ -14,6 +14,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.config import merge_configs
 
 from agent.agent import MUCGPTAgent
+from agent.react_agent import MUCGPTReActAgent
 from agent.tools.tool_chunk import ToolStreamChunk
 from api.api_models import (
     ChatCompletionChoice,
@@ -76,7 +77,7 @@ class MUCGPTAgentExecutor:
 
     def __init__(
         self,
-        agent: MUCGPTAgent = None,
+        agent: MUCGPTAgent | MUCGPTReActAgent,
     ):
         self.logger = logger
         self.agent = agent
@@ -164,10 +165,12 @@ class MUCGPTAgentExecutor:
                     continue
                 if isinstance(item, tuple) and item[0] == "messages":
                     _, (message_chunk, metadata) = item
-                    # only stream model call and no tool chunks
-                    if metadata["langgraph_node"] == "call_model" and isinstance(
-                        message_chunk, AIMessageChunk
-                    ):
+                    # only stream assistant model output and no tool chunks
+                    if metadata.get("langgraph_node") in {
+                        "call_model",
+                        "assistant",
+                        "model",
+                    } and isinstance(message_chunk, AIMessageChunk):
                         chunk_content = message_chunk.content
                         if chunk_content is None:
                             continue

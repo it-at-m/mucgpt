@@ -1,0 +1,143 @@
+import os
+from typing import Any, cast
+
+from langchain.agents import create_agent
+from langchain_core.language_models import BaseChatModel
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools.base import BaseTool
+
+from agent.middleware import _ToolErrorMiddleware
+from agent.tools.mcp import McpBearerAuthProvider
+from agent.tools.tools import ToolCollection
+from core.auth_models import AuthenticationResult
+from core.logtools import getLogger
+
+logger = getLogger(name="mucgpt-core-react-agent")
+
+DEFAULT_INSTRUCTIONS = ""
+with open(
+    os.path.join(os.path.dirname(__file__), "prompts", "default_instructions.md")) as fp:
+    DEFAULT_INSTRUCTIONS = fp.read()
+
+
+class _ConfiguredLangChainAgentGraph:
+    """Simple wrapper around a LangChain agent to configure it with user info and tools on each run."""
+
+    def __init__(
+        self,
+        llm: BaseChatModel,
+        tool_collection: ToolCollection,
+        tools: list[BaseTool],
+        logger,
+    ):
+        self.model = llm
+        self.tool_collection = tool_collection
+        self.tools = tools
+        self.logger = logger
+
+        self.agent = create_agent(
+            model=cast(Any, self.model),
+            tools=self.tools,
+            middleware=[_ToolErrorMiddleware()],
+            system_prompt=DEFAULT_INSTRUCTIONS,
+        )
+
+    def _select_tools(self, enabled_tools: list[str] | None) -> list[BaseTool]:
+        if not enabled_tools:
+            return []
+        enabled = set(enabled_tools)
+        return [tool for tool in self.tools if tool.name in enabled]
+
+    def _prepare_run(
+        self, input_data: dict[str, Any], config: RunnableConfig | None
+    ) -> tuple[Any, list[Any], list[BaseTool]]:
+        configurable = config.get("configurable", {}) if config else {}
+        user_info = cast(AuthenticationResult | None, configurable.get("user_info"))
+        if not user_info:
+            raise ValueError("user_info is required in config for MUCGPTReActAgent")
+
+        llm_user = configurable.get("llm_user")
+        extra_body = configurable.get("llm_extra_body")
+        enabled_tools = configurable.get("enabled_tools")
+
+        # Keep MCP auth token map up-to-date for forwarded auth providers.
+        McpBearerAuthProvider.set_token(user_info.user_id, user_info.token)
+
+        model = self.model
+        if extra_body:
+            model = model.bind(extra_body=extra_body)
+        if llm_user:
+            model = model.bind(user=llm_user)
+
+        messages = input_data.get("messages", [])
+        tools_to_use = self._select_tools(enabled_tools)
+        if enabled_tools:
+            messages = self.tool_collection.add_instructions(
+                messages, enabled_tools, tools=tools_to_use
+            )
+        return model, messages, tools_to_use
+
+    async def astream(
+        self,
+        input_data: dict[str, Any],
+        *,
+        stream_mode: list[str] | str | None = None,
+        config: RunnableConfig | None = None,
+        **kwargs,
+    ):
+        model, messages, tools_to_use = self._prepare_run(input_data, config)
+        active_agent = self.agent
+        if tools_to_use != self.tools or model is not self.model:
+            active_agent = create_agent(
+                model=cast(Any, model),
+                tools=tools_to_use,
+                middleware=[_ToolErrorMiddleware()],
+                system_prompt=DEFAULT_INSTRUCTIONS if messages[0].content != DEFAULT_INSTRUCTIONS else None,
+            )
+        async for item in active_agent.astream(
+            {"messages": messages},
+            stream_mode=stream_mode,
+            config=config,
+            **kwargs,
+        ):
+            yield item
+
+    async def ainvoke(
+        self,
+        input_data: dict[str, Any],
+        *,
+        config: RunnableConfig | None = None,
+        **kwargs,
+    ):
+        model, messages, tools_to_use = self._prepare_run(input_data, config)
+        active_agent = self.agent
+        if tools_to_use != self.tools or model is not self.model:
+            active_agent = create_agent(
+                model=cast(Any, model),
+                tools=tools_to_use,
+                middleware=[_ToolErrorMiddleware()],
+                system_prompt=DEFAULT_INSTRUCTIONS if messages[0].content != DEFAULT_INSTRUCTIONS else None,
+            )
+        return await active_agent.ainvoke(
+            {"messages": messages}, config=config, **kwargs
+        )
+
+
+class MUCGPTReActAgent:
+    """Minimal ReAct agent."""
+
+    def __init__(
+        self,
+        llm: BaseChatModel,
+        tool_collection: ToolCollection,
+        tools: list[BaseTool],
+        logger=None,
+    ):
+        self.logger = logger if logger else getLogger(name="mucgpt-core-react-agent")
+        self.model = llm  # required for non-streaming calls, e.g. assisted MUCGPT-Assistant generation.
+        self.graph = _ConfiguredLangChainAgentGraph(
+            llm=llm,
+            tool_collection=tool_collection,
+            tools=tools,
+            logger=self.logger,
+        )

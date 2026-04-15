@@ -3,7 +3,7 @@ name = "mucgpt-core-service"
 version = "0.9.0"
 description = "a web interface for large language models for the public administration"
 readme = "README.md"
-requires-python= ">=3.10"
+requires-python = ">=3.10"
 authors = [
     { name = "Michael Jaumann", email = "michael.jaumann@muenchen.de" },
     { name = "Paul Ilitz", email = "paul.ilitz@muenchen.de" },
@@ -15,19 +15,19 @@ maintainers = [
 ]
 
 dependencies = [
-    "fastapi[standard]==0.118.0",
-    "langchain==0.3.27",
-    "langchain-core==0.3.81",
-    "langchain_community==0.3.31",
-    "langchain-openai==0.3.35",
-    "openai==1.109.1",
-    "langsmith==0.6.3",
+    "fastapi[standard]==0.135.3",
+    "langchain==1.2.15",
+    "langchain-core==1.2.27",
+    "langchain_community==0.4.1",
+    "langchain-openai==1.1.12",
+    "openai==2.30.0",
+    "langsmith==0.7.26",
     "joserfc",
     "pypdf==6.8.0",
-    "uvicorn==0.37.0",
+    "uvicorn==0.44.0",
     "asgi-correlation-id==4.3.4",
     "pydantic-settings>=2.8.1",
-    "langgraph>=0.6.0",
+    "langgraph>=1.1.6",
     "truststore>=0.10.4",
     "langfuse>=3.3.4",
     "httpx==0.28.1",
@@ -47,7 +47,7 @@ dev-dependencies = [
     "pytest-snapshot",
     "pytest-mock==3.15.1",
     "coverage==7.10.7",
-    "pytest-cov==7.0.0"
+    "pytest-cov==7.0.0",
 ]
 
 [[tool.uv.index]]
@@ -60,23 +60,22 @@ src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
-ignore = ["E501", "E701"] # line too long, multiple statements on one line
+ignore = ["E501", "E701"]      # line too long, multiple statements on one line
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers --strict-config --verbose --tb=short -ra --cov=src"
 pythonpath = ["src/"]
-testpaths = [
-    "tests"]
+testpaths = ["tests"]
 markers = [
     "integration: mark a test as a integration test",
-    "unit: mark test as a unit test"
+    "unit: mark test as a unit test",
 ]
 env = [
     "MUCGPT_CORE_LOG_CONFIG=src/logconf.yaml",
     "MUCGPT_CORE_VERSION=0.0",
     "MUCGPT_CORE_COMMIT=12012lf",
     '''MUCGPT_CORE_MODELS=[{{"type": "AZURE", "llm_name": "mucgpt-test-model", "deployment": "mucgpt-test-model", "endpoint": "https://testprovider.api", "api_key": "blub", "max_output_tokens": 16384, "max_input_tokens": 128000, "description": "Model developed by kicc. "}}]''',
-    "GIT_PYTHON_REFRESH=quiet"
+    "GIT_PYTHON_REFRESH=quiet",
 ]
 
 [tool.coverage.paths]

@@ -6,9 +6,9 @@ import { BaseTutorial, TutorialTip } from "./BaseTutorial";
 import TutorialProgress from "./TutorialProgress";
 import { useTutorialProgress } from "./useTutorialProgress";
 import { QuestionInput } from "../../../components/QuestionInput/QuestionInput";
-import ToolStatusDisplay from "../../../components/ToolStatusDisplay/ToolStatusDisplay";
 import { ToolStatus, ToolStreamState } from "../../../utils/ToolStreamHandler";
 import { useToolsContext } from "../../../components/ToolsProvider";
+import { useToolStatusToasts } from "../../../hooks/useToolStatusToasts";
 import styles from "./ToolsTutorial.module.css";
 import { TutorialSection } from "./TutorialTypes";
 import { UploadedData } from "../../../components/ContextManagerDialog/ContextManagerDialog";
@@ -19,6 +19,8 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const { tools } = useToolsContext();
     const { t } = useTranslation();
+
+    useToolStatusToasts(toolStatuses);
 
     const simulateToolExecution = useCallback(
         (toolNames: string[]) => {
@@ -106,7 +108,6 @@ const TutorialQuestionInput = ({ selectedTools, setSelectedTools }: { selectedTo
                 setSelectedTools={setSelectedTools}
                 tools={tools}
             />
-            <ToolStatusDisplay activeTools={toolStatuses} />
         </>
     );
 };

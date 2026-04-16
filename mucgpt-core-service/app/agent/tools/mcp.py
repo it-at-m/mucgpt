@@ -72,7 +72,14 @@ class McpLoader:
             tools = []
             for source_id in mcp_connections.keys():
                 try:
-                    tools += await mcp_client.get_tools(server_name=source_id)
+                    source_tools = await mcp_client.get_tools(server_name=source_id)
+                    for source_tool in source_tools:
+                        existing_metadata = getattr(source_tool, "metadata", None) or {}
+                        source_tool.metadata = {
+                            **existing_metadata,
+                            "mcp_source": source_id,
+                        }
+                    tools += source_tools
                 except Exception as e:
                     McpLoader._logger.error(
                         f"Exception while fetching MCP tools from '{source_id}'",

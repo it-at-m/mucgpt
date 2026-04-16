@@ -1,5 +1,4 @@
 import logging
-import re
 
 from langchain_core.messages import SystemMessage
 from langchain_core.runnables.base import RunnableSerializable
@@ -10,7 +9,6 @@ from agent.tools.brainstorm import make_brainstorm_tool
 from agent.tools.mcp import McpLoader
 from agent.tools.simplify import make_simplify_tool
 from api.api_models import ToolInfo, ToolListResponse
-from config.settings import get_mcp_settings
 from core.auth import AuthenticationResult
 from core.logtools import getLogger
 
@@ -190,25 +188,14 @@ class ToolCollection:
         simplify_tool = make_simplify_tool(DummyModel(), dummy_logger)
         mcp_tools = await McpLoader.load_mcp_tools(user_info=user_info)
         tools = [brainstorm_tool, simplify_tool] + mcp_tools
-        mcp_source_keys = set((get_mcp_settings().SOURCES or {}).keys())
-
         # Build the list using actual tool names for lookup
         tools_info = []
         for tool in tools:
             tool_name = tool.name
             meta = tool_metadata.get(lang_key, {}).get(tool_name)
             tool_runtime_metadata = getattr(tool, "metadata", None) or {}
-            mcp_source = tool_runtime_metadata.get(
-                "mcp_source"
-            ) or ToolCollection._infer_mcp_source(
-                tool_name=tool_name,
-                mcp_sources=mcp_source_keys,
-            )
-            mcp_scope = (
-                ToolCollection._infer_mcp_scope(tool_name=tool_name)
-                if mcp_source
-                else None
-            )
+            mcp_source = tool_runtime_metadata.get("mcp_source")
+            mcp_group = tool_runtime_metadata.get("mcp_group")
             if meta:
                 tools_info.append(
                     ToolInfo(
@@ -216,7 +203,7 @@ class ToolCollection:
                         name=meta.get("name", tool_name),
                         description=meta.get("description", tool.description),
                         mcp_source=mcp_source,
-                        mcp_scope=mcp_scope,
+                        mcp_group=mcp_group,
                     )
                 )
             else:
@@ -227,35 +214,10 @@ class ToolCollection:
                         name=tool_name,
                         description=tool.description,
                         mcp_source=mcp_source,
-                        mcp_scope=mcp_scope,
+                        mcp_group=mcp_group,
                     )
                 )
         return ToolListResponse(tools=tools_info)
-
-    @staticmethod
-    def _infer_mcp_source(tool_name: str, mcp_sources: set[str]) -> str | None:
-        lowered = tool_name.lower()
-        for source in mcp_sources:
-            source_lowered = source.lower()
-            if lowered == source_lowered:
-                return source
-            for separator in ("__", ":", ".", "/", "-", "_"):
-                if lowered.startswith(f"{source_lowered}{separator}"):
-                    return source
-
-        match = re.search(r"(mcp-[a-z0-9][a-z0-9_-]*)", lowered)
-        if match:
-            return match.group(1)
-        return None
-
-    @staticmethod
-    def _infer_mcp_scope(tool_name: str) -> str | None:
-        lowered = tool_name.lower()
-        if "jira" in lowered:
-            return "jira"
-        if "confluence" in lowered:
-            return "confluence"
-        return None
 
     @staticmethod
     def add_instructions(messages, enabled_tools: list[str], tools: list[BaseTool]):

@@ -295,6 +295,7 @@ class MCPSourceConfig(BaseModel):
     url: str
     transport: MCPTransport
     forward_token: bool = False
+    group: str | None = None
 
 
 class MCPConfig(BaseModel):

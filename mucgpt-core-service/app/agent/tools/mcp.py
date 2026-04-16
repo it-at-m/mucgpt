@@ -78,6 +78,7 @@ class McpLoader:
                         source_tool.metadata = {
                             **existing_metadata,
                             "mcp_source": source_id,
+                            "mcp_group": sources[source_id].group,
                         }
                     tools += source_tools
                 except Exception as e:

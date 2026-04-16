@@ -331,19 +331,3 @@ class TestAgentLifecycle:
         assert patch_get_stream_writer.write.called or True, (
             "Tool error should trigger a stream notification"
         )
-
-
-class TestToolMetadataInference:
-    def test_infer_mcp_source_from_configured_prefix(self):
-        assert (
-            ToolCollection._infer_mcp_source(
-                tool_name="jira__create_issue",
-                mcp_sources={"jira", "confluence"},
-            )
-            == "jira"
-        )
-
-    def test_infer_mcp_scope_recognizes_known_tool_families(self):
-        assert ToolCollection._infer_mcp_scope("jira__create_issue") == "jira"
-        assert ToolCollection._infer_mcp_scope("confluence_search") == "confluence"
-        assert ToolCollection._infer_mcp_scope("custom_tool") is None

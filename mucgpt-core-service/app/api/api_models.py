@@ -253,9 +253,9 @@ class ToolInfo(BaseModel):
         default=None,
         description="MCP source/server identifier if the tool comes from MCP.",
     )
-    mcp_scope: str | None = Field(
+    mcp_group: str | None = Field(
         default=None,
-        description="Optional MCP scope/group (e.g. jira, confluence).",
+        description="Optional group for grouping tools from this MCP source in the frontend (e.g. jira, confluence).",
     )
     # Optionally, add more fields like parameters if needed
     model_config = ConfigDict(
@@ -265,7 +265,7 @@ class ToolInfo(BaseModel):
                 "name": "Web Search",
                 "description": "Search the municipal website for information.",
                 "mcp_source": None,
-                "mcp_scope": None,
+                "mcp_group": None,
             }
         }
     )

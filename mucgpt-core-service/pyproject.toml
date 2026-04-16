@@ -21,7 +21,7 @@ dependencies = [
     "langchain_community==0.4.1",
     "langchain-openai==1.1.12",
     "openai==2.31.0",
-    "langsmith==0.7.30",
+    "langsmith==0.7.31",
     "joserfc",
     "pypdf>=6.9.2",
     "uvicorn>=0.42.0",

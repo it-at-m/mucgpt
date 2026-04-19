@@ -258,9 +258,16 @@ i18n
                             errorhint: "MUCGPT kann Fehler machen. Überprüfe wichtige Informationen.",
                             toolsselectorbutton_tooltip: "Werkzeuge auswählen",
                             tutorial_help: "Tutorial öffnen",
-                            tool_header: "Zusätzliche Tools zu wählen:",
+                            tool_header: "Zusätzliche Werkzeuge wählen:",
                             tutorial_help_aria: "Tutorial für {{tool}} öffnen",
-                            send_question: "Frage senden"
+                            send_question: "Frage senden",
+                            add_tool: "Werkzeuge hinzufügen",
+                            no_tools_active: "Keine Werkzeuge aktiv",
+                            more_tools: "+{{count}} weitere",
+                            enable_all: "Alle aktivieren",
+                            disable_all: "Alle deaktivieren",
+                            available_tools: "Verfügbare Werkzeuge",
+                            remove_tool_aria: "{{tool}} entfernen"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -589,9 +596,9 @@ i18n
                             deleted_state_no_history: "Für diesen Assistenten ist kein lokaler Chatverlauf verfügbar."
                         },
                         toolsselector: {
-                            title: "Verfügbare Tools",
+                            title: "Verfügbare Werkzeuge",
                             select_all: "Alle auswählen",
-                            none: "Keine Tools verfügbar.",
+                            none: "Keine Werkzeuge verfügbar.",
                             apply: "Übernehmen",
                             cancel: "Abbrechen"
                         },
@@ -884,7 +891,14 @@ i18n
                             tutorial_help: "Open tutorial",
                             tool_header: "Choose additional tools:",
                             tutorial_help_aria: "Open Tutorial for Werkzeug {{tool}} ",
-                            send_question: "Send question"
+                            send_question: "Send question",
+                            add_tool: "Add tools",
+                            no_tools_active: "No tools active",
+                            more_tools: "+{{count}} more",
+                            enable_all: "Enable all",
+                            disable_all: "Disable all",
+                            available_tools: "Available Tools",
+                            remove_tool_aria: "Remove {{tool}}"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1501,7 +1515,14 @@ i18n
                             tutorial_help: "Tutorial aufmachn",
                             tool_header: "Zusätzliche Werkzeig auswähln:",
                             tutorial_help_aria: "Tutorial zum Werkzeig {{tool}} aufmachn",
-                            send_question: "Froog senden"
+                            send_question: "Froog senden",
+                            add_tool: "Werkzeig dazua doa",
+                            no_tools_active: "Koane Werkzeig aktiv",
+                            more_tools: "+{{count}} mehr",
+                            enable_all: "Ois aktiviern",
+                            disable_all: "Ois deaktivieren",
+                            available_tools: "Verfügbare Werkzeig",
+                            remove_tool_aria: "{{tool}} wegmachn"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -2124,7 +2145,14 @@ i18n
                             tutorial_help: "Ouvrir le tutoriel",
                             tool_header: "Choisir des outils supplémentaires:",
                             tutorial_help_aria: "Ouvrir le tutoriel pour l'outil {{tool}}",
-                            send_question: "Envoyer la question"
+                            send_question: "Envoyer la question",
+                            add_tool: "Ajouter des outils",
+                            no_tools_active: "Aucun outil actif",
+                            more_tools: "+{{count}} de plus",
+                            enable_all: "Tout activer",
+                            disable_all: "Tout désactiver",
+                            available_tools: "Outils disponibles",
+                            remove_tool_aria: "Supprimer {{tool}}"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2745,7 +2773,14 @@ i18n
                             tutorial_help: "Відкрити навчальний посібник",
                             tool_header: "Вибрати додаткові інструменти:",
                             tutorial_help_aria: "Відкрити навчальний посібник для інструменту {{tool}}",
-                            send_question: "Надіслати питання"
+                            send_question: "Надіслати питання",
+                            add_tool: "Додати інструменти",
+                            no_tools_active: "Немає активних інструментів",
+                            more_tools: "+{{count}} ще",
+                            enable_all: "Активувати всі",
+                            disable_all: "Деактивувати всі",
+                            available_tools: "Доступні інструменти",
+                            remove_tool_aria: "Видалити {{tool}}"
                         },
                         suminput: {
                             tokensused: "Використано токени",

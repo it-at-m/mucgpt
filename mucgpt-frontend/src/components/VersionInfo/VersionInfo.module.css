@@ -1,46 +1,41 @@
 .container {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px;
-    border-radius: 4px;
-}
-
-.label {
-    font-size: 14px;
-    font-weight: 500;
-    margin-right: 4px;
-    color: inherit;
-}
-
-.versionContainer {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: default;
-}
-
-.infoIcon {
-    color: var(--colorBrandForeground1);
-    margin-right: 2px;
+    gap: 10px;
 }
 
 .versionLink {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--app-header-foreground);
     text-decoration: none;
-    color: inherit;
-    display: flex;
-    align-items: center;
     padding: 4px 8px;
     border-radius: 4px;
-    transition: background-color 0.2s;
-    text-decoration: underline;
+    opacity: 0.85;
+    transition:
+        opacity 0.15s ease,
+        background-color 0.15s ease;
+    white-space: nowrap;
 }
 
 .versionLink:hover {
-    background-color: var(--colorBrandBackgroundHover);
+    opacity: 1;
+    background-color: var(--app-header-hover);
     text-decoration: none;
 }
 
-.tooltip {
-    max-width: 300px;
+.tooltipContent {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 4px 2px;
+    min-width: 220px;
+}
+
+.tooltipRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    white-space: nowrap;
 }

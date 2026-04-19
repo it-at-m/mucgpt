@@ -1,57 +1,52 @@
-import { Tag, Tooltip } from "@fluentui/react-components";
-import { InfoRegular } from "@fluentui/react-icons";
+import { Badge, Tooltip } from "@fluentui/react-components";
 import styles from "./VersionInfo.module.css";
 import { useTranslation } from "react-i18next";
 
 interface VersionInfoProps {
+    app_version: string;
     core_version: string;
     frontend_version: string;
     assistant_version: string;
     versionUrl?: string;
 }
 
-export const VersionInfo = ({ core_version, versionUrl, frontend_version, assistant_version }: VersionInfoProps) => {
+const SERVICES = [
+    { name: "mucgpt-frontend", getVersion: (p: VersionInfoProps) => p.frontend_version },
+    { name: "mucgpt-core", getVersion: (p: VersionInfoProps) => p.core_version },
+    { name: "mucgpt-assistants", getVersion: (p: VersionInfoProps) => p.assistant_version }
+];
+
+export const VersionInfo = (props: VersionInfoProps) => {
+    const { app_version, versionUrl } = props;
     const { t } = useTranslation();
 
-    const tooltipContent = t(
-        "components.versioninfo.tooltip",
-        "Application version: {{core_version}}, Frontend Version: {{frontend_version}}, Assistant Version: {{assistant_version}}",
-        {
-            core_version,
-            frontend_version,
-            assistant_version
-        }
-    );
-
-    const content = (
-        <div className={styles.versionContainer}>
-            <InfoRegular className={styles.infoIcon} aria-hidden />
-            <span className={styles.label}>{t("components.versioninfo.core_version", "Core Version:")}</span>
-            <Tag shape="circular">{core_version}</Tag>
-            <span className={styles.label}>{t("components.versioninfo.frontend_version", "Frontend Version:")}</span>
-            <Tag shape="circular">{frontend_version}</Tag>
-            <span className={styles.label}>{t("components.versioninfo.assistant_version", "Assistant Version:")}</span>
-            <Tag shape="circular">{assistant_version}</Tag>
-        </div>
-    );
-
-    if (versionUrl) {
-        return (
-            <>
-                <Tooltip content={tooltipContent} relationship="description" positioning="above">
-                    {content}
-                </Tooltip>
+    return (
+        <div className={styles.container}>
+            <Tooltip
+                content={
+                    <div className={styles.tooltipContent}>
+                        {SERVICES.map(service => (
+                            <div key={service.name} className={styles.tooltipRow}>
+                                <span>{service.name}</span>
+                                <span>{service.getVersion(props)}</span>
+                            </div>
+                        ))}
+                    </div>
+                }
+                relationship="description"
+                positioning="above"
+                withArrow
+            >
+                <Badge appearance="outline" color="subtle" shape="circular" tabIndex={0}>
+                    v{app_version}
+                </Badge>
+            </Tooltip>
+            {versionUrl && (
                 <a href={versionUrl} className={styles.versionLink}>
                     {t("components.versioninfo.whats_new", "Was gibt's neues?")}
                 </a>
-            </>
-        );
-    }
-
-    return (
-        <Tooltip content={tooltipContent} relationship="description" positioning="above">
-            <div className={styles.container}>{content}</div>
-        </Tooltip>
+            )}
+        </div>
     );
 };
 

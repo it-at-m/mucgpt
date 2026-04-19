@@ -362,6 +362,7 @@ class ConfigResponse(BaseModel):
         default_factory=list,
         description="List of configured language models",
     )
+    app_version: str
     core_version: str
     frontend_version: str
     assistant_version: str

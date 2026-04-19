@@ -23,6 +23,7 @@ import { VersionInfo } from "../../components/VersionInfo/VersionInfo";
 import { configApi } from "../../api/core-client";
 import { ApiError } from "../../api/fetch-utils";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
+import GlobalToastHandler from "../../components/GlobalToastHandler/GlobalToastHandler";
 import { Navigation24Regular, DismissRegular, Settings24Regular, ContactCard24Regular } from "@fluentui/react-icons";
 import TutorialsButton from "../../components/TutorialsButton";
 import { ToolsProvider } from "../../components/ToolsProvider";
@@ -77,6 +78,15 @@ export const Layout = () => {
     const appTokens = useMemo(() => getAppTokens(isLight), [isLight]);
     const theme = useMemo(() => createScaledTypographyTheme(createFluentTheme(appTokens, isLight), fontscaling), [appTokens, isLight, fontscaling]);
     const appCssVars = useMemo(() => createAppCssVars(appTokens) as CSSProperties, [appTokens]);
+
+    // Apply custom CSS vars globally on :root so they're available in Fluent UI portals (toasts, dialogs etc.)
+    // which render outside the FluentProvider wrapper in the DOM.
+    useEffect(() => {
+        const root = document.documentElement;
+        for (const [key, value] of Object.entries(appCssVars)) {
+            root.style.setProperty(key, value as string);
+        }
+    }, [appCssVars]);
 
     // change theme
     const onThemeChange = useCallback(
@@ -334,6 +344,7 @@ export const Layout = () => {
                             </div>
                         </ToolsProvider>
                     )}
+                    <GlobalToastHandler />
                 </UserContextProvider>
             </LightContext.Provider>
         </FluentProvider>

@@ -267,7 +267,10 @@ i18n
                             enable_all: "Alle aktivieren",
                             disable_all: "Alle deaktivieren",
                             available_tools: "Verfügbare Werkzeuge",
-                            remove_tool_aria: "{{tool}} entfernen"
+                            remove_tool_aria: "{{tool}} entfernen",
+                            assistant_tool_locked: "Für diesen Assistenten fest aktiviert",
+                            assistant_tools_section: "Vom Assistenten vorgegeben",
+                            optional_tools_section: "Weitere Werkzeuge"
                         },
                         suminput: {
                             tokensused: "Token verbraucht",
@@ -898,7 +901,10 @@ i18n
                             enable_all: "Enable all",
                             disable_all: "Disable all",
                             available_tools: "Available Tools",
-                            remove_tool_aria: "Remove {{tool}}"
+                            remove_tool_aria: "Remove {{tool}}",
+                            assistant_tool_locked: "Required by this assistant",
+                            assistant_tools_section: "Provided by the assistant",
+                            optional_tools_section: "Additional tools"
                         },
                         suminput: {
                             tokensused: "Token used",
@@ -1522,7 +1528,10 @@ i18n
                             enable_all: "Ois aktiviern",
                             disable_all: "Ois deaktivieren",
                             available_tools: "Verfügbare Werkzeig",
-                            remove_tool_aria: "{{tool}} wegmachn"
+                            remove_tool_aria: "{{tool}} wegmachn",
+                            assistant_tool_locked: "Für den Assistentn fest aktiv",
+                            assistant_tools_section: "Vom Assistentn vorgem",
+                            optional_tools_section: "Weiterne Werkzeig"
                         },
                         suminput: {
                             tokensused: "Token vabrocht",
@@ -2152,7 +2161,10 @@ i18n
                             enable_all: "Tout activer",
                             disable_all: "Tout désactiver",
                             available_tools: "Outils disponibles",
-                            remove_tool_aria: "Supprimer {{tool}}"
+                            remove_tool_aria: "Supprimer {{tool}}",
+                            assistant_tool_locked: "Activé par cet assistant",
+                            assistant_tools_section: "Fourni par l'assistant",
+                            optional_tools_section: "Outils supplémentaires"
                         },
                         suminput: {
                             tokensused: "Tokens utilisés",
@@ -2780,7 +2792,10 @@ i18n
                             enable_all: "Активувати всі",
                             disable_all: "Деактивувати всі",
                             available_tools: "Доступні інструменти",
-                            remove_tool_aria: "Видалити {{tool}}"
+                            remove_tool_aria: "Видалити {{tool}}",
+                            assistant_tool_locked: "Обов'язково для цього асистента",
+                            assistant_tools_section: "Надані асистентом",
+                            optional_tools_section: "Додаткові інструменти"
                         },
                         suminput: {
                             tokensused: "Використано токени",

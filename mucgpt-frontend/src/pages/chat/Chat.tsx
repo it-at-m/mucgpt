@@ -105,7 +105,14 @@ const Chat = () => {
         setShowSidebar(value);
         localStorage.setItem(STORAGE_KEYS.SHOW_SIDEBAR, value.toString());
     };
-    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [selectedTools, setSelectedTools] = useState<string[]>(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
+            return stored ? (JSON.parse(stored) as string[]) : [];
+        } catch {
+            return [];
+        }
+    });
     const [toolStatuses, setToolStatuses] = useState<ToolStatus[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
@@ -368,6 +375,21 @@ const Chat = () => {
         hasRestoredLLMRef.current = true;
     }, [availableLLMs, setLLM, LLM.llm_name]);
 
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools));
+        } catch {
+            // ignore storage errors
+        }
+    }, [selectedTools]);
+
+    useEffect(() => {
+        if (!tools?.tools) return;
+
+        const availableToolIds = new Set(tools.tools.map(tool => tool.id));
+        setSelectedTools(prev => prev.filter(toolId => availableToolIds.has(toolId)));
+    }, [tools]);
+
     // Initialisierung beim ersten Laden
     useEffect(() => {
         if (!isFirstRender.current) return;
@@ -397,6 +419,15 @@ const Chat = () => {
         if (toolsFromUrl) {
             const toolsArray = toolsFromUrl.split(",").filter(tool => tool.trim() !== "");
             setSelectedTools(toolsArray);
+        } else {
+            try {
+                const storedTools = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
+                if (storedTools) {
+                    setSelectedTools(JSON.parse(storedTools) as string[]);
+                }
+            } catch {
+                // ignore storage errors
+            }
         }
 
         if (questionFromUrl) {

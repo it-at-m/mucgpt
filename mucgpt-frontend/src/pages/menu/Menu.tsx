@@ -15,6 +15,7 @@ import { SearchCommunityAssistantButton } from "../../components/SearchCommunity
 import { CommunityAssistantsDialog } from "../../components/CommunityAssistantDialog/CommunityAssistantDialog";
 import { DEFAULTHEADER, HeaderContext } from "../layout/HeaderContextProvider";
 import { UserContext } from "../layout/UserContextProvider";
+import { STORAGE_KEYS } from "../layout/LayoutHelper";
 import { QuestionInput } from "../../components/QuestionInput/QuestionInput";
 import { getOwnedCommunityAssistants, getUserSubscriptionsApi } from "../../api/assistant-client";
 import { useGlobalToastContext } from "../../components/GlobalToastHandler/GlobalToastContext";
@@ -39,7 +40,14 @@ const Menu = () => {
 
     const [question, setQuestion] = useState<string>("");
     const [username, setUserName] = useState<string>("");
-    const [selectedTools, setSelectedTools] = useState<string[]>([]);
+    const [selectedTools, setSelectedTools] = useState<string[]>(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEYS.SELECTED_TOOLS);
+            return stored ? (JSON.parse(stored) as string[]) : [];
+        } catch {
+            return [];
+        }
+    });
     const { tools } = useToolsContext();
 
     const { setHeader } = useContext(HeaderContext);
@@ -99,6 +107,21 @@ const Menu = () => {
             setUserName(user.givenname || user.displayName || user.username || "User");
         }
     }, [user]);
+
+    useEffect(() => {
+        try {
+            localStorage.setItem(STORAGE_KEYS.SELECTED_TOOLS, JSON.stringify(selectedTools));
+        } catch {
+            // ignore storage errors
+        }
+    }, [selectedTools]);
+
+    useEffect(() => {
+        if (!tools?.tools) return;
+
+        const availableToolIds = new Set(tools.tools.map(tool => tool.id));
+        setSelectedTools(prev => prev.filter(toolId => availableToolIds.has(toolId)));
+    }, [tools]);
 
     const onSearchAssistant = () => {
         setShowSearchAssistant(true);

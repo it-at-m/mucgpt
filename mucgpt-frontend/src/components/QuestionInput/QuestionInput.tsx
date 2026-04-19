@@ -18,6 +18,7 @@ interface Props {
     setSelectedTools?: React.Dispatch<React.SetStateAction<string[]>>;
     tools?: ToolListResponse;
     allowToolSelection?: boolean;
+    lockedToolIds?: string[];
 }
 
 export const QuestionInput = ({
@@ -30,7 +31,8 @@ export const QuestionInput = ({
     selectedTools,
     setSelectedTools,
     tools,
-    allowToolSelection = true
+    allowToolSelection = true,
+    lockedToolIds = []
 }: Props) => {
     const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -123,7 +125,13 @@ export const QuestionInput = ({
             <div className={styles.questionInputWrapper}>
                 {/* Chat tool selector - always shown when tools are available */}
                 {tools && tools.tools && tools.tools.length > 0 && setSelectedTools && (
-                    <ChatToolSelector tools={tools} selectedTools={selectedTools} setSelectedTools={setSelectedTools} allowToolSelection={allowToolSelection} />
+                    <ChatToolSelector
+                        tools={tools}
+                        selectedTools={selectedTools}
+                        setSelectedTools={setSelectedTools}
+                        allowToolSelection={allowToolSelection}
+                        lockedToolIds={lockedToolIds}
+                    />
                 )}
 
                 {/* Input container with textarea and buttons */}

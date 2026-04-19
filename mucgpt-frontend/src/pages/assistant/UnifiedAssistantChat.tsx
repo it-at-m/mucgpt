@@ -559,13 +559,7 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
 
     // Text-Input component
     const inputComponent = useMemo(() => {
-        // Filter tools to only show those configured in the assistant
-        const filteredTools =
-            tools && assistantConfig.tools
-                ? {
-                      tools: tools.tools.filter(tool => assistantConfig.tools?.some(assistantTool => assistantTool.id === tool.id))
-                  }
-                : tools;
+        const lockedToolIds = assistantConfig.tools?.map(tool => tool.id) ?? [];
 
         if (isDeletedAssistant) {
             const duplicateCandidateSnapshot = deletedAssistantSnapshot;
@@ -629,8 +623,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                         setQuestion={question => setQuestion(question)}
                         selectedTools={selectedTools}
                         setSelectedTools={setSelectedTools}
-                        tools={filteredTools}
-                        allowToolSelection={false}
+                        tools={tools}
+                        allowToolSelection={true}
+                        lockedToolIds={lockedToolIds}
                     />
                 </>
             );
@@ -646,8 +641,9 @@ const UnifiedAssistantChat = ({ strategy }: UnifiedAssistantChatProps) => {
                 setQuestion={question => setQuestion(question)}
                 selectedTools={selectedTools}
                 setSelectedTools={setSelectedTools}
-                tools={filteredTools}
-                allowToolSelection={false}
+                tools={tools}
+                allowToolSelection={true}
+                lockedToolIds={lockedToolIds}
             />
         );
     }, [

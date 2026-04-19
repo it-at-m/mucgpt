@@ -44,6 +44,25 @@
     cursor: not-allowed;
 }
 
+.lockedBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    min-height: var(--badge-height);
+    height: var(--badge-height);
+    padding: 3px 12px;
+    border-radius: 100px;
+    border: 1px solid var(--colorNeutralStroke2);
+    background-color: var(--colorNeutralBackground2);
+    color: var(--colorNeutralForeground2);
+}
+
+.lockedBadgeIcon {
+    color: var(--colorNeutralForeground3);
+    flex-shrink: 0;
+}
+
 /* --- Individual badge --- */
 
 .badgeLabel {
@@ -190,6 +209,14 @@
     gap: 4px;
 }
 
+.lockedHint {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--colorNeutralForeground3);
+    font-size: var(--fontSizeBase200);
+}
+
 .groupHeaderActionButton {
     flex-shrink: 0;
     min-width: 0 !important;
@@ -293,6 +320,28 @@
     padding: 0 4px 10px 4px;
     border-bottom: 1px solid var(--colorNeutralStroke1);
     margin-bottom: 4px;
+}
+
+.popoverSectionHeader {
+    font-size: var(--fontSizeBase100);
+    font-weight: var(--fontWeightSemibold);
+    color: var(--colorNeutralForeground3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 4px 0 4px;
+}
+
+.lockedToolSection {
+    border: 1px solid var(--colorNeutralStroke1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.lockedToolSectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px 0 12px;
 }
 
 /* --- Accordion groups inside popover --- */
@@ -438,6 +487,11 @@
     border-color: var(--colorNeutralStroke1);
 }
 
+.lockedToolItem {
+    border-color: var(--colorNeutralStroke2);
+    background-color: var(--colorNeutralBackground2);
+}
+
 .toolItemToggle {
     display: flex;
     align-items: center;
@@ -451,6 +505,15 @@
     width: 100%;
     min-height: 44px;
     min-width: 0;
+}
+
+.toolItemStatic {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
 }
 
 .toolItemToggle:focus-visible {

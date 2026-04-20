@@ -319,6 +319,7 @@ export const Layout = () => {
                                         {!isMobile && (
                                             <div className={styles.footerSection}>
                                                 <VersionInfo
+                                                    app_version={config.app_version}
                                                     core_version={config.core_version}
                                                     frontend_version={config.frontend_version}
                                                     assistant_version={config.assistant_version}

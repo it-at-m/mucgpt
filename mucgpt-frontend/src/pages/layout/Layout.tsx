@@ -103,7 +103,7 @@ export const Layout = () => {
 
         configApi()
             .then(result => {
-                setConfig(result);
+                setConfig({ ...DEFAULT_APP_CONFIG, ...result });
                 setModels(result.models);
                 if (result.models.length === 0) {
                     console.error("Keine Modelle vorhanden");

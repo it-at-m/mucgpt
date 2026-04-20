@@ -53,6 +53,7 @@ export interface ApplicationConfig {
     models: Model[];
     alternative_logo: boolean;
     env_name: string;
+    app_version: string;
     core_version: string;
     frontend_version: string;
     assistant_version: string;

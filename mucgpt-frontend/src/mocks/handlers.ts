@@ -122,6 +122,7 @@ const CONFIG_RESPONSE: ApplicationConfig = {
     ],
     env_name: "MUCGPT",
     alternative_logo: false,
+    app_version: "2.0",
     core_version: "0.0.1",
     frontend_version: "0.0.1",
     assistant_version: "0.0.1"

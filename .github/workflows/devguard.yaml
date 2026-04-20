@@ -1,0 +1,19 @@
+# .github/workflows/devguard.yml
+name: DevGuard DevSecOps
+
+on:
+    push:
+
+permissions:
+    contents: read
+    packages: write
+
+jobs:
+    call-devsecops:
+        uses: l3montree-dev/devguard-action/.github/workflows/full.yml@main
+        with:
+            asset-name: "landeshauptstadt-munchen/projects/mucgpt/assets/mucgpt"
+            api-url: "https://api.devguard.org"
+            web-ui: "https://app.devguard.org"
+        secrets:
+            devguard-token: "${{ secrets.DEVGUARD_TOKEN }}" # you need to create this secret in your GitHub repository settings

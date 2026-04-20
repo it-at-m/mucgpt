@@ -49,7 +49,8 @@ export const DEFAULT_APP_CONFIG: ApplicationConfig = {
     app_version: "2.0",
     core_version: "DEV 1.0.0",
     frontend_version: "DEV 1.0.0",
-    assistant_version: "DEV 1.0.0"
+    assistant_version: "DEV 1.0.0",
+    document_processing_enabled: false
 };
 
 export const CREATIVITY_LOW = "low";

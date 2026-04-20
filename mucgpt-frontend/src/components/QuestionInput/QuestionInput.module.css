@@ -39,6 +39,13 @@
     gap: 8px;
     margin-bottom: 10px;
     transition: box-shadow 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.dragActive {
+    border: 2px dashed var(--colorBrandStroke1);
+    background: var(--colorNeutralBackground2);
+    box-shadow: none;
 }
 
 .questionInputContainer:focus-within {
@@ -81,11 +88,46 @@
 
 .questionInputButtons {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
     padding-bottom: 4px;
+}
+
+.uploadButtonWrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.uploadCountBadge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--colorBrandBackground);
+    color: var(--colorNeutralForegroundOnBrand);
+    border: 1px solid var(--colorNeutralStroke1);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.uploadedDataHeader {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 0 16px 8px 16px;
 }
 
 .errorhintSection {

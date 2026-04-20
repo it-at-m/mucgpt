@@ -1,5 +1,9 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
+    Accordion,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
     Popover,
     PopoverTrigger,
     PopoverSurface,
@@ -12,15 +16,7 @@ import {
     DialogContent,
     DialogTrigger
 } from "@fluentui/react-components";
-import {
-    Checkmark16Regular,
-    QuestionCircle16Regular,
-    ChevronDown16Regular,
-    Dismiss12Regular,
-    Dismiss16Regular,
-    Dismiss24Regular,
-    LockClosed16Regular
-} from "@fluentui/react-icons";
+import { Checkmark16Regular, QuestionCircle16Regular, Dismiss12Regular, Dismiss24Regular, LockClosed16Regular } from "@fluentui/react-icons";
 import { useTranslation } from "react-i18next";
 import styles from "./ChatToolSelector.module.css";
 import { ToolInfo, ToolListResponse } from "../../api/models";
@@ -93,29 +89,17 @@ function buildGroups(allTools: ToolInfo[]): { groups: ToolGroup[]; ungrouped: To
     };
 }
 
-interface GroupBadgeItemProps {
-    badge: GroupActiveBadge;
-    onDismissGroup: (groupName: string) => void;
-    onToggleGroup: (groupTools: ToolInfo[]) => void;
-    allowToolSelection: boolean;
+interface UseHoverPopoverOptions {
     isCompact: boolean;
-    renderToolItem: (tool: ToolInfo) => React.ReactNode;
-    removeAriaLabel: string;
+    hoverEnabled?: boolean;
+    forceClose?: boolean;
 }
 
-const GroupBadgeItem = ({ badge, onDismissGroup, onToggleGroup, allowToolSelection, isCompact, renderToolItem, removeAriaLabel }: GroupBadgeItemProps) => {
-    const { t } = useTranslation();
+const useHoverPopover = ({ isCompact, hoverEnabled = true, forceClose = false }: UseHoverPopoverOptions) => {
     const [open, setOpen] = useState(false);
     const badgeRef = useRef<HTMLDivElement>(null);
     const surfaceRef = useRef<HTMLDivElement>(null);
     const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const allSelected = badge.activeTools.length === badge.allGroupTools.length;
-
-    useEffect(() => {
-        if (!allowToolSelection) {
-            setOpen(false);
-        }
-    }, [allowToolSelection]);
 
     useEffect(
         () => () => {
@@ -133,7 +117,7 @@ const GroupBadgeItem = ({ badge, onDismissGroup, onToggleGroup, allowToolSelecti
         }
     }, []);
 
-    const isMovingWithinGroupBadge = useCallback((nextTarget: EventTarget | null) => {
+    const isMovingWithinOverlay = useCallback((nextTarget: EventTarget | null) => {
         if (!(nextTarget instanceof Node)) {
             return false;
         }
@@ -142,10 +126,10 @@ const GroupBadgeItem = ({ badge, onDismissGroup, onToggleGroup, allowToolSelecti
     }, []);
 
     const openPopover = useCallback(() => {
-        if (isCompact || !allowToolSelection) return;
+        if (isCompact || !hoverEnabled) return;
         clearCloseTimeout();
         setOpen(true);
-    }, [allowToolSelection, clearCloseTimeout, isCompact]);
+    }, [clearCloseTimeout, hoverEnabled, isCompact]);
 
     const scheduleClosePopover = useCallback(() => {
         if (isCompact) return;
@@ -155,13 +139,13 @@ const GroupBadgeItem = ({ badge, onDismissGroup, onToggleGroup, allowToolSelecti
 
     const handleMouseLeave = useCallback(
         (event: React.MouseEvent<HTMLElement>) => {
-            if (isCompact || isMovingWithinGroupBadge(event.relatedTarget)) {
+            if (isCompact || isMovingWithinOverlay(event.relatedTarget)) {
                 return;
             }
 
             scheduleClosePopover();
         },
-        [isCompact, isMovingWithinGroupBadge, scheduleClosePopover]
+        [isCompact, isMovingWithinOverlay, scheduleClosePopover]
     );
 
     const handleCompactOpenChange = useCallback(
@@ -174,217 +158,236 @@ const GroupBadgeItem = ({ badge, onDismissGroup, onToggleGroup, allowToolSelecti
     );
 
     useEffect(() => {
-        if (isCompact) {
+        if (forceClose) {
             clearCloseTimeout();
+            setOpen(false);
         }
-    }, [clearCloseTimeout, isCompact]);
+    }, [clearCloseTimeout, forceClose]);
 
     useEffect(() => {
-        if (open) {
+        if (isCompact || open) {
             clearCloseTimeout();
         }
-    }, [clearCloseTimeout, open]);
+    }, [clearCloseTimeout, isCompact, open]);
+
+    return {
+        open,
+        badgeRef,
+        surfaceRef,
+        clearCloseTimeout,
+        openPopover,
+        handleMouseLeave,
+        handleCompactOpenChange
+    };
+};
+
+type GroupBadgePopoverItemProps =
+    | {
+          kind: "active";
+          badge: GroupActiveBadge;
+          onDismissGroup: (groupName: string) => void;
+          onToggleGroup: (groupTools: ToolInfo[]) => void;
+          allowToolSelection: boolean;
+          isCompact: boolean;
+          renderToolItem: (tool: ToolInfo) => React.ReactNode;
+          removeAriaLabel: string;
+      }
+    | {
+          kind: "locked";
+          badge: LockedGroupBadge;
+          isCompact: boolean;
+          renderToolItem: (tool: ToolInfo) => React.ReactNode;
+          lockedBadgeLabel: string;
+      };
+
+const GroupBadgePopoverItem = (props: GroupBadgePopoverItemProps) => {
+    const { t } = useTranslation();
+    const isLocked = props.kind === "locked";
+    const badge = props.badge;
+    const activeProps = props.kind === "active" ? props : null;
+    const activeBadge = props.kind === "active" ? props.badge : null;
+    const lockedBadge = props.kind === "locked" ? props.badge : null;
+    const allowSelection = activeProps?.allowToolSelection ?? true;
+    const groupTools = lockedBadge?.tools ?? activeBadge?.allGroupTools ?? [];
+    const selectedCount = lockedBadge?.tools.length ?? activeBadge?.activeTools.length ?? 0;
+    const triggerDisabled = !allowSelection;
+    const allSelected = !!activeBadge && activeBadge.activeTools.length === activeBadge.allGroupTools.length;
+    const { open, badgeRef, surfaceRef, clearCloseTimeout, openPopover, handleMouseLeave, handleCompactOpenChange } = useHoverPopover({
+        isCompact: props.isCompact,
+        hoverEnabled: isLocked || allowSelection,
+        forceClose: !isLocked && !allowSelection
+    });
 
     const handleDismissGroup = useCallback(() => {
+        if (!activeProps || !activeBadge) return;
         clearCloseTimeout();
-        onDismissGroup(badge.groupName);
-    }, [badge.groupName, clearCloseTimeout, onDismissGroup]);
+        activeProps.onDismissGroup(badge.groupName);
+    }, [activeBadge, activeProps, badge.groupName, clearCloseTimeout]);
 
     const handleToggleGroup = useCallback(() => {
+        if (!activeProps || !activeBadge) return;
         clearCloseTimeout();
-        onToggleGroup(badge.allGroupTools);
-    }, [badge.allGroupTools, clearCloseTimeout, onToggleGroup]);
+        activeProps.onToggleGroup(activeBadge.allGroupTools);
+    }, [activeBadge, activeProps, clearCloseTimeout]);
 
-    const groupToolList = <div className={styles.groupHoverToolList}>{badge.allGroupTools.map(renderToolItem)}</div>;
+    const triggerContent = (
+        <Button appearance="transparent" className={styles.groupBadgeLabel} disabled={triggerDisabled}>
+            {isLocked && <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />}
+            <span>{badge.groupName}</span>
+            <span className={styles.groupBadgeCount}>{selectedCount}</span>
+        </Button>
+    );
+
+    const toolList = <div className={styles.groupHoverToolList}>{groupTools.map(props.renderToolItem)}</div>;
     const groupActionLabel = allSelected ? t("components.questioninput.disable_all") : t("components.questioninput.enable_all");
-    const groupActionIcon = allSelected ? <Dismiss16Regular /> : <Checkmark16Regular />;
+    const headerAction = isLocked ? (
+        <span>
+            <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
+            {props.lockedBadgeLabel}
+        </span>
+    ) : (
+        <Button
+            size="small"
+            appearance="subtle"
+            shape="circular"
+            className={styles.groupHeaderActionButton}
+            onClick={handleToggleGroup}
+            disabled={!allowSelection}
+        >
+            {groupActionLabel}
+        </Button>
+    );
 
     return (
         <div
             ref={badgeRef}
-            className={`${styles.activeBadge} ${!allowToolSelection ? styles.activeBadgeDisabled : ""}`}
+            className={isLocked ? styles.lockedBadge : `${styles.activeBadge} ${!allowSelection ? styles.activeBadgeDisabled : ""}`}
             onMouseEnter={openPopover}
             onMouseLeave={handleMouseLeave}
         >
-            {isCompact ? (
+            {props.isCompact ? (
                 <Dialog open={open} onOpenChange={handleCompactOpenChange}>
-                    <DialogTrigger disableButtonEnhancement>
-                        <button type="button" className={styles.groupBadgeLabel} disabled={!allowToolSelection}>
-                            <span>{badge.groupName}</span>&nbsp;
-                            <span className={styles.groupBadgeCount}>{badge.activeTools.length}</span>
-                        </button>
-                    </DialogTrigger>
+                    <DialogTrigger disableButtonEnhancement>{triggerContent}</DialogTrigger>
                     <DialogSurface className={styles.groupDetailDialog}>
                         <DialogBody className={styles.groupDetailDialogBody}>
-                            <DialogTitle
-                                action={
-                                    <div className={styles.groupDialogTitleActions}>
-                                        <Button
-                                            size="small"
-                                            appearance="subtle"
-                                            icon={groupActionIcon}
-                                            className={styles.groupHeaderActionButton}
-                                            onClick={handleToggleGroup}
-                                            disabled={!allowToolSelection}
-                                        >
-                                            {groupActionLabel}
-                                        </Button>
-                                        <DialogTrigger action="close">
-                                            <Button appearance="subtle" aria-label={t("close")} icon={<Dismiss24Regular />} />
-                                        </DialogTrigger>
-                                    </div>
-                                }
-                            >
-                                {badge.groupName}
-                            </DialogTitle>
-                            <DialogContent className={styles.groupDetailDialogContent}>{groupToolList}</DialogContent>
-                        </DialogBody>
-                    </DialogSurface>
-                </Dialog>
-            ) : (
-                <Popover open={open} positioning={{ position: "above", align: "start", offset: { mainAxis: 6 } }}>
-                    <PopoverTrigger disableButtonEnhancement>
-                        <button type="button" className={styles.groupBadgeLabel} disabled={!allowToolSelection}>
-                            <span>{badge.groupName}</span>&nbsp;
-                            <span className={styles.groupBadgeCount}>{badge.activeTools.length}</span>
-                        </button>
-                    </PopoverTrigger>
-                    <PopoverSurface ref={surfaceRef} className={styles.groupHoverSurface} onMouseEnter={openPopover} onMouseLeave={handleMouseLeave}>
-                        <div className={styles.groupHoverHeaderRow}>
-                            <div className={styles.groupHoverPopoverHeader}>{badge.groupName}</div>
-                            <Button
-                                size="small"
-                                appearance="subtle"
-                                icon={groupActionIcon}
-                                className={styles.groupHeaderActionButton}
-                                onClick={handleToggleGroup}
-                                disabled={!allowToolSelection}
-                            >
-                                {groupActionLabel}
-                            </Button>
-                        </div>
-                        {groupToolList}
-                    </PopoverSurface>
-                </Popover>
-            )}
-            <Button
-                size="small"
-                appearance="transparent"
-                icon={<Dismiss12Regular />}
-                className={styles.dismissTrigger}
-                onClick={handleDismissGroup}
-                disabled={!allowToolSelection}
-                aria-label={removeAriaLabel}
-            />
-        </div>
-    );
-};
-
-interface LockedGroupBadgeItemProps {
-    badge: LockedGroupBadge;
-    isCompact: boolean;
-    renderToolItem: (tool: ToolInfo) => React.ReactNode;
-    lockedBadgeLabel: string;
-}
-
-const LockedGroupBadgeItem = ({ badge, isCompact, renderToolItem, lockedBadgeLabel }: LockedGroupBadgeItemProps) => {
-    const [open, setOpen] = useState(false);
-    const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const badgeRef = useRef<HTMLDivElement>(null);
-    const surfaceRef = useRef<HTMLDivElement>(null);
-
-    useEffect(
-        () => () => {
-            if (closeTimeoutRef.current) {
-                clearTimeout(closeTimeoutRef.current);
-            }
-        },
-        []
-    );
-
-    const clearCloseTimeout = useCallback(() => {
-        if (closeTimeoutRef.current) {
-            clearTimeout(closeTimeoutRef.current);
-            closeTimeoutRef.current = null;
-        }
-    }, []);
-
-    const isMovingWithinBadge = useCallback((nextTarget: EventTarget | null) => {
-        if (!(nextTarget instanceof Node)) {
-            return false;
-        }
-
-        return !!(badgeRef.current?.contains(nextTarget) || surfaceRef.current?.contains(nextTarget));
-    }, []);
-
-    const openPopover = useCallback(() => {
-        if (isCompact) return;
-        clearCloseTimeout();
-        setOpen(true);
-    }, [clearCloseTimeout, isCompact]);
-
-    const handleMouseLeave = useCallback(
-        (event: React.MouseEvent<HTMLElement>) => {
-            if (isCompact || isMovingWithinBadge(event.relatedTarget)) {
-                return;
-            }
-
-            clearCloseTimeout();
-            closeTimeoutRef.current = setTimeout(() => setOpen(false), 180);
-        },
-        [clearCloseTimeout, isCompact, isMovingWithinBadge]
-    );
-
-    const lockedToolList = <div className={styles.groupHoverToolList}>{badge.tools.map(renderToolItem)}</div>;
-
-    return (
-        <div ref={badgeRef} className={styles.lockedBadge} onMouseEnter={openPopover} onMouseLeave={handleMouseLeave}>
-            {isCompact ? (
-                <Dialog open={open} onOpenChange={(_, data) => setOpen(data.open)}>
-                    <DialogTrigger disableButtonEnhancement>
-                        <button type="button" className={styles.groupBadgeLabel}>
-                            <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                            <span>{badge.groupName}</span>
-                            <span className={styles.groupBadgeCount}>{badge.tools.length}</span>
-                        </button>
-                    </DialogTrigger>
-                    <DialogSurface className={styles.groupDetailDialog}>
-                        <DialogBody className={styles.groupDetailDialogBody}>
-                            <DialogTitle>{badge.groupName}</DialogTitle>
+                            {isLocked ? (
+                                <DialogTitle>{badge.groupName}</DialogTitle>
+                            ) : (
+                                <DialogTitle
+                                    action={
+                                        <div className={styles.groupDialogTitleActions}>
+                                            {headerAction}
+                                            <DialogTrigger action="close">
+                                                <Button appearance="subtle" aria-label={t("close")} icon={<Dismiss24Regular />} />
+                                            </DialogTrigger>
+                                        </div>
+                                    }
+                                >
+                                    {badge.groupName}
+                                </DialogTitle>
+                            )}
                             <DialogContent className={styles.groupDetailDialogContent}>
-                                <div className={styles.groupHoverHeaderRow}>
-                                    <div className={styles.groupHoverPopoverHeader}>{badge.groupName}</div>
-                                    <span className={styles.lockedHint}>
-                                        <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                                        {lockedBadgeLabel}
-                                    </span>
-                                </div>
-                                {lockedToolList}
+                                {isLocked && (
+                                    <div className={styles.groupHoverHeaderRow}>
+                                        <div className={`${styles.popoverEyebrow} ${styles.groupHoverPopoverHeader}`}>{badge.groupName}</div>
+                                        {headerAction}
+                                    </div>
+                                )}
+                                {toolList}
                             </DialogContent>
                         </DialogBody>
                     </DialogSurface>
                 </Dialog>
             ) : (
                 <Popover open={open} positioning={{ position: "above", align: "start", offset: { mainAxis: 6 } }}>
-                    <PopoverTrigger disableButtonEnhancement>
-                        <button type="button" className={styles.groupBadgeLabel}>
-                            <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                            <span>{badge.groupName}</span>
-                            <span className={styles.groupBadgeCount}>{badge.tools.length}</span>
-                        </button>
-                    </PopoverTrigger>
+                    <PopoverTrigger disableButtonEnhancement>{triggerContent}</PopoverTrigger>
                     <PopoverSurface ref={surfaceRef} className={styles.groupHoverSurface} onMouseEnter={openPopover} onMouseLeave={handleMouseLeave}>
                         <div className={styles.groupHoverHeaderRow}>
-                            <div className={styles.groupHoverPopoverHeader}>{badge.groupName}</div>
-                            <span className={styles.lockedHint}>
-                                <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                                {lockedBadgeLabel}
-                            </span>
+                            <div className={`${styles.popoverEyebrow} ${styles.groupHoverPopoverHeader}`}>{badge.groupName}</div>
+                            {headerAction}
                         </div>
-                        {lockedToolList}
+                        {toolList}
                     </PopoverSurface>
                 </Popover>
             )}
+            {!isLocked && (
+                <Button
+                    size="small"
+                    appearance="transparent"
+                    shape="circular"
+                    icon={<Dismiss12Regular />}
+                    className={styles.dismissTrigger}
+                    onClick={handleDismissGroup}
+                    disabled={!allowSelection}
+                    aria-label={props.removeAriaLabel}
+                />
+            )}
+        </div>
+    );
+};
+
+interface ToolRowProps {
+    tool: ToolInfo;
+    isLocked?: boolean;
+    isSelected?: boolean;
+    allowToolSelection: boolean;
+    onToggle?: (toolId: string) => void;
+    onOpenTutorial: (toolId: string, event: React.MouseEvent) => void;
+}
+
+const ToolRow = ({ tool, isLocked = false, isSelected = false, allowToolSelection, onToggle, onOpenTutorial }: ToolRowProps) => {
+    const { t } = useTranslation();
+    const hasTutorial = !!TOOL_TUTORIAL_MAP[tool.id];
+    const showActiveState = isLocked || isSelected;
+    const titleContent = (
+        <span className={styles.toolItemContent}>
+            <span className={`${styles.statusDot} ${showActiveState ? styles.statusDotActive : ""}`} aria-hidden="true" />
+            <span className={styles.toolItemTitleRow}>
+                <span className={styles.toolItemName}>{tool.name}</span>
+            </span>
+        </span>
+    );
+
+    return (
+        <div key={tool.id} className={`${styles.toolItem} ${isLocked ? styles.lockedToolItem : ""} ${isSelected ? styles.toolItemSelected : ""}`}>
+            <div className={styles.toolItemMain}>
+                <div className={styles.toolItemInfoGroup}>
+                    {isLocked ? (
+                        <div className={styles.toolItemStatic}>{titleContent}</div>
+                    ) : (
+                        <Button
+                            appearance="transparent"
+                            className={styles.toolItemToggle}
+                            aria-pressed={isSelected}
+                            onClick={() => onToggle?.(tool.id)}
+                            disabled={!allowToolSelection}
+                        >
+                            {titleContent}
+                        </Button>
+                    )}
+                    {hasTutorial && (
+                        <Tooltip content={t("components.questioninput.tutorial_help")} relationship="label">
+                            <Button
+                                size="small"
+                                icon={<QuestionCircle16Regular />}
+                                appearance="transparent"
+                                className={`${styles.tutorialButton} ${styles.toolItemTutorialButton}`}
+                                onClick={event => onOpenTutorial(tool.id, event)}
+                                aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
+                            />
+                        </Tooltip>
+                    )}
+                </div>
+                <span className={styles.toolItemActions}>
+                    {isLocked ? (
+                        <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
+                    ) : (
+                        <span className={`${styles.checkCircle} ${!isSelected ? styles.checkCircleHidden : ""}`} aria-hidden="true">
+                            <Checkmark16Regular className={styles.checkIcon} />
+                        </span>
+                    )}
+                </span>
+            </div>
         </div>
     );
 };
@@ -427,10 +430,6 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
         }
 
         setPopoverOpen(data.open);
-    }, []);
-
-    const toggleGroupOpen = useCallback((groupName: string) => {
-        setOpenGroups(prev => (prev.includes(groupName) ? prev.filter(name => name !== groupName) : [...prev, groupName]));
     }, []);
 
     const lockedToolIdSet = useMemo(() => new Set(lockedToolIds), [lockedToolIds]);
@@ -536,6 +535,21 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
         [setSelectedTools, allowToolSelection]
     );
 
+    const handleAccordionToggle = useCallback((_: unknown, data: { openItems: unknown | unknown[] }) => {
+        const nextOpenGroups = Array.isArray(data.openItems) ? data.openItems.filter((value): value is string => typeof value === "string") : [];
+        setOpenGroups(nextOpenGroups);
+    }, []);
+
+    const handleAccordionHeaderClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLElement;
+        if (target.closest(".fui-AccordionHeader__button") || target.closest(`.${styles.groupHeaderActionButton}`)) {
+            return;
+        }
+
+        const headerButton = event.currentTarget.querySelector<HTMLButtonElement>(".fui-AccordionHeader__button");
+        headerButton?.click();
+    }, []);
+
     const openTutorial = useCallback((toolId: string, event: React.MouseEvent) => {
         event.stopPropagation();
         const route = TOOL_TUTORIAL_MAP[toolId];
@@ -546,82 +560,22 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
     const lockedBadgeLabel = t("components.questioninput.assistant_tool_locked");
 
     const renderToolItem = useCallback(
-        (tool: ToolInfo) => {
-            const isSelected = selectedTools.includes(tool.id);
-            const hasTutorial = !!TOOL_TUTORIAL_MAP[tool.id];
-
-            return (
-                <div key={tool.id} className={`${styles.toolItem} ${isSelected ? styles.toolItemSelected : ""}`}>
-                    <button
-                        type="button"
-                        className={styles.toolItemToggle}
-                        aria-pressed={isSelected}
-                        onClick={() => toggleTool(tool.id)}
-                        disabled={!allowToolSelection}
-                    >
-                        <span className={styles.toolItemContent}>
-                            <span className={`${styles.statusDot} ${isSelected ? styles.statusDotActive : ""}`} aria-hidden="true" />
-                            <span className={styles.toolItemTitleRow}>
-                                <span className={styles.toolItemName}>{tool.name}</span>
-                                {hasTutorial && (
-                                    <Tooltip content={t("components.questioninput.tutorial_help")} relationship="label">
-                                        <Button
-                                            size="small"
-                                            icon={<QuestionCircle16Regular />}
-                                            appearance="transparent"
-                                            className={styles.tutorialButton}
-                                            onClick={event => openTutorial(tool.id, event)}
-                                            aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
-                                        />
-                                    </Tooltip>
-                                )}
-                            </span>
-                        </span>
-                        <span className={styles.toolItemActions}>
-                            <span className={`${styles.checkCircle} ${!isSelected ? styles.checkCircleHidden : ""}`} aria-hidden="true">
-                                <Checkmark16Regular className={styles.checkIcon} />
-                            </span>
-                        </span>
-                    </button>
-                </div>
-            );
-        },
-        [selectedTools, toggleTool, openTutorial, t]
+        (tool: ToolInfo) => (
+            <ToolRow
+                key={tool.id}
+                tool={tool}
+                isSelected={selectedTools.includes(tool.id)}
+                allowToolSelection={allowToolSelection}
+                onToggle={toggleTool}
+                onOpenTutorial={openTutorial}
+            />
+        ),
+        [selectedTools, allowToolSelection, toggleTool, openTutorial]
     );
 
     const renderLockedToolItem = useCallback(
-        (tool: ToolInfo) => {
-            const hasTutorial = !!TOOL_TUTORIAL_MAP[tool.id];
-
-            return (
-                <div key={tool.id} className={`${styles.toolItem} ${styles.lockedToolItem}`}>
-                    <div className={styles.toolItemStatic}>
-                        <span className={styles.toolItemContent}>
-                            <span className={`${styles.statusDot} ${styles.statusDotActive}`} aria-hidden="true" />
-                            <span className={styles.toolItemTitleRow}>
-                                <span className={styles.toolItemName}>{tool.name}</span>
-                                {hasTutorial && (
-                                    <Tooltip content={t("components.questioninput.tutorial_help")} relationship="label">
-                                        <Button
-                                            size="small"
-                                            icon={<QuestionCircle16Regular />}
-                                            appearance="transparent"
-                                            className={styles.tutorialButton}
-                                            onClick={event => openTutorial(tool.id, event)}
-                                            aria-label={t("components.questioninput.tutorial_help_aria", { tool: tool.id })}
-                                        />
-                                    </Tooltip>
-                                )}
-                            </span>
-                        </span>
-                        <span className={styles.toolItemActions}>
-                            <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                        </span>
-                    </div>
-                </div>
-            );
-        },
-        [openTutorial, t]
+        (tool: ToolInfo) => <ToolRow key={tool.id} tool={tool} isLocked allowToolSelection={allowToolSelection} onOpenTutorial={openTutorial} />,
+        [allowToolSelection, openTutorial]
     );
 
     return (
@@ -631,8 +585,9 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
             {visibleBadges.map(badge => {
                 if (badge.type === "group") {
                     return (
-                        <GroupBadgeItem
+                        <GroupBadgePopoverItem
                             key={`group-${badge.groupName}`}
+                            kind="active"
                             badge={badge}
                             onDismissGroup={dismissGroup}
                             onToggleGroup={toggleGroup}
@@ -646,8 +601,9 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
 
                 if (badge.type === "locked-group") {
                     return (
-                        <LockedGroupBadgeItem
+                        <GroupBadgePopoverItem
                             key={`locked-group-${badge.groupName}`}
+                            kind="locked"
                             badge={badge}
                             isCompact={isCompact}
                             renderToolItem={renderLockedToolItem}
@@ -668,17 +624,16 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
                 }
 
                 return (
-                    <button
-                        type="button"
+                    <Button
                         key={`tool-${badge.tool.id}`}
+                        appearance="secondary"
                         className={styles.activeBadge}
                         onClick={() => dismissIndividualTool(badge.tool.id)}
                         disabled={!allowToolSelection}
                         aria-label={t("components.questioninput.remove_tool_aria", { tool: badge.tool.name })}
                     >
                         <span className={styles.badgeLabel}>{badge.tool.name}</span>
-                        <Dismiss12Regular className={styles.dismissIcon} aria-hidden="true" />
-                    </button>
+                    </Button>
                 );
             })}
 
@@ -697,91 +652,81 @@ export const ChatToolSelector = ({ tools, selectedTools, setSelectedTools, allow
                     }}
                 >
                     <PopoverTrigger disableButtonEnhancement>
-                        <Button ref={triggerRef} appearance="transparent" className={styles.addToolBadge} disabled={!allowToolSelection}>
+                        <Button ref={triggerRef} shape="circular" appearance="primary" className={styles.addToolBadge} disabled={!allowToolSelection}>
                             {t("components.questioninput.add_tool")}
                         </Button>
                     </PopoverTrigger>
                     <PopoverSurface className={styles.popoverSurface}>
-                        <div className={styles.popoverHeader}>{t("components.questioninput.available_tools")}</div>
+                        <div className={`${styles.popoverEyebrow} ${styles.popoverHeader}`}>{t("components.questioninput.available_tools")}</div>
 
                         {hasLockedTools && (
                             <>
-                                <div className={styles.popoverSectionHeader}>{t("components.questioninput.assistant_tools_section")}</div>
+                                <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>
+                                    {t("components.questioninput.assistant_tools_section")}
+                                </div>
                                 {lockedGroups.map(group => (
                                     <div key={`locked-section-${group.name}`} className={styles.lockedToolSection}>
                                         <div className={styles.lockedToolSectionHeader}>
                                             <LockClosed16Regular className={styles.lockedBadgeIcon} aria-hidden="true" />
-                                            <span className={styles.groupName}>{group.name}</span>
+                                            <span className={`${styles.popoverEyebrow} ${styles.lockedToolSectionTitle}`}>{group.name}</span>
                                         </div>
                                         <div className={styles.groupToolsList}>{group.tools.map(renderLockedToolItem)}</div>
                                     </div>
                                 ))}
                                 {lockedUngrouped.length > 0 && <div className={styles.ungroupedList}>{lockedUngrouped.map(renderLockedToolItem)}</div>}
-                                <div className={styles.popoverSectionHeader}>{t("components.questioninput.optional_tools_section")}</div>
+                                <div className={`${styles.popoverEyebrow} ${styles.popoverSectionHeader}`}>
+                                    {t("components.questioninput.optional_tools_section")}
+                                </div>
                             </>
                         )}
 
-                        {selectableGroups.length > 0 &&
-                            selectableGroups.map(group => {
-                                const groupIds = group.tools.map(tool => tool.id);
-                                const selectedCount = groupIds.filter(id => selectedTools.includes(id)).length;
-                                const allSelected = group.tools.length > 0 && selectedCount === group.tools.length;
-                                const isOpen = openGroups.includes(group.name);
-                                const groupActionLabel = allSelected ? t("components.questioninput.disable_all") : t("components.questioninput.enable_all");
-                                const groupActionIcon = allSelected ? <Dismiss16Regular /> : <Checkmark16Regular />;
+                        {selectableGroups.length > 0 && (
+                            <Accordion className={styles.groupAccordion} collapsible multiple openItems={openGroups} onToggle={handleAccordionToggle}>
+                                {selectableGroups.map(group => {
+                                    const groupIds = group.tools.map(tool => tool.id);
+                                    const selectedCount = groupIds.filter(id => selectedTools.includes(id)).length;
+                                    const allSelected = group.tools.length > 0 && selectedCount === group.tools.length;
+                                    const groupActionLabel = allSelected ? t("components.questioninput.disable_all") : t("components.questioninput.enable_all");
 
-                                return (
-                                    <div key={group.name} className={styles.accordionGroup}>
-                                        <div className={styles.accordionGroupHeader}>
-                                            <button
-                                                type="button"
-                                                className={styles.accordionGroupToggle}
-                                                onClick={() => toggleGroupOpen(group.name)}
-                                                aria-expanded={isOpen}
-                                                disabled={!allowToolSelection}
-                                            >
-                                                <span className={`${styles.statusDot} ${selectedCount > 0 ? styles.statusDotActive : ""}`} aria-hidden="true" />
-                                                <span className={styles.groupTitleBlock}>
-                                                    <span className={styles.groupName}>{group.name}</span>
-                                                    <span className={styles.groupCount}>
-                                                        {selectedCount}/{group.tools.length}
+                                    return (
+                                        <AccordionItem key={group.name} value={group.name} className={styles.accordionGroup}>
+                                            <div className={styles.accordionGroupHeader} onClick={handleAccordionHeaderClick}>
+                                                <AccordionHeader className={styles.accordionHeader} expandIconPosition="end">
+                                                    <span className={styles.groupAccordionHeaderContent}>
+                                                        <span
+                                                            className={`${styles.statusDot} ${selectedCount > 0 ? styles.statusDotActive : ""}`}
+                                                            aria-hidden="true"
+                                                        />
+                                                        <span className={styles.groupTitleBlock}>
+                                                            <span className={styles.groupName}>{group.name}</span>
+                                                            <span className={styles.groupCount}>
+                                                                {selectedCount}/{group.tools.length}
+                                                            </span>
+                                                        </span>
                                                     </span>
-                                                </span>
-                                            </button>
-                                            <Button
-                                                size="small"
-                                                appearance="subtle"
-                                                icon={groupActionIcon}
-                                                className={styles.groupHeaderActionButton}
-                                                onClick={event => {
-                                                    event.stopPropagation();
-                                                    toggleGroup(group.tools);
-                                                }}
-                                                disabled={!allowToolSelection}
-                                            >
-                                                {groupActionLabel}
-                                            </Button>
-                                            <button
-                                                type="button"
-                                                className={styles.groupChevronButton}
-                                                onClick={event => {
-                                                    event.stopPropagation();
-                                                    toggleGroupOpen(group.name);
-                                                }}
-                                                aria-label={group.name}
-                                                aria-expanded={isOpen}
-                                                disabled={!allowToolSelection}
-                                            >
-                                                <ChevronDown16Regular
-                                                    className={`${styles.expandIcon} ${isOpen ? styles.expandIconOpen : ""}`}
-                                                    aria-hidden="true"
-                                                />
-                                            </button>
-                                        </div>
-                                        {isOpen && <div className={styles.groupToolsList}>{group.tools.map(renderToolItem)}</div>}
-                                    </div>
-                                );
-                            })}
+                                                </AccordionHeader>
+                                                <Button
+                                                    size="small"
+                                                    appearance="subtle"
+                                                    shape="circular"
+                                                    className={styles.groupHeaderActionButton}
+                                                    onClick={event => {
+                                                        event.stopPropagation();
+                                                        toggleGroup(group.tools);
+                                                    }}
+                                                    disabled={!allowToolSelection}
+                                                >
+                                                    {groupActionLabel}
+                                                </Button>
+                                            </div>
+                                            <AccordionPanel className={styles.accordionPanel}>
+                                                <div className={styles.groupToolsList}>{group.tools.map(renderToolItem)}</div>
+                                            </AccordionPanel>
+                                        </AccordionItem>
+                                    );
+                                })}
+                            </Accordion>
+                        )}
 
                         {selectableUngrouped.length > 0 && <div className={styles.ungroupedList}>{selectableUngrouped.map(renderToolItem)}</div>}
                     </PopoverSurface>

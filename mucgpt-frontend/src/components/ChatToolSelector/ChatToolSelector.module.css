@@ -8,40 +8,32 @@
     padding: 8px 0 12px 0;
 }
 
-/* Shared badge shell — used for both individual (button) and group (div) badges */
 .activeBadge {
     display: inline-flex !important;
     align-items: center !important;
     gap: 0;
     box-sizing: border-box;
+    min-width: 0 !important;
     min-height: var(--badge-height);
     height: var(--badge-height);
-    padding: 3px 8px 3px 12px !important;
+    margin: 0 !important;
+    padding: 3px 8px 3px 8px !important;
     border-radius: 100px !important;
     cursor: pointer;
     border: 1px solid var(--colorNeutralStroke1) !important;
-    background-color: var(--colorNeutralBackground1) !important;
+    box-shadow: none !important;
     color: var(--colorBrandBackground) !important;
+    background-color: var(--colorNeutralBackground) !important;
     transition:
         gap 0.15s ease,
         background-color 0.15s ease,
         border-color 0.15s ease;
 }
 
-.activeBadge:hover {
-    background-color: var(--colorNeutralBackground1Hover) !important;
-    border-color: var(--colorNeutralStroke1Hover) !important;
-}
-
 .activeBadge:hover,
 .activeBadge:focus-within {
+    background-color: var(--colorNeutralBackground2) !important;
     gap: 6px;
-}
-
-.activeBadge:disabled,
-.activeBadgeDisabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 .lockedBadge {
@@ -51,10 +43,9 @@
     box-sizing: border-box;
     min-height: var(--badge-height);
     height: var(--badge-height);
-    padding: 3px 12px;
+    padding: 3px 8px 3px 8px;
     border-radius: 100px;
     border: 1px solid var(--colorNeutralStroke2);
-    background-color: var(--colorNeutralBackground2);
     color: var(--colorNeutralForeground2);
 }
 
@@ -71,62 +62,21 @@
     flex: 1;
 }
 
-/* X icon inside individual badge — hidden until hover/focus, always visible on touch */
-.dismissIcon {
-    width: 0;
-    height: 12px;
-    flex-basis: 0;
-    flex-shrink: 0;
-    color: currentColor;
-    opacity: 0;
-    overflow: hidden;
-    transition:
-        width 0.15s ease,
-        flex-basis 0.15s ease,
-        opacity 0.15s ease;
-}
-
-.activeBadge:hover .dismissIcon,
-.activeBadge:focus-visible .dismissIcon {
-    width: 12px;
-    flex-basis: 12px;
-    opacity: 1;
-}
-
-@media (hover: none), (pointer: coarse) {
-    .dismissIcon {
-        width: 12px;
-        flex-basis: 12px;
-        opacity: 1;
-    }
-}
-
 /* --- Group badge --- */
 
-/* Label button inside the group badge div */
 .groupBadgeLabel {
     flex: 1;
-    display: inline-flex;
-    align-items: center;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
     gap: 4px;
-    background: none;
-    border: none;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     cursor: pointer;
-    color: inherit;
+    color: var(--colorBrandBackground) !important;
     font-size: inherit;
     font-weight: inherit;
-    min-width: 0;
-}
-
-.groupBadgeLabel:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 2px;
-    border-radius: 4px;
-}
-
-.groupBadgeLabel:disabled {
-    cursor: not-allowed;
+    min-width: 0 !important;
 }
 
 .groupBadgeCount {
@@ -134,7 +84,6 @@
     opacity: 0.75;
 }
 
-/* X button inside the group badge — hidden until hover/focus-within, always visible on touch */
 .dismissTrigger {
     flex-shrink: 0;
     width: 0 !important;
@@ -166,10 +115,6 @@
         opacity: 1;
         pointer-events: auto;
     }
-}
-
-.dismissTrigger:hover {
-    background-color: var(--colorNeutralBackground3) !important;
 }
 
 /* --- Group badge popover --- */
@@ -209,30 +154,12 @@
     gap: 4px;
 }
 
-.lockedHint {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--colorNeutralForeground3);
-    font-size: var(--fontSizeBase200);
-}
-
-.groupHeaderActionButton {
-    flex-shrink: 0;
-    min-width: 0 !important;
-    border-radius: 999px !important;
-    padding-inline: 10px !important;
-    color: var(--colorBrandForeground1) !important;
-    background-color: color-mix(in srgb, var(--colorBrandBackground) 12%, transparent) !important;
-    border: 1px solid color-mix(in srgb, var(--colorBrandBackground) 28%, transparent) !important;
-}
-
-.groupHeaderActionButton:hover {
-    background-color: color-mix(in srgb, var(--colorBrandBackground) 18%, transparent) !important;
-}
-
-.groupHeaderActionButton:disabled {
-    opacity: 0.55;
+.accordionGroupHeader .groupHeaderActionButton {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
 }
 
 .groupDetailDialog {
@@ -256,44 +183,27 @@
 /* --- Overflow and add-tool badges --- */
 
 .overflowBadge {
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
     min-height: var(--badge-height);
     height: var(--badge-height);
     padding: 3px 10px;
     border-radius: 100px;
     border: 1px solid var(--colorNeutralStroke1);
-    background-color: var(--colorNeutralBackground1);
     color: var(--colorBrandBackground);
 }
 
 .emptyStateBadge {
-    display: inline-flex;
-    align-items: center;
-    box-sizing: border-box;
     min-height: var(--badge-height);
     height: var(--badge-height);
     padding: 3px 12px;
     border-radius: 100px;
     border: 1px dashed var(--colorNeutralStroke2);
     background-color: var(--colorNeutralBackground2);
-    color: var(--colorNeutralForeground3);
+    color: var(--colorNeutralForeground2);
 }
 
 .addToolBadge {
-    display: inline-flex !important;
-    align-items: center !important;
-    box-sizing: border-box;
     min-height: var(--badge-height) !important;
     height: var(--badge-height) !important;
-    padding: 3px 12px !important;
-    min-width: unset !important;
-    border-radius: 100px !important;
-    border: 1px solid var(--colorBrandBackground) !important;
-    cursor: pointer;
-    background-color: var(--colorBrandBackground) !important;
-    color: var(--colorNeutralForegroundOnBrand) !important;
 }
 
 /* --- Tool selector popover --- */
@@ -346,6 +256,12 @@
 
 /* --- Accordion groups inside popover --- */
 
+.groupAccordion {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .accordionGroup {
     border: 1px solid var(--colorNeutralStroke1);
     border-radius: 12px;
@@ -356,47 +272,53 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 0 12px;
+    position: relative;
     user-select: none;
-    transition: background-color 0.15s ease;
 }
 
 .accordionGroupHeader:hover {
     background-color: var(--colorNeutralBackground2Hover);
 }
 
-.accordionGroupToggle {
+.accordionHeader {
     flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    color: inherit;
-    text-align: left;
     min-width: 0;
 }
 
-.accordionGroupToggle:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 2px;
+.accordionHeader :global(.fui-AccordionHeader__button) {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    padding: 10px 156px 10px 0;
+    color: inherit;
     border-radius: 4px;
 }
 
-.accordionGroupToggle:disabled {
-    cursor: not-allowed;
+.accordionHeader :global(.fui-AccordionHeader__button):focus-visible {
+    outline: 2px solid var(--colorBrandBackground);
+    outline-offset: 2px;
 }
 
-.groupName {
-    font-weight: var(--fontWeightSemibold);
-    font-size: var(--fontSizeBase300);
-}
-
-.groupCount {
-    font-size: var(--fontSizeBase200);
+.accordionHeader :global(.fui-AccordionHeader__expandIcon) {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--colorNeutralForeground3);
+}
+
+.accordionPanel {
+    padding: 0;
+    margin: 0;
+}
+
+.groupAccordionHeaderContent {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
 }
 
 .groupTitleBlock {
@@ -407,41 +329,14 @@
     min-width: 0;
 }
 
-.groupChevronButton {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: none;
-    background: none;
-    color: inherit;
-    cursor: pointer;
-    border-radius: 999px;
+.groupName {
+    font-weight: var(--fontWeightSemibold);
+    font-size: var(--fontSizeBase300);
 }
 
-.groupChevronButton:hover {
-    background-color: var(--colorNeutralBackground2Hover);
-}
-
-.groupChevronButton:focus-visible {
-    outline: 2px solid var(--colorBrandBackground);
-    outline-offset: 2px;
-}
-
-.groupChevronButton:disabled {
-    cursor: not-allowed;
-}
-
-.expandIcon {
+.groupCount {
+    font-size: var(--fontSizeBase200);
     color: var(--colorNeutralForeground3);
-    transition: transform 0.2s ease;
-}
-
-.expandIconOpen {
-    transform: rotate(180deg);
 }
 
 .groupToolsList {
@@ -469,6 +364,7 @@
 .toolItem {
     display: flex;
     align-items: center;
+    gap: 4px;
     border-radius: 12px;
     border: 1px solid var(--colorNeutralStroke3);
     background-color: var(--colorNeutralBackground1);
@@ -492,31 +388,45 @@
     background-color: var(--colorNeutralBackground2);
 }
 
-.toolItemToggle {
+.toolItemMain {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: none;
-    border: none;
-    padding: 10px 12px;
-    cursor: pointer;
-    color: inherit;
-    text-align: left;
     width: 100%;
     min-height: 44px;
+    padding: 10px 12px;
     min-width: 0;
 }
 
-.toolItemStatic {
+.toolItemInfoGroup {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    min-height: 44px;
-    padding: 10px 12px;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
 }
 
-.toolItemToggle:focus-visible {
+.toolItemToggle {
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background-color: transparent !important;
+    color: inherit !important;
+    border-radius: 0 !important;
+    text-align: left;
+    min-width: 0 !important;
+    max-width: 100%;
+    box-shadow: none !important;
+}
+
+.toolItemStatic {
+    min-width: 0;
+}
+
+.toolItemToggle:focus-visible,
+.toolItemToggle[data-fui-focus-visible] {
     outline: 2px solid var(--colorBrandBackground);
     outline-offset: 2px;
     border-radius: 12px;
@@ -524,6 +434,11 @@
 
 .toolItemToggle:disabled {
     cursor: not-allowed;
+}
+
+.toolItemTutorialButton {
+    flex-shrink: 0;
+    margin-right: 0;
 }
 
 .toolItemContent {
@@ -547,6 +462,7 @@
     justify-content: flex-end;
     flex-shrink: 0;
     min-width: 24px;
+    margin-left: 8px;
 }
 
 .toolItemName {
